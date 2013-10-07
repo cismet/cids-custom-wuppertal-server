@@ -346,6 +346,108 @@ public class NASProductGenerator {
 
     /**
      * DOCUMENT ME!
+     *
+     * @param  query  DOCUMENT ME!
+     * @param  file   DOCUMENT ME!
+     */
+    public void writeResultToFileforRequest(final InputStream query, final File file) {
+        initAmManager();
+        final int sessionID = manager.login(USER, PW);
+        final String orderId = manager.registerGZip(sessionID, gZipFile(query));
+        final AMAuftragServer amServer = manager.listAuftrag(sessionID, orderId);
+
+        while ((manager.getResultCount(sessionID, orderId) < 1)
+                    && (manager.getProtocolGZip(sessionID, orderId) == null)) {
+            try {
+                Thread.sleep(1000);
+//                this.logProtocol(manager.getProtocolGZip(sessionID, orderId));
+            } catch (InterruptedException ex) {
+                Exceptions.printStackTrace(ex);
+            }
+        }
+        final int resCount = manager.getResultCount(sessionID, orderId);
+
+        if (resCount > 1) {
+            // unzip and save all files, then zip them
+            final ArrayList<byte[]> resultFiles = new ArrayList<byte[]>();
+            for (int i = 0; i < resCount; i++) {
+                resultFiles.add(manager.getNResultGZip(sessionID, orderId, i));
+            }
+            final ArrayList<byte[]> unzippedFileCollection = new ArrayList<byte[]>();
+            for (final byte[] zipFile : resultFiles) {
+                unzippedFileCollection.add(gunzip(zipFile));
+            }
+            FileOutputStream fos = null;
+            ZipOutputStream zos = null;
+            try {
+                fos = new FileOutputStream(file);
+                zos = new ZipOutputStream(fos);
+                for (int i = 0; i < unzippedFileCollection.size(); i++) {
+                    final byte[] unzippedFile = unzippedFileCollection.get(i);
+                    final String fileEntryName = orderId + "#" + i + FILE_APPENDIX;
+                    zos.putNextEntry(new ZipEntry(fileEntryName));
+                    zos.write(unzippedFile);
+                    zos.closeEntry();
+                }
+            } catch (IOException ex) {
+                log.warn("error during creation of zip file");
+            } finally {
+                try {
+                    if (zos != null) {
+                        zos.close();
+                    }
+                    if (fos != null) {
+                        fos.close();
+                    }
+                } catch (IOException ex) {
+                    Exceptions.printStackTrace(ex);
+                }
+            }
+        } else {
+            final byte[] data;
+            if (resCount == 0) {
+                log.error("it seems that there is an error with NAS order: " + orderId + ". Writing protocol to file "
+                            + file);
+                log.error("Protocol for NAS order " + orderId + ": "
+                            + new String(gunzip(manager.getProtocolGZip(sessionID, orderId))));
+                data = manager.getProtocolGZip(sessionID, orderId);
+            } else {
+                data = manager.getResultGZip(sessionID, orderId);
+            }
+
+            if (data == null) {
+                log.error("result of nas order " + orderId + " is null");
+                return;
+            }
+            InputStream is = null;
+            OutputStream os = null;
+            try {
+                is = new GZIPInputStream(new ByteArrayInputStream(manager.getResultGZip(sessionID, orderId)));
+                os = new FileOutputStream(file);
+                final byte[] buffer = new byte[8192];
+                int length = is.read(buffer, 0, 8192);
+                while (length != -1) {
+                    os.write(buffer, 0, length);
+                    length = is.read(buffer, 0, 8192);
+                }
+            } catch (IOException ex) {
+                log.error("error during gunzip of nas response files", ex);
+            } finally {
+                try {
+                    if (is != null) {
+                        is.close();
+                    }
+                    if (os != null) {
+                        os.close();
+                    }
+                } catch (IOException ex) {
+                }
+            }
+        }
+    }
+
+    /**
+     * DOCUMENT ME!
      */
     private void initAmManager() {
 //        try {
@@ -845,6 +947,31 @@ public class NASProductGenerator {
             log.error("error while json mapping/unmarshalling of nas order log file", ex);
         } catch (IOException ex) {
             log.error("error while loading nas order log file", ex);
+        }
+    }
+
+    /**
+     * DOCUMENT ME!
+     *
+     * @param  args  DOCUMENT ME!
+     */
+    public static void main(final String[] args) {
+        FileInputStream fis = null;
+        try {
+//            final InputStream templateFile = NASProductGenerator.class.getResourceAsStream(
+//                    "test_request.xml");
+            fis = new FileInputStream(new File(
+                        "/home/daniel/Documents/punktreservierung/Wunda_Reservierung2/Muster-Dateien/A_AMGR000000003012_Ben_Auftr_alle_PKZ_alt.xml"));
+            final File f = new File("/home/daniel/Desktop/result.xml");
+            NASProductGenerator.instance().writeResultToFileforRequest(fis, f);
+        } catch (FileNotFoundException ex) {
+            Exceptions.printStackTrace(ex);
+        } finally {
+            try {
+                fis.close();
+            } catch (IOException ex) {
+                Exceptions.printStackTrace(ex);
+            }
         }
     }
 
