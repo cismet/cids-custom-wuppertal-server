@@ -1,10 +1,12 @@
-/***************************************************
-*
-* cismet GmbH, Saarbruecken, Germany
-*
-*              ... and it just works.
-*
-****************************************************/
+/**
+ * *************************************************
+ *
+ * cismet GmbH, Saarbruecken, Germany
+ * 
+* ... and it just works.
+ * 
+***************************************************
+ */
 /*
  * To change this template, choose Tools | Templates
  * and open the template in the editor.
@@ -15,6 +17,7 @@ import com.sun.org.apache.xml.internal.serialize.OutputFormat;
 import com.sun.org.apache.xml.internal.serialize.XMLSerializer;
 
 import com.vividsolutions.jts.geom.GeometryCollection;
+import de.cismet.cids.custom.utils.alkis.AlkisConstants;
 
 import org.openide.util.Exceptions;
 
@@ -34,29 +37,36 @@ import javax.xml.bind.JAXBException;
 import javax.xml.parsers.DocumentBuilder;
 import javax.xml.parsers.DocumentBuilderFactory;
 import javax.xml.parsers.ParserConfigurationException;
+import org.apache.log4j.Logger;
 
 /**
  * This class provides an easy way to convert JTS Geometry Collections into an xml representation that is suited to the
  * 3A Server interface used in for NAS-queries.
  *
- * @author   daniel
- * @version  $Revision$, $Date$
+ * @author daniel
+ * @version $Revision$, $Date$
  */
 public class GML3Writer {
 
+    private static final Logger LOG = Logger.getLogger(GML3Writer.class);
     //~ Methods ----------------------------------------------------------------
 
     /**
      * DOCUMENT ME!
      *
-     * @param   geometries   DOCUMENT ME!
-     * @param   crs          DOCUMENT ME!
-     * @param   srsNameProp  DOCUMENT ME!
+     * @param geometries DOCUMENT ME!
+     * @param crs DOCUMENT ME!
+     * @param srsNameProp DOCUMENT ME!
      *
-     * @return  DOCUMENT ME!
+     * @return DOCUMENT ME!
      */
     public static String convertToGML(final GeometryCollection geometries, final String crs, final String srsNameProp) {
         String rawXML = "";
+        //check the SRID of the geometry collection -> it must be not 0
+        if (geometries.getSRID() == 0) {
+            LOG.warn("There is no SRID set for the geometry to convert to GML. Using SRID EPSG:25832 as default");
+            geometries.setSRID(25832);
+        }
         try {
 //            CrsTransformer.transformToGivenCrs(geometry, crs);
             final JAXBContext ffo = JAXBContext.newInstance("org.jvnet.ogc.gml.v_3_1_1.jts");
@@ -89,7 +99,7 @@ public class GML3Writer {
                     linearRingNodes.item(i).removeChild(child);
                     child = nextSibling;
                 }
-                final Node newNode = (Node)doc.createElement("gml:posList");
+                final Node newNode = (Node) doc.createElement("gml:posList");
                 newNode.setTextContent(poslistCoords.toString());
                 linearRingNodes.item(i).appendChild(newNode);
             }
@@ -151,9 +161,9 @@ public class GML3Writer {
     /**
      * DOCUMENT ME!
      *
-     * @param   geometries  DOCUMENT ME!
+     * @param geometries DOCUMENT ME!
      *
-     * @return  DOCUMENT ME!
+     * @return DOCUMENT ME!
      */
     public static String writeGML3_2WithETRS89(final GeometryCollection geometries) {
         final String confluence = convertToGML(geometries, "EPSG:25832", "urn:adv:crs:ETRS89_UTM32");
