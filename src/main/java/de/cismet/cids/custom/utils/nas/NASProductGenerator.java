@@ -507,11 +507,13 @@ public class NASProductGenerator {
     public HashMap<String, NasProductInfo> getUndeliveredOrders(final User user) {
         final HashMap<String, NasProductInfo> result = new HashMap<String, NasProductInfo>();
         final HashMap<String, NasProductInfo> undeliveredOrders = undeliveredOrderMap.get(determineUserPrefix(user));
-        for (final String undeliveredOrderId : undeliveredOrders.keySet()) {
-            final NasProductInfo pInfo = (NasProductInfo)undeliveredOrders.get(undeliveredOrderId);
-            result.put(
-                undeliveredOrderId,
-                new NasProductInfo(pInfo.isIsSplittet(), new String(pInfo.getRequestName())));
+        if ((undeliveredOrders != null) && !undeliveredOrders.isEmpty()) {
+            for (final String undeliveredOrderId : undeliveredOrders.keySet()) {
+                final NasProductInfo pInfo = (NasProductInfo)undeliveredOrders.get(undeliveredOrderId);
+                result.put(
+                    undeliveredOrderId,
+                    new NasProductInfo(pInfo.isIsSplittet(), new String(pInfo.getRequestName())));
+            }
         }
         return result;
     }
