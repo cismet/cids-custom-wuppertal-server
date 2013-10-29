@@ -214,11 +214,11 @@ public class CidsBillingSearchStatement extends AbstractCidsServerSearch {
     private void appendKostenart() {
         switch (kostenart) {
             case KOSTENFREI: {
-                query.append("and gebuehrenpflichtig is false");
+                query.append("and netto_summe = 0 ");
                 break;
             }
             case KOSTENPFLICHTIG: {
-                query.append("and gebuehrenpflichtig is true");
+                query.append("and netto_summe > 0 ");
                 break;
             }
         }
