@@ -131,7 +131,12 @@ public class CidsBillingSearchStatement extends AbstractCidsServerSearch {
                     + "                WHERE   name ilike 'billing' "
                     + "                ), b.id ");
         query.append(" FROM billing_billing b");
+        query.append(" JOIN billing_kunden_logins as logins");
+        query.append("     ON b.angelegt_durch = logins.id");
+        query.append(" JOIN billing_kunde as kunde");
+        query.append("     ON logins.kunde = kunde.id");
         query.append(" WHERE ");
+        appendKundeIds();
         appendUserIds();
         appendGeschaeftsbuchnummer();
         appendProjekt();
@@ -145,29 +150,25 @@ public class CidsBillingSearchStatement extends AbstractCidsServerSearch {
     /**
      * DOCUMENT ME!
      */
+    private void appendKundeIds() {
+        // create the following structure: (id_1, id_2, ... ,  id_n)
+        final StringBuilder customerListString = new StringBuilder(" kunde.id in (");
+        for (final MetaObject kundeMetaObject : kundeMetaObjects) {
+            customerListString.append(kundeMetaObject.getBean().getProperty("id"));
+            customerListString.append(",");
+        }
+        // remove last comma
+        customerListString.deleteCharAt(customerListString.length() - 1);
+        customerListString.append(")");
+        query.append(customerListString.toString());
+    }
+
+    /**
+     * DOCUMENT ME!
+     */
     private void appendUserIds() {
-        if ((userID == null) || userID.equals("")) {
-            final List<CidsBean> benutzerBeans = new ArrayList<CidsBean>();
-            for (final MetaObject kundeMetaObject : kundeMetaObjects) {
-                benutzerBeans.addAll(kundeMetaObject.getBean().getBeanCollectionProperty("benutzer"));
-            }
-            LOG.fatal("Benutzerbeans: " + benutzerBeans.size());
-            if (!benutzerBeans.isEmpty()) {
-                // create the following structure: (id_1, id_2, ... ,  id_n)
-                final StringBuilder userListString = new StringBuilder(" angelegt_durch in (");
-                for (final CidsBean benutzer : benutzerBeans) {
-                    userListString.append(benutzer.getProperty("id"));
-                    userListString.append(",");
-                }
-                // remove last comma
-                userListString.deleteCharAt(userListString.length() - 1);
-                userListString.append(")");
-                query.append(userListString.toString());
-            } else {
-                query.append(" false ");
-                LOG.error("This customer has no users, that should not happen.");
-            }
-        } else { // filter only for one userID
+        if (!(userID == null) || userID.equals("")) {
+            // filter only for one userID
             query.append(" angelegt_durch  = " + userID + " ");
         }
     }
