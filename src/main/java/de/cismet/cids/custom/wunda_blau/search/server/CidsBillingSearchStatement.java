@@ -167,9 +167,9 @@ public class CidsBillingSearchStatement extends AbstractCidsServerSearch {
      * DOCUMENT ME!
      */
     private void appendUserIds() {
-        if (!(userID == null) || userID.equals("")) {
+        if ((userID != null) && !userID.equals("")) {
             // filter only for one userID
-            query.append(" angelegt_durch  = " + userID + " ");
+            query.append("and angelegt_durch  = " + userID + " ");
         }
     }
 
