@@ -25,9 +25,6 @@ import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collection;
 import java.util.Date;
-import java.util.List;
-
-import de.cismet.cids.dynamics.CidsBean;
 
 import de.cismet.cids.server.search.AbstractCidsServerSearch;
 import de.cismet.cids.server.search.SearchException;
@@ -65,6 +62,7 @@ public class CidsBillingSearchStatement extends AbstractCidsServerSearch {
     private String geschaeftsbuchnummer;
     private String projekt;
     private String userID;
+    private String abrechnungsturnusID;
     private ArrayList<String> verwendungszweckKeys = new ArrayList<String>();
     private Kostenart kostenart = Kostenart.IGNORIEREN;
     private Date from = new Date();
@@ -143,6 +141,7 @@ public class CidsBillingSearchStatement extends AbstractCidsServerSearch {
         appendVerwendungszweckKeys();
         appendKostenart();
         appendDates();
+        appendAbrechnungsturnus();
 
         return query.toString();
     }
@@ -241,6 +240,15 @@ public class CidsBillingSearchStatement extends AbstractCidsServerSearch {
             query.append(" and date_trunc('day',ts) <= '");
             query.append(postgresDateFormat.format(till));
             query.append("' ");
+        }
+    }
+
+    /**
+     * DOCUMENT ME!
+     */
+    private void appendAbrechnungsturnus() {
+        if ((abrechnungsturnusID != null) && !abrechnungsturnusID.equals("")) {
+            query.append(" and kunde.abrechnungsturnus = " + abrechnungsturnusID + " ");
         }
     }
 
@@ -386,5 +394,23 @@ public class CidsBillingSearchStatement extends AbstractCidsServerSearch {
      */
     public void setTill(final Date till) {
         this.till = till;
+    }
+
+    /**
+     * DOCUMENT ME!
+     *
+     * @return  DOCUMENT ME!
+     */
+    public String getAbrechnungsturnusID() {
+        return abrechnungsturnusID;
+    }
+
+    /**
+     * DOCUMENT ME!
+     *
+     * @param  abrechnungsturnusID  DOCUMENT ME!
+     */
+    public void setAbrechnungsturnusID(final String abrechnungsturnusID) {
+        this.abrechnungsturnusID = abrechnungsturnusID;
     }
 }
