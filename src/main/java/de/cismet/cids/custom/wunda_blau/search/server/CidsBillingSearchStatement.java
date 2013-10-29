@@ -72,19 +72,30 @@ public class CidsBillingSearchStatement extends AbstractCidsServerSearch {
     private StringBuilder query;
     private SimpleDateFormat postgresDateFormat = new SimpleDateFormat("yyyy-MM-dd");
     private User user;
-    private MetaObject kundeMetaObject;
+    private ArrayList<MetaObject> kundeMetaObjects = new ArrayList<MetaObject>();
 
     //~ Constructors -----------------------------------------------------------
 
     /**
      * Creates a new CidsBillingSearchStatement object.
      *
-     * @param  kundeMetaObject  kundeBean DOCUMENT ME!
      * @param  user             DOCUMENT ME!
+     * @param  kundeMetaObject  kundeBean DOCUMENT ME!
      */
-    public CidsBillingSearchStatement(final MetaObject kundeMetaObject, final User user) {
+    public CidsBillingSearchStatement(final User user, final MetaObject kundeMetaObject) {
         this.user = user;
-        this.kundeMetaObject = kundeMetaObject;
+        this.kundeMetaObjects.add(kundeMetaObject);
+    }
+
+    /**
+     * Creates a new CidsBillingSearchStatement object.
+     *
+     * @param  user              DOCUMENT ME!
+     * @param  kundeMetaObjects  DOCUMENT ME!
+     */
+    public CidsBillingSearchStatement(final User user, final ArrayList<MetaObject> kundeMetaObjects) {
+        this.user = user;
+        this.kundeMetaObjects = kundeMetaObjects;
     }
 
     //~ Methods ----------------------------------------------------------------
@@ -121,7 +132,7 @@ public class CidsBillingSearchStatement extends AbstractCidsServerSearch {
                     + "                ), b.id ");
         query.append(" FROM billing_billing b");
         query.append(" WHERE ");
-        appendWhereClauseAndUsernames();
+        appendUserIds();
         appendGeschaeftsbuchnummer();
         appendProjekt();
         appendVerwendungszweckKeys();
@@ -134,13 +145,16 @@ public class CidsBillingSearchStatement extends AbstractCidsServerSearch {
     /**
      * DOCUMENT ME!
      */
-    private void appendWhereClauseAndUsernames() {
+    private void appendUserIds() {
         if ((userID == null) || userID.equals("")) {
-            final List<CidsBean> benutzerBeans = kundeMetaObject.getBean().getBeanCollectionProperty("benutzer");
+            final List<CidsBean> benutzerBeans = new ArrayList<CidsBean>();
+            for (final MetaObject kundeMetaObject : kundeMetaObjects) {
+                benutzerBeans.addAll(kundeMetaObject.getBean().getBeanCollectionProperty("benutzer"));
+            }
             LOG.fatal("Benutzerbeans: " + benutzerBeans.size());
             if (!benutzerBeans.isEmpty()) {
-                query.append(" angelegt_durch ");
-                final StringBuilder userListString = new StringBuilder("in (");
+                // create the following structure: (id_1, id_2, ... ,  id_n)
+                final StringBuilder userListString = new StringBuilder(" angelegt_durch in (");
                 for (final CidsBean benutzer : benutzerBeans) {
                     userListString.append(benutzer.getProperty("id"));
                     userListString.append(",");
@@ -153,7 +167,7 @@ public class CidsBillingSearchStatement extends AbstractCidsServerSearch {
                 query.append(" false ");
                 LOG.error("This customer has no users, that should not happen.");
             }
-        } else {
+        } else { // filter only for one userID
             query.append(" angelegt_durch  = " + userID + " ");
         }
     }
@@ -252,17 +266,17 @@ public class CidsBillingSearchStatement extends AbstractCidsServerSearch {
      *
      * @return  DOCUMENT ME!
      */
-    public MetaObject getKundeBean() {
-        return kundeMetaObject;
+    public ArrayList<MetaObject> getKundeMetaObjects() {
+        return kundeMetaObjects;
     }
 
     /**
      * DOCUMENT ME!
      *
-     * @param  kundeBean  DOCUMENT ME!
+     * @param  kundeMetaObjects  kundeBean DOCUMENT ME!
      */
-    public void setKundeBean(final MetaObject kundeBean) {
-        this.kundeMetaObject = kundeBean;
+    public void setKundeMetaObjects(final ArrayList<MetaObject> kundeMetaObjects) {
+        this.kundeMetaObjects = kundeMetaObjects;
     }
 
     /**
