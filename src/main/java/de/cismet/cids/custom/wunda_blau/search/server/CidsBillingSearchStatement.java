@@ -71,6 +71,7 @@ public class CidsBillingSearchStatement extends AbstractCidsServerSearch {
     private SimpleDateFormat postgresDateFormat = new SimpleDateFormat("yyyy-MM-dd");
     private User user;
     private ArrayList<MetaObject> kundeMetaObjects = new ArrayList<MetaObject>();
+    private String kundenname;
 
     //~ Constructors -----------------------------------------------------------
 
@@ -96,6 +97,17 @@ public class CidsBillingSearchStatement extends AbstractCidsServerSearch {
         this.kundeMetaObjects = kundeMetaObjects;
     }
 
+    /**
+     * Creates a new CidsBillingSearchStatement object.
+     *
+     * @param  user        DOCUMENT ME!
+     * @param  kundenname  DOCUMENT ME!
+     */
+    public CidsBillingSearchStatement(final User user, final String kundenname) {
+        this.user = user;
+        this.kundenname = kundenname;
+    }
+
     //~ Methods ----------------------------------------------------------------
 
     @Override
@@ -103,7 +115,9 @@ public class CidsBillingSearchStatement extends AbstractCidsServerSearch {
         final MetaService ms = (MetaService)getActiveLocalServers().get(DOMAIN);
         if (ms != null) {
             try {
+                generateQuery();
                 LOG.warn(query.toString());
+
                 final MetaObject[] billingMetaObjects = ms.getMetaObject(user, query.toString());
                 final ArrayList<MetaObject> billingCollection = new ArrayList<MetaObject>(Arrays.asList(
                             billingMetaObjects));
@@ -134,7 +148,7 @@ public class CidsBillingSearchStatement extends AbstractCidsServerSearch {
         query.append(" JOIN billing_kunde as kunde");
         query.append("     ON logins.kunde = kunde.id");
         query.append(" WHERE ");
-        appendKundeIds();
+        appendKunde();
         appendUserIds();
         appendGeschaeftsbuchnummer();
         appendProjekt();
@@ -149,17 +163,21 @@ public class CidsBillingSearchStatement extends AbstractCidsServerSearch {
     /**
      * DOCUMENT ME!
      */
-    private void appendKundeIds() {
-        // create the following structure: (id_1, id_2, ... ,  id_n)
-        final StringBuilder customerListString = new StringBuilder(" kunde.id in (");
-        for (final MetaObject kundeMetaObject : kundeMetaObjects) {
-            customerListString.append(kundeMetaObject.getBean().getProperty("id"));
-            customerListString.append(",");
+    private void appendKunde() {
+        if (kundenname == null) {
+            // create the following structure: (id_1, id_2, ... ,  id_n)
+            final StringBuilder customerListString = new StringBuilder(" kunde.id in (");
+            for (final MetaObject kundeMetaObject : kundeMetaObjects) {
+                customerListString.append(kundeMetaObject.getBean().getProperty("id"));
+                customerListString.append(",");
+            }
+            // remove last comma
+            customerListString.deleteCharAt(customerListString.length() - 1);
+            customerListString.append(")");
+            query.append(customerListString.toString());
+        } else {
+            query.append(" kunde.name ilike '%" + kundenname + "%' ");
         }
-        // remove last comma
-        customerListString.deleteCharAt(customerListString.length() - 1);
-        customerListString.append(")");
-        query.append(customerListString.toString());
     }
 
     /**
