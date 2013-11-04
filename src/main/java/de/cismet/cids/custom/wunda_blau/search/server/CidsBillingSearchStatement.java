@@ -50,7 +50,7 @@ public class CidsBillingSearchStatement extends AbstractCidsServerSearch {
      *
      * @version  $Revision$, $Date$
      */
-    public enum Kostenart {
+    public enum Kostentyp {
 
         //~ Enum constants -----------------------------------------------------
 
@@ -64,7 +64,7 @@ public class CidsBillingSearchStatement extends AbstractCidsServerSearch {
     private String userID;
     private String abrechnungsturnusID;
     private ArrayList<String> verwendungszweckKeys = new ArrayList<String>();
-    private Kostenart kostenart = Kostenart.IGNORIEREN;
+    private Kostentyp kostentyp = Kostentyp.IGNORIEREN;
     private Date from;
     private Date till;
     private StringBuilder query;
@@ -154,7 +154,7 @@ public class CidsBillingSearchStatement extends AbstractCidsServerSearch {
         appendGeschaeftsbuchnummer();
         appendProjekt();
         appendVerwendungszweckKeys();
-        appendKostenart();
+        appendKostentyp();
         appendDates();
         appendAbrechnungsturnus();
         appendStornoAndAbgerechnet();
@@ -231,8 +231,8 @@ public class CidsBillingSearchStatement extends AbstractCidsServerSearch {
     /**
      * DOCUMENT ME!
      */
-    private void appendKostenart() {
-        switch (kostenart) {
+    private void appendKostentyp() {
+        switch (kostentyp) {
             case KOSTENFREI: {
                 query.append("and netto_summe = 0 ");
                 break;
@@ -378,17 +378,17 @@ public class CidsBillingSearchStatement extends AbstractCidsServerSearch {
      *
      * @return  DOCUMENT ME!
      */
-    public Kostenart getKostenart() {
-        return kostenart;
+    public Kostentyp getKostentyp() {
+        return kostentyp;
     }
 
     /**
      * DOCUMENT ME!
      *
-     * @param  kostenart  DOCUMENT ME!
+     * @param  kostentyp  DOCUMENT ME!
      */
-    public void setKostenart(final Kostenart kostenart) {
-        this.kostenart = kostenart;
+    public void setKostentyp(final Kostentyp kostentyp) {
+        this.kostentyp = kostentyp;
     }
 
     /**
