@@ -72,7 +72,8 @@ public class CidsBillingSearchStatement extends AbstractCidsServerSearch {
     private User user;
     private ArrayList<MetaObject> kundeMetaObjects = new ArrayList<MetaObject>();
     private String kundenname;
-    private boolean hideStornoOrAbgerechnetBillings = true;
+    private boolean showStornierteBillings = false;
+    private boolean showAbgerechneteBillings = false;
 
     //~ Constructors -----------------------------------------------------------
 
@@ -277,8 +278,10 @@ public class CidsBillingSearchStatement extends AbstractCidsServerSearch {
      * DOCUMENT ME!
      */
     private void appendStornoAndAbgerechnet() {
-        if (hideStornoOrAbgerechnetBillings) {
+        if (!showStornierteBillings) {
             query.append(" and b.storniert is not true ");
+        }
+        if (!showAbgerechneteBillings) {
             query.append(" and b.abgerechnet is not true ");
         }
     }
@@ -450,16 +453,34 @@ public class CidsBillingSearchStatement extends AbstractCidsServerSearch {
      *
      * @return  DOCUMENT ME!
      */
-    public boolean isHideStornoOrAbgerechnetBillings() {
-        return hideStornoOrAbgerechnetBillings;
+    public boolean isShowStornierteBillings() {
+        return showStornierteBillings;
     }
 
     /**
      * DOCUMENT ME!
      *
-     * @param  hideStornoOrAbgerechnetBillings  DOCUMENT ME!
+     * @param  showStornierteBillings  DOCUMENT ME!
      */
-    public void setHideStornoOrAbgerechnetBillings(final boolean hideStornoOrAbgerechnetBillings) {
-        this.hideStornoOrAbgerechnetBillings = hideStornoOrAbgerechnetBillings;
+    public void setShowStornierteBillings(final boolean showStornierteBillings) {
+        this.showStornierteBillings = showStornierteBillings;
+    }
+
+    /**
+     * DOCUMENT ME!
+     *
+     * @return  DOCUMENT ME!
+     */
+    public boolean isShowAbgerechneteBillings() {
+        return showAbgerechneteBillings;
+    }
+
+    /**
+     * DOCUMENT ME!
+     *
+     * @param  showAbgerechneteBillings  DOCUMENT ME!
+     */
+    public void setShowAbgerechneteBillings(final boolean showAbgerechneteBillings) {
+        this.showAbgerechneteBillings = showAbgerechneteBillings;
     }
 }
