@@ -72,6 +72,7 @@ public class CidsBillingSearchStatement extends AbstractCidsServerSearch {
     private User user;
     private ArrayList<MetaObject> kundeMetaObjects = new ArrayList<MetaObject>();
     private String kundenname;
+    private boolean hideStornoOrAbgerechnetBillings = true;
 
     //~ Constructors -----------------------------------------------------------
 
@@ -156,6 +157,7 @@ public class CidsBillingSearchStatement extends AbstractCidsServerSearch {
         appendKostenart();
         appendDates();
         appendAbrechnungsturnus();
+        appendStornoAndAbgerechnet();
 
         return query.toString();
     }
@@ -267,6 +269,16 @@ public class CidsBillingSearchStatement extends AbstractCidsServerSearch {
     private void appendAbrechnungsturnus() {
         if ((abrechnungsturnusID != null) && !abrechnungsturnusID.equals("")) {
             query.append(" and kunde.abrechnungsturnus = " + abrechnungsturnusID + " ");
+        }
+    }
+
+    /**
+     * DOCUMENT ME!
+     */
+    private void appendStornoAndAbgerechnet() {
+        if (hideStornoOrAbgerechnetBillings) {
+            query.append(" and b.storniert is not true ");
+            query.append(" and b.abgerechnet is not true ");
         }
     }
 
@@ -430,5 +442,23 @@ public class CidsBillingSearchStatement extends AbstractCidsServerSearch {
      */
     public void setAbrechnungsturnusID(final String abrechnungsturnusID) {
         this.abrechnungsturnusID = abrechnungsturnusID;
+    }
+
+    /**
+     * DOCUMENT ME!
+     *
+     * @return  DOCUMENT ME!
+     */
+    public boolean isHideStornoOrAbgerechnetBillings() {
+        return hideStornoOrAbgerechnetBillings;
+    }
+
+    /**
+     * DOCUMENT ME!
+     *
+     * @param  hideStornoOrAbgerechnetBillings  DOCUMENT ME!
+     */
+    public void setHideStornoOrAbgerechnetBillings(final boolean hideStornoOrAbgerechnetBillings) {
+        this.hideStornoOrAbgerechnetBillings = hideStornoOrAbgerechnetBillings;
     }
 }
