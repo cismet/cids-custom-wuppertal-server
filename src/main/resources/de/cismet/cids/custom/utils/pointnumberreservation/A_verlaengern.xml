@@ -1,0 +1,134 @@
+<?xml version="1.0" encoding="utf-8"?>
+<AX_Fortfuehrungsauftrag xmlns:wfs="http://www.adv-online.de/namespaces/adv/gid/wfs" xmlns:gml="http://www.opengis.net/gml/3.2" xmlns:adv="http://www.adv-online.de/namespaces/adv/gid/6.0" xmlns:xlink="http://www.w3.org/1999/xlink" xmlns:xs="http://www.w3.org/2001/XMLSchema" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xmlns:ogc="http://www.adv-online.de/namespaces/adv/gid/ogc" xmlns:wfsext="http://www.adv-online.de/namespaces/adv/gid/wfsext" xsi:schemaLocation="http://www.adv-online.de/namespaces/adv/gid/6.0 NAS-Operationen.xsd" xmlns="http://www.adv-online.de/namespaces/adv/gid/6.0">
+    <empfaenger>
+        <AA_Empfaenger>
+            <direkt>true</direkt> 
+        </AA_Empfaenger>
+    </empfaenger>
+    <ausgabeform>application/xml</ausgabeform> 
+    <geaenderteObjekte>
+        <wfs:Transaction service="WFS" version="1.0.0">
+            <wfsext:Replace vendorId="AdV" safeToIgnore="false">
+                <AX_Reservierung gml:id="DENW29AL40000MLi">
+                    <lebenszeitintervall>
+                        <AA_Lebenszeitintervall>
+                            <beginnt>2013-09-19T09:55:55Z</beginnt> 
+                        </AA_Lebenszeitintervall>
+                    </lebenszeitintervall>
+                    <modellart>
+                        <AA_Modellart>
+                            <advStandardModell>DLKM</advStandardModell> 
+                        </AA_Modellart>
+                    </modellart>
+                    <art>1000</art> 
+                    <nummer>323725672000001</nummer> 
+                    <vermessungsstelle>
+                        <AX_Dienststelle_Schluessel>
+                            <land>05</land> 
+                            <stelle>3290</stelle> 
+                        </AX_Dienststelle_Schluessel>
+                    </vermessungsstelle>
+                    <ablaufDerReservierung>2018-09-28</ablaufDerReservierung> 
+                    <antragsnummer>STU_test</antragsnummer> 
+                    <auftragsnummer>STU_test</auftragsnummer> 
+                </AX_Reservierung>
+                <ogc:Filter>
+                    <ogc:FeatureId fid="DENW29AL40000MLi20130919T095555Z" /> 
+                </ogc:Filter>
+            </wfsext:Replace>
+            <wfsext:Replace vendorId="AdV" safeToIgnore="false">
+                <AX_Reservierung gml:id="DENW29AL1000PqCJ">
+                    <lebenszeitintervall>
+                        <AA_Lebenszeitintervall>
+                            <beginnt>2013-09-19T09:55:55Z</beginnt> 
+                        </AA_Lebenszeitintervall>
+                    </lebenszeitintervall>
+                    <modellart>
+                        <AA_Modellart>
+                            <advStandardModell>DLKM</advStandardModell> 
+                        </AA_Modellart>
+                    </modellart>
+                    <art>1000</art> 
+                    <nummer>323725673000002</nummer> 
+                    <vermessungsstelle>
+                        <AX_Dienststelle_Schluessel>
+                            <land>05</land> 
+                            <stelle>3290</stelle> 
+                        </AX_Dienststelle_Schluessel>
+                    </vermessungsstelle>
+                    <ablaufDerReservierung>2018-09-28</ablaufDerReservierung> 
+                    <antragsnummer>STU_test</antragsnummer> 
+                    <auftragsnummer>STU_test</auftragsnummer> 
+                </AX_Reservierung>
+                <ogc:Filter>
+                    <ogc:FeatureId fid="DENW29AL1000PqCJ20130919T095555Z" /> 
+                </ogc:Filter>
+            </wfsext:Replace>
+            <wfsext:Replace vendorId="AdV" safeToIgnore="false">
+                <AX_Reservierung gml:id="DENW29AL40000MLj">
+                    <lebenszeitintervall>
+                        <AA_Lebenszeitintervall>
+                            <beginnt>2013-09-19T09:55:55Z</beginnt> 
+                        </AA_Lebenszeitintervall>
+                    </lebenszeitintervall>
+                    <modellart>
+                        <AA_Modellart>
+                            <advStandardModell>DLKM</advStandardModell> 
+                        </AA_Modellart>
+                    </modellart>
+                    <art>1000</art> 
+                    <nummer>323725672000002</nummer> 
+                    <vermessungsstelle>
+                        <AX_Dienststelle_Schluessel>
+                            <land>05</land> 
+                            <stelle>3290</stelle> 
+                        </AX_Dienststelle_Schluessel>
+                    </vermessungsstelle>
+                    <ablaufDerReservierung>2018-09-28</ablaufDerReservierung> 
+                    <antragsnummer>STU_test</antragsnummer> 
+                    <auftragsnummer>STU_test</auftragsnummer> 
+                </AX_Reservierung>
+                <ogc:Filter>
+                    <ogc:FeatureId fid="DENW29AL40000MLj20130919T095555Z" /> 
+                </ogc:Filter>
+            </wfsext:Replace>
+            <wfsext:Replace vendorId="AdV" safeToIgnore="false">
+                <AX_Reservierung gml:id="DENW29AL1000PqCK">
+                    <lebenszeitintervall>
+                        <AA_Lebenszeitintervall>
+                            <beginnt>2013-09-19T09:55:55Z</beginnt> 
+                        </AA_Lebenszeitintervall>
+                    </lebenszeitintervall>
+                    <modellart>
+                        <AA_Modellart>
+                            <advStandardModell>DLKM</advStandardModell> 
+                        </AA_Modellart>
+                    </modellart>
+                    <art>1000</art> 
+                    <nummer>323725673000003</nummer> 
+                    <vermessungsstelle>
+                        <AX_Dienststelle_Schluessel>
+                            <land>05</land> 
+                            <stelle>3290</stelle> 
+                        </AX_Dienststelle_Schluessel>
+                    </vermessungsstelle>
+                    <ablaufDerReservierung>2018-09-28</ablaufDerReservierung> 
+                    <antragsnummer>STU_test</antragsnummer> 
+                    <auftragsnummer>STU_test</auftragsnummer> 
+                </AX_Reservierung>
+                <ogc:Filter>
+                    <ogc:FeatureId fid="DENW29AL1000PqCK20130919T095555Z" /> 
+                </ogc:Filter>
+            </wfsext:Replace>
+        </wfs:Transaction>
+    </geaenderteObjekte>
+    <profilkennung>WUNDA_RES</profilkennung> 
+    <antragsnummer>STU_test</antragsnummer> 
+    <auftragsnummer>STU_test</auftragsnummer> 
+    <impliziteLoeschungDerReservierung>4000</impliziteLoeschungDerReservierung> 
+    <verarbeitungsart>1000</verarbeitungsart> 
+    <geometriebehandlung>false</geometriebehandlung> 
+    <mitTemporaeremArbeitsbereich>false</mitTemporaeremArbeitsbereich> 
+    <mitObjektenImFortfuehrungsgebiet>false</mitObjektenImFortfuehrungsgebiet> 
+    <mitFortfuehrungsnachweis>false</mitFortfuehrungsnachweis> 
+</AX_Fortfuehrungsauftrag>

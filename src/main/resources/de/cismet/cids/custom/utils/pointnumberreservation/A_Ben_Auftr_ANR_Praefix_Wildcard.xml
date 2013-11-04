@@ -1,0 +1,31 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<!--Die NAS-Datei wurde mit der 3A-Version 5.6.12.0 erstellt.-->
+<AX_Benutzungsauftrag xsi:schemaLocation="http://www.adv-online.de/namespaces/adv/gid/6.0 NAS-Operationen.xsd" xmlns="http://www.adv-online.de/namespaces/adv/gid/6.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xmlns:gml="http://www.opengis.net/gml/3.2" xmlns:xlink="http://www.w3.org/1999/xlink" xmlns:kom="http://www.lverma.nrw.de/namespaces/geobasis/3.5" xmlns:ogc="http://www.adv-online.de/namespaces/adv/gid/ogc" xmlns:wfs="http://www.adv-online.de/namespaces/adv/gid/wfs" xmlns:xs="http://www.w3.org/2001/XMLSchema" xmlns:wfsext="http://www.adv-online.de/namespaces/adv/gid/wfsext" xmlns:gmd="http://www.isotc211.org/2005/gmd" xmlns:gco="http://www.isotc211.org/2005/gco">
+    <empfaenger>
+        <AA_Empfaenger>
+            <direkt>true</direkt>
+        </AA_Empfaenger>
+    </empfaenger>
+    <ausgabeform>application/gzip</ausgabeform>
+    <art>0010</art>
+    <anforderungsmerkmale>
+        <wfs:Query typeName="AX_Reservierung">
+            <ogc:Filter>
+                <ogc:And>
+                    <ogc:PropertyIsEqualTo>
+                        <ogc:PropertyName>art</ogc:PropertyName>
+                        <ogc:Literal>1000</ogc:Literal>
+                    </ogc:PropertyIsEqualTo>
+                    <ogc:PropertyIsLike escape="\" singleChar="?" wildCard="*">
+                        <ogc:PropertyName>antragsnummer</ogc:PropertyName>
+                        <ogc:Literal>STU_*</ogc:Literal>
+                    </ogc:PropertyIsLike>
+                </ogc:And>
+            </ogc:Filter>
+        </wfs:Query>
+    </anforderungsmerkmale>
+    <profilkennung>WUNDA_RES</profilkennung>
+    <antragsnummer>STU_lese3</antragsnummer>
+    <mitMetadaten>false</mitMetadaten>
+    <auftragsnummer>STU_lese3</auftragsnummer>
+</AX_Benutzungsauftrag>

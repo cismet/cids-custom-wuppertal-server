@@ -1,0 +1,31 @@
+<?xml version="1.0" encoding="utf-8" ?> 
+<AX_Reservierungsauftrag xmlns:wfs="http://www.adv-online.de/namespaces/adv/gid/wfs" xmlns:gml="http://www.opengis.net/gml/3.2" xmlns:adv="http://www.adv-online.de/namespaces/adv/gid/6.0" xmlns:xlink="http://www.w3.org/1999/xlink" xmlns:xs="http://www.w3.org/2001/XMLSchema" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xmlns:ogc="http://www.adv-online.de/namespaces/adv/gid/ogc" xsi:schemaLocation="http://www.adv-online.de/namespaces/adv/gid/6.0 NAS-Operationen.xsd" xmlns="http://www.adv-online.de/namespaces/adv/gid/6.0">
+    <empfaenger>
+        <AA_Empfaenger>
+            <direkt>true</direkt> 
+        </AA_Empfaenger>
+    </empfaenger>
+    <ausgabeform>application/xml</ausgabeform> 
+    <profilkennung>WUNDA_RES</profilkennung> 
+    <antragsnummer>STU_test</antragsnummer> 
+    <auftragsnummer>STU_test</auftragsnummer> 
+    <art>1000</art> 
+    <reservierungsart>3000</reservierungsart> 
+    <vermessungsstelle>
+        <AX_Dienststelle_Schluessel>
+            <land>05</land> 
+            <stelle>3290</stelle> 
+        </AX_Dienststelle_Schluessel>
+    </vermessungsstelle>
+    <nummerierungsbezirk>323725672</nummerierungsbezirk> 
+    <ordnungsnummer1>
+        <AX_Ordnungsnummer>
+            <nummer>000050</nummer> 
+        </AX_Ordnungsnummer>
+    </ordnungsnummer1>
+    <ordnungsnummer2>
+        <AX_Ordnungsnummer>
+            <nummer>000055</nummer> 
+        </AX_Ordnungsnummer>
+    </ordnungsnummer2>
+</AX_Reservierungsauftrag>
