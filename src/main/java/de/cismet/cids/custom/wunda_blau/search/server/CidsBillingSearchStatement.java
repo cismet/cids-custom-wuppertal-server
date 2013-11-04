@@ -65,7 +65,7 @@ public class CidsBillingSearchStatement extends AbstractCidsServerSearch {
     private String abrechnungsturnusID;
     private ArrayList<String> verwendungszweckKeys = new ArrayList<String>();
     private Kostenart kostenart = Kostenart.IGNORIEREN;
-    private Date from = new Date();
+    private Date from;
     private Date till;
     private StringBuilder query;
     private SimpleDateFormat postgresDateFormat = new SimpleDateFormat("yyyy-MM-dd");
@@ -248,12 +248,13 @@ public class CidsBillingSearchStatement extends AbstractCidsServerSearch {
      * DOCUMENT ME!
      */
     private void appendDates() {
-        // check if there is a second date or if they are the same day
-        if ((till == null) || postgresDateFormat.format(from).equals(postgresDateFormat.format(till))) {
+        if (from == null) {
+            // do nothing, time filters are ignored
+        } else if ((till == null) || postgresDateFormat.format(from).equals(postgresDateFormat.format(till))) { // check if there is a second date or if they are the same day
             query.append(" and date_trunc('day',ts) = '");
             query.append(postgresDateFormat.format(from));
             query.append("' ");
-        } else { // create query for a time period
+        } else {                                                                                                // create query for a time period
             query.append(" and date_trunc('day',ts) >= '");
             query.append(postgresDateFormat.format(from));
             query.append("' ");
