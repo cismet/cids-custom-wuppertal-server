@@ -7,8 +7,8 @@
     </empfaenger>
     <ausgabeform>application/xml</ausgabeform> 
     <profilkennung>WUNDA_RES</profilkennung> 
-    <antragsnummer>STU_test</antragsnummer> 
-    <auftragsnummer>STU_test</auftragsnummer> 
+    <antragsnummer>ANR</antragsnummer> 
+    <auftragsnummer>ANR</auftragsnummer> 
     <art>1000</art> 
     <reservierungsart>3000</reservierungsart> 
     <vermessungsstelle>
@@ -17,15 +17,15 @@
             <stelle>3290</stelle> 
         </AX_Dienststelle_Schluessel>
     </vermessungsstelle>
-    <nummerierungsbezirk>323725672</nummerierungsbezirk> 
+    <nummerierungsbezirk>NBZ</nummerierungsbezirk> 
     <ordnungsnummer1>
         <AX_Ordnungsnummer>
-            <nummer>000050</nummer> 
+            <nummer>FIRST_NUMBER</nummer> 
         </AX_Ordnungsnummer>
     </ordnungsnummer1>
     <ordnungsnummer2>
         <AX_Ordnungsnummer>
-            <nummer>000055</nummer> 
+            <nummer>LAST_NUMBER</nummer> 
         </AX_Ordnungsnummer>
     </ordnungsnummer2>
 </AX_Reservierungsauftrag>

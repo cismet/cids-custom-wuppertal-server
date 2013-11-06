@@ -18,7 +18,7 @@
                     </ogc:PropertyIsEqualTo>
                     <ogc:PropertyIsLike escape="\" singleChar="?" wildCard="*">
                         <ogc:PropertyName>antragsnummer</ogc:PropertyName>
-                        <ogc:Literal>STU_*</ogc:Literal>
+                        <ogc:Literal>ANR</ogc:Literal>
                     </ogc:PropertyIsLike>
                 </ogc:And>
             </ogc:Filter>

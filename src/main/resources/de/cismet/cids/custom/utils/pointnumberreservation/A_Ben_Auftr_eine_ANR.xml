@@ -17,7 +17,7 @@
                     </ogc:PropertyIsEqualTo>
                     <ogc:PropertyIsEqualTo>
                         <ogc:PropertyName>antragsnummer</ogc:PropertyName> 
-                        <ogc:Literal>STU_tttt</ogc:Literal> 
+                        <ogc:Literal>ANR</ogc:Literal> 
                     </ogc:PropertyIsEqualTo>
                 </ogc:And>
             </ogc:Filter>

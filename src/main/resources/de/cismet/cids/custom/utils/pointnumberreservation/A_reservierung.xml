@@ -7,8 +7,8 @@
     </empfaenger>
     <ausgabeform>application/xml</ausgabeform> 
     <profilkennung>WUNDA_RES</profilkennung> 
-    <antragsnummer>STU_std</antragsnummer> 
-    <auftragsnummer>STU_std</auftragsnummer> 
+    <antragsnummer>ANR</antragsnummer> 
+    <auftragsnummer>ANR</auftragsnummer> 
     <art>1000</art> 
     <reservierungsart>2100</reservierungsart> 
     <vermessungsstelle>
@@ -17,8 +17,8 @@
             <stelle>3290</stelle> 
         </AX_Dienststelle_Schluessel>
     </vermessungsstelle>
-    <zahl>4</zahl> 
-    <!--<nummerierungsbezirk>323725673</nummerierungsbezirk>-->
-    <nummerierungsbezirk>323725672</nummerierungsbezirk>  
-    <ablaufDerReservierung>2015-02-28</ablaufDerReservierung> 
+    <zahl>POINT_AMOUNT</zahl> 
+    <!--<nummerierungsbezirk>323725672</nummerierungsbezirk>-->  
+    <nummerierungsbezirk>NBZ</nummerierungsbezirk>  
+    <ablaufDerReservierung>ADR</ablaufDerReservierung> 
 </AX_Reservierungsauftrag>
