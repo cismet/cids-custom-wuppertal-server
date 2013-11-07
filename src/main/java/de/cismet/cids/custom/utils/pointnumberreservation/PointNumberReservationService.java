@@ -1,10 +1,12 @@
-/***************************************************
-*
-* cismet GmbH, Saarbruecken, Germany
-*
-*              ... and it just works.
-*
-****************************************************/
+/**
+ * *************************************************
+ *
+ * cismet GmbH, Saarbruecken, Germany
+ * 
+* ... and it just works.
+ * 
+***************************************************
+ */
 package de.cismet.cids.custom.utils.pointnumberreservation;
 
 import de.aed_sicad.namespaces.svr.AuftragsManager;
@@ -20,6 +22,8 @@ import java.io.InputStreamReader;
 import java.io.OutputStream;
 
 import java.net.URL;
+import java.text.DecimalFormat;
+import java.text.NumberFormat;
 
 import java.text.SimpleDateFormat;
 
@@ -33,13 +37,12 @@ import java.util.zip.GZIPOutputStream;
 /**
  * DOCUMENT ME!
  *
- * @author   daniel
- * @version  $Revision$, $Date$
+ * @author daniel
+ * @version $Revision$, $Date$
  */
 public class PointNumberReservationService {
 
     //~ Static fields/initializers ---------------------------------------------
-
     private static final transient org.apache.log4j.Logger LOG = org.apache.log4j.Logger.getLogger(
             PointNumberReservationService.class);
     private static final String AUFTRAGS_NUMMER = "ANR";
@@ -53,18 +56,16 @@ public class PointNumberReservationService {
     private static PointNumberReservationService instance;
 
     //~ Instance fields --------------------------------------------------------
-
     private final String SERVICE_URL;
     private final String USER;
     private final String PW;
     private AuftragsManagerSoap manager;
 
     //~ Constructors -----------------------------------------------------------
-
     /**
      * Creates a new PointNumberService object.
      *
-     * @throws  RuntimeException  DOCUMENT ME!
+     * @throws RuntimeException DOCUMENT ME!
      */
     private PointNumberReservationService() {
         final Properties serviceProperties = new Properties();
@@ -81,11 +82,10 @@ public class PointNumberReservationService {
     }
 
     //~ Methods ----------------------------------------------------------------
-
     /**
      * DOCUMENT ME!
      *
-     * @return  DOCUMENT ME!
+     * @return DOCUMENT ME!
      */
     public static PointNumberReservationService instance() {
         if (instance == null) {
@@ -111,9 +111,9 @@ public class PointNumberReservationService {
     /**
      * DOCUMENT ME!
      *
-     * @param   is  DOCUMENT ME!
+     * @param is DOCUMENT ME!
      *
-     * @return  DOCUMENT ME!
+     * @return DOCUMENT ME!
      */
     private byte[] gZipFile(final InputStream is) {
         final ByteArrayOutputStream bos = new ByteArrayOutputStream();
@@ -141,9 +141,9 @@ public class PointNumberReservationService {
     /**
      * DOCUMENT ME!
      *
-     * @param   file  DOCUMENT ME!
+     * @param file DOCUMENT ME!
      *
-     * @return  DOCUMENT ME!
+     * @return DOCUMENT ME!
      */
     private String readFile(final InputStream file) {
         final BufferedReader reader;
@@ -170,9 +170,9 @@ public class PointNumberReservationService {
     /**
      * DOCUMENT ME!
      *
-     * @param   data  DOCUMENT ME!
+     * @param data DOCUMENT ME!
      *
-     * @return  DOCUMENT ME!
+     * @return DOCUMENT ME!
      */
     private byte[] gunzip(final byte[] data) {
         final ByteArrayOutputStream bos = new ByteArrayOutputStream();
@@ -203,9 +203,9 @@ public class PointNumberReservationService {
     /**
      * DOCUMENT ME!
      *
-     * @param   preparedQuery  DOCUMENT ME!
+     * @param preparedQuery DOCUMENT ME!
      *
-     * @return  DOCUMENT ME!
+     * @return DOCUMENT ME!
      */
     private String sendRequestAndAwaitResult(final InputStream preparedQuery) {
         initAmManager();
@@ -218,7 +218,7 @@ public class PointNumberReservationService {
         final String orderId = manager.registerGZip(sessionID, gZipFile(preparedQuery));
 
         while ((manager.getResultCount(sessionID, orderId) < 1)
-                    && (manager.getProtocolGZip(sessionID, orderId) == null)) {
+                && (manager.getProtocolGZip(sessionID, orderId) == null)) {
             try {
                 Thread.sleep(500);
             } catch (InterruptedException ex) {
@@ -230,14 +230,15 @@ public class PointNumberReservationService {
         if (resCount == 0) {
             LOG.error("it seems that there is an error with NAS order: " + orderId + ". Protocol:");
             LOG.error("Protocol for NAS order " + orderId + ": "
-                        + new String(gunzip(manager.getProtocolGZip(sessionID, orderId))));
+                    + new String(gunzip(manager.getProtocolGZip(sessionID, orderId))));
             data = manager.getProtocolGZip(sessionID, orderId);
+            return null;
         } else {
             data = manager.getResultGZip(sessionID, orderId);
         }
         if (LOG.isDebugEnabled()) {
             LOG.debug("Result for request: " + orderId + ": "
-                        + new String(gunzip(manager.getResultGZip(sessionID, orderId))));
+                    + new String(gunzip(manager.getResultGZip(sessionID, orderId))));
         }
 
         return new String(gunzip(data));
@@ -246,48 +247,47 @@ public class PointNumberReservationService {
     /**
      * DOCUMENT ME!
      *
-     * @param   requestId  DOCUMENT ME!
+     * @param requestId DOCUMENT ME!
      *
-     * @return  DOCUMENT ME!
+     * @return DOCUMENT ME!
      */
-    private boolean isAuftragsNummerValid(final String requestId) {
-        return (requestId.length() <= 50) && requestId.matches("[a-zA-Z0-9_-]*");
-    }
-
     /**
      * DOCUMENT ME!
      *
-     * @return  DOCUMENT ME!
+     * @return DOCUMENT ME!
      */
     private String getAblaufDatum() {
         final GregorianCalendar currDate = new GregorianCalendar();
         currDate.add(GregorianCalendar.MONTH, 18);
 
-        final SimpleDateFormat fd = new SimpleDateFormat("yyyy-mm-dd");
+        final SimpleDateFormat fd = new SimpleDateFormat("yyyy-MM-dd");
         return fd.format(currDate.getTime());
     }
 
     /**
      * DOCUMENT ME!
      *
-     * @return  DOCUMENT ME!
+     * @return DOCUMENT ME!
      */
-    public Object getAllBenAuftrAllPKZ() {
+    public Collection<PointNumberReservationRequest> getAllBenAuftr() {
         final InputStream templateFile = PointNumberReservationService.class.getResourceAsStream(
                 "A_Ben_Auftr_alle_PKZ.xml");
         final String request = readFile(templateFile);
         final InputStream preparedQuery = new ByteArrayInputStream(request.getBytes());
 
         final String result = sendRequestAndAwaitResult(preparedQuery);
+        if (result == null) {
+            return null;
+        }
         return PointNumberReservationBeanParser.parseBestandsdatenauszug(result);
     }
 
     /**
      * DOCUMENT ME!
      *
-     * @param   anr  DOCUMENT ME!
+     * @param anr DOCUMENT ME!
      *
-     * @return  DOCUMENT ME!
+     * @return DOCUMENT ME!
      */
     public PointNumberReservationRequest getAllBenAuftr(final String anr) {
         InputStream templateFile = null;
@@ -304,8 +304,11 @@ public class PointNumberReservationService {
         final InputStream preparedQuery = new ByteArrayInputStream(preparedRequest.getBytes());
 
         final String result = sendRequestAndAwaitResult(preparedQuery);
+        if (result == null) {
+            return null;
+        }
         final Collection<PointNumberReservationRequest> requests = PointNumberReservationBeanParser
-                    .parseBestandsdatenauszug(result);
+                .parseBestandsdatenauszug(result);
         // should only contain one element
         if (requests.isEmpty()) {
             LOG.info("Could not find a result for Auftragsnummer " + anr);
@@ -313,7 +316,7 @@ public class PointNumberReservationService {
         }
         if (request.length() > 1) {
             LOG.warn(
-                "There should be exact one Auftragsnummer but the result contains multiple one. Returning only the first one");
+                    "There should be exact one Auftragsnummer but the result contains multiple one. Returning only the first one");
         }
         final PointNumberReservationRequest r = requests.toArray(new PointNumberReservationRequest[1])[0];
 
@@ -323,9 +326,9 @@ public class PointNumberReservationService {
     /**
      * DOCUMENT ME!
      *
-     * @param   anr  DOCUMENT ME!
+     * @param anr DOCUMENT ME!
      *
-     * @return  DOCUMENT ME!
+     * @return DOCUMENT ME!
      */
     public Collection<PointNumberReservationRequest> getAllBenAuftrWithWildCard(final String anr) {
         InputStream templateFile = null;
@@ -343,8 +346,11 @@ public class PointNumberReservationService {
         final InputStream preparedQuery = new ByteArrayInputStream(preparedRequest.getBytes());
 
         final String result = sendRequestAndAwaitResult(preparedQuery);
+        if (result == null) {
+            return null;
+        }
         final Collection<PointNumberReservationRequest> requests = PointNumberReservationBeanParser
-                    .parseBestandsdatenauszug(result);
+                .parseBestandsdatenauszug(result);
 
         if (requests.isEmpty()) {
             LOG.info("Could not find a result for Auftragsnummer " + anr);
@@ -366,9 +372,9 @@ public class PointNumberReservationService {
     /**
      * DOCUMENT ME!
      *
-     * @param   anr  DOCUMENT ME!
+     * @param anr DOCUMENT ME!
      *
-     * @return  DOCUMENT ME!
+     * @return DOCUMENT ME!
      */
     public boolean isAntragsNummerExisting(final String anr) {
         final PointNumberReservationRequest auftrag = getAllBenAuftr(anr);
@@ -378,9 +384,9 @@ public class PointNumberReservationService {
     /**
      * DOCUMENT ME!
      *
-     * @param   expirationDate  DOCUMENT ME!
+     * @param expirationDate DOCUMENT ME!
      *
-     * @return  DOCUMENT ME!
+     * @return DOCUMENT ME!
      */
     public Object prolongReservation(final Date expirationDate) {
         final InputStream templateFile = PointNumberReservationService.class.getResourceAsStream("A_verlaengern.xml");
@@ -396,6 +402,9 @@ public class PointNumberReservationService {
         final InputStream preparedQuery = new ByteArrayInputStream(request.getBytes());
 
         final String result = sendRequestAndAwaitResult(preparedQuery);
+        if (result == null) {
+            return null;
+        }
 
         return result;
     }
@@ -403,9 +412,9 @@ public class PointNumberReservationService {
     /**
      * DOCUMENT ME!
      *
-     * @param   requestId  DOCUMENT ME!
+     * @param requestId DOCUMENT ME!
      *
-     * @return  DOCUMENT ME!
+     * @return DOCUMENT ME!
      */
     public Collection<PointNumberReservation> getReserviertePunkte(final String requestId) {
         final PointNumberReservationRequest request = getAllBenAuftr(requestId);
@@ -418,15 +427,15 @@ public class PointNumberReservationService {
     /**
      * DOCUMENT ME!
      *
-     * @param   anr                  DOCUMENT ME!
-     * @param   nummerierungsbezirk  DOCUMENT ME!
-     * @param   firstPointNumber     DOCUMENT ME!
-     * @param   lastPointNumber      DOCUMENT ME!
+     * @param anr DOCUMENT ME!
+     * @param nummerierungsbezirk DOCUMENT ME!
+     * @param firstPointNumber DOCUMENT ME!
+     * @param lastPointNumber DOCUMENT ME!
      *
-     * @return  DOCUMENT ME!
+     * @return DOCUMENT ME!
      */
-    public Object releaseReservation(final String anr,
-            final int nummerierungsbezirk,
+    public PointNumberReservationRequest releaseReservation(final String anr,
+            final String nummerierungsbezirk,
             final int firstPointNumber,
             final int lastPointNumber) {
         // ToDo: both numbers need to have 6 digits, last one needs to be greater than first number
@@ -440,43 +449,42 @@ public class PointNumberReservationService {
 
         String request = readFile(templateFile);
         request = request.replaceAll(AUFTRAGS_NUMMER, anr);
-        request = request.replaceAll(NUMMERIERUNGS_BEZIRK, Integer.toString(nummerierungsbezirk));
-        request = request.replaceAll(FIRST_NUMBER, Integer.toString(firstPointNumber));
-        request = request.replaceAll(LAST_NUMBER, Integer.toString(lastPointNumber));
+        request = request.replaceAll(NUMMERIERUNGS_BEZIRK, nummerierungsbezirk);
+        DecimalFormat dcf = new DecimalFormat("000000");
+
+        request = request.replaceAll(FIRST_NUMBER, dcf.format(firstPointNumber));
+        request = request.replaceAll(LAST_NUMBER, dcf.format(lastPointNumber));
 
         final InputStream preparedQuery = new ByteArrayInputStream(request.getBytes());
 
         final String result = sendRequestAndAwaitResult(preparedQuery);
-
-        return result;
+        if (result == null) {
+            return null;
+        }
+        return PointNumberReservationBeanParser.parseReservierungsErgebnis(result);
     }
 
     /**
      * DOCUMENT ME!
      *
-     * @param   requestId            DOCUMENT ME!
-     * @param   nummerierungsbezirk  DOCUMENT ME!
-     * @param   anzahl               DOCUMENT ME!
-     * @param   startValue           DOCUMENT ME!
+     * @param requestId DOCUMENT ME!
+     * @param nummerierungsbezirk DOCUMENT ME!
+     * @param anzahl DOCUMENT ME!
+     * @param startValue DOCUMENT ME!
      *
-     * @return  DOCUMENT ME!
+     * @return DOCUMENT ME!
      *
-     * @throws  IllegalStateException  DOCUMENT ME!
+     * @throws IllegalStateException DOCUMENT ME!
      */
-    public Object doReservation(final String requestId,
-            final int nummerierungsbezirk,
+    public PointNumberReservationRequest doReservation(final String requestId,
+            final String nummerierungsbezirk,
             final int anzahl,
             final int startValue) {
         // check requestID
-        if (!isAuftragsNummerValid(requestId)) {
-            final String errorMsg = "Auftragsnummer " + requestId + " is not valid. Can not execute request";
-            LOG.error(errorMsg);
-            throw new IllegalStateException(errorMsg);
-        }
         // check if point number exceed 999999
         if ((startValue + anzahl) > 999999) {
             final String errorMsg = "Point number for startValue " + startValue + "and point amount " + anzahl
-                        + " will exceed maximum number 999999. Can not execute request.";
+                    + " will exceed maximum number 999999. Can not execute request.";
             LOG.error(errorMsg);
             throw new IllegalStateException(errorMsg);
         }
@@ -496,7 +504,7 @@ public class PointNumberReservationService {
         String request = readFile(templateFile);
         // Insert values in the template file,
         request = request.replaceAll(AUFTRAGS_NUMMER, requestId);
-        request = request.replaceAll(NUMMERIERUNGS_BEZIRK, Integer.toString(nummerierungsbezirk));
+        request = request.replaceAll(NUMMERIERUNGS_BEZIRK, nummerierungsbezirk);
         request = request.replaceAll(ANZAHL, Integer.toString(anzahl));
         request = request.replaceAll(STARTWERT, Integer.toString(startValue));
         request = request.replaceAll(ABLAUF_RESERVIERUNG, getAblaufDatum());
@@ -504,25 +512,322 @@ public class PointNumberReservationService {
         final InputStream preparedQuery = new ByteArrayInputStream(request.getBytes());
 
         final String result = sendRequestAndAwaitResult(preparedQuery);
+        if (result == null) {
+            return null;
+        }
+        return PointNumberReservationBeanParser.parseReservierungsErgebnis(result);
 
-        return result;
+    }
+
+    /*
+     ToDo: only for testing, remove before productional use
+     */
+    private void testReservation() {
+        final String anr = "cismet_test_6";
+        final String nbz = "323725672";
+        final int anzahl = 10;
+        System.out.println("Erstelle neuen Reservierungsauftrag mit Antragsnummer " + anr + " im  Nummerierungsbezirk " + nbz);
+        System.out.println("Reserviere " + anzahl + "Punkte");
+        System.out.println("Prüfe ob Antragsnummer bereits vorhanden");
+        if (isAntragsNummerExisting(anr)) {
+            System.out.println("Antragsnummer ist bereits vorhanden. Abbruch");
+            return;
+        }
+        System.out.println("Antragsnummer noch nicht vorhanden. Starte Request...");
+        PointNumberReservationRequest result = doReservation(anr, nbz, anzahl, 0);
+        if (result == null) {
+            System.out.println("Reservierungsauftrag nicht erfolgreich");
+            return;
+        }
+        if (result.getAntragsnummer() == null || result.getPointNumbers() == null || result.getPointNumbers().isEmpty()) {
+            System.out.println("Reservierungsauftrag nicht erfolgreich");
+            return;
+        }
+
+        final StringBuilder b = new StringBuilder();
+        for (PointNumberReservation pnr : result.getPointNumbers()) {
+            b.append(pnr.getPunktnummern());
+            b.append(",");
+        }
+        System.out.println("Reservierungsauftrag erfolgreich: Punktnummern für Antragsnummer " + result.getAntragsnummer() + " :");
+        System.out.println(b.toString());
+
+    }
+
+    private void testExtendReservation() {
+        final String anr = "cismet_test";
+        final String nbz = "323725672";
+        final int anzahl = 10;
+        System.out.println("Erweitere Reservierungsauftrag " + anr + " um " + anzahl + " Punktnummern");
+        System.out.println("Prüfe ob auftrag bereits vorhanden");
+        if (!isAntragsNummerExisting(anr)) {
+            System.out.println("Antragsnummer ist noch nicht vorhanden. Abbruch");
+            return;
+        }
+        System.out.println("Antragsnummer ist vorhanden. Starte Request...");
+        PointNumberReservationRequest result = doReservation(anr, nbz, anzahl, 0);
+        if (result == null) {
+            System.out.println("Reservierungsauftrag nicht erfolgreich");
+            return;
+        }
+        if (result.getAntragsnummer() == null || result.getPointNumbers() == null || result.getPointNumbers().isEmpty()) {
+            System.out.println("Reservierungsauftrag nicht erfolgreich");
+            return;
+        }
+
+        final StringBuilder b = new StringBuilder();
+        for (PointNumberReservation pnr : result.getPointNumbers()) {
+            b.append(pnr.getPunktnummern());
+            b.append(",");
+        }
+        System.out.println("Reservierungsauftrag erfolgreich: neue Punktnummern für Antragsnummer " + result.getAntragsnummer() + " :");
+        System.out.println(b.toString());
+    }
+
+    private void testExtendReservationWithStartValue() {
+        final String anr = "cismet_test";
+        final String nbz = "323725672";
+        final int anzahl = 2;
+        final int startValue = 400200;
+        System.out.println("Erweitere Reservierungsauftrag " + anr + " um " + anzahl + " Punktnummern");
+        System.out.println("Prüfe ob auftrag bereits vorhanden");
+        if (!isAntragsNummerExisting(anr)) {
+            System.out.println("Antragsnummer ist noch nicht vorhanden. Abbruch");
+            return;
+        }
+        System.out.println("Antragsnummer ist vorhanden. Starte Request...");
+        PointNumberReservationRequest result = doReservation(anr, nbz, anzahl, startValue);
+        if (result == null) {
+            System.out.println("Reservierungsauftrag nicht erfolgreich");
+            return;
+        }
+        if (result.getAntragsnummer() == null || result.getPointNumbers() == null || result.getPointNumbers().isEmpty()) {
+            System.out.println("Reservierungsauftrag nicht erfolgreich");
+            return;
+        }
+
+        final StringBuilder b = new StringBuilder();
+        for (PointNumberReservation pnr : result.getPointNumbers()) {
+            b.append(pnr.getPunktnummern());
+            b.append(",");
+        }
+        System.out.println("Reservierungsauftrag erfolgreich: neue Punktnummern für Antragsnummer " + result.getAntragsnummer() + " :");
+        System.out.println(b.toString());
+    }
+
+    private void testFreigabeOfOnePoint() {
+        final String anr = "cismet_test";
+        final String nbz = "323725672";
+
+        System.out.println("Freigabe des Punkt 400200 in Auftrag cismet_test");
+        PointNumberReservationRequest result = releaseReservation(anr, nbz, 400200, 400200);
+        final StringBuffer b = new StringBuffer();
+        b.append("Freigegebene PunktNummern: ");
+        for (PointNumberReservation pnr : result.getPointNumbers()) {
+            b.append(pnr.getPunktnummern());
+        }
+    }
+
+    private void testFreigabeOfPointInterval() {
+        final String anr = "cismet_test";
+        final String nbz = "323725672";
+
+        System.out.println("Freigabe der Punkte 400042 bis 400051 in Auftrag cismet_test");
+        PointNumberReservationRequest result = releaseReservation(anr, nbz, 400042, 400051);
+        final StringBuffer b = new StringBuffer();
+        b.append("Freigegebene PunktNummern: ");
+        for (PointNumberReservation pnr : result.getPointNumbers()) {
+            b.append(pnr.getPunktnummern());
+        }
+    }
+
+    private void testGetCismetTestAuftraege() {
+        Collection<PointNumberReservationRequest> results = getAllBenAuftrWithWildCard("cismet_*");
+        for (PointNumberReservationRequest req : results) {
+            final StringBuilder b = new StringBuilder();
+            b.append("Auftrag " + req.getAntragsnummer());
+            b.append(" mit PunktNummern ");
+            final StringBuilder pnrBuilder = new StringBuilder();
+            for (PointNumberReservation pnr : req.getPointNumbers()) {
+                pnrBuilder.append(pnr.getPunktnummern());
+                pnrBuilder.append(",");
+            }
+            b.append(pnrBuilder.toString());
+            System.out.println(b.toString());
+        }
+    }
+
+    private void speedTest() {
+        final PointNumberReservationService pos = PointNumberReservationService.instance();
+        String result = "";
+        long begin = System.currentTimeMillis();
+        pos.getAllBenAuftr();
+        long end = System.currentTimeMillis();
+        float durationInSec = (end - begin) / 1000f;
+        System.out.println("Dauer: " + durationInSec);
+
+        System.out.println("Dauer Ben_Auftr_alle_PKZ:" + (durationInSec) + "sec");
+//        System.out.println(result);
+        System.out.println("\n######################################################\n");
+        begin = System.currentTimeMillis();
+        pos.getAllBenAuftrWithWildCard("12015_11054_Stenzel*");
+        end = System.currentTimeMillis();
+        durationInSec = (end - begin) / 1000f;
+        System.out.println(result);
+        System.out.println("\nSuche nach 12015_11054_Stenzel*:" + (durationInSec) + "sec");
+        begin = System.currentTimeMillis();
+        pos.getAllBenAuftr("12015_11054_Stenzel");
+        end = System.currentTimeMillis();
+        durationInSec = (end - begin) / 1000f;
+//        System.out.println(result);
+        System.out.println("Suche nach 12015_11054_Stenzel:" + (durationInSec) + "sec");
+        System.out.println("\n######################################################\n");
+
+        begin = System.currentTimeMillis();
+        pos.getAllBenAuftrWithWildCard("0279_11191-E*");
+        end = System.currentTimeMillis();
+        durationInSec = (end - begin) / 1000f;
+//        System.out.println(result);
+        System.out.println("Suche nach 0279_11191-E*:" + (durationInSec) + "sec");
+
+        begin = System.currentTimeMillis();
+        pos.getAllBenAuftr("0279_11191-E");
+        end = System.currentTimeMillis();
+        durationInSec = (end - begin) / 1000f;
+//        System.out.println(result);
+        System.out.println("Suche nach 0279_11191-E:" + (durationInSec) + "sec");
+        System.out.println("\n######################################################\n");
+
+        begin = System.currentTimeMillis();
+        pos.getAllBenAuftrWithWildCard("3290_20120297*");
+        end = System.currentTimeMillis();
+        durationInSec = (end - begin) / 1000f;
+//        System.out.println(result);
+        System.out.println("Suche nach 3290_20120297*:" + (durationInSec) + "sec");
+
+        begin = System.currentTimeMillis();
+        pos.getAllBenAuftr("3290_20120297");
+        end = System.currentTimeMillis();
+        durationInSec = (end - begin) / 1000f;
+//        System.out.println(result);
+        System.out.println("Suche nach 3290_20120297:" + (durationInSec) + "sec");
+        System.out.println("\n######################################################\n");
+
+        begin = System.currentTimeMillis();
+        pos.getAllBenAuftrWithWildCard("3290_20120321*");
+        end = System.currentTimeMillis();
+        durationInSec = (end - begin) / 1000f;
+//        System.out.println(result);
+        System.out.println("Suche nach 3290_20120321*:" + (durationInSec) + "sec");
+
+        begin = System.currentTimeMillis();
+        pos.getAllBenAuftr("3290_20120321");
+        end = System.currentTimeMillis();
+        durationInSec = (end - begin) / 1000f;
+//        System.out.println(result);
+        System.out.println("Suche nach 3290_20120321:" + (durationInSec) + "sec");
+        System.out.println("\n######################################################\n");
+
+        begin = System.currentTimeMillis();
+        pos.getAllBenAuftrWithWildCard("3290_20110057*");
+        end = System.currentTimeMillis();
+        durationInSec = (end - begin) / 1000f;
+//        System.out.println(result);
+        System.out.println("Suche nach 3290_20110057*:" + (durationInSec) + "sec");
+        begin = System.currentTimeMillis();
+        pos.getAllBenAuftr("3290_20110057");
+        end = System.currentTimeMillis();
+        durationInSec = (end - begin) / 1000f;
+//        System.out.println(result);
+        System.out.println("Suche nach 3290_20110057:" + (durationInSec) + "sec");
+        System.out.println("\n######################################################\n");
+
+        begin = System.currentTimeMillis();
+        pos.getAllBenAuftrWithWildCard("0270_13007*");
+        end = System.currentTimeMillis();
+        durationInSec = (end - begin) / 1000f;
+//        System.out.println(result);
+        System.out.println("Suche nach 0270_13007*:" + (durationInSec) + "sec");
+        begin = System.currentTimeMillis();
+        pos.getAllBenAuftr("0270_13007");
+        end = System.currentTimeMillis();
+        durationInSec = (end - begin) / 1000f;
+//        System.out.println(result);
+        System.out.println("Suche nach 0270_13007:" + (durationInSec) + "sec");
+        System.out.println("\n######################################################\n");
+
+        begin = System.currentTimeMillis();
+        pos.getAllBenAuftrWithWildCard("0279_112121_Schmalenhofer_Bach*");
+        end = System.currentTimeMillis();
+        durationInSec = (end - begin) / 1000f;
+//        System.out.println(result);
+        System.out.println("Suche nach 0279_112121_Schmalenhofer_Bach*:" + (durationInSec) + "sec");
+        begin = System.currentTimeMillis();
+        pos.getAllBenAuftr("0279_112121_Schmalenhofer_Bach");
+        end = System.currentTimeMillis();
+        durationInSec = (end - begin) / 1000f;
+//        System.out.println(result);
+        System.out.println("Suche nach 0279_112121_Schmalenhofer_Bach:" + (durationInSec) + "sec");
+        System.out.println("\n######################################################\n");
+
+        begin = System.currentTimeMillis();
+        pos.getAllBenAuftrWithWildCard("0508_10-163*");
+        end = System.currentTimeMillis();
+        durationInSec = (end - begin) / 1000f;
+//        System.out.println(result);
+        System.out.println("Suche nach 0508_10-163*:" + (durationInSec) + "sec");
+        begin = System.currentTimeMillis();
+        pos.getAllBenAuftr("0508_10-163");
+        end = System.currentTimeMillis();
+        durationInSec = (end - begin) / 1000f;
+//        System.out.println(result);
+        System.out.println("Suche nach 0508_10-163:" + (durationInSec) + "sec");
+        System.out.println("\n######################################################\n");
+
+        begin = System.currentTimeMillis();
+        pos.getAllBenAuftr("aaa");
+        end = System.currentTimeMillis();
+        durationInSec = (end - begin) / 1000f;
+        System.out.println("Suche nach aaa (should fail):" + (durationInSec) + "sec");
+        System.out.println("isAnrValid(aaa):" + pos.isAntragsNummerExisting("aaa"));
+        System.out.println("\n######################################################\n");
+
+        begin = System.currentTimeMillis();
+        pos.getAllBenAuftrWithWildCard("02*");
+        end = System.currentTimeMillis();
+        durationInSec = (end - begin) / 1000f;
+        System.out.println("Suche nach 02*:" + (durationInSec) + "sec");
+        System.out.println("\n######################################################\n");
     }
 
     /**
      * DOCUMENT ME!
      *
-     * @param  args  DOCUMENT ME!
+     * @param args DOCUMENT ME!
      */
     public static void main(final String[] args) {
+
         final PointNumberReservationService pos = PointNumberReservationService.instance();
         final String result = "";
-        final long begin = System.currentTimeMillis();
-//        result = (String) pos.getAllBenAuftrAllPKZ();
-        final long end = System.currentTimeMillis();
+        long begin = System.currentTimeMillis();
+        pos.testReservation();
+        pos.testGetCismetTestAuftraege();
+
+        pos.testFreigabeOfOnePoint();
+
+        pos.testGetCismetTestAuftraege();
+
+        pos.testFreigabeOfPointInterval();
+
+        pos.testGetCismetTestAuftraege();
+        pos.testExtendReservationWithStartValue();
+        long end = System.currentTimeMillis();
         final float durationInSec = (end - begin) / 1000f;
-        System.out.println("Dauer Ben_Auftr_alle_PKZ:" + (durationInSec) + "sec");
-//        System.out.println(result);
-        System.out.println("\n######################################################\n");
+        System.out.println("Dauer: " + durationInSec);
+//        result = (String) pos.getAllBenAuftrAllPKZ();
+//        System.out.println("Dauer Ben_Auftr_alle_PKZ:" + (durationInSec) + "sec");
+////        System.out.println(result);
+//        System.out.println("\n######################################################\n");
 
 //        begin = System.currentTimeMillis();
 //        result = (String) pos.getAllBenAuftr("12015_11054_Stenzel*", true);
