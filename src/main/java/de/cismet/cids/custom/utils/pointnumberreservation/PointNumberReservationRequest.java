@@ -7,6 +7,8 @@
 ****************************************************/
 package de.cismet.cids.custom.utils.pointnumberreservation;
 
+import java.io.Serializable;
+
 import java.util.ArrayList;
 import java.util.Collection;
 
@@ -16,7 +18,7 @@ import java.util.Collection;
  * @author   daniel
  * @version  $Revision$, $Date$
  */
-public class PointNumberReservationRequest {
+public class PointNumberReservationRequest implements Serializable {
 
     //~ Instance fields --------------------------------------------------------
 
