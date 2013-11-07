@@ -25,7 +25,7 @@
         </wfs:Query>
     </anforderungsmerkmale>
     <profilkennung>WUNDA_RES</profilkennung>
-    <antragsnummer>STU_lese3</antragsnummer>
+    <antragsnummer>Wunda_Reservierung</antragsnummer>
     <mitMetadaten>false</mitMetadaten>
-    <auftragsnummer>STU_lese3</auftragsnummer>
+    <auftragsnummer>Wunda_Reservierung</auftragsnummer>
 </AX_Benutzungsauftrag>
