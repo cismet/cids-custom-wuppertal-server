@@ -14,7 +14,7 @@
     <vermessungsstelle>
         <AX_Dienststelle_Schluessel>
             <land>05</land> 
-            <stelle>3290</stelle> 
+            <stelle>VERMESSUNG_STELLE</stelle> 
         </AX_Dienststelle_Schluessel>
     </vermessungsstelle>
     <nummerierungsbezirk>NBZ</nummerierungsbezirk> 

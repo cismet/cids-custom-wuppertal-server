@@ -131,7 +131,7 @@ public class PointNumberReserverationServerAction implements ServerAction {
             return null;
         }
 
-        return pnrService.doReservation(anr, nbz, anzahl, startwert);
+        return pnrService.doReservation(aPrefix, anr, nbz, anzahl, startwert);
     }
 
     /**
@@ -171,7 +171,7 @@ public class PointNumberReserverationServerAction implements ServerAction {
         if (!isAuftragsNummerValid(anr)) {
             return null;
         }
-        return pnrService.releaseReservation(anr, nbz, on1, on2);
+        return pnrService.releaseReservation(aPrefix, anr, nbz, on1, on2);
     }
 
     /**

@@ -25,7 +25,7 @@
                     <vermessungsstelle>
                         <AX_Dienststelle_Schluessel>
                             <land>05</land> 
-                            <stelle>3290</stelle> 
+                            <stelle>STELLE</stelle> 
                         </AX_Dienststelle_Schluessel>
                     </vermessungsstelle>
                     <ablaufDerReservierung>2018-09-28</ablaufDerReservierung> 

@@ -51,6 +51,7 @@ public class PointNumberReservationService {
     private static final String ANZAHL = "POINT_AMOUNT";
     private static final String FIRST_NUMBER = "FIRST_NUMBER";
     private static final String LAST_NUMBER = "LAST_NUMBER";
+    private static final String VERMESSUNG_STELLE = "VERMESSUNG_STELLE";
 
     private static PointNumberReservationService instance;
 
@@ -430,6 +431,7 @@ public class PointNumberReservationService {
     /**
      * DOCUMENT ME!
      *
+     * @param   prefix               DOCUMENT ME!
      * @param   anr                  DOCUMENT ME!
      * @param   nummerierungsbezirk  DOCUMENT ME!
      * @param   firstPointNumber     DOCUMENT ME!
@@ -437,7 +439,8 @@ public class PointNumberReservationService {
      *
      * @return  DOCUMENT ME!
      */
-    public PointNumberReservationRequest releaseReservation(final String anr,
+    public PointNumberReservationRequest releaseReservation(final String prefix,
+            final String anr,
             final String nummerierungsbezirk,
             final int firstPointNumber,
             final int lastPointNumber) {
@@ -453,6 +456,7 @@ public class PointNumberReservationService {
         String request = readFile(templateFile);
         request = request.replaceAll(AUFTRAGS_NUMMER, anr);
         request = request.replaceAll(NUMMERIERUNGS_BEZIRK, nummerierungsbezirk);
+        request = request.replaceAll(VERMESSUNG_STELLE, prefix);
         final DecimalFormat dcf = new DecimalFormat("000000");
 
         request = request.replaceAll(FIRST_NUMBER, dcf.format(firstPointNumber));
@@ -470,6 +474,7 @@ public class PointNumberReservationService {
     /**
      * DOCUMENT ME!
      *
+     * @param   prefix               DOCUMENT ME!
      * @param   requestId            DOCUMENT ME!
      * @param   nummerierungsbezirk  DOCUMENT ME!
      * @param   anzahl               DOCUMENT ME!
@@ -479,7 +484,8 @@ public class PointNumberReservationService {
      *
      * @throws  IllegalStateException  DOCUMENT ME!
      */
-    public PointNumberReservationRequest doReservation(final String requestId,
+    public PointNumberReservationRequest doReservation(final String prefix,
+            final String requestId,
             final String nummerierungsbezirk,
             final int anzahl,
             final int startValue) {
@@ -511,6 +517,7 @@ public class PointNumberReservationService {
         request = request.replaceAll(ANZAHL, Integer.toString(anzahl));
         request = request.replaceAll(STARTWERT, Integer.toString(startValue));
         request = request.replaceAll(ABLAUF_RESERVIERUNG, getAblaufDatum());
+        request = request.replaceAll(VERMESSUNG_STELLE, prefix);
 
         final InputStream preparedQuery = new ByteArrayInputStream(request.getBytes());
 
