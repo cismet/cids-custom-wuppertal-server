@@ -10,7 +10,7 @@ package de.cismet.cids.custom.utils.pointnumberreservation;
 import java.io.Serializable;
 
 import java.util.ArrayList;
-import java.util.Collection;
+import java.util.List;
 
 /**
  * DOCUMENT ME!
@@ -23,7 +23,7 @@ public class PointNumberReservationRequest implements Serializable {
     //~ Instance fields --------------------------------------------------------
 
     private String antragsnummer;
-    private Collection<PointNumberReservation> pointNumbers = new ArrayList<PointNumberReservation>();
+    private List<PointNumberReservation> pointNumbers = new ArrayList<PointNumberReservation>();
 
     //~ Methods ----------------------------------------------------------------
 
@@ -50,7 +50,7 @@ public class PointNumberReservationRequest implements Serializable {
      *
      * @return  DOCUMENT ME!
      */
-    public Collection<PointNumberReservation> getPointNumbers() {
+    public List<PointNumberReservation> getPointNumbers() {
         return pointNumbers;
     }
 
@@ -59,7 +59,7 @@ public class PointNumberReservationRequest implements Serializable {
      *
      * @param  pointNumbers  DOCUMENT ME!
      */
-    public void setPointNumbers(final Collection<PointNumberReservation> pointNumbers) {
+    public void setPointNumbers(final List<PointNumberReservation> pointNumbers) {
         this.pointNumbers = pointNumbers;
     }
 

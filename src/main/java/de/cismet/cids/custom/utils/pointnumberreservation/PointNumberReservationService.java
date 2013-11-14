@@ -22,12 +22,13 @@ import java.io.OutputStream;
 import java.net.URL;
 
 import java.text.DecimalFormat;
-import java.text.NumberFormat;
 import java.text.SimpleDateFormat;
 
 import java.util.Collection;
+import java.util.Collections;
 import java.util.Date;
 import java.util.GregorianCalendar;
+import java.util.List;
 import java.util.Properties;
 import java.util.zip.GZIPInputStream;
 import java.util.zip.GZIPOutputStream;
@@ -525,6 +526,31 @@ public class PointNumberReservationService {
         if (result == null) {
             return null;
         }
-        return PointNumberReservationBeanParser.parseReservierungsErgebnis(result);
+        final PointNumberReservationRequest tmpResult = PointNumberReservationBeanParser.parseReservierungsErgebnis(
+                result);
+        fillWithAblaufDatum(requestId, tmpResult);
+        return tmpResult;
+    }
+
+    /**
+     * DOCUMENT ME!
+     *
+     * @param  requestId          DOCUMENT ME!
+     * @param  resultWithoutDate  DOCUMENT ME!
+     */
+    private void fillWithAblaufDatum(final String requestId, final PointNumberReservationRequest resultWithoutDate) {
+        final List<PointNumberReservation> tmp = getAllBenAuftr(requestId).getPointNumbers();
+        final List<PointNumberReservation> pnrWithoutDate = resultWithoutDate.getPointNumbers();
+        tmp.retainAll(resultWithoutDate.getPointNumbers());
+        Collections.sort(tmp);
+        Collections.sort(pnrWithoutDate);
+
+        for (final PointNumberReservation pnr : pnrWithoutDate) {
+            // search for the corresponding pnr of the getAllAuftrag
+            final PointNumberReservation completePnr = tmp.get(pnrWithoutDate.indexOf(pnr));
+            if (pnr.equals(completePnr)) {
+                pnr.setAblaufDatum(completePnr.getAblaufDatum());
+            }
+        }
     }
 }

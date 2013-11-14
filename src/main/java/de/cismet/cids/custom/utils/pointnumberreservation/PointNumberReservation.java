@@ -15,7 +15,7 @@ import java.io.Serializable;
  * @author   daniel
  * @version  $Revision$, $Date$
  */
-public class PointNumberReservation implements Serializable {
+public class PointNumberReservation implements Comparable<PointNumberReservation>, Serializable {
 
     //~ Instance fields --------------------------------------------------------
 
@@ -58,5 +58,27 @@ public class PointNumberReservation implements Serializable {
      */
     public void setPunktnummern(final String punktnummer) {
         this.punktnummer = punktnummer;
+    }
+
+    @Override
+    public boolean equals(final Object obj) {
+        if (obj instanceof PointNumberReservation) {
+            final PointNumberReservation pnr = (PointNumberReservation)obj;
+            return this.punktnummer.equals(pnr.getPunktnummern());
+        } else {
+            return false;
+        }
+    }
+
+    @Override
+    public int hashCode() {
+        int hash = 7;
+        hash = (23 * hash) + ((this.punktnummer != null) ? this.punktnummer.hashCode() : 0);
+        return hash;
+    }
+
+    @Override
+    public int compareTo(final PointNumberReservation o) {
+        return this.getPunktnummern().compareTo(o.getPunktnummern());
     }
 }
