@@ -24,6 +24,8 @@ public class PointNumberReservationRequest implements Serializable {
 
     private String antragsnummer;
     private List<PointNumberReservation> pointNumbers = new ArrayList<PointNumberReservation>();
+    private boolean successfull;
+    private String protokoll;
 
     //~ Methods ----------------------------------------------------------------
 
@@ -70,5 +72,41 @@ public class PointNumberReservationRequest implements Serializable {
      */
     public void addPointNumberReservation(final PointNumberReservation pnr) {
         pointNumbers.add(pnr);
+    }
+
+    /**
+     * DOCUMENT ME!
+     *
+     * @param  wasSuccessFull  DOCUMENT ME!
+     */
+    void setSuccessful(final boolean wasSuccessFull) {
+        this.successfull = wasSuccessFull;
+    }
+
+    /**
+     * DOCUMENT ME!
+     *
+     * @param  protokoll  DOCUMENT ME!
+     */
+    void setProtokoll(final String protokoll) {
+        this.protokoll = protokoll;
+    }
+
+    /**
+     * DOCUMENT ME!
+     *
+     * @return  DOCUMENT ME!
+     */
+    public boolean isSuccessfull() {
+        return successfull;
+    }
+
+    /**
+     * DOCUMENT ME!
+     *
+     * @return  DOCUMENT ME!
+     */
+    public String getProtokoll() {
+        return protokoll;
     }
 }

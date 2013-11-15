@@ -79,7 +79,7 @@ public class PointNumberReservationService {
             USER = serviceProperties.getProperty("user");
             PW = serviceProperties.getProperty("password");
         } catch (Exception ex) {
-            LOG.fatal("NAS Datenabgabe initialisation Error!", ex);
+            LOG.fatal("Punktnummernreservierung initialisation Error!", ex);
             throw new RuntimeException(ex);
         }
     }
@@ -365,7 +365,9 @@ public class PointNumberReservationService {
                 b.append(pnr.getPunktnummern());
                 b.append(",");
             }
-            LOG.fatal("Found request: " + r.getAntragsnummer() + " with pointNUmbers: " + b.toString());
+            if (LOG.isDebugEnabled()) {
+                LOG.debug("Found request: " + r.getAntragsnummer() + " with pointNUmbers: " + b.toString());
+            }
         }
 
         return requests;
@@ -482,22 +484,15 @@ public class PointNumberReservationService {
      * @param   startValue           DOCUMENT ME!
      *
      * @return  DOCUMENT ME!
-     *
-     * @throws  IllegalStateException  DOCUMENT ME!
      */
     public PointNumberReservationRequest doReservation(final String prefix,
             final String requestId,
             final String nummerierungsbezirk,
             final int anzahl,
             final int startValue) {
-        // check requestID
-        // check if point number exceed 999999
-        if ((startValue + anzahl) > 999999) {
-            final String errorMsg = "Point number for startValue " + startValue + "and point amount " + anzahl
-                        + " will exceed maximum number 999999. Can not execute request.";
-            LOG.error(errorMsg);
-            throw new IllegalStateException(errorMsg);
-        }
+        // check requestID check if point number exceed 999999 if ((startValue + anzahl) > 999999) { final String
+        // errorMsg = "Point number for startValue " + startValue + "and point amount " + anzahl + " will exceed maximum
+        // number 999999. Can not execute request."; LOG.error(errorMsg); throw new IllegalStateException(errorMsg); }
 
         InputStream templateFile = null;
         if (startValue == 0) {
@@ -528,7 +523,9 @@ public class PointNumberReservationService {
         }
         final PointNumberReservationRequest tmpResult = PointNumberReservationBeanParser.parseReservierungsErgebnis(
                 result);
-        fillWithAblaufDatum(requestId, tmpResult);
+        if (tmpResult.isSuccessfull()) {
+            fillWithAblaufDatum(requestId, tmpResult);
+        }
         return tmpResult;
     }
 

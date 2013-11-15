@@ -106,16 +106,22 @@ public class PointNumberReservationBeanParser {
             final String anr = parseAuftragsnummer(doc.getLastChild());
             final PointNumberReservationRequest requestBean = new PointNumberReservationRequest();
             requestBean.setAntragsnummer(anr);
-
-            final ArrayList<PointNumberReservation> pointNumbers = new ArrayList<PointNumberReservation>();
-            final NodeList pointNumberNodes = doc.getElementsByTagName("reservierteNummern");
-            for (int i = 0; i < pointNumberNodes.getLength(); i++) {
-                final Node resNumNode = pointNumberNodes.item(i);
-                final PointNumberReservation pointNumber = new PointNumberReservation();
-                pointNumber.setPunktnummern(resNumNode.getTextContent());
-                pointNumbers.add(pointNumber);
+            final boolean wasSuccessFull = parseSuccessfull(doc.getLastChild());
+            requestBean.setSuccessful(wasSuccessFull);
+            if (wasSuccessFull) {
+                final ArrayList<PointNumberReservation> pointNumbers = new ArrayList<PointNumberReservation>();
+                final NodeList pointNumberNodes = doc.getElementsByTagName("reservierteNummern");
+                for (int i = 0; i < pointNumberNodes.getLength(); i++) {
+                    final Node resNumNode = pointNumberNodes.item(i);
+                    final PointNumberReservation pointNumber = new PointNumberReservation();
+                    pointNumber.setPunktnummern(resNumNode.getTextContent());
+                    pointNumbers.add(pointNumber);
+                }
+                requestBean.setPointNumbers(pointNumbers);
+            } else {
+                final String protokoll = parseProtkoll(doc.getLastChild());
+                requestBean.setProtokoll(protokoll);
             }
-            requestBean.setPointNumbers(pointNumbers);
             return requestBean;
         } catch (ParserConfigurationException ex) {
             LOG.error("Could not parse 3A server Result", ex);
@@ -168,6 +174,45 @@ public class PointNumberReservationBeanParser {
             LOG.error("Could not parse 3A server Result", ex);
         }
         return requests.values();
+    }
+
+    /**
+     * DOCUMENT ME!
+     *
+     * @param   rootNode  DOCUMENT ME!
+     *
+     * @return  DOCUMENT ME!
+     */
+    private static boolean parseSuccessfull(final Node rootNode) {
+        final NodeList childs = rootNode.getChildNodes();
+        boolean b = false;
+        for (int i = 0; i < childs.getLength(); i++) {
+            final Node currChild = childs.item(i);
+            if (currChild.getNodeName().equals("erfolgreich")) {
+                b = Boolean.parseBoolean(currChild.getTextContent());
+                break;
+            }
+        }
+        return b;
+    }
+
+    /**
+     * DOCUMENT ME!
+     *
+     * @param   rootNode  DOCUMENT ME!
+     *
+     * @return  DOCUMENT ME!
+     */
+    private static String parseProtkoll(final Node rootNode) {
+        final NodeList childs = rootNode.getChildNodes();
+        final boolean b = false;
+        for (int i = 0; i < childs.getLength(); i++) {
+            final Node currChild = childs.item(i);
+            if (currChild.getNodeName().equals("erlaeuterung")) {
+                return currChild.getTextContent();
+            }
+        }
+        return "";
     }
 
     //~ Inner Classes ----------------------------------------------------------
