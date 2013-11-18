@@ -79,7 +79,7 @@ public class PointNumberReservationRequest implements Serializable {
      *
      * @param  wasSuccessFull  DOCUMENT ME!
      */
-    void setSuccessful(final boolean wasSuccessFull) {
+    public void setSuccessful(final boolean wasSuccessFull) {
         this.successfull = wasSuccessFull;
     }
 
@@ -88,7 +88,7 @@ public class PointNumberReservationRequest implements Serializable {
      *
      * @param  protokoll  DOCUMENT ME!
      */
-    void setProtokoll(final String protokoll) {
+    public void setProtokoll(final String protokoll) {
         this.protokoll = protokoll;
     }
 
