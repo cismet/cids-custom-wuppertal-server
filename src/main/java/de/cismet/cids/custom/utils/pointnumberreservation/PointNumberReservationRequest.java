@@ -26,6 +26,7 @@ public class PointNumberReservationRequest implements Serializable {
     private List<PointNumberReservation> pointNumbers = new ArrayList<PointNumberReservation>();
     private boolean successfull;
     private String protokoll;
+    private List<String> errorMessages;
 
     //~ Methods ----------------------------------------------------------------
 
@@ -108,5 +109,23 @@ public class PointNumberReservationRequest implements Serializable {
      */
     public String getProtokoll() {
         return protokoll;
+    }
+
+    /**
+     * DOCUMENT ME!
+     *
+     * @return  DOCUMENT ME!
+     */
+    public List<String> getErrorMessages() {
+        return errorMessages;
+    }
+
+    /**
+     * DOCUMENT ME!
+     *
+     * @param  errorMessages  DOCUMENT ME!
+     */
+    public void setErrorMessages(final List<String> errorMessages) {
+        this.errorMessages = errorMessages;
     }
 }

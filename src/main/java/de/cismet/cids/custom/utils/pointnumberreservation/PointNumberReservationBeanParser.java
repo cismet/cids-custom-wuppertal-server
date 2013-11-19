@@ -9,6 +9,8 @@ package de.cismet.cids.custom.utils.pointnumberreservation;
 
 import org.apache.log4j.Logger;
 
+import org.openide.util.Exceptions;
+
 import org.w3c.dom.Document;
 import org.w3c.dom.Node;
 import org.w3c.dom.NodeList;
@@ -22,6 +24,7 @@ import java.io.InputStream;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.HashMap;
+import java.util.List;
 
 import javax.xml.parsers.DocumentBuilder;
 import javax.xml.parsers.DocumentBuilderFactory;
@@ -120,7 +123,9 @@ public class PointNumberReservationBeanParser {
                 requestBean.setPointNumbers(pointNumbers);
             } else {
                 final String protokoll = parseProtkoll(doc.getLastChild());
+                final List<String> errorMsg = parseProtokollErrorMessages(protokoll);
                 requestBean.setProtokoll(protokoll);
+                requestBean.setErrorMessages(errorMsg);
             }
             return requestBean;
         } catch (ParserConfigurationException ex) {
@@ -213,6 +218,49 @@ public class PointNumberReservationBeanParser {
             }
         }
         return "";
+    }
+
+    /**
+     * DOCUMENT ME!
+     *
+     * @param   protokoll  rootNode DOCUMENT ME!
+     *
+     * @return  DOCUMENT ME!
+     */
+    private static List<String> parseProtokollErrorMessages(final String protokoll) {
+        final ArrayList<String> errorMsg = new ArrayList<String>();
+        try {
+            final InputStream result = new ByteArrayInputStream(protokoll.getBytes());
+            // parse the queryTemplate and insert the geom in it
+            final DocumentBuilderFactory dbFactory = DocumentBuilderFactory.newInstance();
+            final DocumentBuilder dBuilder = dbFactory.newDocumentBuilder();
+            final Document doc = dBuilder.parse(result);
+            final Node rootNode = doc.getLastChild();
+            final NodeList childs = rootNode.getChildNodes();
+            for (int i = 0; i < childs.getLength(); i++) {
+                final Node n = childs.item(i);
+                if (n.getNodeName().equals("Message")) {
+                    final NodeList messageChilds = n.getChildNodes();
+                    for (int j = 0; j < messageChilds.getLength(); j++) {
+                        final Node tmp = messageChilds.item(j);
+                        if (tmp.getNodeName().equals("MessageLevel")) {
+                            final String messageLevel = tmp.getTextContent();
+                            if (messageLevel.equals("Error")) {
+                                final String errorMessage = tmp.getNextSibling().getTextContent();
+                                errorMsg.add(errorMessage);
+                            }
+                        }
+                    }
+                }
+            }
+        } catch (SAXException ex) {
+            Exceptions.printStackTrace(ex);
+        } catch (IOException ex) {
+            Exceptions.printStackTrace(ex);
+        } catch (ParserConfigurationException ex) {
+            Exceptions.printStackTrace(ex);
+        }
+        return errorMsg;
     }
 
     //~ Inner Classes ----------------------------------------------------------
