@@ -464,7 +464,7 @@ public class CidsBillingSearchStatement extends AbstractCidsServerSearch {
     /**
      * DOCUMENT ME!
      *
-     * @param  showStornierteBillings  DOCUMENT ME!
+     * @param  showOnlyStornierteBillings  DOCUMENT ME!
      */
     public void setShowOnlyStornierteBillings(final boolean showOnlyStornierteBillings) {
         this.showOnlyStornierteBillings = showOnlyStornierteBillings;
@@ -482,7 +482,7 @@ public class CidsBillingSearchStatement extends AbstractCidsServerSearch {
     /**
      * DOCUMENT ME!
      *
-     * @param  showAbgerechneteBillings  DOCUMENT ME!
+     * @param  showOnlyAbgerechneteBillings  DOCUMENT ME!
      */
     public void setShowOnlyAbgerechneteBillings(final boolean showOnlyAbgerechneteBillings) {
         this.showOnlyAbgerechneteBillings = showOnlyAbgerechneteBillings;
