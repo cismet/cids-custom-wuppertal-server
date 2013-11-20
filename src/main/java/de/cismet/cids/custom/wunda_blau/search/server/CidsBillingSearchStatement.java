@@ -72,8 +72,8 @@ public class CidsBillingSearchStatement extends AbstractCidsServerSearch {
     private User user;
     private ArrayList<MetaObject> kundeMetaObjects = new ArrayList<MetaObject>();
     private String kundenname;
-    private boolean showStornierteBillings = false;
-    private boolean showAbgerechneteBillings = false;
+    private boolean showOnlyStornierteBillings = false;
+    private boolean showOnlyAbgerechneteBillings = false;
 
     //~ Constructors -----------------------------------------------------------
 
@@ -278,10 +278,14 @@ public class CidsBillingSearchStatement extends AbstractCidsServerSearch {
      * DOCUMENT ME!
      */
     private void appendStornoAndAbgerechnet() {
-        if (!showStornierteBillings) {
+        if (showOnlyStornierteBillings) {
+            query.append(" and b.storniert is true ");
+        } else { // hide stornierte billings
             query.append(" and b.storniert is not true ");
         }
-        if (!showAbgerechneteBillings) {
+        if (showOnlyAbgerechneteBillings) {
+            query.append(" and b.abgerechnet is true ");
+        } else { // hide abgerechnete billings
             query.append(" and b.abgerechnet is not true ");
         }
     }
@@ -453,8 +457,8 @@ public class CidsBillingSearchStatement extends AbstractCidsServerSearch {
      *
      * @return  DOCUMENT ME!
      */
-    public boolean isShowStornierteBillings() {
-        return showStornierteBillings;
+    public boolean isShowOnlyStornierteBillings() {
+        return showOnlyStornierteBillings;
     }
 
     /**
@@ -462,8 +466,8 @@ public class CidsBillingSearchStatement extends AbstractCidsServerSearch {
      *
      * @param  showStornierteBillings  DOCUMENT ME!
      */
-    public void setShowStornierteBillings(final boolean showStornierteBillings) {
-        this.showStornierteBillings = showStornierteBillings;
+    public void setShowOnlyStornierteBillings(final boolean showOnlyStornierteBillings) {
+        this.showOnlyStornierteBillings = showOnlyStornierteBillings;
     }
 
     /**
@@ -471,8 +475,8 @@ public class CidsBillingSearchStatement extends AbstractCidsServerSearch {
      *
      * @return  DOCUMENT ME!
      */
-    public boolean isShowAbgerechneteBillings() {
-        return showAbgerechneteBillings;
+    public boolean isShowOnlyAbgerechneteBillings() {
+        return showOnlyAbgerechneteBillings;
     }
 
     /**
@@ -480,7 +484,7 @@ public class CidsBillingSearchStatement extends AbstractCidsServerSearch {
      *
      * @param  showAbgerechneteBillings  DOCUMENT ME!
      */
-    public void setShowAbgerechneteBillings(final boolean showAbgerechneteBillings) {
-        this.showAbgerechneteBillings = showAbgerechneteBillings;
+    public void setShowOnlyAbgerechneteBillings(final boolean showOnlyAbgerechneteBillings) {
+        this.showOnlyAbgerechneteBillings = showOnlyAbgerechneteBillings;
     }
 }
