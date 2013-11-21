@@ -7,6 +7,9 @@
 ****************************************************/
 package de.cismet.cids.custom.utils.pointnumberreservation;
 
+import com.sun.org.apache.xml.internal.serialize.OutputFormat;
+import com.sun.org.apache.xml.internal.serialize.XMLSerializer;
+
 import org.apache.log4j.Logger;
 
 import org.openide.util.Exceptions;
@@ -20,6 +23,7 @@ import org.xml.sax.SAXException;
 import java.io.ByteArrayInputStream;
 import java.io.IOException;
 import java.io.InputStream;
+import java.io.StringWriter;
 
 import java.util.ArrayList;
 import java.util.Collection;
@@ -214,7 +218,28 @@ public class PointNumberReservationBeanParser {
         for (int i = 0; i < childs.getLength(); i++) {
             final Node currChild = childs.item(i);
             if (currChild.getNodeName().equals("erlaeuterung")) {
-                return currChild.getTextContent();
+                final String protString = currChild.getTextContent();
+                final DocumentBuilderFactory dbFactory = DocumentBuilderFactory.newInstance();
+                final DocumentBuilder dBuilder;
+                try {
+                    dBuilder = dbFactory.newDocumentBuilder();
+                    final Document doc = dBuilder.parse(new ByteArrayInputStream(protString.getBytes()));
+                    final OutputFormat format = new OutputFormat(doc, "UTF-8", true);
+                    // as a String
+                    final StringWriter stringOut = new StringWriter();
+                    final XMLSerializer serial = new XMLSerializer(stringOut,
+                            format);
+                    serial.serialize(doc);
+
+                    // set the request id that is shown in the 3A Auftagsmanagement Interface
+                    return stringOut.toString();
+                } catch (ParserConfigurationException ex) {
+                    Exceptions.printStackTrace(ex);
+                } catch (SAXException ex) {
+                    Exceptions.printStackTrace(ex);
+                } catch (IOException ex) {
+                    Exceptions.printStackTrace(ex);
+                }
             }
         }
         return "";
@@ -246,7 +271,7 @@ public class PointNumberReservationBeanParser {
                         if (tmp.getNodeName().equals("MessageLevel")) {
                             final String messageLevel = tmp.getTextContent();
                             if (messageLevel.equals("Error")) {
-                                final String errorMessage = tmp.getNextSibling().getTextContent();
+                                final String errorMessage = tmp.getNextSibling().getNextSibling().getTextContent();
                                 errorMsg.add(errorMessage);
                             }
                         }
