@@ -32,10 +32,10 @@ public class VermessungsStellenSearchResult implements Serializable {
     /**
      * Creates a new VermessungsStellenSearchResult object.
      *
-     * @param  name              DOCUMENT ME!
      * @param  zulassungsNummer  DOCUMENT ME!
+     * @param  name              DOCUMENT ME!
      */
-    public VermessungsStellenSearchResult(final String name, final String zulassungsNummer) {
+    public VermessungsStellenSearchResult(final String zulassungsNummer, final String name) {
         this.name = name;
         this.zulassungsNummer = zulassungsNummer;
     }
@@ -76,5 +76,10 @@ public class VermessungsStellenSearchResult implements Serializable {
      */
     public void setZulassungsNummer(final String zulassungsNummer) {
         this.zulassungsNummer = zulassungsNummer;
+    }
+
+    @Override
+    public String toString() {
+        return this.zulassungsNummer;
     }
 }
