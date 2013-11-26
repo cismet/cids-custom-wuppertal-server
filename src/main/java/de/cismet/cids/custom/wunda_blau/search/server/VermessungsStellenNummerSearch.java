@@ -21,6 +21,8 @@ import java.rmi.RemoteException;
 import java.util.ArrayList;
 import java.util.Collection;
 
+import de.cismet.cids.custom.utils.pointnumberreservation.VermessungsStellenSearchResult;
+
 import de.cismet.cids.server.search.AbstractCidsServerSearch;
 import de.cismet.cids.server.search.SearchException;
 
@@ -40,7 +42,7 @@ public class VermessungsStellenNummerSearch extends AbstractCidsServerSearch {
 
     private String userName;
     private final String QUERY =
-        "select k.vermessungsstellennummer from \"public\".billing_kunden_logins kl join billing_kunde k on k.id=kl.kunde "
+        "select k.vermessungsstellennummer, k.name from \"public\".billing_kunden_logins kl join billing_kunde k on k.id=kl.kunde "
                 + "where vermessungsstellennummer is not null and kl.name like '%1$s';";
 
     //~ Constructors -----------------------------------------------------------
@@ -67,10 +69,12 @@ public class VermessungsStellenNummerSearch extends AbstractCidsServerSearch {
                     LOG.debug("query: " + query); // NOI18N
                 }
                 final ArrayList<ArrayList> lists = ms.performCustomSearch(query);
-                final ArrayList<String> result = new ArrayList<String>();
+                final ArrayList<VermessungsStellenSearchResult> result =
+                    new ArrayList<VermessungsStellenSearchResult>();
                 for (final ArrayList l : lists) {
                     final String vermessungsStellenNummer = (String)l.get(0);
-                    result.add(vermessungsStellenNummer);
+                    final String name = (String)l.get(1);
+                    result.add(new VermessungsStellenSearchResult(vermessungsStellenNummer, name));
                 }
                 return result;
             } catch (RemoteException ex) {
