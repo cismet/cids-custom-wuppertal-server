@@ -88,26 +88,25 @@ public class NASProductGenerator {
 
     //~ Instance fields --------------------------------------------------------
 
-    final File openOrdersLogFile;
-    final File undeliveredOrdersLogFile;
+    private File openOrdersLogFile;
+    private File undeliveredOrdersLogFile;
     private final transient org.apache.log4j.Logger log = org.apache.log4j.Logger.getLogger(this.getClass());
     private AuftragsManagerSoap manager;
-    private final String SERVICE_URL;
-    private final String USER;
-    private final String PW;
-    private final String OUTPUT_DIR;
+    private String SERVICE_URL;
+    private String USER;
+    private String PW;
+    private String OUTPUT_DIR;
     private HashMap<String, HashMap<String, NasProductInfo>> openOrderMap =
         new HashMap<String, HashMap<String, NasProductInfo>>();
     private HashMap<String, HashMap<String, NasProductInfo>> undeliveredOrderMap =
         new HashMap<String, HashMap<String, NasProductInfo>>();
     private HashMap<String, NasProductDownloader> downloaderMap = new HashMap<String, NasProductDownloader>();
+    private boolean initError = false;
 
     //~ Constructors -----------------------------------------------------------
 
     /**
      * Creates a new NASProductGenerator object.
-     *
-     * @throws  RuntimeException  DOCUMENT ME!
      */
     private NASProductGenerator() {
         final Properties serviceProperties = new Properties();
@@ -115,15 +114,28 @@ public class NASProductGenerator {
             serviceProperties.load(NASProductGenerator.class.getResourceAsStream("nasServer_conf.properties"));
             SERVICE_URL = serviceProperties.getProperty("service");
             USER = serviceProperties.getProperty("user");
-            PW = serviceProperties.getProperty("password");
+            PW = serviceProperties.getProperty("pw");
             OUTPUT_DIR = serviceProperties.getProperty("outputDir");
+            if ((OUTPUT_DIR == null) || OUTPUT_DIR.isEmpty()) {
+                log.info("Could not read nas nas output dir property. using server working dir as fallback");
+                OUTPUT_DIR = ".";
+            }
+            if (((SERVICE_URL == null) || SERVICE_URL.isEmpty()) || ((USER == null) || USER.isEmpty())
+                        || ((PW == null) || PW.isEmpty())) {
+                log.warn(
+                    "NAS Datenabgabe initialisation Error. Could not read all properties for connecting 3A Server. NAS support is disabled");
+                initError = true;
+                return;
+            }
             final File outputDir = new File(OUTPUT_DIR);
             if (!outputDir.exists()) {
                 outputDir.mkdirs();
             }
             if (!outputDir.isDirectory() || !outputDir.canWrite()) {
-                log.error("could not write to the given nas output directory " + outputDir);
-                throw new RuntimeException("could not write to the given nas output directory " + outputDir);
+                log.warn("NAS Datenabgabe initialisation Error. Could not write to the given nas output directory: "
+                            + outputDir);
+                initError = true;
+                return;
             }
             final StringBuilder fileNameBuilder = new StringBuilder(OUTPUT_DIR);
             fileNameBuilder.append(System.getProperty("file.separator"));
@@ -139,12 +151,15 @@ public class NASProductGenerator {
             }
             if (!(openOrdersLogFile.isFile() && openOrdersLogFile.canWrite())
                         || !(undeliveredOrdersLogFile.isFile() && undeliveredOrdersLogFile.canWrite())) {
-                log.error("could not write to order log files");
+                log.warn(
+                    "NAS Datenabgabe initialisation Error. Could not write to NAS order log files. NAS support is disabled");
+                initError = true;
+                return;
             }
             initFromOrderLogFiles();
         } catch (Exception ex) {
-            log.fatal("NAS Datenabgabe initialisation Error!", ex);
-            throw new RuntimeException(ex);
+            log.warn("NAS Datenabgabe initialisation Error! NAS support is disabled", ex);
+            initError = true;
         }
     }
 
@@ -268,7 +283,6 @@ public class NASProductGenerator {
             request = request.replaceAll(REQUEST_PLACE_HOLDER, requestName);
 
             // check if this request needs to be portioned
-
             if (isOrderSplitted(geom)) {
                 request = request.replaceAll(DATA_FORMAT_STD, DATA_FORMAT_500);
             }
@@ -300,6 +314,12 @@ public class NASProductGenerator {
             final GeometryCollection geoms,
             final User user,
             final String requestName) {
+        if (initError) {
+            if (log.isDebugEnabled()) {
+                log.debug("NASProductGenerator doesnt work hence there was an error during the initialisation.");
+            }
+            return null;
+        }
 //        try {
         InputStream templateFile = null;
 
@@ -351,6 +371,12 @@ public class NASProductGenerator {
      * @param  file   DOCUMENT ME!
      */
     public void writeResultToFileforRequest(final InputStream query, final File file) {
+        if (initError) {
+            if (log.isDebugEnabled()) {
+                log.debug("NASProductGenerator doesnt work hence there was an error during the initialisation.");
+            }
+            return;
+        }
         initAmManager();
         final int sessionID = manager.login(USER, PW);
         final String orderId = manager.registerGZip(sessionID, gZipFile(query));
@@ -476,6 +502,12 @@ public class NASProductGenerator {
      * @return  DOCUMENT ME!
      */
     public byte[] getResultForOrder(final String orderId, final User user) {
+        if (initError) {
+            if (log.isDebugEnabled()) {
+                log.debug("NASProductGenerator doesnt work hence there was an error during the initialisation.");
+            }
+            return null;
+        }
         final HashMap<String, NasProductInfo> openUserOrders = openOrderMap.get(determineUserPrefix(user));
         if ((openUserOrders != null) && openUserOrders.keySet().contains(orderId)) {
 //            if (log.isDebugEnabled()) {
@@ -506,6 +538,12 @@ public class NASProductGenerator {
      */
     public HashMap<String, NasProductInfo> getUndeliveredOrders(final User user) {
         final HashMap<String, NasProductInfo> result = new HashMap<String, NasProductInfo>();
+        if (initError) {
+            if (log.isDebugEnabled()) {
+                log.debug("NASProductGenerator doesnt work hence there was an error during the initialisation.");
+            }
+            return result;
+        }
         final HashMap<String, NasProductInfo> undeliveredOrders = undeliveredOrderMap.get(determineUserPrefix(user));
         if ((undeliveredOrders != null) && !undeliveredOrders.isEmpty()) {
             for (final String undeliveredOrderId : undeliveredOrders.keySet()) {
@@ -525,6 +563,12 @@ public class NASProductGenerator {
      * @param  user     DOCUMENT ME!
      */
     public void cancelOrder(final String orderId, final User user) {
+        if (initError) {
+            if (log.isDebugEnabled()) {
+                log.debug("NASProductGenerator doesnt work hence there was an error during the initialisation.");
+            }
+            return;
+        }
         final String userKey = determineUserPrefix(user);
         final NasProductDownloader downloader = downloaderMap.get(orderId);
         if (downloader != null) {

@@ -77,22 +77,20 @@ public class ButlerProductGenerator {
 
     //~ Instance fields --------------------------------------------------------
 
-    final File openOrdersLogFile;
+    File openOrdersLogFile;
     // Map that lists all open Orders to a user id
     private HashMap<Integer, HashMap<String, ButlerRequestInfo>> openOrderMap =
         new HashMap<Integer, HashMap<String, ButlerRequestInfo>>();
-    private final String requestFolder;
-    private final String butler2RequestFolder;
-    private final String resultBaseFolder;
-    private final String butlerBasePath;
+    private String requestFolder;
+    private String butler2RequestFolder;
+    private String resultBaseFolder;
+    private String butlerBasePath;
     private boolean initError = false;
 
     //~ Constructors -----------------------------------------------------------
 
     /**
      * Creates a new ButlerProductGenerator object.
-     *
-     * @throws  RuntimeException  DOCUMENT ME!
      */
     private ButlerProductGenerator() {
         try {
@@ -114,14 +112,18 @@ public class ButlerProductGenerator {
                 updateJsonLogFiles();
             }
             if (!(openOrdersLogFile.isFile() && openOrdersLogFile.canWrite())) {
-                LOG.error("can not write to open order log file");
+                LOG.warn("Can not write to Butler open order log file (" + openOrdersLogFile.getPath()
+                            + "). This might cause problems in Wunda_Blau Butler functionality");
+                initError = true;
             }
             loadOpenOrdersFromJsonFile();
         } catch (IOException ex) {
-            LOG.error("Could not load butler properties", ex);
-            throw new RuntimeException(ex);
+            LOG.warn("Could not load butler properties. This might cause problems in Wunda_Blau Butler functionality");
+            initError = true;
         }
-        checkFolders();
+        if (!initError) {
+            checkFolders();
+        }
     }
 
     //~ Methods ----------------------------------------------------------------
@@ -276,6 +278,12 @@ public class ButlerProductGenerator {
      * @return  A list of bytes representing the result files <code>null</code> if there are no result files
      */
     public Map<String, byte[]> getResultForRequest(final User user, final String requestId, final String format) {
+        if (initError) {
+            if (LOG.isDebugEnabled()) {
+                LOG.debug("ButlerPrdocutGenerator doesnt work hence there was an error during the initialisation.");
+            }
+            return null;
+        }
         File resultDir;
         if (format.equals("dxf")) {
             resultDir = new File(resultBaseFolder + System.getProperty("file.separator") + dxfResultDir);
@@ -325,6 +333,12 @@ public class ButlerProductGenerator {
      * @return  DOCUMENT ME!
      */
     public HashMap<String, ButlerRequestInfo> getAllOpenUserRequests(final User user) {
+        if (initError) {
+            if (LOG.isDebugEnabled()) {
+                LOG.debug("ButlerPrdocutGenerator doesnt work hence there was an error during the initialisation.");
+            }
+            return null;
+        }
         if (openOrderMap.keySet().contains(user.getId())) {
             final HashMap<String, ButlerRequestInfo> result = new HashMap<String, ButlerRequestInfo>();
             result.putAll(openOrderMap.get(user.getId()));
@@ -652,6 +666,12 @@ public class ButlerProductGenerator {
      * @param  requestId  DOCUMENT ME!
      */
     public void removeOrder(final User user, final String requestId) {
+        if (initError) {
+            if (LOG.isDebugEnabled()) {
+                LOG.debug("ButlerPrdocutGenerator doesnt work hence there was an error during the initialisation.");
+            }
+            return;
+        }
         removeFromOpenOrders(user, requestId);
     }
 
