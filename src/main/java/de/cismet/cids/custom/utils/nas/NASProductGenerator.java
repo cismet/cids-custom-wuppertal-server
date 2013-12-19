@@ -988,11 +988,11 @@ public class NASProductGenerator {
                 map.put(s, wrapperMap.get(s).getMap());
             }
         } catch (JsonParseException ex) {
-            log.error("Could not parse nas order log files", ex);
+            log.warn("Could not parse nas order log files");
         } catch (JsonMappingException ex) {
-            log.error("error while json mapping/unmarshalling of nas order log file", ex);
+            log.warn("error while json mapping/unmarshalling of nas order log file");
         } catch (IOException ex) {
-            log.error("error while loading nas order log file", ex);
+            log.warn("error while loading nas order log file");
         }
     }
 
