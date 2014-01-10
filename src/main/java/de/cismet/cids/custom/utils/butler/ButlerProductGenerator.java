@@ -25,16 +25,11 @@ import org.openide.util.Exceptions;
 
 import java.io.BufferedReader;
 import java.io.BufferedWriter;
-import java.io.ByteArrayOutputStream;
 import java.io.File;
-import java.io.FileFilter;
-import java.io.FileInputStream;
 import java.io.FileNotFoundException;
 import java.io.FileOutputStream;
-import java.io.FileReader;
 import java.io.FileWriter;
 import java.io.IOException;
-import java.io.InputStream;
 import java.io.InputStreamReader;
 import java.io.OutputStreamWriter;
 
@@ -45,7 +40,6 @@ import java.text.SimpleDateFormat;
 import java.util.Date;
 import java.util.GregorianCalendar;
 import java.util.HashMap;
-import java.util.Map;
 import java.util.Properties;
 
 /**
@@ -60,10 +54,6 @@ public class ButlerProductGenerator {
 
     private static final ButlerProductGenerator instance = new ButlerProductGenerator();
     private static final Logger LOG = Logger.getLogger(ButlerProductGenerator.class);
-    private static final String pdfResultDir = "pdf";
-    private static final String dxfResultDir = "dxf";
-    private static final String tifResultDir = "tif";
-    private static final String shapeResultDir = "shape";
     private static final String FILE_APPENDIX = ".but";
     private static final String SEPERATOR = ";";
     private static final String EASTING = "$RECHTSWERT$";
@@ -83,7 +73,6 @@ public class ButlerProductGenerator {
         new HashMap<Integer, HashMap<String, ButlerRequestInfo>>();
     private String requestFolder;
     private String butler2RequestFolder;
-    private String resultBaseFolder;
     private String butlerBasePath;
     private boolean initError = false;
 
@@ -101,8 +90,6 @@ public class ButlerProductGenerator {
                         + butlerProperties.getProperty("butler1RequestPath");
             butler2RequestFolder = butlerBasePath + System.getProperty("file.separator")
                         + butlerProperties.getProperty("butler2RequestPath");
-            resultBaseFolder = butlerBasePath + System.getProperty("file.separator")
-                        + butlerProperties.getProperty("butler1ResultPath");
             final StringBuilder fileNameBuilder = new StringBuilder(butlerBasePath);
             fileNameBuilder.append(System.getProperty("file.separator"));
             openOrdersLogFile = new File(fileNameBuilder.toString() + "openOrders.json");
@@ -271,63 +258,6 @@ public class ButlerProductGenerator {
     /**
      * DOCUMENT ME!
      *
-     * @param   user       DOCUMENT ME!
-     * @param   requestId  represents the request
-     * @param   format     must be one of the following "dxf", "shp","tif","pdf"
-     *
-     * @return  A list of bytes representing the result files <code>null</code> if there are no result files
-     */
-    public Map<String, byte[]> getResultForRequest(final User user, final String requestId, final String format) {
-        if (initError) {
-            if (LOG.isDebugEnabled()) {
-                LOG.debug("ButlerPrdocutGenerator doesnt work hence there was an error during the initialisation.");
-            }
-            return null;
-        }
-        File resultDir;
-        if (format.equals("dxf")) {
-            resultDir = new File(resultBaseFolder + System.getProperty("file.separator") + dxfResultDir);
-        } else if (format.equals("shp")) {
-            resultDir = new File(resultBaseFolder + System.getProperty("file.separator") + shapeResultDir);
-        } else if (format.equals("tif")) {
-            resultDir = new File(resultBaseFolder + System.getProperty("file.separator") + tifResultDir);
-        } else if (format.equals("geotif")) {
-            resultDir = new File(resultBaseFolder + System.getProperty("file.separator") + tifResultDir);
-        } else {
-            // this must be true here: format.equals("pdf")
-            resultDir = new File(resultBaseFolder + System.getProperty("file.separator") + pdfResultDir);
-        }
-
-        // get a list of files with the respective fileName and read them all
-        final String regex = (requestId + ".*").replaceAll("\\+", "\\\\\\+");
-        final File[] resultFiles = resultDir.listFiles(new FileFilter() {
-
-                    @Override
-                    public boolean accept(final File file) {
-                        return file.getName().matches(regex);
-                    }
-                });
-        // if there the list is emtpy the butler service hasnt finished the request
-        if ((resultFiles == null) || (resultFiles.length <= 0)) {
-            LOG.info("could not find the result file for butler order " + requestId
-                        + ". Maybe the server side processing isn't finished");
-            return null;
-        }
-
-        removeFromOpenOrders(user, requestId);
-//        final ArrayList<byte[]> result = new ArrayList<byte[]>();
-        final Map<String, byte[]> result = new HashMap<String, byte[]>();
-        for (int i = 0; i < resultFiles.length; i++) {
-//            result.add(loadFile(resultFiles[i]));
-            result.put(resultFiles[i].getName(), loadFile(resultFiles[i]));
-        }
-
-        return result;
-    }
-
-    /**
-     * DOCUMENT ME!
-     *
      * @param   user  DOCUMENT ME!
      *
      * @return  DOCUMENT ME!
@@ -360,28 +290,6 @@ public class ButlerProductGenerator {
         if (!requestDir.isDirectory() || !requestDir.canWrite()) {
             LOG.error("could not write to the given butler request directory " + requestDir);
             throw new RuntimeException("could not write to the given butler request directory " + requestDir);
-        }
-
-        final File resultBaseDir = new File(resultBaseFolder);
-        if (!resultBaseDir.exists()) {
-            resultBaseDir.mkdirs();
-        }
-        final File pdfDir = new File(resultBaseDir + System.getProperty("file.separator") + pdfResultDir);
-        final File dxfDir = new File(resultBaseDir + System.getProperty("file.separator") + dxfResultDir);
-        final File tifDir = new File(resultBaseDir + System.getProperty("file.separator") + tifResultDir);
-        final File shapeDir = new File(resultBaseDir + System.getProperty("file.separator") + shapeResultDir);
-
-        if (!(pdfDir.exists() && dxfDir.exists() && tifDir.exists() && shapeDir.exists())) {
-            LOG.fatal("one ore all of butler result directories does not exists");
-            initError = true;
-            return;
-        }
-
-        if (!(pdfDir.isDirectory() && pdfDir.canExecute() && dxfDir.isDirectory() && dxfDir.canExecute()
-                        && tifDir.isDirectory() && tifDir.canExecute()
-                        && shapeDir.isDirectory() && shapeDir.canExecute())) {
-            LOG.fatal("can not write to one ore all of butler result directories");
-            initError = true;
         }
     }
 
@@ -545,41 +453,6 @@ public class ButlerProductGenerator {
     /**
      * DOCUMENT ME!
      *
-     * @param   f  userKey DOCUMENT ME!
-     *
-     * @return  DOCUMENT ME!
-     */
-    private byte[] loadFile(final File f) {
-        final ByteArrayOutputStream bos = new ByteArrayOutputStream();
-        InputStream is = null;
-        try {
-            is = new FileInputStream(f);
-            final byte[] buffer = new byte[8192];
-            int length = is.read(buffer, 0, 8192);
-            while (length != -1) {
-                bos.write(buffer, 0, length);
-                length = is.read(buffer, 0, 8192);
-            }
-            return bos.toByteArray();
-        } catch (FileNotFoundException ex) {
-            LOG.error("could not find result file " + f.getName());
-        } catch (IOException ex) {
-            LOG.error("error during loading file " + f.getName());
-        } finally {
-            try {
-                if (is != null) {
-                    is.close();
-                }
-                bos.close();
-            } catch (IOException ex) {
-            }
-        }
-        return null;
-    }
-
-    /**
-     * DOCUMENT ME!
-     *
      * @param  user         DOCUMENT ME!
      * @param  requestId    filename DOCUMENT ME!
      * @param  userOrderId  DOCUMENT ME!
@@ -673,32 +546,6 @@ public class ButlerProductGenerator {
             return;
         }
         removeFromOpenOrders(user, requestId);
-    }
-
-    /**
-     * DOCUMENT ME!
-     *
-     * @param  args  DOCUMENT ME!
-     */
-    public static void main(final String[] args) {
-        final ButlerProductGenerator gen = new ButlerProductGenerator();
-        final ButlerProduct p = new ButlerProduct();
-        p.setKey("0901");
-        final ButlerFormat f = new ButlerFormat();
-        f.setKey("tif");
-        p.setFormat(f);
-        final ButlerResolution res = new ButlerResolution();
-        res.setKey("ohne");
-        p.setResolution(res);
-        final User user = new User(0, "admin", "WUNDA_BLAU");
-        final String id = gen.createButler2Request("test", user, p, "EXPORT100", 375800, 5682800);
-
-        Map<String, byte[]> result = gen.getResultForRequest(user, id, "tif");
-        while (result == null) {
-            result = gen.getResultForRequest(user, id, "tif");
-        }
-
-        System.out.println("fertich");
     }
 
     //~ Inner Classes ----------------------------------------------------------
