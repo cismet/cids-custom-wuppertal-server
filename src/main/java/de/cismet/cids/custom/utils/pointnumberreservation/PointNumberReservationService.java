@@ -62,26 +62,31 @@ public class PointNumberReservationService {
     private final String USER;
     private final String PW;
     private AuftragsManagerSoap manager;
+    private boolean initError = false;
 
     //~ Constructors -----------------------------------------------------------
 
     /**
      * Creates a new PointNumberService object.
-     *
-     * @throws  RuntimeException  DOCUMENT ME!
      */
     private PointNumberReservationService() {
         final Properties serviceProperties = new Properties();
         try {
             serviceProperties.load(PointNumberReservationService.class.getResourceAsStream(
                     "pointNumberRes_conf.properties"));
-            SERVICE_URL = serviceProperties.getProperty("service");
-            USER = serviceProperties.getProperty("user");
-            PW = serviceProperties.getProperty("password");
         } catch (Exception ex) {
-            LOG.fatal("Punktnummernreservierung initialisation Error!", ex);
-            throw new RuntimeException(ex);
+            LOG.warn("Punktnummernreservierung initialisation Error!", ex);
+            initError = true;
         }
+        if (!serviceProperties.containsKey("service") || !serviceProperties.containsKey("user")
+                    || !serviceProperties.containsKey("password")) {
+            LOG.warn(
+                "Could not read all necessary properties from pointNumberRes_conf.properties. Disabling PointNumberReservationService!");
+            initError = true;
+        }
+        SERVICE_URL = serviceProperties.getProperty("service", "");
+        USER = serviceProperties.getProperty("user", "");
+        PW = serviceProperties.getProperty("password", "");
     }
 
     //~ Methods ----------------------------------------------------------------
@@ -102,11 +107,14 @@ public class PointNumberReservationService {
      * DOCUMENT ME!
      */
     private void initAmManager() {
+        if (initError) {
+            return;
+        }
         final AuftragsManager am;
         try {
             am = new AuftragsManager(new URL(SERVICE_URL));
         } catch (Exception ex) {
-            LOG.error("error creating 3AServer interface");
+            LOG.error("error creating 3AServer interface", ex);
             return;
         }
         manager = am.getAuftragsManagerSoap();
@@ -218,34 +226,34 @@ public class PointNumberReservationService {
             return null;
         }
         final int sessionID = manager.login(USER, PW);
+        try {
+            final String orderId = manager.registerGZip(
+                    sessionID,
+                    gZipFile(preparedQuery));
 
-        final String orderId = manager.registerGZip(sessionID, gZipFile(preparedQuery));
-
-        while ((manager.getResultCount(sessionID, orderId) < 1)
-                    && (manager.getProtocolGZip(sessionID, orderId) == null)) {
-            try {
-                Thread.sleep(500);
-            } catch (InterruptedException ex) {
-                LOG.error("Sleep interrupted");
+            while ((manager.getResultCount(sessionID, orderId) < 1)
+                        && (manager.getProtocolGZip(sessionID, orderId) == null)) {
+                try {
+                    Thread.sleep(500);
+                } catch (InterruptedException ex) {
+                    LOG.error("Sleep interrupted");
+                }
             }
-        }
-        final int resCount = manager.getResultCount(sessionID, orderId);
-        byte[] data;
-        if (resCount == 0) {
-            LOG.error("it seems that there is an error with NAS order: " + orderId + ". Protocol:");
-            LOG.error("Protocol for NAS order " + orderId + ": "
-                        + new String(gunzip(manager.getProtocolGZip(sessionID, orderId))));
-            data = manager.getProtocolGZip(sessionID, orderId);
-            return null;
-        } else {
-            data = manager.getResultGZip(sessionID, orderId);
-        }
-        if (LOG.isDebugEnabled()) {
-            LOG.debug("Result for request: " + orderId + ": "
-                        + new String(gunzip(manager.getResultGZip(sessionID, orderId))));
-        }
+            final int resCount = manager.getResultCount(sessionID, orderId);
+            final byte[] data;
+            if (resCount == 0) {
+                LOG.error("Protocol for PointNumberReservation order " + orderId + ": "
+                            + new String(gunzip(manager.getProtocolGZip(sessionID, orderId))));
+                return null;
+            } else {
+                data = manager.getResultGZip(sessionID, orderId);
+            }
 
-        return new String(gunzip(data));
+            return new String(gunzip(data), "UTF-8");
+        } catch (Exception e) {
+            LOG.error("Error during registering order at aaa service", e);
+        }
+        return null;
     }
 
     /**
@@ -272,6 +280,10 @@ public class PointNumberReservationService {
      * @return  DOCUMENT ME!
      */
     public Collection<PointNumberReservationRequest> getAllBenAuftr() {
+        if (initError) {
+            LOG.info("PointNumberReservationService initialisation error");
+            return null;
+        }
         final InputStream templateFile = PointNumberReservationService.class.getResourceAsStream(
                 "A_Ben_Auftr_alle_PKZ.xml");
         final String request = readFile(templateFile);
@@ -292,6 +304,10 @@ public class PointNumberReservationService {
      * @return  DOCUMENT ME!
      */
     public PointNumberReservationRequest getAllBenAuftr(final String anr) {
+        if (initError) {
+            LOG.info("PointNumberReservationService initialisation error");
+            return null;
+        }
         InputStream templateFile = null;
         templateFile = PointNumberReservationService.class.getResourceAsStream("A_Ben_Auftr_eine_ANR.xml");
 
@@ -333,6 +349,10 @@ public class PointNumberReservationService {
      * @return  DOCUMENT ME!
      */
     public Collection<PointNumberReservationRequest> getAllBenAuftrWithWildCard(final String anr) {
+        if (initError) {
+            LOG.info("PointNumberReservationService initialisation error");
+            return null;
+        }
         InputStream templateFile = null;
         templateFile = PointNumberReservationService.class.getResourceAsStream(
                 "A_Ben_Auftr_ANR_Praefix_Wildcard.xml");
@@ -381,6 +401,10 @@ public class PointNumberReservationService {
      * @return  DOCUMENT ME!
      */
     public boolean isAntragsNummerExisting(final String anr) {
+        if (initError) {
+            LOG.info("PointNumberReservationService initialisation error");
+            return false;
+        }
         final PointNumberReservationRequest auftrag = getAllBenAuftr(anr);
         if ((auftrag == null) || (auftrag.getAntragsnummer() == null)) {
             return false;
@@ -396,6 +420,10 @@ public class PointNumberReservationService {
      * @return  DOCUMENT ME!
      */
     public Object prolongReservation(final Date expirationDate) {
+        if (initError) {
+            LOG.info("PointNumberReservationService initialisation error");
+            return null;
+        }
         final InputStream templateFile = PointNumberReservationService.class.getResourceAsStream("A_verlaengern.xml");
 
         if (templateFile == null) {
@@ -424,6 +452,10 @@ public class PointNumberReservationService {
      * @return  DOCUMENT ME!
      */
     public Collection<PointNumberReservation> getReserviertePunkte(final String requestId) {
+        if (initError) {
+            LOG.info("PointNumberReservationService initialisation error");
+            return null;
+        }
         final PointNumberReservationRequest request = getAllBenAuftr(requestId);
         if (request != null) {
             return request.getPointNumbers();
@@ -447,7 +479,10 @@ public class PointNumberReservationService {
             final String nummerierungsbezirk,
             final int firstPointNumber,
             final int lastPointNumber) {
-        // ToDo: both numbers need to have 6 digits, last one needs to be greater than first number
+        if (initError) {
+            LOG.info("PointNumberReservationService initialisation error");
+            return null;
+        }
 
         final InputStream templateFile = PointNumberReservationService.class.getResourceAsStream("A_Freigabe.xml");
 
@@ -490,6 +525,10 @@ public class PointNumberReservationService {
             final String nummerierungsbezirk,
             final int anzahl,
             final int startValue) {
+        if (initError) {
+            LOG.info("PointNumberReservationService initialisation error");
+            return null;
+        }
         // check requestID check if point number exceed 999999 if ((startValue + anzahl) > 999999) { final String
         // errorMsg = "Point number for startValue " + startValue + "and point amount " + anzahl + " will exceed maximum
         // number 999999. Can not execute request."; LOG.error(errorMsg); throw new IllegalStateException(errorMsg); }
