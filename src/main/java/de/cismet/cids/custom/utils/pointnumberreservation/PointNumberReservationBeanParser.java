@@ -7,9 +7,6 @@
 ****************************************************/
 package de.cismet.cids.custom.utils.pointnumberreservation;
 
-import com.sun.org.apache.xml.internal.serialize.OutputFormat;
-import com.sun.org.apache.xml.internal.serialize.XMLSerializer;
-
 import org.apache.log4j.Logger;
 
 import org.openide.util.Exceptions;
@@ -26,6 +23,7 @@ import java.io.InputStream;
 import java.io.StringWriter;
 
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.Collection;
 import java.util.HashMap;
 import java.util.List;
@@ -103,13 +101,24 @@ public class PointNumberReservationBeanParser {
      * @return  DOCUMENT ME!
      */
     public static PointNumberReservationRequest parseReservierungsErgebnis(final String resultString) {
-        final InputStream result = new ByteArrayInputStream(resultString.getBytes());
-        // parse the queryTemplate and insert the geom in it
         final DocumentBuilderFactory dbFactory = DocumentBuilderFactory.newInstance();
         final DocumentBuilder dBuilder;
         try {
+            final byte[] res = resultString.getBytes("UTF-8");
+            byte[] b;
+            if (resultString.startsWith("\uFEFF")) {
+                if (LOG.isDebugEnabled()) {
+                    LOG.debug("resultString starts with \\uFEFF which is a UTF-8 BOM. Removing first 3 bytes");
+                }
+                b = Arrays.copyOfRange(res, 3, res.length);
+            } else {
+                b = res;
+            }
+
             dBuilder = dbFactory.newDocumentBuilder();
-            final Document doc = dBuilder.parse(result);
+            final InputStream is = new ByteArrayInputStream(b);
+
+            final Document doc = dBuilder.parse(is);
             final String anr = parseAuftragsnummer(doc.getLastChild());
             final PointNumberReservationRequest requestBean = new PointNumberReservationRequest();
             requestBean.setAntragsnummer(anr);
@@ -150,15 +159,24 @@ public class PointNumberReservationBeanParser {
      * @return  DOCUMENT ME!
      */
     public static Collection<PointNumberReservationRequest> parseBestandsdatenauszug(final String resultString) {
-        final InputStream result = new ByteArrayInputStream(resultString.getBytes());
-        // parse the queryTemplate and insert the geom in it
         final DocumentBuilderFactory dbFactory = DocumentBuilderFactory.newInstance();
         final DocumentBuilder dBuilder;
         final HashMap<String, PointNumberReservationRequest> requests =
             new HashMap<String, PointNumberReservationRequest>();
         try {
+            final byte[] res = resultString.getBytes("UTF-8");
+            byte[] b;
+            if (resultString.startsWith("\uFEFF")) {
+                if (LOG.isDebugEnabled()) {
+                    LOG.debug("resultString starts with \\uFEFF which is a UTF-8 BOM. Removing first 3 bytes");
+                }
+                b = Arrays.copyOfRange(res, 3, res.length);
+            } else {
+                b = res;
+            }
             dBuilder = dbFactory.newDocumentBuilder();
-            final Document doc = dBuilder.parse(result);
+            final InputStream is = new ByteArrayInputStream(b);
+            final Document doc = dBuilder.parse(is);
             final NodeList axReservierungen = doc.getElementsByTagName("AX_Reservierung");
             for (int i = 0; i < axReservierungen.getLength(); i++) {
                 final Node axReservierung = axReservierungen.item(i);
@@ -222,23 +240,38 @@ public class PointNumberReservationBeanParser {
                 final DocumentBuilderFactory dbFactory = DocumentBuilderFactory.newInstance();
                 final DocumentBuilder dBuilder;
                 try {
+                    final byte[] res = protString.getBytes("UTF-8");
+                    byte[] bytes;
+                    if (protString.startsWith("\uFEFF")) {
+                        if (LOG.isDebugEnabled()) {
+                            LOG.debug("Protokoll starts with \\uFEFF which is a UTF-8 BOM. Removing first 3 bytes");
+                        }
+                        bytes = Arrays.copyOfRange(res, 3, res.length);
+                    } else {
+                        bytes = res;
+                    }
                     dBuilder = dbFactory.newDocumentBuilder();
-                    final Document doc = dBuilder.parse(new ByteArrayInputStream(protString.getBytes()));
-                    final OutputFormat format = new OutputFormat(doc, "UTF-8", true);
+                    final InputStream is = new ByteArrayInputStream(bytes);
+                    final Document doc = dBuilder.parse(is);
+                    final org.apache.xml.serialize.OutputFormat format = new org.apache.xml.serialize.OutputFormat(
+                            doc,
+                            "UTF-8",
+                            true);
                     // as a String
                     final StringWriter stringOut = new StringWriter();
-                    final XMLSerializer serial = new XMLSerializer(stringOut,
+                    final org.apache.xml.serialize.XMLSerializer serial = new org.apache.xml.serialize.XMLSerializer(
+                            stringOut,
                             format);
                     serial.serialize(doc);
 
                     // set the request id that is shown in the 3A Auftagsmanagement Interface
                     return stringOut.toString();
                 } catch (ParserConfigurationException ex) {
-                    Exceptions.printStackTrace(ex);
+                    LOG.error("Could not parse 3A server Protokoll: ", ex);
                 } catch (SAXException ex) {
-                    Exceptions.printStackTrace(ex);
+                    LOG.error("Could not parse 3A server Protokoll: ", ex);
                 } catch (IOException ex) {
-                    Exceptions.printStackTrace(ex);
+                    LOG.error("Could not parse 3A server Protokoll: ", ex);
                 }
             }
         }
