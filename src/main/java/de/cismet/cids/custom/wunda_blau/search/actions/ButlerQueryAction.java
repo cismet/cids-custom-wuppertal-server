@@ -41,7 +41,7 @@ public class ButlerQueryAction implements UserAwareServerAction {
 
         //~ Enum constants -----------------------------------------------------
 
-        ADD, GET, GET_ALL, CANCEL
+        ADD, GET_ALL, CANCEL
     }
 
     /**
@@ -123,11 +123,6 @@ public class ButlerQueryAction implements UserAwareServerAction {
                     return ButlerProductGenerator.getInstance()
                                 .createButler2Request(orderId, user, product, box, minX, minY);
                 }
-            }
-        } else if (method == METHOD_TYPE.GET) {
-            if ((product != null) && (product.getFormat() != null)) {
-                return ButlerProductGenerator.getInstance()
-                            .getResultForRequest(user, requestId, product.getFormat().getKey());
             }
         } else if (method == METHOD_TYPE.GET_ALL) {
             return ButlerProductGenerator.getInstance().getAllOpenUserRequests(user);
