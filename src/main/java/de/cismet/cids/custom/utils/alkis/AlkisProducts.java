@@ -163,12 +163,24 @@ public final class AlkisProducts {
                                         } else {
                                             massstab = "-";
                                         }
+                                        final Attribute massstabMinAttr = preisFaktoren.getAttribute("MassstabMin");
+                                        String massstabMin = null;
+                                        if (massstabMinAttr != null) {
+                                            massstabMin = preisFaktoren.getAttribute("MassstabMin").getValue();
+                                        }
+                                        final Attribute massstabMaxAttr = preisFaktoren.getAttribute("MassstabMin");
+                                        String massstabMax = null;
+                                        if (massstabMaxAttr != null) {
+                                            massstabMax = preisFaktoren.getAttribute("MassstabMax").getValue();
+                                        }
                                         final AlkisProductDescription currentProduct = new AlkisProductDescription(
                                                 clazz,
                                                 type,
                                                 code,
                                                 dinFormat,
                                                 massstab,
+                                                massstabMin,
+                                                massstabMax,
                                                 fileFormat,
                                                 width,
                                                 height);
@@ -201,6 +213,7 @@ public final class AlkisProducts {
         sb.append(pointBean.getProperty("pointcode"));
         return sb.toString().replace(" ", "");
     }
+
     /**
      * DOCUMENT ME!
      *
@@ -410,6 +423,10 @@ public final class AlkisProducts {
         }
         url.append('&');
         url.append(IDENTIFICATION);
+        if ((produkt.getMassstabMin() != null) && (produkt.getMassstabMax() != null)) {
+            url.append("&scale=");
+            url.append(produkt.getMassstab());
+        }
 
         return new URL(url.toString());
     }
