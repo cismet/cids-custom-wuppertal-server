@@ -29,26 +29,32 @@ public class AlkisProductDescription {
     private final String dinFormat;
     private final String fileFormat;
     private final String massstab;
+    private final String massstabMin;
+    private final String massstabMax;
 
     //~ Constructors -----------------------------------------------------------
 
     /**
      * Creates a new AlkisProduct object.
      *
-     * @param  clazz       DOCUMENT ME!
-     * @param  type        DOCUMENT ME!
-     * @param  code        DOCUMENT ME!
-     * @param  dinFormat   DOCUMENT ME!
-     * @param  massstab    DOCUMENT ME!
-     * @param  fileFormat  DOCUMENT ME!
-     * @param  width       DOCUMENT ME!
-     * @param  height      DOCUMENT ME!
+     * @param  clazz        DOCUMENT ME!
+     * @param  type         DOCUMENT ME!
+     * @param  code         DOCUMENT ME!
+     * @param  dinFormat    DOCUMENT ME!
+     * @param  massstab     DOCUMENT ME!
+     * @param  massstabMin  DOCUMENT ME!
+     * @param  massstabMax  DOCUMENT ME!
+     * @param  fileFormat   DOCUMENT ME!
+     * @param  width        DOCUMENT ME!
+     * @param  height       DOCUMENT ME!
      */
     public AlkisProductDescription(final String clazz,
             final String type,
             final String code,
             final String dinFormat,
             final String massstab,
+            final String massstabMin,
+            final String massstabMax,
             final String fileFormat,
             final int width,
             final int height) {
@@ -57,6 +63,8 @@ public class AlkisProductDescription {
         this.code = code;
         this.dinFormat = dinFormat;
         this.massstab = massstab;
+        this.massstabMin = massstabMin;
+        this.massstabMax = massstabMax;
         this.fileFormat = fileFormat;
         this.width = width;
         this.height = height;
@@ -134,6 +142,24 @@ public class AlkisProductDescription {
      */
     public String getFileFormat() {
         return fileFormat;
+    }
+
+    /**
+     * DOCUMENT ME!
+     *
+     * @return  DOCUMENT ME!
+     */
+    public String getMassstabMin() {
+        return massstabMin;
+    }
+
+    /**
+     * DOCUMENT ME!
+     *
+     * @return  DOCUMENT ME!
+     */
+    public String getMassstabMax() {
+        return massstabMax;
     }
 
     @Override
