@@ -11,7 +11,9 @@
  */
 package de.cismet.cids.custom.utils.butler;
 
+import Sirius.server.middleware.impls.domainserver.DomainServerImpl;
 import Sirius.server.newuser.User;
+import Sirius.server.property.ServerProperties;
 
 import com.fasterxml.jackson.core.JsonParseException;
 import com.fasterxml.jackson.core.type.TypeReference;
@@ -26,6 +28,7 @@ import org.openide.util.Exceptions;
 import java.io.BufferedReader;
 import java.io.BufferedWriter;
 import java.io.File;
+import java.io.FileInputStream;
 import java.io.FileNotFoundException;
 import java.io.FileOutputStream;
 import java.io.FileWriter;
@@ -74,6 +77,7 @@ public class ButlerProductGenerator {
     private String requestFolder;
     private String butler2RequestFolder;
     private String butlerBasePath;
+    private String BUTLER_TEMPLATES_RES_PATH = "/de/cismet/cids/custom/utils/butler/";
     private boolean initError = false;
 
     //~ Constructors -----------------------------------------------------------
@@ -83,6 +87,9 @@ public class ButlerProductGenerator {
      */
     private ButlerProductGenerator() {
         try {
+            final ServerProperties serverProps = DomainServerImpl.getServerProperties();
+            final String resPath = serverProps.getServerResourcesBasePath();
+            BUTLER_TEMPLATES_RES_PATH = resPath + BUTLER_TEMPLATES_RES_PATH;
             final Properties butlerProperties = new Properties();
             butlerProperties.load(ButlerProductGenerator.class.getResourceAsStream("butler.properties"));
             butlerBasePath = butlerProperties.getProperty("butlerBasePath");
@@ -109,7 +116,9 @@ public class ButlerProductGenerator {
             initError = true;
         }
         if (!initError) {
-            checkFolders();
+            if (!checkFolders()) {
+                initError = true;
+            }
         }
     }
 
@@ -280,17 +289,18 @@ public class ButlerProductGenerator {
     /**
      * DOCUMENT ME!
      *
-     * @throws  RuntimeException  DOCUMENT ME!
+     * @return  DOCUMENT ME!
      */
-    private void checkFolders() {
+    private boolean checkFolders() {
         final File requestDir = new File(requestFolder);
         if (!requestDir.exists()) {
             requestDir.mkdirs();
         }
         if (!requestDir.isDirectory() || !requestDir.canWrite()) {
             LOG.error("could not write to the given butler request directory " + requestDir);
-            throw new RuntimeException("could not write to the given butler request directory " + requestDir);
+            return false;
         }
+        return true;
     }
 
     /**
@@ -428,11 +438,10 @@ public class ButlerProductGenerator {
      * @return  DOCUMENT ME!
      */
     private String loadTemplate(final String productKey) {
-        final URL templateUrl = ButlerProductGenerator.class.getResource("template_" + productKey + ".xml");
         try {
             final StringBuffer templateBuffer = new StringBuffer();
             final BufferedReader fr = new BufferedReader(new InputStreamReader(
-                        ButlerProductGenerator.class.getResourceAsStream("template_" + productKey + ".xml"),
+                        new FileInputStream(BUTLER_TEMPLATES_RES_PATH + "template_" + productKey + ".xml"),
                         "ISO-8859-1"));
             final char[] buf = new char[1024];
             int numRead = 0;
@@ -443,9 +452,13 @@ public class ButlerProductGenerator {
             fr.close();
             return templateBuffer.toString();
         } catch (FileNotFoundException ex) {
-            Exceptions.printStackTrace(ex);
+            LOG.error("Could not access Butler tempalte file: " + BUTLER_TEMPLATES_RES_PATH + "template_" + productKey
+                        + ".xml",
+                ex);
         } catch (IOException ex) {
-            Exceptions.printStackTrace(ex);
+            LOG.error("Could not access Butler tempalte file: " + BUTLER_TEMPLATES_RES_PATH + "template_" + productKey
+                        + ".xml",
+                ex);
         }
         return null;
     }
