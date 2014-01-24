@@ -12,6 +12,7 @@
  */
 package de.cismet.cids.custom.wunda_blau.startuphooks;
 
+import Sirius.server.middleware.impls.domainserver.DomainServerImpl;
 import Sirius.server.middleware.interfaces.domainserver.DomainServerStartupHook;
 
 import de.cismet.cids.custom.utils.alkis.AlkisConstants;
@@ -40,17 +41,10 @@ public class WundaServerStartupHook implements DomainServerStartupHook {
          * which will cause an vm crash or Exception
          */
 
-        final AlkisProducts pr = new AlkisProducts(
-                AlkisConstants.COMMONS.USER,
-                AlkisConstants.COMMONS.PASSWORD,
-                AlkisConstants.COMMONS.SERVICE);
-
-        final NasZaehlObjekteSearch search = new NasZaehlObjekteSearch(
-                null,
-                NasZaehlObjekteSearch.NasSearchType.ADRESSE);
-
-        ButlerProductGenerator.getInstance();
-        NASProductGenerator.instance();
-        PointNumberReservationService.instance();
+        if (DomainServerImpl.getServerProperties().getServerName().equalsIgnoreCase("WUNDA_BLAU")) {
+            ButlerProductGenerator.getInstance();
+            NASProductGenerator.instance();
+            PointNumberReservationService.instance();
+        }
     }
 }
