@@ -69,11 +69,23 @@ public class NasZaehlObjekteSearch extends AbstractCidsServerSearch {
                 + " AND geo_field && GeometryFromText('<geom>')"
                 + " AND intersects(st_buffer(geo_field, 0.000001),st_buffer(GeometryFromText('<geom>'), 0.000001)) ORDER BY 1,2,3";
     private static Connection fmeConn = null;
+    private static String url;
+    private static String user;
+    private static String pw;
+    private static boolean initError = false;
 
     static {
         try {
+            final Properties serviceProperties = new Properties();
+            serviceProperties.load(NasZaehlObjekteSearch.class.getResourceAsStream("fme_db_conn.properties"));
+            url = serviceProperties.getProperty("connection_url");
+            user = serviceProperties.getProperty("connection_username");
+            pw = serviceProperties.getProperty("connection_pw");
             initConnection();
         } catch (SearchException ex) {
+            LOG.fatal("error during initialisation of fme db connection", ex);
+        } catch (IOException ex) {
+            initError = true;
             LOG.fatal("error during initialisation of fme db connection", ex);
         }
     }
@@ -169,7 +181,7 @@ public class NasZaehlObjekteSearch extends AbstractCidsServerSearch {
         Statement st = null;
         try {
 //            initConnection();
-            if (fmeConn.isClosed()) {
+            if ((fmeConn == null) || fmeConn.isClosed()) {
                 initConnection();
             }
             st = fmeConn.createStatement();
@@ -247,16 +259,8 @@ public class NasZaehlObjekteSearch extends AbstractCidsServerSearch {
      */
     private static void initConnection() throws SearchException {
         try {
-            final Properties serviceProperties = new Properties();
-            serviceProperties.load(NasZaehlObjekteSearch.class.getResourceAsStream("fme_db_conn.properties"));
-            final String url = serviceProperties.getProperty("connection_url");
-            final String user = serviceProperties.getProperty("connection_username");
-            final String pw = serviceProperties.getProperty("connection_pw");
             fmeConn = DriverManager.getConnection(url,
                     user, pw);
-        } catch (IOException ex) {
-            LOG.error("error during reading properties for fme_db connection", ex);
-            throw new SearchException("Error during NasZaehlObjekte search");
         } catch (SQLException ex) {
             LOG.error("Could not create db connection to fme_import database", ex);
             throw new SearchException("Error during NasZaehlObjekte search");
@@ -266,6 +270,12 @@ public class NasZaehlObjekteSearch extends AbstractCidsServerSearch {
     @Override
     public Collection performServerSearch() throws SearchException {
         final ArrayList<Integer> resultList = new ArrayList<Integer>();
+        if (initError) {
+            LOG.warn(
+                "NasZaehlObjekteSearch initialisation error. An error during reading fme_db_con properties occured.");
+            return resultList;
+        }
+
         if (searchType == NasZaehlObjekteSearch.NasSearchType.FLURSTUECKE) {
             resultList.add(getFlurstueckObjectsCount());
         } else if (searchType == NasZaehlObjekteSearch.NasSearchType.GEBAEUDE) {

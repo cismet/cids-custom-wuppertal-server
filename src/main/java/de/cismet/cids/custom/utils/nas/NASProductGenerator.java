@@ -7,7 +7,9 @@
 ****************************************************/
 package de.cismet.cids.custom.utils.nas;
 
+import Sirius.server.middleware.impls.domainserver.DomainServerImpl;
 import Sirius.server.newuser.User;
+import Sirius.server.property.ServerProperties;
 
 import com.fasterxml.jackson.core.JsonParseException;
 import com.fasterxml.jackson.core.type.TypeReference;
@@ -88,6 +90,9 @@ public class NASProductGenerator {
 
     //~ Instance fields --------------------------------------------------------
 
+    private String EIGENTUEMER_TEMPLATE_RES = "/de/cismet/cids/custom/utils/nas/A_o_eigentuemer.xml";
+    private String KOMPLETT_TEMPLATE_RES = "/de/cismet/cids/custom/utils/nas/A_komplett.xml";
+    private String POINTS_TEMPLATE_RES = "/de/cismet/cids/custom/utils/nas/A_points.xml";
     private File openOrdersLogFile;
     private File undeliveredOrdersLogFile;
     private final transient org.apache.log4j.Logger log = org.apache.log4j.Logger.getLogger(this.getClass());
@@ -111,6 +116,19 @@ public class NASProductGenerator {
     private NASProductGenerator() {
         final Properties serviceProperties = new Properties();
         try {
+            final ServerProperties serverProps = DomainServerImpl.getServerProperties();
+            final String resFolder = serverProps.getServerResourcesBasePath();
+            KOMPLETT_TEMPLATE_RES = resFolder + "/de/cismet/cids/custom/utils/nas/A_komplett.xml";
+            EIGENTUEMER_TEMPLATE_RES = resFolder + "/de/cismet/cids/custom/utils/nas/A_o_eigentuemer.xml";
+            POINTS_TEMPLATE_RES = resFolder + "/de/cismet/cids/custom/utils/nas/A_points.xml";
+
+            if (!checkTemplateFilesAccesible()) {
+                log.warn(
+                    "NAS Datenabgabe initialisation Error. Could not read all necessary template files. NAS support is disabled");
+                initError = true;
+                return;
+            }
+
             serviceProperties.load(NASProductGenerator.class.getResourceAsStream("nasServer_conf.properties"));
             SERVICE_URL = serviceProperties.getProperty("service");
             USER = serviceProperties.getProperty("user");
@@ -303,6 +321,29 @@ public class NASProductGenerator {
     /**
      * DOCUMENT ME!
      *
+     * @param   template  DOCUMENT ME!
+     *
+     * @return  DOCUMENT ME!
+     */
+    private InputStream loadTemplateFile(final NasProductTemplate template) {
+        InputStream templateFile = null;
+        try {
+            if (template == NasProductTemplate.KOMPLETT) {
+                templateFile = new FileInputStream(KOMPLETT_TEMPLATE_RES);
+            } else if (template == NasProductTemplate.OHNE_EIGENTUEMER) {
+                templateFile = new FileInputStream(EIGENTUEMER_TEMPLATE_RES);
+            } else {
+                templateFile = new FileInputStream(POINTS_TEMPLATE_RES);
+            }
+        } catch (FileNotFoundException ex) {
+            log.fatal("Could not read template template file for Template :" + template.toString(), ex);
+        }
+        return templateFile;
+    }
+
+    /**
+     * DOCUMENT ME!
+     *
      * @param   template     DOCUMENT ME!
      * @param   geoms        DOCUMENT ME!
      * @param   user         DOCUMENT ME!
@@ -321,22 +362,13 @@ public class NASProductGenerator {
             return null;
         }
 //        try {
-        InputStream templateFile = null;
+        final InputStream templateFile = loadTemplateFile(template);
 
-        try {
-            if (template == NasProductTemplate.KOMPLETT) {
-                templateFile = NASProductGenerator.class.getResourceAsStream(
-                        "A_komplett.xml");
-            } else if (template == NasProductTemplate.OHNE_EIGENTUEMER) {
-                templateFile = NASProductGenerator.class.getResourceAsStream(
-                        "A_o_eigentuemer.xml");
-            } else {
-                templateFile = NASProductGenerator.class.getResourceAsStream(
-                        "A_points.xml");
-            }
-        } catch (Exception ex) {
-            log.fatal("ka", ex);
+        if (templateFile == null) {
+            log.error("Error laoding the NAS template file.");
+            return null;
         }
+
         if (geoms == null) {
             log.error("geometry is null, cannot execute nas query");
             return null;
@@ -1019,6 +1051,19 @@ public class NASProductGenerator {
                 Exceptions.printStackTrace(ex);
             }
         }
+    }
+
+    /**
+     * DOCUMENT ME!
+     *
+     * @return  DOCUMENT ME!
+     */
+    private boolean checkTemplateFilesAccesible() {
+        final File komplettTemplate = new File(KOMPLETT_TEMPLATE_RES);
+        final File eignetuemerTemplate = new File(EIGENTUEMER_TEMPLATE_RES);
+        final File pointTemplate = new File(POINTS_TEMPLATE_RES);
+
+        return (komplettTemplate.canRead() && eignetuemerTemplate.canRead() && pointTemplate.canRead());
     }
 
     //~ Inner Classes ----------------------------------------------------------

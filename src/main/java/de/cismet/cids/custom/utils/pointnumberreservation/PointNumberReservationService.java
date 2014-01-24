@@ -7,12 +7,16 @@
 ****************************************************/
 package de.cismet.cids.custom.utils.pointnumberreservation;
 
+import Sirius.server.middleware.impls.domainserver.DomainServerImpl;
+import Sirius.server.property.ServerProperties;
+
 import de.aed_sicad.namespaces.svr.AuftragsManager;
 import de.aed_sicad.namespaces.svr.AuftragsManagerSoap;
 
 import java.io.BufferedReader;
 import java.io.ByteArrayInputStream;
 import java.io.ByteArrayOutputStream;
+import java.io.File;
 import java.io.FileNotFoundException;
 import java.io.IOException;
 import java.io.InputStream;
@@ -63,6 +67,13 @@ public class PointNumberReservationService {
     private final String PW;
     private AuftragsManagerSoap manager;
     private boolean initError = false;
+    private String TEMPLATE_BEN_AUFTR_ALL;
+    private String TEMPLATE_BEN_AUFTR_ONE_ANR;
+    private String TEMPLATE_BEN_AUFTR_WILDCARD;
+    private String TEMPLATE_VERLAENGERN;
+    private String TEMPLATE_FREIGABE;
+    private String TEMPLATE_RESERVIERUNG;
+    private String TEMPLATE_RESERVIERUNG_SW;
 
     //~ Constructors -----------------------------------------------------------
 
@@ -74,6 +85,26 @@ public class PointNumberReservationService {
         try {
             serviceProperties.load(PointNumberReservationService.class.getResourceAsStream(
                     "pointNumberRes_conf.properties"));
+            final ServerProperties serverProps = DomainServerImpl.getServerProperties();
+            final String serverRespath = serverProps.getServerResourcesBasePath();
+            TEMPLATE_BEN_AUFTR_ALL = serverRespath
+                        + "/de/cismet/cids/custom/utils/pointnumberreservation/A_Ben_Auftr_alle_PKZ.xml";
+            TEMPLATE_BEN_AUFTR_ONE_ANR = serverRespath
+                        + "/de/cismet/cids/custom/utils/pointnumberreservation/A_Ben_Auftr_eine_ANR.xml";
+            TEMPLATE_BEN_AUFTR_WILDCARD = serverRespath
+                        + "/de/cismet/cids/custom/utils/pointnumberreservation/A_Ben_Auftr_ANR_Praefix_Wildcard.xml";
+            TEMPLATE_VERLAENGERN = serverRespath
+                        + "/de/cismet/cids/custom/utils/pointnumberreservation/A_verlaengern.xml";
+            TEMPLATE_FREIGABE = serverRespath + "/de/cismet/cids/custom/utils/pointnumberreservation/A_Freigabe.xml";
+            TEMPLATE_RESERVIERUNG = serverRespath
+                        + "/de/cismet/cids/custom/utils/pointnumberreservation/A_reservierung.xml";
+            TEMPLATE_RESERVIERUNG_SW = serverRespath
+                        + "/de/cismet/cids/custom/utils/pointnumberreservation/A_reservierung_startwert.xml";
+
+            if (!checkTemplateFilesAccessible()) {
+                LOG.warn("Punktnummernreservierung initialisation Error!");
+                initError = true;
+            }
         } catch (Exception ex) {
             LOG.warn("Punktnummernreservierung initialisation Error!", ex);
             initError = true;
@@ -588,5 +619,24 @@ public class PointNumberReservationService {
                 pnr.setAblaufDatum(completePnr.getAblaufDatum());
             }
         }
+    }
+
+    /**
+     * DOCUMENT ME!
+     *
+     * @return  DOCUMENT ME!
+     */
+    private boolean checkTemplateFilesAccessible() {
+        final File benAuftrAllTempl = new File(TEMPLATE_BEN_AUFTR_ALL);
+        final File benAuftrOneTempl = new File(TEMPLATE_BEN_AUFTR_ONE_ANR);
+        final File benAuftrWildTempl = new File(TEMPLATE_BEN_AUFTR_WILDCARD);
+        final File releaseTempl = new File(TEMPLATE_FREIGABE);
+        final File reservationTempl = new File(TEMPLATE_RESERVIERUNG);
+        final File reservationSWTempl = new File(TEMPLATE_RESERVIERUNG_SW);
+        final File prolongueTempl = new File(TEMPLATE_VERLAENGERN);
+
+        return benAuftrAllTempl.canRead() && benAuftrOneTempl.canRead() && benAuftrWildTempl.canRead()
+                    && releaseTempl.canRead() && reservationSWTempl.canRead() && reservationTempl.canRead()
+                    && prolongueTempl.canRead();
     }
 }
