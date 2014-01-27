@@ -13,10 +13,13 @@ import Sirius.server.property.ServerProperties;
 import de.aed_sicad.namespaces.svr.AuftragsManager;
 import de.aed_sicad.namespaces.svr.AuftragsManagerSoap;
 
+import org.openide.util.Exceptions;
+
 import java.io.BufferedReader;
 import java.io.ByteArrayInputStream;
 import java.io.ByteArrayOutputStream;
 import java.io.File;
+import java.io.FileInputStream;
 import java.io.FileNotFoundException;
 import java.io.IOException;
 import java.io.InputStream;
@@ -315,12 +318,18 @@ public class PointNumberReservationService {
             LOG.info("PointNumberReservationService initialisation error");
             return null;
         }
-        final InputStream templateFile = PointNumberReservationService.class.getResourceAsStream(
-                "A_Ben_Auftr_alle_PKZ.xml");
-        final String request = readFile(templateFile);
-        final InputStream preparedQuery = new ByteArrayInputStream(request.getBytes());
+        final InputStream templateFile;
+        String result = null;
+        try {
+            templateFile = new FileInputStream(TEMPLATE_BEN_AUFTR_ALL);
+            final String request = readFile(templateFile);
+            final InputStream preparedQuery = new ByteArrayInputStream(request.getBytes());
 
-        final String result = sendRequestAndAwaitResult(preparedQuery);
+            result = sendRequestAndAwaitResult(preparedQuery);
+        } catch (FileNotFoundException ex) {
+            LOG.error("Could not find PointnumberReservation tempalte file " + TEMPLATE_BEN_AUFTR_ALL);
+        }
+
         if (result == null) {
             return null;
         }
@@ -340,10 +349,13 @@ public class PointNumberReservationService {
             return null;
         }
         InputStream templateFile = null;
-        templateFile = PointNumberReservationService.class.getResourceAsStream("A_Ben_Auftr_eine_ANR.xml");
+        try {
+            templateFile = new FileInputStream(TEMPLATE_BEN_AUFTR_ONE_ANR);
+        } catch (FileNotFoundException ex) {
+            LOG.error("Could not find PointnumberReservation tempalte file " + TEMPLATE_BEN_AUFTR_ONE_ANR);
+        }
 
         if (templateFile == null) {
-            LOG.error("Could not load Template file");
             return null;
         }
 
@@ -385,10 +397,12 @@ public class PointNumberReservationService {
             return null;
         }
         InputStream templateFile = null;
-        templateFile = PointNumberReservationService.class.getResourceAsStream(
-                "A_Ben_Auftr_ANR_Praefix_Wildcard.xml");
+        try {
+            templateFile = new FileInputStream(TEMPLATE_BEN_AUFTR_WILDCARD);
+        } catch (FileNotFoundException ex) {
+            LOG.error("Could not find PointnumberReservation tempalte file " + TEMPLATE_BEN_AUFTR_WILDCARD);
+        }
         if (templateFile == null) {
-            LOG.error("Could not load Template file");
             return null;
         }
 
@@ -455,10 +469,14 @@ public class PointNumberReservationService {
             LOG.info("PointNumberReservationService initialisation error");
             return null;
         }
-        final InputStream templateFile = PointNumberReservationService.class.getResourceAsStream("A_verlaengern.xml");
+        InputStream templateFile = null;
+        try {
+            templateFile = new FileInputStream(TEMPLATE_VERLAENGERN);
+        } catch (FileNotFoundException ex) {
+            LOG.error("Could not find PointnumberReservation tempalte file " + TEMPLATE_VERLAENGERN);
+        }
 
         if (templateFile == null) {
-            LOG.error("Could not load Template file");
             return null;
         }
 
@@ -515,10 +533,14 @@ public class PointNumberReservationService {
             return null;
         }
 
-        final InputStream templateFile = PointNumberReservationService.class.getResourceAsStream("A_Freigabe.xml");
+        InputStream templateFile = null;
+        try {
+            templateFile = new FileInputStream(TEMPLATE_FREIGABE);
+        } catch (FileNotFoundException ex) {
+            LOG.error("Could not find PointnumberReservation tempalte file " + TEMPLATE_FREIGABE);
+        }
 
         if (templateFile == null) {
-            LOG.error("Could not load Template file");
             return null;
         }
 
@@ -565,14 +587,17 @@ public class PointNumberReservationService {
         // number 999999. Can not execute request."; LOG.error(errorMsg); throw new IllegalStateException(errorMsg); }
 
         InputStream templateFile = null;
-        if (startValue == 0) {
-            templateFile = PointNumberReservationService.class.getResourceAsStream("A_reservierung.xml");
-        } else {
-            templateFile = PointNumberReservationService.class.getResourceAsStream("A_reservierung_startwert.xml");
+        try {
+            if (startValue == 0) {
+                templateFile = new FileInputStream(TEMPLATE_RESERVIERUNG);
+            } else {
+                templateFile = new FileInputStream(TEMPLATE_RESERVIERUNG_SW);
+            }
+        } catch (FileNotFoundException ex) {
+            LOG.error("Could not find PointnumberReservation tempalte file " + TEMPLATE_FREIGABE);
         }
 
         if (templateFile == null) {
-            LOG.error("Could not load Template file");
             return null;
         }
 
