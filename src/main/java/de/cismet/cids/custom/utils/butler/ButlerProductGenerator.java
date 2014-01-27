@@ -55,7 +55,7 @@ public class ButlerProductGenerator {
 
     //~ Static fields/initializers ---------------------------------------------
 
-    private static final ButlerProductGenerator instance = new ButlerProductGenerator();
+    private static ButlerProductGenerator instance;
     private static final Logger LOG = Logger.getLogger(ButlerProductGenerator.class);
     private static final String FILE_APPENDIX = ".but";
     private static final String SEPERATOR = ";";
@@ -111,8 +111,10 @@ public class ButlerProductGenerator {
                 initError = true;
             }
             loadOpenOrdersFromJsonFile();
-        } catch (IOException ex) {
-            LOG.warn("Could not load butler properties. This might cause problems in Wunda_Blau Butler functionality");
+        } catch (Exception ex) {
+            LOG.warn(
+                "Could not load butler properties. This might cause problems in Wunda_Blau Butler functionality",
+                ex);
             initError = true;
         }
         if (!initError) {
@@ -130,6 +132,9 @@ public class ButlerProductGenerator {
      * @return  DOCUMENT ME!
      */
     public static ButlerProductGenerator getInstance() {
+        if (instance == null) {
+            instance = new ButlerProductGenerator();
+        }
         return instance;
     }
 

@@ -29,7 +29,6 @@ public class PointNumberReserverationServerAction implements ServerAction {
     //~ Static fields/initializers ---------------------------------------------
 
     private static final String ANR_SEPERATOR = "_";
-    private static final PointNumberReservationService pnrService = PointNumberReservationService.instance();
 
     //~ Enums ------------------------------------------------------------------
 
@@ -65,7 +64,8 @@ public class PointNumberReserverationServerAction implements ServerAction {
      * @return  DOCUMENT ME!
      */
     private Collection<String> getAllAntragsNummern() {
-        final Collection<PointNumberReservationRequest> requests = pnrService.getAllBenAuftr();
+        final Collection<PointNumberReservationRequest> requests = PointNumberReservationService.instance()
+                    .getAllBenAuftr();
         final ArrayList<String> antragsNummern = new ArrayList<String>();
         if (requests != null) {
             for (final PointNumberReservationRequest r : requests) {
@@ -84,7 +84,8 @@ public class PointNumberReserverationServerAction implements ServerAction {
      */
     private Collection<String> getAllAntragsNummern(final String aPrefix) {
         final String anr = aPrefix + "*";
-        final Collection<PointNumberReservationRequest> requests = pnrService.getAllBenAuftrWithWildCard(anr);
+        final Collection<PointNumberReservationRequest> requests = PointNumberReservationService.instance()
+                    .getAllBenAuftrWithWildCard(anr);
         final ArrayList<String> antragsNummern = new ArrayList<String>();
         if (requests != null) {
             for (final PointNumberReservationRequest r : requests) {
@@ -107,7 +108,7 @@ public class PointNumberReserverationServerAction implements ServerAction {
         if (!isAuftragsNummerValid(anr)) {
             return false;
         }
-        return pnrService.isAntragsNummerExisting(anr);
+        return PointNumberReservationService.instance().isAntragsNummerExisting(anr);
     }
 
     /**
@@ -131,7 +132,7 @@ public class PointNumberReserverationServerAction implements ServerAction {
             return null;
         }
 
-        return pnrService.doReservation(aPrefix, anr, nbz, anzahl, startwert);
+        return PointNumberReservationService.instance().doReservation(aPrefix, anr, nbz, anzahl, startwert);
     }
 
     /**
@@ -144,7 +145,7 @@ public class PointNumberReserverationServerAction implements ServerAction {
      */
     private Collection<PointNumberReservation> getReserviertePunkte(final String aPrefix, final String aNummer) {
         final String anr = aPrefix + ANR_SEPERATOR + aNummer;
-        final PointNumberReservationRequest result = pnrService.getAllBenAuftr(anr);
+        final PointNumberReservationRequest result = PointNumberReservationService.instance().getAllBenAuftr(anr);
         if (result != null) {
             return result.getPointNumbers();
         }
@@ -171,7 +172,7 @@ public class PointNumberReserverationServerAction implements ServerAction {
         if (!isAuftragsNummerValid(anr)) {
             return null;
         }
-        return pnrService.releaseReservation(aPrefix, anr, nbz, on1, on2);
+        return PointNumberReservationService.instance().releaseReservation(aPrefix, anr, nbz, on1, on2);
     }
 
     /**

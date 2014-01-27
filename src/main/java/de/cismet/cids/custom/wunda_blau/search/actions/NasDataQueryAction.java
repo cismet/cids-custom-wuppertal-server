@@ -64,7 +64,6 @@ public class NasDataQueryAction implements UserAwareServerAction {
 
     //~ Instance fields --------------------------------------------------------
 
-    private final NASProductGenerator nasPg = NASProductGenerator.instance();
     private User user;
 
     //~ Methods ----------------------------------------------------------------
@@ -90,17 +89,17 @@ public class NasDataQueryAction implements UserAwareServerAction {
             }
         }
         if (method == METHOD_TYPE.ADD) {
-            return nasPg.executeAsynchQuery(template, geoms, user, requestId);
+            return NASProductGenerator.instance().executeAsynchQuery(template, geoms, user, requestId);
         } else if (method == METHOD_TYPE.GET) {
             if (orderId == null) {
                 LOG.error("missing order id for get request");
                 return null;
             }
-            return nasPg.getResultForOrder(orderId, user);
+            return NASProductGenerator.instance().getResultForOrder(orderId, user);
         } else if (method == METHOD_TYPE.GET_ALL) {
-            return nasPg.getUndeliveredOrders(user);
+            return NASProductGenerator.instance().getUndeliveredOrders(user);
         } else if (method == METHOD_TYPE.CANCEL) {
-            nasPg.cancelOrder(orderId, user);
+            NASProductGenerator.instance().cancelOrder(orderId, user);
         }
 
         return null;
