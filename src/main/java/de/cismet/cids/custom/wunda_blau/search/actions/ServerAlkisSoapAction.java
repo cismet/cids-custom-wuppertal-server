@@ -37,8 +37,6 @@ public class ServerAlkisSoapAction implements ServerAction {
 
     private static final transient org.apache.log4j.Logger LOG = org.apache.log4j.Logger.getLogger(
             ServerAlkisSoapAction.class);
-    private static SOAPAccessProvider soapProvider = new SOAPAccessProvider();
-    private static ALKISInfoServices infoService = soapProvider.getAlkisInfoService();
 
     //~ Enums ------------------------------------------------------------------
 
@@ -66,8 +64,8 @@ public class ServerAlkisSoapAction implements ServerAction {
             // POINT
             try {
                 final String pointCode = params[0].getValue().toString();
-                final Point point = infoService.getPoint(soapProvider.getIdentityCard(),
-                        soapProvider.getService(),
+                final Point point = getALKISInfoServices().getPoint(getSOAPAccessProvider().getIdentityCard(),
+                        getSOAPAccessProvider().getService(),
                         pointCode);
                 return point;
             } catch (RemoteException remoteException) {
@@ -78,8 +76,9 @@ public class ServerAlkisSoapAction implements ServerAction {
             // BUCHUNGSBLATT
             try {
                 final String buchungsblattCode = params[0].getValue().toString();
-                final Buchungsblatt buchungsblatt = infoService.getBuchungsblatt(soapProvider.getIdentityCard(),
-                        soapProvider.getService(),
+                final Buchungsblatt buchungsblatt = getALKISInfoServices().getBuchungsblatt(getSOAPAccessProvider()
+                                .getIdentityCard(),
+                        getSOAPAccessProvider().getService(),
                         buchungsblattCode);
                 return buchungsblatt;
             } catch (RemoteException remoteException) {
@@ -92,5 +91,45 @@ public class ServerAlkisSoapAction implements ServerAction {
     @Override
     public String getTaskName() {
         return "alkisSoapTunnelAction";
+    }
+
+    /**
+     * DOCUMENT ME!
+     *
+     * @return  DOCUMENT ME!
+     */
+    private static SOAPAccessProvider getSOAPAccessProvider() {
+        return LazyInitialiser.soapProvider;
+    }
+
+    /**
+     * DOCUMENT ME!
+     *
+     * @return  DOCUMENT ME!
+     */
+    private static ALKISInfoServices getALKISInfoServices() {
+        return getSOAPAccessProvider().getAlkisInfoService();
+    }
+
+    //~ Inner Classes ----------------------------------------------------------
+
+    /**
+     * DOCUMENT ME!
+     *
+     * @version  $Revision$, $Date$
+     */
+    private static final class LazyInitialiser {
+
+        //~ Static fields/initializers -----------------------------------------
+
+        private static final SOAPAccessProvider soapProvider = new SOAPAccessProvider();
+
+        //~ Constructors -------------------------------------------------------
+
+        /**
+         * Creates a new LazyInitialiser object.
+         */
+        private LazyInitialiser() {
+        }
     }
 }
