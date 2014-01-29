@@ -83,10 +83,14 @@ public class NasZaehlObjekteSearch extends AbstractCidsServerSearch {
             pw = serviceProperties.getProperty("connection_pw");
             initConnection();
         } catch (SearchException ex) {
-            LOG.fatal("error during initialisation of fme db connection", ex);
+            if (LOG.isDebugEnabled()) {
+                LOG.debug("error during initialisation of fme db connection.", ex);
+            }
         } catch (IOException ex) {
             initError = true;
-            LOG.fatal("error during initialisation of fme db connection", ex);
+            LOG.warn(
+                "error during initialisation of fme db connection. Could not read properties file. Search disabled",
+                ex);
         }
     }
 
@@ -262,8 +266,8 @@ public class NasZaehlObjekteSearch extends AbstractCidsServerSearch {
             fmeConn = DriverManager.getConnection(url,
                     user, pw);
         } catch (SQLException ex) {
-            LOG.error("Could not create db connection to fme_import database", ex);
-            throw new SearchException("Error during NasZaehlObjekte search");
+            throw new SearchException(
+                "Error during NasZaehlObjekte search.Could not create db connection to fme_import database");
         }
     }
 
