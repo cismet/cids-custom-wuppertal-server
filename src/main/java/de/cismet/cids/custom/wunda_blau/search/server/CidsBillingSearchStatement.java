@@ -118,7 +118,9 @@ public class CidsBillingSearchStatement extends AbstractCidsServerSearch {
         if (ms != null) {
             try {
                 generateQuery();
-                LOG.warn(query.toString());
+                if (LOG.isDebugEnabled()) {
+                    LOG.debug("The used query is: " + query.toString());
+                }
 
                 final MetaObject[] billingMetaObjects = ms.getMetaObject(user, query.toString());
                 final ArrayList<MetaObject> billingCollection = new ArrayList<MetaObject>(Arrays.asList(
