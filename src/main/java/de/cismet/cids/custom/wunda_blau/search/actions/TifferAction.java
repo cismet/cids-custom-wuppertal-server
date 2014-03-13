@@ -33,12 +33,14 @@ import javax.imageio.ImageIO;
 import de.cismet.cids.server.actions.ServerAction;
 import de.cismet.cids.server.actions.ServerActionParameter;
 
+import static de.cismet.cids.custom.wunda_blau.search.actions.TifferAction.ParameterType.*;
+
 /**
  * A server action which adds a simple footer with text to an image. This image can be downloaded from a URL.
  *
  * @author   Gilles Baatz
  * @version  $Revision$, $Date$
- * @see ImageAnnotator
+ * @see      ImageAnnotator
  */
 @org.openide.util.lookup.ServiceProvider(service = ServerAction.class)
 public class TifferAction implements ServerAction {
@@ -59,7 +61,7 @@ public class TifferAction implements ServerAction {
 
         //~ Enum constants -----------------------------------------------------
 
-        BILDNUMMER, ORT, AUFNAHME_DATUM, FORMAT, SCALE
+        BILDNUMMER, ORT, AUFNAHME_DATUM, FORMAT, SCALE, SUBDIR
     }
 
     //~ Instance fields --------------------------------------------------------
@@ -83,9 +85,6 @@ public class TifferAction implements ServerAction {
 
     @Override
     public Object execute(final Object body, final ServerActionParameter... params) {
-        // String txt = "Freie Verwendung für den internen Dienstgebrauch, Publikation oder Weitergabe nur mit
-        // Einzelgenehmigung von R102 oder gemäß Rahmenvereinbarung mit R102";
-
         final HashMap parameterMap = createHashMap(params);
 
         String txt = res.getString("annotation");
@@ -97,16 +96,21 @@ public class TifferAction implements ServerAction {
             LOG.debug(txt + "\n" + watermark + "\n" + base + "\n" + separator + "\n" + urlOrFile);
         }
 
-        String bildnummer = (String)parameterMap.get(ParameterType.BILDNUMMER.toString());
+        String bildnummer = (String)parameterMap.get(BILDNUMMER.toString());
 
         if (bildnummer == null) {
             return null;
         }
 
-        final String ort = (String)parameterMap.get(ParameterType.ORT.toString());
-        final String aufdat = (String)parameterMap.get(ParameterType.AUFNAHME_DATUM.toString());
-        String format = (String)parameterMap.get(ParameterType.FORMAT.toString());
-        final String scale = (String)parameterMap.get(ParameterType.SCALE.toString());
+        final String ort = (String)parameterMap.get(ORT.toString());
+        final String aufdat = (String)parameterMap.get(AUFNAHME_DATUM.toString());
+        String format = (String)parameterMap.get(FORMAT.toString());
+        final String scale = (String)parameterMap.get(SCALE.toString());
+
+        String subdir = (String)parameterMap.get(SUBDIR.toString());
+        if (subdir == null) {
+            subdir = "";
+        }
 
         ///////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 
@@ -153,12 +157,13 @@ public class TifferAction implements ServerAction {
         ImageAnnotator a;
         try {
             if (!urlOrFile.equalsIgnoreCase("file")) {
-                final URL imgUrl = new URL("http://" + base + bildnummer);
+                final URL imgUrl = new URL("http://" + base + subdir + bildnummer);
                 final URL wUrl = new URL("http://" + base + watermark);
-                a = new ImageAnnotator(new URL("http://127.0.0.1:8000/MARBLES.TIF"), wUrl, txt);
+                a = new ImageAnnotator(imgUrl, wUrl, txt);
             } else // file
             {
-                a = new ImageAnnotator(base + bildnummer, base + watermark, txt);
+                final String fileLocation = base + subdir + bildnummer;
+                a = new ImageAnnotator(fileLocation, base + watermark, txt);
             }
         } catch (MalformedURLException ex) {
             LOG.error("MalformedURLException while annotating the image.", ex);
