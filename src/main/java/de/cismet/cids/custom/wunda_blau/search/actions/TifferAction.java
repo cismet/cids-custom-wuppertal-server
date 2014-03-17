@@ -51,17 +51,6 @@ public class TifferAction implements ServerAction {
 
     private static final Logger LOG = Logger.getLogger(TifferAction.class);
     public static final String ACTION_NAME = "tifferAction";
-    private static final String WATERMARK_NAME = "wupperwurm.gif";
-    private static BufferedImage watermark;
-
-    static {
-        try {
-            watermark = ImageIO.read(TifferAction.class.getResourceAsStream(WATERMARK_NAME));
-        } catch (IOException ex) {
-            watermark = new BufferedImage(1, 1, BufferedImage.TYPE_INT_RGB);
-            LOG.error("Watermark could not be properly created. Using an empty image instead.", ex);
-        }
-    }
 
     //~ Enums ------------------------------------------------------------------
 
@@ -170,11 +159,11 @@ public class TifferAction implements ServerAction {
         try {
             if (!urlOrFile.equalsIgnoreCase("file")) {
                 final URL imgUrl = new URL("http://" + base + subdir + bildnummer);
-                a = new ImageAnnotator(imgUrl, watermark, txt);
+                a = new ImageAnnotator(imgUrl, txt);
             } else // file
             {
                 final String fileLocation = base + subdir + bildnummer;
-                a = new ImageAnnotator(fileLocation, watermark, txt);
+                a = new ImageAnnotator(fileLocation, txt);
             }
         } catch (MalformedURLException ex) {
             LOG.error("MalformedURLException while annotating the image.", ex);
