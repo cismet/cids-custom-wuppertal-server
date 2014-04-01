@@ -63,7 +63,7 @@ public class TifferAction implements ServerAction {
 
         //~ Enum constants -----------------------------------------------------
 
-        BILDNUMMER, ORT, AUFNAHME_DATUM, FORMAT, SCALE, SUBDIR
+        BILDNUMMER, FORMAT, SCALE, SUBDIR
     }
 
     //~ Instance fields --------------------------------------------------------
@@ -77,7 +77,7 @@ public class TifferAction implements ServerAction {
      */
     public TifferAction() {
         try {
-            res = new PropertyResourceBundle(this.getClass().getResourceAsStream("luftbild_servlet.cfg"));
+            res = new PropertyResourceBundle(this.getClass().getResourceAsStream("tifferAction.cfg"));
         } catch (Exception e) {
             LOG.error("Resource not found");
         }
@@ -97,14 +97,12 @@ public class TifferAction implements ServerAction {
             LOG.debug(txt + "\n" + base + "\n" + separator + "\n" + urlOrFile);
         }
 
-        String bildnummer = (String)parameterMap.get(BILDNUMMER.toString());
+        final String bildnummer = (String)parameterMap.get(BILDNUMMER.toString());
 
         if (bildnummer == null) {
             return null;
         }
 
-        final String ort = (String)parameterMap.get(ORT.toString());
-        final String aufdat = (String)parameterMap.get(AUFNAHME_DATUM.toString());
         String format = (String)parameterMap.get(FORMAT.toString());
         final String scale = (String)parameterMap.get(SCALE.toString());
 
@@ -113,25 +111,15 @@ public class TifferAction implements ServerAction {
             subdir = "";
         }
 
-        ///////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-
-        if ((!bildnummer.endsWith(".TIF") && !bildnummer.endsWith(".tif") && !bildnummer.endsWith(".TIFF")
-                        && !bildnummer.endsWith("tiff"))) {
-            bildnummer += ".tif";
-        }
-
-        if (ort != null) {
-            txt = "Ort {" + ort + "} / " + txt;
-        }
-        if (aufdat != null) {
-            txt = "Aufnahmedatum {" + aufdat + "} / " + txt;
-        }
-        txt = "Bildnummer {" + bildnummer + "} / " + txt;
+        txt = txt.replace("$bnr$", bildnummer);
+        txt = txt.replace("(c)", "\u00A9");
 
         ////////////////////////////////////////////////////////////////////////////////////////
 
         if (format != null) {
-            if (format.equalsIgnoreCase("jpg") || format.equalsIgnoreCase("jpeg")) {
+            if (format.equalsIgnoreCase("jpg")) {
+                format = "JPG";
+            } else if (format.equalsIgnoreCase("jpeg")) {
                 format = "JPEG";
             } else if (format.equalsIgnoreCase("bmp")) {
                 format = "BMP";
@@ -149,7 +137,7 @@ public class TifferAction implements ServerAction {
 
         try {
             if ((scale != null) && !scale.equals("0.0") && !scale.equals("0") && !scale.equals(".0")) {
-                scaleFactor = new Double(scale).doubleValue();
+                scaleFactor = Double.parseDouble(scale);
             }
         } catch (Exception e) {
             LOG.error("scale Format", e);
@@ -158,11 +146,11 @@ public class TifferAction implements ServerAction {
         ImageAnnotator a;
         try {
             if (!urlOrFile.equalsIgnoreCase("file")) {
-                final URL imgUrl = new URL("http://" + base + subdir + bildnummer);
+                final URL imgUrl = new URL("http://" + base + subdir + bildnummer + "." + format.toLowerCase());
                 a = new ImageAnnotator(imgUrl, txt);
             } else // file
             {
-                final String fileLocation = base + subdir + bildnummer;
+                final String fileLocation = base + subdir + bildnummer + "." + format.toLowerCase();
                 a = new ImageAnnotator(fileLocation, txt);
             }
         } catch (MalformedURLException ex) {
@@ -175,8 +163,6 @@ public class TifferAction implements ServerAction {
             LOG.error("Some other exception while annotating the image.", ex);
             return null;
         }
-
-        a.setPrintFilename(false);
 
         BufferedImage bi = a.getAnnotatedImage();
 
