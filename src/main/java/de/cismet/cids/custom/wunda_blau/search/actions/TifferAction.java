@@ -11,8 +11,6 @@
  */
 package de.cismet.cids.custom.wunda_blau.search.actions;
 
-import Sirius.util.image.ImageAnnotator;
-
 import org.apache.log4j.Logger;
 
 import org.jfree.util.Log;
