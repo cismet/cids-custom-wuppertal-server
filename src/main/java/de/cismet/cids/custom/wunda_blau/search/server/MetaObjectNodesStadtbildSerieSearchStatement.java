@@ -12,6 +12,7 @@ import Sirius.server.middleware.types.MetaObject;
 import Sirius.server.middleware.types.MetaObjectNode;
 import Sirius.server.newuser.User;
 
+import org.apache.commons.lang.StringUtils;
 import org.apache.log4j.Logger;
 
 import java.rmi.RemoteException;
@@ -19,7 +20,6 @@ import java.rmi.RemoteException;
 import java.text.SimpleDateFormat;
 
 import java.util.ArrayList;
-import java.util.Arrays;
 import java.util.Collection;
 import java.util.Date;
 
@@ -79,7 +79,7 @@ public class MetaObjectNodesStadtbildSerieSearchStatement extends AbstractCidsSe
     private String streetID;
     private String ortID;
     private String hausnummer;
-    private String imageNrfrom;
+    private String imageNrFrom;
     private String imageNrTo;
     private final User user;
     private StringBuilder query;
@@ -133,14 +133,20 @@ public class MetaObjectNodesStadtbildSerieSearchStatement extends AbstractCidsSe
 
     /**
      * DOCUMENT ME!
+     *
+     * @return  DOCUMENT ME!
      */
-    public void generateQuery() {
+    public String generateQuery() {
         query = new StringBuilder();
-        query.append("SELECT " + "(SELECT id "
+        query.append("SELECT DISTINCT " + "(SELECT id "
                     + "                FROM    cs_class "
                     + "                WHERE   name ilike 'sb_stadtbildserie' "
                     + "                ), sbs.id ");
         query.append(" FROM sb_stadtbildserie sbs");
+        if (StringUtils.isNotBlank(imageNrFrom) || StringUtils.isNotBlank(imageNrTo)) {
+            query.append(" join sb_serie_bild_array as arr ");
+            query.append(" on sbs.id = arr.sb_stadtbildserie_reference ");
+        }
         query.append(" WHERE ");
         query.append(" TRUE ");
         appendBildtyp();
@@ -149,6 +155,8 @@ public class MetaObjectNodesStadtbildSerieSearchStatement extends AbstractCidsSe
         appendStreetID();
         appendOrtID();
         appendHausnummer();
+        appendImageNumbers();
+        return query.toString();
     }
 
     /**
@@ -240,10 +248,50 @@ public class MetaObjectNodesStadtbildSerieSearchStatement extends AbstractCidsSe
             query.append(" and sbs.ort = ").append(ortID).append(" ");
         }
     }
-    
-        private void appendHausnummer() {
+
+    /**
+     * DOCUMENT ME!
+     */
+    private void appendHausnummer() {
         if ((hausnummer != null) && !hausnummer.equals("")) {
-            query.append("and sbs.hausnummer ilike '%" + hausnummer + "%' ");
+            query.append("and sbs.hausnummer ilike '%").append(hausnummer).append("%' ");
+        }
+    }
+
+    /**
+     * DOCUMENT ME!
+     */
+    private void appendImageNumbers() {
+        if (StringUtils.isNotBlank(imageNrFrom) && StringUtils.isNotBlank(imageNrTo)) {
+            // both are set
+            int fromInt;
+            int toInt;
+            try {
+                fromInt = Integer.parseInt(imageNrFrom);
+                toInt = Integer.parseInt(imageNrTo);
+                if (fromInt > toInt) {
+                    final int temp = fromInt;
+                    fromInt = toInt;
+                    toInt = temp;
+                }
+            } catch (NumberFormatException ex) {
+                return;
+            }
+
+            query.append(
+                    " and arr.stadtbild in (select id from sb_stadtbild where bildnummer ~ '^\\\\d{6}$' and ")
+                    .append(fromInt)
+                    .append(" <= bildnummer::integer and bildnummer::integer <= ")
+                    .append(toInt)
+                    .append(" ) ");
+        } else if (StringUtils.isBlank(imageNrFrom) || StringUtils.isBlank(imageNrTo)) {
+            // only one is set
+            final String usedNr = StringUtils.isNotBlank(imageNrFrom) ? imageNrFrom : imageNrTo;
+            query.append(" and arr.stadtbild = (select id from sb_stadtbild where bildnummer = '")
+                    .append(usedNr)
+                    .append("') ");
+        } else {
+            // none are set -- do nothing
         }
     }
 
@@ -355,13 +403,57 @@ public class MetaObjectNodesStadtbildSerieSearchStatement extends AbstractCidsSe
         this.ortID = ortID;
     }
 
+    /**
+     * DOCUMENT ME!
+     *
+     * @return  DOCUMENT ME!
+     */
     public String getHausnummer() {
         return hausnummer;
     }
 
-    public void setHausnummer(String hausnummer) {
+    /**
+     * DOCUMENT ME!
+     *
+     * @param  hausnummer  DOCUMENT ME!
+     */
+    public void setHausnummer(final String hausnummer) {
         this.hausnummer = hausnummer;
     }
-    
-    
+
+    /**
+     * DOCUMENT ME!
+     *
+     * @return  DOCUMENT ME!
+     */
+    public String getImageNrfrom() {
+        return imageNrFrom;
+    }
+
+    /**
+     * DOCUMENT ME!
+     *
+     * @param  imageNrFrom  DOCUMENT ME!
+     */
+    public void setImageNrFrom(final String imageNrFrom) {
+        this.imageNrFrom = imageNrFrom;
+    }
+
+    /**
+     * DOCUMENT ME!
+     *
+     * @return  DOCUMENT ME!
+     */
+    public String getImageNrTo() {
+        return imageNrTo;
+    }
+
+    /**
+     * DOCUMENT ME!
+     *
+     * @param  imageNrTo  DOCUMENT ME!
+     */
+    public void setImageNrTo(final String imageNrTo) {
+        this.imageNrTo = imageNrTo;
+    }
 }
