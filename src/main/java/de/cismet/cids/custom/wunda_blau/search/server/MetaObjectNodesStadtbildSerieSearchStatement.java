@@ -84,6 +84,7 @@ public class MetaObjectNodesStadtbildSerieSearchStatement extends AbstractCidsSe
     private final User user;
     private StringBuilder query;
     private final SimpleDateFormat postgresDateFormat = new SimpleDateFormat("yyyy-MM-dd");
+    private ArrayList<ArrayList> resultset;
 
     //~ Constructors -----------------------------------------------------------
 
@@ -108,20 +109,20 @@ public class MetaObjectNodesStadtbildSerieSearchStatement extends AbstractCidsSe
                     LOG.debug("The used query is: " + query.toString());
                 }
 
-                final MetaObject[] metaObjects = metaService.getMetaObject(user, query.toString());
-                if (metaObjects.length > 100) {
-                    throw new SearchException("Too many search results. Amount found: " + metaObjects.length);
+                resultset = metaService.performCustomSearch(query.toString());
+
+                final ArrayList result = new ArrayList();
+
+                for (final ArrayList stadtbildserie : resultset) {
+                    final int classID = (Integer)stadtbildserie.get(0);
+                    final int objectID = (Integer)stadtbildserie.get(1);
+                    final String name = (String)stadtbildserie.get(2);
+
+                    final MetaObjectNode node = new MetaObjectNode(DOMAIN, objectID, classID, name);
+
+                    result.add(node);
                 }
-                final Collection<MetaObjectNode> metaObjectsNodes = new ArrayList<MetaObjectNode>(metaObjects.length);
-                for (final MetaObject metaObject : metaObjects) {
-                    final MetaObjectNode node = new MetaObjectNode(
-                            "WUNDA_BLAU",
-                            metaObject.getID(),
-                            metaObject.getClassID(),
-                            metaObject.getName());
-                    metaObjectsNodes.add(node);
-                }
-                return metaObjectsNodes;
+                return result;
             } catch (RemoteException ex) {
                 LOG.error(ex.getMessage(), ex);
             }
@@ -141,7 +142,7 @@ public class MetaObjectNodesStadtbildSerieSearchStatement extends AbstractCidsSe
         query.append("SELECT DISTINCT " + "(SELECT id "
                     + "                FROM    cs_class "
                     + "                WHERE   name ilike 'sb_stadtbildserie' "
-                    + "                ), sbs.id ");
+                    + "                ), sbs.id, (select bildnummer from sb_stadtbild sb where sb.id = sbs.vorschaubild) ");
         query.append(" FROM sb_stadtbildserie sbs");
         if (StringUtils.isNotBlank(imageNrFrom) || StringUtils.isNotBlank(imageNrTo)) {
             query.append(" join sb_serie_bild_array as arr ");
@@ -262,7 +263,15 @@ public class MetaObjectNodesStadtbildSerieSearchStatement extends AbstractCidsSe
      * DOCUMENT ME!
      */
     private void appendImageNumbers() {
-        if (StringUtils.isNotBlank(imageNrFrom) && StringUtils.isNotBlank(imageNrTo)) {
+        if (StringUtils.isBlank(imageNrFrom) && StringUtils.isBlank(imageNrTo)) {
+            // none are set -- do nothing
+        } else if (StringUtils.isBlank(imageNrFrom) || StringUtils.isBlank(imageNrTo)) {
+            // only one is set
+            final String usedNr = StringUtils.isNotBlank(imageNrFrom) ? imageNrFrom : imageNrTo;
+            query.append(" and arr.stadtbild = (select id from sb_stadtbild where bildnummer ilike '")
+                    .append(usedNr)
+                    .append("') ");
+        } else {
             // both are set
             int fromInt;
             int toInt;
@@ -284,14 +293,6 @@ public class MetaObjectNodesStadtbildSerieSearchStatement extends AbstractCidsSe
                     .append(" <= bildnummer::integer and bildnummer::integer <= ")
                     .append(toInt)
                     .append(" ) ");
-        } else if (StringUtils.isBlank(imageNrFrom) || StringUtils.isBlank(imageNrTo)) {
-            // only one is set
-            final String usedNr = StringUtils.isNotBlank(imageNrFrom) ? imageNrFrom : imageNrTo;
-            query.append(" and arr.stadtbild = (select id from sb_stadtbild where bildnummer = '")
-                    .append(usedNr)
-                    .append("') ");
-        } else {
-            // none are set -- do nothing
         }
     }
 
