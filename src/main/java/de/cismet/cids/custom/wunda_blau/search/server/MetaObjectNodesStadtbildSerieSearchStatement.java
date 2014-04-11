@@ -235,7 +235,7 @@ public class MetaObjectNodesStadtbildSerieSearchStatement extends AbstractCidsSe
      * DOCUMENT ME!
      */
     private void appendStreetID() {
-        if ((streetID != null) && !streetID.equals("")) {
+        if (StringUtils.isNotBlank(streetID)) {
             query.append(" and sbs.strasse = ").append(streetID).append(" ");
         }
     }
@@ -244,7 +244,7 @@ public class MetaObjectNodesStadtbildSerieSearchStatement extends AbstractCidsSe
      * DOCUMENT ME!
      */
     private void appendOrtID() {
-        if ((ortID != null) && !ortID.equals("")) {
+        if (StringUtils.isNotBlank(ortID)) {
             query.append(" and sbs.ort = ").append(ortID).append(" ");
         }
     }
@@ -253,7 +253,7 @@ public class MetaObjectNodesStadtbildSerieSearchStatement extends AbstractCidsSe
      * DOCUMENT ME!
      */
     private void appendHausnummer() {
-        if ((hausnummer != null) && !hausnummer.equals("")) {
+        if (StringUtils.isNotBlank(hausnummer)) {
             query.append("and sbs.hausnummer ilike '%").append(hausnummer).append("%' ");
         }
     }
