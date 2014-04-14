@@ -8,7 +8,6 @@
 package de.cismet.cids.custom.wunda_blau.search.server;
 
 import Sirius.server.middleware.interfaces.domainserver.MetaService;
-import Sirius.server.middleware.types.MetaObject;
 import Sirius.server.middleware.types.MetaObjectNode;
 import Sirius.server.newuser.User;
 
@@ -85,6 +84,7 @@ public class MetaObjectNodesStadtbildSerieSearchStatement extends AbstractCidsSe
     private StringBuilder query;
     private final SimpleDateFormat postgresDateFormat = new SimpleDateFormat("yyyy-MM-dd");
     private ArrayList<ArrayList> resultset;
+    private boolean preparationExecution = false;
 
     //~ Constructors -----------------------------------------------------------
 
@@ -99,9 +99,14 @@ public class MetaObjectNodesStadtbildSerieSearchStatement extends AbstractCidsSe
 
     //~ Methods ----------------------------------------------------------------
 
-    @Override
-    public Collection<MetaObjectNode> performServerSearch() throws SearchException {
+    /**
+     * DOCUMENT ME!
+     *
+     * @return  DOCUMENT ME!
+     */
+    public Collection prepareResultSetAndReturnItsSize() {
         final MetaService metaService = (MetaService)getActiveLocalServers().get(DOMAIN);
+        final Collection<Integer> result = new ArrayList<Integer>();
         if (metaService != null) {
             try {
                 generateQuery();
@@ -110,6 +115,39 @@ public class MetaObjectNodesStadtbildSerieSearchStatement extends AbstractCidsSe
                 }
 
                 resultset = metaService.performCustomSearch(query.toString());
+
+                result.add(resultset.size());
+                return result;
+            } catch (RemoteException ex) {
+                LOG.error(ex.getMessage(), ex);
+            }
+        } else {
+            LOG.error("active local server not found"); // NOI18N
+        }
+        result.clear();
+        result.add(0);
+        return result;
+    }
+
+    @Override
+    public Collection<MetaObjectNode> performServerSearch() throws SearchException {
+        if (isPreparationExecution()) {
+            return prepareResultSetAndReturnItsSize();
+        }
+
+        final MetaService metaService = (MetaService)getActiveLocalServers().get(DOMAIN);
+        if (metaService != null) {
+            try {
+                if (query == null) {
+                    generateQuery();
+                }
+                if (LOG.isDebugEnabled()) {
+                    LOG.debug("The used query is: " + query.toString());
+                }
+
+                if (resultset == null) {
+                    resultset = metaService.performCustomSearch(query.toString());
+                }
 
                 final ArrayList result = new ArrayList();
 
@@ -456,5 +494,27 @@ public class MetaObjectNodesStadtbildSerieSearchStatement extends AbstractCidsSe
      */
     public void setImageNrTo(final String imageNrTo) {
         this.imageNrTo = imageNrTo;
+    }
+
+    /**
+     * This ServerSearch can be executed in two modes: a preparation mode and the normal mode. The default mode is the
+     * normal mode, where MetaObjectNodes will be returned. In the preparation mode the amount of the found results will
+     * be returned.
+     *
+     * @return  true: preparation mode. false: normal mode
+     */
+    public boolean isPreparationExecution() {
+        return preparationExecution;
+    }
+
+    /**
+     * This ServerSearch can be executed in two modes: a preparation mode and the normal mode. The default mode is the
+     * normal mode, where MetaObjectNodes will be returned. In the preparation mode the amount of the found results will
+     * be returned.
+     *
+     * @param  preparationExecution  true: preparation mode. false: normal mode
+     */
+    public void setPreparationExecution(final boolean preparationExecution) {
+        this.preparationExecution = preparationExecution;
     }
 }
