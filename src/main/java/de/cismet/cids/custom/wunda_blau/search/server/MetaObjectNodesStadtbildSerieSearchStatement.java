@@ -319,7 +319,7 @@ public class MetaObjectNodesStadtbildSerieSearchStatement extends AbstractCidsSe
         } else if (StringUtils.isBlank(imageNrFrom) || StringUtils.isBlank(imageNrTo)) {
             // only one is set
             final String usedNr = StringUtils.isNotBlank(imageNrFrom) ? imageNrFrom : imageNrTo;
-            query.append(" and arr.stadtbild = (select id from sb_stadtbild where bildnummer ilike '")
+            query.append(" and arr.stadtbild in (select id from sb_stadtbild where bildnummer ilike '")
                     .append(usedNr)
                     .append("') ");
         } else {
