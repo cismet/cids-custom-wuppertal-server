@@ -11,6 +11,10 @@ import Sirius.server.middleware.interfaces.domainserver.MetaService;
 import Sirius.server.middleware.types.MetaObjectNode;
 import Sirius.server.newuser.User;
 
+import com.vividsolutions.jts.geom.Geometry;
+import com.vividsolutions.jts.geom.MultiPolygon;
+import com.vividsolutions.jts.geom.Polygon;
+
 import org.apache.commons.lang.StringUtils;
 import org.apache.log4j.Logger;
 
@@ -25,6 +29,8 @@ import java.util.Date;
 import de.cismet.cids.server.search.AbstractCidsServerSearch;
 import de.cismet.cids.server.search.MetaObjectNodeServerSearch;
 import de.cismet.cids.server.search.SearchException;
+
+import de.cismet.cismap.commons.jtsgeometryfactories.PostGisGeometryFactory;
 
 /**
  * DOCUMENT ME!
@@ -70,6 +76,8 @@ public class MetaObjectNodesStadtbildSerieSearchStatement extends AbstractCidsSe
     }
 
     //~ Instance fields --------------------------------------------------------
+
+    private Geometry geometryToSearchFor;
 
     private ArrayList<Bildtyp> bildtypen = new ArrayList<Bildtyp>();
     private ArrayList<Integer> suchwoerterIDs = new ArrayList<Integer>();
@@ -186,6 +194,10 @@ public class MetaObjectNodesStadtbildSerieSearchStatement extends AbstractCidsSe
             query.append(" join sb_serie_bild_array as arr ");
             query.append(" on sbs.id = arr.sb_stadtbildserie_reference ");
         }
+
+        if (geometryToSearchFor != null) {
+            query.append(" join geom g ON sbs.geom = g.id ");
+        }
         query.append(" WHERE ");
         query.append(" TRUE ");
         appendBildtyp();
@@ -195,6 +207,7 @@ public class MetaObjectNodesStadtbildSerieSearchStatement extends AbstractCidsSe
         appendOrtID();
         appendHausnummer();
         appendImageNumbers();
+        appendGeometry();
         return query.toString();
     }
 
@@ -306,7 +319,7 @@ public class MetaObjectNodesStadtbildSerieSearchStatement extends AbstractCidsSe
         } else if (StringUtils.isBlank(imageNrFrom) || StringUtils.isBlank(imageNrTo)) {
             // only one is set
             final String usedNr = StringUtils.isNotBlank(imageNrFrom) ? imageNrFrom : imageNrTo;
-            query.append(" and arr.stadtbild = (select id from sb_stadtbild where bildnummer ilike '")
+            query.append(" and arr.stadtbild in (select id from sb_stadtbild where bildnummer ilike '")
                     .append(usedNr)
                     .append("') ");
         } else {
@@ -331,6 +344,27 @@ public class MetaObjectNodesStadtbildSerieSearchStatement extends AbstractCidsSe
                     .append(" <= bildnummer::integer and bildnummer::integer <= ")
                     .append(toInt)
                     .append(" ) ");
+        }
+    }
+
+    /**
+     * DOCUMENT ME!
+     */
+    private void appendGeometry() {
+        if (geometryToSearchFor != null) {
+            final String geostring = PostGisGeometryFactory.getPostGisCompliantDbString(geometryToSearchFor);
+            query.append("and g.geo_field && GeometryFromText('").append(geostring).append("')");
+
+            if ((geometryToSearchFor instanceof Polygon) || (geometryToSearchFor instanceof MultiPolygon)) { // with buffer for geostring
+                query.append(" and intersects(" + "st_buffer(geo_field, 0.000001)," + "st_buffer(GeometryFromText('")
+                        .append(geostring)
+                        .append("'), 0.000001))");
+            } else {                                                                                         // without buffer for
+                // geostring
+                query.append(" and intersects(" + "st_buffer(geo_field, 0.000001)," + "GeometryFromText('")
+                        .append(geostring)
+                        .append("'))");
+            }
         }
     }
 
@@ -516,5 +550,14 @@ public class MetaObjectNodesStadtbildSerieSearchStatement extends AbstractCidsSe
      */
     public void setPreparationExecution(final boolean preparationExecution) {
         this.preparationExecution = preparationExecution;
+    }
+
+    /**
+     * DOCUMENT ME!
+     *
+     * @param  geometryToSearchFor  DOCUMENT ME!
+     */
+    public void setGeometryToSearchFor(final Geometry geometryToSearchFor) {
+        this.geometryToSearchFor = geometryToSearchFor;
     }
 }
