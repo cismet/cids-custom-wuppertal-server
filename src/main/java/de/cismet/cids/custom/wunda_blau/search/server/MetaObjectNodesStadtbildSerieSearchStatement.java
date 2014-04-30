@@ -306,7 +306,7 @@ public class MetaObjectNodesStadtbildSerieSearchStatement extends AbstractCidsSe
      */
     private void appendHausnummer() {
         if (StringUtils.isNotBlank(hausnummer)) {
-            query.append("and sbs.hausnummer ilike '%").append(hausnummer).append("%' ");
+            query.append("and sbs.hausnummer ilike '").append(hausnummer).append("' ");
         }
     }
 
