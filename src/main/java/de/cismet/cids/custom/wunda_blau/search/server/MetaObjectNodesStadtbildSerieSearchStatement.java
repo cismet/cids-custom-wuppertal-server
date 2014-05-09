@@ -122,7 +122,6 @@ public class MetaObjectNodesStadtbildSerieSearchStatement extends AbstractCidsSe
                 if (LOG.isDebugEnabled()) {
                     LOG.debug("The used query is: " + query.toString());
                 }
-                LOG.fatal("The used query is: " + query.toString());
                 resultset = metaService.performCustomSearch(query.toString());
 
                 result.add(resultset.size());
