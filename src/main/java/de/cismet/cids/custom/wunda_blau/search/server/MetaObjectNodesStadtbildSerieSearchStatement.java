@@ -589,7 +589,7 @@ public class MetaObjectNodesStadtbildSerieSearchStatement extends AbstractCidsSe
      *
      * @param  fancyIntervall  DOCUMENT ME!
      */
-    public void setFancyIntervall(final ArrayList<String> fancyIntervall) {
+    public void setFancyInterval(final ArrayList<String> fancyIntervall) {
         this.fancyIntervall = fancyIntervall;
     }
 }
