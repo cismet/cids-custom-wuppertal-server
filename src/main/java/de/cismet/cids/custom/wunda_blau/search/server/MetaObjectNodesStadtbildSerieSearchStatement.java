@@ -122,7 +122,7 @@ public class MetaObjectNodesStadtbildSerieSearchStatement extends AbstractCidsSe
                 if (LOG.isDebugEnabled()) {
                     LOG.debug("The used query is: " + query.toString());
                 }
-
+                LOG.fatal("The used query is: " + query.toString());
                 resultset = metaService.performCustomSearch(query.toString());
 
                 result.add(resultset.size());
@@ -348,10 +348,16 @@ public class MetaObjectNodesStadtbildSerieSearchStatement extends AbstractCidsSe
                     .append(" ) ");
         }
     }
-    
-    private void appendFancyIntervall(){
-        if(!fancyIntervall.isEmpty()){
-            query.append(" and arr.stadtbild in (").append(StringUtils.join(fancyIntervall, ',')).append(") ");            
+
+    /**
+     * DOCUMENT ME!
+     */
+    private void appendFancyIntervall() {
+        if (!fancyIntervall.isEmpty()) {
+            query.append(" and arr.stadtbild in (")
+                    .append("SELECT id from sb_stadtbild WHERE bildnummer IN (")
+                    .append("'" + StringUtils.join(fancyIntervall, "','") + "'")
+                    .append(")) ");
         }
     }
 
@@ -569,11 +575,21 @@ public class MetaObjectNodesStadtbildSerieSearchStatement extends AbstractCidsSe
         this.geometryToSearchFor = geometryToSearchFor;
     }
 
+    /**
+     * DOCUMENT ME!
+     *
+     * @return  DOCUMENT ME!
+     */
     public ArrayList<String> getFancyIntervall() {
         return fancyIntervall;
     }
 
-    public void setFancyIntervall(ArrayList<String> fancyIntervall) {
+    /**
+     * DOCUMENT ME!
+     *
+     * @param  fancyIntervall  DOCUMENT ME!
+     */
+    public void setFancyIntervall(final ArrayList<String> fancyIntervall) {
         this.fancyIntervall = fancyIntervall;
     }
 }
