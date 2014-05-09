@@ -81,6 +81,7 @@ public class MetaObjectNodesStadtbildSerieSearchStatement extends AbstractCidsSe
 
     private ArrayList<Bildtyp> bildtypen = new ArrayList<Bildtyp>();
     private ArrayList<Integer> suchwoerterIDs = new ArrayList<Integer>();
+    private ArrayList<String> fancyIntervall = new ArrayList<String>();
     private Date from;
     private Date till;
     private String streetID;
@@ -190,7 +191,7 @@ public class MetaObjectNodesStadtbildSerieSearchStatement extends AbstractCidsSe
                     + "                WHERE   name ilike 'sb_stadtbildserie' "
                     + "                ), sbs.id, (select bildnummer from sb_stadtbild sb where sb.id = sbs.vorschaubild) ");
         query.append(" FROM sb_stadtbildserie sbs");
-        if (StringUtils.isNotBlank(imageNrFrom) || StringUtils.isNotBlank(imageNrTo)) {
+        if (StringUtils.isNotBlank(imageNrFrom) || StringUtils.isNotBlank(imageNrTo) || !fancyIntervall.isEmpty()) {
             query.append(" join sb_serie_bild_array as arr ");
             query.append(" on sbs.id = arr.sb_stadtbildserie_reference ");
         }
@@ -207,6 +208,7 @@ public class MetaObjectNodesStadtbildSerieSearchStatement extends AbstractCidsSe
         appendOrtID();
         appendHausnummer();
         appendImageNumbers();
+        appendFancyIntervall();
         appendGeometry();
         return query.toString();
     }
@@ -344,6 +346,12 @@ public class MetaObjectNodesStadtbildSerieSearchStatement extends AbstractCidsSe
                     .append(" <= bildnummer::integer and bildnummer::integer <= ")
                     .append(toInt)
                     .append(" ) ");
+        }
+    }
+    
+    private void appendFancyIntervall(){
+        if(!fancyIntervall.isEmpty()){
+            query.append(" and arr.stadtbild in (").append(StringUtils.join(fancyIntervall, ',')).append(") ");            
         }
     }
 
@@ -559,5 +567,13 @@ public class MetaObjectNodesStadtbildSerieSearchStatement extends AbstractCidsSe
      */
     public void setGeometryToSearchFor(final Geometry geometryToSearchFor) {
         this.geometryToSearchFor = geometryToSearchFor;
+    }
+
+    public ArrayList<String> getFancyIntervall() {
+        return fancyIntervall;
+    }
+
+    public void setFancyIntervall(ArrayList<String> fancyIntervall) {
+        this.fancyIntervall = fancyIntervall;
     }
 }
