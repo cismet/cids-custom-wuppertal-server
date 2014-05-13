@@ -249,7 +249,7 @@ public class CidsMauernSearchStatement extends AbstractCidsServerSearch implemen
      */
     private String generateWhereClause() {
         if ((pruefungFrom != null) || (pruefungTil != null)) {
-            final SimpleDateFormat df = new SimpleDateFormat("yyy-MM-dd");
+            final SimpleDateFormat df = new SimpleDateFormat("yyyy-MM-dd");
             if (whereNeeded) {
                 whereBuilder.append("WHERE (");
                 lastBraceNeeded = true;
