@@ -88,8 +88,7 @@ public class MetaObjectNodesStadtbildSerieSearchStatement extends AbstractCidsSe
     private String streetID;
     private String ortID;
     private String hausnummer;
-    private String imageNrFrom;
-    private String imageNrTo;
+    private String singleImageNumber;
     private final User user;
     private StringBuilder query;
     private final SimpleDateFormat postgresDateFormat = new SimpleDateFormat("yyyy-MM-dd");
@@ -191,7 +190,7 @@ public class MetaObjectNodesStadtbildSerieSearchStatement extends AbstractCidsSe
                     + "                WHERE   name ilike 'sb_stadtbildserie' "
                     + "                ), sbs.id, (select bildnummer from sb_stadtbild sb where sb.id = sbs.vorschaubild) ");
         query.append(" FROM sb_stadtbildserie sbs");
-        if (StringUtils.isNotBlank(imageNrFrom) || StringUtils.isNotBlank(imageNrTo) || !fancyIntervall.isEmpty()) {
+        if (StringUtils.isNotBlank(singleImageNumber) || !fancyIntervall.isEmpty()) {
             query.append(" join sb_serie_bild_array as arr ");
             query.append(" on sbs.id = arr.sb_stadtbildserie_reference ");
             query.append(" JOIN sb_stadtbild AS sb ON sb.id = arr.stadtbild ");
@@ -208,7 +207,7 @@ public class MetaObjectNodesStadtbildSerieSearchStatement extends AbstractCidsSe
         appendStreetID();
         appendOrtID();
         appendHausnummer();
-        appendImageNumbers();
+        appendSingleImageNumber();
         appendFancyIntervall();
         appendGeometry();
         return query.toString();
@@ -316,37 +315,11 @@ public class MetaObjectNodesStadtbildSerieSearchStatement extends AbstractCidsSe
     /**
      * DOCUMENT ME!
      */
-    private void appendImageNumbers() {
-        if (StringUtils.isBlank(imageNrFrom) && StringUtils.isBlank(imageNrTo)) {
-            // none are set -- do nothing
-        } else if (StringUtils.isBlank(imageNrFrom) || StringUtils.isBlank(imageNrTo)) {
-            // only one is set
-            final String usedNr = StringUtils.isNotBlank(imageNrFrom) ? imageNrFrom : imageNrTo;
+    private void appendSingleImageNumber() {
+        if (StringUtils.isBlank(singleImageNumber)) {
             query.append(" and arr.stadtbild in (select id from sb_stadtbild where bildnummer ilike '")
-                    .append(usedNr)
+                    .append(singleImageNumber)
                     .append("') ");
-        } else {
-            // both are set
-            int fromInt;
-            int toInt;
-            try {
-                fromInt = Integer.parseInt(imageNrFrom);
-                toInt = Integer.parseInt(imageNrTo);
-                if (fromInt > toInt) {
-                    final int temp = fromInt;
-                    fromInt = toInt;
-                    toInt = temp;
-                }
-            } catch (NumberFormatException ex) {
-                return;
-            }
-
-            query.append(
-                    " and arr.stadtbild in (select id from sb_stadtbild where bildnummer ~ '^\\\\d{6}$' and ")
-                    .append(fromInt)
-                    .append(" <= bildnummer::integer and bildnummer::integer <= ")
-                    .append(toInt)
-                    .append(" ) ");
         }
     }
 
@@ -520,35 +493,17 @@ public class MetaObjectNodesStadtbildSerieSearchStatement extends AbstractCidsSe
      *
      * @return  DOCUMENT ME!
      */
-    public String getImageNrfrom() {
-        return imageNrFrom;
+    public String getSingleImageNumber() {
+        return singleImageNumber;
     }
 
     /**
      * DOCUMENT ME!
      *
-     * @param  imageNrFrom  DOCUMENT ME!
+     * @param  singleImageNumber  DOCUMENT ME!
      */
-    public void setImageNrFrom(final String imageNrFrom) {
-        this.imageNrFrom = imageNrFrom;
-    }
-
-    /**
-     * DOCUMENT ME!
-     *
-     * @return  DOCUMENT ME!
-     */
-    public String getImageNrTo() {
-        return imageNrTo;
-    }
-
-    /**
-     * DOCUMENT ME!
-     *
-     * @param  imageNrTo  DOCUMENT ME!
-     */
-    public void setImageNrTo(final String imageNrTo) {
-        this.imageNrTo = imageNrTo;
+    public void setSingleImageNumber(final String singleImageNumber) {
+        this.singleImageNumber = singleImageNumber;
     }
 
     /**
