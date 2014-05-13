@@ -255,7 +255,11 @@ public class CidsMauernSearchStatement extends AbstractCidsServerSearch implemen
                 lastBraceNeeded = true;
                 whereNeeded = false;
             }
-            whereBuilder.append(CONJUNCTION);
+            if (leadingConjucjtionNeeded) {
+                whereBuilder.append(CONJUNCTION);
+            } else {
+                leadingConjucjtionNeeded = true;
+            }
             whereBuilder.append(" (");
             boolean flag = false;
             if (pruefungFrom != null) {
