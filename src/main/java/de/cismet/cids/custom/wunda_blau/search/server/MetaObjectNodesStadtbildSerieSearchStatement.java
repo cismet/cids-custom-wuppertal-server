@@ -82,13 +82,13 @@ public class MetaObjectNodesStadtbildSerieSearchStatement extends AbstractCidsSe
     private ArrayList<Bildtyp> bildtypen = new ArrayList<Bildtyp>();
     private ArrayList<Integer> suchwoerterIDs = new ArrayList<Integer>();
     private ArrayList<String> fancyIntervall = new ArrayList<String>();
+    private boolean fancyIntervalExactMatch = false;
     private Date from;
     private Date till;
     private String streetID;
     private String ortID;
     private String hausnummer;
-    private String imageNrFrom;
-    private String imageNrTo;
+    private String singleImageNumber;
     private final User user;
     private StringBuilder query;
     private final SimpleDateFormat postgresDateFormat = new SimpleDateFormat("yyyy-MM-dd");
@@ -190,9 +190,10 @@ public class MetaObjectNodesStadtbildSerieSearchStatement extends AbstractCidsSe
                     + "                WHERE   name ilike 'sb_stadtbildserie' "
                     + "                ), sbs.id, (select bildnummer from sb_stadtbild sb where sb.id = sbs.vorschaubild) ");
         query.append(" FROM sb_stadtbildserie sbs");
-        if (StringUtils.isNotBlank(imageNrFrom) || StringUtils.isNotBlank(imageNrTo) || !fancyIntervall.isEmpty()) {
+        if (StringUtils.isNotBlank(singleImageNumber) || !fancyIntervall.isEmpty()) {
             query.append(" join sb_serie_bild_array as arr ");
             query.append(" on sbs.id = arr.sb_stadtbildserie_reference ");
+            query.append(" JOIN sb_stadtbild AS sb ON sb.id = arr.stadtbild ");
         }
 
         if (geometryToSearchFor != null) {
@@ -206,7 +207,7 @@ public class MetaObjectNodesStadtbildSerieSearchStatement extends AbstractCidsSe
         appendStreetID();
         appendOrtID();
         appendHausnummer();
-        appendImageNumbers();
+        appendSingleImageNumber();
         appendFancyIntervall();
         appendGeometry();
         return query.toString();
@@ -314,37 +315,9 @@ public class MetaObjectNodesStadtbildSerieSearchStatement extends AbstractCidsSe
     /**
      * DOCUMENT ME!
      */
-    private void appendImageNumbers() {
-        if (StringUtils.isBlank(imageNrFrom) && StringUtils.isBlank(imageNrTo)) {
-            // none are set -- do nothing
-        } else if (StringUtils.isBlank(imageNrFrom) || StringUtils.isBlank(imageNrTo)) {
-            // only one is set
-            final String usedNr = StringUtils.isNotBlank(imageNrFrom) ? imageNrFrom : imageNrTo;
-            query.append(" and arr.stadtbild in (select id from sb_stadtbild where bildnummer ilike '")
-                    .append(usedNr)
-                    .append("') ");
-        } else {
-            // both are set
-            int fromInt;
-            int toInt;
-            try {
-                fromInt = Integer.parseInt(imageNrFrom);
-                toInt = Integer.parseInt(imageNrTo);
-                if (fromInt > toInt) {
-                    final int temp = fromInt;
-                    fromInt = toInt;
-                    toInt = temp;
-                }
-            } catch (NumberFormatException ex) {
-                return;
-            }
-
-            query.append(
-                    " and arr.stadtbild in (select id from sb_stadtbild where bildnummer ~ '^\\\\d{6}$' and ")
-                    .append(fromInt)
-                    .append(" <= bildnummer::integer and bildnummer::integer <= ")
-                    .append(toInt)
-                    .append(" ) ");
+    private void appendSingleImageNumber() {
+        if (StringUtils.isNotBlank(singleImageNumber)) {
+            query.append(" and sb.bildnummer ilike '").append(singleImageNumber).append("' ");
         }
     }
 
@@ -353,10 +326,13 @@ public class MetaObjectNodesStadtbildSerieSearchStatement extends AbstractCidsSe
      */
     private void appendFancyIntervall() {
         if (!fancyIntervall.isEmpty()) {
-            query.append(" and arr.stadtbild in (")
-                    .append("SELECT id from sb_stadtbild WHERE bildnummer IN (")
-                    .append("'" + StringUtils.join(fancyIntervall, "','") + "'")
-                    .append(")) ");
+            if (fancyIntervalExactMatch) {
+                query.append(" and sb.bildnummer IN ('").append(StringUtils.join(fancyIntervall, "','")).append("') ");
+            } else {
+                query.append(" and sb.bildnummer ~ '^(")
+                        .append(StringUtils.join(fancyIntervall, "|"))
+                        .append(")[a-z]?$'");
+            }
         }
     }
 
@@ -512,35 +488,17 @@ public class MetaObjectNodesStadtbildSerieSearchStatement extends AbstractCidsSe
      *
      * @return  DOCUMENT ME!
      */
-    public String getImageNrfrom() {
-        return imageNrFrom;
+    public String getSingleImageNumber() {
+        return singleImageNumber;
     }
 
     /**
      * DOCUMENT ME!
      *
-     * @param  imageNrFrom  DOCUMENT ME!
+     * @param  singleImageNumber  DOCUMENT ME!
      */
-    public void setImageNrFrom(final String imageNrFrom) {
-        this.imageNrFrom = imageNrFrom;
-    }
-
-    /**
-     * DOCUMENT ME!
-     *
-     * @return  DOCUMENT ME!
-     */
-    public String getImageNrTo() {
-        return imageNrTo;
-    }
-
-    /**
-     * DOCUMENT ME!
-     *
-     * @param  imageNrTo  DOCUMENT ME!
-     */
-    public void setImageNrTo(final String imageNrTo) {
-        this.imageNrTo = imageNrTo;
+    public void setSingleImageNumber(final String singleImageNumber) {
+        this.singleImageNumber = singleImageNumber;
     }
 
     /**
@@ -590,5 +548,25 @@ public class MetaObjectNodesStadtbildSerieSearchStatement extends AbstractCidsSe
      */
     public void setFancyInterval(final ArrayList<String> fancyIntervall) {
         this.fancyIntervall = fancyIntervall;
+    }
+
+    /**
+     * DOCUMENT ME!
+     *
+     * @return  DOCUMENT ME!
+     */
+    public boolean isFancyIntervalExactMatch() {
+        return fancyIntervalExactMatch;
+    }
+
+    /**
+     * Only useful in combination with a fancy interval. If fancyIntervalExactMatch is true, then the exact image
+     * numbers from the List fancyIntervall will be found. Otherwise the image numbers can have some suffix e.g. a
+     * letter.
+     *
+     * @param  fancyIntervalExactMatch  DOCUMENT ME!
+     */
+    public void setFancyIntervalExactMatch(final boolean fancyIntervalExactMatch) {
+        this.fancyIntervalExactMatch = fancyIntervalExactMatch;
     }
 }
