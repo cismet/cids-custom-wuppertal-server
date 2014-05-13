@@ -193,6 +193,7 @@ public class MetaObjectNodesStadtbildSerieSearchStatement extends AbstractCidsSe
         if (StringUtils.isNotBlank(imageNrFrom) || StringUtils.isNotBlank(imageNrTo) || !fancyIntervall.isEmpty()) {
             query.append(" join sb_serie_bild_array as arr ");
             query.append(" on sbs.id = arr.sb_stadtbildserie_reference ");
+            query.append(" JOIN sb_stadtbild AS sb ON sb.id = arr.stadtbild ");
         }
 
         if (geometryToSearchFor != null) {
