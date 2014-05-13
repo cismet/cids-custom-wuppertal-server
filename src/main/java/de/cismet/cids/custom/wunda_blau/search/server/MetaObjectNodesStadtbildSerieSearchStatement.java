@@ -82,6 +82,7 @@ public class MetaObjectNodesStadtbildSerieSearchStatement extends AbstractCidsSe
     private ArrayList<Bildtyp> bildtypen = new ArrayList<Bildtyp>();
     private ArrayList<Integer> suchwoerterIDs = new ArrayList<Integer>();
     private ArrayList<String> fancyIntervall = new ArrayList<String>();
+    private boolean fancyIntervalExactMatch = false;
     private Date from;
     private Date till;
     private String streetID;
@@ -354,10 +355,16 @@ public class MetaObjectNodesStadtbildSerieSearchStatement extends AbstractCidsSe
      */
     private void appendFancyIntervall() {
         if (!fancyIntervall.isEmpty()) {
-            query.append(" and arr.stadtbild in (")
-                    .append("SELECT id from sb_stadtbild WHERE bildnummer IN (")
-                    .append("'" + StringUtils.join(fancyIntervall, "','") + "'")
-                    .append(")) ");
+            if (fancyIntervalExactMatch) {
+                query.append(" and arr.stadtbild in (")
+                        .append("SELECT id from sb_stadtbild WHERE bildnummer IN ('")
+                        .append(StringUtils.join(fancyIntervall, "','"))
+                        .append("')) ");
+            } else {
+                query.append(" and sb.bildnummer ~ '^(")
+                        .append(StringUtils.join(fancyIntervall, "|"))
+                        .append(")[a-z]?$'");
+            }
         }
     }
 
@@ -591,5 +598,25 @@ public class MetaObjectNodesStadtbildSerieSearchStatement extends AbstractCidsSe
      */
     public void setFancyInterval(final ArrayList<String> fancyIntervall) {
         this.fancyIntervall = fancyIntervall;
+    }
+
+    /**
+     * DOCUMENT ME!
+     *
+     * @return  DOCUMENT ME!
+     */
+    public boolean isFancyIntervalExactMatch() {
+        return fancyIntervalExactMatch;
+    }
+
+    /**
+     * Only useful in combination with a fancy interval. If fancyIntervalExactMatch is true, then the exact image
+     * numbers from the List fancyIntervall will be found. Otherwise the image numbers can have some suffix e.g. a
+     * letter.
+     *
+     * @param  fancyIntervalExactMatch  DOCUMENT ME!
+     */
+    public void setFancyIntervalExactMatch(final boolean fancyIntervalExactMatch) {
+        this.fancyIntervalExactMatch = fancyIntervalExactMatch;
     }
 }
