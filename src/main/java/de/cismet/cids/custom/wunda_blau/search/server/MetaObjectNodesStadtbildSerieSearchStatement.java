@@ -316,10 +316,8 @@ public class MetaObjectNodesStadtbildSerieSearchStatement extends AbstractCidsSe
      * DOCUMENT ME!
      */
     private void appendSingleImageNumber() {
-        if (StringUtils.isBlank(singleImageNumber)) {
-            query.append(" and arr.stadtbild in (select id from sb_stadtbild where bildnummer ilike '")
-                    .append(singleImageNumber)
-                    .append("') ");
+        if (StringUtils.isNotBlank(singleImageNumber)) {
+            query.append(" and sb.bildnummer ilike '").append(singleImageNumber).append("' ");
         }
     }
 
@@ -329,10 +327,7 @@ public class MetaObjectNodesStadtbildSerieSearchStatement extends AbstractCidsSe
     private void appendFancyIntervall() {
         if (!fancyIntervall.isEmpty()) {
             if (fancyIntervalExactMatch) {
-                query.append(" and arr.stadtbild in (")
-                        .append("SELECT id from sb_stadtbild WHERE bildnummer IN ('")
-                        .append(StringUtils.join(fancyIntervall, "','"))
-                        .append("')) ");
+                query.append(" and sb.bildnummer IN ('").append(StringUtils.join(fancyIntervall, "','")).append("') ");
             } else {
                 query.append(" and sb.bildnummer ~ '^(")
                         .append(StringUtils.join(fancyIntervall, "|"))
