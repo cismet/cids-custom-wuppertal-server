@@ -15,6 +15,8 @@ package de.cismet.cids.custom.wunda_blau.startuphooks;
 import Sirius.server.middleware.impls.domainserver.DomainServerImpl;
 import Sirius.server.middleware.interfaces.domainserver.DomainServerStartupHook;
 
+import de.cismet.cids.custom.utils.alkis.AlkisConstants;
+import de.cismet.cids.custom.utils.alkis.AlkisProducts;
 import de.cismet.cids.custom.utils.butler.ButlerProductGenerator;
 import de.cismet.cids.custom.utils.nas.NASProductGenerator;
 import de.cismet.cids.custom.utils.pointnumberreservation.PointNumberReservationService;
@@ -40,6 +42,10 @@ public class WundaServerStartupHook implements DomainServerStartupHook {
         NASProductGenerator.instance();
         ButlerProductGenerator.getInstance();
         PointNumberReservationService.instance();
+        final AlkisProducts pr = new AlkisProducts(
+                AlkisConstants.COMMONS.USER,
+                AlkisConstants.COMMONS.PASSWORD,
+                AlkisConstants.COMMONS.SERVICE);
     }
 
     @Override
