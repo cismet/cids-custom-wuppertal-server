@@ -135,6 +135,14 @@ public final class AlkisProducts {
                             for (final Object o2 : productClass.getChildren()) {
                                 final Element guiProduct = (Element)o2;
                                 final String type = guiProduct.getAttribute("ProduktnameAuswertung").getValue();
+                                final Attribute defaultProductAttr = guiProduct.getAttribute(
+                                        "defaultProduct");
+                                boolean defaultProduct;
+                                if (defaultProductAttr != null) {
+                                    defaultProduct = defaultProductAttr.getBooleanValue();
+                                } else {
+                                    defaultProduct = false;
+                                }
                                 for (final Object o3 : guiProduct.getChildren()) {
                                     final Element singleProduct = (Element)o3;
                                     final Attribute codeAttr = singleProduct.getAttribute("ID");
@@ -183,7 +191,8 @@ public final class AlkisProducts {
                                                 massstabMax,
                                                 fileFormat,
                                                 width,
-                                                height);
+                                                height,
+                                                defaultProduct);
                                         mapProducts.add(currentProduct);
                                     }
                                 }

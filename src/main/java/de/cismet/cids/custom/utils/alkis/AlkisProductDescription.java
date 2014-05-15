@@ -31,22 +31,24 @@ public class AlkisProductDescription {
     private final String massstab;
     private final String massstabMin;
     private final String massstabMax;
+    private boolean defaultProduct = false;
 
     //~ Constructors -----------------------------------------------------------
 
     /**
      * Creates a new AlkisProduct object.
      *
-     * @param  clazz        DOCUMENT ME!
-     * @param  type         DOCUMENT ME!
-     * @param  code         DOCUMENT ME!
-     * @param  dinFormat    DOCUMENT ME!
-     * @param  massstab     DOCUMENT ME!
-     * @param  massstabMin  DOCUMENT ME!
-     * @param  massstabMax  DOCUMENT ME!
-     * @param  fileFormat   DOCUMENT ME!
-     * @param  width        DOCUMENT ME!
-     * @param  height       DOCUMENT ME!
+     * @param  clazz           DOCUMENT ME!
+     * @param  type            DOCUMENT ME!
+     * @param  code            DOCUMENT ME!
+     * @param  dinFormat       DOCUMENT ME!
+     * @param  massstab        DOCUMENT ME!
+     * @param  massstabMin     DOCUMENT ME!
+     * @param  massstabMax     DOCUMENT ME!
+     * @param  fileFormat      DOCUMENT ME!
+     * @param  width           DOCUMENT ME!
+     * @param  height          DOCUMENT ME!
+     * @param  defaultProduct  DOCUMENT ME!
      */
     public AlkisProductDescription(final String clazz,
             final String type,
@@ -57,7 +59,8 @@ public class AlkisProductDescription {
             final String massstabMax,
             final String fileFormat,
             final int width,
-            final int height) {
+            final int height,
+            final boolean defaultProduct) {
         this.clazz = clazz;
         this.type = type;
         this.code = code;
@@ -68,6 +71,7 @@ public class AlkisProductDescription {
         this.fileFormat = fileFormat;
         this.width = width;
         this.height = height;
+        this.defaultProduct = defaultProduct;
     }
 
     //~ Methods ----------------------------------------------------------------
@@ -160,6 +164,15 @@ public class AlkisProductDescription {
      */
     public String getMassstabMax() {
         return massstabMax;
+    }
+
+    /**
+     * DOCUMENT ME!
+     *
+     * @return  DOCUMENT ME!
+     */
+    public boolean isDefaultProduct() {
+        return defaultProduct;
     }
 
     @Override
