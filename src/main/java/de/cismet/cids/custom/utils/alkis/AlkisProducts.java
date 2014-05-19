@@ -161,6 +161,8 @@ public final class AlkisProducts {
                                             height = Integer.parseInt(dims[1]);
                                             formatMap.put(dinFormatCode, new Point(width, height));
                                         }
+
+                                        // Preisfaktoren
                                         final Element preisFaktoren = (Element)singleProduct.getChildren().get(0);
                                         final String dinFormat = preisFaktoren.getAttribute("DINFormat").getValue();
                                         final String fileFormat = preisFaktoren.getAttribute("Dateiformat").getValue();
@@ -181,6 +183,24 @@ public final class AlkisProducts {
                                         if (massstabMaxAttr != null) {
                                             massstabMax = preisFaktoren.getAttribute("MassstabMax").getValue();
                                         }
+
+                                        // Stempelfeld
+                                        StempelfeldInfo stempelfeldInfo = null;
+                                        final Element stempelFeldInfoElement = (Element)singleProduct.getChild(
+                                                "Stempelfeld",
+                                                singleProduct.getNamespace());
+                                        if (stempelFeldInfoElement != null) {
+                                            final float fromX = stempelFeldInfoElement.getAttribute("fromX")
+                                                        .getFloatValue();
+                                            final float fromY = stempelFeldInfoElement.getAttribute("fromY")
+                                                        .getFloatValue();
+                                            final float toX = stempelFeldInfoElement.getAttribute("toX")
+                                                        .getFloatValue();
+                                            final float toY = stempelFeldInfoElement.getAttribute("toY")
+                                                        .getFloatValue();
+                                            stempelfeldInfo = new StempelfeldInfo(fromX, fromY, toX, toY);
+                                        }
+
                                         final AlkisProductDescription currentProduct = new AlkisProductDescription(
                                                 clazz,
                                                 type,
@@ -192,7 +212,8 @@ public final class AlkisProducts {
                                                 fileFormat,
                                                 width,
                                                 height,
-                                                defaultProduct);
+                                                defaultProduct,
+                                                stempelfeldInfo);
                                         mapProducts.add(currentProduct);
                                     }
                                 }
