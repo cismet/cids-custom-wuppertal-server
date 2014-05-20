@@ -53,7 +53,7 @@ public class ButlerQueryAction implements UserAwareServerAction {
 
         //~ Enum constants -----------------------------------------------------
 
-        IS_WMPS, REQUEST_ID, ORDER_ID, BUTLER_PRODUCT, MIN_X, MIN_Y, MAX_X, MAX_Y, METHOD, BOX_SIZE
+        IS_WMPS, REQUEST_ID, ORDER_ID, BUTLER_PRODUCT, MIN_X, MIN_Y, MAX_X, MAX_Y, METHOD, BOX_SIZE, ETRS_BLATTSCHNITT
     }
 
     //~ Instance fields --------------------------------------------------------
@@ -73,6 +73,7 @@ public class ButlerQueryAction implements UserAwareServerAction {
         double maxX = 0;
         double maxY = 0;
         String box = null;
+        boolean isEtrsBlattschnitt = false;
 
         boolean useWmps = false;
         for (final ServerActionParameter sap : params) {
@@ -97,6 +98,8 @@ public class ButlerQueryAction implements UserAwareServerAction {
                 useWmps = ((Boolean)sap.getValue()).booleanValue();
             } else if (sapKey.equals(PARAMETER_TYPE.BOX_SIZE.toString())) {
                 box = (String)sap.getValue();
+            } else if (sapKey.equals(PARAMETER_TYPE.ETRS_BLATTSCHNITT.toString())) {
+                isEtrsBlattschnitt = (Boolean)sap.getValue();
             }
         }
 
@@ -121,7 +124,7 @@ public class ButlerQueryAction implements UserAwareServerAction {
                                     isGeoTif);
                 } else {
                     return ButlerProductGenerator.getInstance()
-                                .createButler2Request(orderId, user, product, box, minX, minY);
+                                .createButler2Request(orderId, user, product, isEtrsBlattschnitt, box, minX, minY);
                 }
             }
         } else if (method == METHOD_TYPE.GET_ALL) {
