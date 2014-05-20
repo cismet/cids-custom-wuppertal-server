@@ -67,6 +67,9 @@ public class ButlerProductGenerator {
     private static final String FILE_NAME = "$DATEINAME$";
     private static final String TIME = "$ZEIT$";
     private static final String DATE = "$DATUM$";
+    private static final String LAYER = "$LAYER$";
+    private static final String ETRS89_LAYER = "39";
+    private static final String GK_LAYER = "36";
 
     //~ Instance fields --------------------------------------------------------
 
@@ -205,18 +208,20 @@ public class ButlerProductGenerator {
     /**
      * DOCUMENT ME!
      *
-     * @param   orderNumber  DOCUMENT ME!
-     * @param   user         DOCUMENT ME!
-     * @param   product      DOCUMENT ME!
-     * @param   boxSize      DOCUMENT ME!
-     * @param   middleE      DOCUMENT ME!
-     * @param   middleN      DOCUMENT ME!
+     * @param   orderNumber        DOCUMENT ME!
+     * @param   user               DOCUMENT ME!
+     * @param   product            DOCUMENT ME!
+     * @param   isEtrsBlattscnitt  DOCUMENT ME!
+     * @param   boxSize            DOCUMENT ME!
+     * @param   middleE            DOCUMENT ME!
+     * @param   middleN            DOCUMENT ME!
      *
      * @return  DOCUMENT ME!
      */
     public String createButler2Request(final String orderNumber,
             final User user,
             final ButlerProduct product,
+            final boolean isEtrsBlattscnitt,
             final String boxSize,
             final double middleE,
             final double middleN) {
@@ -228,7 +233,13 @@ public class ButlerProductGenerator {
             File reqeustFile = null;
             BufferedWriter bw = null;
             final String filename = determineRequestFileName(user, orderNumber);
-            final String request = getButler2RequestLine(product, middleE, middleN, boxSize, filename);
+            final String request = getButler2RequestLine(
+                    product,
+                    isEtrsBlattscnitt,
+                    middleE,
+                    middleN,
+                    boxSize,
+                    filename);
             if (request == null) {
                 LOG.error("The generated Butler 2 reqeust is null.");
                 return null;
@@ -397,23 +408,34 @@ public class ButlerProductGenerator {
     /**
      * DOCUMENT ME!
      *
-     * @param   product   DOCUMENT ME!
-     * @param   x         DOCUMENT ME!
-     * @param   y         DOCUMENT ME!
-     * @param   box_size  DOCUMENT ME!
-     * @param   filename  DOCUMENT ME!
+     * @param   product             DOCUMENT ME!
+     * @param   isEtrsBlattschnitt  DOCUMENT ME!
+     * @param   x                   DOCUMENT ME!
+     * @param   y                   DOCUMENT ME!
+     * @param   box_size            DOCUMENT ME!
+     * @param   filename            DOCUMENT ME!
      *
      * @return  DOCUMENT ME!
      */
     private String getButler2RequestLine(final ButlerProduct product,
+            final boolean isEtrsBlattschnitt,
             final double x,
             final double y,
             final String box_size,
             final String filename) {
         final String productKey = product.getKey();
         final String template = loadTemplate(productKey);
-
-        String result = template.replace(EASTING, "" + x);
+        /* Karte fuer Feldvergleich. We need to check if we need to
+         * use the GK-Layer or the ETRS89-layer
+         */
+        String result;
+        // The inserted LayerId prevents the display of the layer
+        if (productKey.equals("0903") && isEtrsBlattschnitt) {
+            result = template.replace(LAYER, GK_LAYER);
+        } else {
+            result = template.replace(LAYER, ETRS89_LAYER);
+        }
+        result = result.replace(EASTING, "" + x);
         result = result.replace(NORTHING, "" + y);
         result = result.replace(BOX_SIZE, "" + box_size);
         result = result.replace(RESOLUTION, product.getResolution().getKey());
