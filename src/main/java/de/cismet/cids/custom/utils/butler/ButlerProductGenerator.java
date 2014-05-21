@@ -70,6 +70,7 @@ public class ButlerProductGenerator {
     private static final String LAYER = "$LAYER$";
     private static final String ETRS89_LAYER = "39";
     private static final String GK_LAYER = "36";
+    private static final String MAP_SCALE = "$SCALE$";
 
     //~ Instance fields --------------------------------------------------------
 
@@ -428,12 +429,15 @@ public class ButlerProductGenerator {
         /* Karte fuer Feldvergleich. We need to check if we need to
          * use the GK-Layer or the ETRS89-layer
          */
-        String result;
+        String result = "";
         // The inserted LayerId prevents the display of the layer
-        if (productKey.equals("0903") && isEtrsBlattschnitt) {
-            result = template.replace(LAYER, GK_LAYER);
-        } else {
-            result = template.replace(LAYER, ETRS89_LAYER);
+        if (productKey.startsWith("0903")) {
+            if (isEtrsBlattschnitt) {
+                result = template.replace(LAYER, GK_LAYER);
+            } else {
+                result = template.replace(LAYER, ETRS89_LAYER);
+            }
+            result = result.replace(MAP_SCALE, product.getScale());
         }
         result = result.replace(EASTING, "" + x);
         result = result.replace(NORTHING, "" + y);
