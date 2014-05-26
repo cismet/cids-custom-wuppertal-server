@@ -429,13 +429,13 @@ public class ButlerProductGenerator {
         /* Karte fuer Feldvergleich. We need to check if we need to
          * use the GK-Layer or the ETRS89-layer
          */
-        String result = "";
+        String result = new String(template);
         // The inserted LayerId prevents the display of the layer
         if (productKey.startsWith("0903")) {
             if (isEtrsBlattschnitt) {
-                result = template.replace(LAYER, GK_LAYER);
+                result = result.replace(LAYER, GK_LAYER);
             } else {
-                result = template.replace(LAYER, ETRS89_LAYER);
+                result = result.replace(LAYER, ETRS89_LAYER);
             }
             result = result.replace(MAP_SCALE, product.getScale());
         }
