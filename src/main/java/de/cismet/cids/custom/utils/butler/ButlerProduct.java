@@ -29,6 +29,7 @@ public class ButlerProduct implements Serializable {
     ButlerResolution resolution;
     ButlerFormat format;
     String volumeParamText;
+    String scale;
 
     //~ Methods ----------------------------------------------------------------
 
@@ -143,5 +144,23 @@ public class ButlerProduct implements Serializable {
      */
     public void setVolumeParamText(final String volumeParamText) {
         this.volumeParamText = volumeParamText;
+    }
+
+    /**
+     * DOCUMENT ME!
+     *
+     * @return  DOCUMENT ME!
+     */
+    public String getScale() {
+        return scale;
+    }
+
+    /**
+     * DOCUMENT ME!
+     *
+     * @param  scale  DOCUMENT ME!
+     */
+    public void setScale(final String scale) {
+        this.scale = scale;
     }
 }
