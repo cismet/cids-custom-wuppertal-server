@@ -51,10 +51,10 @@ import java.io.StringWriter;
 
 import java.net.URL;
 
+import java.rmi.RemoteException;
+
 import java.util.ArrayList;
 import java.util.HashMap;
-import java.util.LinkedHashMap;
-import java.util.Map;
 import java.util.Properties;
 import java.util.Timer;
 import java.util.TimerTask;
@@ -199,46 +199,19 @@ public class NASProductGenerator {
      * DOCUMENT ME!
      */
     private void initFromOrderLogFiles() {
-//        try {
-//            openOrderMap = transformJsonMap(mapper.readValue(openOrdersLogFile, Map.class));
-//            undeliveredOrderMap = transformJsonMap(mapper.readValue(undeliveredOrdersLogFile, Map.class));
         loadFromLogFile(openOrderMap, openOrdersLogFile);
         loadFromLogFile(undeliveredOrderMap, undeliveredOrdersLogFile);
-        // check of there are open orders that arent downloaded from the 3a server yet for (final String userId :
-        // openOrderMap.keySet()) { final HashMap<String, NasProductInfo> openOrderIds = openOrderMap.get(userId); for
-        // (final String orderId : openOrderIds.keySet()) { final NasProductDownloader downloader = new
-        // NasProductDownloader(userId, orderId); downloaderMap.put(orderId, downloader); final Thread workerThread =
-        // new Thread(downloader); workerThread.start(); } } } catch (JsonParseException ex) { log.error("Could not
-        // parse nas order log files", ex); } catch (JsonMappingException ex) { log.error("error while json
-        // mapping/unmarshalling of nas order log file", ex); } catch (IOException ex) { log.error("error while loading
-        // nas order log file", ex); }
-    }
-
-    /**
-     * DOCUMENT ME!
-     *
-     * @param   loadedJsonObj  DOCUMENT ME!
-     *
-     * @return  DOCUMENT ME!
-     */
-    private HashMap<String, HashMap<String, NasProductInfo>> transformJsonMap(
-            final Map<String, HashMap<String, LinkedHashMap>> loadedJsonObj) {
-        final HashMap<String, HashMap<String, NasProductInfo>> map =
-            new HashMap<String, HashMap<String, NasProductInfo>>();
-        for (final String user : loadedJsonObj.keySet()) {
-            final HashMap<String, LinkedHashMap> loadedOrderMap = (HashMap<String, LinkedHashMap>)loadedJsonObj.get(
-                    user);
-            final HashMap<String, NasProductInfo> orderIdSet = new HashMap<String, NasProductInfo>();
-            for (final String orderId : loadedOrderMap.keySet()) {
-                final LinkedHashMap attrMap = loadedOrderMap.get(orderId);
-                final Boolean isSplitted = (Boolean)attrMap.get("isSplittet");
-                final String requestName = (String)attrMap.get("requestName");
-                final NasProductInfo pInfo = new NasProductInfo(isSplitted.booleanValue(), requestName);
-                orderIdSet.put(orderId, pInfo);
+        // check of there are open orders that arent downloaded from the 3a server yet
+        for (final String userId
+                    : openOrderMap.keySet()) {
+            final HashMap<String, NasProductInfo> openOrderIds = openOrderMap.get(userId);
+            for (final String orderId : openOrderIds.keySet()) {
+                final NasProductDownloader downloader = new NasProductDownloader(userId, orderId);
+                downloaderMap.put(orderId, downloader);
+                final Thread workerThread = new Thread(downloader);
+                workerThread.start();
             }
-            map.put(user, orderIdSet);
         }
-        return map;
     }
 
     /**
@@ -1098,60 +1071,54 @@ public class NASProductGenerator {
 
         @Override
         public void run() {
-//            try {
-            initAmManager();
-            final int sessionId = manager.login(USER, PW);
-            final Timer t = new Timer();
-            t.scheduleAtFixedRate(new TimerTask() {
+            try {
+                initAmManager();
+                final int sessionId = manager.login(USER, PW);
+                final Timer t = new Timer();
+                t.scheduleAtFixedRate(new TimerTask() {
 
-                    @Override
-                    public void run() {
-                        AMAuftragServer amServer = null;
-//                            AM_AuftragServer amServer = null;
-//                            try {
-                        if (interrupted) {
-                            log.info(
-                                "interrupting the dowload of nas order "
-                                        + orderId);
+                        @Override
+                        public void run() {
+                            AMAuftragServer amServer = null;
+                            if (interrupted) {
+                                log.info(
+                                    "interrupting the dowload of nas order "
+                                            + orderId);
+                                t.cancel();
+                                return;
+                            }
+                            amServer = manager.listAuftrag(sessionId, orderId);
+                            if (amServer.getWannBeendet() == null) {
+                                return;
+                            }
                             t.cancel();
-                            return;
-                        }
-                        amServer = manager.listAuftrag(sessionId, orderId);
-                        if (amServer.getWannBeendet() == null) {
-                            return;
-                        }
-                        t.cancel();
-                        logProtocol(manager.getProtocolGZip(sessionId, orderId));
-                        if (!interrupted) {
-                            final int resCount = manager.getResultCount(sessionId, orderId);
-                            if (resCount > 1) {
-                                // unzip and save all files, then zip them
-                                final ArrayList<byte[]> resultFiles = new ArrayList<byte[]>();
-                                for (int i = 0; i < resCount; i++) {
-                                    resultFiles.add(manager.getNResultGZip(sessionId, orderId, i));
+                            logProtocol(manager.getProtocolGZip(sessionId, orderId));
+                            if (!interrupted) {
+                                final int resCount = manager.getResultCount(sessionId, orderId);
+                                if (resCount > 1) {
+                                    // unzip and save all files, then zip them
+                                    final ArrayList<byte[]> resultFiles = new ArrayList<byte[]>();
+                                    for (int i = 0; i < resCount; i++) {
+                                        resultFiles.add(manager.getNResultGZip(sessionId, orderId, i));
+                                    }
+                                    saveZipFileOfUnzippedFileCollection(userId, orderId, resultFiles);
+                                } else {
+                                    unzipAndSaveFile(userId, orderId, manager.getResultGZip(sessionId, orderId));
                                 }
-                                saveZipFileOfUnzippedFileCollection(userId, orderId, resultFiles);
+                                for (int i = 0; i < resCount; i++) {
+                                }
+                                removeFromOpenOrders(userId, orderId);
+                                downloaderMap.remove(orderId);
                             } else {
-                                unzipAndSaveFile(userId, orderId, manager.getResultGZip(sessionId, orderId));
+                                log.info(
+                                    "interrupting the download of nas order "
+                                            + orderId);
                             }
-                            for (int i = 0; i < resCount; i++) {
-                            }
-//                                    unzipAndSaveFile(userId, orderId, manager.getResultGZip(sessionId, orderId));
-                            removeFromOpenOrders(userId, orderId);
-                            downloaderMap.remove(orderId);
-                        } else {
-                            log.info(
-                                "interrupting the download of nas order "
-                                        + orderId);
                         }
-//                            } catch (RemoteException ex) {
-//                                Exceptions.printStackTrace(ex);
-//                            }
-                    }
-                }, REQUEST_PERIOD, REQUEST_PERIOD);
-//            } catch (RemoteException ex) {
-//                log.error("Could not connect to 3A server", ex);
-//            }
+                    }, REQUEST_PERIOD, REQUEST_PERIOD);
+            } catch (Exception ex) {
+                log.warn("Could not connect to 3A server", ex);
+            }
         }
 
         /**
