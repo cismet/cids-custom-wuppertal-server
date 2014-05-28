@@ -30,6 +30,12 @@ public class NasProductInfo implements Serializable {
 
     /**
      * Creates a new NasProductInfo object.
+     */
+    public NasProductInfo() {
+    }
+
+    /**
+     * Creates a new NasProductInfo object.
      *
      * @param  isSplittet   DOCUMENT ME!
      * @param  requestName  DOCUMENT ME!
