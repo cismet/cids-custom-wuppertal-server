@@ -143,6 +143,14 @@ public final class AlkisProducts {
                                 } else {
                                     defaultProduct = false;
                                 }
+                                final Attribute productDefaultScaleAttr = guiProduct.getAttribute(
+                                        "productDefaultScale");
+                                Integer productDefaultScale;
+                                if (productDefaultScaleAttr != null) {
+                                    productDefaultScale = productDefaultScaleAttr.getIntValue();
+                                } else {
+                                    productDefaultScale = null;
+                                }
                                 for (final Object o3 : guiProduct.getChildren()) {
                                     final Element singleProduct = (Element)o3;
                                     final Attribute codeAttr = singleProduct.getAttribute("ID");
@@ -213,7 +221,8 @@ public final class AlkisProducts {
                                                 width,
                                                 height,
                                                 defaultProduct,
-                                                stempelfeldInfo);
+                                                stempelfeldInfo,
+                                                productDefaultScale);
                                         mapProducts.add(currentProduct);
                                     }
                                 }
