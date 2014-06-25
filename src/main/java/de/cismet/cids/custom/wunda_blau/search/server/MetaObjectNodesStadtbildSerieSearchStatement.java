@@ -327,11 +327,31 @@ public class MetaObjectNodesStadtbildSerieSearchStatement extends AbstractCidsSe
     private void appendInterval() {
         if (!interval.isEmpty()) {
             if (simpleInterval) {
-                query.append(" and sb.bildnummer IN ('").append(StringUtils.join(interval, "','")).append("') ");
+                String imageNrFrom = interval.get(0);
+                String imageNrTo = interval.get(1);
+                String whereStatement;
+                if (Character.isLetter(imageNrFrom.charAt(0))) {
+                    final char firstLetter = imageNrFrom.charAt(0);
+                    imageNrFrom = imageNrFrom.substring(1);
+                    imageNrTo = imageNrTo.substring(1);
+                    final int length = imageNrFrom.length();
+                    whereStatement = String.format(
+                            "and sb.bildnummer ~ '^%4$s\\\\d{%1$d}[a-z]?$' and %2$s <= substring(sb.bildnummer,2,%1$d)::bigint and substring(sb.bildnummer,2,%1$d)::bigint <= %3$s ",
+                            length,
+                            imageNrFrom,
+                            imageNrTo,
+                            firstLetter);
+                } else {
+                    final int length = imageNrFrom.length();
+                    whereStatement = String.format(
+                            "and sb.bildnummer ~ '^\\\\d{%1$d}[a-z]?$' and %2$s <= substring(sb.bildnummer,1,%1$d)::bigint and substring(sb.bildnummer,1,%1$d)::bigint <= %3$s ",
+                            length,
+                            imageNrFrom,
+                            imageNrTo);
+                }
+                query.append(whereStatement);
             } else {
-                query.append(" and sb.bildnummer ~ '^(")
-                        .append(StringUtils.join(interval, "|"))
-                        .append(")[a-z]?$'");
+                query.append(" and sb.bildnummer IN ('").append(StringUtils.join(interval, "','")).append("') ");
             }
         }
     }
@@ -560,9 +580,7 @@ public class MetaObjectNodesStadtbildSerieSearchStatement extends AbstractCidsSe
     }
 
     /**
-     * Only useful in combination with a fancy interval. If simpleInterval is true, then the exact image
- numbers from the List intervall will be found. Otherwise the image numbers can have some suffix e.g. a
- letter.
+     * DOCUMENT ME!
      *
      * @param  simpleInterval  DOCUMENT ME!
      */
