@@ -81,8 +81,8 @@ public class MetaObjectNodesStadtbildSerieSearchStatement extends AbstractCidsSe
 
     private ArrayList<Bildtyp> bildtypen = new ArrayList<Bildtyp>();
     private ArrayList<Integer> suchwoerterIDs = new ArrayList<Integer>();
-    private ArrayList<String> fancyIntervall = new ArrayList<String>();
-    private boolean fancyIntervalExactMatch = false;
+    private ArrayList<String> interval = new ArrayList<String>();
+    private boolean simpleInterval = false;
     private Date from;
     private Date till;
     private String streetID;
@@ -190,7 +190,7 @@ public class MetaObjectNodesStadtbildSerieSearchStatement extends AbstractCidsSe
                     + "                WHERE   name ilike 'sb_stadtbildserie' "
                     + "                ), sbs.id, (select bildnummer from sb_stadtbild sb where sb.id = sbs.vorschaubild) ");
         query.append(" FROM sb_stadtbildserie sbs");
-        if (StringUtils.isNotBlank(singleImageNumber) || !fancyIntervall.isEmpty()) {
+        if (StringUtils.isNotBlank(singleImageNumber) || !interval.isEmpty()) {
             query.append(" join sb_serie_bild_array as arr ");
             query.append(" on sbs.id = arr.sb_stadtbildserie_reference ");
             query.append(" JOIN sb_stadtbild AS sb ON sb.id = arr.stadtbild ");
@@ -208,7 +208,7 @@ public class MetaObjectNodesStadtbildSerieSearchStatement extends AbstractCidsSe
         appendOrtID();
         appendHausnummer();
         appendSingleImageNumber();
-        appendFancyIntervall();
+        appendInterval();
         appendGeometry();
         return query.toString();
     }
@@ -324,13 +324,13 @@ public class MetaObjectNodesStadtbildSerieSearchStatement extends AbstractCidsSe
     /**
      * DOCUMENT ME!
      */
-    private void appendFancyIntervall() {
-        if (!fancyIntervall.isEmpty()) {
-            if (fancyIntervalExactMatch) {
-                query.append(" and sb.bildnummer IN ('").append(StringUtils.join(fancyIntervall, "','")).append("') ");
+    private void appendInterval() {
+        if (!interval.isEmpty()) {
+            if (simpleInterval) {
+                query.append(" and sb.bildnummer IN ('").append(StringUtils.join(interval, "','")).append("') ");
             } else {
                 query.append(" and sb.bildnummer ~ '^(")
-                        .append(StringUtils.join(fancyIntervall, "|"))
+                        .append(StringUtils.join(interval, "|"))
                         .append(")[a-z]?$'");
             }
         }
@@ -537,17 +537,17 @@ public class MetaObjectNodesStadtbildSerieSearchStatement extends AbstractCidsSe
      *
      * @return  DOCUMENT ME!
      */
-    public ArrayList<String> getFancyIntervall() {
-        return fancyIntervall;
+    public ArrayList<String> getInterval() {
+        return interval;
     }
 
     /**
      * DOCUMENT ME!
      *
-     * @param  fancyIntervall  DOCUMENT ME!
+     * @param  interval  DOCUMENT ME!
      */
-    public void setFancyInterval(final ArrayList<String> fancyIntervall) {
-        this.fancyIntervall = fancyIntervall;
+    public void setInterval(final ArrayList<String> interval) {
+        this.interval = interval;
     }
 
     /**
@@ -555,18 +555,18 @@ public class MetaObjectNodesStadtbildSerieSearchStatement extends AbstractCidsSe
      *
      * @return  DOCUMENT ME!
      */
-    public boolean isFancyIntervalExactMatch() {
-        return fancyIntervalExactMatch;
+    public boolean isSimpleInterval() {
+        return simpleInterval;
     }
 
     /**
-     * Only useful in combination with a fancy interval. If fancyIntervalExactMatch is true, then the exact image
-     * numbers from the List fancyIntervall will be found. Otherwise the image numbers can have some suffix e.g. a
-     * letter.
+     * Only useful in combination with a fancy interval. If simpleInterval is true, then the exact image
+ numbers from the List intervall will be found. Otherwise the image numbers can have some suffix e.g. a
+ letter.
      *
-     * @param  fancyIntervalExactMatch  DOCUMENT ME!
+     * @param  simpleInterval  DOCUMENT ME!
      */
-    public void setFancyIntervalExactMatch(final boolean fancyIntervalExactMatch) {
-        this.fancyIntervalExactMatch = fancyIntervalExactMatch;
+    public void setSimpleInterval(final boolean simpleInterval) {
+        this.simpleInterval = simpleInterval;
     }
 }
