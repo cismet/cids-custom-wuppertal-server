@@ -69,7 +69,7 @@ public final class AlkisProducts {
     //
     public final Map<String, Point> ALKIS_FORMATS;
     public final List<AlkisProductDescription> ALKIS_MAP_PRODUCTS;
-    private final String IDENTIFICATION;
+    private final String IDENTIFICATIONANDMORE;
     //
 
     //~ Constructors -----------------------------------------------------------
@@ -88,7 +88,8 @@ public final class AlkisProducts {
         final Map<String, Point> formatMap = new HashMap<String, Point>();
         ALKIS_FORMATS = Collections.unmodifiableMap(formatMap);
         ALKIS_MAP_PRODUCTS = Collections.unmodifiableList(mapProducts);
-        IDENTIFICATION = "user=" + user + "&password=" + pw + "&service=" + service;
+        IDENTIFICATIONANDMORE = "user=" + user + "&password=" + pw + "&service=" + service
+                    + "&script=nachverarbeitung.bat&";
         FLURSTUECKSNACHWEIS_PDF = productProperties.getProperty("FLURSTUECKSNACHWEIS_PDF");
         FLURSTUECKSNACHWEIS_HTML = productProperties.getProperty("FLURSTUECKSNACHWEIS_HTML");
         FLURSTUECKS_UND_EIGENTUMSNACHWEIS_KOMMUNAL_PDF = productProperties.getProperty(
@@ -108,7 +109,7 @@ public final class AlkisProducts {
         GRUNDSTUECKSNACHWEIS_NRW_HTML = productProperties.getProperty("GRUNDSTUECKSNACHWEIS_NRW_HTML");
         BESTANDSNACHWEIS_NRW_PDF = productProperties.getProperty("BESTANDSNACHWEIS_NRW_PDF");
         BESTANDSNACHWEIS_NRW_HTML = productProperties.getProperty("BESTANDSNACHWEIS_NRW_HTML");
-        BESTANDSNACHWEIS_KOMMUNAL_PDF = productProperties.getProperty("BESTANDSNACHWEIS_KOMMUNAL_PDF");
+        BESTANDSNACHWEIS_KOMMUNAL_PDF = productProperties.getProperty("BESTANlDSNACHWEIS_KOMMUNAL_PDF");
         BESTANDSNACHWEIS_KOMMUNAL_HTML = productProperties.getProperty("BESTANDSNACHWEIS_KOMMUNAL_HTML");
         BESTANDSNACHWEIS_KOMMUNAL_INTERN_PDF = productProperties.getProperty("BESTANDSNACHWEIS_KOMMUNAL_INTERN_PDF");
         BESTANDSNACHWEIS_KOMMUNAL_INTERN_HTML = productProperties.getProperty("BESTANDSNACHWEIS_KOMMUNAL_INTERN_HTML");
@@ -263,7 +264,7 @@ public final class AlkisProducts {
      */
     public void productEinzelNachweis(final String objectID, final String productCode) {
         final String url = AlkisConstants.COMMONS.EINZEL_NACHWEIS_SERVICE + "?" + AlkisConstants.MLESSNUMBER
-                    + "&product=" + productCode + "&id=" + objectID + "&" + IDENTIFICATION;
+                    + "&product=" + productCode + "&id=" + objectID + "&" + IDENTIFICATIONANDMORE;
         log.info("Open product URL : " + url);
         BrowserLauncher.openURLorFile(url);
     }
@@ -280,7 +281,7 @@ public final class AlkisProducts {
      */
     public URL productEinzelNachweisUrl(final String objectID, final String productCode) throws MalformedURLException {
         return new URL(AlkisConstants.COMMONS.EINZEL_NACHWEIS_SERVICE + "?" + AlkisConstants.MLESSNUMBER + "&product="
-                        + productCode + "&id=" + objectID + "&" + IDENTIFICATION);
+                        + productCode + "&id=" + objectID + "&" + IDENTIFICATIONANDMORE);
     }
 
     /**
@@ -306,7 +307,7 @@ public final class AlkisProducts {
      */
     public void productListenNachweis(final String punktliste, final String productCode) {
         final String url = AlkisConstants.COMMONS.LISTEN_NACHWEIS_SERVICE + "?" + AlkisConstants.MLESSNUMBER
-                    + "&product=" + productCode + "&ids=" + punktliste + "&" + IDENTIFICATION;
+                    + "&product=" + productCode + "&ids=" + punktliste + "&" + IDENTIFICATIONANDMORE;
         log.info("Open product URL : " + url);
         BrowserLauncher.openURLorFile(url);
     }
@@ -321,7 +322,7 @@ public final class AlkisProducts {
      */
     public String productListenNachweisUrl(final String punktliste, final String productCode) {
         return AlkisConstants.COMMONS.LISTEN_NACHWEIS_SERVICE + "?" + AlkisConstants.MLESSNUMBER + "&product="
-                    + productCode + "&ids=" + punktliste + "&" + IDENTIFICATION;
+                    + productCode + "&ids=" + punktliste + "&" + IDENTIFICATIONANDMORE;
     }
 
     /**
@@ -353,7 +354,7 @@ public final class AlkisProducts {
      */
     public void productKarte(final String parcelCode) {
         final String url = AlkisConstants.COMMONS.LIEGENSCHAFTSKARTE_SERVICE + "?" + AlkisConstants.MLESSNUMBER
-                    + "&landparcel=" + parcelCode + "&" + IDENTIFICATION;
+                    + "&landparcel=" + parcelCode + "&" + IDENTIFICATIONANDMORE;
         log.info("Open product URL : " + url);
         BrowserLauncher.openURLorFile(url);
     }
@@ -369,7 +370,7 @@ public final class AlkisProducts {
      */
     public URL productKarteUrl(final String parcelCode) throws MalformedURLException {
         return new URL(AlkisConstants.COMMONS.LIEGENSCHAFTSKARTE_SERVICE + "?" + AlkisConstants.MLESSNUMBER
-                        + "&landparcel=" + parcelCode + "&" + IDENTIFICATION);
+                        + "&landparcel=" + parcelCode + "&" + IDENTIFICATIONANDMORE);
     }
 
     /**
@@ -406,7 +407,7 @@ public final class AlkisProducts {
         if (moreThanOneParcel) {
             url += "&additionalLandparcel=true";
         }
-        url += "&" + IDENTIFICATION;
+        url += "&" + IDENTIFICATIONANDMORE;
         log.info("Open product URL : " + url);
         BrowserLauncher.openURLorFile(url);
     }
@@ -461,7 +462,7 @@ public final class AlkisProducts {
             url.append("&additionalLandparcel=true");
         }
         url.append('&');
-        url.append(IDENTIFICATION);
+        url.append(IDENTIFICATIONANDMORE);
         if ((produkt.getMassstabMin() != null) && (produkt.getMassstabMax() != null)) {
             url.append("&scale=");
             url.append(produkt.getMassstab());
