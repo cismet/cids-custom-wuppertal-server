@@ -323,7 +323,11 @@ public class MetaObjectNodesStadtbildSerieSearchStatement extends AbstractCidsSe
     }
 
     /**
-     * DOCUMENT ME!
+     * If an Interval Object is present then the search looks for the bildnummern inside the Interval. An Interval
+     * consists of two parts the simple interval and the exact matches. For the simple interval a statement is generated
+     * that expresses: intervalStart &lt;= bildnummer &lt;= intervalEnd. Although the statement is more complicated than
+     * that because a bildnummer can be e.g. N04711c. The exact matches is a list of bildnummern which should be found
+     * independently from the simple interval.
      */
     private void appendInterval() {
         if (interval != null) {
@@ -580,7 +584,12 @@ public class MetaObjectNodesStadtbildSerieSearchStatement extends AbstractCidsSe
     //~ Inner Classes ----------------------------------------------------------
 
     /**
-     * DOCUMENT ME!
+     * Interval is used to search for bildnummern of a stadtbildserie. An Interval consists of two parts the simple
+     * interval and the exact matches.
+     *
+     * <p>For the simple interval later on a statement will be generated that expresses: intervalStart &lt;= bildnummer
+     * &lt;= intervalEnd. The exact matches is a list of bildnummern which should be found independently from the simple
+     * interval.</p>
      *
      * @version  $Revision$, $Date$
      */
