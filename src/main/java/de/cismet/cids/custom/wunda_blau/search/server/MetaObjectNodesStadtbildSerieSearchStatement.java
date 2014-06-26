@@ -18,6 +18,8 @@ import com.vividsolutions.jts.geom.Polygon;
 import org.apache.commons.lang.StringUtils;
 import org.apache.log4j.Logger;
 
+import java.io.Serializable;
+
 import java.rmi.RemoteException;
 
 import java.text.SimpleDateFormat;
@@ -81,8 +83,7 @@ public class MetaObjectNodesStadtbildSerieSearchStatement extends AbstractCidsSe
 
     private ArrayList<Bildtyp> bildtypen = new ArrayList<Bildtyp>();
     private ArrayList<Integer> suchwoerterIDs = new ArrayList<Integer>();
-    private ArrayList<String> interval = new ArrayList<String>();
-    private boolean simpleInterval = false;
+    private Interval interval;
     private Date from;
     private Date till;
     private String streetID;
@@ -190,7 +191,7 @@ public class MetaObjectNodesStadtbildSerieSearchStatement extends AbstractCidsSe
                     + "                WHERE   name ilike 'sb_stadtbildserie' "
                     + "                ), sbs.id, (select bildnummer from sb_stadtbild sb where sb.id = sbs.vorschaubild) ");
         query.append(" FROM sb_stadtbildserie sbs");
-        if (StringUtils.isNotBlank(singleImageNumber) || !interval.isEmpty()) {
+        if (StringUtils.isNotBlank(singleImageNumber) || (interval != null)) {
             query.append(" join sb_serie_bild_array as arr ");
             query.append(" on sbs.id = arr.sb_stadtbildserie_reference ");
             query.append(" JOIN sb_stadtbild AS sb ON sb.id = arr.stadtbild ");
@@ -557,7 +558,7 @@ public class MetaObjectNodesStadtbildSerieSearchStatement extends AbstractCidsSe
      *
      * @return  DOCUMENT ME!
      */
-    public ArrayList<String> getInterval() {
+    public Interval getInterval() {
         return interval;
     }
 
@@ -566,25 +567,113 @@ public class MetaObjectNodesStadtbildSerieSearchStatement extends AbstractCidsSe
      *
      * @param  interval  DOCUMENT ME!
      */
-    public void setInterval(final ArrayList<String> interval) {
+    public void setInterval(final Interval interval) {
         this.interval = interval;
     }
 
-    /**
-     * DOCUMENT ME!
-     *
-     * @return  DOCUMENT ME!
-     */
-    public boolean isSimpleInterval() {
-        return simpleInterval;
-    }
+    //~ Inner Classes ----------------------------------------------------------
 
     /**
      * DOCUMENT ME!
      *
-     * @param  simpleInterval  DOCUMENT ME!
+     * @version  $Revision$, $Date$
      */
-    public void setSimpleInterval(final boolean simpleInterval) {
-        this.simpleInterval = simpleInterval;
+    public static class Interval implements Serializable {
+
+        //~ Instance fields ----------------------------------------------------
+
+        private final String intervalStart;
+        private final String intervalEnd;
+        private final ArrayList<String> additionalExactMatches;
+
+        //~ Constructors -------------------------------------------------------
+
+        /**
+         * Creates a new Interval object.
+         *
+         * @param  intervalStart  DOCUMENT ME!
+         * @param  intervalEnd    DOCUMENT ME!
+         */
+        public Interval(final String intervalStart, final String intervalEnd) {
+            this(intervalStart, intervalEnd, null);
+        }
+
+        /**
+         * Creates a new Interval object.
+         *
+         * @param  intervalStart           DOCUMENT ME!
+         * @param  intervalEnd             DOCUMENT ME!
+         * @param  additionalExactMatches  DOCUMENT ME!
+         */
+        public Interval(final String intervalStart,
+                final String intervalEnd,
+                final ArrayList<String> additionalExactMatches) {
+            this.intervalStart = intervalStart;
+            this.intervalEnd = intervalEnd;
+            this.additionalExactMatches = additionalExactMatches;
+        }
+
+        //~ Methods ------------------------------------------------------------
+
+        /**
+         * DOCUMENT ME!
+         *
+         * @return  DOCUMENT ME!
+         */
+        public String getIntervalStart() {
+            return intervalStart;
+        }
+
+        /**
+         * DOCUMENT ME!
+         *
+         * @return  DOCUMENT ME!
+         */
+        public String getIntervalEnd() {
+            return intervalEnd;
+        }
+
+        /**
+         * DOCUMENT ME!
+         *
+         * @return  DOCUMENT ME!
+         */
+        public ArrayList<String> getAdditionalExactMatches() {
+            return additionalExactMatches;
+        }
+
+        @Override
+        public int hashCode() {
+            int hash = 3;
+            hash = (41 * hash) + ((this.intervalStart != null) ? this.intervalStart.hashCode() : 0);
+            hash = (41 * hash) + ((this.intervalEnd != null) ? this.intervalEnd.hashCode() : 0);
+            hash = (41 * hash) + ((this.additionalExactMatches != null) ? this.additionalExactMatches.hashCode() : 0);
+            return hash;
+        }
+
+        @Override
+        public boolean equals(final Object obj) {
+            if (obj == null) {
+                return false;
+            }
+            if (getClass() != obj.getClass()) {
+                return false;
+            }
+            final Interval other = (Interval)obj;
+            if ((this.intervalStart == null) ? (other.intervalStart != null)
+                                             : (!this.intervalStart.equals(other.intervalStart))) {
+                return false;
+            }
+            if ((this.intervalEnd == null) ? (other.intervalEnd != null)
+                                           : (!this.intervalEnd.equals(other.intervalEnd))) {
+                return false;
+            }
+            if ((this.additionalExactMatches != other.additionalExactMatches)
+                        && ((this.additionalExactMatches == null)
+                            || !this.additionalExactMatches.equals(other.additionalExactMatches))) {
+                return false;
+            }
+            return true;
+        }
     }
 }
