@@ -326,10 +326,11 @@ public class MetaObjectNodesStadtbildSerieSearchStatement extends AbstractCidsSe
      * DOCUMENT ME!
      */
     private void appendInterval() {
-        if (!interval.isEmpty()) {
-            if (simpleInterval) {
-                String imageNrFrom = interval.get(0);
-                String imageNrTo = interval.get(1);
+        if (interval != null) {
+            String logicalConnective = " and ";
+            if ((interval.intervalStart != null) && (interval.intervalEnd != null)) {
+                String imageNrFrom = interval.intervalStart;
+                String imageNrTo = interval.intervalEnd;
                 String whereStatement;
                 if (Character.isLetter(imageNrFrom.charAt(0))) {
                     final char firstLetter = imageNrFrom.charAt(0);
@@ -337,7 +338,7 @@ public class MetaObjectNodesStadtbildSerieSearchStatement extends AbstractCidsSe
                     imageNrTo = imageNrTo.substring(1);
                     final int length = imageNrFrom.length();
                     whereStatement = String.format(
-                            "and sb.bildnummer ~ '^%4$s\\\\d{%1$d}[a-z]?$' and %2$s <= substring(sb.bildnummer,2,%1$d)::bigint and substring(sb.bildnummer,2,%1$d)::bigint <= %3$s ",
+                            " and sb.bildnummer ~ '^%4$s\\\\d{%1$d}[a-z]?$' and %2$s <= substring(sb.bildnummer,2,%1$d)::bigint and substring(sb.bildnummer,2,%1$d)::bigint <= %3$s ",
                             length,
                             imageNrFrom,
                             imageNrTo,
@@ -345,14 +346,19 @@ public class MetaObjectNodesStadtbildSerieSearchStatement extends AbstractCidsSe
                 } else {
                     final int length = imageNrFrom.length();
                     whereStatement = String.format(
-                            "and sb.bildnummer ~ '^\\\\d{%1$d}[a-z]?$' and %2$s <= substring(sb.bildnummer,1,%1$d)::bigint and substring(sb.bildnummer,1,%1$d)::bigint <= %3$s ",
+                            " and sb.bildnummer ~ '^\\\\d{%1$d}[a-z]?$' and %2$s <= substring(sb.bildnummer,1,%1$d)::bigint and substring(sb.bildnummer,1,%1$d)::bigint <= %3$s ",
                             length,
                             imageNrFrom,
                             imageNrTo);
                 }
                 query.append(whereStatement);
-            } else {
-                query.append(" and sb.bildnummer IN ('").append(StringUtils.join(interval, "','")).append("') ");
+                logicalConnective = " or ";
+            }
+            if ((interval.additionalExactMatches != null) && !interval.additionalExactMatches.isEmpty()) {
+                query.append(logicalConnective);
+                query.append(" sb.bildnummer IN ('")
+                        .append(StringUtils.join(interval.additionalExactMatches, "','"))
+                        .append("') ");
             }
         }
     }
