@@ -18,6 +18,8 @@ import com.vividsolutions.jts.geom.Polygon;
 import org.apache.commons.lang.StringUtils;
 import org.apache.log4j.Logger;
 
+import java.io.Serializable;
+
 import java.rmi.RemoteException;
 
 import java.text.SimpleDateFormat;
@@ -81,8 +83,7 @@ public class MetaObjectNodesStadtbildSerieSearchStatement extends AbstractCidsSe
 
     private ArrayList<Bildtyp> bildtypen = new ArrayList<Bildtyp>();
     private ArrayList<Integer> suchwoerterIDs = new ArrayList<Integer>();
-    private ArrayList<String> fancyIntervall = new ArrayList<String>();
-    private boolean fancyIntervalExactMatch = false;
+    private Interval interval;
     private Date from;
     private Date till;
     private String streetID;
@@ -190,7 +191,7 @@ public class MetaObjectNodesStadtbildSerieSearchStatement extends AbstractCidsSe
                     + "                WHERE   name ilike 'sb_stadtbildserie' "
                     + "                ), sbs.id, (select bildnummer from sb_stadtbild sb where sb.id = sbs.vorschaubild) ");
         query.append(" FROM sb_stadtbildserie sbs");
-        if (StringUtils.isNotBlank(singleImageNumber) || !fancyIntervall.isEmpty()) {
+        if (StringUtils.isNotBlank(singleImageNumber) || (interval != null)) {
             query.append(" join sb_serie_bild_array as arr ");
             query.append(" on sbs.id = arr.sb_stadtbildserie_reference ");
             query.append(" JOIN sb_stadtbild AS sb ON sb.id = arr.stadtbild ");
@@ -208,7 +209,7 @@ public class MetaObjectNodesStadtbildSerieSearchStatement extends AbstractCidsSe
         appendOrtID();
         appendHausnummer();
         appendSingleImageNumber();
-        appendFancyIntervall();
+        appendInterval();
         appendGeometry();
         return query.toString();
     }
@@ -322,16 +323,46 @@ public class MetaObjectNodesStadtbildSerieSearchStatement extends AbstractCidsSe
     }
 
     /**
-     * DOCUMENT ME!
+     * If an Interval Object is present then the search looks for the bildnummern inside the Interval. An Interval
+     * consists of two parts the simple interval and the exact matches. For the simple interval a statement is generated
+     * that expresses: intervalStart &lt;= bildnummer &lt;= intervalEnd. Although the statement is more complicated than
+     * that because a bildnummer can be e.g. N04711c. The exact matches is a list of bildnummern which should be found
+     * independently from the simple interval.
      */
-    private void appendFancyIntervall() {
-        if (!fancyIntervall.isEmpty()) {
-            if (fancyIntervalExactMatch) {
-                query.append(" and sb.bildnummer IN ('").append(StringUtils.join(fancyIntervall, "','")).append("') ");
-            } else {
-                query.append(" and sb.bildnummer ~ '^(")
-                        .append(StringUtils.join(fancyIntervall, "|"))
-                        .append(")[a-z]?$'");
+    private void appendInterval() {
+        if (interval != null) {
+            String logicalConnective = " and ";
+            if ((interval.intervalStart != null) && (interval.intervalEnd != null)) {
+                String imageNrFrom = interval.intervalStart;
+                String imageNrTo = interval.intervalEnd;
+                String whereStatement;
+                if (Character.isLetter(imageNrFrom.charAt(0))) {
+                    final char firstLetter = imageNrFrom.charAt(0);
+                    imageNrFrom = imageNrFrom.substring(1);
+                    imageNrTo = imageNrTo.substring(1);
+                    final int length = imageNrFrom.length();
+                    whereStatement = String.format(
+                            " and sb.bildnummer ~ '^%4$s\\\\d{%1$d}[a-z]?$' and %2$s <= substring(sb.bildnummer,2,%1$d)::bigint and substring(sb.bildnummer,2,%1$d)::bigint <= %3$s ",
+                            length,
+                            imageNrFrom,
+                            imageNrTo,
+                            firstLetter);
+                } else {
+                    final int length = imageNrFrom.length();
+                    whereStatement = String.format(
+                            " and sb.bildnummer ~ '^\\\\d{%1$d}[a-z]?$' and %2$s <= substring(sb.bildnummer,1,%1$d)::bigint and substring(sb.bildnummer,1,%1$d)::bigint <= %3$s ",
+                            length,
+                            imageNrFrom,
+                            imageNrTo);
+                }
+                query.append(whereStatement);
+                logicalConnective = " or ";
+            }
+            if ((interval.additionalExactMatches != null) && !interval.additionalExactMatches.isEmpty()) {
+                query.append(logicalConnective);
+                query.append(" sb.bildnummer IN ('")
+                        .append(StringUtils.join(interval.additionalExactMatches, "','"))
+                        .append("') ");
             }
         }
     }
@@ -537,36 +568,127 @@ public class MetaObjectNodesStadtbildSerieSearchStatement extends AbstractCidsSe
      *
      * @return  DOCUMENT ME!
      */
-    public ArrayList<String> getFancyIntervall() {
-        return fancyIntervall;
+    public Interval getInterval() {
+        return interval;
     }
 
     /**
      * DOCUMENT ME!
      *
-     * @param  fancyIntervall  DOCUMENT ME!
+     * @param  interval  DOCUMENT ME!
      */
-    public void setFancyInterval(final ArrayList<String> fancyIntervall) {
-        this.fancyIntervall = fancyIntervall;
+    public void setInterval(final Interval interval) {
+        this.interval = interval;
     }
 
-    /**
-     * DOCUMENT ME!
-     *
-     * @return  DOCUMENT ME!
-     */
-    public boolean isFancyIntervalExactMatch() {
-        return fancyIntervalExactMatch;
-    }
+    //~ Inner Classes ----------------------------------------------------------
 
     /**
-     * Only useful in combination with a fancy interval. If fancyIntervalExactMatch is true, then the exact image
-     * numbers from the List fancyIntervall will be found. Otherwise the image numbers can have some suffix e.g. a
-     * letter.
+     * Interval is used to search for bildnummern of a stadtbildserie. An Interval consists of two parts the simple
+     * interval and the exact matches.
      *
-     * @param  fancyIntervalExactMatch  DOCUMENT ME!
+     * <p>For the simple interval later on a statement will be generated that expresses: intervalStart &lt;= bildnummer
+     * &lt;= intervalEnd. The exact matches is a list of bildnummern which should be found independently from the simple
+     * interval.</p>
+     *
+     * @version  $Revision$, $Date$
      */
-    public void setFancyIntervalExactMatch(final boolean fancyIntervalExactMatch) {
-        this.fancyIntervalExactMatch = fancyIntervalExactMatch;
+    public static class Interval implements Serializable {
+
+        //~ Instance fields ----------------------------------------------------
+
+        private final String intervalStart;
+        private final String intervalEnd;
+        private final ArrayList<String> additionalExactMatches;
+
+        //~ Constructors -------------------------------------------------------
+
+        /**
+         * Creates a new Interval object.
+         *
+         * @param  intervalStart  DOCUMENT ME!
+         * @param  intervalEnd    DOCUMENT ME!
+         */
+        public Interval(final String intervalStart, final String intervalEnd) {
+            this(intervalStart, intervalEnd, null);
+        }
+
+        /**
+         * Creates a new Interval object.
+         *
+         * @param  intervalStart           DOCUMENT ME!
+         * @param  intervalEnd             DOCUMENT ME!
+         * @param  additionalExactMatches  DOCUMENT ME!
+         */
+        public Interval(final String intervalStart,
+                final String intervalEnd,
+                final ArrayList<String> additionalExactMatches) {
+            this.intervalStart = intervalStart;
+            this.intervalEnd = intervalEnd;
+            this.additionalExactMatches = additionalExactMatches;
+        }
+
+        //~ Methods ------------------------------------------------------------
+
+        /**
+         * DOCUMENT ME!
+         *
+         * @return  DOCUMENT ME!
+         */
+        public String getIntervalStart() {
+            return intervalStart;
+        }
+
+        /**
+         * DOCUMENT ME!
+         *
+         * @return  DOCUMENT ME!
+         */
+        public String getIntervalEnd() {
+            return intervalEnd;
+        }
+
+        /**
+         * DOCUMENT ME!
+         *
+         * @return  DOCUMENT ME!
+         */
+        public ArrayList<String> getAdditionalExactMatches() {
+            return additionalExactMatches;
+        }
+
+        @Override
+        public int hashCode() {
+            int hash = 3;
+            hash = (41 * hash) + ((this.intervalStart != null) ? this.intervalStart.hashCode() : 0);
+            hash = (41 * hash) + ((this.intervalEnd != null) ? this.intervalEnd.hashCode() : 0);
+            hash = (41 * hash) + ((this.additionalExactMatches != null) ? this.additionalExactMatches.hashCode() : 0);
+            return hash;
+        }
+
+        @Override
+        public boolean equals(final Object obj) {
+            if (obj == null) {
+                return false;
+            }
+            if (getClass() != obj.getClass()) {
+                return false;
+            }
+            final Interval other = (Interval)obj;
+            if ((this.intervalStart == null) ? (other.intervalStart != null)
+                                             : (!this.intervalStart.equals(other.intervalStart))) {
+                return false;
+            }
+            if ((this.intervalEnd == null) ? (other.intervalEnd != null)
+                                           : (!this.intervalEnd.equals(other.intervalEnd))) {
+                return false;
+            }
+            if ((this.additionalExactMatches != other.additionalExactMatches)
+                        && ((this.additionalExactMatches == null)
+                            || !this.additionalExactMatches.equals(other.additionalExactMatches))) {
+                return false;
+            }
+            return true;
+        }
     }
 }
