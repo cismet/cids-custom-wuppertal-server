@@ -217,6 +217,28 @@ public class NASProductGenerator {
     /**
      * DOCUMENT ME!
      *
+     * @return  DOCUMENT ME!
+     */
+    public boolean reInitFromOrderLogFiles() {
+//        if (!openOrderMap.isEmpty()) {
+//            log.info(
+//                "The open order map (requests that need to be downloaded from the cids server) is not empty. can not re-init from log files");
+//            return false;
+//        }
+//        if (!undeliveredOrderMap.isEmpty()) {
+//            log.info(
+//                "The open order map (requests that need to be downloaded from the client) is not empty. can not re-init from log files");
+//            return false;
+//        }
+        openOrderMap = new HashMap<String, HashMap<String, NasProductInfo>>();
+        undeliveredOrderMap = new HashMap<String, HashMap<String, NasProductInfo>>();
+        initFromOrderLogFiles();
+        return true;
+    }
+
+    /**
+     * DOCUMENT ME!
+     *
      * @param   geom          DOCUMENT ME!
      * @param   templateFile  DOCUMENT ME!
      * @param   requestName   DOCUMENT ME!
@@ -504,7 +526,7 @@ public class NASProductGenerator {
      * @param   orderId  DOCUMENT ME!
      * @param   user     DOCUMENT ME!
      *
-     * @return  DOCUMENT ME!
+     * @return  DOCUMcd ENT ME!
      */
     public byte[] getResultForOrder(final String orderId, final User user) {
         if (initError) {
@@ -827,7 +849,15 @@ public class NASProductGenerator {
      * @return  DOCUMENT ME!
      */
     private String determineUserPrefix(final User user) {
-        return user.getId() + "_" + user.getName();
+        String prefix = user.getId() + "_" + user.getName();
+        prefix = prefix.replaceAll("Ö", "oe");
+        prefix = prefix.replaceAll("ö", "oe");
+        prefix = prefix.replaceAll("Ä", "ae");
+        prefix = prefix.replaceAll("ä", "ae");
+        prefix = prefix.replaceAll("Ü", "ue");
+        prefix = prefix.replaceAll("ü", "ue");
+        prefix = prefix.replaceAll("ß", "ss");
+        return prefix;
     }
 
     /**

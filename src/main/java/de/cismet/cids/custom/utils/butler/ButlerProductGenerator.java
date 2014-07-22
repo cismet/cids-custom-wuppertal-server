@@ -331,10 +331,17 @@ public class ButlerProductGenerator {
     private String determineRequestFileName(final User user, final String requestId) {
         final GregorianCalendar cal = new GregorianCalendar();
         cal.setTime(new Date());
-
-        return user.getName() + "_" + requestId + "_" + cal.get(GregorianCalendar.HOUR_OF_DAY)
+        String filename = user.getName() + "_" + requestId + "_" + cal.get(GregorianCalendar.HOUR_OF_DAY)
                     + "_" + cal.get(GregorianCalendar.MINUTE)
                     + "_" + cal.get(GregorianCalendar.SECOND);
+        filename = filename.replaceAll("Ö", "oe");
+        filename = filename.replaceAll("ö", "oe");
+        filename = filename.replaceAll("Ä", "ae");
+        filename = filename.replaceAll("ä", "ae");
+        filename = filename.replaceAll("Ü", "ue");
+        filename = filename.replaceAll("ü", "ue");
+        filename = filename.replaceAll("ß", "ss");
+        return filename;
     }
 
     /**
