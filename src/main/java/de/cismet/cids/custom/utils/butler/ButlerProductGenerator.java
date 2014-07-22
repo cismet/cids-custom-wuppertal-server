@@ -194,12 +194,14 @@ public class ButlerProductGenerator {
                 bw.close();
                 return filename;
             } catch (IOException ex) {
-                Exceptions.printStackTrace(ex);
+                LOG.error(ex.getMessage(), ex);
             } finally {
                 try {
-                    fw.close();
+                    if (fw != null) {
+                        fw.close();
+                    }
                 } catch (IOException ex) {
-                    Exceptions.printStackTrace(ex);
+                    LOG.error(ex.getMessage(), ex);
                 }
             }
         }
