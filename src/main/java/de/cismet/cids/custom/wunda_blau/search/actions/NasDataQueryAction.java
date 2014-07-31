@@ -16,7 +16,7 @@ import Sirius.server.newuser.User;
 import com.vividsolutions.jts.geom.GeometryCollection;
 
 import de.cismet.cids.custom.utils.nas.NASProductGenerator;
-import de.cismet.cids.custom.utils.nas.NasProductTemplate;
+import de.cismet.cids.custom.utils.nas.NasProduct;
 
 import de.cismet.cids.server.actions.ServerAction;
 import de.cismet.cids.server.actions.ServerActionParameter;
@@ -70,14 +70,14 @@ public class NasDataQueryAction implements UserAwareServerAction {
 
     @Override
     public Object execute(final Object body, final ServerActionParameter... params) {
-        NasProductTemplate template = null;
+        NasProduct nasProduct = null;
         GeometryCollection geoms = null;
         METHOD_TYPE method = null;
         String orderId = null;
         String requestId = null;
         for (final ServerActionParameter sap : params) {
             if (sap.getKey().equals(PARAMETER_TYPE.TEMPLATE.toString())) {
-                template = (NasProductTemplate)sap.getValue();
+                nasProduct = (NasProduct)sap.getValue();
             } else if (sap.getKey().equals(PARAMETER_TYPE.GEOMETRY_COLLECTION.toString())) {
                 geoms = (GeometryCollection)sap.getValue();
             } else if (sap.getKey().equals(PARAMETER_TYPE.METHOD.toString())) {
@@ -89,7 +89,7 @@ public class NasDataQueryAction implements UserAwareServerAction {
             }
         }
         if (method == METHOD_TYPE.ADD) {
-            return NASProductGenerator.instance().executeAsynchQuery(template, geoms, user, requestId);
+            return NASProductGenerator.instance().executeAsynchQuery(nasProduct, geoms, user, requestId);
         } else if (method == METHOD_TYPE.GET) {
             if (orderId == null) {
                 LOG.error("missing order id for get request");
