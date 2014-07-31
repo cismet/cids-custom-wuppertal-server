@@ -253,7 +253,12 @@ public class CidsBaulastSearchStatement extends AbstractCidsServerSearch impleme
     }
 
     /**
-     * DOCUMENT ME!
+     * Creates the primary query. A join is made over several tables. To make this join two cases have to be
+     * distinguished.<br>
+     * 1) Filter for a geometry. In this case more tables have to be joined as the geometry of a landparcel has to be
+     * fetched.<br>
+     * 2) No geometry involved. In this case fewer tables have to be joined because there are buchungsblaetter without a
+     * landparcel. Thus a join with the table flurstueck and geom leads to a wrong result as the join fails.
      *
      * @return  DOCUMENT ME!
      */
@@ -268,7 +273,7 @@ public class CidsBaulastSearchStatement extends AbstractCidsServerSearch impleme
                     + "\nWHERE  b.blattnummer IN (SELECT blattnummer "
                     + "\n                         FROM "
                     + "\n       (";
-        final String queryMid = ""
+        String queryMid = ""
                     + "\nSELECT " + baulastClassID + "  AS class_id, "
                     + "\n               l.id AS object_id, "
                     + "\n               l.blattnummer|| '/' || case when l.laufende_nummer is not null then l.laufende_nummer else 'keine laufende Nummer' end, "
@@ -279,21 +284,36 @@ public class CidsBaulastSearchStatement extends AbstractCidsServerSearch impleme
                     + "\n               left outer join alb_baulast_art a on (la.baulast_art = a.id),"
                     + "\n" + getBelastetBeguenstigtSubselect()
                     + "\n               , "
-                    + "\n               alb_flurstueck_kicker k, "
-                    + "\n               flurstueck f, "
-                    + "\n               geom g "
+                    + "\n               alb_flurstueck_kicker k";
+        if ((geometry != null) && !geometry.isEmpty()) {
+            queryMid += ", "
+                        + "\n               flurstueck f, "
+                        + "\n               geom g ";
+        }
+        queryMid += ""
                     + "\n        WHERE  1 = 1 "
                     + "\n               AND l.id = fsj.baulast_reference "
-                    + "\n               AND fsj.flurstueck = k.id "
-                    + "\n               AND k.fs_referenz = f.id "
-                    + "\n               AND f.umschreibendes_rechteck = g.id "
+                    + "\n               AND fsj.flurstueck = k.id ";
+        if ((geometry != null) && !geometry.isEmpty()) {
+            queryMid += ""
+                        + "\n               AND k.fs_referenz = f.id "
+                        + "\n               AND f.umschreibendes_rechteck = g.id ";
+        }
+        queryMid += ""
                     + "\n               "
-                    + blattnummerquerypart               // --  AND l.blattnummer LIKE '^[0]*4711[[:alpha:]]?$'  "
-                    + "\n               " + geoquerypart
-                    + "\n               " + artquerypart // -- AND a.baulast_art = 'Wertsteigerungsverzicht' "
-                    + "\n               " + ungueltigquerypart
-                    + "\n               " + gueltigquerypart
-                    + "\n               " + fsquerypart;
+                    + blattnummerquerypart; // --  AND l.blattnummer LIKE '^[0]*4711[[:alpha:]]?$'  "
+        if ((geometry != null) && !geometry.isEmpty()) {
+            queryMid += "\n               "
+                        + geoquerypart;
+        }
+        queryMid += "\n               "
+                    + artquerypart          // -- AND a.baulast_art = 'Wertsteigerungsverzicht' "
+                    + "\n               "
+                    + ungueltigquerypart
+                    + "\n               "
+                    + gueltigquerypart
+                    + "\n               "
+                    + fsquerypart;
         final String queryBlattPostfix = ""
                     + "\n) AS x "
                     + "\n                        ) "
@@ -306,9 +326,12 @@ public class CidsBaulastSearchStatement extends AbstractCidsServerSearch impleme
                     + "\n order by blattnummer, laufende_nummer";
 
         if (result == Result.BAULASTBLATT) {
-            query = queryBlattPrefix + queryMid + queryBlattPostfix;
+            query = queryBlattPrefix
+                        + queryMid
+                        + queryBlattPostfix;
         } else {
-            query = queryMid + queryBaulastPostfix;
+            query = queryMid
+                        + queryBaulastPostfix;
         }
         return query;
     }
