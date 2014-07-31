@@ -24,6 +24,7 @@ public class NasProductInfo implements Serializable {
     //~ Instance fields --------------------------------------------------------
 
     private boolean isSplittet;
+    private boolean dxf;
     private String requestName;
 
     //~ Constructors -----------------------------------------------------------
@@ -39,10 +40,12 @@ public class NasProductInfo implements Serializable {
      *
      * @param  isSplittet   DOCUMENT ME!
      * @param  requestName  DOCUMENT ME!
+     * @param  isDxf        DOCUMENT ME!
      */
-    public NasProductInfo(final boolean isSplittet, final String requestName) {
+    public NasProductInfo(final boolean isSplittet, final String requestName, final boolean isDxf) {
         this.isSplittet = isSplittet;
         this.requestName = requestName;
+        this.dxf = isDxf;
     }
 
     //~ Methods ----------------------------------------------------------------
@@ -81,5 +84,23 @@ public class NasProductInfo implements Serializable {
      */
     public void setRequestName(final String requestName) {
         this.requestName = requestName;
+    }
+
+    /**
+     * DOCUMENT ME!
+     *
+     * @return  DOCUMENT ME!
+     */
+    public boolean isDxf() {
+        return dxf;
+    }
+
+    /**
+     * DOCUMENT ME!
+     *
+     * @param  dxf  DOCUMENT ME!
+     */
+    public void setDxf(final boolean dxf) {
+        this.dxf = dxf;
     }
 }
