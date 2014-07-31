@@ -27,6 +27,8 @@ import de.aed_sicad.namespaces.svr.AMAuftragServer;
 import de.aed_sicad.namespaces.svr.AuftragsManager;
 import de.aed_sicad.namespaces.svr.AuftragsManagerSoap;
 
+import org.apache.commons.io.IOUtils;
+
 import org.openide.util.Exceptions;
 
 import org.w3c.dom.Document;
@@ -51,13 +53,13 @@ import java.io.StringWriter;
 
 import java.net.URL;
 
-import java.rmi.RemoteException;
-
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.Properties;
 import java.util.Timer;
 import java.util.TimerTask;
+import java.util.concurrent.ExecutionException;
+import java.util.concurrent.Future;
 import java.util.zip.GZIPInputStream;
 import java.util.zip.GZIPOutputStream;
 import java.util.zip.ZipEntry;
@@ -66,6 +68,8 @@ import java.util.zip.ZipOutputStream;
 import javax.xml.parsers.DocumentBuilder;
 import javax.xml.parsers.DocumentBuilderFactory;
 import javax.xml.parsers.ParserConfigurationException;
+
+import de.cismet.cids.server.api.types.ActionTask;
 
 /*
  * To change this template, choose Tools | Templates
@@ -101,12 +105,15 @@ public class NASProductGenerator {
     private String USER;
     private String PW;
     private String OUTPUT_DIR;
+    private String ACTION_SERVICE;
+    private String ACTION_DOMAIN;
     private HashMap<String, HashMap<String, NasProductInfo>> openOrderMap =
         new HashMap<String, HashMap<String, NasProductInfo>>();
     private HashMap<String, HashMap<String, NasProductInfo>> undeliveredOrderMap =
         new HashMap<String, HashMap<String, NasProductInfo>>();
     private HashMap<String, NasProductDownloader> downloaderMap = new HashMap<String, NasProductDownloader>();
     private boolean initError = false;
+    private DXFConverterAction dxfConverter;
 
     //~ Constructors -----------------------------------------------------------
 
@@ -134,6 +141,8 @@ public class NASProductGenerator {
             USER = serviceProperties.getProperty("user");
             PW = serviceProperties.getProperty("pw");
             OUTPUT_DIR = serviceProperties.getProperty("outputDir");
+            ACTION_DOMAIN = serviceProperties.getProperty("actionDomain");
+            ACTION_SERVICE = serviceProperties.getProperty("actionServiceURL");
             if ((OUTPUT_DIR == null) || OUTPUT_DIR.isEmpty()) {
                 log.info("Could not read nas nas output dir property. using server working dir as fallback");
                 OUTPUT_DIR = ".";
@@ -155,6 +164,13 @@ public class NASProductGenerator {
                 initError = true;
                 return;
             }
+            if ((ACTION_DOMAIN == null) || (ACTION_SERVICE == null)) {
+                log.warn(
+                    "NAS Datenabgabe initialisation Error. Can not read properties for connecting to DXF converter Action");
+                initError = true;
+                return;
+            }
+            dxfConverter = new DXFConverterAction(ACTION_DOMAIN, ACTION_SERVICE);
             final StringBuilder fileNameBuilder = new StringBuilder(OUTPUT_DIR);
             fileNameBuilder.append(System.getProperty("file.separator"));
             openOrdersLogFile = new File(fileNameBuilder.toString() + "openOrdersMap.json");
@@ -205,12 +221,12 @@ public class NASProductGenerator {
         for (final String userId
                     : openOrderMap.keySet()) {
             final HashMap<String, NasProductInfo> openOrderIds = openOrderMap.get(userId);
-            for (final String orderId : openOrderIds.keySet()) {
-                final NasProductDownloader downloader = new NasProductDownloader(userId, orderId);
-                downloaderMap.put(orderId, downloader);
-                final Thread workerThread = new Thread(downloader);
-                workerThread.start();
-            }
+//            for (final String orderId : openOrderIds.keySet()) {
+//                final NasProductDownloader downloader = new NasProductDownloader(userId, orderId);
+//                downloaderMap.put(orderId, downloader);
+//                final Thread workerThread = new Thread(downloader);
+//                workerThread.start();
+//            }
         }
     }
 
@@ -316,22 +332,20 @@ public class NASProductGenerator {
     /**
      * DOCUMENT ME!
      *
-     * @param   template  DOCUMENT ME!
+     * @param   product  DOCUMENT ME!
      *
      * @return  DOCUMENT ME!
      */
-    private InputStream loadTemplateFile(final NasProductTemplate template) {
+    private InputStream loadTemplateFile(final NasProduct product) {
         InputStream templateFile = null;
         try {
-            if (template == NasProductTemplate.KOMPLETT) {
-                templateFile = new FileInputStream(KOMPLETT_TEMPLATE_RES);
-            } else if (template == NasProductTemplate.OHNE_EIGENTUEMER) {
-                templateFile = new FileInputStream(EIGENTUEMER_TEMPLATE_RES);
-            } else {
-                templateFile = new FileInputStream(POINTS_TEMPLATE_RES);
+            if ((product != null) && (product.getTemplate() != null)) {
+                final ServerProperties serverProps = DomainServerImpl.getServerProperties();
+                final String resPath = serverProps.getServerResourcesBasePath();
+                templateFile = new FileInputStream(resPath + product.getTemplate());
             }
         } catch (FileNotFoundException ex) {
-            log.fatal("Could not read template template file for Template :" + template.toString(), ex);
+            log.fatal("Could not read template template file for Template :" + product.toString(), ex);
         }
         return templateFile;
     }
@@ -339,14 +353,14 @@ public class NASProductGenerator {
     /**
      * DOCUMENT ME!
      *
-     * @param   template     DOCUMENT ME!
+     * @param   product      DOCUMENT ME!
      * @param   geoms        DOCUMENT ME!
      * @param   user         DOCUMENT ME!
      * @param   requestName  DOCUMENT ME!
      *
      * @return  DOCUMENT ME!
      */
-    public String executeAsynchQuery(final NasProductTemplate template,
+    public String executeAsynchQuery(final NasProduct product,
             final GeometryCollection geoms,
             final User user,
             final String requestName) {
@@ -357,7 +371,7 @@ public class NASProductGenerator {
             return null;
         }
 //        try {
-        final InputStream templateFile = loadTemplateFile(template);
+        final InputStream templateFile = loadTemplateFile(product);
 
         if (templateFile == null) {
             log.error("Error laoding the NAS template file.");
@@ -376,10 +390,10 @@ public class NASProductGenerator {
         final String orderId = manager.registerGZip(sessionID, gZipFile(preparedQuery));
 
         final boolean isSplitted = isOrderSplitted(geoms);
-        addToOpenOrders(determineUserPrefix(user), orderId, new NasProductInfo(isSplitted, requestName));
-        addToUndeliveredOrders(determineUserPrefix(user), orderId, new NasProductInfo(isSplitted, requestName));
-
-        final NasProductDownloader downloader = new NasProductDownloader(determineUserPrefix(user), orderId);
+        final boolean isDXF = product.getFormat().equals(NasProduct.Format.DXF.toString());
+        addToOpenOrders(determineUserPrefix(user), orderId, new NasProductInfo(isSplitted, requestName, isDXF));
+        addToUndeliveredOrders(determineUserPrefix(user), orderId, new NasProductInfo(isSplitted, requestName, isDXF));
+        final NasProductDownloader downloader = new NasProductDownloader(determineUserPrefix(user), orderId, isDXF);
         downloaderMap.put(orderId, downloader);
         final Thread workerThread = new Thread(downloader);
         workerThread.start();
@@ -552,8 +566,35 @@ public class NASProductGenerator {
             log.error("there is no order for user " + user.toString() + " with order id " + orderId);
             return null;
         }
+        final NasProductInfo productInfo = undeliveredUserOrders.get(orderId);
+
         removeFromUndeliveredOrders(determineUserPrefix(user), orderId);
-        return loadFile(determineUserPrefix(user), orderId);
+        String fileExtension = ".xml";
+        if (productInfo.isDxf()) {
+            fileExtension = ".dxf";
+        } else if (productInfo.isIsSplittet()) {
+            fileExtension = ".zip";
+        }
+        return loadFile(determineUserPrefix(user), orderId, fileExtension);
+    }
+
+    /**
+     * DOCUMENT ME!
+     *
+     * @param   orderId   DOCUMENT ME!
+     * @param   userId    DOCUMENT ME!
+     * @param   isZipped  DOCUMENT ME!
+     *
+     * @return  DOCUMENT ME!
+     */
+    public File getNasFileForOrder(final String orderId, final String userId, final boolean isZipped) {
+        if (initError) {
+            if (log.isDebugEnabled()) {
+                log.debug("NASProductGenerator doesnt work hence there was an error during the initialisation.");
+            }
+            return null;
+        }
+        return new File(determineFileName(userId, orderId, isZipped ? ".zip" : ".xml"));
     }
 
     /**
@@ -577,7 +618,7 @@ public class NASProductGenerator {
                 final NasProductInfo pInfo = (NasProductInfo)undeliveredOrders.get(undeliveredOrderId);
                 result.put(
                     undeliveredOrderId,
-                    new NasProductInfo(pInfo.isIsSplittet(), new String(pInfo.getRequestName())));
+                    new NasProductInfo(pInfo.isIsSplittet(), new String(pInfo.getRequestName()), pInfo.isDxf()));
             }
         }
         return result;
@@ -775,16 +816,17 @@ public class NASProductGenerator {
     /**
      * DOCUMENT ME!
      *
-     * @param   userKey  DOCUMENT ME!
-     * @param   orderId  DOCUMENT ME!
+     * @param   userKey        DOCUMENT ME!
+     * @param   orderId        DOCUMENT ME!
+     * @param   fileExtension  DOCUMENT ME!
      *
      * @return  DOCUMENT ME!
      */
-    private byte[] loadFile(final String userKey, final String orderId) {
+    private byte[] loadFile(final String userKey, final String orderId, final String fileExtension) {
         final ByteArrayOutputStream bos = new ByteArrayOutputStream();
         InputStream is = null;
         try {
-            is = new FileInputStream(determineFileName(userKey, orderId));
+            is = new FileInputStream(determineFileName(userKey, orderId, fileExtension));
             final byte[] buffer = new byte[8192];
             int length = is.read(buffer, 0, 8192);
             while (length != -1) {
@@ -793,22 +835,7 @@ public class NASProductGenerator {
             }
             return bos.toByteArray();
         } catch (FileNotFoundException ex) {
-            try {
-                log.error("could not find result file for order id " + orderId);
-                final String filename = determineFileName(userKey, orderId);
-                is = new FileInputStream(filename.replace(FILE_APPENDIX, ".zip"));
-                final byte[] buffer = new byte[8192];
-                int length = is.read(buffer, 0, 8192);
-                while (length != -1) {
-                    bos.write(buffer, 0, length);
-                    length = is.read(buffer, 0, 8192);
-                }
-                return bos.toByteArray();
-            } catch (FileNotFoundException ex1) {
-                log.error("could not find result file for order id " + orderId);
-            } catch (IOException ex1) {
-                log.error("could not find result file for order id " + orderId);
-            }
+            log.error("could not find result file for order id " + orderId);
         } catch (IOException ex) {
             log.error("error during loading result file for order id " + orderId);
         } finally {
@@ -832,12 +859,25 @@ public class NASProductGenerator {
      * @return  DOCUMENT ME!
      */
     private String determineFileName(final String userKey, final String orderId) {
+        return determineFileName(userKey, orderId, FILE_APPENDIX);
+    }
+
+    /**
+     * DOCUMENT ME!
+     *
+     * @param   userKey        DOCUMENT ME!
+     * @param   orderId        DOCUMENT ME!
+     * @param   fileExtension  DOCUMENT ME!
+     *
+     * @return  DOCUMENT ME!
+     */
+    private String determineFileName(final String userKey, final String orderId, final String fileExtension) {
         final StringBuilder fileNameBuilder = new StringBuilder(OUTPUT_DIR);
         fileNameBuilder.append(System.getProperty("file.separator"));
         fileNameBuilder.append(userKey);
         fileNameBuilder.append(System.getProperty("file.separator"));
         fileNameBuilder.append(orderId);
-        fileNameBuilder.append(FILE_APPENDIX);
+        fileNameBuilder.append(fileExtension);
         return fileNameBuilder.toString();
     }
 
@@ -873,7 +913,7 @@ public class NASProductGenerator {
             openUserOders = new HashMap<String, NasProductInfo>();
             openOrderMap.put(userKey, openUserOders);
         }
-        openUserOders.put(orderId, new NasProductInfo(true, userKey));
+        openUserOders.put(orderId, pInfo);
         updateJsonLogFiles();
     }
 
@@ -1082,6 +1122,7 @@ public class NASProductGenerator {
 
         private String orderId;
         private String userId;
+        private boolean isDxf;
         private boolean interrupted = false;
 
         //~ Constructors -------------------------------------------------------
@@ -1089,12 +1130,14 @@ public class NASProductGenerator {
         /**
          * Creates a new NasProductDownloader object.
          *
-         * @param  userId   DOCUMENT ME!
-         * @param  orderId  DOCUMENT ME!
+         * @param  userId     DOCUMENT ME!
+         * @param  orderId    DOCUMENT ME!
+         * @param  dxfFormat  DOCUMENT ME!
          */
-        public NasProductDownloader(final String userId, final String orderId) {
+        public NasProductDownloader(final String userId, final String orderId, final boolean dxfFormat) {
             this.orderId = orderId;
             this.userId = userId;
+            this.isDxf = dxfFormat;
         }
 
         //~ Methods ------------------------------------------------------------
@@ -1123,6 +1166,7 @@ public class NASProductGenerator {
                             }
                             t.cancel();
                             logProtocol(manager.getProtocolGZip(sessionId, orderId));
+                            boolean isZip = false;
                             if (!interrupted) {
                                 final int resCount = manager.getResultCount(sessionId, orderId);
                                 if (resCount > 1) {
@@ -1132,10 +1176,31 @@ public class NASProductGenerator {
                                         resultFiles.add(manager.getNResultGZip(sessionId, orderId, i));
                                     }
                                     saveZipFileOfUnzippedFileCollection(userId, orderId, resultFiles);
+                                    isZip = true;
                                 } else {
                                     unzipAndSaveFile(userId, orderId, manager.getResultGZip(sessionId, orderId));
                                 }
-                                for (int i = 0; i < resCount; i++) {
+                                if (isDxf) {
+                                    try {
+                                        final ActionTask at = dxfConverter.createDxfActionTask(
+                                                new HashMap<String, Object>(),
+                                                getNasFileForOrder(orderId, userId, isZip),
+                                                isZip);
+                                        if (at.getKey() == null) {
+                                            log.error("There was an error creating the dxf converter action");
+                                            return;
+                                        }
+                                        final Future<File> converterFuture = dxfConverter.getResult(at.getKey());
+                                        final File dxfFile = converterFuture.get();
+                                        final File resultDxfFile = new File(determineFileName(userId, orderId, ".dxf"));
+                                        IOUtils.copy(new FileInputStream(dxfFile), new FileOutputStream(resultDxfFile));
+                                    } catch (InterruptedException ex) {
+                                        log.warn("DXF Converter Thread was interrupted", ex);
+                                    } catch (ExecutionException ex) {
+                                        log.warn("Error during the execution of the dxf converter thread", ex);
+                                    } catch (Exception ex) {
+                                        log.warn(ex.getMessage(), ex);
+                                    }
                                 }
                                 removeFromOpenOrders(userId, orderId);
                                 downloaderMap.remove(orderId);
