@@ -22,6 +22,7 @@ import com.sun.jersey.api.client.config.ClientConfig;
 import com.sun.jersey.api.client.config.DefaultClientConfig;
 import com.sun.jersey.api.json.JSONConfiguration;
 import com.sun.jersey.multipart.FormDataMultiPart;
+import com.sun.jersey.multipart.impl.MultiPartWriter;
 
 import org.apache.commons.io.IOUtils;
 import org.apache.log4j.Logger;
@@ -62,6 +63,7 @@ public class AbstractCidsActionClient {
     static {
         final ClientConfig clientConfig = new DefaultClientConfig();
         clientConfig.getFeatures().put(JSONConfiguration.FEATURE_POJO_MAPPING, Boolean.TRUE);
+        clientConfig.getClasses().add(MultiPartWriter.class);
         client = Client.create(clientConfig);
     }
 
@@ -233,7 +235,7 @@ public class AbstractCidsActionClient {
             if (f != null) {
                 form.field("file", f, fileType);
             }
-
+            LOG.error("sending post request to " + url);
             final String responseJson = webResource.type(MediaType.MULTIPART_FORM_DATA)
                         .accept(MediaType.APPLICATION_JSON)
                         .post(String.class, form);
