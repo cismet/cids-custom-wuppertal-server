@@ -39,6 +39,7 @@ public class DXFConverterAction extends AbstractCidsActionClient {
     private static final ExecutorService executor = CismetExecutors.newCachedLimitedThreadPool(
             30,
             "dxfConvertPollingThread");
+    private static final int POLLING_INTERVAL = 5000;
 
     //~ Constructors -----------------------------------------------------------
 
@@ -117,7 +118,7 @@ public class DXFConverterAction extends AbstractCidsActionClient {
             ActionTask.Status status = getTaskStatus(ACTION_KEY, taskKey);
             while (status != ActionTask.Status.FINISHED) {
                 try {
-                    Thread.sleep(1000);
+                    Thread.sleep(POLLING_INTERVAL);
                     status = getTaskStatus(ACTION_KEY, taskKey);
                 } catch (InterruptedException ex) {
                 }
