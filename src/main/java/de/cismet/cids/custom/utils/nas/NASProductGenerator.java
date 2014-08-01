@@ -835,9 +835,9 @@ public class NASProductGenerator {
             }
             return bos.toByteArray();
         } catch (FileNotFoundException ex) {
-            log.error("could not find result file for order id " + orderId);
+            log.error("could not find result file for order id " + orderId, ex);
         } catch (IOException ex) {
-            log.error("error during loading result file for order id " + orderId);
+            log.error("error during loading result file for order id " + orderId, ex);
         } finally {
             try {
                 if (is != null) {
@@ -1182,24 +1182,29 @@ public class NASProductGenerator {
                                 }
                                 if (isDxf) {
                                     try {
+                                        log.error("sending nas file to dxf converter");
                                         final ActionTask at = dxfConverter.createDxfActionTask(
                                                 new HashMap<String, Object>(),
                                                 getNasFileForOrder(orderId, userId, isZip),
                                                 isZip);
+                                        log.error("task id for converter action is: " + at.getKey());
                                         if (at.getKey() == null) {
                                             log.error("There was an error creating the dxf converter action");
                                             return;
                                         }
                                         final Future<File> converterFuture = dxfConverter.getResult(at.getKey());
+                                        log.error("start polling dxf converter action for result.");
                                         final File dxfFile = converterFuture.get();
+                                        log.error("DXF file from converter received: " + dxfFile.toString());
                                         final File resultDxfFile = new File(determineFileName(userId, orderId, ".dxf"));
+                                        log.error("Copying dxf file to : " + resultDxfFile.toString());
                                         IOUtils.copy(new FileInputStream(dxfFile), new FileOutputStream(resultDxfFile));
                                     } catch (InterruptedException ex) {
-                                        log.warn("DXF Converter Thread was interrupted", ex);
+                                        log.error("DXF Converter Thread was interrupted", ex);
                                     } catch (ExecutionException ex) {
-                                        log.warn("Error during the execution of the dxf converter thread", ex);
+                                        log.error("Error during the execution of the dxf converter thread", ex);
                                     } catch (Exception ex) {
-                                        log.warn(ex.getMessage(), ex);
+                                        log.error(ex.getMessage(), ex);
                                     }
                                 }
                                 removeFromOpenOrders(userId, orderId);
