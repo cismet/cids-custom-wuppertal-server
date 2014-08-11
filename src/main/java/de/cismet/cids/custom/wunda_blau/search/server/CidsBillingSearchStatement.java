@@ -73,7 +73,14 @@ public class CidsBillingSearchStatement extends AbstractCidsServerSearch {
     private ArrayList<MetaObject> kundeMetaObjects = new ArrayList<MetaObject>();
     private String kundenname;
     private boolean showOnlyStornierteBillings = false;
-    private boolean showOnlyAbgerechneteBillings = false;
+    /**
+     * <ul>
+     *   <li>True: show only Abgerechnete Billings</li>
+     *   <li>False: hide Abgerechnete Billings</li>
+     *   <li>Null: do not consider the abgerechnet-field in the where condition</li>
+     * </ul>
+     */
+    private Boolean showAbgerechneteBillings = false;
 
     //~ Constructors -----------------------------------------------------------
 
@@ -282,14 +289,15 @@ public class CidsBillingSearchStatement extends AbstractCidsServerSearch {
     private void appendStornoAndAbgerechnet() {
         if (showOnlyStornierteBillings) {
             query.append(" and b.storniert is true ");
-        } else { // hide stornierte billings
+        } else {                                                     // hide stornierte billings
             query.append(" and b.storniert is not true ");
         }
-        if (showOnlyAbgerechneteBillings) {
+        if (Boolean.TRUE.equals(showAbgerechneteBillings)) {
             query.append(" and b.abgerechnet is true ");
-        } else { // hide abgerechnete billings
+        } else if (Boolean.FALSE.equals(showAbgerechneteBillings)) { // hide abgerechnete billings
             query.append(" and b.abgerechnet is not true ");
-        }
+        }                                                            // else - do nothing - to ignore the field
+                                                                     // abgerechnet
     }
 
     /**
@@ -473,20 +481,28 @@ public class CidsBillingSearchStatement extends AbstractCidsServerSearch {
     }
 
     /**
-     * DOCUMENT ME!
+     * <ul>
+     *   <li>True: show only Abgerechnete Billings</li>
+     *   <li>False: hide Abgerechnete Billings</li>
+     *   <li>Null: do not consider the abgerechnet-field in the where condition</li>
+     * </ul>
      *
      * @return  DOCUMENT ME!
      */
-    public boolean isShowOnlyAbgerechneteBillings() {
-        return showOnlyAbgerechneteBillings;
+    public boolean isShowAbgerechneteBillings() {
+        return showAbgerechneteBillings;
     }
 
     /**
-     * DOCUMENT ME!
+     * <ul>
+     *   <li>True: show only Abgerechnete Billings</li>
+     *   <li>False: hide Abgerechnete Billings</li>
+     *   <li>Null: do not consider the abgerechnet-field in the where condition</li>
+     * </ul>
      *
-     * @param  showOnlyAbgerechneteBillings  DOCUMENT ME!
+     * @param  showAbgerechneteBillings  DOCUMENT ME!
      */
-    public void setShowOnlyAbgerechneteBillings(final boolean showOnlyAbgerechneteBillings) {
-        this.showOnlyAbgerechneteBillings = showOnlyAbgerechneteBillings;
+    public void setShowAbgerechneteBillings(final Boolean showAbgerechneteBillings) {
+        this.showAbgerechneteBillings = showAbgerechneteBillings;
     }
 }
