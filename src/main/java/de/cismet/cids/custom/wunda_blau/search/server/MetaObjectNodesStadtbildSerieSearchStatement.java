@@ -94,6 +94,16 @@ public class MetaObjectNodesStadtbildSerieSearchStatement extends AbstractCidsSe
     private StringBuilder query;
     private final SimpleDateFormat postgresDateFormat = new SimpleDateFormat("yyyy-MM-dd");
     private ArrayList<ArrayList> resultset;
+    /**
+     * If true the Stadtbildserie must have all selected Suchworte. If false the Stadtbildserie must have only one
+     * suchwort.
+     */
+    private boolean hasAllSuchworte = true;
+    /**
+     * This ServerSearch can be executed in two modes: a preparation mode and the normal mode. The default mode is the
+     * normal mode, where MetaObjectNodes will be returned. In the preparation mode the amount of the found results will
+     * be returned.
+     */
     private boolean preparationExecution = false;
 
     //~ Constructors -----------------------------------------------------------
@@ -232,7 +242,10 @@ public class MetaObjectNodesStadtbildSerieSearchStatement extends AbstractCidsSe
     }
 
     /**
-     * DOCUMENT ME!
+     * Creates an array with all the Stadtbildserie-Ids which have the right Suchworter, then it is checked if the
+     * current Stadtbildserie-Id is in the array. The array can be created with an INTERSECT or an UNION. If it is
+     * created with the INTERSECT then only the Stadtbildserien will be in the array which have all Suchworte. If the
+     * UNION is chosen the array will contain all Stadtbildserien which have at least one suchwort.
      */
     private void appendSuchworte() {
         if (!suchwoerterIDs.isEmpty()) {
@@ -241,7 +254,11 @@ public class MetaObjectNodesStadtbildSerieSearchStatement extends AbstractCidsSe
                         + suchwoerterIDs.get(0);
             query.append(subquery);
             for (int i = 1; i < suchwoerterIDs.size(); i++) {
-                query.append(" INTERSECT ");
+                if (hasAllSuchworte) {
+                    query.append(" INTERSECT ");
+                } else {
+                    query.append(" UNION ");
+                }
                 subquery = "select sb_stadtbild_reference from sb_stadtbild_suchwort_array b where b.sb_suchwort = "
                             + suchwoerterIDs.get(i);
                 query.append(subquery);
@@ -579,6 +596,24 @@ public class MetaObjectNodesStadtbildSerieSearchStatement extends AbstractCidsSe
      */
     public void setInterval(final Interval interval) {
         this.interval = interval;
+    }
+
+    /**
+     * DOCUMENT ME!
+     *
+     * @return  DOCUMENT ME!
+     */
+    public boolean isHasAllSuchworte() {
+        return hasAllSuchworte;
+    }
+
+    /**
+     * DOCUMENT ME!
+     *
+     * @param  hasAllSuchworte  DOCUMENT ME!
+     */
+    public void setHasAllSuchworte(final boolean hasAllSuchworte) {
+        this.hasAllSuchworte = hasAllSuchworte;
     }
 
     //~ Inner Classes ----------------------------------------------------------
