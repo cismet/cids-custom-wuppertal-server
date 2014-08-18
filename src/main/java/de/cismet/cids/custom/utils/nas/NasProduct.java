@@ -105,6 +105,33 @@ public class NasProduct implements Serializable {
     /**
      * DOCUMENT ME!
      *
+     * @param  displayName  DOCUMENT ME!
+     */
+    public void setDisplayName(final String displayName) {
+        this.displayName = displayName;
+    }
+
+    /**
+     * DOCUMENT ME!
+     *
+     * @param  billingKey  DOCUMENT ME!
+     */
+    public void setBillingKey(final String billingKey) {
+        this.billingKey = billingKey;
+    }
+
+    /**
+     * DOCUMENT ME!
+     *
+     * @param  template  DOCUMENT ME!
+     */
+    public void setTemplate(final String template) {
+        this.template = template;
+    }
+
+    /**
+     * DOCUMENT ME!
+     *
      * @return  DOCUMENT ME!
      */
     public String getTemplate() {
@@ -113,6 +140,9 @@ public class NasProduct implements Serializable {
 
     @Override
     public String toString() {
+        if (displayName == null) {
+            return super.toString();
+        }
         return displayName;
     }
 
