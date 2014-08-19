@@ -15,9 +15,8 @@ import org.apache.log4j.Logger;
 
 import org.jfree.util.Log;
 
-import org.openide.util.Exceptions;
-
 import java.awt.image.BufferedImage;
+import java.awt.image.RenderedImage;
 
 import java.io.ByteArrayOutputStream;
 import java.io.IOException;
@@ -26,9 +25,14 @@ import java.net.MalformedURLException;
 import java.net.URL;
 
 import java.util.HashMap;
+import java.util.Iterator;
 import java.util.PropertyResourceBundle;
 
+import javax.imageio.IIOImage;
 import javax.imageio.ImageIO;
+import javax.imageio.ImageWriteParam;
+import javax.imageio.ImageWriter;
+import javax.imageio.stream.ImageOutputStream;
 
 import de.cismet.cids.server.actions.ServerAction;
 import de.cismet.cids.server.actions.ServerActionParameter;
@@ -179,7 +183,7 @@ public class TifferAction implements ServerAction {
         ByteArrayOutputStream out = null;
         try {
             out = new ByteArrayOutputStream();
-            ImageIO.write(bi, format, out);
+            writeImage(bi, format, out);
 
             return out.toByteArray();
         } catch (IOException ex) {
@@ -194,6 +198,29 @@ public class TifferAction implements ServerAction {
                 }
             }
         }
+    }
+
+    /**
+     * A replacement of ImageIO.write() as it compresses JPGs to much.
+     *
+     * @param   image   DOCUMENT ME!
+     * @param   format  DOCUMENT ME!
+     * @param   output  DOCUMENT ME!
+     *
+     * @throws  IOException  DOCUMENT ME!
+     */
+    public static void writeImage(final RenderedImage image, final String format, final Object output)
+            throws IOException {
+        final Iterator<ImageWriter> iter = ImageIO.getImageWritersByFormatName(format);
+        final ImageWriter writer = iter.next();
+        final ImageWriteParam iwp = writer.getDefaultWriteParam();
+        iwp.setCompressionMode(ImageWriteParam.MODE_EXPLICIT);
+        iwp.setCompressionQuality(1f);
+
+        final ImageOutputStream ios = ImageIO.createImageOutputStream(output);
+        writer.setOutput(ios);
+        writer.write(null, new IIOImage(image, null, null), iwp);
+        writer.dispose();
     }
 
     /**
