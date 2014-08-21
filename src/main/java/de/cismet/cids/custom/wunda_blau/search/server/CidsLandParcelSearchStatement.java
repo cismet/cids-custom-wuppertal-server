@@ -18,11 +18,8 @@ import com.vividsolutions.jts.geom.Geometry;
 import com.vividsolutions.jts.geom.MultiPolygon;
 import com.vividsolutions.jts.geom.Polygon;
 
+import org.apache.commons.logging.Log;
 import org.apache.log4j.Logger;
-
-import org.jfree.util.Log;
-
-import org.openide.util.Exceptions;
 
 import java.rmi.RemoteException;
 
@@ -34,7 +31,6 @@ import java.util.List;
 
 import de.cismet.cids.server.search.AbstractCidsServerSearch;
 import de.cismet.cids.server.search.MetaObjectNodeServerSearch;
-import de.cismet.cids.server.search.SearchException;
 
 import de.cismet.cismap.commons.jtsgeometryfactories.PostGisGeometryFactory;
 
@@ -151,7 +147,7 @@ public class CidsLandParcelSearchStatement extends AbstractCidsServerSearch impl
             }
             return result;
         } catch (RemoteException ex) {
-            Log.error("Problem", ex);
+            LOG.error("Problem", ex);
             throw new RuntimeException(ex);
         }
     }
