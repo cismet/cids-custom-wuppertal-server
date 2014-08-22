@@ -13,7 +13,7 @@ package de.cismet.cids.custom.wunda_blau.search.actions;
 
 import org.apache.log4j.Logger;
 
-import org.jfree.util.Log;
+import org.openide.util.Exceptions;
 
 import java.awt.image.BufferedImage;
 import java.awt.image.RenderedImage;
@@ -194,7 +194,7 @@ public class TifferAction implements ServerAction {
                 try {
                     out.close();
                 } catch (IOException ex) {
-                    Log.error(ex.getMessage(), ex);
+                    LOG.error(ex.getMessage(), ex);
                 }
             }
         }

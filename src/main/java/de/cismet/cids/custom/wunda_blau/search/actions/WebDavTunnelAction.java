@@ -27,9 +27,9 @@ import java.io.InputStream;
 import de.cismet.cids.server.actions.ServerAction;
 import de.cismet.cids.server.actions.ServerActionParameter;
 
-import de.cismet.netutil.Proxy;
+import de.cismet.commons.security.WebDavClient;
 
-import de.cismet.security.WebDavClient;
+import de.cismet.netutil.Proxy;
 
 /**
  * DOCUMENT ME!
