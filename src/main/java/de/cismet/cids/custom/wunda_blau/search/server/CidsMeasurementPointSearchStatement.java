@@ -22,6 +22,7 @@ import java.util.Collection;
 import java.util.Iterator;
 
 import de.cismet.cids.server.search.AbstractCidsServerSearch;
+import de.cismet.cids.server.search.CidsServerSearch;
 import de.cismet.cids.server.search.MetaObjectNodeServerSearch;
 
 import de.cismet.cismap.commons.jtsgeometryfactories.PostGisGeometryFactory;
@@ -32,6 +33,7 @@ import de.cismet.cismap.commons.jtsgeometryfactories.PostGisGeometryFactory;
  * @author   jweintraut
  * @version  $Revision$, $Date$
  */
+@org.openide.util.lookup.ServiceProvider(service = CidsServerSearch.class)
 public class CidsMeasurementPointSearchStatement extends AbstractCidsServerSearch
         implements MetaObjectNodeServerSearch {
 
@@ -139,12 +141,18 @@ public class CidsMeasurementPointSearchStatement extends AbstractCidsServerSearc
 
     //~ Instance fields --------------------------------------------------------
 
-    private final String pointcode;
+    private String pointcode;
     private Collection<Pointtype> pointtypes;
     private GST gst;
     private Geometry geometry;
 
     //~ Constructors -----------------------------------------------------------
+
+    /**
+     * Creates a new CidsMeasurementPointSearchStatement object.
+     */
+    public CidsMeasurementPointSearchStatement() {
+    }
 
     /**
      * Creates a new CustomAlkisPointSearchStatement object.
@@ -158,13 +166,85 @@ public class CidsMeasurementPointSearchStatement extends AbstractCidsServerSearc
             final Collection<Pointtype> pointtypes,
             final GST gst,
             final Geometry geometry) {
-        this.pointcode = StringEscapeUtils.escapeSql(pointcode);
-        this.pointtypes = pointtypes;
-        this.gst = gst;
-        this.geometry = geometry;
+        setPointcode(pointcode);
+        setPointtypes(pointtypes);
+        setGst(gst);
+        setGeometry(geometry);
     }
 
     //~ Methods ----------------------------------------------------------------
+
+    /**
+     * DOCUMENT ME!
+     *
+     * @return  DOCUMENT ME!
+     */
+    public String getPointcode() {
+        return pointcode;
+    }
+
+    /**
+     * DOCUMENT ME!
+     *
+     * @return  DOCUMENT ME!
+     */
+    public Collection<Pointtype> getPointtypes() {
+        return pointtypes;
+    }
+
+    /**
+     * DOCUMENT ME!
+     *
+     * @return  DOCUMENT ME!
+     */
+    public GST getGst() {
+        return gst;
+    }
+
+    /**
+     * DOCUMENT ME!
+     *
+     * @return  DOCUMENT ME!
+     */
+    public Geometry getGeometry() {
+        return geometry;
+    }
+
+    /**
+     * DOCUMENT ME!
+     *
+     * @param  pointtypes  DOCUMENT ME!
+     */
+    public final void setPointtypes(final Collection<Pointtype> pointtypes) {
+        this.pointtypes = pointtypes;
+    }
+
+    /**
+     * DOCUMENT ME!
+     *
+     * @param  gst  DOCUMENT ME!
+     */
+    public final void setGst(final GST gst) {
+        this.gst = gst;
+    }
+
+    /**
+     * DOCUMENT ME!
+     *
+     * @param  geometry  DOCUMENT ME!
+     */
+    public final void setGeometry(final Geometry geometry) {
+        this.geometry = geometry;
+    }
+
+    /**
+     * DOCUMENT ME!
+     *
+     * @param  pointcode  DOCUMENT ME!
+     */
+    public final void setPointcode(final String pointcode) {
+        this.pointcode = StringEscapeUtils.escapeSql(pointcode);
+    }
 
     @Override
     public Collection<MetaObjectNode> performServerSearch() {

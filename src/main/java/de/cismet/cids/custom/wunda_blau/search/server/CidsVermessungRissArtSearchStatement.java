@@ -17,6 +17,7 @@ import java.util.Collection;
 import java.util.LinkedList;
 
 import de.cismet.cids.server.search.AbstractCidsServerSearch;
+import de.cismet.cids.server.search.CidsServerSearch;
 
 /**
  * DOCUMENT ME!
@@ -24,6 +25,7 @@ import de.cismet.cids.server.search.AbstractCidsServerSearch;
  * @author   jweintraut
  * @version  $Revision$, $Date$
  */
+@org.openide.util.lookup.ServiceProvider(service = CidsServerSearch.class)
 public class CidsVermessungRissArtSearchStatement extends AbstractCidsServerSearch {
 
     //~ Static fields/initializers ---------------------------------------------
@@ -42,11 +44,13 @@ public class CidsVermessungRissArtSearchStatement extends AbstractCidsServerSear
                 + CIDSCLASS
                 + " ORDER BY name";
 
-    //~ Instance fields --------------------------------------------------------
-
-    private final User user;
-
     //~ Constructors -----------------------------------------------------------
+
+    /**
+     * Creates a new CidsVermessungRissArtSearchStatement object.
+     */
+    public CidsVermessungRissArtSearchStatement() {
+    }
 
     /**
      * Creates a new CidsVermessungRissArtSearchStatement object.
@@ -54,7 +58,7 @@ public class CidsVermessungRissArtSearchStatement extends AbstractCidsServerSear
      * @param  user  DOCUMENT ME!
      */
     public CidsVermessungRissArtSearchStatement(final User user) {
-        this.user = user;
+        setUser(user);
     }
 
     //~ Methods ----------------------------------------------------------------
@@ -86,10 +90,10 @@ public class CidsVermessungRissArtSearchStatement extends AbstractCidsServerSear
                 final int objectID = (Integer)veraenderungsart.get(1);
 
                 try {
-                    result.add(metaService.getMetaObject(user, objectID, classID));
+                    result.add(metaService.getMetaObject(getUser(), objectID, classID));
                 } catch (final Exception ex) {
                     LOG.warn("Couldn't get CidsBean for class '" + classID + "', object '" + objectID + "', user '"
-                                + user + "'.",
+                                + getUser() + "'.",
                         ex);
                 }
             }

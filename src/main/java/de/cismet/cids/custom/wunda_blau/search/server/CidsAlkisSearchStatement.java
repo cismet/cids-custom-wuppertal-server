@@ -26,6 +26,7 @@ import java.util.List;
 import de.cismet.cids.custom.utils.alkis.SOAPAccessProvider;
 
 import de.cismet.cids.server.search.AbstractCidsServerSearch;
+import de.cismet.cids.server.search.CidsServerSearch;
 import de.cismet.cids.server.search.MetaObjectNodeServerSearch;
 
 import de.cismet.cismap.commons.jtsgeometryfactories.PostGisGeometryFactory;
@@ -36,6 +37,7 @@ import de.cismet.cismap.commons.jtsgeometryfactories.PostGisGeometryFactory;
  * @author   stefan
  * @version  $Revision$, $Date$
  */
+@org.openide.util.lookup.ServiceProvider(service = CidsServerSearch.class)
 public class CidsAlkisSearchStatement extends AbstractCidsServerSearch implements MetaObjectNodeServerSearch {
 
     //~ Static fields/initializers ---------------------------------------------
@@ -100,6 +102,12 @@ public class CidsAlkisSearchStatement extends AbstractCidsServerSearch implement
     //~ Constructors -----------------------------------------------------------
 
     /**
+     * Creates a new CidsBaulastSearchStatement object.
+     */
+    public CidsAlkisSearchStatement() {
+    }
+
+    /**
      * Creates a new CidsAlkisSearchStatement object.
      *
      * @param  resulttyp                               DOCUMENT ME!
@@ -111,14 +119,14 @@ public class CidsAlkisSearchStatement extends AbstractCidsServerSearch implement
             final SucheUeber ueber,
             final String flurstuecksnummerOrBuchungsblattnummer,
             final Geometry geometry) {
-        this.resulttyp = resulttyp;
-        this.ueber = ueber;
+        setResulttyp(resulttyp);
+        setUeber(ueber);
         if (ueber == SucheUeber.FLURSTUECKSNUMMER) {
-            flurstuecksnummer = flurstuecksnummerOrBuchungsblattnummer;
+            setFlurstuecksnummer(flurstuecksnummerOrBuchungsblattnummer);
         } else if (ueber == SucheUeber.BUCHUNGSBLATTNUMMER) {
-            buchungsblattnummer = flurstuecksnummerOrBuchungsblattnummer;
+            setBuchungsblattnummer(flurstuecksnummerOrBuchungsblattnummer);
         }
-        this.geometry = geometry;
+        setGeometry(geometry);
     }
 
     /**
@@ -139,21 +147,197 @@ public class CidsAlkisSearchStatement extends AbstractCidsServerSearch implement
             final String geburtstag,
             final Personentyp ptyp,
             final Geometry g) {
-        this.resulttyp = resulttyp;
-        this.ueber = SucheUeber.EIGENTUEMER;
-        String lengthTest = name;
-        this.name = (lengthTest.length() > 0) ? lengthTest : null;
-        lengthTest = vorname;
-        this.vorname = (lengthTest.length() > 0) ? lengthTest : null;
-        lengthTest = geburtsname;
-        this.geburtsname = (lengthTest.length() > 0) ? lengthTest : null;
-        lengthTest = geburtstag;
-        this.geburtstag = (lengthTest.length() > 0) ? lengthTest : null;
-        this.ptyp = ptyp;
-        geometry = g;
+        setResulttyp(resulttyp);
+        setUeber(SucheUeber.EIGENTUEMER);
+        setName((name.length() > 0) ? name : null);
+        setVorname((vorname.length() > 0) ? vorname : null);
+        setGeburtsname((geburtsname.length() > 0) ? geburtsname : null);
+        setGeburtstag((geburtstag.length() > 0) ? geburtstag : null);
+        setPtyp(ptyp);
+        setGeometry(g);
     }
 
     //~ Methods ----------------------------------------------------------------
+
+    /**
+     * DOCUMENT ME!
+     *
+     * @return  DOCUMENT ME!
+     */
+    public Personentyp getPtyp() {
+        return ptyp;
+    }
+
+    /**
+     * DOCUMENT ME!
+     *
+     * @return  DOCUMENT ME!
+     */
+    public Resulttyp getResulttyp() {
+        return resulttyp;
+    }
+
+    /**
+     * DOCUMENT ME!
+     *
+     * @return  DOCUMENT ME!
+     */
+    public String getName() {
+        return name;
+    }
+
+    /**
+     * DOCUMENT ME!
+     *
+     * @return  DOCUMENT ME!
+     */
+    public String getVorname() {
+        return vorname;
+    }
+
+    /**
+     * DOCUMENT ME!
+     *
+     * @return  DOCUMENT ME!
+     */
+    public String getGeburtsname() {
+        return geburtsname;
+    }
+
+    /**
+     * DOCUMENT ME!
+     *
+     * @return  DOCUMENT ME!
+     */
+    public String getGeburtstag() {
+        return geburtstag;
+    }
+
+    /**
+     * DOCUMENT ME!
+     *
+     * @return  DOCUMENT ME!
+     */
+    public String getFlurstuecksnummer() {
+        return flurstuecksnummer;
+    }
+
+    /**
+     * DOCUMENT ME!
+     *
+     * @return  DOCUMENT ME!
+     */
+    public String getBuchungsblattnummer() {
+        return buchungsblattnummer;
+    }
+
+    /**
+     * DOCUMENT ME!
+     *
+     * @return  DOCUMENT ME!
+     */
+    public SucheUeber getUeber() {
+        return ueber;
+    }
+
+    /**
+     * DOCUMENT ME!
+     *
+     * @return  DOCUMENT ME!
+     */
+    public Geometry getGeometry() {
+        return geometry;
+    }
+
+    /**
+     * DOCUMENT ME!
+     *
+     * @param  flurstuecksnummer  DOCUMENT ME!
+     */
+    public final void setFlurstuecksnummer(final String flurstuecksnummer) {
+        this.flurstuecksnummer = flurstuecksnummer;
+    }
+
+    /**
+     * DOCUMENT ME!
+     *
+     * @param  buchungsblattnummer  DOCUMENT ME!
+     */
+    public final void setBuchungsblattnummer(final String buchungsblattnummer) {
+        this.buchungsblattnummer = buchungsblattnummer;
+    }
+
+    /**
+     * DOCUMENT ME!
+     *
+     * @param  ueber  DOCUMENT ME!
+     */
+    public final void setUeber(final SucheUeber ueber) {
+        this.ueber = ueber;
+    }
+
+    /**
+     * DOCUMENT ME!
+     *
+     * @param  resulttyp  DOCUMENT ME!
+     */
+    public final void setResulttyp(final Resulttyp resulttyp) {
+        this.resulttyp = resulttyp;
+    }
+
+    /**
+     * DOCUMENT ME!
+     *
+     * @param  name  DOCUMENT ME!
+     */
+    public final void setName(final String name) {
+        this.name = name;
+    }
+
+    /**
+     * DOCUMENT ME!
+     *
+     * @param  vorname  DOCUMENT ME!
+     */
+    public final void setVorname(final String vorname) {
+        this.vorname = vorname;
+    }
+
+    /**
+     * DOCUMENT ME!
+     *
+     * @param  geburtsname  DOCUMENT ME!
+     */
+    public final void setGeburtsname(final String geburtsname) {
+        this.geburtsname = geburtsname;
+    }
+
+    /**
+     * DOCUMENT ME!
+     *
+     * @param  geburtstag  DOCUMENT ME!
+     */
+    public final void setGeburtstag(final String geburtstag) {
+        this.geburtstag = geburtstag;
+    }
+
+    /**
+     * DOCUMENT ME!
+     *
+     * @param  ptyp  DOCUMENT ME!
+     */
+    public final void setPtyp(final Personentyp ptyp) {
+        this.ptyp = ptyp;
+    }
+
+    /**
+     * DOCUMENT ME!
+     *
+     * @param  geometry  DOCUMENT ME!
+     */
+    public final void setGeometry(final Geometry geometry) {
+        this.geometry = geometry;
+    }
 
     @Override
     public Collection<MetaObjectNode> performServerSearch() {

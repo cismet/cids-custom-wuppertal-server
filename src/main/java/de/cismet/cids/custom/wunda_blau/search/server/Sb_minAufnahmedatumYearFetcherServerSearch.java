@@ -15,6 +15,7 @@ import java.util.ArrayList;
 import java.util.Collection;
 
 import de.cismet.cids.server.search.AbstractCidsServerSearch;
+import de.cismet.cids.server.search.CidsServerSearch;
 import de.cismet.cids.server.search.SearchException;
 
 /**
@@ -23,6 +24,7 @@ import de.cismet.cids.server.search.SearchException;
  * @author   Gilles Baatz
  * @version  $Revision$, $Date$
  */
+@org.openide.util.lookup.ServiceProvider(service = CidsServerSearch.class)
 public class Sb_minAufnahmedatumYearFetcherServerSearch extends AbstractCidsServerSearch {
 
     //~ Static fields/initializers ---------------------------------------------

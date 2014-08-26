@@ -29,6 +29,7 @@ import java.util.HashMap;
 import java.util.List;
 
 import de.cismet.cids.server.search.AbstractCidsServerSearch;
+import de.cismet.cids.server.search.CidsServerSearch;
 import de.cismet.cids.server.search.MetaObjectNodeServerSearch;
 import de.cismet.cids.server.search.SearchException;
 
@@ -40,6 +41,7 @@ import de.cismet.cismap.commons.jtsgeometryfactories.PostGisGeometryFactory;
  * @author   daniel
  * @version  $Revision$, $Date$
  */
+@org.openide.util.lookup.ServiceProvider(service = CidsServerSearch.class)
 public class CidsMauernSearchStatement extends AbstractCidsServerSearch implements MetaObjectNodeServerSearch {
 
     //~ Static fields/initializers ---------------------------------------------
@@ -105,8 +107,15 @@ public class CidsMauernSearchStatement extends AbstractCidsServerSearch implemen
     private HashMap<PropertyKeys, Double> filter;
     private final StringBuilder fromBuilder = new StringBuilder(FROM);
     private final StringBuilder whereBuilder = new StringBuilder();
+    private SearchMode searchMode;
 
     //~ Constructors -----------------------------------------------------------
+
+    /**
+     * Creates a new CidsMauernSearchStatement object.
+     */
+    public CidsMauernSearchStatement() {
+    }
 
     /**
      * Creates a new CidsMauernSearchStatement object.
@@ -126,16 +135,143 @@ public class CidsMauernSearchStatement extends AbstractCidsServerSearch implemen
             final Geometry geom,
             final SearchMode searchMode,
             final HashMap<PropertyKeys, Double> filterProps) {
-        this.geom = geom;
-        this.eigentuemer = eigentuemerIds;
-        this.lastKlasseIds = lastKlasseIds;
-        this.pruefungFrom = pruefFrom;
-        this.pruefungTil = pruefTil;
-        this.filter = filterProps;
-        CONJUNCTION = (searchMode == SearchMode.AND_SEARCH) ? " AND " : " OR ";
+        setGeom(geom);
+        setEigentuemer(eigentuemerIds);
+        setLastKlasseIds(lastKlasseIds);
+        setPruefungFrom(pruefFrom);
+        setPruefungTil(pruefTil);
+        setFilter(filterProps);
+        setSearchMode(searchMode);
     }
 
     //~ Methods ----------------------------------------------------------------
+
+    /**
+     * DOCUMENT ME!
+     *
+     * @return  DOCUMENT ME!
+     */
+    public Geometry getGeom() {
+        return geom;
+    }
+
+    /**
+     * DOCUMENT ME!
+     *
+     * @return  DOCUMENT ME!
+     */
+    public List<Integer> getEigentuemer() {
+        return eigentuemer;
+    }
+
+    /**
+     * DOCUMENT ME!
+     *
+     * @return  DOCUMENT ME!
+     */
+    public List<Integer> getLastKlasseIds() {
+        return lastKlasseIds;
+    }
+
+    /**
+     * DOCUMENT ME!
+     *
+     * @return  DOCUMENT ME!
+     */
+    public Date getPruefungFrom() {
+        return pruefungFrom;
+    }
+
+    /**
+     * DOCUMENT ME!
+     *
+     * @return  DOCUMENT ME!
+     */
+    public Date getPruefungTil() {
+        return pruefungTil;
+    }
+
+    /**
+     * DOCUMENT ME!
+     *
+     * @return  DOCUMENT ME!
+     */
+    public HashMap<PropertyKeys, Double> getFilter() {
+        return filter;
+    }
+
+    /**
+     * DOCUMENT ME!
+     *
+     * @return  DOCUMENT ME!
+     */
+    public SearchMode getSearchMode() {
+        return searchMode;
+    }
+
+    /**
+     * DOCUMENT ME!
+     *
+     * @param  geom  DOCUMENT ME!
+     */
+    public final void setGeom(final Geometry geom) {
+        this.geom = geom;
+    }
+
+    /**
+     * DOCUMENT ME!
+     *
+     * @param  eigentuemer  DOCUMENT ME!
+     */
+    public final void setEigentuemer(final List<Integer> eigentuemer) {
+        this.eigentuemer = eigentuemer;
+    }
+
+    /**
+     * DOCUMENT ME!
+     *
+     * @param  lastKlasseIds  DOCUMENT ME!
+     */
+    public final void setLastKlasseIds(final List<Integer> lastKlasseIds) {
+        this.lastKlasseIds = lastKlasseIds;
+    }
+
+    /**
+     * DOCUMENT ME!
+     *
+     * @param  pruefungFrom  DOCUMENT ME!
+     */
+    public final void setPruefungFrom(final Date pruefungFrom) {
+        this.pruefungFrom = pruefungFrom;
+    }
+
+    /**
+     * DOCUMENT ME!
+     *
+     * @param  pruefungTil  DOCUMENT ME!
+     */
+    public final void setPruefungTil(final Date pruefungTil) {
+        this.pruefungTil = pruefungTil;
+    }
+
+    /**
+     * DOCUMENT ME!
+     *
+     * @param  filter  DOCUMENT ME!
+     */
+    public final void setFilter(final HashMap<PropertyKeys, Double> filter) {
+        this.filter = filter;
+    }
+
+    /**
+     * DOCUMENT ME!
+     *
+     * @param  searchMode  DOCUMENT ME!
+     */
+    public final void setSearchMode(final SearchMode searchMode) {
+        this.searchMode = searchMode;
+        CONJUNCTION = (searchMode == SearchMode.AND_SEARCH) ? " AND " : " OR ";
+    }
 
     @Override
     public Collection<MetaObjectNode> performServerSearch() throws SearchException {

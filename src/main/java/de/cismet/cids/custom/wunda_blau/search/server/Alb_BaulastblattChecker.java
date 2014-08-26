@@ -31,6 +31,7 @@ import java.util.ArrayList;
 import java.util.Collection;
 
 import de.cismet.cids.server.search.AbstractCidsServerSearch;
+import de.cismet.cids.server.search.CidsServerSearch;
 
 /**
  * DOCUMENT ME!
@@ -38,13 +39,22 @@ import de.cismet.cids.server.search.AbstractCidsServerSearch;
  * @author   stefan
  * @version  $Revision$, $Date$
  */
+@org.openide.util.lookup.ServiceProvider(service = CidsServerSearch.class)
 public class Alb_BaulastblattChecker extends AbstractCidsServerSearch {
 
     //~ Instance fields --------------------------------------------------------
 
-    private String searchQuery;
+    private String searchQuery = null;
+    private String blattnummer = null;
+    private Integer id = null;
 
     //~ Constructors -----------------------------------------------------------
+
+    /**
+     * Creates a new Alb_BaulastblattChecker object.
+     */
+    public Alb_BaulastblattChecker() {
+    }
 
     /**
      * Creates a new Alb_BaulastblattChecker object.
@@ -52,13 +62,58 @@ public class Alb_BaulastblattChecker extends AbstractCidsServerSearch {
      * @param  blattnummer  DOCUMENT ME!
      * @param  id           DOCUMENT ME!
      */
-    public Alb_BaulastblattChecker(String blattnummer, final int id) {
-        blattnummer = blattnummer.replaceAll("'", "");
-        this.searchQuery = "select count(*) from alb_baulastblatt where blattnummer = '" + blattnummer + "' and id <> "
-                    + id;
+    public Alb_BaulastblattChecker(final String blattnummer, final int id) {
+        setBlattnummer(blattnummer);
+        setId(id);
     }
 
     //~ Methods ----------------------------------------------------------------
+
+    /**
+     * DOCUMENT ME!
+     *
+     * @return  DOCUMENT ME!
+     */
+    public String getBlattnummer() {
+        return blattnummer;
+    }
+
+    /**
+     * DOCUMENT ME!
+     *
+     * @return  DOCUMENT ME!
+     */
+    public Integer getId() {
+        return id;
+    }
+
+    /**
+     * DOCUMENT ME!
+     *
+     * @param  blattnummer  DOCUMENT ME!
+     */
+    public final void setBlattnummer(final String blattnummer) {
+        this.blattnummer = blattnummer;
+        refreshSearchQuery();
+    }
+
+    /**
+     * DOCUMENT ME!
+     *
+     * @param  id  DOCUMENT ME!
+     */
+    public final void setId(final int id) {
+        this.id = id;
+        refreshSearchQuery();
+    }
+
+    /**
+     * DOCUMENT ME!
+     */
+    private void refreshSearchQuery() {
+        this.searchQuery = "select count(*) from alb_baulastblatt where blattnummer = '"
+                    + blattnummer.replaceAll("'", "") + "' and id <> " + id;
+    }
 
     @Override
     public Collection performServerSearch() {

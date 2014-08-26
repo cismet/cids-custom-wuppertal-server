@@ -24,6 +24,7 @@ import java.util.Collection;
 import de.cismet.cids.custom.utils.pointnumberreservation.VermessungsStellenSearchResult;
 
 import de.cismet.cids.server.search.AbstractCidsServerSearch;
+import de.cismet.cids.server.search.CidsServerSearch;
 import de.cismet.cids.server.search.SearchException;
 
 /**
@@ -32,6 +33,7 @@ import de.cismet.cids.server.search.SearchException;
  * @author   daniel
  * @version  $Revision$, $Date$
  */
+@org.openide.util.lookup.ServiceProvider(service = CidsServerSearch.class)
 public class VermessungsStellenNummerSearch extends AbstractCidsServerSearch {
 
     //~ Static fields/initializers ---------------------------------------------
@@ -49,14 +51,38 @@ public class VermessungsStellenNummerSearch extends AbstractCidsServerSearch {
 
     /**
      * Creates a new VermessungsStellenNummerSearch object.
+     */
+    public VermessungsStellenNummerSearch() {
+    }
+
+    /**
+     * Creates a new VermessungsStellenNummerSearch object.
      *
      * @param  userName  DOCUMENT ME!
      */
     public VermessungsStellenNummerSearch(final String userName) {
-        this.userName = userName;
+        setUserName(userName);
     }
 
     //~ Methods ----------------------------------------------------------------
+
+    /**
+     * DOCUMENT ME!
+     *
+     * @return  DOCUMENT ME!
+     */
+    public String getUserName() {
+        return userName;
+    }
+
+    /**
+     * DOCUMENT ME!
+     *
+     * @param  userName  DOCUMENT ME!
+     */
+    public final void setUserName(final String userName) {
+        this.userName = userName;
+    }
 
     @Override
     public Collection performServerSearch() throws SearchException {

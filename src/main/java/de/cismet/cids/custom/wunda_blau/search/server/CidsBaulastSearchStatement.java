@@ -22,6 +22,7 @@ import java.util.Collection;
 import java.util.List;
 
 import de.cismet.cids.server.search.AbstractCidsServerSearch;
+import de.cismet.cids.server.search.CidsServerSearch;
 import de.cismet.cids.server.search.MetaObjectNodeServerSearch;
 
 import de.cismet.cismap.commons.jtsgeometryfactories.PostGisGeometryFactory;
@@ -32,6 +33,7 @@ import de.cismet.cismap.commons.jtsgeometryfactories.PostGisGeometryFactory;
  * @author   stefan
  * @version  $Revision$, $Date$
  */
+@org.openide.util.lookup.ServiceProvider(service = CidsServerSearch.class)
 public class CidsBaulastSearchStatement extends AbstractCidsServerSearch implements MetaObjectNodeServerSearch {
 
     //~ Static fields/initializers ---------------------------------------------
@@ -71,16 +73,23 @@ public class CidsBaulastSearchStatement extends AbstractCidsServerSearch impleme
     private List<FlurstueckInfo> flurstuecke;
     //
     private String art;
-    private final int baulastClassID;
-    private final int baulastblattClassID;
+    private int baulastClassID;
+    private int baulastblattClassID;
     private String blattnummerquerypart = "";
     private String gueltigquerypart = "";
     private String ungueltigquerypart = "";
     private String geoquerypart = "";
     private String fsquerypart = "";
     private String artquerypart = "";
+    private BaulastSearchInfo searchInfo;
 
     //~ Constructors -----------------------------------------------------------
+
+    /**
+     * Creates a new CidsBaulastSearchStatement object.
+     */
+    public CidsBaulastSearchStatement() {
+    }
 
     /**
      * Creates a new CidsBaulastSearchStatement object.
@@ -92,8 +101,72 @@ public class CidsBaulastSearchStatement extends AbstractCidsServerSearch impleme
     public CidsBaulastSearchStatement(final BaulastSearchInfo searchInfo,
             final int baulastClassID,
             final int baulastblattClassID) {
+        setBaulastClassID(baulastClassID);
+        setBaulastblattClassID(baulastblattClassID);
+        setSearchInfo(searchInfo);
+    }
+
+    //~ Methods ----------------------------------------------------------------
+
+    /**
+     * DOCUMENT ME!
+     *
+     * @return  DOCUMENT ME!
+     */
+    public int getBaulastClassID() {
+        return baulastClassID;
+    }
+
+    /**
+     * DOCUMENT ME!
+     *
+     * @return  DOCUMENT ME!
+     */
+    public int getBaulastblattClassID() {
+        return baulastblattClassID;
+    }
+
+    /**
+     * DOCUMENT ME!
+     *
+     * @return  DOCUMENT ME!
+     */
+    public BaulastSearchInfo getSearchInfo() {
+        return searchInfo;
+    }
+
+    /**
+     * DOCUMENT ME!
+     *
+     * @param  baulastClassID  DOCUMENT ME!
+     */
+    public final void setBaulastClassID(final int baulastClassID) {
         this.baulastClassID = baulastClassID;
+    }
+
+    /**
+     * DOCUMENT ME!
+     *
+     * @param  baulastblattClassID  DOCUMENT ME!
+     */
+    public final void setBaulastblattClassID(final int baulastblattClassID) {
         this.baulastblattClassID = baulastblattClassID;
+    }
+
+    /**
+     * DOCUMENT ME!
+     *
+     * @param  searchInfo  DOCUMENT ME!
+     */
+    public final void setSearchInfo(final BaulastSearchInfo searchInfo) {
+        this.searchInfo = searchInfo;
+        refresh();
+    }
+
+    /**
+     * DOCUMENT ME!
+     */
+    private void refresh() {
         this.result = searchInfo.getResult();
         this.blattnummer = searchInfo.getBlattnummer();
         if (blattnummer != null) {
@@ -151,8 +224,6 @@ public class CidsBaulastSearchStatement extends AbstractCidsServerSearch impleme
 
         fsquerypart = getSqlByFlurstuecksInfo(flurstuecke);
     }
-
-    //~ Methods ----------------------------------------------------------------
 
     @Override
     public Collection<MetaObjectNode> performServerSearch() {

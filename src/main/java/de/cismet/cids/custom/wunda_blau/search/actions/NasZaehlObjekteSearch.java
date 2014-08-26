@@ -38,6 +38,7 @@ import java.util.Properties;
 import de.cismet.cids.custom.wunda_blau.search.server.CidsMauernSearchStatement;
 
 import de.cismet.cids.server.search.AbstractCidsServerSearch;
+import de.cismet.cids.server.search.CidsServerSearch;
 import de.cismet.cids.server.search.SearchException;
 
 import de.cismet.cismap.commons.jtsgeometryfactories.PostGisGeometryFactory;
@@ -48,6 +49,7 @@ import de.cismet.cismap.commons.jtsgeometryfactories.PostGisGeometryFactory;
  * @author   daniel
  * @version  $Revision$, $Date$
  */
+@org.openide.util.lookup.ServiceProvider(service = CidsServerSearch.class)
 public class NasZaehlObjekteSearch extends AbstractCidsServerSearch {
 
     //~ Static fields/initializers ---------------------------------------------
@@ -110,10 +112,16 @@ public class NasZaehlObjekteSearch extends AbstractCidsServerSearch {
 
     //~ Instance fields --------------------------------------------------------
 
-    final Geometry geometry;
-    final NasZaehlObjekteSearch.NasSearchType searchType;
+    private Geometry geometry;
+    private NasZaehlObjekteSearch.NasSearchType searchType;
 
     //~ Constructors -----------------------------------------------------------
+
+    /**
+     * Creates a new NasZaehlObjekteSearch object.
+     */
+    public NasZaehlObjekteSearch() {
+    }
 
     /**
      * Creates a new NasZaehlObjekteSearch object.
@@ -122,11 +130,47 @@ public class NasZaehlObjekteSearch extends AbstractCidsServerSearch {
      * @param  type  useCids DOCUMENT ME!
      */
     public NasZaehlObjekteSearch(final Geometry g, final NasZaehlObjekteSearch.NasSearchType type) {
-        geometry = g;
-        this.searchType = type;
+        setGeometry(g);
+        setSearchType(type);
     }
 
     //~ Methods ----------------------------------------------------------------
+
+    /**
+     * DOCUMENT ME!
+     *
+     * @return  DOCUMENT ME!
+     */
+    public Geometry getGeometry() {
+        return geometry;
+    }
+
+    /**
+     * DOCUMENT ME!
+     *
+     * @return  DOCUMENT ME!
+     */
+    public NasSearchType getSearchType() {
+        return searchType;
+    }
+
+    /**
+     * DOCUMENT ME!
+     *
+     * @param  geometry  DOCUMENT ME!
+     */
+    public final void setGeometry(final Geometry geometry) {
+        this.geometry = geometry;
+    }
+
+    /**
+     * DOCUMENT ME!
+     *
+     * @param  searchType  DOCUMENT ME!
+     */
+    public final void setSearchType(final NasSearchType searchType) {
+        this.searchType = searchType;
+    }
 
     /**
      * DOCUMENT ME!

@@ -22,6 +22,7 @@ import java.util.Iterator;
 import java.util.Map;
 
 import de.cismet.cids.server.search.AbstractCidsServerSearch;
+import de.cismet.cids.server.search.CidsServerSearch;
 import de.cismet.cids.server.search.MetaObjectNodeServerSearch;
 
 import de.cismet.cismap.commons.jtsgeometryfactories.PostGisGeometryFactory;
@@ -32,6 +33,7 @@ import de.cismet.cismap.commons.jtsgeometryfactories.PostGisGeometryFactory;
  * @author   jweintraut
  * @version  $Revision$, $Date$
  */
+@org.openide.util.lookup.ServiceProvider(service = CidsServerSearch.class)
 public class CidsVermessungRissSearchStatement extends AbstractCidsServerSearch implements MetaObjectNodeServerSearch {
 
     //~ Static fields/initializers ---------------------------------------------
@@ -75,6 +77,12 @@ public class CidsVermessungRissSearchStatement extends AbstractCidsServerSearch 
 
     /**
      * Creates a new CidsVermessungRissSearchStatement object.
+     */
+    public CidsVermessungRissSearchStatement() {
+    }
+
+    /**
+     * Creates a new CidsVermessungRissSearchStatement object.
      *
      * @param  schluessel            DOCUMENT ME!
      * @param  gemarkung             DOCUMENT ME!
@@ -91,16 +99,142 @@ public class CidsVermessungRissSearchStatement extends AbstractCidsServerSearch 
             final Collection<String> schluesselCollection,
             final Geometry geometry,
             final Collection<Map<String, String>> flurstuecke) {
-        this.schluessel = schluessel;
-        this.gemarkung = gemarkung;
-        this.flur = flur;
-        this.blatt = blatt;
-        this.schluesselCollection = schluesselCollection;
-        this.geometry = geometry;
-        this.flurstuecke = flurstuecke;
+        setSchluessel(schluessel);
+        setGemarkung(gemarkung);
+        setFlur(flur);
+        setBlatt(blatt);
+        setSchluesselCollection(schluesselCollection);
+        setGeometry(geometry);
+        setFlurstuecke(flurstuecke);
     }
 
     //~ Methods ----------------------------------------------------------------
+
+    /**
+     * DOCUMENT ME!
+     *
+     * @return  DOCUMENT ME!
+     */
+    public String getSchluessel() {
+        return schluessel;
+    }
+
+    /**
+     * DOCUMENT ME!
+     *
+     * @return  DOCUMENT ME!
+     */
+    public String getGemarkung() {
+        return gemarkung;
+    }
+
+    /**
+     * DOCUMENT ME!
+     *
+     * @return  DOCUMENT ME!
+     */
+    public String getFlur() {
+        return flur;
+    }
+
+    /**
+     * DOCUMENT ME!
+     *
+     * @return  DOCUMENT ME!
+     */
+    public String getBlatt() {
+        return blatt;
+    }
+
+    /**
+     * DOCUMENT ME!
+     *
+     * @return  DOCUMENT ME!
+     */
+    public Collection<String> getSchluesselCollection() {
+        return schluesselCollection;
+    }
+
+    /**
+     * DOCUMENT ME!
+     *
+     * @return  DOCUMENT ME!
+     */
+    public Geometry getGeometry() {
+        return geometry;
+    }
+
+    /**
+     * DOCUMENT ME!
+     *
+     * @return  DOCUMENT ME!
+     */
+    public Collection<Map<String, String>> getFlurstuecke() {
+        return flurstuecke;
+    }
+
+    /**
+     * DOCUMENT ME!
+     *
+     * @param  schluessel  DOCUMENT ME!
+     */
+    public final void setSchluessel(final String schluessel) {
+        this.schluessel = schluessel;
+    }
+
+    /**
+     * DOCUMENT ME!
+     *
+     * @param  gemarkung  DOCUMENT ME!
+     */
+    public final void setGemarkung(final String gemarkung) {
+        this.gemarkung = gemarkung;
+    }
+
+    /**
+     * DOCUMENT ME!
+     *
+     * @param  flur  DOCUMENT ME!
+     */
+    public final void setFlur(final String flur) {
+        this.flur = flur;
+    }
+
+    /**
+     * DOCUMENT ME!
+     *
+     * @param  blatt  DOCUMENT ME!
+     */
+    public final void setBlatt(final String blatt) {
+        this.blatt = blatt;
+    }
+
+    /**
+     * DOCUMENT ME!
+     *
+     * @param  schluesselCollection  DOCUMENT ME!
+     */
+    public final void setSchluesselCollection(final Collection<String> schluesselCollection) {
+        this.schluesselCollection = schluesselCollection;
+    }
+
+    /**
+     * DOCUMENT ME!
+     *
+     * @param  geometry  DOCUMENT ME!
+     */
+    public final void setGeometry(final Geometry geometry) {
+        this.geometry = geometry;
+    }
+
+    /**
+     * DOCUMENT ME!
+     *
+     * @param  flurstuecke  DOCUMENT ME!
+     */
+    public final void setFlurstuecke(final Collection<Map<String, String>> flurstuecke) {
+        this.flurstuecke = flurstuecke;
+    }
 
     @Override
     public Collection<MetaObjectNode> performServerSearch() {

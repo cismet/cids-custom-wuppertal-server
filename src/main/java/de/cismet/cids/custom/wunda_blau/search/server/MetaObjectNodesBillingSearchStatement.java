@@ -18,6 +18,7 @@ import Sirius.server.newuser.User;
 import java.util.ArrayList;
 import java.util.Collection;
 
+import de.cismet.cids.server.search.CidsServerSearch;
 import de.cismet.cids.server.search.MetaObjectNodeServerSearch;
 import de.cismet.cids.server.search.SearchException;
 
@@ -27,10 +28,18 @@ import de.cismet.cids.server.search.SearchException;
  * @author   Gilles Baatz
  * @version  $Revision$, $Date$
  */
+@org.openide.util.lookup.ServiceProvider(service = CidsServerSearch.class)
 public class MetaObjectNodesBillingSearchStatement extends CidsBillingSearchStatement
         implements MetaObjectNodeServerSearch {
 
     //~ Constructors -----------------------------------------------------------
+
+    /**
+     * Creates a new MetaObjectNodesBillingSearchStatement object.
+     */
+    public MetaObjectNodesBillingSearchStatement() {
+        super();
+    }
 
     /**
      * Creates a new MetaObjectNodesBillingSearchStatement object.

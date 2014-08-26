@@ -17,6 +17,7 @@ import java.util.ArrayList;
 import java.util.Collection;
 
 import de.cismet.cids.server.search.AbstractCidsServerSearch;
+import de.cismet.cids.server.search.CidsServerSearch;
 import de.cismet.cids.server.search.MetaObjectNodeServerSearch;
 
 /**
@@ -25,6 +26,7 @@ import de.cismet.cids.server.search.MetaObjectNodeServerSearch;
  * @author   thorsten
  * @version  $Revision$, $Date$
  */
+@org.openide.util.lookup.ServiceProvider(service = CidsServerSearch.class)
 public class CustomStrassenSearchStatement extends AbstractCidsServerSearch implements MetaObjectNodeServerSearch {
 
     //~ Static fields/initializers ---------------------------------------------
@@ -40,14 +42,38 @@ public class CustomStrassenSearchStatement extends AbstractCidsServerSearch impl
 
     /**
      * Creates a new CustomStrassenSearchStatement object.
+     */
+    public CustomStrassenSearchStatement() {
+    }
+
+    /**
+     * Creates a new CustomStrassenSearchStatement object.
      *
      * @param  searchString  DOCUMENT ME!
      */
     public CustomStrassenSearchStatement(final String searchString) {
-        this.searchString = searchString;
+        setSearchString(searchString);
     }
 
     //~ Methods ----------------------------------------------------------------
+
+    /**
+     * DOCUMENT ME!
+     *
+     * @return  DOCUMENT ME!
+     */
+    public String getSearchString() {
+        return searchString;
+    }
+
+    /**
+     * DOCUMENT ME!
+     *
+     * @param  searchString  DOCUMENT ME!
+     */
+    public final void setSearchString(final String searchString) {
+        this.searchString = searchString;
+    }
 
     @Override
     public Collection<MetaObjectNode> performServerSearch() {

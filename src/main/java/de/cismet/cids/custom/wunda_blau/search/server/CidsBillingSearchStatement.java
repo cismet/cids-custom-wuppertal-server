@@ -27,6 +27,7 @@ import java.util.Collection;
 import java.util.Date;
 
 import de.cismet.cids.server.search.AbstractCidsServerSearch;
+import de.cismet.cids.server.search.CidsServerSearch;
 import de.cismet.cids.server.search.SearchException;
 
 /**
@@ -35,12 +36,12 @@ import de.cismet.cids.server.search.SearchException;
  * @author   Gilles Baatz
  * @version  $Revision$, $Date$
  */
+@org.openide.util.lookup.ServiceProvider(service = CidsServerSearch.class)
 public class CidsBillingSearchStatement extends AbstractCidsServerSearch {
 
     //~ Static fields/initializers ---------------------------------------------
 
     private static final Logger LOG = Logger.getLogger(CidsBillingSearchStatement.class);
-    private static final String CIDSCLASS = "billing";
     private static final String DOMAIN = "WUNDA_BLAU";
 
     //~ Enums ------------------------------------------------------------------
@@ -69,8 +70,7 @@ public class CidsBillingSearchStatement extends AbstractCidsServerSearch {
     private Date till;
     private StringBuilder query;
     private SimpleDateFormat postgresDateFormat = new SimpleDateFormat("yyyy-MM-dd");
-    private User user;
-    private ArrayList<MetaObject> kundeMetaObjects = new ArrayList<MetaObject>();
+    private ArrayList<MetaObject> kundeMetaObjects;
     private String kundenname;
     private boolean showOnlyStornierteBillings = false;
     /**
@@ -86,13 +86,21 @@ public class CidsBillingSearchStatement extends AbstractCidsServerSearch {
 
     /**
      * Creates a new CidsBillingSearchStatement object.
+     */
+    public CidsBillingSearchStatement() {
+    }
+
+    /**
+     * Creates a new CidsBillingSearchStatement object.
      *
      * @param  user             DOCUMENT ME!
      * @param  kundeMetaObject  kundeBean DOCUMENT ME!
      */
     public CidsBillingSearchStatement(final User user, final MetaObject kundeMetaObject) {
-        this.user = user;
-        this.kundeMetaObjects.add(kundeMetaObject);
+        setUser(user);
+        final ArrayList<MetaObject> kundeMetaObjects = new ArrayList<MetaObject>();
+        kundeMetaObjects.add(kundeMetaObject);
+        setKundeMetaObjects(kundeMetaObjects);
     }
 
     /**
@@ -102,8 +110,8 @@ public class CidsBillingSearchStatement extends AbstractCidsServerSearch {
      * @param  kundeMetaObjects  DOCUMENT ME!
      */
     public CidsBillingSearchStatement(final User user, final ArrayList<MetaObject> kundeMetaObjects) {
-        this.user = user;
-        this.kundeMetaObjects = kundeMetaObjects;
+        setUser(user);
+        setKundeMetaObjects(kundeMetaObjects);
     }
 
     /**
@@ -113,11 +121,29 @@ public class CidsBillingSearchStatement extends AbstractCidsServerSearch {
      * @param  kundenname  DOCUMENT ME!
      */
     public CidsBillingSearchStatement(final User user, final String kundenname) {
-        this.user = user;
-        this.kundenname = kundenname;
+        setUser(user);
+        setKundenname(kundenname);
     }
 
     //~ Methods ----------------------------------------------------------------
+
+    /**
+     * DOCUMENT ME!
+     *
+     * @return  DOCUMENT ME!
+     */
+    public String getKundenname() {
+        return kundenname;
+    }
+
+    /**
+     * DOCUMENT ME!
+     *
+     * @param  kundenname  DOCUMENT ME!
+     */
+    public final void setKundenname(final String kundenname) {
+        this.kundenname = kundenname;
+    }
 
     @Override
     public Collection<MetaObject> performServerSearch() throws SearchException {
@@ -129,7 +155,7 @@ public class CidsBillingSearchStatement extends AbstractCidsServerSearch {
                     LOG.debug("The used query is: " + query.toString());
                 }
 
-                final MetaObject[] billingMetaObjects = ms.getMetaObject(user, query.toString());
+                final MetaObject[] billingMetaObjects = ms.getMetaObject(getUser(), query.toString());
                 final ArrayList<MetaObject> billingCollection = new ArrayList<MetaObject>(Arrays.asList(
                             billingMetaObjects));
                 return billingCollection;
@@ -332,7 +358,7 @@ public class CidsBillingSearchStatement extends AbstractCidsServerSearch {
      *
      * @param  kundeMetaObjects  kundeBean DOCUMENT ME!
      */
-    public void setKundeMetaObjects(final ArrayList<MetaObject> kundeMetaObjects) {
+    public final void setKundeMetaObjects(final ArrayList<MetaObject> kundeMetaObjects) {
         this.kundeMetaObjects = kundeMetaObjects;
     }
 

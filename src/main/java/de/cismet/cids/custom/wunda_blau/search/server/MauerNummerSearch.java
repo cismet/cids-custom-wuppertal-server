@@ -21,6 +21,7 @@ import java.util.ArrayList;
 import java.util.Collection;
 
 import de.cismet.cids.server.search.AbstractCidsServerSearch;
+import de.cismet.cids.server.search.CidsServerSearch;
 import de.cismet.cids.server.search.SearchException;
 
 /**
@@ -29,6 +30,7 @@ import de.cismet.cids.server.search.SearchException;
  * @author   daniel
  * @version  $Revision$, $Date$
  */
+@org.openide.util.lookup.ServiceProvider(service = CidsServerSearch.class)
 public class MauerNummerSearch extends AbstractCidsServerSearch {
 
     //~ Static fields/initializers ---------------------------------------------
@@ -44,14 +46,38 @@ public class MauerNummerSearch extends AbstractCidsServerSearch {
 
     /**
      * Creates a new MauerNummerSearch object.
+     */
+    public MauerNummerSearch() {
+    }
+
+    /**
+     * Creates a new MauerNummerSearch object.
      *
      * @param  mauerNummer  DOCUMENT ME!
      */
     public MauerNummerSearch(final String mauerNummer) {
-        this.mauerNummer = mauerNummer;
+        setMauerNummer(mauerNummer);
     }
 
     //~ Methods ----------------------------------------------------------------
+
+    /**
+     * DOCUMENT ME!
+     *
+     * @return  DOCUMENT ME!
+     */
+    public String getMauerNummer() {
+        return mauerNummer;
+    }
+
+    /**
+     * DOCUMENT ME!
+     *
+     * @param  mauerNummer  DOCUMENT ME!
+     */
+    public final void setMauerNummer(final String mauerNummer) {
+        this.mauerNummer = mauerNummer;
+    }
 
     @Override
     public Collection performServerSearch() throws SearchException {

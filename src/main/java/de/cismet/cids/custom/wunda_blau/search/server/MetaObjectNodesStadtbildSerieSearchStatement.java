@@ -29,6 +29,7 @@ import java.util.Collection;
 import java.util.Date;
 
 import de.cismet.cids.server.search.AbstractCidsServerSearch;
+import de.cismet.cids.server.search.CidsServerSearch;
 import de.cismet.cids.server.search.MetaObjectNodeServerSearch;
 import de.cismet.cids.server.search.SearchException;
 
@@ -40,6 +41,7 @@ import de.cismet.cismap.commons.jtsgeometryfactories.PostGisGeometryFactory;
  * @author   Gilles Baatz
  * @version  $Revision$, $Date$
  */
+@org.openide.util.lookup.ServiceProvider(service = CidsServerSearch.class)
 public class MetaObjectNodesStadtbildSerieSearchStatement extends AbstractCidsServerSearch
         implements MetaObjectNodeServerSearch {
 
@@ -90,7 +92,6 @@ public class MetaObjectNodesStadtbildSerieSearchStatement extends AbstractCidsSe
     private String ortID;
     private String hausnummer;
     private String singleImageNumber;
-    private final User user;
     private StringBuilder query;
     private final SimpleDateFormat postgresDateFormat = new SimpleDateFormat("yyyy-MM-dd");
     private ArrayList<ArrayList> resultset;
@@ -110,11 +111,17 @@ public class MetaObjectNodesStadtbildSerieSearchStatement extends AbstractCidsSe
 
     /**
      * Creates a new MetaObjectNodesStadtbildSerieSearchStatement object.
+     */
+    public MetaObjectNodesStadtbildSerieSearchStatement() {
+    }
+
+    /**
+     * Creates a new MetaObjectNodesStadtbildSerieSearchStatement object.
      *
      * @param  user  DOCUMENT ME!
      */
     public MetaObjectNodesStadtbildSerieSearchStatement(final User user) {
-        this.user = user;
+        setUser(user);
     }
 
     //~ Methods ----------------------------------------------------------------
