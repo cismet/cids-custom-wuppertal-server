@@ -107,6 +107,8 @@ public class NASProductGenerator {
     private String OUTPUT_DIR;
     private String ACTION_SERVICE;
     private String ACTION_DOMAIN;
+    private String ACTION_USER;
+    private String ACTION_PASSWORD;
     private HashMap<String, HashMap<String, NasProductInfo>> openOrderMap =
         new HashMap<String, HashMap<String, NasProductInfo>>();
     private HashMap<String, HashMap<String, NasProductInfo>> undeliveredOrderMap =
@@ -143,6 +145,9 @@ public class NASProductGenerator {
             OUTPUT_DIR = serviceProperties.getProperty("outputDir");
             ACTION_DOMAIN = serviceProperties.getProperty("actionDomain");
             ACTION_SERVICE = serviceProperties.getProperty("actionServiceURL");
+            ACTION_USER = serviceProperties.getProperty("actionServiceUser");
+            ACTION_PASSWORD = serviceProperties.getProperty("actionServicePassword");
+
             if ((OUTPUT_DIR == null) || OUTPUT_DIR.isEmpty()) {
                 log.info("Could not read nas nas output dir property. using server working dir as fallback");
                 OUTPUT_DIR = ".";
@@ -164,13 +169,15 @@ public class NASProductGenerator {
                 initError = true;
                 return;
             }
-            if ((ACTION_DOMAIN == null) || (ACTION_SERVICE == null)) {
+            if ((ACTION_DOMAIN == null) || (ACTION_SERVICE == null) || (ACTION_SERVICE == null)
+                        || (ACTION_PASSWORD == null)) {
                 log.warn(
                     "NAS Datenabgabe initialisation Error. Can not read properties for connecting to DXF converter Action");
                 initError = true;
                 return;
             }
             dxfConverter = new DXFConverterAction(ACTION_DOMAIN, ACTION_SERVICE);
+            dxfConverter.setBasicAuthentication(ACTION_USER, ACTION_PASSWORD);
             final StringBuilder fileNameBuilder = new StringBuilder(OUTPUT_DIR);
             fileNameBuilder.append(System.getProperty("file.separator"));
             openOrdersLogFile = new File(fileNameBuilder.toString() + "openOrdersMap.json");

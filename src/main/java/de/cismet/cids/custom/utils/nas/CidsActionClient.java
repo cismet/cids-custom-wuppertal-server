@@ -20,6 +20,7 @@ import com.sun.jersey.api.client.Client;
 import com.sun.jersey.api.client.WebResource;
 import com.sun.jersey.api.client.config.ClientConfig;
 import com.sun.jersey.api.client.config.DefaultClientConfig;
+import com.sun.jersey.api.client.filter.HTTPBasicAuthFilter;
 import com.sun.jersey.api.json.JSONConfiguration;
 import com.sun.jersey.multipart.FormDataMultiPart;
 import com.sun.jersey.multipart.impl.MultiPartWriter;
@@ -50,27 +51,20 @@ import de.cismet.cids.server.api.types.CollectionResource;
  * @author   daniel
  * @version  $Revision$, $Date$
  */
-public class AbstractCidsActionClient {
+public class CidsActionClient {
 
     //~ Static fields/initializers ---------------------------------------------
 
     protected static final String ACTION_URL = "/actions";
 //    private static final ApacheHttpClient client = ApacheHttpClient.create();
-    private static final Client client;
-    private static final Logger LOG = Logger.getLogger(AbstractCidsActionClient.class);
-    private static final ObjectMapper mapper = new ObjectMapper();
-
-    static {
-        final ClientConfig clientConfig = new DefaultClientConfig();
-        clientConfig.getFeatures().put(JSONConfiguration.FEATURE_POJO_MAPPING, Boolean.TRUE);
-        clientConfig.getClasses().add(MultiPartWriter.class);
-        client = Client.create(clientConfig);
-    }
+    private static final Logger LOG = Logger.getLogger(CidsActionClient.class);
 
     //~ Instance fields --------------------------------------------------------
 
     protected String domain;
     protected String baseURL;
+    private final Client client;
+    private final ObjectMapper mapper = new ObjectMapper();
     private final String RESOURCE_URL = "/%1$s.%2$s/tasks/%3$s/results/%4$s";
 
     //~ Constructors -----------------------------------------------------------
@@ -81,12 +75,35 @@ public class AbstractCidsActionClient {
      * @param  domain   DOCUMENT ME!
      * @param  baseURL  DOCUMENT ME!
      */
-    public AbstractCidsActionClient(final String domain, final String baseURL) {
+    public CidsActionClient(final String domain, final String baseURL) {
         this.domain = domain;
         this.baseURL = baseURL;
+        final ClientConfig clientConfig = new DefaultClientConfig();
+        clientConfig.getFeatures().put(JSONConfiguration.FEATURE_POJO_MAPPING, Boolean.TRUE);
+        clientConfig.getClasses().add(MultiPartWriter.class);
+        client = Client.create(clientConfig);
     }
 
     //~ Methods ----------------------------------------------------------------
+
+    /**
+     * DOCUMENT ME!
+     *
+     * @return  DOCUMENT ME!
+     */
+    public Client getClient() {
+        return client;
+    }
+
+    /**
+     * DOCUMENT ME!
+     *
+     * @param  user      DOCUMENT ME!
+     * @param  password  DOCUMENT ME!
+     */
+    public void setBasicAuthentication(final String user, final String password) {
+        client.addFilter(new HTTPBasicAuthFilter(user, password));
+    }
 
     /**
      * DOCUMENT ME!
@@ -295,7 +312,7 @@ public class AbstractCidsActionClient {
      * @param  args  DOCUMENT ME!
      */
     public static void main(final String[] args) {
-        final AbstractCidsActionClient client = new AbstractCidsActionClient("cids", "http://s102x002:8890");
+        final CidsActionClient client = new CidsActionClient("cids", "http://s102x002:8890");
         final ActionTask at = new ActionTask();
         at.setParameters(new HashMap<String, Object>());
         final File f = new File("ci_test_klein.zip");

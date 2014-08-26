@@ -31,7 +31,7 @@ import de.cismet.commons.concurrency.CismetExecutors;
  * @author   daniel
  * @version  $Revision$, $Date$
  */
-public class DXFConverterAction extends AbstractCidsActionClient {
+public class DXFConverterAction extends CidsActionClient {
 
     //~ Static fields/initializers ---------------------------------------------
 
