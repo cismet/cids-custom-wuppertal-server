@@ -13,6 +13,8 @@ package de.cismet.cids.custom.utils.butler;
 
 import java.io.Serializable;
 
+import java.util.ArrayList;
+
 /**
  * DOCUMENT ME!
  *
@@ -30,6 +32,7 @@ public class ButlerProduct implements Serializable {
     ButlerFormat format;
     String volumeParamText;
     String scale;
+    ArrayList<ButlerResolution> butlerResolutions;
 
     //~ Methods ----------------------------------------------------------------
 
@@ -162,5 +165,23 @@ public class ButlerProduct implements Serializable {
      */
     public void setScale(final String scale) {
         this.scale = scale;
+    }
+
+    /**
+     * DOCUMENT ME!
+     *
+     * @return  DOCUMENT ME!
+     */
+    public ArrayList<ButlerResolution> getButlerResolutions() {
+        return butlerResolutions;
+    }
+
+    /**
+     * DOCUMENT ME!
+     *
+     * @param  butlerResolutions  DOCUMENT ME!
+     */
+    public void setButlerResolutions(final ArrayList<ButlerResolution> butlerResolutions) {
+        this.butlerResolutions = butlerResolutions;
     }
 }
