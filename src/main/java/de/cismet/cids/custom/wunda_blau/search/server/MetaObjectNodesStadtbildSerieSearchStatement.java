@@ -217,6 +217,7 @@ public class MetaObjectNodesStadtbildSerieSearchStatement extends AbstractCidsSe
         appendSuchworte();
         appendDates();
         appendStreetID();
+        appendNutzungseinschraenkungID();
         appendOrtID();
         appendHausnummer();
         appendSingleImageNumber();
@@ -310,6 +311,14 @@ public class MetaObjectNodesStadtbildSerieSearchStatement extends AbstractCidsSe
     private void appendStreetID() {
         if (StringUtils.isNotBlank(streetID)) {
             query.append(" and sbs.strasse = ").append(streetID).append(" ");
+        }
+    }
+    /**
+     * DOCUMENT ME!
+     */
+    private void appendNutzungseinschraenkungID() {
+        if (StringUtils.isNotBlank(nutzungseinschraenkungID)) {
+            query.append(" and sbs.nutzungseinschraenkung = ").append(nutzungseinschraenkungID).append(" ");
         }
     }
 
