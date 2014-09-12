@@ -86,6 +86,7 @@ public class MetaObjectNodesStadtbildSerieSearchStatement extends AbstractCidsSe
     private Interval interval;
     private Date from;
     private Date till;
+    private String nutzungseinschraenkungID;
     private String streetID;
     private String ortID;
     private String hausnummer;
@@ -614,6 +615,24 @@ public class MetaObjectNodesStadtbildSerieSearchStatement extends AbstractCidsSe
      */
     public void setHasAllSuchworte(final boolean hasAllSuchworte) {
         this.hasAllSuchworte = hasAllSuchworte;
+    }
+
+    /**
+     * DOCUMENT ME!
+     *
+     * @param  nutzungseinschraenkungID  DOCUMENT ME!
+     */
+    public void setNutzungseinschraenkungID(final String nutzungseinschraenkungID) {
+        this.nutzungseinschraenkungID = nutzungseinschraenkungID;
+    }
+
+    /**
+     * DOCUMENT ME!
+     *
+     * @return  DOCUMENT ME!
+     */
+    public String getNutzungseinschraenkungID() {
+        return nutzungseinschraenkungID;
     }
 
     //~ Inner Classes ----------------------------------------------------------
