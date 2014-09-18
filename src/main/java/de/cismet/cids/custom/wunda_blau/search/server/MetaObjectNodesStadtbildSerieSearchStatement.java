@@ -83,6 +83,7 @@ public class MetaObjectNodesStadtbildSerieSearchStatement extends AbstractCidsSe
 
     private ArrayList<Bildtyp> bildtypen = new ArrayList<Bildtyp>();
     private ArrayList<Integer> suchwoerterIDs = new ArrayList<Integer>();
+    private ArrayList<Integer> nutzungseinschraenkungIDs = new ArrayList<Integer>();
     private Interval interval;
     private Date from;
     private Date till;
@@ -216,6 +217,7 @@ public class MetaObjectNodesStadtbildSerieSearchStatement extends AbstractCidsSe
         appendSuchworte();
         appendDates();
         appendStreetID();
+        appendNutzungseinschraenkungIDs();
         appendOrtID();
         appendHausnummer();
         appendSingleImageNumber();
@@ -264,6 +266,19 @@ public class MetaObjectNodesStadtbildSerieSearchStatement extends AbstractCidsSe
                 query.append(subquery);
             }
             query.append(" ) ");
+        }
+    }
+
+    /**
+     * DOCUMENT ME!
+     */
+    private void appendNutzungseinschraenkungIDs() {
+        if ((nutzungseinschraenkungIDs != null) && !nutzungseinschraenkungIDs.isEmpty()) {
+            query.append(" and sbs.nutzungseinschraenkung IN (")
+                    .append(StringUtils.join(nutzungseinschraenkungIDs, ','))
+                    .append(") ");
+        } else {
+            query.append(" and sbs.nutzungseinschraenkung IS NULL ");
         }
     }
 
@@ -614,6 +629,24 @@ public class MetaObjectNodesStadtbildSerieSearchStatement extends AbstractCidsSe
      */
     public void setHasAllSuchworte(final boolean hasAllSuchworte) {
         this.hasAllSuchworte = hasAllSuchworte;
+    }
+
+    /**
+     * DOCUMENT ME!
+     *
+     * @param  nutzungseinschraenkungIDs  DOCUMENT ME!
+     */
+    public void setNutzungseinschraenkungIDs(final ArrayList<Integer> nutzungseinschraenkungIDs) {
+        this.nutzungseinschraenkungIDs = nutzungseinschraenkungIDs;
+    }
+
+    /**
+     * DOCUMENT ME!
+     *
+     * @return  DOCUMENT ME!
+     */
+    public ArrayList<Integer> getNutzungseinschraenkungIDs() {
+        return nutzungseinschraenkungIDs;
     }
 
     //~ Inner Classes ----------------------------------------------------------
