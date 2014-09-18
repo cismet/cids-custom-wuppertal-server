@@ -83,10 +83,10 @@ public class MetaObjectNodesStadtbildSerieSearchStatement extends AbstractCidsSe
 
     private ArrayList<Bildtyp> bildtypen = new ArrayList<Bildtyp>();
     private ArrayList<Integer> suchwoerterIDs = new ArrayList<Integer>();
+    private ArrayList<Integer> nutzungseinschraenkungIDs = new ArrayList<Integer>();
     private Interval interval;
     private Date from;
     private Date till;
-    private String nutzungseinschraenkungID;
     private String streetID;
     private String ortID;
     private String hausnummer;
@@ -217,7 +217,7 @@ public class MetaObjectNodesStadtbildSerieSearchStatement extends AbstractCidsSe
         appendSuchworte();
         appendDates();
         appendStreetID();
-        appendNutzungseinschraenkungID();
+        appendNutzungseinschraenkungIDs();
         appendOrtID();
         appendHausnummer();
         appendSingleImageNumber();
@@ -272,6 +272,19 @@ public class MetaObjectNodesStadtbildSerieSearchStatement extends AbstractCidsSe
     /**
      * DOCUMENT ME!
      */
+    private void appendNutzungseinschraenkungIDs() {
+        if ((nutzungseinschraenkungIDs != null) && !nutzungseinschraenkungIDs.isEmpty()) {
+            query.append(" and sbs.nutzungseinschraenkung IN (")
+                    .append(StringUtils.join(nutzungseinschraenkungIDs, ','))
+                    .append(") ");
+        } else {
+            query.append(" and sbs.nutzungseinschraenkung IS NULL ");
+        }
+    }
+
+    /**
+     * DOCUMENT ME!
+     */
     private void appendDates() {
         if ((from == null) && (till == null)) {
             // do nothing, time filters are ignored
@@ -311,14 +324,6 @@ public class MetaObjectNodesStadtbildSerieSearchStatement extends AbstractCidsSe
     private void appendStreetID() {
         if (StringUtils.isNotBlank(streetID)) {
             query.append(" and sbs.strasse = ").append(streetID).append(" ");
-        }
-    }
-    /**
-     * DOCUMENT ME!
-     */
-    private void appendNutzungseinschraenkungID() {
-        if (StringUtils.isNotBlank(nutzungseinschraenkungID)) {
-            query.append(" and sbs.nutzungseinschraenkung = ").append(nutzungseinschraenkungID).append(" ");
         }
     }
 
@@ -629,10 +634,10 @@ public class MetaObjectNodesStadtbildSerieSearchStatement extends AbstractCidsSe
     /**
      * DOCUMENT ME!
      *
-     * @param  nutzungseinschraenkungID  DOCUMENT ME!
+     * @param  nutzungseinschraenkungIDs  DOCUMENT ME!
      */
-    public void setNutzungseinschraenkungID(final String nutzungseinschraenkungID) {
-        this.nutzungseinschraenkungID = nutzungseinschraenkungID;
+    public void setNutzungseinschraenkungIDs(final ArrayList<Integer> nutzungseinschraenkungIDs) {
+        this.nutzungseinschraenkungIDs = nutzungseinschraenkungIDs;
     }
 
     /**
@@ -640,8 +645,8 @@ public class MetaObjectNodesStadtbildSerieSearchStatement extends AbstractCidsSe
      *
      * @return  DOCUMENT ME!
      */
-    public String getNutzungseinschraenkungID() {
-        return nutzungseinschraenkungID;
+    public ArrayList<Integer> getNutzungseinschraenkungIDs() {
+        return nutzungseinschraenkungIDs;
     }
 
     //~ Inner Classes ----------------------------------------------------------
