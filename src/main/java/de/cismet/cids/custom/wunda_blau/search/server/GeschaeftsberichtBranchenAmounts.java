@@ -38,6 +38,7 @@ public class GeschaeftsberichtBranchenAmounts extends AbstractCidsServerSearch {
     public static final String BRANCHEN_AMOUNTS = "branchenAmounts";
     public static final String ANTRAEGE_AMOUNTS = "antraegeAmounts";
     public static final String DOWNLOADS_AMOUNTS = "downloadAmounts";
+    public static final String KUNDEN_UMSATZ = "kundenUmsatz";
 
     //~ Instance fields --------------------------------------------------------
 
@@ -65,6 +66,13 @@ public class GeschaeftsberichtBranchenAmounts extends AbstractCidsServerSearch {
                 + whereClause
                 + "group by kunde.name\n"
                 + "order by amount desc limit 10;";
+
+    String queryKundenUmsatz = "select sum(netto_summe) as summe, kunde.name\n"
+                + fromBillingJoinTillKunde
+                + whereClause
+                + "group by kunde.name\n"
+                + "order by summe desc limit 10";
+
     private final User user;
     private final String billingBeanIds;
 
@@ -93,6 +101,7 @@ public class GeschaeftsberichtBranchenAmounts extends AbstractCidsServerSearch {
                 excuteQueryAndConvertResults(ms, results, queryKundenBranche, BRANCHEN_AMOUNTS);
                 excuteQueryAndConvertResults(ms, results, queryKundenAntraege, ANTRAEGE_AMOUNTS);
                 excuteQueryAndConvertResults(ms, results, queryKundenAnzahlDownloads, DOWNLOADS_AMOUNTS);
+                excuteQueryAndConvertResults(ms, results, queryKundenUmsatz, KUNDEN_UMSATZ);
 
                 final ArrayList resultWrapper = new ArrayList(1);
                 resultWrapper.add(results);
@@ -126,8 +135,8 @@ public class GeschaeftsberichtBranchenAmounts extends AbstractCidsServerSearch {
                 final ArrayList row = (ArrayList)it.next();
 
                 final BrancheAmountBean bean = new BrancheAmountBean();
-                final Long amount = (Long)row.get(0);
-                bean.anzahl = amount;
+                final Number amount = (Number)row.get(0);
+                bean.number = amount;
 
                 final String branche = (String)row.get(1);
                 bean.name = branche;
@@ -153,7 +162,7 @@ public class GeschaeftsberichtBranchenAmounts extends AbstractCidsServerSearch {
 
         //~ Instance fields ----------------------------------------------------
 
-        Long anzahl = (long)0;
+        Number number = (long)0;
         String name = "";
         String info = "";
 
@@ -172,17 +181,35 @@ public class GeschaeftsberichtBranchenAmounts extends AbstractCidsServerSearch {
          *
          * @return  DOCUMENT ME!
          */
-        public Long getAnzahl() {
-            return anzahl;
+        public Number getAnzahl() {
+            return number;
         }
 
         /**
          * DOCUMENT ME!
          *
-         * @param  anzahl  DOCUMENT ME!
+         * @param  number  DOCUMENT ME!
          */
-        public void setAnzahl(final Long anzahl) {
-            this.anzahl = anzahl;
+        public void setAnzahl(final Number number) {
+            this.number = number;
+        }
+
+        /**
+         * DOCUMENT ME!
+         *
+         * @return  DOCUMENT ME!
+         */
+        public Number getSumme() {
+            return number;
+        }
+
+        /**
+         * DOCUMENT ME!
+         *
+         * @param  number  anzahl DOCUMENT ME!
+         */
+        public void setSumme(final Number number) {
+            this.number = number;
         }
 
         /**
