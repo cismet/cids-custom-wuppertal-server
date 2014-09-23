@@ -39,6 +39,10 @@ public class GeschaeftsberichtBranchenAmounts extends AbstractCidsServerSearch {
     public static final String ANTRAEGE_AMOUNTS = "antraegeAmounts";
     public static final String DOWNLOADS_AMOUNTS = "downloadAmounts";
     public static final String KUNDEN_UMSATZ = "kundenUmsatz";
+    public static final String PRODUKTE_COMMON_DOWNLOADS = "produkteCommonDownloads";
+    public static String PRODUKTE_DOWNLOADS = "produkteDownloads";
+    public static String PRODUKTE_EINNAHMEN = "produkteEinnahmen";
+    public static String EINNAHMEN = "einnahmen";
 
     //~ Instance fields --------------------------------------------------------
 
@@ -73,6 +77,43 @@ public class GeschaeftsberichtBranchenAmounts extends AbstractCidsServerSearch {
                 + "group by kunde.name\n"
                 + "order by summe desc limit 10";
 
+    String queryProdukteCommonDownloads = "select count(*) as anzahl, produktbezeichnung, produktkey\n"
+                + "        from\n"
+                + "                billing_billing as b\n"
+                + whereClause
+                + "group by produktkey,produktbezeichnung\n"
+                + "order by anzahl  desc   limit 10;";
+
+    String queryProdukteDownloads = "select count(*) as anzahl, produktbezeichnung, produktkey\n"
+                + "        from\n"
+                + "                billing_billing as b\n"
+                + whereClause
+                + "group by produktkey,produktbezeichnung\n"
+                + "order by produktbezeichnung  asc;";
+
+    String queryProdukteEinnahmen =
+        "select sum(brutto_summe) as summe, produktbezeichnung, count(brutto_summe) as anzahlProdukte\n"
+                + "        from\n"
+                + "                billing_billing as b\n"
+                + whereClause
+                + "group by produktbezeichnung\n"
+                + "order by summe  desc;";
+
+    String queryEinnahmen = "select y.gesum,y.gesum/360*2 as minsum,z.produktbezeichnung,z.summe,z.anzahl from \n"
+                + "(select sum(summe) as gesum from \n"
+                + "(select produktbezeichnung,sum(brutto_summe) as summe,count(brutto_summe) as anzahl\n"
+                + "        from\n"
+                + "                billing_billing as b\n"
+                + whereClause
+                + "group by produktbezeichnung) x) y,\n"
+                + "(select produktbezeichnung,sum(brutto_summe) as summe,count(brutto_summe) as anzahl\n"
+                + "        from\n"
+                + "                billing_billing as b\n"
+                + whereClause
+                + "group by produktbezeichnung) z\n"
+                + "where z.summe > y.gesum/360*2\n"
+                + "order by z.summe desc;";
+
     private final User user;
     private final String billingBeanIds;
 
@@ -102,6 +143,11 @@ public class GeschaeftsberichtBranchenAmounts extends AbstractCidsServerSearch {
                 excuteQueryAndConvertResults(ms, results, queryKundenAntraege, ANTRAEGE_AMOUNTS);
                 excuteQueryAndConvertResults(ms, results, queryKundenAnzahlDownloads, DOWNLOADS_AMOUNTS);
                 excuteQueryAndConvertResults(ms, results, queryKundenUmsatz, KUNDEN_UMSATZ);
+                excuteQueryAndConvertResults(ms, results, queryProdukteCommonDownloads, PRODUKTE_COMMON_DOWNLOADS);
+                excuteQueryAndConvertResults(ms, results, queryProdukteDownloads, PRODUKTE_DOWNLOADS);
+                excuteQueryAndConvertResults(ms, results, queryProdukteEinnahmen, PRODUKTE_EINNAHMEN);
+
+                excuteEinnahmenQuery(ms, results);
 
                 final ArrayList resultWrapper = new ArrayList(1);
                 resultWrapper.add(results);
@@ -135,14 +181,11 @@ public class GeschaeftsberichtBranchenAmounts extends AbstractCidsServerSearch {
                 final ArrayList row = (ArrayList)it.next();
 
                 final BrancheAmountBean bean = new BrancheAmountBean();
-                final Number amount = (Number)row.get(0);
-                bean.number = amount;
-
-                final String branche = (String)row.get(1);
-                bean.name = branche;
+                bean.number = (Number)row.get(0);
+                bean.name = (String)row.get(1);
 
                 if (row.size() == 3) {
-                    bean.info = (String)row.get(2);
+                    bean.info = row.get(2);
                 }
 
                 beans.add(bean);
@@ -151,7 +194,100 @@ public class GeschaeftsberichtBranchenAmounts extends AbstractCidsServerSearch {
         }
     }
 
+    /**
+     * DOCUMENT ME!
+     *
+     * @param   ms       DOCUMENT ME!
+     * @param   results  DOCUMENT ME!
+     *
+     * @throws  RemoteException  DOCUMENT ME!
+     */
+    private void excuteEinnahmenQuery(final MetaService ms,
+            final HashMap<String, ArrayList> results) throws RemoteException {
+        queryEinnahmen = queryEinnahmen.replace("$bean_ids$", billingBeanIds);
+        final ArrayList<ArrayList> lists = ms.performCustomSearch(queryEinnahmen);
+        if ((lists != null) && !lists.isEmpty()) {
+            final ArrayList<EinnahmenBean> beans = new ArrayList<EinnahmenBean>();
+            for (final Iterator it = lists.iterator(); it.hasNext();) {
+                final ArrayList row = (ArrayList)it.next();
+
+                final EinnahmenBean bean = new EinnahmenBean();
+                bean.gesum = (Double)row.get(0);
+                bean.minsum = (Double)row.get(1);
+                bean.produktbezeichnung = (String)row.get(2);
+                bean.summe = (Double)row.get(3);
+                bean.anzahl = (Long)row.get(4);
+
+                beans.add(bean);
+            }
+            results.put(EINNAHMEN, beans);
+        }
+    }
+
     //~ Inner Classes ----------------------------------------------------------
+
+    /**
+     * DOCUMENT ME!
+     *
+     * @version  $Revision$, $Date$
+     */
+    public class EinnahmenBean implements Serializable {
+
+        //~ Instance fields ----------------------------------------------------
+
+        Double gesum;
+        Double minsum;
+        Double summe;
+        String produktbezeichnung;
+        Long anzahl;
+
+        //~ Methods ------------------------------------------------------------
+
+        /**
+         * DOCUMENT ME!
+         *
+         * @return  DOCUMENT ME!
+         */
+        public Double getGesum() {
+            return gesum;
+        }
+
+        /**
+         * DOCUMENT ME!
+         *
+         * @return  DOCUMENT ME!
+         */
+        public Double getMinsum() {
+            return minsum;
+        }
+
+        /**
+         * DOCUMENT ME!
+         *
+         * @return  DOCUMENT ME!
+         */
+        public Double getSumme() {
+            return summe;
+        }
+
+        /**
+         * DOCUMENT ME!
+         *
+         * @return  DOCUMENT ME!
+         */
+        public String getProduktbezeichnung() {
+            return produktbezeichnung;
+        }
+
+        /**
+         * DOCUMENT ME!
+         *
+         * @return  DOCUMENT ME!
+         */
+        public Long getAnzahl() {
+            return anzahl;
+        }
+    }
 
     /**
      * DOCUMENT ME!
@@ -164,7 +300,7 @@ public class GeschaeftsberichtBranchenAmounts extends AbstractCidsServerSearch {
 
         Number number = (long)0;
         String name = "";
-        String info = "";
+        Object info = "";
 
         //~ Constructors -------------------------------------------------------
 
@@ -188,28 +324,10 @@ public class GeschaeftsberichtBranchenAmounts extends AbstractCidsServerSearch {
         /**
          * DOCUMENT ME!
          *
-         * @param  number  DOCUMENT ME!
-         */
-        public void setAnzahl(final Number number) {
-            this.number = number;
-        }
-
-        /**
-         * DOCUMENT ME!
-         *
          * @return  DOCUMENT ME!
          */
         public Number getSumme() {
             return number;
-        }
-
-        /**
-         * DOCUMENT ME!
-         *
-         * @param  number  anzahl DOCUMENT ME!
-         */
-        public void setSumme(final Number number) {
-            this.number = number;
         }
 
         /**
@@ -224,10 +342,10 @@ public class GeschaeftsberichtBranchenAmounts extends AbstractCidsServerSearch {
         /**
          * DOCUMENT ME!
          *
-         * @param  name  DOCUMENT ME!
+         * @return  DOCUMENT ME!
          */
-        public void setName(final String name) {
-            this.name = name;
+        public String getProduktbezeichnung() {
+            return name;
         }
 
         /**
@@ -235,17 +353,26 @@ public class GeschaeftsberichtBranchenAmounts extends AbstractCidsServerSearch {
          *
          * @return  DOCUMENT ME!
          */
-        public String getInfo() {
+        public Object getInfo() {
             return info;
         }
 
         /**
          * DOCUMENT ME!
          *
-         * @param  info  DOCUMENT ME!
+         * @return  DOCUMENT ME!
          */
-        public void setInfo(final String info) {
-            this.info = info;
+        public Object getProduktkey() {
+            return info;
+        }
+
+        /**
+         * DOCUMENT ME!
+         *
+         * @return  DOCUMENT ME!
+         */
+        public Object getAnzahlProdukte() {
+            return info;
         }
     }
 }
