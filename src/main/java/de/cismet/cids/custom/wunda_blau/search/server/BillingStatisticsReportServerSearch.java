@@ -23,17 +23,19 @@ import de.cismet.cids.server.search.AbstractCidsServerSearch;
 import de.cismet.cids.server.search.SearchException;
 
 /**
- * DOCUMENT ME!
+ * A server search which fetches the needed information for the charts in the billing statistics report. To fetch the
+ * data, multiple queries are executed and their results are converted to beans ({@link BrancheAmountBean} or
+ * {@link EinnahmeBean}). These beans are added to a HashMap, which is returned in {@code performSeverSearch}.
  *
  * @author   Gilles Baatz
  * @version  $Revision$, $Date$
  */
-public class GeschaeftsberichtBranchenAmounts extends AbstractCidsServerSearch {
+public class BillingStatisticsReportServerSearch extends AbstractCidsServerSearch {
 
     //~ Static fields/initializers ---------------------------------------------
 
     private static final org.apache.log4j.Logger LOG = org.apache.log4j.Logger.getLogger(
-            GeschaeftsberichtBranchenAmounts.class);
+            BillingStatisticsReportServerSearch.class);
     private static final String DOMAIN = "WUNDA_BLAU";
     public static final String BRANCHEN_AMOUNTS = "branchenAmounts";
     public static final String ANTRAEGE_AMOUNTS = "antraegeAmounts";
@@ -125,7 +127,7 @@ public class GeschaeftsberichtBranchenAmounts extends AbstractCidsServerSearch {
      * @param  user            DOCUMENT ME!
      * @param  billingBeanIds  timestampEnd DOCUMENT ME!
      */
-    public GeschaeftsberichtBranchenAmounts(final User user, final String billingBeanIds) {
+    public BillingStatisticsReportServerSearch(final User user, final String billingBeanIds) {
         this.user = user;
         this.billingBeanIds = billingBeanIds;
     }
@@ -149,6 +151,7 @@ public class GeschaeftsberichtBranchenAmounts extends AbstractCidsServerSearch {
 
                 excuteEinnahmenQuery(ms, results);
 
+                // a collection must be returned, therefore wrap the HashMap in a Collection
                 final ArrayList resultWrapper = new ArrayList(1);
                 resultWrapper.add(results);
                 return resultWrapper;
@@ -227,7 +230,7 @@ public class GeschaeftsberichtBranchenAmounts extends AbstractCidsServerSearch {
     //~ Inner Classes ----------------------------------------------------------
 
     /**
-     * DOCUMENT ME!
+     * A Bean which is used to create a JRDataSource for the big pie chart.
      *
      * @version  $Revision$, $Date$
      */
@@ -290,7 +293,9 @@ public class GeschaeftsberichtBranchenAmounts extends AbstractCidsServerSearch {
     }
 
     /**
-     * DOCUMENT ME!
+     * A Bean which is used to create a JRDataSource for the charts in the report. It got only three fields but several
+     * getters for these fields with different names. Thus the fields in the report can have different, more specific
+     * names.
      *
      * @version  $Revision$, $Date$
      */
@@ -301,14 +306,6 @@ public class GeschaeftsberichtBranchenAmounts extends AbstractCidsServerSearch {
         Number number = (long)0;
         String name = "";
         Object info = "";
-
-        //~ Constructors -------------------------------------------------------
-
-        /**
-         * Creates a new BrancheAmountBean object.
-         */
-        public BrancheAmountBean() {
-        }
 
         //~ Methods ------------------------------------------------------------
 
