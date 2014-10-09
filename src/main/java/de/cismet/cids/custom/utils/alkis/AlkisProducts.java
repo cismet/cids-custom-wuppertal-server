@@ -19,8 +19,11 @@ import java.io.InputStream;
 import java.net.MalformedURLException;
 import java.net.URL;
 
+import java.text.SimpleDateFormat;
+
 import java.util.ArrayList;
 import java.util.Collections;
+import java.util.Date;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -55,6 +58,7 @@ public final class AlkisProducts {
     public final String FLURSTUECKS_UND_EIGENTUMSNACHWEIS_KOMMUNAL_INTERN_HTML;
     // Buchungsblatt
     public final String BESTANDSNACHWEIS_NRW_PDF;
+    public final String BESTANDSNACHWEIS_STICHTAGSBEZOGEN_NRW_PDF;
     public final String BESTANDSNACHWEIS_NRW_HTML;
     public final String BESTANDSNACHWEIS_KOMMUNAL_PDF;
     public final String BESTANDSNACHWEIS_KOMMUNAL_HTML;
@@ -70,6 +74,7 @@ public final class AlkisProducts {
     public final Map<String, Point> ALKIS_FORMATS;
     public final List<AlkisProductDescription> ALKIS_MAP_PRODUCTS;
     private final String IDENTIFICATIONANDMORE;
+    private final SimpleDateFormat stichtagDateFormat = new SimpleDateFormat("dd.MM.yyy");
     //
 
     //~ Constructors -----------------------------------------------------------
@@ -108,6 +113,8 @@ public final class AlkisProducts {
         GRUNDSTUECKSNACHWEIS_NRW_PDF = productProperties.getProperty("GRUNDSTUECKSNACHWEIS_NRW_PDF");
         GRUNDSTUECKSNACHWEIS_NRW_HTML = productProperties.getProperty("GRUNDSTUECKSNACHWEIS_NRW_HTML");
         BESTANDSNACHWEIS_NRW_PDF = productProperties.getProperty("BESTANDSNACHWEIS_NRW_PDF");
+        BESTANDSNACHWEIS_STICHTAGSBEZOGEN_NRW_PDF = productProperties.getProperty(
+                "BESTANDSNACHWEIS_STICHTAGSBEZOGEN_NRW_PDF");
         BESTANDSNACHWEIS_NRW_HTML = productProperties.getProperty("BESTANDSNACHWEIS_NRW_HTML");
         BESTANDSNACHWEIS_KOMMUNAL_PDF = productProperties.getProperty("BESTANDSNACHWEIS_KOMMUNAL_PDF");
         BESTANDSNACHWEIS_KOMMUNAL_HTML = productProperties.getProperty("BESTANDSNACHWEIS_KOMMUNAL_HTML");
@@ -282,6 +289,25 @@ public final class AlkisProducts {
     public URL productEinzelNachweisUrl(final String objectID, final String productCode) throws MalformedURLException {
         return new URL(AlkisConstants.COMMONS.EINZEL_NACHWEIS_SERVICE + "?" + AlkisConstants.MLESSNUMBER + "&product="
                         + productCode + "&id=" + objectID + "&" + IDENTIFICATIONANDMORE);
+    }
+
+    /**
+     * DOCUMENT ME!
+     *
+     * @param   objectID     DOCUMENT ME!
+     * @param   productCode  DOCUMENT ME!
+     * @param   stichtag     DOCUMENT ME!
+     *
+     * @return  DOCUMENT ME!
+     *
+     * @throws  MalformedURLException  DOCUMENT ME!
+     */
+    public URL productEinzelnachweisStichtagsbezogenUrl(final String objectID,
+            final String productCode,
+            final Date stichtag) throws MalformedURLException {
+        return new URL(AlkisConstants.COMMONS.EINZEL_NACHWEIS_SERVICE + "?" + AlkisConstants.MLESSNUMBER
+                        + "&reportingDate=" + stichtagDateFormat.format(stichtag)
+                        + "&product=" + productCode + "&id=" + objectID + "&" + IDENTIFICATIONANDMORE);
     }
 
     /**
