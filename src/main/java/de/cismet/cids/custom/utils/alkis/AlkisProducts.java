@@ -74,7 +74,7 @@ public final class AlkisProducts {
     public final Map<String, Point> ALKIS_FORMATS;
     public final List<AlkisProductDescription> ALKIS_MAP_PRODUCTS;
     private final String IDENTIFICATIONANDMORE;
-    private final SimpleDateFormat stichtagDateFormat = new SimpleDateFormat("dd.MM.yyy");
+    private final SimpleDateFormat stichtagDateFormat = new SimpleDateFormat("dd.MM.yyyy");
     //
 
     //~ Constructors -----------------------------------------------------------
