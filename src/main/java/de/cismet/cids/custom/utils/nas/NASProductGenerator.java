@@ -1189,22 +1189,16 @@ public class NASProductGenerator {
                                 }
                                 if (isDxf) {
                                     try {
-                                        log.error("sending nas file to dxf converter");
                                         final ActionTask at = dxfConverter.createDxfActionTask(
                                                 new HashMap<String, Object>(),
                                                 getNasFileForOrder(orderId, userId, isZip),
                                                 isZip);
-                                        log.error("task id for converter action is: " + at.getKey());
                                         if (at.getKey() == null) {
-                                            log.error("There was an error creating the dxf converter action");
                                             return;
                                         }
                                         final Future<File> converterFuture = dxfConverter.getResult(at.getKey());
-                                        log.error("start polling dxf converter action for result.");
                                         final File dxfFile = converterFuture.get();
-                                        log.error("DXF file from converter received: " + dxfFile.toString());
                                         final File resultDxfFile = new File(determineFileName(userId, orderId, ".dxf"));
-                                        log.error("Copying dxf file to : " + resultDxfFile.toString());
                                         IOUtils.copy(new FileInputStream(dxfFile), new FileOutputStream(resultDxfFile));
                                     } catch (InterruptedException ex) {
                                         log.error("DXF Converter Thread was interrupted", ex);
