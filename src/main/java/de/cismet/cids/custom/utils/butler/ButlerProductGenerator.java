@@ -1,10 +1,12 @@
-/***************************************************
-*
-* cismet GmbH, Saarbruecken, Germany
-*
-*              ... and it just works.
-*
-****************************************************/
+/**
+ * *************************************************
+ *
+ * cismet GmbH, Saarbruecken, Germany
+ * 
+* ... and it just works.
+ * 
+***************************************************
+ */
 /*
  * To change this template, choose Tools | Templates
  * and open the template in the editor.
@@ -23,8 +25,6 @@ import com.fasterxml.jackson.databind.ObjectWriter;
 
 import org.apache.log4j.Logger;
 
-import org.openide.util.Exceptions;
-
 import java.io.BufferedReader;
 import java.io.BufferedWriter;
 import java.io.File;
@@ -36,25 +36,29 @@ import java.io.IOException;
 import java.io.InputStreamReader;
 import java.io.OutputStreamWriter;
 
-import java.net.URL;
-
 import java.text.SimpleDateFormat;
 
 import java.util.Date;
 import java.util.GregorianCalendar;
 import java.util.HashMap;
+import java.util.Map;
 import java.util.Properties;
+
+import javax.ws.rs.core.MediaType;
+
+import de.cismet.cids.custom.utils.nas.CidsActionClient;
+
+import de.cismet.cids.server.api.types.ActionTask;
 
 /**
  * DOCUMENT ME!
  *
- * @author   daniel
- * @version  $Revision$, $Date$
+ * @author daniel
+ * @version $Revision$, $Date$
  */
 public class ButlerProductGenerator {
 
     //~ Static fields/initializers ---------------------------------------------
-
     private static ButlerProductGenerator instance;
     private static final Logger LOG = Logger.getLogger(ButlerProductGenerator.class);
     private static final String FILE_APPENDIX = ".but";
@@ -65,27 +69,29 @@ public class ButlerProductGenerator {
     private static final String RESOLUTION = "$AUFLOESUNG$";
     private static final String FORMAT = "$AUSGABEFORMAT$";
     private static final String FILE_NAME = "$DATEINAME$";
-    private static final String TIME = "$ZEIT$";
-    private static final String DATE = "$DATUM$";
     private static final String LAYER = "$LAYER$";
     private static final String ETRS89_LAYER = "39";
     private static final String GK_LAYER = "36";
     private static final String MAP_SCALE = "$SCALE$";
+    private static final String PDF_OPTIONS_VAR = "$PDF_OPTIONS$";
+    private static final String PDF_OPTIONS = "mode=\"ACTIVEVIEW\" showpdflayers=\"false\"";
 
     //~ Instance fields --------------------------------------------------------
-
     File openOrdersLogFile;
+    private String ACTION_SERVICE;
+    private String ACTION_DOMAIN;
+    private String ACTION_USER;
+    private String ACTION_PASSWORD;
     // Map that lists all open Orders to a user id
-    private HashMap<Integer, HashMap<String, ButlerRequestInfo>> openOrderMap =
-        new HashMap<Integer, HashMap<String, ButlerRequestInfo>>();
+    private HashMap<Integer, HashMap<String, ButlerRequestInfo>> openOrderMap
+            = new HashMap<Integer, HashMap<String, ButlerRequestInfo>>();
     private String requestFolder;
-    private String butler2RequestFolder;
     private String butlerBasePath;
     private String BUTLER_TEMPLATES_RES_PATH = "/de/cismet/cids/custom/utils/butler/";
     private boolean initError = false;
+    private WmpsCidsAction wmpsActionClient;
 
     //~ Constructors -----------------------------------------------------------
-
     /**
      * Creates a new ButlerProductGenerator object.
      */
@@ -98,9 +104,20 @@ public class ButlerProductGenerator {
             butlerProperties.load(ButlerProductGenerator.class.getResourceAsStream("butler.properties"));
             butlerBasePath = butlerProperties.getProperty("butlerBasePath");
             requestFolder = butlerBasePath + System.getProperty("file.separator")
-                        + butlerProperties.getProperty("butler1RequestPath");
-            butler2RequestFolder = butlerBasePath + System.getProperty("file.separator")
-                        + butlerProperties.getProperty("butler2RequestPath");
+                    + butlerProperties.getProperty("butler1RequestPath");
+            ACTION_DOMAIN = butlerProperties.getProperty("actionDomain");
+            ACTION_SERVICE = butlerProperties.getProperty("actionServiceURL");
+            ACTION_USER = butlerProperties.getProperty("actionServiceUser");
+            ACTION_PASSWORD = butlerProperties.getProperty("actionServicePassword");
+            if ((ACTION_DOMAIN == null) || (ACTION_SERVICE == null) || (ACTION_SERVICE == null)
+                    || (ACTION_PASSWORD == null)) {
+                LOG.warn(
+                        "Butler initialisation Error. Can not read properties for connecting to WMPS Action");
+                initError = true;
+            }
+            wmpsActionClient = new WmpsCidsAction(ACTION_DOMAIN, ACTION_SERVICE);
+            wmpsActionClient.setBasicAuthentication(ACTION_USER, ACTION_PASSWORD);
+
             final StringBuilder fileNameBuilder = new StringBuilder(butlerBasePath);
             fileNameBuilder.append(System.getProperty("file.separator"));
             openOrdersLogFile = new File(fileNameBuilder.toString() + "openOrders.json");
@@ -111,14 +128,14 @@ public class ButlerProductGenerator {
             }
             if (!(openOrdersLogFile.isFile() && openOrdersLogFile.canWrite())) {
                 LOG.warn("Can not write to Butler open order log file (" + openOrdersLogFile.getPath()
-                            + "). This might cause problems in Wunda_Blau Butler functionality");
+                        + "). This might cause problems in Wunda_Blau Butler functionality");
                 initError = true;
             }
             loadOpenOrdersFromJsonFile();
         } catch (Exception ex) {
             LOG.warn(
-                "Could not load butler properties. This might cause problems in Wunda_Blau Butler functionality",
-                ex);
+                    "Could not load butler properties. This might cause problems in Wunda_Blau Butler functionality",
+                    ex);
             initError = true;
         }
         if (!initError) {
@@ -129,11 +146,10 @@ public class ButlerProductGenerator {
     }
 
     //~ Methods ----------------------------------------------------------------
-
     /**
      * DOCUMENT ME!
      *
-     * @return  DOCUMENT ME!
+     * @return DOCUMENT ME!
      */
     public static ButlerProductGenerator getInstance() {
         if (instance == null) {
@@ -145,18 +161,18 @@ public class ButlerProductGenerator {
     /**
      * DOCUMENT ME!
      *
-     * @param   orderNumber  DOCUMENT ME!
-     * @param   user         that sends the request
-     * @param   product      of the product that shall be generated
-     * @param   minX         lower x coordinate of the rectangle the product is generated for
-     * @param   minY         lower y coordinate of the rectangle the product is generated for
-     * @param   maxX         upper x coordinate of the rectangle the product is generated for
-     * @param   maxY         lower y coordinate of the rectangle the product is generated for
-     * @param   isGeoTiff    default no, set only to true if <code>format.equals("tif")</code> and the output file
-     *                       should end with *.geotiff instead of *.tif
+     * @param orderNumber DOCUMENT ME!
+     * @param user that sends the request
+     * @param product of the product that shall be generated
+     * @param minX lower x coordinate of the rectangle the product is generated for
+     * @param minY lower y coordinate of the rectangle the product is generated for
+     * @param maxX upper x coordinate of the rectangle the product is generated for
+     * @param maxY lower y coordinate of the rectangle the product is generated for
+     * @param isGeoTiff default no, set only to true if <code>format.equals("tif")</code> and the output file should end
+     * with *.geotiff instead of *.tif
      *
-     * @return  the requestId necessary to retrive results with
-     *          {@link #getResultForRequest(java.lang.String, java.lang.String)} method
+     * @return the requestId necessary to retrive results with
+     * {@link #getResultForRequest(java.lang.String, java.lang.String)} method
      */
     public String createButlerRequest(final String orderNumber,
             final User user,
@@ -173,7 +189,7 @@ public class ButlerProductGenerator {
             addToOpenOrderMap(user, filename, orderNumber, product);
             try {
                 reqeustFile = new File(requestFolder + System.getProperty("file.separator") + filename
-                                + FILE_APPENDIX);
+                        + FILE_APPENDIX);
                 if (reqeustFile.exists()) {
                     // should not happen;
                     LOG.error("butler 1 request file already exists");
@@ -211,15 +227,15 @@ public class ButlerProductGenerator {
     /**
      * DOCUMENT ME!
      *
-     * @param   orderNumber        DOCUMENT ME!
-     * @param   user               DOCUMENT ME!
-     * @param   product            DOCUMENT ME!
-     * @param   isEtrsBlattscnitt  DOCUMENT ME!
-     * @param   boxSize            DOCUMENT ME!
-     * @param   middleE            DOCUMENT ME!
-     * @param   middleN            DOCUMENT ME!
+     * @param orderNumber DOCUMENT ME!
+     * @param user DOCUMENT ME!
+     * @param product DOCUMENT ME!
+     * @param isEtrsBlattscnitt DOCUMENT ME!
+     * @param boxSize DOCUMENT ME!
+     * @param middleE DOCUMENT ME!
+     * @param middleN DOCUMENT ME!
      *
-     * @return  DOCUMENT ME!
+     * @return DOCUMENT ME!
      */
     public String createButler2Request(final String orderNumber,
             final User user,
@@ -233,7 +249,6 @@ public class ButlerProductGenerator {
              * 1. load the respective template 2. replace the values in the template 3. save the file in the right
              * folder
              */
-            File reqeustFile = null;
             BufferedWriter bw = null;
             final String filename = determineRequestFileName(user, orderNumber);
             final String request = getButler2RequestLine(
@@ -251,27 +266,19 @@ public class ButlerProductGenerator {
             addToOpenOrderMap(user, filename, orderNumber, product);
 
             try {
-                if (product.getFormat() == null) {
-                    LOG.error("Product Format can not be null for a butler 2 wmps request");
-                    return null;
-                }
-                String fileAppendix = product.getFormat().getKey();
-                if (fileAppendix.equals("dxf")) {
-                    fileAppendix = "acad";
-                }
-                reqeustFile = new File(butler2RequestFolder + System.getProperty("file.separator") + filename
-                                + "." + fileAppendix);
-                if (reqeustFile.exists()) {
-                    // should not happen;
-                    LOG.error("butler 2 request file already exists");
-                    return null;
-                }
-                bw = new BufferedWriter(new OutputStreamWriter(new FileOutputStream(reqeustFile), "ISO-8859-1"));
+                final File requestFile = File.createTempFile(filename, "xml");
+                bw = new BufferedWriter(new OutputStreamWriter(new FileOutputStream(requestFile), "ISO-8859-1"));
                 bw.write(request);
                 bw.close();
-                return filename;
+
+                final ActionTask at = wmpsActionClient.createWmpsActionTask(filename, requestFile);
+                if (at != null) {
+                    return filename;
+                }
             } catch (IOException ex) {
-                LOG.error("", ex);
+                LOG.error("Could not write the request file for alkis datenausgabe", ex);
+            } catch (Exception ex) {
+                LOG.error("Could not create WMPS action, Alkis Datenausgabe equest is aborted", ex);
             } finally {
                 try {
                     bw.close();
@@ -286,9 +293,9 @@ public class ButlerProductGenerator {
     /**
      * DOCUMENT ME!
      *
-     * @param   user  DOCUMENT ME!
+     * @param user DOCUMENT ME!
      *
-     * @return  DOCUMENT ME!
+     * @return DOCUMENT ME!
      */
     public HashMap<String, ButlerRequestInfo> getAllOpenUserRequests(final User user) {
         if (initError) {
@@ -308,7 +315,7 @@ public class ButlerProductGenerator {
     /**
      * DOCUMENT ME!
      *
-     * @return  DOCUMENT ME!
+     * @return DOCUMENT ME!
      */
     private boolean checkFolders() {
         final File requestDir = new File(requestFolder);
@@ -325,17 +332,17 @@ public class ButlerProductGenerator {
     /**
      * DOCUMENT ME!
      *
-     * @param   user       DOCUMENT ME!
-     * @param   requestId  DOCUMENT ME!
+     * @param user DOCUMENT ME!
+     * @param requestId DOCUMENT ME!
      *
-     * @return  DOCUMENT ME!
+     * @return DOCUMENT ME!
      */
     private String determineRequestFileName(final User user, final String requestId) {
         final GregorianCalendar cal = new GregorianCalendar();
         cal.setTime(new Date());
         String filename = user.getName() + "_" + requestId + "_" + cal.get(GregorianCalendar.HOUR_OF_DAY)
-                    + "_" + cal.get(GregorianCalendar.MINUTE)
-                    + "_" + cal.get(GregorianCalendar.SECOND);
+                + "_" + cal.get(GregorianCalendar.MINUTE)
+                + "_" + cal.get(GregorianCalendar.SECOND);
         filename = filename.replaceAll("Ö", "oe");
         filename = filename.replaceAll("ö", "oe");
         filename = filename.replaceAll("Ä", "ae");
@@ -349,17 +356,17 @@ public class ButlerProductGenerator {
     /**
      * DOCUMENT ME!
      *
-     * @param   productId   DOCUMENT ME!
-     * @param   minX        DOCUMENT ME!
-     * @param   minY        DOCUMENT ME!
-     * @param   maxX        DOCUMENT ME!
-     * @param   maxY        DOCUMENT ME!
-     * @param   colorDepth  DOCUMENT ME!
-     * @param   resolution  DOCUMENT ME!
-     * @param   geoTiff     DOCUMENT ME!
-     * @param   format      DOCUMENT ME!
+     * @param productId DOCUMENT ME!
+     * @param minX DOCUMENT ME!
+     * @param minY DOCUMENT ME!
+     * @param maxX DOCUMENT ME!
+     * @param maxY DOCUMENT ME!
+     * @param colorDepth DOCUMENT ME!
+     * @param resolution DOCUMENT ME!
+     * @param geoTiff DOCUMENT ME!
+     * @param format DOCUMENT ME!
      *
-     * @return  DOCUMENT ME!
+     * @return DOCUMENT ME!
      */
     private String getRequestLine(final String productId,
             final double minX,
@@ -418,14 +425,14 @@ public class ButlerProductGenerator {
     /**
      * DOCUMENT ME!
      *
-     * @param   product             DOCUMENT ME!
-     * @param   isEtrsBlattschnitt  DOCUMENT ME!
-     * @param   x                   DOCUMENT ME!
-     * @param   y                   DOCUMENT ME!
-     * @param   box_size            DOCUMENT ME!
-     * @param   filename            DOCUMENT ME!
+     * @param product DOCUMENT ME!
+     * @param isEtrsBlattschnitt DOCUMENT ME!
+     * @param x DOCUMENT ME!
+     * @param y DOCUMENT ME!
+     * @param box_size DOCUMENT ME!
+     * @param filename DOCUMENT ME!
      *
-     * @return  DOCUMENT ME!
+     * @return DOCUMENT ME!
      */
     private String getButler2RequestLine(final ButlerProduct product,
             final boolean isEtrsBlattschnitt,
@@ -434,55 +441,50 @@ public class ButlerProductGenerator {
             final String box_size,
             final String filename) {
         final String productKey = product.getKey();
-        final String template = loadTemplate(productKey);
+        String template = loadTemplate(productKey);
         /* Karte fuer Feldvergleich. We need to check if we need to
-         * use the GK-Layer or the ETRS89-layer
+         * use the GK-Layer or the ETRS89-layer The inserted LayerId prevents the display of the layer
          */
-        String result = new String(template);
-        // The inserted LayerId prevents the display of the layer
         if (productKey.startsWith("0903")) {
             if (isEtrsBlattschnitt) {
-                result = result.replace(LAYER, GK_LAYER);
+                template = template.replace(LAYER, GK_LAYER);
             } else {
-                result = result.replace(LAYER, ETRS89_LAYER);
+                template = template.replace(LAYER, ETRS89_LAYER);
             }
-            result = result.replace(MAP_SCALE, product.getScale());
+            template = template.replace(MAP_SCALE, product.getScale());
         }
-        result = result.replace(EASTING, "" + x);
-        result = result.replace(NORTHING, "" + y);
-        result = result.replace(BOX_SIZE, "" + box_size);
-        result = result.replace(RESOLUTION, product.getResolution().getKey());
-        String format = "";
-        if (product.getFormat().getKey().equals("dxf")) {
-            format = "ACAD";
-        } else if (product.getFormat().getKey().equals("pdf")) {
-            format = "PDF";
+        template = template.replace(EASTING, "" + x);
+        template = template.replace(NORTHING, "" + y);
+        template = template.replace(BOX_SIZE, "" + box_size);
+        template = template.replace(RESOLUTION, product.getResolution().getKey());
+        if (product.getFormat() == null || product.getFormat().getKey() == null) {
+            LOG.error("No Format for Butler Product is specified. can not create a correct request file");
+            return null;
+        }
+        if (product.getFormat().getKey().equals("pdf")) {
+            template = template.replace(PDF_OPTIONS_VAR, PDF_OPTIONS);
         } else if (product.getFormat().getKey().equals("tif")) {
-            format = "TIF#8";
+            template = template.replace(PDF_OPTIONS_VAR, "");
         }
-        result = result.replace(FORMAT, format);
-        final SimpleDateFormat df = new SimpleDateFormat("yyyyMMdd");
-        final SimpleDateFormat tf = new SimpleDateFormat("kkmmss");
-        result = result.replace(TIME, tf.format(new Date()));
-        result = result.replace(DATE, df.format(new Date()));
-        result = result.replace(FILE_NAME, filename);
+        template = template.replace(FORMAT, product.getFormat().getKey());
+        template = template.replace(FILE_NAME, filename);
 
-        return result;
+        return template;
     }
 
     /**
      * DOCUMENT ME!
      *
-     * @param   productKey  DOCUMENT ME!
+     * @param productKey DOCUMENT ME!
      *
-     * @return  DOCUMENT ME!
+     * @return DOCUMENT ME!
      */
     private String loadTemplate(final String productKey) {
         try {
             final StringBuffer templateBuffer = new StringBuffer();
             final BufferedReader fr = new BufferedReader(new InputStreamReader(
-                        new FileInputStream(BUTLER_TEMPLATES_RES_PATH + "template_" + productKey + ".xml"),
-                        "ISO-8859-1"));
+                    new FileInputStream(BUTLER_TEMPLATES_RES_PATH + "template_" + productKey + ".xml"),
+                    "ISO-8859-1"));
             final char[] buf = new char[1024];
             int numRead = 0;
             while ((numRead = fr.read(buf)) != -1) {
@@ -493,12 +495,12 @@ public class ButlerProductGenerator {
             return templateBuffer.toString();
         } catch (FileNotFoundException ex) {
             LOG.error("Could not access Butler tempalte file: " + BUTLER_TEMPLATES_RES_PATH + "template_" + productKey
-                        + ".xml",
-                ex);
+                    + ".xml",
+                    ex);
         } catch (IOException ex) {
             LOG.error("Could not access Butler tempalte file: " + BUTLER_TEMPLATES_RES_PATH + "template_" + productKey
-                        + ".xml",
-                ex);
+                    + ".xml",
+                    ex);
         }
         return null;
     }
@@ -506,16 +508,16 @@ public class ButlerProductGenerator {
     /**
      * DOCUMENT ME!
      *
-     * @param  user         DOCUMENT ME!
-     * @param  requestId    filename DOCUMENT ME!
-     * @param  userOrderId  DOCUMENT ME!
-     * @param  product      DOCUMENT ME!
+     * @param user DOCUMENT ME!
+     * @param requestId filename DOCUMENT ME!
+     * @param userOrderId DOCUMENT ME!
+     * @param product DOCUMENT ME!
      */
     private void addToOpenOrderMap(final User user,
             final String requestId,
             final String userOrderId,
             final ButlerProduct product) {
-        HashMap<String, ButlerRequestInfo> openUserOrders = (HashMap<String, ButlerRequestInfo>)openOrderMap.get(
+        HashMap<String, ButlerRequestInfo> openUserOrders = (HashMap<String, ButlerRequestInfo>) openOrderMap.get(
                 user.getId());
         if (openUserOrders == null) {
             openUserOrders = new HashMap<String, ButlerRequestInfo>();
@@ -528,11 +530,11 @@ public class ButlerProductGenerator {
     /**
      * DOCUMENT ME!
      *
-     * @param  user       DOCUMENT ME!
-     * @param  requestId  DOCUMENT ME!
+     * @param user DOCUMENT ME!
+     * @param requestId DOCUMENT ME!
      */
     private void removeFromOpenOrders(final User user, final String requestId) {
-        final HashMap<String, ButlerRequestInfo> openUserOrders = (HashMap<String, ButlerRequestInfo>)openOrderMap.get(
+        final HashMap<String, ButlerRequestInfo> openUserOrders = (HashMap<String, ButlerRequestInfo>) openOrderMap.get(
                 user.getId());
         if (openUserOrders != null) {
             openUserOrders.remove(requestId);
@@ -588,8 +590,8 @@ public class ButlerProductGenerator {
     /**
      * DOCUMENT ME!
      *
-     * @param  user       DOCUMENT ME!
-     * @param  requestId  DOCUMENT ME!
+     * @param user DOCUMENT ME!
+     * @param requestId DOCUMENT ME!
      */
     public void removeOrder(final User user, final String requestId) {
         if (initError) {
@@ -602,20 +604,17 @@ public class ButlerProductGenerator {
     }
 
     //~ Inner Classes ----------------------------------------------------------
-
     /**
      * DOCUMENT ME!
      *
-     * @version  $Revision$, $Date$
+     * @version $Revision$, $Date$
      */
     private static final class OpenOrderMapWrapper {
 
         //~ Instance fields ----------------------------------------------------
-
         private HashMap<String, ButlerRequestInfo> map;
 
         //~ Constructors -------------------------------------------------------
-
         /**
          * Creates a new OpenOrderMapWrapper object.
          */
@@ -625,18 +624,17 @@ public class ButlerProductGenerator {
         /**
          * Creates a new OpenOrderMapWrapper object.
          *
-         * @param  map  DOCUMENT ME!
+         * @param map DOCUMENT ME!
          */
         public OpenOrderMapWrapper(final HashMap<String, ButlerRequestInfo> map) {
             this.map = map;
         }
 
         //~ Methods ------------------------------------------------------------
-
         /**
          * DOCUMENT ME!
          *
-         * @return  DOCUMENT ME!
+         * @return DOCUMENT ME!
          */
         public HashMap<String, ButlerRequestInfo> getMap() {
             return map;
@@ -645,10 +643,50 @@ public class ButlerProductGenerator {
         /**
          * DOCUMENT ME!
          *
-         * @param  map  DOCUMENT ME!
+         * @param map DOCUMENT ME!
          */
         public void setMap(final HashMap<String, ButlerRequestInfo> map) {
             this.map = map;
+        }
+    }
+
+    /**
+     * DOCUMENT ME!
+     *
+     * @version $Revision$, $Date$
+     */
+    private final class WmpsCidsAction extends CidsActionClient {
+
+        //~ Static fields/initializers -----------------------------------------
+        private static final String ACTION_KEY = "wmps";
+
+        //~ Constructors -------------------------------------------------------
+        /**
+         * Creates a new WmpsCidsAction object.
+         *
+         * @param domain DOCUMENT ME!
+         * @param baseURL DOCUMENT ME!
+         */
+        public WmpsCidsAction(final String domain, final String baseURL) {
+            super(domain, baseURL);
+        }
+
+        //~ Methods ------------------------------------------------------------
+        /**
+         * DOCUMENT ME!
+         *
+         * @param filename params DOCUMENT ME!
+         * @param requestFile DOCUMENT ME!
+         *
+         * @return DOCUMENT ME!
+         */
+        public ActionTask createWmpsActionTask(final String filename,
+                final File requestFile) {
+            final ActionTask task = new ActionTask();
+            final HashMap<String, Object> params = new HashMap<String, Object>();
+            params.put("$1", filename);
+            task.setParameters(params);
+            return super.createTask(ACTION_KEY, task, requestFile, MediaType.APPLICATION_XML_TYPE, true);
         }
     }
 }
