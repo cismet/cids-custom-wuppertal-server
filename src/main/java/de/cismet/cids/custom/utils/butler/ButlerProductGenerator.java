@@ -36,12 +36,10 @@ import java.io.IOException;
 import java.io.InputStreamReader;
 import java.io.OutputStreamWriter;
 
-import java.text.SimpleDateFormat;
 
 import java.util.Date;
 import java.util.GregorianCalendar;
 import java.util.HashMap;
-import java.util.Map;
 import java.util.Properties;
 
 import javax.ws.rs.core.MediaType;
