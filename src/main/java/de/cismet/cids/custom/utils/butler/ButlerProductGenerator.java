@@ -689,7 +689,6 @@ public class ButlerProductGenerator {
                 final File requestFile) {
             final ActionTask task = new ActionTask();
             final HashMap<String, Object> params = new HashMap<String, Object>();
-            params.put("$1", filename);
             task.setParameters(params);
             return super.createTask(ACTION_KEY, task, requestFile, MediaType.APPLICATION_XML_TYPE, true);
         }
