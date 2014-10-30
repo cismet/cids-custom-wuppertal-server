@@ -1,4 +1,4 @@
-cids-custom-wuppertal-server
+cids-custom-wuppertal-server [![Build Status](http://ci.cismet.de/buildStatus/icon?job=cids-custom-wuppertal-server)](https://ci.cismet.de/job/cids-custom-wuppertal-server/)
 ============================
 
 Serverside customizations of the cids system for the city of Wuppertal.
