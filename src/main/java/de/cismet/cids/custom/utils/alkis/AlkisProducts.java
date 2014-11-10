@@ -490,7 +490,7 @@ public final class AlkisProducts {
         url.append('&');
         url.append(IDENTIFICATIONANDMORE);
         if ((produkt.getMassstabMin() != null) && (produkt.getMassstabMax() != null)) {
-            url.append("&scale=");
+            url.append("scale=");
             url.append(produkt.getMassstab());
         }
 
