@@ -94,7 +94,7 @@ public final class AlkisProducts {
         ALKIS_FORMATS = Collections.unmodifiableMap(formatMap);
         ALKIS_MAP_PRODUCTS = Collections.unmodifiableList(mapProducts);
         IDENTIFICATIONANDMORE = "user=" + user + "&password=" + pw + "&service=" + service
-                    + "&script=nachverarbeitung.bat&";
+                    + "&script=nachverarbeitung.bat";
         FLURSTUECKSNACHWEIS_PDF = productProperties.getProperty("FLURSTUECKSNACHWEIS_PDF");
         FLURSTUECKSNACHWEIS_HTML = productProperties.getProperty("FLURSTUECKSNACHWEIS_HTML");
         FLURSTUECKS_UND_EIGENTUMSNACHWEIS_KOMMUNAL_PDF = productProperties.getProperty(
@@ -490,7 +490,7 @@ public final class AlkisProducts {
         url.append('&');
         url.append(IDENTIFICATIONANDMORE);
         if ((produkt.getMassstabMin() != null) && (produkt.getMassstabMax() != null)) {
-            url.append("scale=");
+            url.append("&scale=");
             url.append(produkt.getMassstab());
         }
 
