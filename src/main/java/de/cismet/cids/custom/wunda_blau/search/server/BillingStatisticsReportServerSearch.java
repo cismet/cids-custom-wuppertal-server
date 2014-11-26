@@ -51,21 +51,24 @@ public class BillingStatisticsReportServerSearch extends AbstractCidsServerSearc
     String whereClause = "WHERE b.id IN ($bean_ids$)\n";
     String fromBillingJoinTillKunde = "FROM billing_billing AS b\n"
                 + "JOIN billing_kunden_logins AS login ON b.angelegt_durch = login.id\n"
-                + "JOIN billing_kunde AS kunde ON login.kunde = kunde.id\n";
+                + "JOIN billing_kunde AS kunde ON login.kunde = kunde.id\n"
+                + "JOIN billing_branche ON kunde.branche = billing_branche.id\n";
 
-    String queryKundenBranche = "SELECT count(*) AS amount,\n"
-                + "       billing_branche.name\n"
-                + fromBillingJoinTillKunde
-                + "JOIN billing_branche ON kunde.branche = billing_branche.id\n"
-                + whereClause
-                + "GROUP BY billing_branche.name\n"
-                + "ORDER BY amount DESC;";
-
-    String queryKundenAntraege = "select count(*) as amount,kunde.name, b.geschaeftsbuchnummer\n"
+    String queryKundenBranche = "with tempTabel as (SELECT count(b.username),\n"
+                + "billing_branche.name\n"
                 + fromBillingJoinTillKunde
                 + whereClause
-                + "group by kunde.name,b.geschaeftsbuchnummer\n"
-                + "order by amount desc limit 10;";
+                + "GROUP BY billing_branche.name,b.username\n"
+                + "ORDER BY billing_branche.name DESC)\n"
+                + "select count(name) as anzahl,name from tempTabel group by name order by anzahl desc;";
+
+    String queryKundenAntraege = "with tempTable as (\n"
+                + "select kunde.name,geschaeftsbuchnummer\n"
+                + fromBillingJoinTillKunde
+                + whereClause
+                + "group by kunde.name,geschaeftsbuchnummer\n"
+                + "order by kunde.name)\n"
+                + "select count(name) as Anzahl,name from tempTable group by name order by Anzahl desc limit 10;";
 
     String queryKundenAnzahlDownloads = "select count (*) as amount,kunde.name\n"
                 + fromBillingJoinTillKunde
