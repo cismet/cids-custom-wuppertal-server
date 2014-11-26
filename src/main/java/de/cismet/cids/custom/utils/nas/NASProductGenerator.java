@@ -55,6 +55,7 @@ import java.net.URL;
 
 import java.util.ArrayList;
 import java.util.HashMap;
+import java.util.Map;
 import java.util.Properties;
 import java.util.Timer;
 import java.util.TimerTask;
@@ -400,7 +401,10 @@ public class NASProductGenerator {
         final boolean isDXF = product.getFormat().equals(NasProduct.Format.DXF.toString());
         addToOpenOrders(determineUserPrefix(user), orderId, new NasProductInfo(isSplitted, requestName, isDXF));
         addToUndeliveredOrders(determineUserPrefix(user), orderId, new NasProductInfo(isSplitted, requestName, isDXF));
-        final NasProductDownloader downloader = new NasProductDownloader(determineUserPrefix(user), orderId, isDXF);
+        final NasProductDownloader downloader = new NasProductDownloader(determineUserPrefix(user),
+                orderId,
+                isDXF,
+                product.getParams());
         downloaderMap.put(orderId, downloader);
         final Thread workerThread = new Thread(downloader);
         workerThread.start();
@@ -1127,6 +1131,7 @@ public class NASProductGenerator {
 
         //~ Instance fields ----------------------------------------------------
 
+        final HashMap<String, Object> params;
         private String orderId;
         private String userId;
         private boolean isDxf;
@@ -1140,11 +1145,19 @@ public class NASProductGenerator {
          * @param  userId     DOCUMENT ME!
          * @param  orderId    DOCUMENT ME!
          * @param  dxfFormat  DOCUMENT ME!
+         * @param  params     DOCUMENT ME!
          */
-        public NasProductDownloader(final String userId, final String orderId, final boolean dxfFormat) {
+        public NasProductDownloader(final String userId,
+                final String orderId,
+                final boolean dxfFormat,
+                final Map<String, Object> params) {
             this.orderId = orderId;
             this.userId = userId;
             this.isDxf = dxfFormat;
+            this.params = new HashMap<String, Object>();
+            if (params != null) {
+                this.params.putAll(params);
+            }
         }
 
         //~ Methods ------------------------------------------------------------
@@ -1190,7 +1203,7 @@ public class NASProductGenerator {
                                 if (isDxf) {
                                     try {
                                         final ActionTask at = dxfConverter.createDxfActionTask(
-                                                new HashMap<String, Object>(),
+                                                params,
                                                 getNasFileForOrder(orderId, userId, isZip),
                                                 isZip);
                                         if (at.getKey() == null) {

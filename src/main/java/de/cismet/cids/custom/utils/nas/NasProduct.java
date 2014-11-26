@@ -45,7 +45,7 @@ public class NasProduct implements Serializable {
     private String displayName;
     private String billingKey;
     private String template;
-    private Map<String, String> params;
+    private Map<String, Object> params;
 
     //~ Constructors -----------------------------------------------------------
 
@@ -169,7 +169,7 @@ public class NasProduct implements Serializable {
      *
      * @return  DOCUMENT ME!
      */
-    public Map<String, String> getParams() {
+    public Map<String, Object> getParams() {
         return params;
     }
 
@@ -178,7 +178,7 @@ public class NasProduct implements Serializable {
      *
      * @param  params  DOCUMENT ME!
      */
-    public void setParams(final Map<String, String> params) {
+    public void setParams(final Map<String, Object> params) {
         this.params = params;
     }
 }
