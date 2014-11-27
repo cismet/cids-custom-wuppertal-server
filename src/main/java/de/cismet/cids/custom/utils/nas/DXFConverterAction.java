@@ -70,6 +70,8 @@ public class DXFConverterAction extends CidsActionClient {
         final ActionTask task = new ActionTask();
         if (isZipped) {
             params.put("$1", "zip");
+        } else {
+            params.put("$1", "not_zip");
         }
         task.setParameters(params);
         final MediaType type = isZipped ? new MediaType("application", "zip") : MediaType.APPLICATION_XML_TYPE;
