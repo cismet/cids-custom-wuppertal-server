@@ -14,7 +14,9 @@ package de.cismet.cids.custom.utils.nas;
 
 import java.io.File;
 
+import java.util.HashMap;
 import java.util.Map;
+import java.util.TreeMap;
 import java.util.concurrent.Callable;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Future;
@@ -68,12 +70,14 @@ public class DXFConverterAction extends CidsActionClient {
             final File nasFile,
             final boolean isZipped) {
         final ActionTask task = new ActionTask();
+        final TreeMap<String, Object> p = new TreeMap<String, Object>();
         if (isZipped) {
-            params.put("$1", "zip");
+            p.put("$1", "zip");
         } else {
-            params.put("$1", "not_zip");
+            p.put("$1", "not_zip");
         }
-        task.setParameters(params);
+        p.putAll(params);
+        task.setParameters(p);
         final MediaType type = isZipped ? new MediaType("application", "zip") : MediaType.APPLICATION_XML_TYPE;
         return super.createTask(ACTION_KEY, task, nasFile, type, true);
     }
