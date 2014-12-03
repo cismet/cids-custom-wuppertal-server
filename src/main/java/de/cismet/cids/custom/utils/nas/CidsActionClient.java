@@ -15,8 +15,10 @@ package de.cismet.cids.custom.utils.nas;
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.core.type.TypeReference;
 import com.fasterxml.jackson.databind.ObjectMapper;
+import com.fasterxml.jackson.databind.node.ObjectNode;
 
 import com.sun.jersey.api.client.Client;
+import com.sun.jersey.api.client.ClientResponse;
 import com.sun.jersey.api.client.WebResource;
 import com.sun.jersey.api.client.config.ClientConfig;
 import com.sun.jersey.api.client.config.DefaultClientConfig;
@@ -252,7 +254,6 @@ public class CidsActionClient {
             if (f != null) {
                 form.field("file", f, fileType);
             }
-            LOG.error("sending post request to " + url);
             final String responseJson = webResource.type(MediaType.MULTIPART_FORM_DATA)
                         .accept(MediaType.APPLICATION_JSON)
                         .post(String.class, form);
