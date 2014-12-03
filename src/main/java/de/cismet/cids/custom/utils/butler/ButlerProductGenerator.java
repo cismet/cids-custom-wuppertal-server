@@ -23,8 +23,6 @@ import com.fasterxml.jackson.databind.ObjectWriter;
 
 import org.apache.log4j.Logger;
 
-import org.openide.util.Exceptions;
-
 import java.io.BufferedReader;
 import java.io.BufferedWriter;
 import java.io.File;
@@ -36,14 +34,16 @@ import java.io.IOException;
 import java.io.InputStreamReader;
 import java.io.OutputStreamWriter;
 
-import java.net.URL;
-
-import java.text.SimpleDateFormat;
-
 import java.util.Date;
 import java.util.GregorianCalendar;
 import java.util.HashMap;
 import java.util.Properties;
+
+import javax.ws.rs.core.MediaType;
+
+import de.cismet.cids.custom.utils.nas.CidsActionClient;
+
+import de.cismet.cids.server.api.types.ActionTask;
 
 /**
  * DOCUMENT ME!
@@ -65,24 +65,28 @@ public class ButlerProductGenerator {
     private static final String RESOLUTION = "$AUFLOESUNG$";
     private static final String FORMAT = "$AUSGABEFORMAT$";
     private static final String FILE_NAME = "$DATEINAME$";
-    private static final String TIME = "$ZEIT$";
-    private static final String DATE = "$DATUM$";
     private static final String LAYER = "$LAYER$";
     private static final String ETRS89_LAYER = "39";
     private static final String GK_LAYER = "36";
     private static final String MAP_SCALE = "$SCALE$";
+    private static final String PDF_OPTIONS_VAR = "$PDF_OPTIONS$";
+    private static final String PDF_OPTIONS = "mode=\"ACTIVEVIEW\" showpdflayers=\"false\"";
 
     //~ Instance fields --------------------------------------------------------
 
     File openOrdersLogFile;
+    private String ACTION_SERVICE;
+    private String ACTION_DOMAIN;
+    private String ACTION_USER;
+    private String ACTION_PASSWORD;
     // Map that lists all open Orders to a user id
     private HashMap<Integer, HashMap<String, ButlerRequestInfo>> openOrderMap =
         new HashMap<Integer, HashMap<String, ButlerRequestInfo>>();
     private String requestFolder;
-    private String butler2RequestFolder;
     private String butlerBasePath;
     private String BUTLER_TEMPLATES_RES_PATH = "/de/cismet/cids/custom/utils/butler/";
     private boolean initError = false;
+    private WmpsCidsAction wmpsActionClient;
 
     //~ Constructors -----------------------------------------------------------
 
@@ -99,8 +103,19 @@ public class ButlerProductGenerator {
             butlerBasePath = butlerProperties.getProperty("butlerBasePath");
             requestFolder = butlerBasePath + System.getProperty("file.separator")
                         + butlerProperties.getProperty("butler1RequestPath");
-            butler2RequestFolder = butlerBasePath + System.getProperty("file.separator")
-                        + butlerProperties.getProperty("butler2RequestPath");
+            ACTION_DOMAIN = butlerProperties.getProperty("actionDomain");
+            ACTION_SERVICE = butlerProperties.getProperty("actionServiceURL");
+            ACTION_USER = butlerProperties.getProperty("actionServiceUser");
+            ACTION_PASSWORD = butlerProperties.getProperty("actionServicePassword");
+            if ((ACTION_DOMAIN == null) || (ACTION_SERVICE == null) || (ACTION_SERVICE == null)
+                        || (ACTION_PASSWORD == null)) {
+                LOG.warn(
+                    "Butler initialisation Error. Can not read properties for connecting to WMPS Action");
+                initError = true;
+            }
+            wmpsActionClient = new WmpsCidsAction(ACTION_DOMAIN, ACTION_SERVICE);
+            wmpsActionClient.setBasicAuthentication(ACTION_USER, ACTION_PASSWORD);
+
             final StringBuilder fileNameBuilder = new StringBuilder(butlerBasePath);
             fileNameBuilder.append(System.getProperty("file.separator"));
             openOrdersLogFile = new File(fileNameBuilder.toString() + "openOrders.json");
@@ -233,7 +248,6 @@ public class ButlerProductGenerator {
              * 1. load the respective template 2. replace the values in the template 3. save the file in the right
              * folder
              */
-            File reqeustFile = null;
             BufferedWriter bw = null;
             final String filename = determineRequestFileName(user, orderNumber);
             final String request = getButler2RequestLine(
@@ -248,30 +262,21 @@ public class ButlerProductGenerator {
                 return null;
             }
 
-            addToOpenOrderMap(user, filename, orderNumber, product);
-
             try {
-                if (product.getFormat() == null) {
-                    LOG.error("Product Format can not be null for a butler 2 wmps request");
-                    return null;
-                }
-                String fileAppendix = product.getFormat().getKey();
-                if (fileAppendix.equals("dxf")) {
-                    fileAppendix = "acad";
-                }
-                reqeustFile = new File(butler2RequestFolder + System.getProperty("file.separator") + filename
-                                + "." + fileAppendix);
-                if (reqeustFile.exists()) {
-                    // should not happen;
-                    LOG.error("butler 2 request file already exists");
-                    return null;
-                }
-                bw = new BufferedWriter(new OutputStreamWriter(new FileOutputStream(reqeustFile), "ISO-8859-1"));
+                final File requestFile = File.createTempFile(filename, "xml");
+                bw = new BufferedWriter(new OutputStreamWriter(new FileOutputStream(requestFile), "ISO-8859-1"));
                 bw.write(request);
                 bw.close();
-                return filename;
+
+                final ActionTask at = wmpsActionClient.createWmpsActionTask(filename, requestFile);
+                if (at != null) {
+                    addToOpenOrderMap(user, filename, orderNumber, product);
+                    return filename;
+                }
             } catch (IOException ex) {
-                LOG.error("", ex);
+                LOG.error("Could not write the request file for alkis datenausgabe", ex);
+            } catch (Exception ex) {
+                LOG.error("Could not create WMPS action, Alkis Datenausgabe equest is aborted", ex);
             } finally {
                 try {
                     bw.close();
@@ -434,40 +439,35 @@ public class ButlerProductGenerator {
             final String box_size,
             final String filename) {
         final String productKey = product.getKey();
-        final String template = loadTemplate(productKey);
+        String template = loadTemplate(productKey);
         /* Karte fuer Feldvergleich. We need to check if we need to
-         * use the GK-Layer or the ETRS89-layer
+         * use the GK-Layer or the ETRS89-layer The inserted LayerId prevents the display of the layer
          */
-        String result = new String(template);
-        // The inserted LayerId prevents the display of the layer
         if (productKey.startsWith("0903")) {
             if (isEtrsBlattschnitt) {
-                result = result.replace(LAYER, GK_LAYER);
+                template = template.replace(LAYER, GK_LAYER);
             } else {
-                result = result.replace(LAYER, ETRS89_LAYER);
+                template = template.replace(LAYER, ETRS89_LAYER);
             }
-            result = result.replace(MAP_SCALE, product.getScale());
+            template = template.replace(MAP_SCALE, product.getScale());
         }
-        result = result.replace(EASTING, "" + x);
-        result = result.replace(NORTHING, "" + y);
-        result = result.replace(BOX_SIZE, "" + box_size);
-        result = result.replace(RESOLUTION, product.getResolution().getKey());
-        String format = "";
-        if (product.getFormat().getKey().equals("dxf")) {
-            format = "ACAD";
-        } else if (product.getFormat().getKey().equals("pdf")) {
-            format = "PDF";
+        template = template.replace(EASTING, "" + x);
+        template = template.replace(NORTHING, "" + y);
+        template = template.replace(BOX_SIZE, "" + box_size);
+        template = template.replace(RESOLUTION, product.getResolution().getKey());
+        if ((product.getFormat() == null) || (product.getFormat().getKey() == null)) {
+            LOG.error("No Format for Butler Product is specified. can not create a correct request file");
+            return null;
+        }
+        if (product.getFormat().getKey().equals("pdf")) {
+            template = template.replace(PDF_OPTIONS_VAR, PDF_OPTIONS);
         } else if (product.getFormat().getKey().equals("tif")) {
-            format = "TIF#8";
+            template = template.replace(PDF_OPTIONS_VAR, "");
         }
-        result = result.replace(FORMAT, format);
-        final SimpleDateFormat df = new SimpleDateFormat("yyyyMMdd");
-        final SimpleDateFormat tf = new SimpleDateFormat("kkmmss");
-        result = result.replace(TIME, tf.format(new Date()));
-        result = result.replace(DATE, df.format(new Date()));
-        result = result.replace(FILE_NAME, filename);
+        template = template.replace(FORMAT, product.getFormat().getKey());
+        template = template.replace(FILE_NAME, filename);
 
-        return result;
+        return template;
     }
 
     /**
@@ -649,6 +649,48 @@ public class ButlerProductGenerator {
          */
         public void setMap(final HashMap<String, ButlerRequestInfo> map) {
             this.map = map;
+        }
+    }
+
+    /**
+     * DOCUMENT ME!
+     *
+     * @version  $Revision$, $Date$
+     */
+    private final class WmpsCidsAction extends CidsActionClient {
+
+        //~ Static fields/initializers -----------------------------------------
+
+        private static final String ACTION_KEY = "wmps";
+
+        //~ Constructors -------------------------------------------------------
+
+        /**
+         * Creates a new WmpsCidsAction object.
+         *
+         * @param  domain   DOCUMENT ME!
+         * @param  baseURL  DOCUMENT ME!
+         */
+        public WmpsCidsAction(final String domain, final String baseURL) {
+            super(domain, baseURL);
+        }
+
+        //~ Methods ------------------------------------------------------------
+
+        /**
+         * DOCUMENT ME!
+         *
+         * @param   filename     params DOCUMENT ME!
+         * @param   requestFile  DOCUMENT ME!
+         *
+         * @return  DOCUMENT ME!
+         */
+        public ActionTask createWmpsActionTask(final String filename,
+                final File requestFile) {
+            final ActionTask task = new ActionTask();
+            final HashMap<String, Object> params = new HashMap<String, Object>();
+            task.setParameters(params);
+            return super.createTask(ACTION_KEY, task, requestFile, MediaType.APPLICATION_XML_TYPE, true);
         }
     }
 }
