@@ -137,7 +137,7 @@ public class GeorgCreateAuftragAction implements ServerAction {
             conn.setRequestMethod("POST");
             conn.setDoOutput(true);
             conn.setDoInput(true);
-            // conn.setRequestProperty("SOAPAction", "http://buero.geosoft.de:6050/");
+            conn.setRequestProperty("SOAPACTION", "SOAPACTION");
             conn.setDoOutput(true);
             final OutputStreamWriter writer = new OutputStreamWriter(conn.getOutputStream());
             writer.write(soapRequest);
