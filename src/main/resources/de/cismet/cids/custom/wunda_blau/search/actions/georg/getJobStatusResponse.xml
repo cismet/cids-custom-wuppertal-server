@@ -1,0 +1,13 @@
+<?xml version="1.0" encoding="utf-8"?>
+<soapenv:Envelope xmlns:soapenv="http://schemas.xmlsoap.org/soap/envelope/" xmlns:xsd="http://www.w3.org/2001/XMLSchema" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance">
+	<soapenv:Body>
+		<ns1:getJobStatusResponse soapenv:encodingStyle="http://schemas.xmlsoap.org/soap/encoding/" xmlns:ns1="http://webservice.portaladapter.vermunterlagenportal.aedsicad.de">
+			<getJobStatusReturn href="#id0"/>
+		</ns1:getJobStatusResponse>
+		<multiRef id="id0" soapenc:root="0" soapenv:encodingStyle="http://schemas.xmlsoap.org/soap/encoding/" xsi:type="ns2:JobStatusBean" xmlns:soapenc="http://schemas.xmlsoap.org/soap/encoding/" xmlns:ns2="http://common.portaladapter.vermunterlagenportal.aedsicad.de">
+			<enumJobStatus href="#id1"/>
+			<geschaeftsbuchnummer xsi:type="xsd:string">0.36672643994373855</geschaeftsbuchnummer>
+		</multiRef>
+		<multiRef id="id1" soapenc:root="0" soapenv:encodingStyle="http://schemas.xmlsoap.org/soap/encoding/" xsi:type="ns3:EnumJobStatus" xmlns:ns3="http://common.portaladapter.vermunterlagenportal.aedsicad.de" xmlns:soapenc="http://schemas.xmlsoap.org/soap/encoding/">OK</multiRef>
+	</soapenv:Body>
+</soapenv:Envelope>

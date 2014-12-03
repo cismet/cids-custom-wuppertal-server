@@ -1,0 +1,23 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<soapenv:Envelope xmlns:soapenv="http://schemas.xmlsoap.org/soap/envelope/" xmlns:xsd="http://www.w3.org/2001/XMLSchema" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance">
+    <soapenv:Body>
+        <ns1:executeJob soapenv:encodingStyle="http://schemas.xmlsoap.org/soap/encoding/" xmlns:ns1="http://webservice.portaladapter.vermunterlagenportal.aedsicad.de">
+            <in0 href="#id0"/>
+        </ns1:executeJob>
+        <multiRef id="id0" soapenc:root="0" soapenv:encodingStyle="http://schemas.xmlsoap.org/soap/encoding/" xsi:type="ns2:AntragsdatensatzBean" xmlns:soapenc="http://schemas.xmlsoap.org/soap/encoding/" xmlns:ns2="http://common.portaladapter.vermunterlagenportal.aedsicad.de">
+            <aktenzeichenKatasteramt xsi:type="xsd:string"/>
+            <artderVermessung soapenc:arrayType="xsd:string[1]" xsi:type="soapenc:Array">
+                <artderVermessung xsi:type="xsd:string">%s</artderVermessung>
+            </artderVermessung>
+            <geschaeftsbuchnummer xsi:type="xsd:string"></geschaeftsbuchnummer>
+            <katasteramtAuftragsnummer xsi:type="xsd:string"/>
+            <katasteramtsId xsi:type="xsd:string"></katasteramtsId>
+            <mitGrenzniederschriften href="#id3"/>
+            <nameVermessungsstelle xsi:type="xsd:string">WuNDa</nameVermessungsstelle>
+            <nurPunktnummernreservierung href="#id4"/>
+            <zulassungsnummerVermessungsstelle xsi:type="xsd:string"></zulassungsnummerVermessungsstelle>
+        </multiRef>
+        <multiRef id="id3" soapenc:root="0" soapenv:encodingStyle="http://schemas.xmlsoap.org/soap/encoding/" xsi:type="xsd:boolean" xmlns:soapenc="http://schemas.xmlsoap.org/soap/encoding/">false</multiRef>
+        <multiRef id="id4" soapenc:root="0" soapenv:encodingStyle="http://schemas.xmlsoap.org/soap/encoding/" xsi:type="xsd:boolean" xmlns:soapenc="http://schemas.xmlsoap.org/soap/encoding/">false</multiRef>
+    </soapenv:Body>
+</soapenv:Envelope>
