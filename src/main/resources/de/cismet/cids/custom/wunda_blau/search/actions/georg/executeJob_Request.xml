@@ -9,13 +9,13 @@
             <artderVermessung soapenc:arrayType="xsd:string[1]" xsi:type="soapenc:Array">
                 <artderVermessung xsi:type="xsd:string">%s</artderVermessung>
             </artderVermessung>
-            <geschaeftsbuchnummer xsi:type="xsd:string"></geschaeftsbuchnummer>
+            <geschaeftsbuchnummer xsi:type="xsd:string">%s</geschaeftsbuchnummer>
             <katasteramtAuftragsnummer xsi:type="xsd:string"/>
             <katasteramtsId xsi:type="xsd:string"></katasteramtsId>
             <mitGrenzniederschriften href="#id3"/>
             <nameVermessungsstelle xsi:type="xsd:string">WuNDa</nameVermessungsstelle>
             <nurPunktnummernreservierung href="#id4"/>
-            <zulassungsnummerVermessungsstelle xsi:type="xsd:string">unbekannt</zulassungsnummerVermessungsstelle>
+            <zulassungsnummerVermessungsstelle xsi:type="xsd:string">WuNDa</zulassungsnummerVermessungsstelle>
         </multiRef>
         <multiRef id="id3" soapenc:root="0" soapenv:encodingStyle="http://schemas.xmlsoap.org/soap/encoding/" xsi:type="xsd:boolean" xmlns:soapenc="http://schemas.xmlsoap.org/soap/encoding/">false</multiRef>
         <multiRef id="id4" soapenc:root="0" soapenv:encodingStyle="http://schemas.xmlsoap.org/soap/encoding/" xsi:type="xsd:boolean" xmlns:soapenc="http://schemas.xmlsoap.org/soap/encoding/">false</multiRef>
