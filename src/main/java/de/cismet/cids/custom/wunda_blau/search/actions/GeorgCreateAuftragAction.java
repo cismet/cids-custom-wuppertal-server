@@ -48,16 +48,14 @@ public class GeorgCreateAuftragAction implements ServerAction {
     private static final Logger LOG = Logger.getLogger(GeorgCreateAuftragAction.class);
 
     public static final String ACTION_NAME = "georgCreateAuftragAction";
-    public static final String GEORG_SOAP_SERVICE = "http://leo:6081/mockPortaladapterWebserviceSoapBinding"; // "http://buero.geosoft.de:6050"
+    public static final String GEORG_SOAP_SERVICE = "http://s102x003:6050";
 
     //~ Methods ----------------------------------------------------------------
 
-    // public static final String GEORG_SOAP_SERVICE = "http://buero.geosoft.de:6050";
     @Override
     public Object execute(final Object body, final ServerActionParameter... params) {
         try {
-            final String jobId = createAuftrag("Amtlicher Lageplan");
-            Thread.sleep(500);
+            final String jobId = createAuftrag("Amtlicher Lageplan", String.valueOf(System.currentTimeMillis()));
             final String auftragsnummer = getAuftragsnummer(jobId);
             return auftragsnummer;
         } catch (Exception e) {
@@ -80,12 +78,18 @@ public class GeorgCreateAuftragAction implements ServerAction {
      */
     public static void main(final String[] args) throws Exception {
         System.out.println("try");
-        final GeorgCreateAuftragAction gcaa = new GeorgCreateAuftragAction();
-        final String jobId = gcaa.createAuftrag("Amtlicher Lageplan");
-        System.out.println(jobId);
-        Thread.sleep(500);
-        final String auftragsnummer = gcaa.getAuftragsnummer(jobId);
-        System.out.println(auftragsnummer);
+        final String[] arten = { "Geobasis Land", "Geobasis LieKa", "Geodaten kom" };
+        for (final String art : arten) {
+            System.out.println("=== Test für Auftragsart:" + art);
+            final GeorgCreateAuftragAction gcaa = new GeorgCreateAuftragAction();
+            final String eigNr = String.valueOf(System.currentTimeMillis());
+            final String jobId = gcaa.createAuftrag(art, eigNr);
+            System.out.println("          eigene Nummer: " + eigNr);
+            System.out.println("          SOAP Job Id: " + jobId);
+            // Thread.sleep(500);
+            final String auftragsnummer = gcaa.getAuftragsnummer(jobId);
+            System.out.println("     -->  GEORG-Auftragsnummer: " + auftragsnummer);
+        }
         System.out.println("done");
     }
 
@@ -93,15 +97,16 @@ public class GeorgCreateAuftragAction implements ServerAction {
      * DOCUMENT ME!
      *
      * @param   auftragsart  DOCUMENT ME!
+     * @param   eigeneNr     DOCUMENT ME!
      *
      * @return  DOCUMENT ME!
      *
      * @throws  Exception  DOCUMENT ME!
      */
-    private String createAuftrag(final String auftragsart) throws Exception {
+    private String createAuftrag(final String auftragsart, final String eigeneNr) throws Exception {
         final String soapRequest = IOUtils.toString(GeorgCreateAuftragAction.class.getResourceAsStream(
                     "/de/cismet/cids/custom/wunda_blau/search/actions/georg/executeJob_Request.xml"));
-        final String processed = String.format(soapRequest, auftragsart);
+        final String processed = String.format(soapRequest, auftragsart, eigeneNr);
         return manuallyPostRequestAndParseWithXPath(processed, "//executeJobReturn");
     }
 
@@ -137,7 +142,7 @@ public class GeorgCreateAuftragAction implements ServerAction {
             conn.setRequestMethod("POST");
             conn.setDoOutput(true);
             conn.setDoInput(true);
-            conn.setRequestProperty("SOAPACTION", "SOAPACTION");
+            conn.setRequestProperty("SOAPAction", "SOAPAction");
             conn.setDoOutput(true);
             final OutputStreamWriter writer = new OutputStreamWriter(conn.getOutputStream());
             writer.write(soapRequest);
