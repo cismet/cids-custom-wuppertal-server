@@ -78,7 +78,7 @@ public class GeorgCreateAuftragAction implements ServerAction {
      */
     public static void main(final String[] args) throws Exception {
         System.out.println("try");
-        final String[] arten = { "Geobasis Land", "Geobasis LieKa", "Geodaten kom" };
+        final String[] arten = { "Geobasis_Land", "Geobasis_LieKa", "Geodaten_kom" };
         for (final String art : arten) {
             System.out.println("=== Test für Auftragsart:" + art);
             final GeorgCreateAuftragAction gcaa = new GeorgCreateAuftragAction();
