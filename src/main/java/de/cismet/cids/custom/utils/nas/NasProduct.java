@@ -45,6 +45,7 @@ public class NasProduct implements Serializable {
     private String displayName;
     private String billingKey;
     private String template;
+    private String permissionNeeded;
     private Map<String, Object> params;
 
     //~ Constructors -----------------------------------------------------------
@@ -180,5 +181,23 @@ public class NasProduct implements Serializable {
      */
     public void setParams(final Map<String, Object> params) {
         this.params = params;
+    }
+
+    /**
+     * DOCUMENT ME!
+     *
+     * @return  DOCUMENT ME!
+     */
+    public String getPermissionNeeded() {
+        return permissionNeeded;
+    }
+
+    /**
+     * DOCUMENT ME!
+     *
+     * @param  permissionNeeded  DOCUMENT ME!
+     */
+    public void setPermissionNeeded(final String permissionNeeded) {
+        this.permissionNeeded = permissionNeeded;
     }
 }
