@@ -67,6 +67,8 @@ public class CidsBillingSearchStatement extends AbstractCidsServerSearch {
     private Kostentyp kostentyp = Kostentyp.IGNORIEREN;
     private Date from;
     private Date till;
+    private Date abrechnungsdatumFrom;
+    private Date abrechnungsdatumTill;
     private StringBuilder query;
     private SimpleDateFormat postgresDateFormat = new SimpleDateFormat("yyyy-MM-dd");
     private User user;
@@ -149,6 +151,42 @@ public class CidsBillingSearchStatement extends AbstractCidsServerSearch {
             LOG.error("active local server not found"); // NOI18N
         }
         return null;
+    }
+
+    /**
+     * DOCUMENT ME!
+     *
+     * @return  DOCUMENT ME!
+     */
+    public Date getAbrechnungsdatumFrom() {
+        return abrechnungsdatumFrom;
+    }
+
+    /**
+     * DOCUMENT ME!
+     *
+     * @param  abrechnungsdatumFrom  DOCUMENT ME!
+     */
+    public void setAbrechnungsdatumFrom(final Date abrechnungsdatumFrom) {
+        this.abrechnungsdatumFrom = abrechnungsdatumFrom;
+    }
+
+    /**
+     * DOCUMENT ME!
+     *
+     * @return  DOCUMENT ME!
+     */
+    public Date getAbrechnungsdatumTill() {
+        return abrechnungsdatumTill;
+    }
+
+    /**
+     * DOCUMENT ME!
+     *
+     * @param  abrechnungsdatumTill  DOCUMENT ME!
+     */
+    public void setAbrechnungsdatumTill(final Date abrechnungsdatumTill) {
+        this.abrechnungsdatumTill = abrechnungsdatumTill;
     }
 
     /**
@@ -283,6 +321,24 @@ public class CidsBillingSearchStatement extends AbstractCidsServerSearch {
             query.append("' ");
             query.append(" and date_trunc('day',ts) <= '");
             query.append(postgresDateFormat.format(till));
+            query.append("' ");
+        }
+
+        if (abrechnungsdatumFrom == null) {
+            // do nothing, time filters are ignored
+        } else if ((abrechnungsdatumTill == null)
+                    || postgresDateFormat.format(abrechnungsdatumFrom).equals(
+                        postgresDateFormat.format(abrechnungsdatumTill))) {    // check if there is a second date or if
+                                                                               // they are the same day
+            query.append(" and date_trunc('day',abrechnungsdatum) = '");
+            query.append(postgresDateFormat.format(abrechnungsdatumFrom));
+            query.append("' ");
+        } else {                                                               // create query for a time period
+            query.append(" and date_trunc('day',abrechnungsdatum) >= '");
+            query.append(postgresDateFormat.format(abrechnungsdatumFrom));
+            query.append("' ");
+            query.append(" and date_trunc('day',abrechnungsdatum) <= '");
+            query.append(postgresDateFormat.format(abrechnungsdatumTill));
             query.append("' ");
         }
     }
