@@ -87,6 +87,15 @@ public class CidsBillingSearchStatement extends AbstractCidsServerSearch {
     /**
      * Creates a new CidsBillingSearchStatement object.
      *
+     * @param  user  DOCUMENT ME!
+     */
+    public CidsBillingSearchStatement(final User user) {
+        this.user = user;
+    }
+
+    /**
+     * Creates a new CidsBillingSearchStatement object.
+     *
      * @param  user             DOCUMENT ME!
      * @param  kundeMetaObject  kundeBean DOCUMENT ME!
      */
@@ -177,16 +186,20 @@ public class CidsBillingSearchStatement extends AbstractCidsServerSearch {
      */
     private void appendKunde() {
         if (kundenname == null) {
-            // create the following structure: (id_1, id_2, ... ,  id_n)
-            final StringBuilder customerListString = new StringBuilder(" kunde.id in (");
-            for (final MetaObject kundeMetaObject : kundeMetaObjects) {
-                customerListString.append(kundeMetaObject.getBean().getProperty("id"));
-                customerListString.append(",");
+            if (kundeMetaObjects.isEmpty()) {
+                query.append(" true ");
+            } else {
+                // create the following structure: (id_1, id_2, ... ,  id_n)
+                final StringBuilder customerListString = new StringBuilder(" kunde.id in (");
+                for (final MetaObject kundeMetaObject : kundeMetaObjects) {
+                    customerListString.append(kundeMetaObject.getBean().getProperty("id"));
+                    customerListString.append(",");
+                }
+                // remove last comma
+                customerListString.deleteCharAt(customerListString.length() - 1);
+                customerListString.append(")");
+                query.append(customerListString.toString());
             }
-            // remove last comma
-            customerListString.deleteCharAt(customerListString.length() - 1);
-            customerListString.append(")");
-            query.append(customerListString.toString());
         } else {
             query.append(" kunde.name ilike '%" + kundenname + "%' ");
         }
