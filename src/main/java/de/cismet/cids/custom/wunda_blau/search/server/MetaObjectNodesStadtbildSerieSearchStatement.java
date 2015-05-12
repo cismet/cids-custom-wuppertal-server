@@ -90,7 +90,7 @@ public class MetaObjectNodesStadtbildSerieSearchStatement extends AbstractCidsSe
     private String streetID;
     private String ortID;
     private String hausnummer;
-    private String singleImageNumber;
+    private String imageNumberRule;
     private final User user;
     private StringBuilder query;
     private final SimpleDateFormat postgresDateFormat = new SimpleDateFormat("yyyy-MM-dd");
@@ -202,7 +202,7 @@ public class MetaObjectNodesStadtbildSerieSearchStatement extends AbstractCidsSe
                     + "                WHERE   name ilike 'sb_stadtbildserie' "
                     + "                ), sbs.id, (select bildnummer from sb_stadtbild sb where sb.id = sbs.vorschaubild) ");
         query.append(" FROM sb_stadtbildserie sbs");
-        if (StringUtils.isNotBlank(singleImageNumber) || (interval != null)) {
+        if (StringUtils.isNotBlank(imageNumberRule) || (interval != null)) {
             query.append(" join sb_serie_bild_array as arr ");
             query.append(" on sbs.id = arr.sb_stadtbildserie_reference ");
             query.append(" JOIN sb_stadtbild AS sb ON sb.id = arr.stadtbild ");
@@ -220,7 +220,7 @@ public class MetaObjectNodesStadtbildSerieSearchStatement extends AbstractCidsSe
         appendNutzungseinschraenkungIDs();
         appendOrtID();
         appendHausnummer();
-        appendSingleImageNumber();
+        appendImageNumberRule();
         appendInterval();
         appendGeometry();
         return query.toString();
@@ -348,9 +348,39 @@ public class MetaObjectNodesStadtbildSerieSearchStatement extends AbstractCidsSe
     /**
      * DOCUMENT ME!
      */
-    private void appendSingleImageNumber() {
-        if (StringUtils.isNotBlank(singleImageNumber)) {
-            query.append(" and sb.bildnummer ilike '").append(singleImageNumber).append("' ");
+    private void appendImageNumberRule() {
+        if (StringUtils.isNotBlank(imageNumberRule)) {
+            // alle Trennzeichen durch Leerzeichen ersetzen
+            final String spaceSeparatedNumbers = imageNumberRule.trim().replaceAll("(\\s|;|,)+", " ");
+            // mit Anführungszeichen klammern
+            final String quotedNumbers = "'" + spaceSeparatedNumbers.trim().replaceAll(" ", "' '").trim() + "'";
+            // split
+            final String[] numbers = quotedNumbers.split(" ");
+
+            final String sqlArray = "array[" + implode(numbers, ", ") + "]";
+            query.append(" and sb.bildnummer ilike any (").append(sqlArray).append(") ");
+        }
+    }
+
+    /**
+     * DOCUMENT ME!
+     *
+     * @param   stringArray  DOCUMENT ME!
+     * @param   delimiter    DOCUMENT ME!
+     *
+     * @return  DOCUMENT ME!
+     */
+    public static String implode(final Object[] stringArray, final String delimiter) {
+        if (stringArray.length == 0) {
+            return "";
+        } else {
+            final StringBuilder sb = new StringBuilder();
+            sb.append(stringArray[0]);
+            for (int index = 1; index < stringArray.length; index++) {
+                sb.append(delimiter);
+                sb.append(stringArray[index]);
+            }
+            return sb.toString();
         }
     }
 
@@ -552,16 +582,16 @@ public class MetaObjectNodesStadtbildSerieSearchStatement extends AbstractCidsSe
      * @return  DOCUMENT ME!
      */
     public String getSingleImageNumber() {
-        return singleImageNumber;
+        return imageNumberRule;
     }
 
     /**
      * DOCUMENT ME!
      *
-     * @param  singleImageNumber  DOCUMENT ME!
+     * @param  imageNumberRule  DOCUMENT ME!
      */
-    public void setSingleImageNumber(final String singleImageNumber) {
-        this.singleImageNumber = singleImageNumber;
+    public void setImageNumberRule(final String imageNumberRule) {
+        this.imageNumberRule = imageNumberRule;
     }
 
     /**
