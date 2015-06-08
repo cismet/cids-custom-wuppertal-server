@@ -23,9 +23,9 @@ import com.sun.org.apache.xml.internal.serialize.XMLSerializer;
 import com.vividsolutions.jts.geom.Envelope;
 import com.vividsolutions.jts.geom.GeometryCollection;
 
-import de.aed_sicad.namespaces.svr.AMAuftragServer;
-import de.aed_sicad.namespaces.svr.AuftragsManager;
-import de.aed_sicad.namespaces.svr.AuftragsManagerSoap;
+//import de.aed_sicad.namespaces.svr.AMAuftragServer;
+//import de.aed_sicad.namespaces.svr.AuftragsManager;
+//import de.aed_sicad.namespaces.svr.AuftragsManagerSoap;
 
 import org.apache.commons.io.IOUtils;
 
