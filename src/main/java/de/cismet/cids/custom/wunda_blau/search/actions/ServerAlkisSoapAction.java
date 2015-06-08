@@ -75,9 +75,9 @@ public class ServerAlkisSoapAction implements ServerAction {
         } else {
             // BUCHUNGSBLATT
             try {
-                final String buchungsblattCode = params[0].getValue().toString();
-                final Buchungsblatt buchungsblatt = getALKISInfoServices().getBuchungsblatt(getSOAPAccessProvider()
-                                .getIdentityCard(),
+                final String buchungsblattCode = params[0].getValue().toString();               
+                final Buchungsblatt buchungsblatt = getALKISInfoServices().getBuchungsblattWithUUID(
+                        getSOAPAccessProvider().getIdentityCard(),
                         getSOAPAccessProvider().getService(),
                         buchungsblattCode);
                 return buchungsblatt;
