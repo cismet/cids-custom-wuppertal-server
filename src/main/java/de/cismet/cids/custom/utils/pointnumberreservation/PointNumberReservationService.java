@@ -13,8 +13,6 @@ import Sirius.server.property.ServerProperties;
 import de.aed_sicad.namespaces.svr.AuftragsManager;
 import de.aed_sicad.namespaces.svr.AuftragsManagerSoap;
 
-import org.openide.util.Exceptions;
-
 import java.io.BufferedReader;
 import java.io.ByteArrayInputStream;
 import java.io.ByteArrayOutputStream;
@@ -35,8 +33,11 @@ import java.util.Collection;
 import java.util.Collections;
 import java.util.Date;
 import java.util.GregorianCalendar;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 import java.util.Properties;
+import java.util.TimeZone;
 import java.util.zip.GZIPInputStream;
 import java.util.zip.GZIPOutputStream;
 
@@ -57,6 +58,10 @@ public class PointNumberReservationService {
     private static final String ABLAUF_RESERVIERUNG = "ADR";
     private static final String STARTWERT = "START_VALUE";
     private static final String ANZAHL = "POINT_AMOUNT";
+    private static final String LEBENSZEIT_BEGINN = "LBZ";
+    private static final String PUNKT_NUMMER = "PNR";
+    private static final String PUNKT_UUID = "PUUID";
+    private static final String PUNKT_UUIDLBZ = "PUUIDLBZ";
     private static final String FIRST_NUMBER = "FIRST_NUMBER";
     private static final String LAST_NUMBER = "LAST_NUMBER";
     private static final String VERMESSUNG_STELLE = "VERMESSUNG_STELLE";
@@ -73,8 +78,9 @@ public class PointNumberReservationService {
     private String TEMPLATE_BEN_AUFTR_ALL;
     private String TEMPLATE_BEN_AUFTR_ONE_ANR;
     private String TEMPLATE_BEN_AUFTR_WILDCARD;
-    private String TEMPLATE_VERLAENGERN;
     private String TEMPLATE_FREIGABE;
+    private String TEMPLATE_PROLONG;
+    private String TEMPLATE_PROLONG_SUB;
     private String TEMPLATE_RESERVIERUNG;
     private String TEMPLATE_RESERVIERUNG_SW;
 
@@ -96,9 +102,10 @@ public class PointNumberReservationService {
                         + "/de/cismet/cids/custom/utils/pointnumberreservation/A_Ben_Auftr_eine_ANR.xml";
             TEMPLATE_BEN_AUFTR_WILDCARD = serverRespath
                         + "/de/cismet/cids/custom/utils/pointnumberreservation/A_Ben_Auftr_ANR_Praefix_Wildcard.xml";
-            TEMPLATE_VERLAENGERN = serverRespath
-                        + "/de/cismet/cids/custom/utils/pointnumberreservation/A_verlaengern.xml";
             TEMPLATE_FREIGABE = serverRespath + "/de/cismet/cids/custom/utils/pointnumberreservation/A_Freigabe.xml";
+            TEMPLATE_PROLONG = serverRespath + "/de/cismet/cids/custom/utils/pointnumberreservation/A_Verlaengern.xml";
+            TEMPLATE_PROLONG_SUB = serverRespath
+                        + "/de/cismet/cids/custom/utils/pointnumberreservation/A_Verlaengern__Sub.xml";
             TEMPLATE_RESERVIERUNG = serverRespath
                         + "/de/cismet/cids/custom/utils/pointnumberreservation/A_reservierung.xml";
             TEMPLATE_RESERVIERUNG_SW = serverRespath
@@ -368,6 +375,7 @@ public class PointNumberReservationService {
         if (result == null) {
             return null;
         }
+
         final Collection<PointNumberReservationRequest> requests = PointNumberReservationBeanParser
                     .parseBestandsdatenauszug(result);
         // should only contain one element
@@ -427,7 +435,7 @@ public class PointNumberReservationService {
             final Collection<PointNumberReservation> pointNUmbers = r.getPointNumbers();
             final StringBuffer b = new StringBuffer();
             for (final PointNumberReservation pnr : pointNUmbers) {
-                b.append(pnr.getPunktnummern());
+                b.append(pnr.getPunktnummer());
                 b.append(",");
             }
             if (LOG.isDebugEnabled()) {
@@ -455,42 +463,6 @@ public class PointNumberReservationService {
             return false;
         }
         return auftrag.getAntragsnummer().equals(anr);
-    }
-
-    /**
-     * DOCUMENT ME!
-     *
-     * @param   expirationDate  DOCUMENT ME!
-     *
-     * @return  DOCUMENT ME!
-     */
-    public Object prolongReservation(final Date expirationDate) {
-        if (initError) {
-            LOG.info("PointNumberReservationService initialisation error");
-            return null;
-        }
-        InputStream templateFile = null;
-        try {
-            templateFile = new FileInputStream(TEMPLATE_VERLAENGERN);
-        } catch (FileNotFoundException ex) {
-            LOG.error("Could not find PointnumberReservation tempalte file " + TEMPLATE_VERLAENGERN);
-        }
-
-        if (templateFile == null) {
-            return null;
-        }
-
-        final String request = readFile(templateFile);
-        // ToDo: Replace expiration Date,
-
-        final InputStream preparedQuery = new ByteArrayInputStream(request.getBytes());
-
-        final String result = sendRequestAndAwaitResult(preparedQuery);
-        if (result == null) {
-            return null;
-        }
-
-        return result;
     }
 
     /**
@@ -562,6 +534,100 @@ public class PointNumberReservationService {
         return PointNumberReservationBeanParser.parseReservierungsErgebnis(result);
     }
 
+    /**
+     * DOCUMENT ME!
+     *
+     * @param   prefix  DOCUMENT ME!
+     * @param   anr     DOCUMENT ME!
+     * @param   points  DOCUMENT ME!
+     * @param   date    DOCUMENT ME!
+     *
+     * @return  DOCUMENT ME!
+     */
+    public PointNumberReservationRequest prolongReservation(final String prefix,
+            final String anr,
+            final Collection<Integer> points,
+            final Date date) {
+        if (initError) {
+            LOG.info("PointNumberReservationService initialisation error");
+            return null;
+        }
+
+        InputStream templateFile = null;
+        try {
+            templateFile = new FileInputStream(TEMPLATE_PROLONG);
+        } catch (FileNotFoundException ex) {
+            LOG.error("Could not find PointnumberProlong template file " + TEMPLATE_PROLONG);
+        }
+
+        InputStream templateSubFile = null;
+        try {
+            templateSubFile = new FileInputStream(TEMPLATE_PROLONG_SUB);
+        } catch (FileNotFoundException ex) {
+            LOG.error("Could not find PointnumberProlong template file " + TEMPLATE_PROLONG_SUB);
+        }
+
+        if ((templateFile == null) || (templateSubFile == null)) {
+            return null;
+        }
+
+        final PointNumberReservationRequest result = PointNumberReservationService.instance().getAllBenAuftr(anr);
+        if (result != null) {
+            // for having the pnrs in the right sort order, first push them in HM
+            // then getting them from the HM in the right points order.
+            final Map<Integer, PointNumberReservation> pnrMap = new HashMap<Integer, PointNumberReservation>();
+            for (final PointNumberReservation pointNumberReserveration : result.getPointNumbers()) {
+                final Integer tmp = Integer.parseInt(pointNumberReserveration.getPunktnummer().substring(
+                            pointNumberReserveration.getPunktnummer().length()
+                                    - 6,
+                            pointNumberReserveration.getPunktnummer().length()));
+                if (points.contains(tmp)) {
+                    pnrMap.put(tmp, pointNumberReserveration);
+                }
+            }
+
+            String request = readFile(templateFile);
+            request = request.replaceAll(AUFTRAGS_NUMMER, anr);
+
+            final String requestSub = readFile(templateSubFile);
+            final StringBuffer subs = new StringBuffer();
+
+            for (final Integer point : points) {
+                final PointNumberReservation pointNumberReserveration = pnrMap.get(point);
+                final SimpleDateFormat sdf = new SimpleDateFormat("yyyy-MM-dd");
+
+                String requestSubTmp = requestSub;
+                requestSubTmp = requestSubTmp.replaceAll(PUNKT_UUIDLBZ, pointNumberReserveration.getFeatureId());
+                requestSubTmp = requestSubTmp.replaceAll(PUNKT_UUID, pointNumberReserveration.getUuid());
+                requestSubTmp = requestSubTmp.replaceAll(
+                        LEBENSZEIT_BEGINN,
+                        pointNumberReserveration.getIntervallbeginn());
+                requestSubTmp = requestSubTmp.replaceAll(PUNKT_NUMMER, pointNumberReserveration.getPunktnummer());
+                requestSubTmp = requestSubTmp.replaceAll(
+                        ABLAUF_RESERVIERUNG,
+                        sdf.format(date));
+                requestSubTmp = requestSubTmp.replaceAll(
+                        VERMESSUNG_STELLE,
+                        pointNumberReserveration.getVermessungsstelle());
+                requestSubTmp = requestSubTmp.replaceAll(AUFTRAGS_NUMMER, anr);
+
+                subs.append(requestSubTmp);
+            }
+
+            request = request.replaceAll("SUBTEMPLATE", subs.toString());
+
+            final InputStream preparedQuery = new ByteArrayInputStream(request.getBytes());
+
+            final String verlaengernResult = sendRequestAndAwaitResult(preparedQuery);
+            if (verlaengernResult == null) {
+                return null;
+            }
+            return PointNumberReservationBeanParser.parseReservierungsErgebnis(verlaengernResult);
+        } else {
+            LOG.warn("no pointnumbers found to prolong");
+            return null;
+        }
+    }
     /**
      * DOCUMENT ME!
      *
@@ -656,12 +722,14 @@ public class PointNumberReservationService {
         final File benAuftrOneTempl = new File(TEMPLATE_BEN_AUFTR_ONE_ANR);
         final File benAuftrWildTempl = new File(TEMPLATE_BEN_AUFTR_WILDCARD);
         final File releaseTempl = new File(TEMPLATE_FREIGABE);
+        final File prolongTempl = new File(TEMPLATE_PROLONG);
+        final File prolongSubTempl = new File(TEMPLATE_PROLONG_SUB);
         final File reservationTempl = new File(TEMPLATE_RESERVIERUNG);
         final File reservationSWTempl = new File(TEMPLATE_RESERVIERUNG_SW);
-        final File prolongueTempl = new File(TEMPLATE_VERLAENGERN);
 
         return benAuftrAllTempl.canRead() && benAuftrOneTempl.canRead() && benAuftrWildTempl.canRead()
-                    && releaseTempl.canRead() && reservationSWTempl.canRead() && reservationTempl.canRead()
-                    && prolongueTempl.canRead();
+                    && releaseTempl.canRead() && prolongTempl.canRead() && prolongSubTempl.canRead()
+                    && reservationSWTempl.canRead()
+                    && reservationTempl.canRead();
     }
 }

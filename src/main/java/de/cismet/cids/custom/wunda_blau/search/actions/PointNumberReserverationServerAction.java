@@ -9,6 +9,9 @@ package de.cismet.cids.custom.wunda_blau.search.actions;
 
 import java.util.ArrayList;
 import java.util.Collection;
+import java.util.Date;
+import java.util.HashMap;
+import java.util.Map;
 
 import de.cismet.cids.custom.utils.pointnumberreservation.PointNumberReservation;
 import de.cismet.cids.custom.utils.pointnumberreservation.PointNumberReservationRequest;
@@ -41,7 +44,8 @@ public class PointNumberReserverationServerAction implements ServerAction {
 
         //~ Enum constants -----------------------------------------------------
 
-        GET_ALL_RESERVATIONS, IS_ANTRAG_EXISTING, DO_RESERVATION, EXTEND_RESERVATION, GET_POINT_NUMBERS, DO_STORNO
+        GET_ALL_RESERVATIONS, IS_ANTRAG_EXISTING, DO_RESERVATION, PROLONG_RESERVATION, GET_POINT_NUMBERS, DO_STORNO,
+        DO_PROLONG
     }
 
     /**
@@ -53,7 +57,7 @@ public class PointNumberReserverationServerAction implements ServerAction {
 
         //~ Enum constants -----------------------------------------------------
 
-        ACTION, PREFIX, AUFTRAG_NUMMER, NBZ, ANZAHL, STARTWERT, ON1, ON2
+        ACTION, PREFIX, AUFTRAG_NUMMER, NBZ, ANZAHL, STARTWERT, ON1, ON2, POINT_NUMBER, PROLONG_DATE
     }
 
     //~ Methods ----------------------------------------------------------------
@@ -178,6 +182,27 @@ public class PointNumberReserverationServerAction implements ServerAction {
     /**
      * DOCUMENT ME!
      *
+     * @param   aPrefix  DOCUMENT ME!
+     * @param   aNummer  DOCUMENT ME!
+     * @param   ps       on1 DOCUMENT ME!
+     * @param   date     DOCUMENT ME!
+     *
+     * @return  DOCUMENT ME!
+     */
+    private PointNumberReservationRequest doVerlaengern(final String aPrefix,
+            final String aNummer,
+            final Collection<Integer> ps,
+            final Date date) {
+        final String anr = aPrefix + ANR_SEPERATOR + aNummer;
+        if (!isAuftragsNummerValid(anr)) {
+            return null;
+        }
+        return PointNumberReservationService.instance().prolongReservation(aPrefix, anr, ps, date);
+    }
+
+    /**
+     * DOCUMENT ME!
+     *
      * @param   requestId  DOCUMENT ME!
      *
      * @return  DOCUMENT ME!
@@ -196,6 +221,8 @@ public class PointNumberReserverationServerAction implements ServerAction {
         int startwert = 0;
         int on1 = 0;
         int on2 = 0;
+        Date prolongDate = null;
+        final Collection<Integer> pointnumbers = new ArrayList<Integer>();
         for (final ServerActionParameter sap : params) {
             if (sap.getKey().equals(PARAMETER_TYPE.ACTION.toString())) {
                 method = (ACTION_TYPE)sap.getValue();
@@ -213,6 +240,10 @@ public class PointNumberReserverationServerAction implements ServerAction {
                 on1 = (Integer)sap.getValue();
             } else if (sap.getKey().equals(PARAMETER_TYPE.ON2.toString())) {
                 on2 = (Integer)sap.getValue();
+            } else if (sap.getKey().equals(PARAMETER_TYPE.POINT_NUMBER.toString())) {
+                pointnumbers.add((Integer)sap.getValue());
+            } else if (sap.getKey().equals(PARAMETER_TYPE.PROLONG_DATE.toString())) {
+                prolongDate = (Date)sap.getValue();
             }
         }
 
@@ -233,7 +264,11 @@ public class PointNumberReserverationServerAction implements ServerAction {
                     return doStorno(prefix, auftragsNummer, nbz, on1, on2);
                 }
             }
-        } else if (method == ACTION_TYPE.EXTEND_RESERVATION) {
+        } else if (method == ACTION_TYPE.DO_PROLONG) {
+            if ((prefix != null) && (auftragsNummer != null) && (prolongDate != null) && !pointnumbers.isEmpty()) {
+                return doVerlaengern(prefix, auftragsNummer, pointnumbers, prolongDate);
+            }
+        } else if (method == ACTION_TYPE.PROLONG_RESERVATION) {
             // check if antragsNummer exists
             if ((prefix != null) && (auftragsNummer != null) && (nbz != null) && (anzahl > 0)) {
                 if (isAntragsNummerAlreadyExisting(prefix, auftragsNummer)) {

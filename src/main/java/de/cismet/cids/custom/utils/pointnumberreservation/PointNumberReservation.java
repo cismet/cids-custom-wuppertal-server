@@ -21,8 +21,47 @@ public class PointNumberReservation implements Comparable<PointNumberReservation
 
     private String ablaufDatum;
     private String punktnummer;
+    private String vermessungsstelle;
+    private String intervallbeginn;
+    private String uuid;
 
     //~ Methods ----------------------------------------------------------------
+
+    /**
+     * DOCUMENT ME!
+     *
+     * @return  DOCUMENT ME!
+     */
+    public String getIntervallbeginn() {
+        return intervallbeginn;
+    }
+
+    /**
+     * DOCUMENT ME!
+     *
+     * @param  intervallbeginn  DOCUMENT ME!
+     */
+    public void setIntervallbeginn(final String intervallbeginn) {
+        this.intervallbeginn = intervallbeginn;
+    }
+
+    /**
+     * DOCUMENT ME!
+     *
+     * @return  DOCUMENT ME!
+     */
+    public String getUuid() {
+        return uuid;
+    }
+
+    /**
+     * DOCUMENT ME!
+     *
+     * @param  uuid  DOCUMENT ME!
+     */
+    public void setUuid(final String uuid) {
+        this.uuid = uuid;
+    }
 
     /**
      * DOCUMENT ME!
@@ -47,7 +86,7 @@ public class PointNumberReservation implements Comparable<PointNumberReservation
      *
      * @return  DOCUMENT ME!
      */
-    public String getPunktnummern() {
+    public String getPunktnummer() {
         return punktnummer;
     }
 
@@ -56,15 +95,42 @@ public class PointNumberReservation implements Comparable<PointNumberReservation
      *
      * @param  punktnummer  DOCUMENT ME!
      */
-    public void setPunktnummern(final String punktnummer) {
+    public void setPunktnummer(final String punktnummer) {
         this.punktnummer = punktnummer;
+    }
+
+    /**
+     * DOCUMENT ME!
+     *
+     * @return  DOCUMENT ME!
+     */
+    public String getVermessungsstelle() {
+        return vermessungsstelle;
+    }
+
+    /**
+     * DOCUMENT ME!
+     *
+     * @param  vermessungsstelle  DOCUMENT ME!
+     */
+    public void setVermessungsstelle(final String vermessungsstelle) {
+        this.vermessungsstelle = vermessungsstelle;
+    }
+
+    /**
+     * DOCUMENT ME!
+     *
+     * @return  DOCUMENT ME!
+     */
+    public String getFeatureId() {
+        return getUuid() + getIntervallbeginn().replaceAll("-", "").replaceAll(":", "");
     }
 
     @Override
     public boolean equals(final Object obj) {
         if (obj instanceof PointNumberReservation) {
             final PointNumberReservation pnr = (PointNumberReservation)obj;
-            return this.punktnummer.equals(pnr.getPunktnummern());
+            return this.punktnummer.equals(pnr.getPunktnummer());
         } else {
             return false;
         }
@@ -79,6 +145,6 @@ public class PointNumberReservation implements Comparable<PointNumberReservation
 
     @Override
     public int compareTo(final PointNumberReservation o) {
-        return this.getPunktnummern().compareTo(o.getPunktnummern());
+        return this.getPunktnummer().compareTo(o.getPunktnummer());
     }
 }
