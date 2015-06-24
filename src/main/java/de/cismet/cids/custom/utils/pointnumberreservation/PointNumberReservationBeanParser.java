@@ -31,6 +31,12 @@ import java.util.List;
 import javax.xml.parsers.DocumentBuilder;
 import javax.xml.parsers.DocumentBuilderFactory;
 import javax.xml.parsers.ParserConfigurationException;
+import javax.xml.transform.Transformer;
+import javax.xml.transform.TransformerConfigurationException;
+import javax.xml.transform.TransformerException;
+import javax.xml.transform.TransformerFactory;
+import javax.xml.transform.dom.DOMSource;
+import javax.xml.transform.stream.StreamResult;
 
 /**
  * DOCUMENT ME!
@@ -73,6 +79,10 @@ public class PointNumberReservationBeanParser {
      */
     private static PointNumberWrapper parseAxReservierungNode(final Node axReservierung) {
         final PointNumberWrapper pointNumber = new PointNumberWrapper();
+        final Node gmlIdNode = axReservierung.getAttributes().getNamedItem("gml:id");
+        if (gmlIdNode != null) {
+            pointNumber.setUuid(gmlIdNode.getNodeValue());
+        }
         final NodeList childs = axReservierung.getChildNodes();
         for (int i = 0; i < childs.getLength(); i++) {
             final Node currChild = childs.item(i);
@@ -82,6 +92,14 @@ public class PointNumberReservationBeanParser {
                 pointNumber.setAblaufdatum(currChild.getTextContent());
             } else if (currChild.getNodeName().equals("nummer")) {
                 pointNumber.setPunktnummer(currChild.getTextContent());
+            } else if (currChild.getNodeName().equals("lebenszeitintervall")) {
+                final Node lebenszeitNode = currChild.getChildNodes().item(1);
+                final Node beginntNode = lebenszeitNode.getChildNodes().item(1);
+                pointNumber.setIntervallbeginn(beginntNode.getTextContent());
+            } else if (currChild.getNodeName().equals("vermessungsstelle")) {
+                final Node schluesselNode = currChild.getChildNodes().item(1);
+                final Node stelleNode = schluesselNode.getChildNodes().item(3);
+                pointNumber.setStelle(stelleNode.getTextContent());
             }
         }
         return pointNumber;
@@ -130,7 +148,7 @@ public class PointNumberReservationBeanParser {
                 for (int i = 0; i < pointNumberNodes.getLength(); i++) {
                     final Node resNumNode = pointNumberNodes.item(i);
                     final PointNumberReservation pointNumber = new PointNumberReservation();
-                    pointNumber.setPunktnummern(resNumNode.getTextContent());
+                    pointNumber.setPunktnummer(resNumNode.getTextContent());
                     pointNumbers.add(pointNumber);
                 }
                 requestBean.setPointNumbers(pointNumbers);
@@ -189,7 +207,10 @@ public class PointNumberReservationBeanParser {
                     }
                     final PointNumberReservation pnr = new PointNumberReservation();
                     pnr.setAblaufDatum(pointNumber.getAblaufdatum());
-                    pnr.setPunktnummern(pointNumber.getPunktnummer());
+                    pnr.setPunktnummer(pointNumber.getPunktnummer());
+                    pnr.setIntervallbeginn(pointNumber.getIntervallbeginn());
+                    pnr.setVermessungsstelle(pointNumber.getStelle());
+                    pnr.setUuid(pointNumber.getUuid());
                     requests.get(pointNumber.getAntragsnummer()).addPointNumberReservation(pnr);
                 }
             }
@@ -335,6 +356,9 @@ public class PointNumberReservationBeanParser {
         private String antragsnummer;
         private String ablaufdatum;
         private String punktnummer;
+        private String stelle;
+        private String intervallbeginn;
+        private String uuid;
 
         //~ Methods ------------------------------------------------------------
 
@@ -390,6 +414,60 @@ public class PointNumberReservationBeanParser {
          */
         public void setPunktnummer(final String punktnummer) {
             this.punktnummer = punktnummer;
+        }
+
+        /**
+         * DOCUMENT ME!
+         *
+         * @return  DOCUMENT ME!
+         */
+        public String getStelle() {
+            return stelle;
+        }
+
+        /**
+         * DOCUMENT ME!
+         *
+         * @param  stelle  DOCUMENT ME!
+         */
+        public void setStelle(final String stelle) {
+            this.stelle = stelle;
+        }
+
+        /**
+         * DOCUMENT ME!
+         *
+         * @return  DOCUMENT ME!
+         */
+        public String getIntervallbeginn() {
+            return intervallbeginn;
+        }
+
+        /**
+         * DOCUMENT ME!
+         *
+         * @param  intervallbeginn  DOCUMENT ME!
+         */
+        public void setIntervallbeginn(final String intervallbeginn) {
+            this.intervallbeginn = intervallbeginn;
+        }
+
+        /**
+         * DOCUMENT ME!
+         *
+         * @return  DOCUMENT ME!
+         */
+        public String getUuid() {
+            return uuid;
+        }
+
+        /**
+         * DOCUMENT ME!
+         *
+         * @param  uuid  DOCUMENT ME!
+         */
+        public void setUuid(final String uuid) {
+            this.uuid = uuid;
         }
     }
 }
