@@ -11,6 +11,7 @@ import Sirius.server.middleware.impls.domainserver.DomainServerImpl;
 import Sirius.server.property.ServerProperties;
 
 import de.aed_sicad.namespaces.svr.AuftragsManager;
+import de.aed_sicad.namespaces.svr.AuftragsManagerLocator;
 import de.aed_sicad.namespaces.svr.AuftragsManagerSoap;
 
 import java.io.BufferedReader;
@@ -153,12 +154,12 @@ public class PointNumberReservationService {
         }
         final AuftragsManager am;
         try {
-            am = new AuftragsManager(new URL(SERVICE_URL));
+            am = new AuftragsManagerLocator();
+            manager = am.getAuftragsManagerSoap(new URL(SERVICE_URL));
         } catch (Exception ex) {
             LOG.error("error creating 3AServer interface", ex);
             return;
         }
-        manager = am.getAuftragsManagerSoap();
     }
 
     /**
@@ -266,8 +267,8 @@ public class PointNumberReservationService {
             LOG.error("3AServer manager interface is  null");
             return null;
         }
-        final int sessionID = manager.login(USER, PW);
         try {
+            final int sessionID = manager.login(USER, PW);
             final String orderId = manager.registerGZip(
                     sessionID,
                     gZipFile(preparedQuery));
