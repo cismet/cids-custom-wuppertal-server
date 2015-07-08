@@ -14,7 +14,6 @@ package de.cismet.cids.custom.utils.nas;
 
 import java.io.File;
 
-import java.util.HashMap;
 import java.util.Map;
 import java.util.TreeMap;
 import java.util.concurrent.Callable;
@@ -23,7 +22,7 @@ import java.util.concurrent.Future;
 
 import javax.ws.rs.core.MediaType;
 
-import de.cismet.cids.server.api.types.ActionTask;
+import de.cismet.cidsx.server.api.types.ActionTask;
 
 import de.cismet.commons.concurrency.CismetExecutors;
 

@@ -43,7 +43,7 @@ import javax.ws.rs.core.MediaType;
 
 import de.cismet.cids.custom.utils.nas.CidsActionClient;
 
-import de.cismet.cids.server.api.types.ActionTask;
+import de.cismet.cidsx.server.api.types.ActionTask;
 
 /**
  * DOCUMENT ME!
