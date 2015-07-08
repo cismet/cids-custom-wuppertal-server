@@ -70,7 +70,7 @@ import javax.xml.parsers.DocumentBuilder;
 import javax.xml.parsers.DocumentBuilderFactory;
 import javax.xml.parsers.ParserConfigurationException;
 
-import de.cismet.cids.server.api.types.ActionTask;
+import de.cismet.cidsx.server.api.types.ActionTask;
 
 /*
  * To change this template, choose Tools | Templates

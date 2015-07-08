@@ -42,10 +42,10 @@ import java.util.List;
 
 import javax.ws.rs.core.MediaType;
 
-import de.cismet.cids.server.api.types.Action;
-import de.cismet.cids.server.api.types.ActionResultInfo;
-import de.cismet.cids.server.api.types.ActionTask;
-import de.cismet.cids.server.api.types.CollectionResource;
+import de.cismet.cidsx.server.api.types.Action;
+import de.cismet.cidsx.server.api.types.ActionResultInfo;
+import de.cismet.cidsx.server.api.types.ActionTask;
+import de.cismet.cidsx.server.api.types.CollectionResource;
 
 /**
  * DOCUMENT ME!
