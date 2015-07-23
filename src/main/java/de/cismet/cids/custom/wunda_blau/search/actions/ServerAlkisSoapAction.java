@@ -76,10 +76,14 @@ public class ServerAlkisSoapAction implements ServerAction {
             // BUCHUNGSBLATT
             try {
                 final String buchungsblattCode = params[0].getValue().toString();
-                final Buchungsblatt buchungsblatt = getALKISInfoServices().getBuchungsblatt(getSOAPAccessProvider()
-                                .getIdentityCard(),
+                final String[] uuids = getALKISInfoServices().translateBuchungsblattCodeIntoUUIds(
+                        getSOAPAccessProvider().getIdentityCard(),
                         getSOAPAccessProvider().getService(),
                         buchungsblattCode);
+                final Buchungsblatt buchungsblatt = getALKISInfoServices().getBuchungsblattWithUUID(
+                        getSOAPAccessProvider().getIdentityCard(),
+                        getSOAPAccessProvider().getService(),
+                        uuids[0]);
                 return buchungsblatt;
             } catch (RemoteException remoteException) {
                 LOG.error("Error in ServerAlkisSoapAction", remoteException);
