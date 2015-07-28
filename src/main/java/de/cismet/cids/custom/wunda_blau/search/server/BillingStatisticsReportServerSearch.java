@@ -8,7 +8,9 @@
 package de.cismet.cids.custom.wunda_blau.search.server;
 
 import Sirius.server.middleware.interfaces.domainserver.MetaService;
-import Sirius.server.newuser.User;
+
+import lombok.Getter;
+import lombok.Setter;
 
 import java.io.Serializable;
 
@@ -36,90 +38,90 @@ public class BillingStatisticsReportServerSearch extends AbstractCidsServerSearc
 
     private static final org.apache.log4j.Logger LOG = org.apache.log4j.Logger.getLogger(
             BillingStatisticsReportServerSearch.class);
-    private static final String DOMAIN = "WUNDA_BLAU";
+
     public static final String BRANCHEN_AMOUNTS = "branchenAmounts";
     public static final String ANTRAEGE_AMOUNTS = "antraegeAmounts";
     public static final String DOWNLOADS_AMOUNTS = "downloadAmounts";
     public static final String KUNDEN_UMSATZ = "kundenUmsatz";
     public static final String PRODUKTE_COMMON_DOWNLOADS = "produkteCommonDownloads";
-    public static String PRODUKTE_DOWNLOADS = "produkteDownloads";
-    public static String PRODUKTE_EINNAHMEN = "produkteEinnahmen";
-    public static String EINNAHMEN = "einnahmen";
+    public static final String PRODUKTE_DOWNLOADS = "produkteDownloads";
+    public static final String PRODUKTE_EINNAHMEN = "produkteEinnahmen";
+    public static final String EINNAHMEN = "einnahmen";
 
     //~ Instance fields --------------------------------------------------------
 
-    String whereClause = "WHERE b.id IN ($bean_ids$)\n";
-    String fromBillingJoinTillKunde = "FROM billing_billing AS b\n"
-                + "JOIN billing_kunden_logins AS login ON b.angelegt_durch = login.id\n"
-                + "JOIN billing_kunde AS kunde ON login.kunde = kunde.id\n"
-                + "JOIN billing_branche ON kunde.branche = billing_branche.id\n";
+    private final String whereClause = "WHERE b.id IN ($bean_ids$) ";
+    private final String fromBillingJoinTillKunde = "FROM billing_billing AS b "
+                + "JOIN billing_kunden_logins AS login ON b.angelegt_durch = login.id "
+                + "JOIN billing_kunde AS kunde ON login.kunde = kunde.id "
+                + "JOIN billing_branche ON kunde.branche = billing_branche.id ";
 
-    String queryKundenBranche = "with tempTabel as (SELECT count(b.username),\n"
-                + "billing_branche.name\n"
+    private final String queryKundenBranche = "with tempTabel as (SELECT count(b.username), "
+                + "billing_branche.name "
                 + fromBillingJoinTillKunde
                 + whereClause
-                + "GROUP BY billing_branche.name,b.username\n"
-                + "ORDER BY billing_branche.name DESC)\n"
+                + "GROUP BY billing_branche.name,b.username "
+                + "ORDER BY billing_branche.name DESC) "
                 + "select count(name) as anzahl,name from tempTabel group by name order by anzahl desc;";
 
-    String queryKundenAntraege = "with tempTable as (\n"
-                + "select kunde.name,geschaeftsbuchnummer\n"
+    private final String queryKundenAntraege = "with tempTable as ( "
+                + "select kunde.name,geschaeftsbuchnummer "
                 + fromBillingJoinTillKunde
                 + whereClause
-                + "group by kunde.name,geschaeftsbuchnummer\n"
-                + "order by kunde.name)\n"
+                + "group by kunde.name,geschaeftsbuchnummer "
+                + "order by kunde.name) "
                 + "select count(name) as Anzahl,name from tempTable group by name order by Anzahl desc limit 10;";
 
-    String queryKundenAnzahlDownloads = "select count (*) as amount,kunde.name\n"
+    private final String queryKundenAnzahlDownloads = "select count (*) as amount,kunde.name "
                 + fromBillingJoinTillKunde
                 + whereClause
-                + "group by kunde.name\n"
+                + "group by kunde.name "
                 + "order by amount desc limit 10;";
 
-    String queryKundenUmsatz = "select sum(netto_summe) as summe, kunde.name\n"
+    private final String queryKundenUmsatz = "select sum(netto_summe) as summe, kunde.name "
                 + fromBillingJoinTillKunde
                 + whereClause
-                + "group by kunde.name\n"
+                + "group by kunde.name "
                 + "order by summe desc limit 10";
 
-    String queryProdukteCommonDownloads = "select count(*) as anzahl, produktbezeichnung, produktkey\n"
-                + "        from\n"
-                + "                billing_billing as b\n"
+    private final String queryProdukteCommonDownloads = "select count(*) as anzahl, produktbezeichnung, produktkey "
+                + "        from "
+                + "                billing_billing as b "
                 + whereClause
-                + "group by produktkey,produktbezeichnung\n"
+                + "group by produktkey,produktbezeichnung "
                 + "order by anzahl  desc   limit 10;";
 
-    String queryProdukteDownloads = "select count(*) as anzahl, produktbezeichnung, produktkey\n"
-                + "        from\n"
-                + "                billing_billing as b\n"
+    private final String queryProdukteDownloads = "select count(*) as anzahl, produktbezeichnung, produktkey "
+                + "        from "
+                + "                billing_billing as b "
                 + whereClause
-                + "group by produktkey,produktbezeichnung\n"
+                + "group by produktkey,produktbezeichnung "
                 + "order by produktbezeichnung  asc;";
 
-    String queryProdukteEinnahmen =
-        "select sum(brutto_summe) as summe, produktbezeichnung, count(brutto_summe) as anzahlProdukte\n"
-                + "        from\n"
-                + "                billing_billing as b\n"
+    private final String queryProdukteEinnahmen =
+        "select sum(brutto_summe) as summe, produktbezeichnung, count(brutto_summe) as anzahlProdukte "
+                + "        from "
+                + "                billing_billing as b "
                 + whereClause
-                + "group by produktbezeichnung\n"
+                + "group by produktbezeichnung "
                 + "order by summe  desc;";
 
-    String queryEinnahmen = "select y.gesum,y.gesum/360*2 as minsum,z.produktbezeichnung,z.summe,z.anzahl from \n"
-                + "(select sum(summe) as gesum from \n"
-                + "(select produktbezeichnung,sum(brutto_summe) as summe,count(brutto_summe) as anzahl\n"
-                + "        from\n"
-                + "                billing_billing as b\n"
+    private final String queryEinnahmen =
+        "select y.gesum,y.gesum/360*2 as minsum,z.produktbezeichnung,z.summe,z.anzahl from  "
+                + "(select sum(summe) as gesum from  "
+                + "(select produktbezeichnung,sum(brutto_summe) as summe,count(brutto_summe) as anzahl "
+                + "        from "
+                + "                billing_billing as b "
                 + whereClause
-                + "group by produktbezeichnung) x) y,\n"
-                + "(select produktbezeichnung,sum(brutto_summe) as summe,count(brutto_summe) as anzahl\n"
-                + "        from\n"
-                + "                billing_billing as b\n"
+                + "group by produktbezeichnung) x) y, "
+                + "(select produktbezeichnung,sum(brutto_summe) as summe,count(brutto_summe) as anzahl "
+                + "        from "
+                + "                billing_billing as b "
                 + whereClause
-                + "group by produktbezeichnung) z\n"
-                + "where z.summe > y.gesum/360*2\n"
+                + "group by produktbezeichnung) z "
+                + "where z.summe > y.gesum/360*2 "
                 + "order by z.summe desc;";
 
-    private final User user;
     private final String billingBeanIds;
 
     //~ Constructors -----------------------------------------------------------
@@ -127,11 +129,9 @@ public class BillingStatisticsReportServerSearch extends AbstractCidsServerSearc
     /**
      * Creates a new GeschaeftsberichtBranchenAmounts object.
      *
-     * @param  user            DOCUMENT ME!
      * @param  billingBeanIds  timestampEnd DOCUMENT ME!
      */
-    public BillingStatisticsReportServerSearch(final User user, final String billingBeanIds) {
-        this.user = user;
+    public BillingStatisticsReportServerSearch(final String billingBeanIds) {
         this.billingBeanIds = billingBeanIds;
     }
 
@@ -177,21 +177,20 @@ public class BillingStatisticsReportServerSearch extends AbstractCidsServerSearc
      */
     private void excuteQueryAndConvertResults(final MetaService ms,
             final HashMap<String, ArrayList> results,
-            String query,
+            final String query,
             final String key) throws RemoteException {
-        query = query.replace("$bean_ids$", billingBeanIds);
-        final ArrayList<ArrayList> lists = ms.performCustomSearch(query);
+        final ArrayList<ArrayList> lists = ms.performCustomSearch(query.replace("$bean_ids$", billingBeanIds));
         if ((lists != null) && !lists.isEmpty()) {
             final ArrayList<BrancheAmountBean> beans = new ArrayList<BrancheAmountBean>();
             for (final Iterator it = lists.iterator(); it.hasNext();) {
                 final ArrayList row = (ArrayList)it.next();
 
                 final BrancheAmountBean bean = new BrancheAmountBean();
-                bean.number = (Number)row.get(0);
-                bean.name = (String)row.get(1);
+                bean.setNumber((Number)row.get(0));
+                bean.setName((String)row.get(1));
 
                 if (row.size() == 3) {
-                    bean.info = row.get(2);
+                    bean.setInfo(row.get(2));
                 }
 
                 beans.add(bean);
@@ -210,19 +209,18 @@ public class BillingStatisticsReportServerSearch extends AbstractCidsServerSearc
      */
     private void excuteEinnahmenQuery(final MetaService ms,
             final HashMap<String, ArrayList> results) throws RemoteException {
-        queryEinnahmen = queryEinnahmen.replace("$bean_ids$", billingBeanIds);
-        final ArrayList<ArrayList> lists = ms.performCustomSearch(queryEinnahmen);
+        final ArrayList<ArrayList> lists = ms.performCustomSearch(queryEinnahmen.replace("$bean_ids$", billingBeanIds));
         if ((lists != null) && !lists.isEmpty()) {
             final ArrayList<EinnahmenBean> beans = new ArrayList<EinnahmenBean>();
             for (final Iterator it = lists.iterator(); it.hasNext();) {
                 final ArrayList row = (ArrayList)it.next();
 
                 final EinnahmenBean bean = new EinnahmenBean();
-                bean.gesum = (Double)row.get(0);
-                bean.minsum = (Double)row.get(1);
-                bean.produktbezeichnung = (String)row.get(2);
-                bean.summe = (Double)row.get(3);
-                bean.anzahl = (Long)row.get(4);
+                bean.setGesum((Double)row.get(0));
+                bean.setMinsum((Double)row.get(1));
+                bean.setProduktbezeichnung((String)row.get(2));
+                bean.setSumme((Double)row.get(3));
+                bean.setAnzahl((Long)row.get(4));
 
                 beans.add(bean);
             }
@@ -237,62 +235,17 @@ public class BillingStatisticsReportServerSearch extends AbstractCidsServerSearc
      *
      * @version  $Revision$, $Date$
      */
+    @Getter
+    @Setter
     public class EinnahmenBean implements Serializable {
 
         //~ Instance fields ----------------------------------------------------
 
-        Double gesum;
-        Double minsum;
-        Double summe;
-        String produktbezeichnung;
-        Long anzahl;
-
-        //~ Methods ------------------------------------------------------------
-
-        /**
-         * DOCUMENT ME!
-         *
-         * @return  DOCUMENT ME!
-         */
-        public Double getGesum() {
-            return gesum;
-        }
-
-        /**
-         * DOCUMENT ME!
-         *
-         * @return  DOCUMENT ME!
-         */
-        public Double getMinsum() {
-            return minsum;
-        }
-
-        /**
-         * DOCUMENT ME!
-         *
-         * @return  DOCUMENT ME!
-         */
-        public Double getSumme() {
-            return summe;
-        }
-
-        /**
-         * DOCUMENT ME!
-         *
-         * @return  DOCUMENT ME!
-         */
-        public String getProduktbezeichnung() {
-            return produktbezeichnung;
-        }
-
-        /**
-         * DOCUMENT ME!
-         *
-         * @return  DOCUMENT ME!
-         */
-        public Long getAnzahl() {
-            return anzahl;
-        }
+        private Double gesum;
+        private Double minsum;
+        private Double summe;
+        private String produktbezeichnung;
+        private Long anzahl;
     }
 
     /**
@@ -302,77 +255,14 @@ public class BillingStatisticsReportServerSearch extends AbstractCidsServerSearc
      *
      * @version  $Revision$, $Date$
      */
+    @Getter
+    @Setter
     public class BrancheAmountBean implements Serializable {
 
         //~ Instance fields ----------------------------------------------------
 
-        Number number = (long)0;
-        String name = "";
-        Object info = "";
-
-        //~ Methods ------------------------------------------------------------
-
-        /**
-         * DOCUMENT ME!
-         *
-         * @return  DOCUMENT ME!
-         */
-        public Number getAnzahl() {
-            return number;
-        }
-
-        /**
-         * DOCUMENT ME!
-         *
-         * @return  DOCUMENT ME!
-         */
-        public Number getSumme() {
-            return number;
-        }
-
-        /**
-         * DOCUMENT ME!
-         *
-         * @return  DOCUMENT ME!
-         */
-        public String getName() {
-            return name;
-        }
-
-        /**
-         * DOCUMENT ME!
-         *
-         * @return  DOCUMENT ME!
-         */
-        public String getProduktbezeichnung() {
-            return name;
-        }
-
-        /**
-         * DOCUMENT ME!
-         *
-         * @return  DOCUMENT ME!
-         */
-        public Object getInfo() {
-            return info;
-        }
-
-        /**
-         * DOCUMENT ME!
-         *
-         * @return  DOCUMENT ME!
-         */
-        public Object getProduktkey() {
-            return info;
-        }
-
-        /**
-         * DOCUMENT ME!
-         *
-         * @return  DOCUMENT ME!
-         */
-        public Object getAnzahlProdukte() {
-            return info;
-        }
+        private Number number = (long)0;
+        private String name = "";
+        private Object info = "";
     }
 }
