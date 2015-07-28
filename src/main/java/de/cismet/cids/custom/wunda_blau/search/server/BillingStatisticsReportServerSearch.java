@@ -8,6 +8,7 @@
 package de.cismet.cids.custom.wunda_blau.search.server;
 
 import Sirius.server.middleware.interfaces.domainserver.MetaService;
+import Sirius.server.newuser.User;
 
 import lombok.Getter;
 import lombok.Setter;
@@ -133,6 +134,16 @@ public class BillingStatisticsReportServerSearch extends AbstractCidsServerSearc
      */
     public BillingStatisticsReportServerSearch(final String billingBeanIds) {
         this.billingBeanIds = billingBeanIds;
+    }
+
+    /**
+     * Creates a new BillingStatisticsReportServerSearch object.
+     *
+     * @param  user            DOCUMENT ME!
+     * @param  billingBeanIds  DOCUMENT ME!
+     */
+    public BillingStatisticsReportServerSearch(final User user, final String billingBeanIds) {
+        this(billingBeanIds);
     }
 
     //~ Methods ----------------------------------------------------------------
