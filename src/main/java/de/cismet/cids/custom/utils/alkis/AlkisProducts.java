@@ -281,12 +281,14 @@ public final class AlkisProducts {
     /**
      * Returns an URL object pointing to the Einzelnachweis of the given product.
      *
-     * @param   objectID     The landparcel code
-     * @param   productCode  format Which document to show
+     * @param       objectID     The landparcel code
+     * @param       productCode  format Which document to show
      *
-     * @return  DOCUMENT ME!
+     * @return      DOCUMENT ME!
      *
-     * @throws  MalformedURLException  DOCUMENT ME!
+     * @throws      MalformedURLException  DOCUMENT ME!
+     *
+     * @deprecated  use method with fertigungsVermerk instead
      */
     public URL productEinzelNachweisUrl(final String objectID, final String productCode) throws MalformedURLException {
         return productEinzelNachweisUrl(objectID, productCode, null);
@@ -408,11 +410,13 @@ public final class AlkisProducts {
     /**
      * Returns a URL object pointing to a map of the given landparcel.
      *
-     * @param   parcelCode  The code of the landparcel.
+     * @param       parcelCode  The code of the landparcel.
      *
-     * @return  DOCUMENT ME!
+     * @return      DOCUMENT ME!
      *
-     * @throws  MalformedURLException  DOCUMENT ME!
+     * @throws      MalformedURLException  DOCUMENT ME!
+     *
+     * @deprecated  use method with fertigungsVermerk instead
      */
     public URL productKarteUrl(final String parcelCode) throws MalformedURLException {
         return productKarteUrl(parcelCode, null);
@@ -526,18 +530,20 @@ public final class AlkisProducts {
     /**
      * DOCUMENT ME!
      *
-     * @param   parcelCode         DOCUMENT ME!
-     * @param   produkt            DOCUMENT ME!
-     * @param   winkel             DOCUMENT ME!
-     * @param   centerX            DOCUMENT ME!
-     * @param   centerY            DOCUMENT ME!
-     * @param   zusText            DOCUMENT ME!
-     * @param   auftragsNr         DOCUMENT ME!
-     * @param   moreThanOneParcel  DOCUMENT ME!
+     * @param       parcelCode         DOCUMENT ME!
+     * @param       produkt            DOCUMENT ME!
+     * @param       winkel             DOCUMENT ME!
+     * @param       centerX            DOCUMENT ME!
+     * @param       centerY            DOCUMENT ME!
+     * @param       zusText            DOCUMENT ME!
+     * @param       auftragsNr         DOCUMENT ME!
+     * @param       moreThanOneParcel  DOCUMENT ME!
      *
-     * @return  DOCUMENT ME!
+     * @return      DOCUMENT ME!
      *
-     * @throws  MalformedURLException  DOCUMENT ME!
+     * @throws      MalformedURLException  DOCUMENT ME!
+     *
+     * @deprecated  use method with fertigungsVermerk instead
      */
     public URL productKarteUrl(final String parcelCode,
             final AlkisProductDescription produkt,
