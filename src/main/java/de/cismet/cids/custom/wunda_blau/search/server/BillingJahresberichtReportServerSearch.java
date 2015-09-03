@@ -170,6 +170,11 @@ public class BillingJahresberichtReportServerSearch extends BillingStatisticsRep
                     queryAnzahlProdukteVermessungsunterlagenTs4,
                     ANZAHL_VERMESSUNGSUNTERLAGEN_TS4);
 
+                final Collection sup = super.performServerSearch();
+                if (sup != null) {
+                    results.putAll((HashMap)sup.iterator().next());
+                }
+
                 // a collection must be returned, therefore wrap the HashMap in a Collection
                 final ArrayList resultWrapper = new ArrayList(1);
                 resultWrapper.add(results);
