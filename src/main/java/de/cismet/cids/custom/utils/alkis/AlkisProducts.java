@@ -307,10 +307,10 @@ public final class AlkisProducts {
      */
     public URL productEinzelNachweisUrl(final String objectID, final String productCode, final String fertigungsVermerk)
             throws MalformedURLException {
-        final String fabricationNote = generateFabricationNote(fertigungsVermerk);
+        final String fabricationNotice = generateFabricationNotice(fertigungsVermerk);
         return new URL(AlkisConstants.COMMONS.EINZEL_NACHWEIS_SERVICE + "?" + AlkisConstants.MLESSNUMBER + "&product="
                         + productCode + "&id=" + objectID + "&" + IDENTIFICATIONANDMORE
-                        + ((fabricationNote != null) ? ("&" + fabricationNote) : ""));
+                        + ((fabricationNotice != null) ? ("&" + fabricationNotice) : ""));
     }
 
     /**
@@ -454,14 +454,14 @@ public final class AlkisProducts {
      *
      * @return  DOCUMENT ME!
      */
-    private String generateFabricationNote(final String fertigungsVermerk) {
+    private String generateFabricationNotice(final String fertigungsVermerk) {
         if (fertigungsVermerk != null) {
             try {
                 final String note = URLEncoder.encode(
                         "Gefertigt im Auftrag der Stadt Wuppertal durch: Öffentlich bestellter Vermessungsingenieur "
                                 + fertigungsVermerk,
                         "UTF-8");
-                return "fabricationNote=" + note;
+                return "fabricationNotice=" + note;
             } catch (final UnsupportedEncodingException ex) {
                 log.error("error while encoding fabricationnotice", ex);
                 return null;
