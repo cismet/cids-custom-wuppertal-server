@@ -15,9 +15,11 @@ import org.jdom.input.SAXBuilder;
 import java.awt.Point;
 
 import java.io.InputStream;
+import java.io.UnsupportedEncodingException;
 
 import java.net.MalformedURLException;
 import java.net.URL;
+import java.net.URLEncoder;
 
 import java.text.SimpleDateFormat;
 
@@ -279,16 +281,36 @@ public final class AlkisProducts {
     /**
      * Returns an URL object pointing to the Einzelnachweis of the given product.
      *
-     * @param   objectID     The landparcel code
-     * @param   productCode  format Which document to show
+     * @param       objectID     The landparcel code
+     * @param       productCode  format Which document to show
+     *
+     * @return      DOCUMENT ME!
+     *
+     * @throws      MalformedURLException  DOCUMENT ME!
+     *
+     * @deprecated  use method with fertigungsVermerk instead
+     */
+    public URL productEinzelNachweisUrl(final String objectID, final String productCode) throws MalformedURLException {
+        return productEinzelNachweisUrl(objectID, productCode, null);
+    }
+
+    /**
+     * DOCUMENT ME!
+     *
+     * @param   objectID           DOCUMENT ME!
+     * @param   productCode        DOCUMENT ME!
+     * @param   fertigungsVermerk  DOCUMENT ME!
      *
      * @return  DOCUMENT ME!
      *
      * @throws  MalformedURLException  DOCUMENT ME!
      */
-    public URL productEinzelNachweisUrl(final String objectID, final String productCode) throws MalformedURLException {
+    public URL productEinzelNachweisUrl(final String objectID, final String productCode, final String fertigungsVermerk)
+            throws MalformedURLException {
+        final String fabricationNote = generateFabricationNote(fertigungsVermerk);
         return new URL(AlkisConstants.COMMONS.EINZEL_NACHWEIS_SERVICE + "?" + AlkisConstants.MLESSNUMBER + "&product="
-                        + productCode + "&id=" + objectID + "&" + IDENTIFICATIONANDMORE);
+                        + productCode + "&id=" + objectID + "&" + IDENTIFICATIONANDMORE
+                        + ((fabricationNote != null) ? ("&" + fabricationNote) : ""));
     }
 
     /**
@@ -388,15 +410,82 @@ public final class AlkisProducts {
     /**
      * Returns a URL object pointing to a map of the given landparcel.
      *
-     * @param   parcelCode  The code of the landparcel.
+     * @param       parcelCode  The code of the landparcel.
+     *
+     * @return      DOCUMENT ME!
+     *
+     * @throws      MalformedURLException  DOCUMENT ME!
+     *
+     * @deprecated  use method with fertigungsVermerk instead
+     */
+    public URL productKarteUrl(final String parcelCode) throws MalformedURLException {
+        return productKarteUrl(parcelCode, null);
+    }
+
+    /**
+     * DOCUMENT ME!
+     *
+     * @param   fertigungsVermerk  DOCUMENT ME!
+     *
+     * @return  DOCUMENT ME!
+     */
+    private String generateFabricationNotices(final String fertigungsVermerk) {
+        if (fertigungsVermerk != null) {
+            try {
+                final String notice1 = URLEncoder.encode(
+                        "Gefertigt im Auftrag der Stadt Wuppertal durch: Öffentlich bestellter Vermessungsingenieur",
+                        "UTF-8");
+                final String notice2 = URLEncoder.encode(fertigungsVermerk, "UTF-8"); // %C3%96bVI+Bodo+Schnellme%C3%9F%2C
+
+                return "fabricationNotice1=" + notice1 + "&fabricationNotice2=" + notice2;
+            } catch (final UnsupportedEncodingException ex) {
+                log.error("error while encoding fabricationnotice", ex);
+                return null;
+            }
+        } else {
+            return "";
+        }
+    }
+
+    /**
+     * DOCUMENT ME!
+     *
+     * @param   fertigungsVermerk  DOCUMENT ME!
+     *
+     * @return  DOCUMENT ME!
+     */
+    private String generateFabricationNote(final String fertigungsVermerk) {
+        if (fertigungsVermerk != null) {
+            try {
+                final String note = URLEncoder.encode(
+                        "Gefertigt im Auftrag der Stadt Wuppertal durch: Öffentlich bestellter Vermessungsingenieur "
+                                + fertigungsVermerk,
+                        "UTF-8");
+                return "fabricationNote=" + note;
+            } catch (final UnsupportedEncodingException ex) {
+                log.error("error while encoding fabricationnotice", ex);
+                return null;
+            }
+        } else {
+            return "";
+        }
+    }
+
+    /**
+     * DOCUMENT ME!
+     *
+     * @param   parcelCode         DOCUMENT ME!
+     * @param   fertigungsVermerk  DOCUMENT ME!
      *
      * @return  DOCUMENT ME!
      *
      * @throws  MalformedURLException  DOCUMENT ME!
      */
-    public URL productKarteUrl(final String parcelCode) throws MalformedURLException {
+    public URL productKarteUrl(final String parcelCode, final String fertigungsVermerk) throws MalformedURLException {
+        final String fabricationNotices = generateFabricationNotices(fertigungsVermerk);
         return new URL(AlkisConstants.COMMONS.LIEGENSCHAFTSKARTE_SERVICE + "?" + AlkisConstants.MLESSNUMBER
-                        + "&landparcel=" + parcelCode + "&" + IDENTIFICATIONANDMORE);
+                        + "&landparcel=" + parcelCode + "&" + IDENTIFICATIONANDMORE
+                        + ((fabricationNotices != null) ? ("&" + fabricationNotices) : ""));
     }
 
     /**
@@ -441,6 +530,44 @@ public final class AlkisProducts {
     /**
      * DOCUMENT ME!
      *
+     * @param       parcelCode         DOCUMENT ME!
+     * @param       produkt            DOCUMENT ME!
+     * @param       winkel             DOCUMENT ME!
+     * @param       centerX            DOCUMENT ME!
+     * @param       centerY            DOCUMENT ME!
+     * @param       zusText            DOCUMENT ME!
+     * @param       auftragsNr         DOCUMENT ME!
+     * @param       moreThanOneParcel  DOCUMENT ME!
+     *
+     * @return      DOCUMENT ME!
+     *
+     * @throws      MalformedURLException  DOCUMENT ME!
+     *
+     * @deprecated  use method with fertigungsVermerk instead
+     */
+    public URL productKarteUrl(final String parcelCode,
+            final AlkisProductDescription produkt,
+            final int winkel,
+            final int centerX,
+            final int centerY,
+            final String zusText,
+            final String auftragsNr,
+            final boolean moreThanOneParcel) throws MalformedURLException {
+        return productKarteUrl(
+                parcelCode,
+                produkt,
+                winkel,
+                centerX,
+                centerY,
+                zusText,
+                auftragsNr,
+                moreThanOneParcel,
+                null);
+    }
+
+    /**
+     * DOCUMENT ME!
+     *
      * @param   parcelCode         DOCUMENT ME!
      * @param   produkt            DOCUMENT ME!
      * @param   winkel             DOCUMENT ME!
@@ -449,6 +576,7 @@ public final class AlkisProducts {
      * @param   zusText            DOCUMENT ME!
      * @param   auftragsNr         DOCUMENT ME!
      * @param   moreThanOneParcel  DOCUMENT ME!
+     * @param   fertigungsVermerk  DOCUMENT ME!
      *
      * @return  DOCUMENT ME!
      *
@@ -461,7 +589,8 @@ public final class AlkisProducts {
             final int centerY,
             final String zusText,
             final String auftragsNr,
-            final boolean moreThanOneParcel) throws MalformedURLException {
+            final boolean moreThanOneParcel,
+            final String fertigungsVermerk) throws MalformedURLException {
         final StringBuilder url = new StringBuilder(AlkisConstants.COMMONS.LIEGENSCHAFTSKARTE_SERVICE);
         url.append('?');
         url.append(AlkisConstants.MLESSNUMBER);
@@ -492,6 +621,10 @@ public final class AlkisProducts {
         if ((produkt.getMassstabMin() != null) && (produkt.getMassstabMax() != null)) {
             url.append("&scale=");
             url.append(produkt.getMassstab());
+        }
+        final String fabricationNotices = generateFabricationNotices(fertigungsVermerk);
+        if (fabricationNotices != null) {
+            url.append("&").append(fabricationNotices);
         }
 
         return new URL(url.toString());

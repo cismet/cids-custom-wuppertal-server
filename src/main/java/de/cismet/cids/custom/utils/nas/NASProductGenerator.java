@@ -23,8 +23,9 @@ import com.sun.org.apache.xml.internal.serialize.XMLSerializer;
 import com.vividsolutions.jts.geom.Envelope;
 import com.vividsolutions.jts.geom.GeometryCollection;
 
-import de.aed_sicad.namespaces.svr.AMAuftragServer;
+import de.aed_sicad.namespaces.svr.AM_AuftragServer;
 import de.aed_sicad.namespaces.svr.AuftragsManager;
+import de.aed_sicad.namespaces.svr.AuftragsManagerLocator;
 import de.aed_sicad.namespaces.svr.AuftragsManagerSoap;
 
 import org.apache.commons.io.IOUtils;
@@ -52,6 +53,8 @@ import java.io.StringReader;
 import java.io.StringWriter;
 
 import java.net.URL;
+
+import java.rmi.RemoteException;
 
 import java.util.ArrayList;
 import java.util.HashMap;
@@ -378,42 +381,44 @@ public class NASProductGenerator {
             }
             return null;
         }
-//        try {
-        final InputStream templateFile = loadTemplateFile(product);
+        try {
+            final InputStream templateFile = loadTemplateFile(product);
 
-        if (templateFile == null) {
-            log.error("Error laoding the NAS template file.");
-            return null;
-        }
+            if (templateFile == null) {
+                log.error("Error laoding the NAS template file.");
+                return null;
+            }
 
-        if (geoms == null) {
-            log.error("geometry is null, cannot execute nas query");
-            return null;
-        }
+            if (geoms == null) {
+                log.error("geometry is null, cannot execute nas query");
+                return null;
+            }
 
-        final String requestId = getRequestId(user, requestName);
-        final InputStream preparedQuery = generateQeury(geoms, templateFile, requestId);
-        initAmManager();
-        final int sessionID = manager.login(USER, PW);
-        final String orderId = manager.registerGZip(sessionID, gZipFile(preparedQuery));
+            final String requestId = getRequestId(user, requestName);
+            final InputStream preparedQuery = generateQeury(geoms, templateFile, requestId);
+            initAmManager();
+            final int sessionID = manager.login(USER, PW);
+            final String orderId = manager.registerGZip(sessionID, gZipFile(preparedQuery));
 
-        final boolean isSplitted = isOrderSplitted(geoms);
-        final boolean isDXF = product.getFormat().equals(NasProduct.Format.DXF.toString());
-        addToOpenOrders(determineUserPrefix(user), orderId, new NasProductInfo(isSplitted, requestName, isDXF));
-        addToUndeliveredOrders(determineUserPrefix(user), orderId, new NasProductInfo(isSplitted, requestName, isDXF));
-        final NasProductDownloader downloader = new NasProductDownloader(determineUserPrefix(user),
+            final boolean isSplitted = isOrderSplitted(geoms);
+            final boolean isDXF = product.getFormat().equals(NasProduct.Format.DXF.toString());
+            addToOpenOrders(determineUserPrefix(user), orderId, new NasProductInfo(isSplitted, requestName, isDXF));
+            addToUndeliveredOrders(determineUserPrefix(user),
                 orderId,
-                isDXF,
-                product.getParams());
-        downloaderMap.put(orderId, downloader);
-        final Thread workerThread = new Thread(downloader);
-        workerThread.start();
+                new NasProductInfo(isSplitted, requestName, isDXF));
+            final NasProductDownloader downloader = new NasProductDownloader(determineUserPrefix(user),
+                    orderId,
+                    isDXF,
+                    product.getParams());
+            downloaderMap.put(orderId, downloader);
+            final Thread workerThread = new Thread(downloader);
+            workerThread.start();
 
-        return orderId;
-//        } catch (RemoteException ex) {
-//            log.error("could not create conenction to 3A Server", ex);
-//        }
-//        return null;
+            return orderId;
+        } catch (Exception ex) {
+            log.error("could not create conenction to 3A Server", ex);
+        }
+        return null;
     }
 
     /**
@@ -423,104 +428,111 @@ public class NASProductGenerator {
      * @param  file   DOCUMENT ME!
      */
     public void writeResultToFileforRequest(final InputStream query, final File file) {
-        if (initError) {
-            if (log.isDebugEnabled()) {
-                log.debug("NASProductGenerator doesnt work hence there was an error during the initialisation.");
-            }
-            return;
-        }
-        initAmManager();
-        final int sessionID = manager.login(USER, PW);
-        final String orderId = manager.registerGZip(sessionID, gZipFile(query));
-        final AMAuftragServer amServer = manager.listAuftrag(sessionID, orderId);
-
-        while ((manager.getResultCount(sessionID, orderId) < 1)
-                    && (manager.getProtocolGZip(sessionID, orderId) == null)) {
-            try {
-                Thread.sleep(1000);
-//                this.logProtocol(manager.getProtocolGZip(sessionID, orderId));
-            } catch (InterruptedException ex) {
-                Exceptions.printStackTrace(ex);
-            }
-        }
-        final int resCount = manager.getResultCount(sessionID, orderId);
-
-        if (resCount > 1) {
-            // unzip and save all files, then zip them
-            final ArrayList<byte[]> resultFiles = new ArrayList<byte[]>();
-            for (int i = 0; i < resCount; i++) {
-                resultFiles.add(manager.getNResultGZip(sessionID, orderId, i));
-            }
-            final ArrayList<byte[]> unzippedFileCollection = new ArrayList<byte[]>();
-            for (final byte[] zipFile : resultFiles) {
-                unzippedFileCollection.add(gunzip(zipFile));
-            }
-            FileOutputStream fos = null;
-            ZipOutputStream zos = null;
-            try {
-                fos = new FileOutputStream(file);
-                zos = new ZipOutputStream(fos);
-                for (int i = 0; i < unzippedFileCollection.size(); i++) {
-                    final byte[] unzippedFile = unzippedFileCollection.get(i);
-                    final String fileEntryName = orderId + "#" + i + FILE_APPENDIX;
-                    zos.putNextEntry(new ZipEntry(fileEntryName));
-                    zos.write(unzippedFile);
-                    zos.closeEntry();
+        try {
+            if (initError) {
+                if (log.isDebugEnabled()) {
+                    log.debug("NASProductGenerator doesnt work hence there was an error during the initialisation.");
                 }
-            } catch (IOException ex) {
-                log.warn("error during creation of zip file");
-            } finally {
+                return;
+            }
+            initAmManager();
+            final int sessionID = manager.login(USER, PW);
+            final String orderId = manager.registerGZip(sessionID, gZipFile(query));
+            final AM_AuftragServer amServer = manager.listAuftrag(sessionID, orderId);
+
+            while ((manager.getResultCount(sessionID, orderId) < 1)
+                        && (manager.getProtocolGZip(sessionID, orderId) == null)) {
                 try {
-                    if (zos != null) {
-                        zos.close();
-                    }
-                    if (fos != null) {
-                        fos.close();
-                    }
-                } catch (IOException ex) {
+                    Thread.sleep(1000);
+//                this.logProtocol(manager.getProtocolGZip(sessionID, orderId));
+                } catch (InterruptedException ex) {
                     Exceptions.printStackTrace(ex);
                 }
             }
-        } else {
-            final byte[] data;
-            if (resCount == 0) {
-                log.error("it seems that there is an error with NAS order: " + orderId + ". Writing protocol to file "
-                            + file);
-                log.error("Protocol for NAS order " + orderId + ": "
-                            + new String(gunzip(manager.getProtocolGZip(sessionID, orderId))));
-                data = manager.getProtocolGZip(sessionID, orderId);
-            } else {
-                data = manager.getResultGZip(sessionID, orderId);
-            }
+            final int resCount = manager.getResultCount(sessionID, orderId);
 
-            if (data == null) {
-                log.error("result of nas order " + orderId + " is null");
-                return;
-            }
-            InputStream is = null;
-            OutputStream os = null;
-            try {
-                is = new GZIPInputStream(new ByteArrayInputStream(manager.getResultGZip(sessionID, orderId)));
-                os = new FileOutputStream(file);
-                final byte[] buffer = new byte[8192];
-                int length = is.read(buffer, 0, 8192);
-                while (length != -1) {
-                    os.write(buffer, 0, length);
-                    length = is.read(buffer, 0, 8192);
+            if (resCount > 1) {
+                // unzip and save all files, then zip them
+                final ArrayList<byte[]> resultFiles = new ArrayList<byte[]>();
+                for (int i = 0; i < resCount; i++) {
+                    resultFiles.add(manager.getNResultGZip(sessionID, orderId, i));
                 }
-            } catch (IOException ex) {
-                log.error("error during gunzip of nas response files", ex);
-            } finally {
+                final ArrayList<byte[]> unzippedFileCollection = new ArrayList<byte[]>();
+                for (final byte[] zipFile : resultFiles) {
+                    unzippedFileCollection.add(gunzip(zipFile));
+                }
+                FileOutputStream fos = null;
+                ZipOutputStream zos = null;
                 try {
-                    if (is != null) {
-                        is.close();
-                    }
-                    if (os != null) {
-                        os.close();
+                    fos = new FileOutputStream(file);
+                    zos = new ZipOutputStream(fos);
+                    for (int i = 0; i < unzippedFileCollection.size(); i++) {
+                        final byte[] unzippedFile = unzippedFileCollection.get(i);
+                        final String fileEntryName = orderId + "#" + i + FILE_APPENDIX;
+                        zos.putNextEntry(new ZipEntry(fileEntryName));
+                        zos.write(unzippedFile);
+                        zos.closeEntry();
                     }
                 } catch (IOException ex) {
+                    log.warn("error during creation of zip file");
+                } finally {
+                    try {
+                        if (zos != null) {
+                            zos.close();
+                        }
+                        if (fos != null) {
+                            fos.close();
+                        }
+                    } catch (IOException ex) {
+                        Exceptions.printStackTrace(ex);
+                    }
+                }
+            } else {
+                final byte[] data;
+
+                InputStream is = null;
+                OutputStream os = null;
+
+                try {
+                    if (resCount == 0) {
+                        log.error("it seems that there is an error with NAS order: " + orderId
+                                    + ". Writing protocol to file "
+                                    + file);
+                        log.error("Protocol for NAS order " + orderId + ": "
+                                    + new String(gunzip(manager.getProtocolGZip(sessionID, orderId))));
+                        data = manager.getProtocolGZip(sessionID, orderId);
+                    } else {
+                        data = manager.getResultGZip(sessionID, orderId);
+                    }
+
+                    if (data == null) {
+                        log.error("result of nas order " + orderId + " is null");
+                        return;
+                    }
+                    is = new GZIPInputStream(new ByteArrayInputStream(manager.getResultGZip(sessionID, orderId)));
+                    os = new FileOutputStream(file);
+                    final byte[] buffer = new byte[8192];
+                    int length = is.read(buffer, 0, 8192);
+                    while (length != -1) {
+                        os.write(buffer, 0, length);
+                        length = is.read(buffer, 0, 8192);
+                    }
+                } catch (IOException ex) {
+                    log.error("error during gunzip of nas response files", ex);
+                } finally {
+                    try {
+                        if (is != null) {
+                            is.close();
+                        }
+                        if (os != null) {
+                            os.close();
+                        }
+                    } catch (IOException ex) {
+                    }
                 }
             }
+        } catch (RemoteException ex) {
+            Exceptions.printStackTrace(ex);
         }
     }
 
@@ -528,21 +540,14 @@ public class NASProductGenerator {
      * DOCUMENT ME!
      */
     private void initAmManager() {
-//        try {
-//            final AuftragsManagerLocator am = new AuftragsManagerLocator();
-//            manager = am.getAuftragsManagerSoap(new URL(SERVICE_URL));
         final AuftragsManager am;
         try {
-            am = new AuftragsManager(new URL(SERVICE_URL));
+            am = new AuftragsManagerLocator();
+            manager = am.getAuftragsManagerSoap(new URL(SERVICE_URL));
         } catch (Exception ex) {
             log.error("error creating 3AServer interface", ex);
             return;
         }
-        manager = am.getAuftragsManagerSoap();
-//        } catch (Exception ex) {
-//            log.error("error creating 3AServer interface", ex);
-//            Exceptions.printStackTrace(ex);
-//        }
     }
 
     /**
@@ -1172,61 +1177,68 @@ public class NASProductGenerator {
 
                         @Override
                         public void run() {
-                            AMAuftragServer amServer = null;
-                            if (interrupted) {
-                                log.info(
-                                    "interrupting the dowload of nas order "
-                                            + orderId);
+                            try {
+                                AM_AuftragServer amServer = null;
+                                if (interrupted) {
+                                    log.info(
+                                        "interrupting the dowload of nas order "
+                                                + orderId);
+                                    t.cancel();
+                                    return;
+                                }
+                                amServer = manager.listAuftrag(sessionId, orderId);
+                                if (amServer.getWannBeendet() == null) {
+                                    return;
+                                }
                                 t.cancel();
-                                return;
-                            }
-                            amServer = manager.listAuftrag(sessionId, orderId);
-                            if (amServer.getWannBeendet() == null) {
-                                return;
-                            }
-                            t.cancel();
-                            logProtocol(manager.getProtocolGZip(sessionId, orderId));
-                            boolean isZip = false;
-                            if (!interrupted) {
-                                final int resCount = manager.getResultCount(sessionId, orderId);
-                                if (resCount > 1) {
-                                    // unzip and save all files, then zip them
-                                    final ArrayList<byte[]> resultFiles = new ArrayList<byte[]>();
-                                    for (int i = 0; i < resCount; i++) {
-                                        resultFiles.add(manager.getNResultGZip(sessionId, orderId, i));
-                                    }
-                                    saveZipFileOfUnzippedFileCollection(userId, orderId, resultFiles);
-                                    isZip = true;
-                                } else {
-                                    unzipAndSaveFile(userId, orderId, manager.getResultGZip(sessionId, orderId));
-                                }
-                                if (isDxf) {
-                                    try {
-                                        final ActionTask at = dxfConverter.createDxfActionTask(
-                                                params,
-                                                getNasFileForOrder(orderId, userId, isZip),
-                                                isZip);
-                                        if (at.getKey() == null) {
-                                            return;
+                                logProtocol(manager.getProtocolGZip(sessionId, orderId));
+                                boolean isZip = false;
+                                if (!interrupted) {
+                                    final int resCount = manager.getResultCount(sessionId, orderId);
+                                    if (resCount > 1) {
+                                        // unzip and save all files, then zip them
+                                        final ArrayList<byte[]> resultFiles = new ArrayList<byte[]>();
+                                        for (int i = 0; i < resCount; i++) {
+                                            resultFiles.add(manager.getNResultGZip(sessionId, orderId, i));
                                         }
-                                        final Future<File> converterFuture = dxfConverter.getResult(at.getKey());
-                                        final File dxfFile = converterFuture.get();
-                                        final File resultDxfFile = new File(determineFileName(userId, orderId, ".dxf"));
-                                        IOUtils.copy(new FileInputStream(dxfFile), new FileOutputStream(resultDxfFile));
-                                    } catch (InterruptedException ex) {
-                                        log.error("DXF Converter Thread was interrupted", ex);
-                                    } catch (ExecutionException ex) {
-                                        log.error("Error during the execution of the dxf converter thread", ex);
-                                    } catch (Exception ex) {
-                                        log.error(ex.getMessage(), ex);
+                                        saveZipFileOfUnzippedFileCollection(userId, orderId, resultFiles);
+                                        isZip = true;
+                                    } else {
+                                        unzipAndSaveFile(userId, orderId, manager.getResultGZip(sessionId, orderId));
                                     }
+                                    if (isDxf) {
+                                        try {
+                                            final ActionTask at = dxfConverter.createDxfActionTask(
+                                                    params,
+                                                    getNasFileForOrder(orderId, userId, isZip),
+                                                    isZip);
+                                            if (at.getKey() == null) {
+                                                return;
+                                            }
+                                            final Future<File> converterFuture = dxfConverter.getResult(at.getKey());
+                                            final File dxfFile = converterFuture.get();
+                                            final File resultDxfFile = new File(
+                                                    determineFileName(userId, orderId, ".dxf"));
+                                            IOUtils.copy(
+                                                new FileInputStream(dxfFile),
+                                                new FileOutputStream(resultDxfFile));
+                                        } catch (InterruptedException ex) {
+                                            log.error("DXF Converter Thread was interrupted", ex);
+                                        } catch (ExecutionException ex) {
+                                            log.error("Error during the execution of the dxf converter thread", ex);
+                                        } catch (Exception ex) {
+                                            log.error(ex.getMessage(), ex);
+                                        }
+                                    }
+                                    removeFromOpenOrders(userId, orderId);
+                                    downloaderMap.remove(orderId);
+                                } else {
+                                    log.info(
+                                        "interrupting the download of nas order "
+                                                + orderId);
                                 }
-                                removeFromOpenOrders(userId, orderId);
-                                downloaderMap.remove(orderId);
-                            } else {
-                                log.info(
-                                    "interrupting the download of nas order "
-                                            + orderId);
+                            } catch (RemoteException ex) {
+                                Exceptions.printStackTrace(ex);
                             }
                         }
                     }, REQUEST_PERIOD, REQUEST_PERIOD);

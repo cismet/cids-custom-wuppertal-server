@@ -68,7 +68,7 @@
         <dependency>
             <groupId>de.aedsicad</groupId>
             <artifactId>aaawebclient</artifactId>
-            <version>6.2.1.0</version>
+            <version>6.3.16.1</version>
         </dependency>
         <dependency>
             <groupId>axis</groupId>
@@ -83,8 +83,8 @@
         <dependency>
             <groupId>de.aedsicad</groupId>
             <artifactId>aaaserver</artifactId>
-            <version>6.1.7.0</version>
-        </dependency>
+            <version>6.3.16.1</version>
+        </dependency>        
         <dependency>
             <groupId>javax.media</groupId>
             <artifactId>jai_imageio</artifactId>
@@ -112,7 +112,7 @@
             <artifactId>commons-io</artifactId>
             <version>2.4</version>
         </dependency>
-         <dependency>
+        <dependency>
             <groupId>org.slf4j</groupId>
             <artifactId>slf4j-log4j12</artifactId>
             <version>1.7.7</version>
