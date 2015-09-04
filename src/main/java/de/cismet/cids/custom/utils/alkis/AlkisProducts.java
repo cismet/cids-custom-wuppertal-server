@@ -435,9 +435,9 @@ public final class AlkisProducts {
                 final String notice1 = URLEncoder.encode(
                         "Gefertigt im Auftrag der Stadt Wuppertal durch: Öffentlich bestellter Vermessungsingenieur",
                         "UTF-8");
-                final String notice2 = URLEncoder.encode(fertigungsVermerk, "UTF-8"); // %C3%96bVI+Bodo+Schnellme%C3%9F%2C
+                final String notice3 = URLEncoder.encode(fertigungsVermerk, "UTF-8");
 
-                return "fabricationNotice1=" + notice1 + "&fabricationNotice2=" + notice2;
+                return "fabricationNotice1=" + notice1 + "&fabricationNotice2=&fabricationNotice3=" + notice3;
             } catch (final UnsupportedEncodingException ex) {
                 log.error("error while encoding fabricationnotice", ex);
                 return null;
