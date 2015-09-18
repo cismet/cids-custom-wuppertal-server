@@ -96,7 +96,7 @@ public final class AlkisProducts {
         ALKIS_FORMATS = Collections.unmodifiableMap(formatMap);
         ALKIS_MAP_PRODUCTS = Collections.unmodifiableList(mapProducts);
         IDENTIFICATIONANDMORE = "user=" + user + "&password=" + pw + "&service=" + service
-                    + "&script=nachverarbeitung.bat";
+                    + "&script=" + productProperties.getProperty("NACHVERARBEITUNG_SCRIPT");
         FLURSTUECKSNACHWEIS_PDF = productProperties.getProperty("FLURSTUECKSNACHWEIS_PDF");
         FLURSTUECKSNACHWEIS_HTML = productProperties.getProperty("FLURSTUECKSNACHWEIS_HTML");
         FLURSTUECKS_UND_EIGENTUMSNACHWEIS_KOMMUNAL_PDF = productProperties.getProperty(
