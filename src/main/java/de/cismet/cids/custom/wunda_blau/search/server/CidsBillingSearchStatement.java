@@ -328,12 +328,12 @@ public class CidsBillingSearchStatement extends AbstractCidsServerSearch {
             // do nothing, time filters are ignored
         } else if ((abrechnungsdatumTill == null)
                     || postgresDateFormat.format(abrechnungsdatumFrom).equals(
-                        postgresDateFormat.format(abrechnungsdatumTill))) {    // check if there is a second date or if
-                                                                               // they are the same day
+                        postgresDateFormat.format(abrechnungsdatumTill))) { // check if there is a second date or if
+                                                                            // they are the same day
             query.append(" and date_trunc('day',abrechnungsdatum) = '");
             query.append(postgresDateFormat.format(abrechnungsdatumFrom));
             query.append("' ");
-        } else {                                                               // create query for a time period
+        } else {                                                            // create query for a time period
             query.append(" and date_trunc('day',abrechnungsdatum) >= '");
             query.append(postgresDateFormat.format(abrechnungsdatumFrom));
             query.append("' ");
