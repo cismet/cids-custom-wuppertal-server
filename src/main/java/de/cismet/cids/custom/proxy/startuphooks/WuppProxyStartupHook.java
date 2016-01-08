@@ -14,7 +14,6 @@ package de.cismet.cids.custom.proxy.startuphooks;
 
 import Sirius.server.middleware.impls.proxy.ProxyStartupHook;
 
-import de.cismet.cids.custom.utils.alkis.AlkisConstants;
 import de.cismet.cids.custom.utils.alkis.AlkisProducts;
 import de.cismet.cids.custom.wunda_blau.search.actions.NasZaehlObjekteSearch;
 
@@ -31,10 +30,7 @@ public class WuppProxyStartupHook implements ProxyStartupHook {
 
     @Override
     public void proxyStarted() {
-        final AlkisProducts pr = new AlkisProducts(
-                AlkisConstants.COMMONS.USER,
-                AlkisConstants.COMMONS.PASSWORD,
-                AlkisConstants.COMMONS.SERVICE);
+        AlkisProducts.getInstance();
 
         final NasZaehlObjekteSearch search = new NasZaehlObjekteSearch(
                 null,
