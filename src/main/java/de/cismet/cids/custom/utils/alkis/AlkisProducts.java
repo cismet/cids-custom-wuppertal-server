@@ -47,6 +47,8 @@ public final class AlkisProducts {
 
     private static final org.apache.log4j.Logger log = org.apache.log4j.Logger.getLogger(AlkisProducts.class);
 
+    private static AlkisProducts INSTANCE;
+
     //~ Instance fields --------------------------------------------------------
 
     // Flurstueck
@@ -84,10 +86,13 @@ public final class AlkisProducts {
     /**
      * Creates a new AlkisProducts object.
      *
-     * @param  user     DOCUMENT ME!
-     * @param  pw       DOCUMENT ME!
-     * @param  service  DOCUMENT ME!
+     * @param       user     DOCUMENT ME!
+     * @param       pw       DOCUMENT ME!
+     * @param       service  DOCUMENT ME!
+     *
+     * @deprecated  use getInstance instead
      */
+    @Deprecated
     public AlkisProducts(final String user, final String pw, final String service) {
         final PropertyReader productProperties = new PropertyReader(
                 "/de/cismet/cids/custom/wunda_blau/res/alkis/alkis_products.properties");
@@ -247,6 +252,21 @@ public final class AlkisProducts {
     }
 
     //~ Methods ----------------------------------------------------------------
+
+    /**
+     * DOCUMENT ME!
+     *
+     * @return  DOCUMENT ME!
+     */
+    public static AlkisProducts getInstance() {
+        if (INSTANCE == null) {
+            INSTANCE = new AlkisProducts(
+                    AlkisConstants.COMMONS.USER,
+                    AlkisConstants.COMMONS.PASSWORD,
+                    AlkisConstants.COMMONS.SERVICE);
+        }
+        return INSTANCE;
+    }
 
     /**
      * DOCUMENT ME!
