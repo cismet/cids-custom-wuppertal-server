@@ -43,11 +43,11 @@ import java.rmi.RemoteException;
 import java.sql.Date;
 
 import java.util.ArrayList;
-import java.util.Base64;
 import java.util.Collection;
 import java.util.HashMap;
 import java.util.Map;
 
+import javax.xml.bind.DatatypeConverter;
 import javax.xml.bind.JAXBContext;
 import javax.xml.bind.JAXBException;
 import javax.xml.bind.Unmarshaller;
@@ -113,8 +113,8 @@ public class FormSolutionServerNewStuffAvailableAction implements UserAwareServe
      * Creates a new FormSolutionServerNewStuffAvailableAction object.
      */
     public FormSolutionServerNewStuffAvailableAction() {
-        final String usermame = "22222222-2222";
-        final String password = "actipassfoso42";
+        final String usermame = "";
+        final String password = "";
 
         creds = new UsernamePasswordCredentials(usermame, password);
     }
@@ -235,7 +235,7 @@ public class FormSolutionServerNewStuffAvailableAction implements UserAwareServe
                 });
         inputStream.close();
 
-        return new String(Base64.getDecoder().decode((String)map.get("xml")));
+        return new String(DatatypeConverter.parseBase64Binary((String)map.get("xml")));
     }
 
     /**
