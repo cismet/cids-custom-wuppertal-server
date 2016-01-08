@@ -57,6 +57,7 @@ import javax.xml.bind.ValidationEventHandler;
 import de.cismet.cids.custom.utils.alkis.AlkisProductDescription;
 import de.cismet.cids.custom.utils.alkis.AlkisProducts;
 import de.cismet.cids.custom.utils.formsolutions.FormSolutionsBestellung;
+import de.cismet.cids.custom.utils.formsolutions.FormSolutionsConstants;
 import de.cismet.cids.custom.wunda_blau.search.server.CidsAlkisSearchStatement;
 
 import de.cismet.cids.dynamics.CidsBean;
@@ -113,10 +114,7 @@ public class FormSolutionServerNewStuffAvailableAction implements UserAwareServe
      * Creates a new FormSolutionServerNewStuffAvailableAction object.
      */
     public FormSolutionServerNewStuffAvailableAction() {
-        final String usermame = "";
-        final String password = "";
-
-        creds = new UsernamePasswordCredentials(usermame, password);
+        creds = new UsernamePasswordCredentials(FormSolutionsConstants.USER, FormSolutionsConstants.PASSWORD);
     }
 
     //~ Methods ----------------------------------------------------------------
