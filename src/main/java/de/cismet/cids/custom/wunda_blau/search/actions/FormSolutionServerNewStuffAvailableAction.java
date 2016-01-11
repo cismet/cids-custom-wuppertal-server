@@ -28,19 +28,31 @@ import com.vividsolutions.jts.geom.Point;
 import org.apache.commons.httpclient.UsernamePasswordCredentials;
 import org.apache.commons.io.IOUtils;
 
+import org.openide.util.Exceptions;
 import org.openide.util.Lookup;
 
 import java.io.BufferedReader;
+import java.io.File;
+import java.io.FileOutputStream;
 import java.io.InputStream;
 import java.io.InputStreamReader;
+import java.io.OutputStream;
+import java.io.PrintWriter;
 import java.io.StringReader;
+import java.io.StringWriter;
 
 import java.net.URL;
 
 import java.rmi.Remote;
 import java.rmi.RemoteException;
 
+import java.sql.Connection;
 import java.sql.Date;
+import java.sql.DriverManager;
+import java.sql.PreparedStatement;
+import java.sql.ResultSet;
+import java.sql.SQLException;
+import java.sql.Timestamp;
 
 import java.util.ArrayList;
 import java.util.Collection;
@@ -97,6 +109,7 @@ public class FormSolutionServerNewStuffAvailableAction implements UserAwareServe
 
     private static MetaClass METACLASS_BESTELLUNG;
     private static MetaClass METACLASS_PRODUKT;
+    private static MetaClass METACLASS_PRODUKT_TYP;
     private static MetaClass METACLASS_ADRESSE;
     private static MetaClass METACLASS_FORMAT;
 
@@ -107,6 +120,10 @@ public class FormSolutionServerNewStuffAvailableAction implements UserAwareServe
 
     private User user;
     private MetaService metaService;
+    private Connection connect = null;
+    private final PreparedStatement preparedSelectStatement;
+    private final PreparedStatement preparedInsertStatement;
+    private final PreparedStatement preparedUpdateStatement;
 
     //~ Constructors -----------------------------------------------------------
 
@@ -115,6 +132,37 @@ public class FormSolutionServerNewStuffAvailableAction implements UserAwareServe
      */
     public FormSolutionServerNewStuffAvailableAction() {
         creds = new UsernamePasswordCredentials(FormSolutionsConstants.USER, FormSolutionsConstants.PASSWORD);
+
+        PreparedStatement preparedSelectStatement = null;
+        PreparedStatement preparedInsertStatement = null;
+        PreparedStatement preparedUpdateStatement = null;
+
+        try {
+            Class.forName("com.mysql.jdbc.Driver");
+            connect = DriverManager.getConnection(FormSolutionsConstants.MYSQL_JDBC);
+            try {
+                preparedSelectStatement = connect.prepareStatement("SELECT id FROM bestellung where transid = '?';");
+            } catch (final SQLException ex) {
+                LOG.error(ex, ex);
+            }
+            try {
+                preparedInsertStatement = connect.prepareStatement(
+                        "INSERT INTO bestellung VALUES (default, ?, ?, null, null, ?);");
+            } catch (final SQLException ex) {
+                LOG.error(ex, ex);
+            }
+            try {
+                preparedUpdateStatement = connect.prepareStatement(
+                        "UPDATE bestellung SET status = ?, dokument_dateipfad = ?, dokument_dateiname = ?, last_update = ? WHERE transid = ?;");
+            } catch (final SQLException ex) {
+                LOG.error(ex, ex);
+            }
+        } catch (final Exception ex) {
+            Exceptions.printStackTrace(ex);
+        }
+        this.preparedSelectStatement = preparedSelectStatement;
+        this.preparedInsertStatement = preparedInsertStatement;
+        this.preparedUpdateStatement = preparedUpdateStatement;
     }
 
     //~ Methods ----------------------------------------------------------------
@@ -156,6 +204,22 @@ public class FormSolutionServerNewStuffAvailableAction implements UserAwareServe
      *
      * @return  DOCUMENT ME!
      */
+    private static MetaClass getProduktTypMetaClass() {
+        if (METACLASS_PRODUKT_TYP == null) {
+            try {
+                METACLASS_PRODUKT_TYP = CidsBean.getMetaClassFromTableName("WUNDA_BLAU", "fs_bestellung_produkt_typ");
+            } catch (final Exception ex) {
+                LOG.error("could not get metaclass of fs_bestellung_produkt_typ", ex);
+            }
+        }
+        return METACLASS_PRODUKT_TYP;
+    }
+
+    /**
+     * DOCUMENT ME!
+     *
+     * @return  DOCUMENT ME!
+     */
     private static MetaClass getAdresseMetaClass() {
         if (METACLASS_ADRESSE == null) {
             try {
@@ -190,7 +254,7 @@ public class FormSolutionServerNewStuffAvailableAction implements UserAwareServe
      *
      * @throws  Exception  DOCUMENT ME!
      */
-    private Collection<String> getOpenAuftraege() throws Exception {
+    private Collection<String> getOpenTransids() throws Exception {
         final StringBuilder stringBuilder = new StringBuilder();
         final InputStream inputStream = handler.doRequest(
                 new URL(URL_AUFTRAGSLISTE),
@@ -243,7 +307,7 @@ public class FormSolutionServerNewStuffAvailableAction implements UserAwareServe
      *
      * @throws  Exception  DOCUMENT ME!
      */
-    private void closeAuftrag(final String auftrag) throws Exception {
+    private void closeTransid(final String auftrag) throws Exception {
         handler.doRequest(
             new URL(String.format(URL_AUFTRAG_DELETE, auftrag)),
             new StringReader(""),
@@ -283,15 +347,26 @@ public class FormSolutionServerNewStuffAvailableAction implements UserAwareServe
     /**
      * DOCUMENT ME!
      *
-     * @param   rawDin          DOCUMENT ME!
-     * @param   rawAusrichtung  DOCUMENT ME!
+     * @param   farbauspraegung  DOCUMENT ME!
+     * @param   rawDin           DOCUMENT ME!
+     * @param   rawAusrichtung   DOCUMENT ME!
      *
      * @return  DOCUMENT ME!
      *
      * @throws  RemoteException  DOCUMENT ME!
      */
-    private CidsBean getFormatBean(final String rawDin, final String rawAusrichtung) throws RemoteException {
+    private CidsBean getProduktBean(final String farbauspraegung, final String rawDin, final String rawAusrichtung)
+            throws RemoteException {
+        final String produktKey;
         final String formatKey;
+
+        if ("farbig".equals(farbauspraegung)) {
+            produktKey = "LK.NRW.K.F";
+        } else if ("Graustufen".equals(farbauspraegung)) {
+            produktKey = "LK.NRW.K.SW";
+        } else {
+            produktKey = null;
+        }
 
         if ((rawDin != null) && (rawAusrichtung != null)) {
             final String din = rawDin.trim().toUpperCase().split("DIN")[1].trim();
@@ -300,41 +375,18 @@ public class FormSolutionServerNewStuffAvailableAction implements UserAwareServe
         } else {
             formatKey = null;
         }
-        final MetaClass formatMC = getFormatMetaClass();
-        final String formatQuery = "SELECT DISTINCT " + formatMC.getID() + ", "
-                    + formatMC.getPrimaryKey() + " "
-                    + "FROM " + formatMC.getTableName() + " "
-                    + "WHERE key = '" + formatKey + "' "
-                    + "LIMIT 1;";
-        final MetaObject[] formatMos = getMetaService().getMetaObject(getUser(), formatQuery);
-        formatMos[0].setAllClasses(((MetaClassCacheService)Lookup.getDefault().lookup(MetaClassCacheService.class))
-                    .getAllClasses(formatMos[0].getDomain()));
-        return formatMos[0].getBean();
-    }
 
-    /**
-     * DOCUMENT ME!
-     *
-     * @param   farbauspraegung  DOCUMENT ME!
-     *
-     * @return  DOCUMENT ME!
-     *
-     * @throws  RemoteException  DOCUMENT ME!
-     */
-    private CidsBean getProduktBean(final String farbauspraegung) throws RemoteException {
-        final String produktKey;
-        if ("farbig".equals(farbauspraegung)) {
-            produktKey = "LK.NRW.K.F";
-        } else if ("Graustufen".equals(farbauspraegung)) {
-            produktKey = "LK.NRW.K.SW";
-        } else {
-            produktKey = null;
-        }
+        final MetaClass produktTypMc = getProduktTypMetaClass();
         final MetaClass produktMc = getProduktMetaClass();
+        final MetaClass formatMc = getFormatMetaClass();
         final String produktQuery = "SELECT DISTINCT " + produktMc.getID() + ", "
-                    + produktMc.getPrimaryKey() + " "
-                    + "FROM " + produktMc.getTableName() + " "
-                    + "WHERE key = '" + produktKey + "' "
+                    + produktMc.getTableName() + "." + produktMc.getPrimaryKey() + " "
+                    + "FROM " + produktMc.getTableName() + ", " + produktTypMc.getTableName() + ", "
+                    + formatMc.getTableName() + " "
+                    + "WHERE " + produktMc.getTableName() + ".fk_format = " + formatMc.getTableName() + ".id "
+                    + "AND " + produktMc.getTableName() + ".fk_typ = " + produktTypMc.getTableName() + ".id "
+                    + "AND " + produktTypMc.getTableName() + ".key = '" + produktKey + "' "
+                    + "AND " + formatMc.getTableName() + ".key = '" + formatKey + "' "
                     + "LIMIT 1;";
         final MetaObject[] produktMos = getMetaService().getMetaObject(getUser(), produktQuery);
         produktMos[0].setAllClasses(((MetaClassCacheService)Lookup.getDefault().lookup(MetaClassCacheService.class))
@@ -361,63 +413,36 @@ public class FormSolutionServerNewStuffAvailableAction implements UserAwareServe
         final Integer massstab = (formSolutionsBestellung.getMassstab() != null)
             ? Integer.parseInt(formSolutionsBestellung.getMassstab().split(":")[1]) : null;
 
-        final CidsBean formatBean = getFormatBean(formSolutionsBestellung.getFormat(),
+        final CidsBean produktBean = getProduktBean(formSolutionsBestellung.getFarbauspraegung(),
+                formSolutionsBestellung.getFormat(),
                 formSolutionsBestellung.getAusrichtung());
-        final CidsBean produktBean = getProduktBean(formSolutionsBestellung.getFarbauspraegung());
 
-        adresseVersandBean.setProperty(
-            "firma",
-            formSolutionsBestellung.getFirma().trim().isEmpty() ? null : formSolutionsBestellung.getFirma());
-        adresseVersandBean.setProperty(
-            "name",
-            formSolutionsBestellung.getAsName().trim().isEmpty() ? null : formSolutionsBestellung.getAsName());
-        adresseVersandBean.setProperty(
-            "vorname",
-            formSolutionsBestellung.getAsVorname().trim().isEmpty() ? null : formSolutionsBestellung.getAsVorname());
-        adresseVersandBean.setProperty(
-            "strasse",
-            formSolutionsBestellung.getAsStrasse().trim().isEmpty() ? null : formSolutionsBestellung.getAsStrasse());
-        adresseVersandBean.setProperty(
-            "hausnummer",
-            formSolutionsBestellung.getAsHausnummer().trim().isEmpty() ? null
-                                                                       : formSolutionsBestellung.getAsHausnummer());
+        adresseVersandBean.setProperty("firma", trimedNotEmpty(formSolutionsBestellung.getFirma()));
+        adresseVersandBean.setProperty("name", trimedNotEmpty(formSolutionsBestellung.getAsName()));
+        adresseVersandBean.setProperty("vorname", trimedNotEmpty(formSolutionsBestellung.getAsVorname()));
+        adresseVersandBean.setProperty("strasse", trimedNotEmpty(formSolutionsBestellung.getAsStrasse()));
+        adresseVersandBean.setProperty("hausnummer", trimedNotEmpty(formSolutionsBestellung.getAsHausnummer()));
         adresseVersandBean.setProperty("plz", formSolutionsBestellung.getAsPlz());
-        adresseVersandBean.setProperty(
-            "ort",
-            formSolutionsBestellung.getAsOrt().trim().isEmpty() ? null : formSolutionsBestellung.getAsOrt());
-        adresseVersandBean.setProperty(
-            "staat",
-            formSolutionsBestellung.getStaat().trim().isEmpty() ? null : formSolutionsBestellung.getStaat());
+        adresseVersandBean.setProperty("ort", trimedNotEmpty(formSolutionsBestellung.getAsOrt()));
+        adresseVersandBean.setProperty("staat", trimedNotEmpty(formSolutionsBestellung.getStaat()));
 
-        adresseRechnungBean.setProperty(
-            "firma",
-            formSolutionsBestellung.getFirma1().trim().isEmpty() ? null : formSolutionsBestellung.getFirma1());
-        adresseRechnungBean.setProperty(
-            "name",
-            formSolutionsBestellung.getAsName1().trim().isEmpty() ? null : formSolutionsBestellung.getAsName1());
-        adresseRechnungBean.setProperty(
-            "vorname",
-            formSolutionsBestellung.getAsVorname1().trim().isEmpty() ? null : formSolutionsBestellung.getAsVorname1());
-        adresseRechnungBean.setProperty(
-            "strasse",
-            formSolutionsBestellung.getAsStrasse1().trim().isEmpty() ? null : formSolutionsBestellung.getAsStrasse1());
-        adresseRechnungBean.setProperty(
-            "hausnummer",
-            formSolutionsBestellung.getAsHausnummer1().trim().isEmpty() ? null
-                                                                        : formSolutionsBestellung.getAsHausnummer1());
+        adresseRechnungBean.setProperty("firma", trimedNotEmpty(formSolutionsBestellung.getFirma1()));
+        adresseRechnungBean.setProperty("name", trimedNotEmpty(formSolutionsBestellung.getAsName1()));
+        adresseRechnungBean.setProperty("vorname", trimedNotEmpty(formSolutionsBestellung.getAsVorname1()));
+        adresseRechnungBean.setProperty("strasse", trimedNotEmpty(formSolutionsBestellung.getAsStrasse1()));
+        adresseRechnungBean.setProperty("hausnummer", trimedNotEmpty(formSolutionsBestellung.getAsHausnummer1()));
         adresseRechnungBean.setProperty("plz", formSolutionsBestellung.getAsPlz1());
-        adresseRechnungBean.setProperty(
-            "ort",
-            formSolutionsBestellung.getAsOrt1().trim().isEmpty() ? null : formSolutionsBestellung.getAsOrt1());
-        adresseRechnungBean.setProperty(
-            "staat",
-            formSolutionsBestellung.getStaat1().trim().isEmpty() ? null : formSolutionsBestellung.getStaat1());
+        adresseRechnungBean.setProperty("ort", trimedNotEmpty(formSolutionsBestellung.getAsOrt1()));
+        adresseRechnungBean.setProperty("staat", trimedNotEmpty(formSolutionsBestellung.getStaat1()));
 
         bestellungBean.setProperty("postweg", "Kartenauszug".equals(formSolutionsBestellung.getBezugsweg()));
         bestellungBean.setProperty("transid", formSolutionsBestellung.getTransId());
-        bestellungBean.setProperty("landparcelcode", formSolutionsBestellung.getFlurstueckskennzeichen());
+        if (formSolutionsBestellung.getFlurstueckskennzeichen1() != null) {
+            bestellungBean.setProperty("landparcelcode", formSolutionsBestellung.getFlurstueckskennzeichen1());
+        } else {
+            bestellungBean.setProperty("landparcelcode", formSolutionsBestellung.getFlurstueckskennzeichen());
+        }
         bestellungBean.setProperty("fk_produkt", produktBean);
-        bestellungBean.setProperty("fk_format", formatBean);
         bestellungBean.setProperty("massstab", massstab);
         bestellungBean.setProperty("fk_adresse_versand", adresseVersandBean);
         bestellungBean.setProperty("fk_adresse_rechnung", adresseRechnungBean);
@@ -426,6 +451,26 @@ public class FormSolutionServerNewStuffAvailableAction implements UserAwareServe
         bestellungBean.setProperty("eingegangen_am", new Date(new java.util.Date().getTime()));
 
         return bestellungBean;
+    }
+
+    /**
+     * DOCUMENT ME!
+     *
+     * @param   string  DOCUMENT ME!
+     *
+     * @return  DOCUMENT ME!
+     */
+    private String trimedNotEmpty(final String string) {
+        if (string == null) {
+            return null;
+        } else {
+            final String trimed = string.trim();
+            if (trimed.isEmpty()) {
+                return null;
+            } else {
+                return trimed;
+            }
+        }
     }
 
     /**
@@ -472,12 +517,16 @@ public class FormSolutionServerNewStuffAvailableAction implements UserAwareServe
         localServers.put("WUNDA_BLAU", DomainServerImpl.getServerInstance());
         search.setActiveLocalServers(localServers);
         search.setUser(getUser());
-        final Collection<MetaObjectNode> res = search.performServerSearch();
-        final MetaObjectNode mon = new ArrayList<MetaObjectNode>(res).get(0);
-        final CidsBean flurstueck = DomainServerImpl.getServerInstance()
-                    .getMetaObject(getUser(), mon.getObjectId(), mon.getClassId())
-                    .getBean();
-        return flurstueck;
+        final Collection<MetaObjectNode> mons = search.performServerSearch();
+        if ((mons != null) && !mons.isEmpty()) {
+            final MetaObjectNode mon = new ArrayList<MetaObjectNode>(mons).get(0);
+            final CidsBean flurstueck = DomainServerImpl.getServerInstance()
+                        .getMetaObject(getUser(), mon.getObjectId(), mon.getClassId())
+                        .getBean();
+            return flurstueck;
+        } else {
+            return null;
+        }
     }
 
     /**
@@ -490,8 +539,8 @@ public class FormSolutionServerNewStuffAvailableAction implements UserAwareServe
      * @throws  Exception  DOCUMENT ME!
      */
     private URL createProductUrl(final CidsBean bestellungBean) throws Exception {
-        final String code = (String)bestellungBean.getProperty("fk_produkt.key");
-        final String dinFormat = (String)bestellungBean.getProperty("fk_format.format");
+        final String code = (String)bestellungBean.getProperty("fk_produkt.fk_typ.key");
+        final String dinFormat = (String)bestellungBean.getProperty("fk_produkt.fk_format.format");
         final Integer scale = (Integer)bestellungBean.getProperty("massstab");
 
         final AlkisProductDescription product = getAlkisProductDescription(code, dinFormat, scale);
@@ -516,32 +565,254 @@ public class FormSolutionServerNewStuffAvailableAction implements UserAwareServe
         return url;
     }
 
+    /**
+     * DOCUMENT ME!
+     *
+     * @param   productUrl       DOCUMENT ME!
+     * @param   destinationPath  DOCUMENT ME!
+     *
+     * @throws  Exception  DOCUMENT ME!
+     */
+    private void downloadProdukt(final URL productUrl, final String destinationPath) throws Exception {
+        InputStream in = null;
+        OutputStream out = null;
+        try {
+            in = handler.doRequest(
+                    productUrl,
+                    new StringReader(""),
+                    AccessHandler.ACCESS_METHODS.GET_REQUEST,
+                    null,
+                    creds);
+
+            out = new FileOutputStream(destinationPath);
+            final byte[] buf = new byte[1024];
+            int len;
+            while ((len = in.read(buf)) > 0) {
+                out.write(buf, 0, len);
+            }
+            out.close();
+        } finally {
+            if (in != null) {
+                in.close();
+            }
+            if (out != null) {
+                out.close();
+            }
+        }
+    }
+
+    /**
+     * DOCUMENT ME!
+     *
+     * @param  transid  DOCUMENT ME!
+     * @param  status   DOCUMENT ME!
+     */
+    private void storeErrorSql(final String transid, final int status) {
+        try {
+            updateMySQL(transid, status);
+        } catch (final SQLException ex) {
+            LOG.error("Fehler beim Aktualisieren des MySQL-Datensatzes", ex);
+        }
+    }
+
+    /**
+     * DOCUMENT ME!
+     *
+     * @param  bestellungBean  DOCUMENT ME!
+     * @param  message         DOCUMENT ME!
+     * @param  exception       DOCUMENT ME!
+     */
+    private void storeErrorCids(final CidsBean bestellungBean, final String message, final Exception exception) {
+        try {
+            final StringWriter sw = new StringWriter();
+            final PrintWriter pw = new PrintWriter(sw);
+            exception.printStackTrace(pw);
+            bestellungBean.setProperty("fehler", message + ":\n" + sw.toString());
+        } catch (final Exception ex) {
+        }
+        try {
+            DomainServerImpl.getServerInstance().updateMetaObject(user, bestellungBean.getMetaObject());
+        } catch (final RemoteException ex) {
+            LOG.error("Fehler beim Persistieren der Bestellung", ex);
+        }
+    }
+
     @Override
     public Object execute(final Object body, final ServerActionParameter... params) {
+        Collection<String> transids = null;
+
         try {
-            for (final String auftrag : getOpenAuftraege()) {
-                final String auftragXml = getAuftrag(auftrag);
-                LOG.fatal(auftragXml);
-                final InputStream inputStream = IOUtils.toInputStream(auftragXml, "UTF-8");
-                final FormSolutionsBestellung formSolutionBestellung = createFormSolutionsBestellung(inputStream);
-                final CidsBean bestellungBean = createBestellungBean(formSolutionBestellung);
+            transids = getOpenTransids();
+        } catch (Exception ex) {
+            LOG.error("Die Liste der FormSolutions-Bestellungen konnte nicht abgerufen werden", ex);
+        }
 
-                final MetaObject persisted = DomainServerImpl.getServerInstance()
-                            .insertMetaObject(user, bestellungBean.getMetaObject());
-                final CidsBean persistedBestellungBean = persisted.getBean();
+        if (transids != null) {
+            for (final String transid : transids) {
+                boolean mysqlEntryAlreadyExists = false;
+                ResultSet resultSet = null;
+                try {
+                    resultSet = preparedSelectStatement.executeQuery();
+                    mysqlEntryAlreadyExists = resultSet.next();
+                } catch (final SQLException ex) {
+                    LOG.error("check nach bereits vorhandenen transids fehlgeschlagen.", ex);
+                } finally {
+                    if (resultSet != null) {
+                        try {
+                            resultSet.close();
+                        } catch (SQLException ex) {
+                        }
+                    }
+                }
 
-                final URL productUrl = createProductUrl(persistedBestellungBean);
-                persistedBestellungBean.setProperty("request_url", productUrl.toString());
+                CidsBean persistedBestellungBean = null;
 
-                // TODO request product, store it to his destination path, and then save the file path to the bean
-                persistedBestellungBean.persist();
+                // 0: in Bearbeitung
+                // 1: erfolgreich
+                // -1: Fehler beim Request/Parsen der FormSolution-Schnittstelle
+                // -2: Fehler beim Erzeugen des Cids-Objektes
+                // -3: Fehler beim Erzeugen/Runterladen des Produktes
+                // -4: Fehler beim Persistieren in Cids
+                int status = 0;
 
-                closeAuftrag(auftrag);
+                try {
+                    final String auftragXml = getAuftrag(transid);
+                    final InputStream inputStream = IOUtils.toInputStream(auftragXml, "UTF-8");
+                    final FormSolutionsBestellung formSolutionBestellung = createFormSolutionsBestellung(inputStream);
+
+                    try {
+                        final CidsBean bestellungBean = createBestellungBean(formSolutionBestellung);
+                        bestellungBean.setProperty("form_xml_orig", auftragXml);
+
+                        final MetaObject persisted = DomainServerImpl.getServerInstance()
+                                    .insertMetaObject(user, bestellungBean.getMetaObject());
+                        persistedBestellungBean = persisted.getBean();
+                    } catch (final Exception ex) {
+                        LOG.error("Fehler beim Erstellen des Bestellungs-Objektes", ex);
+                        status = -2;
+                    }
+                } catch (final Exception ex) {
+                    LOG.error("Fehler beim Parsen FormSolution", ex);
+                    status = -1;
+                }
+
+                try {
+                    if (mysqlEntryAlreadyExists) {
+                        updateMySQL(transid, status);
+                    } else {
+                        insertMySQL(transid, status);
+                    }
+                } catch (final SQLException ex) {
+                    LOG.error("Fehler beim Erzeugen/Aktualisieren des MySQL-Datensatzes.", ex);
+                    if (persistedBestellungBean != null) {
+                        storeErrorCids(
+                            persistedBestellungBean,
+                            "Fehler beim Erzeugen/Aktualisieren des MySQL-Datensatzes.",
+                            ex);
+                    }
+                    break;
+                }
+
+                if (persistedBestellungBean != null) {
+                    try {
+                        closeTransid(transid);
+                    } catch (Exception ex) {
+                        LOG.error("Fehler beim Schließen der Transaktion.", ex);
+                        storeErrorCids(persistedBestellungBean, "Fehler beim Schließen der Transaktion.", ex);
+                        break;
+                    }
+
+                    try {
+                        final URL productUrl = createProductUrl(persistedBestellungBean);
+                        persistedBestellungBean.setProperty("request_url", productUrl.toString());
+
+                        final String filePath = FormSolutionsConstants.PRODUKT_BASEPATH + File.separator
+                                    + persistedBestellungBean.getProperty("transid") + ".pdf";
+
+                        downloadProdukt(productUrl, filePath);
+
+                        final String fileNameOrig = (String)persistedBestellungBean.getProperty("fk_produkt.fk_typ.key")
+                                    + "."
+                                    + ((String)persistedBestellungBean.getProperty("landparcelcode")).replace("/", "--")
+                                    + ".pdf";
+
+                        persistedBestellungBean.setProperty("produkt_dateipfad", filePath);
+                        persistedBestellungBean.setProperty("produkt_dateiname_orig", fileNameOrig);
+                    } catch (final Exception ex) {
+                        LOG.error("Fehler beim Erzeugen des Produktes", ex);
+                        storeErrorSql(transid, -3);
+                        storeErrorCids(persistedBestellungBean, "Fehler beim Erzeugen des Produktes", ex);
+                        break;
+                    }
+
+                    try {
+                        DomainServerImpl.getServerInstance()
+                                .updateMetaObject(user, persistedBestellungBean.getMetaObject());
+                    } catch (final RemoteException ex) {
+                        LOG.error("Fehler beim Persistieren der Bestellung", ex);
+                        storeErrorSql(transid, -4);
+                    }
+
+                    try {
+                        updateMySQL(
+                            transid,
+                            1,
+                            (String)persistedBestellungBean.getProperty("produkt_dateipfad"),
+                            (String)persistedBestellungBean.getProperty("produkt_dateiname_orig"));
+                    } catch (final SQLException ex) {
+                        storeErrorCids(persistedBestellungBean, "Fehler beim Abschließen des MYSQL-Datensatzes", ex);
+                    }
+                }
             }
-        } catch (final Exception ex) {
-            LOG.fatal(ex, ex);
         }
         return null;
+    }
+
+    /**
+     * DOCUMENT ME!
+     *
+     * @param   transid  DOCUMENT ME!
+     * @param   status   DOCUMENT ME!
+     *
+     * @throws  SQLException  DOCUMENT ME!
+     */
+    private void insertMySQL(final String transid, final int status) throws SQLException {
+        preparedInsertStatement.setString(1, transid);
+        preparedInsertStatement.setInt(2, status);
+        preparedInsertStatement.setTimestamp(3, new Timestamp(new java.util.Date().getTime()));
+        preparedInsertStatement.executeUpdate();
+    }
+
+    /**
+     * DOCUMENT ME!
+     *
+     * @param   transid  DOCUMENT ME!
+     * @param   status   DOCUMENT ME!
+     *
+     * @throws  SQLException  DOCUMENT ME!
+     */
+    private void updateMySQL(final String transid, final int status) throws SQLException {
+        updateMySQL(transid, status, null, null);
+    }
+
+    /**
+     * DOCUMENT ME!
+     *
+     * @param   transid   DOCUMENT ME!
+     * @param   status    DOCUMENT ME!
+     * @param   filePath  DOCUMENT ME!
+     * @param   origName  DOCUMENT ME!
+     *
+     * @throws  SQLException  DOCUMENT ME!
+     */
+    private void updateMySQL(final String transid, final int status, final String filePath, final String origName)
+            throws SQLException {
+        preparedUpdateStatement.setInt(1, status);
+        preparedUpdateStatement.setString(2, filePath);
+        preparedUpdateStatement.setString(3, origName);
+        preparedUpdateStatement.setTimestamp(4, new Timestamp(new java.util.Date().getTime()));
+        preparedUpdateStatement.setString(5, transid);
+        preparedUpdateStatement.executeUpdate();
     }
 
     @Override
