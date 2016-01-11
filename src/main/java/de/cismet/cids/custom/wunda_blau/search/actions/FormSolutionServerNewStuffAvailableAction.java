@@ -627,6 +627,7 @@ public class FormSolutionServerNewStuffAvailableAction implements UserAwareServe
             final StringWriter sw = new StringWriter();
             final PrintWriter pw = new PrintWriter(sw);
             exception.printStackTrace(pw);
+            bestellungBean.setProperty("erledigt", false);
             bestellungBean.setProperty("fehler", message + ":\n" + sw.toString());
         } catch (final Exception ex) {
         }
@@ -738,6 +739,7 @@ public class FormSolutionServerNewStuffAvailableAction implements UserAwareServe
 
                         persistedBestellungBean.setProperty("produkt_dateipfad", filePath);
                         persistedBestellungBean.setProperty("produkt_dateiname_orig", fileNameOrig);
+                        persistedBestellungBean.setProperty("erledigt", true);
                     } catch (final Exception ex) {
                         LOG.error("Fehler beim Erzeugen des Produktes", ex);
                         storeErrorSql(transid, -3);
