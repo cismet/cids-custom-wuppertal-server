@@ -28,7 +28,6 @@ import com.vividsolutions.jts.geom.Point;
 import org.apache.commons.httpclient.UsernamePasswordCredentials;
 import org.apache.commons.io.IOUtils;
 
-import org.openide.util.Exceptions;
 import org.openide.util.Lookup;
 
 import java.io.BufferedReader;
@@ -46,13 +45,9 @@ import java.net.URL;
 import java.rmi.Remote;
 import java.rmi.RemoteException;
 
-import java.sql.Connection;
 import java.sql.Date;
-import java.sql.DriverManager;
-import java.sql.PreparedStatement;
 import java.sql.ResultSet;
 import java.sql.SQLException;
-import java.sql.Timestamp;
 
 import java.util.ArrayList;
 import java.util.Collection;
@@ -70,6 +65,7 @@ import de.cismet.cids.custom.utils.alkis.AlkisProductDescription;
 import de.cismet.cids.custom.utils.alkis.AlkisProducts;
 import de.cismet.cids.custom.utils.formsolutions.FormSolutionsBestellung;
 import de.cismet.cids.custom.utils.formsolutions.FormSolutionsConstants;
+import de.cismet.cids.custom.utils.formsolutions.FormSolutionsMySqlHelper;
 import de.cismet.cids.custom.wunda_blau.search.server.CidsAlkisSearchStatement;
 
 import de.cismet.cids.dynamics.CidsBean;
@@ -120,10 +116,7 @@ public class FormSolutionServerNewStuffAvailableAction implements UserAwareServe
 
     private User user;
     private MetaService metaService;
-    private Connection connect = null;
-    private final PreparedStatement preparedSelectStatement;
-    private final PreparedStatement preparedInsertStatement;
-    private final PreparedStatement preparedUpdateStatement;
+    private final FormSolutionsMySqlHelper mySqlHelper;
 
     //~ Constructors -----------------------------------------------------------
 
@@ -132,37 +125,7 @@ public class FormSolutionServerNewStuffAvailableAction implements UserAwareServe
      */
     public FormSolutionServerNewStuffAvailableAction() {
         creds = new UsernamePasswordCredentials(FormSolutionsConstants.USER, FormSolutionsConstants.PASSWORD);
-
-        PreparedStatement preparedSelectStatement = null;
-        PreparedStatement preparedInsertStatement = null;
-        PreparedStatement preparedUpdateStatement = null;
-
-        try {
-            Class.forName("com.mysql.jdbc.Driver");
-            connect = DriverManager.getConnection(FormSolutionsConstants.MYSQL_JDBC);
-            try {
-                preparedSelectStatement = connect.prepareStatement("SELECT id FROM bestellung where transid = '?';");
-            } catch (final SQLException ex) {
-                LOG.error(ex, ex);
-            }
-            try {
-                preparedInsertStatement = connect.prepareStatement(
-                        "INSERT INTO bestellung VALUES (default, ?, ?, null, null, ?);");
-            } catch (final SQLException ex) {
-                LOG.error(ex, ex);
-            }
-            try {
-                preparedUpdateStatement = connect.prepareStatement(
-                        "UPDATE bestellung SET status = ?, dokument_dateipfad = ?, dokument_dateiname = ?, last_update = ? WHERE transid = ?;");
-            } catch (final SQLException ex) {
-                LOG.error(ex, ex);
-            }
-        } catch (final Exception ex) {
-            Exceptions.printStackTrace(ex);
-        }
-        this.preparedSelectStatement = preparedSelectStatement;
-        this.preparedInsertStatement = preparedInsertStatement;
-        this.preparedUpdateStatement = preparedUpdateStatement;
+        mySqlHelper = FormSolutionsMySqlHelper.getInstance();
     }
 
     //~ Methods ----------------------------------------------------------------
@@ -413,7 +376,7 @@ public class FormSolutionServerNewStuffAvailableAction implements UserAwareServe
         final MetaClass adresseMc = getAdresseMetaClass();
         final CidsBean bestellungBean = bestellungMc.getEmptyInstance().getBean();
         final CidsBean adresseVersandBean = adresseMc.getEmptyInstance().getBean();
-        final CidsBean adresseRechnungBean = adresseMc.getEmptyInstance().getBean();
+        final CidsBean adresseRechnungBean;
 
         final Integer massstab = (formSolutionsBestellung.getMassstab() != null)
             ? Integer.parseInt(formSolutionsBestellung.getMassstab().split(":")[1]) : null;
@@ -431,14 +394,19 @@ public class FormSolutionServerNewStuffAvailableAction implements UserAwareServe
         adresseVersandBean.setProperty("ort", trimedNotEmpty(formSolutionsBestellung.getAsOrt()));
         adresseVersandBean.setProperty("staat", trimedNotEmpty(formSolutionsBestellung.getStaat()));
 
-        adresseRechnungBean.setProperty("firma", trimedNotEmpty(formSolutionsBestellung.getFirma1()));
-        adresseRechnungBean.setProperty("name", trimedNotEmpty(formSolutionsBestellung.getAsName1()));
-        adresseRechnungBean.setProperty("vorname", trimedNotEmpty(formSolutionsBestellung.getAsVorname1()));
-        adresseRechnungBean.setProperty("strasse", trimedNotEmpty(formSolutionsBestellung.getAsStrasse1()));
-        adresseRechnungBean.setProperty("hausnummer", trimedNotEmpty(formSolutionsBestellung.getAsHausnummer1()));
-        adresseRechnungBean.setProperty("plz", formSolutionsBestellung.getAsPlz1());
-        adresseRechnungBean.setProperty("ort", trimedNotEmpty(formSolutionsBestellung.getAsOrt1()));
-        adresseRechnungBean.setProperty("staat", trimedNotEmpty(formSolutionsBestellung.getStaat1()));
+        if ("ja".equalsIgnoreCase(formSolutionsBestellung.getRechnungsanschriftLieferanschrift())) {
+            adresseRechnungBean = adresseVersandBean;
+        } else {
+            adresseRechnungBean = adresseMc.getEmptyInstance().getBean();
+            adresseRechnungBean.setProperty("firma", trimedNotEmpty(formSolutionsBestellung.getFirma1()));
+            adresseRechnungBean.setProperty("name", trimedNotEmpty(formSolutionsBestellung.getAsName1()));
+            adresseRechnungBean.setProperty("vorname", trimedNotEmpty(formSolutionsBestellung.getAsVorname1()));
+            adresseRechnungBean.setProperty("strasse", trimedNotEmpty(formSolutionsBestellung.getAsStrasse1()));
+            adresseRechnungBean.setProperty("hausnummer", trimedNotEmpty(formSolutionsBestellung.getAsHausnummer1()));
+            adresseRechnungBean.setProperty("plz", formSolutionsBestellung.getAsPlz1());
+            adresseRechnungBean.setProperty("ort", trimedNotEmpty(formSolutionsBestellung.getAsOrt1()));
+            adresseRechnungBean.setProperty("staat", trimedNotEmpty(formSolutionsBestellung.getStaat1()));
+        }
 
         bestellungBean.setProperty("postweg", "Kartenausdruck".equals(formSolutionsBestellung.getBezugsweg()));
         bestellungBean.setProperty("transid", formSolutionsBestellung.getTransId());
@@ -520,13 +488,9 @@ public class FormSolutionServerNewStuffAvailableAction implements UserAwareServe
                 flurstueckKennzeichen,
                 null);
 
-        if (DomainServerImpl.getServerInstance().hasConfigAttr(
-                        getUser(),
-                        "custom.formsolutions.resetactivelocalservers")) {
-            final Map localServers = new HashMap<String, Remote>();
-            localServers.put("WUNDA_BLAU", DomainServerImpl.getServerInstance());
-            search.setActiveLocalServers(localServers);
-        }
+        final Map localServers = new HashMap<String, Remote>();
+        localServers.put("WUNDA_BLAU", DomainServerImpl.getServerInstance());
+        search.setActiveLocalServers(localServers);
         search.setUser(getUser());
         final Collection<MetaObjectNode> mons = search.performServerSearch();
         if ((mons != null) && !mons.isEmpty()) {
@@ -620,7 +584,7 @@ public class FormSolutionServerNewStuffAvailableAction implements UserAwareServe
      */
     private void storeErrorSql(final String transid, final int status) {
         try {
-            updateMySQL(transid, status);
+            mySqlHelper.updateMySQL(transid, status);
         } catch (final SQLException ex) {
             LOG.error("Fehler beim Aktualisieren des MySQL-Datensatzes", ex);
         }
@@ -651,15 +615,6 @@ public class FormSolutionServerNewStuffAvailableAction implements UserAwareServe
 
     @Override
     public Object execute(final Object body, final ServerActionParameter... params) {
-        try {
-            final boolean noClose = DomainServerImpl.getServerInstance()
-                        .hasConfigAttr(getUser(), "custom.formsolutions.noexecute");
-            if (noClose) {
-                return null;
-            }
-        } catch (final Exception ex) {
-        }
-
         Collection<String> transids = null;
 
         try {
@@ -671,30 +626,22 @@ public class FormSolutionServerNewStuffAvailableAction implements UserAwareServe
         if (transids != null) {
             for (final String transid : transids) {
                 boolean mysqlEntryAlreadyExists = false;
-                ResultSet resultSet = null;
                 try {
-                    resultSet = preparedSelectStatement.executeQuery();
-                    mysqlEntryAlreadyExists = resultSet.next();
+                    final ResultSet resultSet = mySqlHelper.selectMySQL(transid);
+                    mysqlEntryAlreadyExists = (resultSet != null) && resultSet.next();
                 } catch (final SQLException ex) {
                     LOG.error("check nach bereits vorhandenen transids fehlgeschlagen.", ex);
-                } finally {
-                    if (resultSet != null) {
-                        try {
-                            resultSet.close();
-                        } catch (SQLException ex) {
-                        }
-                    }
                 }
 
                 CidsBean persistedBestellungBean = null;
 
-                // 0: in Bearbeitung
-                // 1: erfolgreich
+                // 1: in Bearbeitung
+                // 0: erfolgreich
                 // -1: Fehler beim Request/Parsen der FormSolution-Schnittstelle
                 // -2: Fehler beim Erzeugen des Cids-Objektes
                 // -3: Fehler beim Erzeugen/Runterladen des Produktes
                 // -4: Fehler beim Persistieren in Cids
-                int status = 0;
+                int status = 1;
 
                 try {
                     final String auftragXml = getAuftrag(transid);
@@ -719,9 +666,9 @@ public class FormSolutionServerNewStuffAvailableAction implements UserAwareServe
 
                 try {
                     if (mysqlEntryAlreadyExists) {
-                        updateMySQL(transid, status);
+                        mySqlHelper.updateMySQL(transid, status);
                     } else {
-                        insertMySQL(transid, status);
+                        mySqlHelper.insertMySQL(transid, status);
                     }
                 } catch (final SQLException ex) {
                     LOG.error("Fehler beim Erzeugen/Aktualisieren des MySQL-Datensatzes.", ex);
@@ -734,117 +681,78 @@ public class FormSolutionServerNewStuffAvailableAction implements UserAwareServe
                     break;
                 }
 
+                if (status < 0) {
+                    break;
+                }
+
                 if (persistedBestellungBean != null) {
-                    if ((persistedBestellungBean.getProperty("postweg") == null)
-                                || !(Boolean)persistedBestellungBean.getProperty("postweg")) {
-                        try {
-                            closeTransid(transid);
-                        } catch (Exception ex) {
-                            LOG.error("Fehler beim Schließen der Transaktion.", ex);
-                            storeErrorCids(persistedBestellungBean, "Fehler beim Schließen der Transaktion.", ex);
-                            break;
+                    try {
+                        closeTransid(transid);
+                    } catch (Exception ex) {
+                        LOG.error("Fehler beim Schließen der Transaktion.", ex);
+                        storeErrorCids(persistedBestellungBean, "Fehler beim Schließen der Transaktion.", ex);
+                        break;
+                    }
+
+                    try {
+                        final URL productUrl = createProductUrl(persistedBestellungBean);
+                        persistedBestellungBean.setProperty("request_url", productUrl.toString());
+
+                        final String filePath = FormSolutionsConstants.PRODUKT_BASEPATH + File.separator
+                                    + persistedBestellungBean.getProperty("transid") + ".pdf";
+
+                        downloadProdukt(productUrl, filePath);
+
+                        final String fileNameOrig = (String)persistedBestellungBean.getProperty("fk_produkt.fk_typ.key")
+                                    + "."
+                                    + ((String)persistedBestellungBean.getProperty("landparcelcode")).replace(
+                                        "/",
+                                        "--")
+                                    + ".pdf";
+
+                        persistedBestellungBean.setProperty("produkt_dateipfad", filePath);
+                        persistedBestellungBean.setProperty("produkt_dateiname_orig", fileNameOrig);
+                        persistedBestellungBean.setProperty("erledigt", true);
+                    } catch (final Exception ex) {
+                        LOG.error("Fehler beim Erzeugen des Produktes", ex);
+                        storeErrorSql(transid, -3);
+                        storeErrorCids(persistedBestellungBean, "Fehler beim Erzeugen des Produktes", ex);
+                        break;
+                    }
+
+                    try {
+                        DomainServerImpl.getServerInstance()
+                                .updateMetaObject(user, persistedBestellungBean.getMetaObject());
+                    } catch (final RemoteException ex) {
+                        LOG.error("Fehler beim Persistieren der Bestellung", ex);
+                        storeErrorSql(transid, -4);
+                        break;
+                    }
+
+                    try {
+                        final int okStatus;
+                        final Boolean propPostweg = (Boolean)persistedBestellungBean.getProperty("postweg");
+                        if (Boolean.TRUE.equals(propPostweg)) {
+                            okStatus = 2;
+                        } else {
+                            okStatus = 1;
                         }
 
-                        try {
-                            final URL productUrl = createProductUrl(persistedBestellungBean);
-                            persistedBestellungBean.setProperty("request_url", productUrl.toString());
-
-                            final String filePath = FormSolutionsConstants.PRODUKT_BASEPATH + File.separator
-                                        + persistedBestellungBean.getProperty("transid") + ".pdf";
-
-                            downloadProdukt(productUrl, filePath);
-
-                            final String fileNameOrig =
-                                (String)persistedBestellungBean.getProperty("fk_produkt.fk_typ.key")
-                                        + "."
-                                        + ((String)persistedBestellungBean.getProperty("landparcelcode")).replace(
-                                            "/",
-                                            "--")
-                                        + ".pdf";
-
-                            persistedBestellungBean.setProperty("produkt_dateipfad", filePath);
-                            persistedBestellungBean.setProperty("produkt_dateiname_orig", fileNameOrig);
-                            persistedBestellungBean.setProperty("erledigt", true);
-                        } catch (final Exception ex) {
-                            LOG.error("Fehler beim Erzeugen des Produktes", ex);
-                            storeErrorSql(transid, -3);
-                            storeErrorCids(persistedBestellungBean, "Fehler beim Erzeugen des Produktes", ex);
-                            break;
-                        }
-
-                        try {
-                            DomainServerImpl.getServerInstance()
-                                    .updateMetaObject(user, persistedBestellungBean.getMetaObject());
-                        } catch (final RemoteException ex) {
-                            LOG.error("Fehler beim Persistieren der Bestellung", ex);
-                            storeErrorSql(transid, -4);
-                        }
-
-                        try {
-                            updateMySQL(
-                                transid,
-                                1,
-                                (String)persistedBestellungBean.getProperty("produkt_dateipfad"),
-                                (String)persistedBestellungBean.getProperty("produkt_dateiname_orig"));
-                        } catch (final SQLException ex) {
-                            storeErrorCids(
-                                persistedBestellungBean,
-                                "Fehler beim Abschließen des MYSQL-Datensatzes",
-                                ex);
-                        }
-                    } else {
+                        mySqlHelper.updateMySQL(
+                            transid,
+                            okStatus,
+                            (String)persistedBestellungBean.getProperty("produkt_dateipfad"),
+                            (String)persistedBestellungBean.getProperty("produkt_dateiname_orig"));
+                    } catch (final SQLException ex) {
+                        storeErrorCids(
+                            persistedBestellungBean,
+                            "Fehler beim Abschließen des MYSQL-Datensatzes",
+                            ex);
                     }
                 }
             }
         }
         return null;
-    }
-
-    /**
-     * DOCUMENT ME!
-     *
-     * @param   transid  DOCUMENT ME!
-     * @param   status   DOCUMENT ME!
-     *
-     * @throws  SQLException  DOCUMENT ME!
-     */
-    private void insertMySQL(final String transid, final int status) throws SQLException {
-        preparedInsertStatement.setString(1, transid);
-        preparedInsertStatement.setInt(2, status);
-        preparedInsertStatement.setTimestamp(3, new Timestamp(new java.util.Date().getTime()));
-        preparedInsertStatement.executeUpdate();
-    }
-
-    /**
-     * DOCUMENT ME!
-     *
-     * @param   transid  DOCUMENT ME!
-     * @param   status   DOCUMENT ME!
-     *
-     * @throws  SQLException  DOCUMENT ME!
-     */
-    private void updateMySQL(final String transid, final int status) throws SQLException {
-        updateMySQL(transid, status, null, null);
-    }
-
-    /**
-     * DOCUMENT ME!
-     *
-     * @param   transid   DOCUMENT ME!
-     * @param   status    DOCUMENT ME!
-     * @param   filePath  DOCUMENT ME!
-     * @param   origName  DOCUMENT ME!
-     *
-     * @throws  SQLException  DOCUMENT ME!
-     */
-    private void updateMySQL(final String transid, final int status, final String filePath, final String origName)
-            throws SQLException {
-        preparedUpdateStatement.setInt(1, status);
-        preparedUpdateStatement.setString(2, filePath);
-        preparedUpdateStatement.setString(3, origName);
-        preparedUpdateStatement.setTimestamp(4, new Timestamp(new java.util.Date().getTime()));
-        preparedUpdateStatement.setString(5, transid);
-        preparedUpdateStatement.executeUpdate();
     }
 
     @Override
