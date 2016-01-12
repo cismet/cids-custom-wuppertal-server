@@ -308,6 +308,11 @@ public class FormSolutionServerNewStuffAvailableAction implements UserAwareServe
      * @throws  Exception  DOCUMENT ME!
      */
     private void closeTransid(final String auftrag) throws Exception {
+        final boolean noClose = DomainServerImpl.getServerInstance()
+                    .hasConfigAttr(getUser(), "custom.formsolutions.noclose");
+        if (noClose) {
+            return;
+        }
         handler.doRequest(
             new URL(String.format(URL_AUFTRAG_DELETE, auftrag)),
             new StringReader(""),
@@ -435,12 +440,14 @@ public class FormSolutionServerNewStuffAvailableAction implements UserAwareServe
         adresseRechnungBean.setProperty("ort", trimedNotEmpty(formSolutionsBestellung.getAsOrt1()));
         adresseRechnungBean.setProperty("staat", trimedNotEmpty(formSolutionsBestellung.getStaat1()));
 
-        bestellungBean.setProperty("postweg", "Kartenauszug".equals(formSolutionsBestellung.getBezugsweg()));
+        bestellungBean.setProperty("postweg", "Kartenausdruck".equals(formSolutionsBestellung.getBezugsweg()));
         bestellungBean.setProperty("transid", formSolutionsBestellung.getTransId());
-        if (formSolutionsBestellung.getFlurstueckskennzeichen1() != null) {
-            bestellungBean.setProperty("landparcelcode", formSolutionsBestellung.getFlurstueckskennzeichen1());
+        final String landparcelcode1 = trimedNotEmpty(formSolutionsBestellung.getFlurstueckskennzeichen1());
+        final String landparcelcode = trimedNotEmpty(formSolutionsBestellung.getFlurstueckskennzeichen());
+        if (landparcelcode1 != null) {
+            bestellungBean.setProperty("landparcelcode", landparcelcode1);
         } else {
-            bestellungBean.setProperty("landparcelcode", formSolutionsBestellung.getFlurstueckskennzeichen());
+            bestellungBean.setProperty("landparcelcode", landparcelcode);
         }
         bestellungBean.setProperty("fk_produkt", produktBean);
         bestellungBean.setProperty("massstab", massstab);
@@ -513,9 +520,13 @@ public class FormSolutionServerNewStuffAvailableAction implements UserAwareServe
                 flurstueckKennzeichen,
                 null);
 
-        final Map localServers = new HashMap<String, Remote>();
-        localServers.put("WUNDA_BLAU", DomainServerImpl.getServerInstance());
-        search.setActiveLocalServers(localServers);
+        if (DomainServerImpl.getServerInstance().hasConfigAttr(
+                        getUser(),
+                        "custom.formsolutions.resetactivelocalservers")) {
+            final Map localServers = new HashMap<String, Remote>();
+            localServers.put("WUNDA_BLAU", DomainServerImpl.getServerInstance());
+            search.setActiveLocalServers(localServers);
+        }
         search.setUser(getUser());
         final Collection<MetaObjectNode> mons = search.performServerSearch();
         if ((mons != null) && !mons.isEmpty()) {
@@ -640,6 +651,15 @@ public class FormSolutionServerNewStuffAvailableAction implements UserAwareServe
 
     @Override
     public Object execute(final Object body, final ServerActionParameter... params) {
+        try {
+            final boolean noClose = DomainServerImpl.getServerInstance()
+                        .hasConfigAttr(getUser(), "custom.formsolutions.noexecute");
+            if (noClose) {
+                return null;
+            }
+        } catch (final Exception ex) {
+        }
+
         Collection<String> transids = null;
 
         try {
