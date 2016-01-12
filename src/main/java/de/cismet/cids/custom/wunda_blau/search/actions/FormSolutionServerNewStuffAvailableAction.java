@@ -735,54 +735,64 @@ public class FormSolutionServerNewStuffAvailableAction implements UserAwareServe
                 }
 
                 if (persistedBestellungBean != null) {
-                    try {
-                        closeTransid(transid);
-                    } catch (Exception ex) {
-                        LOG.error("Fehler beim Schließen der Transaktion.", ex);
-                        storeErrorCids(persistedBestellungBean, "Fehler beim Schließen der Transaktion.", ex);
-                        break;
-                    }
+                    if ((persistedBestellungBean.getProperty("postweg") == null)
+                                || !(Boolean)persistedBestellungBean.getProperty("postweg")) {
+                        try {
+                            closeTransid(transid);
+                        } catch (Exception ex) {
+                            LOG.error("Fehler beim Schließen der Transaktion.", ex);
+                            storeErrorCids(persistedBestellungBean, "Fehler beim Schließen der Transaktion.", ex);
+                            break;
+                        }
 
-                    try {
-                        final URL productUrl = createProductUrl(persistedBestellungBean);
-                        persistedBestellungBean.setProperty("request_url", productUrl.toString());
+                        try {
+                            final URL productUrl = createProductUrl(persistedBestellungBean);
+                            persistedBestellungBean.setProperty("request_url", productUrl.toString());
 
-                        final String filePath = FormSolutionsConstants.PRODUKT_BASEPATH + File.separator
-                                    + persistedBestellungBean.getProperty("transid") + ".pdf";
+                            final String filePath = FormSolutionsConstants.PRODUKT_BASEPATH + File.separator
+                                        + persistedBestellungBean.getProperty("transid") + ".pdf";
 
-                        downloadProdukt(productUrl, filePath);
+                            downloadProdukt(productUrl, filePath);
 
-                        final String fileNameOrig = (String)persistedBestellungBean.getProperty("fk_produkt.fk_typ.key")
-                                    + "."
-                                    + ((String)persistedBestellungBean.getProperty("landparcelcode")).replace("/", "--")
-                                    + ".pdf";
+                            final String fileNameOrig =
+                                (String)persistedBestellungBean.getProperty("fk_produkt.fk_typ.key")
+                                        + "."
+                                        + ((String)persistedBestellungBean.getProperty("landparcelcode")).replace(
+                                            "/",
+                                            "--")
+                                        + ".pdf";
 
-                        persistedBestellungBean.setProperty("produkt_dateipfad", filePath);
-                        persistedBestellungBean.setProperty("produkt_dateiname_orig", fileNameOrig);
-                        persistedBestellungBean.setProperty("erledigt", true);
-                    } catch (final Exception ex) {
-                        LOG.error("Fehler beim Erzeugen des Produktes", ex);
-                        storeErrorSql(transid, -3);
-                        storeErrorCids(persistedBestellungBean, "Fehler beim Erzeugen des Produktes", ex);
-                        break;
-                    }
+                            persistedBestellungBean.setProperty("produkt_dateipfad", filePath);
+                            persistedBestellungBean.setProperty("produkt_dateiname_orig", fileNameOrig);
+                            persistedBestellungBean.setProperty("erledigt", true);
+                        } catch (final Exception ex) {
+                            LOG.error("Fehler beim Erzeugen des Produktes", ex);
+                            storeErrorSql(transid, -3);
+                            storeErrorCids(persistedBestellungBean, "Fehler beim Erzeugen des Produktes", ex);
+                            break;
+                        }
 
-                    try {
-                        DomainServerImpl.getServerInstance()
-                                .updateMetaObject(user, persistedBestellungBean.getMetaObject());
-                    } catch (final RemoteException ex) {
-                        LOG.error("Fehler beim Persistieren der Bestellung", ex);
-                        storeErrorSql(transid, -4);
-                    }
+                        try {
+                            DomainServerImpl.getServerInstance()
+                                    .updateMetaObject(user, persistedBestellungBean.getMetaObject());
+                        } catch (final RemoteException ex) {
+                            LOG.error("Fehler beim Persistieren der Bestellung", ex);
+                            storeErrorSql(transid, -4);
+                        }
 
-                    try {
-                        updateMySQL(
-                            transid,
-                            1,
-                            (String)persistedBestellungBean.getProperty("produkt_dateipfad"),
-                            (String)persistedBestellungBean.getProperty("produkt_dateiname_orig"));
-                    } catch (final SQLException ex) {
-                        storeErrorCids(persistedBestellungBean, "Fehler beim Abschließen des MYSQL-Datensatzes", ex);
+                        try {
+                            updateMySQL(
+                                transid,
+                                1,
+                                (String)persistedBestellungBean.getProperty("produkt_dateipfad"),
+                                (String)persistedBestellungBean.getProperty("produkt_dateiname_orig"));
+                        } catch (final SQLException ex) {
+                            storeErrorCids(
+                                persistedBestellungBean,
+                                "Fehler beim Abschließen des MYSQL-Datensatzes",
+                                ex);
+                        }
+                    } else {
                     }
                 }
             }
