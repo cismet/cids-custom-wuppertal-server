@@ -52,7 +52,7 @@ public class FormSolutionBestellungChangeStatusServerAction implements UserAware
 
         //~ Enum constants -----------------------------------------------------
 
-        METAOBJECTNODE, ERLEDIGT
+        ERLEDIGT
     }
 
     //~ Instance fields --------------------------------------------------------
@@ -74,41 +74,52 @@ public class FormSolutionBestellungChangeStatusServerAction implements UserAware
 
     @Override
     public Object execute(final Object body, final ServerActionParameter... params) {
-        MetaObjectNode mon = null;
         Boolean erledigt = null;
+
+        if (body == null) {
+            throw new RuntimeException("The body is missing.");
+        } else if (!(body instanceof MetaObjectNode)) {
+            throw new RuntimeException("Wrong type for body, have to be an MetaObjectNode.");
+        }
+
+        final MetaObjectNode mon = (MetaObjectNode)body;
+
         if (params != null) {
             for (final ServerActionParameter sap : params) {
-                if (sap.getKey().equals(PARAMETER_TYPE.METAOBJECTNODE.toString())) {
-                    mon = (MetaObjectNode)sap.getValue();
-                } else if (sap.getKey().equals(PARAMETER_TYPE.ERLEDIGT.toString())) {
+                if (sap.getKey().equals(PARAMETER_TYPE.ERLEDIGT.toString())) {
                     erledigt = (Boolean)sap.getValue();
                 }
             }
         }
-        if ((mon != null) && (erledigt != null)) {
-            try {
-                final CidsBean bestellungBean = DomainServerImpl.getServerInstance()
-                            .getMetaObject(getUser(), mon.getObjectId(), mon.getClassId())
-                            .getBean();
-                final String transid = (String)bestellungBean.getProperty("transid");
-                final int status;
-                final Boolean postweg = (Boolean)bestellungBean.getProperty("postweg");
+
+        if (erledigt == null) {
+            throw new RuntimeException("Missing Paremeter: PARAMETER_TYPE.ERLEDIGT.");
+        }
+
+        try {
+            final CidsBean bestellungBean = DomainServerImpl.getServerInstance()
+                        .getMetaObject(getUser(), mon.getObjectId(), mon.getClassId())
+                        .getBean();
+            final String transid = (String)bestellungBean.getProperty("transid");
+            final int status;
+            final Boolean postweg = (Boolean)bestellungBean.getProperty("postweg");
+            if (Boolean.TRUE.equals(postweg)) {
                 if (erledigt) {
                     status = 0;
-                } else if (Boolean.TRUE.equals(postweg)) {
-                    status = 2;
                 } else {
-                    status = 1;
+                    status = 10;
                 }
                 mySqlHelper.updateMySQL(transid, status);
                 bestellungBean.setProperty("erledigt", erledigt);
+                bestellungBean.setProperty("fehler", null);
                 DomainServerImpl.getServerInstance().updateMetaObject(getUser(), bestellungBean.getMetaObject());
                 return true;
-            } catch (final Exception ex) {
-                LOG.error(ex, ex);
             }
+            return false;
+        } catch (final Exception ex) {
+            LOG.error(ex, ex);
+            return ex;
         }
-        return false;
     }
 
     @Override

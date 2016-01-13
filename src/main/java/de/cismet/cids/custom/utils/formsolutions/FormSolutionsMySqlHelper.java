@@ -58,7 +58,7 @@ public class FormSolutionsMySqlHelper {
             Class.forName("com.mysql.jdbc.Driver");
             connect = DriverManager.getConnection(FormSolutionsConstants.MYSQL_JDBC);
             try {
-                preparedSelectStatement = connect.prepareStatement("SELECT id FROM bestellung where transid = ?;");
+                preparedSelectStatement = connect.prepareStatement("SELECT id FROM bestellung WHERE transid = ?;");
             } catch (final SQLException ex) {
                 LOG.error(ex, ex);
             }
@@ -153,18 +153,8 @@ public class FormSolutionsMySqlHelper {
      * @throws  SQLException  DOCUMENT ME!
      */
     public ResultSet selectMySQL(final String transid) throws SQLException {
-        ResultSet resultSet = null;
-        try {
-            preparedSelectStatement.setString(1, transid);
-            resultSet = preparedSelectStatement.executeQuery();
-        } finally {
-            if (resultSet != null) {
-                try {
-                    resultSet.close();
-                } catch (SQLException ex) {
-                }
-            }
-        }
+        preparedSelectStatement.setString(1, transid);
+        final ResultSet resultSet = preparedSelectStatement.executeQuery();
         return resultSet;
     }
 }

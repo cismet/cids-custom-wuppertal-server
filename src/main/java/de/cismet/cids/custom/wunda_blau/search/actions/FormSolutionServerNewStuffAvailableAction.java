@@ -243,6 +243,56 @@ public class FormSolutionServerNewStuffAvailableAction implements UserAwareServe
     /**
      * DOCUMENT ME!
      *
+     * @param  transid         DOCUMENT ME!
+     * @param  status          DOCUMENT ME!
+     * @param  bestellungBean  DOCUMENT ME!
+     */
+    private void setSuccessStatus(final String transid, final int status, final CidsBean bestellungBean) {
+        try {
+            mySqlHelper.updateMySQL(transid, status);
+        } catch (final Exception ex) {
+            setErrorStatus(transid, 100, bestellungBean, "Fehler Aktualisieren des MySQL-Datensatzes.", ex);
+        }
+    }
+
+    /**
+     * DOCUMENT ME!
+     *
+     * @param  transid         DOCUMENT ME!
+     * @param  status          DOCUMENT ME!
+     * @param  bestellungBean  DOCUMENT ME!
+     * @param  message         DOCUMENT ME!
+     * @param  exception       DOCUMENT ME!
+     */
+    private void setErrorStatus(final String transid,
+            final int status,
+            final CidsBean bestellungBean,
+            final String message,
+            final Exception exception) {
+        LOG.error(message, exception);
+        if (bestellungBean != null) {
+            storeErrorCids(bestellungBean, message, exception);
+            try {
+                final StringWriter sw = new StringWriter();
+                final PrintWriter pw = new PrintWriter(sw);
+                exception.printStackTrace(pw);
+                bestellungBean.setProperty("erledigt", false);
+                bestellungBean.setProperty("fehler", message + ":\n" + sw.toString());
+                getMetaService().updateMetaObject(user, bestellungBean.getMetaObject());
+            } catch (final Exception ex) {
+                LOG.error("Fehler beim Persistieren der Bean", ex);
+            }
+        }
+        try {
+            mySqlHelper.updateMySQL(transid, -status);
+        } catch (final SQLException ex2) {
+            LOG.error("Fehler beim Aktualisieren des MySQL-Datensatzes", ex2);
+        }
+    }
+
+    /**
+     * DOCUMENT ME!
+     *
      * @param   auftrag  DOCUMENT ME!
      *
      * @return  DOCUMENT ME!
@@ -489,14 +539,13 @@ public class FormSolutionServerNewStuffAvailableAction implements UserAwareServe
                 null);
 
         final Map localServers = new HashMap<String, Remote>();
-        localServers.put("WUNDA_BLAU", DomainServerImpl.getServerInstance());
+        localServers.put("WUNDA_BLAU", getMetaService());
         search.setActiveLocalServers(localServers);
         search.setUser(getUser());
         final Collection<MetaObjectNode> mons = search.performServerSearch();
         if ((mons != null) && !mons.isEmpty()) {
             final MetaObjectNode mon = new ArrayList<MetaObjectNode>(mons).get(0);
-            final CidsBean flurstueck = DomainServerImpl.getServerInstance()
-                        .getMetaObject(getUser(), mon.getObjectId(), mon.getClassId())
+            final CidsBean flurstueck = getMetaService().getMetaObject(getUser(), mon.getObjectId(), mon.getClassId())
                         .getBean();
             return flurstueck;
         } else {
@@ -579,177 +628,352 @@ public class FormSolutionServerNewStuffAvailableAction implements UserAwareServe
     /**
      * DOCUMENT ME!
      *
-     * @param  transid  DOCUMENT ME!
-     * @param  status   DOCUMENT ME!
+     * @param  bestellungBean  DOCUMENT ME!
+     * @param  message         DOCUMENT ME!
+     * @param  exception       DOCUMENT ME!
      */
-    private void storeErrorSql(final String transid, final int status) {
-        try {
-            mySqlHelper.updateMySQL(transid, status);
-        } catch (final SQLException ex) {
-            LOG.error("Fehler beim Aktualisieren des MySQL-Datensatzes", ex);
+    private void storeErrorCids(final CidsBean bestellungBean, final String message, final Exception exception) {
+    }
+
+    /**
+     * DOCUMENT ME!
+     *
+     * @param   transids  DOCUMENT ME!
+     *
+     * @return  DOCUMENT ME!
+     */
+    private Map<String, String> extractXmlParts(final Collection<String> transids) {
+        final Map<String, String> fsXmlMap = new HashMap<String, String>(transids.size());
+
+        for (final String transid : transids) {
+            try {
+                final String auftragXml = getAuftrag(transid);
+                fsXmlMap.put(transid, auftragXml);
+                setSuccessStatus(transid, 70, null);
+            } catch (final Exception ex) {
+                setErrorStatus(transid, 70, null, "Fehler beim Parsen FormSolution", ex);
+            }
+        }
+        return fsXmlMap;
+    }
+
+    /**
+     * DOCUMENT ME!
+     *
+     * @param   fsXmlMap  DOCUMENT ME!
+     *
+     * @return  DOCUMENT ME!
+     */
+    private Map<String, FormSolutionsBestellung> createBestellungMap(final Map<String, String> fsXmlMap) {
+        final Collection<String> transids = new ArrayList<String>(fsXmlMap.keySet());
+
+        final Map<String, FormSolutionsBestellung> fsBestellungMap = new HashMap<String, FormSolutionsBestellung>(
+                transids.size());
+        for (final String transid : transids) {
+            try {
+                final String auftragXml = fsXmlMap.get(transid);
+                final InputStream inputStream = IOUtils.toInputStream(auftragXml, "UTF-8");
+                final FormSolutionsBestellung formSolutionBestellung = createFormSolutionsBestellung(inputStream);
+                fsBestellungMap.put(transid, formSolutionBestellung);
+
+                setSuccessStatus(transid, 60, null);
+            } catch (final Exception ex) {
+                setErrorStatus(transid, 60, null, "Fehler beim Parsen FormSolution", ex);
+            }
+        }
+
+        return fsBestellungMap;
+    }
+
+    /**
+     * DOCUMENT ME!
+     *
+     * @param   transids            DOCUMENT ME!
+     * @param   insertExceptionMap  DOCUMENT ME!
+     *
+     * @return  DOCUMENT ME!
+     */
+    private Map<String, CidsBean> createCidsEntries(final Collection<String> transids,
+            final Map<String, Exception> insertExceptionMap) {
+        final Map<String, String> fsXmlMap = extractXmlParts(transids);
+        final Map<String, FormSolutionsBestellung> fsBestellungMap = createBestellungMap(fsXmlMap);
+
+        // nur die transids bearbeiten, bei denen das Parsen auch geklappt hat
+        final Collection<String> transidsNew = new ArrayList<String>(fsBestellungMap.keySet());
+
+        final Map<String, CidsBean> fsBeanMap = new HashMap<String, CidsBean>(transidsNew.size());
+        for (final String transid : transidsNew) {
+            final String auftragXml = fsXmlMap.get(transid);
+            final FormSolutionsBestellung formSolutionBestellung = fsBestellungMap.get(transid);
+
+            try {
+                final Exception insertException = insertExceptionMap.get(transid);
+
+                final CidsBean bestellungBean = createBestellungBean(formSolutionBestellung);
+                bestellungBean.setProperty("form_xml_orig", auftragXml);
+                final MetaObject persistedMo = getMetaService().insertMetaObject(
+                        user,
+                        bestellungBean.getMetaObject());
+                if (insertException != null) {
+                    try {
+                        final StringWriter sw = new StringWriter();
+                        insertException.printStackTrace(new PrintWriter(sw));
+                        bestellungBean.setProperty(
+                            "fehler",
+                            "Fehler beim Erzeugen des MySQL-Datensatzes"
+                                    + ":\n"
+                                    + sw.toString());
+                    } catch (final Exception ex) {
+                    }
+                }
+
+                final CidsBean persistedBestellungBean = persistedMo.getBean();
+                fsBeanMap.put(transid, persistedBestellungBean);
+
+                setSuccessStatus(transid, 50, persistedBestellungBean);
+            } catch (final Exception ex) {
+                setErrorStatus(transid, 50, null, "Fehler beim Erstellen des Bestellungs-Objektes", ex);
+            }
+        }
+
+        return fsBeanMap;
+    }
+
+    /**
+     * DOCUMENT ME!
+     *
+     * @param   transids  DOCUMENT ME!
+     *
+     * @return  DOCUMENT ME!
+     */
+    public final Map<String, Exception> createMySqlEntries(final Collection<String> transids) {
+        final Map<String, Exception> insertExceptionMap = new HashMap<String, Exception>(transids.size());
+
+        for (final String transid : transids) {
+            boolean mysqlEntryAlreadyExists = false;
+            ResultSet resultSet = null;
+            try {
+                resultSet = mySqlHelper.selectMySQL(transid);
+                mysqlEntryAlreadyExists = (resultSet != null) && resultSet.next();
+            } catch (final SQLException ex) {
+                LOG.error("check nach bereits vorhandenen transids fehlgeschlagen.", ex);
+            } finally {
+                if (resultSet != null) {
+                    try {
+                        resultSet.close();
+                    } catch (SQLException ex) {
+                    }
+                }
+            }
+
+            try {
+                if (mysqlEntryAlreadyExists) {
+                    mySqlHelper.updateMySQL(transid, 100);
+                } else {
+                    mySqlHelper.insertMySQL(transid, 100);
+                }
+            } catch (final Exception ex) {
+                LOG.error("Fehler beim Erzeugen/Aktualisieren des MySQL-Datensatzes.", ex);
+                insertExceptionMap.put(transid, ex);
+            }
+        }
+
+        return insertExceptionMap;
+    }
+
+    /**
+     * DOCUMENT ME!
+     *
+     * @param  fsBeanMap  DOCUMENT ME!
+     */
+    private void closeTransactions(final Map<String, CidsBean> fsBeanMap) {
+        final Collection<String> transids = new ArrayList<String>(fsBeanMap.keySet());
+        for (final String transid : transids) {
+            final CidsBean bestellungBean = fsBeanMap.get(transid);
+            if (bestellungBean != null) {
+                try {
+                    closeTransid(transid);
+
+                    setSuccessStatus(transid, 30, null);
+                } catch (Exception ex) {
+                    fsBeanMap.remove(transid);
+                    setErrorStatus(transid, 30, bestellungBean, "Fehler beim Schließen der Transaktion.", ex);
+                    break;
+                }
+            }
         }
     }
 
     /**
      * DOCUMENT ME!
      *
-     * @param  bestellungBean  DOCUMENT ME!
-     * @param  message         DOCUMENT ME!
-     * @param  exception       DOCUMENT ME!
+     * @param   fsBeanMap  DOCUMENT ME!
+     *
+     * @return  DOCUMENT ME!
      */
-    private void storeErrorCids(final CidsBean bestellungBean, final String message, final Exception exception) {
-        try {
-            final StringWriter sw = new StringWriter();
-            final PrintWriter pw = new PrintWriter(sw);
-            exception.printStackTrace(pw);
-            bestellungBean.setProperty("erledigt", false);
-            bestellungBean.setProperty("fehler", message + ":\n" + sw.toString());
-        } catch (final Exception ex) {
+    private Map<String, URL> createUrlMap(final Map<String, CidsBean> fsBeanMap) {
+        final Collection<String> transids = new ArrayList<String>(fsBeanMap.keySet());
+
+        final Map<String, URL> fsUrlMap = new HashMap<String, URL>(transids.size());
+
+        for (final String transid : new ArrayList<String>(fsBeanMap.keySet())) {
+            final CidsBean bestellungBean = fsBeanMap.get(transid);
+            if (bestellungBean != null) {
+                try {
+                    final URL productUrl = createProductUrl(bestellungBean);
+                    fsUrlMap.put(transid, productUrl);
+                    setSuccessStatus(transid, 40, bestellungBean);
+                } catch (final Exception ex) {
+                    fsBeanMap.remove(transid);
+                    setErrorStatus(transid, 40, bestellungBean, "Fehler beim Erzeugen der Produkt-URL", ex);
+                }
+            }
         }
-        try {
-            DomainServerImpl.getServerInstance().updateMetaObject(user, bestellungBean.getMetaObject());
-        } catch (final RemoteException ex) {
-            LOG.error("Fehler beim Persistieren der Bestellung", ex);
+        return fsUrlMap;
+    }
+
+    /**
+     * DOCUMENT ME!
+     *
+     * @param  fsBeanMap  DOCUMENT ME!
+     */
+    private void downloadProdukte(final Map<String, CidsBean> fsBeanMap) {
+        final Map<String, URL> fsUrlMap = createUrlMap(fsBeanMap);
+
+        final Collection<String> transids = new ArrayList<String>(fsUrlMap.keySet());
+
+        for (final String transid : transids) {
+            final CidsBean bestellungBean = fsBeanMap.get(transid);
+            if (bestellungBean != null) {
+                final URL productUrl = fsUrlMap.get(transid);
+                try {
+                    bestellungBean.setProperty("request_url", productUrl.toString());
+
+                    final String filePath = bestellungBean.getProperty("transid") + ".pdf";
+
+                    final String fullFilePath = FormSolutionsConstants.PRODUKT_BASEPATH + File.separator + filePath;
+
+                    downloadProdukt(productUrl, fullFilePath);
+
+                    final String fileNameOrig = (String)bestellungBean.getProperty("fk_produkt.fk_typ.key")
+                                + "."
+                                + ((String)bestellungBean.getProperty("landparcelcode")).replace(
+                                    "/",
+                                    "--")
+                                + ".pdf";
+
+                    bestellungBean.setProperty("produkt_dateipfad", filePath);
+                    bestellungBean.setProperty("produkt_dateiname_orig", fileNameOrig);
+
+                    setSuccessStatus(transid, 20, bestellungBean);
+                } catch (final Exception ex) {
+                    fsBeanMap.remove(transid);
+                    setErrorStatus(transid, 20, bestellungBean, "Fehler beim Erzeugen des Produktes", ex);
+                }
+            }
         }
+    }
+
+    /**
+     * DOCUMENT ME!
+     *
+     * @param  fsBeanMap  DOCUMENT ME!
+     */
+    private void finalizeBeans(final Map<String, CidsBean> fsBeanMap) {
+        final Collection<String> transids = new ArrayList<String>(fsBeanMap.keySet());
+        for (final String transid : transids) {
+            final CidsBean bestellungBean = fsBeanMap.get(transid);
+            if (bestellungBean != null) {
+                try {
+                    final Boolean propPostweg = (Boolean)bestellungBean.getProperty("postweg");
+                    if (!Boolean.TRUE.equals(propPostweg)) {
+                        bestellungBean.setProperty("erledigt", true);
+                    }
+                    getMetaService().updateMetaObject(user, bestellungBean.getMetaObject());
+                } catch (final Exception ex) {
+                    LOG.error("Fehler beim Persistieren der Bestellung", ex);
+                }
+            }
+        }
+    }
+
+    /**
+     * DOCUMENT ME!
+     *
+     * @param  fsBeanMap  DOCUMENT ME!
+     */
+    private void finalizeMySqls(final Map<String, CidsBean> fsBeanMap) {
+        final Collection<String> transids = new ArrayList<String>(fsBeanMap.keySet());
+        for (final String transid : transids) {
+            final CidsBean bestellungBean = fsBeanMap.get(transid);
+            if (bestellungBean != null) {
+                try {
+                    final int okStatus;
+                    final Boolean propPostweg = (Boolean)bestellungBean.getProperty("postweg");
+                    if (Boolean.TRUE.equals(propPostweg)) {
+                        okStatus = 10;
+                    } else {
+                        okStatus = 0;
+                    }
+
+                    mySqlHelper.updateMySQL(
+                        transid,
+                        okStatus,
+                        (String)bestellungBean.getProperty("produkt_dateipfad"),
+                        (String)bestellungBean.getProperty("produkt_dateiname_orig"));
+                } catch (final SQLException ex) {
+                    setErrorStatus(transid, 10, bestellungBean, "Fehler beim Abschließen des MYSQL-Datensatzes", ex);
+                }
+            }
+        }
+    }
+
+    /**
+     * DOCUMENT ME!
+     *
+     * @param   transids  DOCUMENT ME!
+     *
+     * @return  DOCUMENT ME!
+     */
+    private Map<String, CidsBean> createEntries(final Collection<String> transids) {
+        final Map<String, Exception> insertExceptionMap = createMySqlEntries(transids);
+        final Map<String, CidsBean> fsBeanMap = createCidsEntries(transids, insertExceptionMap);
+        return fsBeanMap;
+    }
+
+    /**
+     * DOCUMENT ME!
+     *
+     * @param  fsBeanMap  DOCUMENT ME!
+     */
+    private void finalizeEntries(final Map<String, CidsBean> fsBeanMap) {
+        finalizeMySqls(fsBeanMap);
+        finalizeBeans(fsBeanMap);
     }
 
     @Override
     public Object execute(final Object body, final ServerActionParameter... params) {
         Collection<String> transids = null;
 
-        try {
-            transids = getOpenTransids();
-        } catch (Exception ex) {
-            LOG.error("Die Liste der FormSolutions-Bestellungen konnte nicht abgerufen werden", ex);
-        }
+        synchronized (mySqlHelper) {
+            try {
+                transids = getOpenTransids();
+            } catch (Exception ex) {
+                LOG.error("Die Liste der FormSolutions-Bestellungen konnte nicht abgerufen werden", ex);
+            }
 
-        if (transids != null) {
-            for (final String transid : transids) {
-                boolean mysqlEntryAlreadyExists = false;
-                try {
-                    final ResultSet resultSet = mySqlHelper.selectMySQL(transid);
-                    mysqlEntryAlreadyExists = (resultSet != null) && resultSet.next();
-                } catch (final SQLException ex) {
-                    LOG.error("check nach bereits vorhandenen transids fehlgeschlagen.", ex);
-                }
-
-                CidsBean persistedBestellungBean = null;
-
+            if (transids != null) {
                 // 1: in Bearbeitung
                 // 0: erfolgreich
                 // -1: Fehler beim Request/Parsen der FormSolution-Schnittstelle
                 // -2: Fehler beim Erzeugen des Cids-Objektes
                 // -3: Fehler beim Erzeugen/Runterladen des Produktes
                 // -4: Fehler beim Persistieren in Cids
-                int status = 1;
 
-                try {
-                    final String auftragXml = getAuftrag(transid);
-                    final InputStream inputStream = IOUtils.toInputStream(auftragXml, "UTF-8");
-                    final FormSolutionsBestellung formSolutionBestellung = createFormSolutionsBestellung(inputStream);
-
-                    try {
-                        final CidsBean bestellungBean = createBestellungBean(formSolutionBestellung);
-                        bestellungBean.setProperty("form_xml_orig", auftragXml);
-
-                        final MetaObject persisted = DomainServerImpl.getServerInstance()
-                                    .insertMetaObject(user, bestellungBean.getMetaObject());
-                        persistedBestellungBean = persisted.getBean();
-                    } catch (final Exception ex) {
-                        LOG.error("Fehler beim Erstellen des Bestellungs-Objektes", ex);
-                        status = -2;
-                    }
-                } catch (final Exception ex) {
-                    LOG.error("Fehler beim Parsen FormSolution", ex);
-                    status = -1;
-                }
-
-                try {
-                    if (mysqlEntryAlreadyExists) {
-                        mySqlHelper.updateMySQL(transid, status);
-                    } else {
-                        mySqlHelper.insertMySQL(transid, status);
-                    }
-                } catch (final SQLException ex) {
-                    LOG.error("Fehler beim Erzeugen/Aktualisieren des MySQL-Datensatzes.", ex);
-                    if (persistedBestellungBean != null) {
-                        storeErrorCids(
-                            persistedBestellungBean,
-                            "Fehler beim Erzeugen/Aktualisieren des MySQL-Datensatzes.",
-                            ex);
-                    }
-                    break;
-                }
-
-                if (status < 0) {
-                    break;
-                }
-
-                if (persistedBestellungBean != null) {
-                    try {
-                        closeTransid(transid);
-                    } catch (Exception ex) {
-                        LOG.error("Fehler beim Schließen der Transaktion.", ex);
-                        storeErrorCids(persistedBestellungBean, "Fehler beim Schließen der Transaktion.", ex);
-                        break;
-                    }
-
-                    try {
-                        final URL productUrl = createProductUrl(persistedBestellungBean);
-                        persistedBestellungBean.setProperty("request_url", productUrl.toString());
-
-                        final String filePath = FormSolutionsConstants.PRODUKT_BASEPATH + File.separator
-                                    + persistedBestellungBean.getProperty("transid") + ".pdf";
-
-                        downloadProdukt(productUrl, filePath);
-
-                        final String fileNameOrig = (String)persistedBestellungBean.getProperty("fk_produkt.fk_typ.key")
-                                    + "."
-                                    + ((String)persistedBestellungBean.getProperty("landparcelcode")).replace(
-                                        "/",
-                                        "--")
-                                    + ".pdf";
-
-                        persistedBestellungBean.setProperty("produkt_dateipfad", filePath);
-                        persistedBestellungBean.setProperty("produkt_dateiname_orig", fileNameOrig);
-                        persistedBestellungBean.setProperty("erledigt", true);
-                    } catch (final Exception ex) {
-                        LOG.error("Fehler beim Erzeugen des Produktes", ex);
-                        storeErrorSql(transid, -3);
-                        storeErrorCids(persistedBestellungBean, "Fehler beim Erzeugen des Produktes", ex);
-                        break;
-                    }
-
-                    try {
-                        DomainServerImpl.getServerInstance()
-                                .updateMetaObject(user, persistedBestellungBean.getMetaObject());
-                    } catch (final RemoteException ex) {
-                        LOG.error("Fehler beim Persistieren der Bestellung", ex);
-                        storeErrorSql(transid, -4);
-                        break;
-                    }
-
-                    try {
-                        final int okStatus;
-                        final Boolean propPostweg = (Boolean)persistedBestellungBean.getProperty("postweg");
-                        if (Boolean.TRUE.equals(propPostweg)) {
-                            okStatus = 2;
-                        } else {
-                            okStatus = 1;
-                        }
-
-                        mySqlHelper.updateMySQL(
-                            transid,
-                            okStatus,
-                            (String)persistedBestellungBean.getProperty("produkt_dateipfad"),
-                            (String)persistedBestellungBean.getProperty("produkt_dateiname_orig"));
-                    } catch (final SQLException ex) {
-                        storeErrorCids(
-                            persistedBestellungBean,
-                            "Fehler beim Abschließen des MYSQL-Datensatzes",
-                            ex);
-                    }
-                }
+                final Map<String, CidsBean> fsBeanMap = createEntries(transids);
+                closeTransactions(fsBeanMap);
+                downloadProdukte(fsBeanMap);
+                finalizeEntries(fsBeanMap);
             }
         }
         return null;
