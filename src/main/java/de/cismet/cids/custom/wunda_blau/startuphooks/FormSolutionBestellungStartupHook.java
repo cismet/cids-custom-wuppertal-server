@@ -13,13 +13,11 @@
 package de.cismet.cids.custom.wunda_blau.startuphooks;
 
 import Sirius.server.middleware.impls.domainserver.DomainServerImpl;
-import Sirius.server.middleware.impls.proxy.UserServiceImpl;
 import Sirius.server.middleware.interfaces.domainserver.DomainServerStartupHook;
 import Sirius.server.newuser.User;
 import Sirius.server.newuser.UserGroup;
 
-import org.openide.util.Exceptions;
-
+import de.cismet.cids.custom.utils.formsolutions.FormSolutionsConstants;
 import de.cismet.cids.custom.wunda_blau.search.actions.FormSolutionServerNewStuffAvailableAction;
 
 /**
@@ -52,7 +50,11 @@ public class FormSolutionBestellungStartupHook implements DomainServerStartupHoo
                         new FormSolutionServerNewStuffAvailableAction();
                     action.setMetaService(DomainServerImpl.getServerInstance());
                     action.setUser(
-                        new User(0, "admin", getDomain(), new UserGroup(10075, "_FS_Produkt_Bestellung", getDomain())));
+                        new User(
+                            FormSolutionsConstants.CIDS_USERID,
+                            "formsulutions",
+                            getDomain(),
+                            new UserGroup(FormSolutionsConstants.CIDS_GROUPID, "_FS_Produkt_Bestellung", getDomain())));
                     action.execute(null);
                 }
             }).start();

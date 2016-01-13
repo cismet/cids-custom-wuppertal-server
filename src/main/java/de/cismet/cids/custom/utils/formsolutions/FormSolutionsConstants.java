@@ -32,12 +32,16 @@ public class FormSolutionsConstants {
     public static final String PASSWORD;
     public static final String MYSQL_JDBC;
     public static final String PRODUKT_BASEPATH;
+    public static final Integer CIDS_USERID;
+    public static final Integer CIDS_GROUPID;
 
     static {
         final String user;
         final String password;
         final String mysqlJdbc;
         final String produktBasepath;
+        final Integer cidsUserId;
+        final Integer cidsGroupId;
 
         try {
             final PropertyReader serviceProperties = new PropertyReader(
@@ -47,6 +51,8 @@ public class FormSolutionsConstants {
             password = serviceProperties.getProperty("PASSWORD");
             mysqlJdbc = serviceProperties.getProperty("MYSQL_JDBC");
             produktBasepath = serviceProperties.getProperty("PRODUKT_BASEPATH");
+            cidsUserId = Integer.parseInt(serviceProperties.getProperty("CIDS_USERID"));
+            cidsGroupId = Integer.parseInt(serviceProperties.getProperty("CIDS_GROUPID"));
         } catch (final Exception ex) {
             LOG.fatal("FormSolutionsConstants Error!", ex);
             throw new RuntimeException(ex);
@@ -56,5 +62,7 @@ public class FormSolutionsConstants {
         PASSWORD = password;
         MYSQL_JDBC = mysqlJdbc;
         PRODUKT_BASEPATH = produktBasepath;
+        CIDS_USERID = cidsUserId;
+        CIDS_GROUPID = cidsGroupId;
     }
 }
