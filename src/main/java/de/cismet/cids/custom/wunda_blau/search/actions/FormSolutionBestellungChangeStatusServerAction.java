@@ -109,7 +109,7 @@ public class FormSolutionBestellungChangeStatusServerAction implements UserAware
                 } else {
                     status = 10;
                 }
-                mySqlHelper.updateMySQL(transid, status);
+                mySqlHelper.updateStatus(transid, status);
                 bestellungBean.setProperty("erledigt", erledigt);
                 bestellungBean.setProperty("fehler", null);
                 DomainServerImpl.getServerInstance().updateMetaObject(getUser(), bestellungBean.getMetaObject());

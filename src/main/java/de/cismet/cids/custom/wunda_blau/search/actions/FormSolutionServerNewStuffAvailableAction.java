@@ -48,6 +48,7 @@ import java.rmi.RemoteException;
 import java.sql.Date;
 import java.sql.ResultSet;
 import java.sql.SQLException;
+import java.sql.Timestamp;
 
 import java.util.ArrayList;
 import java.util.Collection;
@@ -108,6 +109,29 @@ public class FormSolutionServerNewStuffAvailableAction implements UserAwareServe
     private static MetaClass METACLASS_PRODUKT_TYP;
     private static MetaClass METACLASS_ADRESSE;
     private static MetaClass METACLASS_FORMAT;
+
+    public static final int STATUS_FETCH = 70;
+    public static final int STATUS_PARSE = 60;
+    public static final int STATUS_SAVE = 50;
+    public static final int STATUS_CLOSE = 40;
+    public static final int STATUS_CREATEURL = 30;
+    public static final int STATUS_DOWNLOAD = 20;
+    public static final int STATUS_PENDING = 10;
+    public static final int STATUS_DONE = 0;
+
+    //~ Enums ------------------------------------------------------------------
+
+    /**
+     * DOCUMENT ME!
+     *
+     * @version  $Revision$, $Date$
+     */
+    public enum PARAMETER_TYPE {
+
+        //~ Enum constants -----------------------------------------------------
+
+        STEP_TO_EXECUTE, SINGLE_STEP, METAOBJECTNODES
+    }
 
     //~ Instance fields --------------------------------------------------------
 
@@ -246,21 +270,6 @@ public class FormSolutionServerNewStuffAvailableAction implements UserAwareServe
      * @param  transid         DOCUMENT ME!
      * @param  status          DOCUMENT ME!
      * @param  bestellungBean  DOCUMENT ME!
-     */
-    private void setSuccessStatus(final String transid, final int status, final CidsBean bestellungBean) {
-        try {
-            mySqlHelper.updateMySQL(transid, status);
-        } catch (final Exception ex) {
-            setErrorStatus(transid, 100, bestellungBean, "Fehler Aktualisieren des MySQL-Datensatzes.", ex);
-        }
-    }
-
-    /**
-     * DOCUMENT ME!
-     *
-     * @param  transid         DOCUMENT ME!
-     * @param  status          DOCUMENT ME!
-     * @param  bestellungBean  DOCUMENT ME!
      * @param  message         DOCUMENT ME!
      * @param  exception       DOCUMENT ME!
      */
@@ -271,20 +280,18 @@ public class FormSolutionServerNewStuffAvailableAction implements UserAwareServe
             final Exception exception) {
         LOG.error(message, exception);
         if (bestellungBean != null) {
-            storeErrorCids(bestellungBean, message, exception);
             try {
-                final StringWriter sw = new StringWriter();
-                final PrintWriter pw = new PrintWriter(sw);
-                exception.printStackTrace(pw);
                 bestellungBean.setProperty("erledigt", false);
-                bestellungBean.setProperty("fehler", message + ":\n" + sw.toString());
+                bestellungBean.setProperty("fehler", message);
+                bestellungBean.setProperty("fehler_ts", new Timestamp(new java.util.Date().getTime()));
+                bestellungBean.setProperty("exception", MAPPER.writeValueAsString(exception));
                 getMetaService().updateMetaObject(user, bestellungBean.getMetaObject());
             } catch (final Exception ex) {
                 LOG.error("Fehler beim Persistieren der Bean", ex);
             }
         }
         try {
-            mySqlHelper.updateMySQL(transid, -status);
+            mySqlHelper.updateStatus(transid, -status);
         } catch (final SQLException ex2) {
             LOG.error("Fehler beim Aktualisieren des MySQL-Datensatzes", ex2);
         }
@@ -379,9 +386,9 @@ public class FormSolutionServerNewStuffAvailableAction implements UserAwareServe
         final String formatKey;
 
         if ("farbig".equals(farbauspraegung)) {
-            produktKey = "LK.NRW.K.F";
+            produktKey = "LK.NRW.K.BF";
         } else if ("Graustufen".equals(farbauspraegung)) {
-            produktKey = "LK.NRW.K.SW";
+            produktKey = "LK.NRW.K.BSW";
         } else {
             produktKey = null;
         }
@@ -473,7 +480,7 @@ public class FormSolutionServerNewStuffAvailableAction implements UserAwareServe
         bestellungBean.setProperty("fk_adresse_rechnung", adresseRechnungBean);
         bestellungBean.setProperty("email", "platzhalter@email.fake"); // TODO reale email Adresse aus XML verwenden
         bestellungBean.setProperty("erledigt", false);
-        bestellungBean.setProperty("eingegangen_am", new Date(new java.util.Date().getTime()));
+        bestellungBean.setProperty("eingang_ts", new Timestamp(new java.util.Date().getTime()));
 
         return bestellungBean;
     }
@@ -567,10 +574,12 @@ public class FormSolutionServerNewStuffAvailableAction implements UserAwareServe
         final String dinFormat = (String)bestellungBean.getProperty("fk_produkt.fk_format.format");
         final Integer scale = (Integer)bestellungBean.getProperty("massstab");
 
-        final AlkisProductDescription product = getAlkisProductDescription(code, dinFormat, scale);
+        final AlkisProductDescription productDesc = getAlkisProductDescription(code, dinFormat, scale);
 
         final String flurstueckKennzeichen = (String)bestellungBean.getProperty("landparcelcode");
         final CidsBean flurstueck = getFlurstueck(flurstueckKennzeichen);
+
+        final String transid = (String)bestellungBean.getProperty("transid");
 
         final Geometry geom = (Geometry)flurstueck.getProperty("geometrie.geo_field");
         final Point center = geom.getCentroid();
@@ -578,12 +587,12 @@ public class FormSolutionServerNewStuffAvailableAction implements UserAwareServe
         final URL url = AlkisProducts.getInstance()
                     .productKarteUrl(
                         flurstueckKennzeichen,
-                        product,
+                        productDesc,
                         0,
                         (int)center.getX(),
                         (int)center.getY(),
                         null,
-                        null,
+                        transid,
                         false,
                         null);
         return url;
@@ -628,16 +637,6 @@ public class FormSolutionServerNewStuffAvailableAction implements UserAwareServe
     /**
      * DOCUMENT ME!
      *
-     * @param  bestellungBean  DOCUMENT ME!
-     * @param  message         DOCUMENT ME!
-     * @param  exception       DOCUMENT ME!
-     */
-    private void storeErrorCids(final CidsBean bestellungBean, final String message, final Exception exception) {
-    }
-
-    /**
-     * DOCUMENT ME!
-     *
      * @param   transids  DOCUMENT ME!
      *
      * @return  DOCUMENT ME!
@@ -649,9 +648,9 @@ public class FormSolutionServerNewStuffAvailableAction implements UserAwareServe
             try {
                 final String auftragXml = getAuftrag(transid);
                 fsXmlMap.put(transid, auftragXml);
-                setSuccessStatus(transid, 70, null);
+                mySqlHelper.updateStatus(transid, STATUS_FETCH);
             } catch (final Exception ex) {
-                setErrorStatus(transid, 70, null, "Fehler beim Parsen FormSolution", ex);
+                setErrorStatus(transid, STATUS_FETCH, null, "Fehler beim Abholen FormSolution", ex);
             }
         }
         return fsXmlMap;
@@ -676,9 +675,9 @@ public class FormSolutionServerNewStuffAvailableAction implements UserAwareServe
                 final FormSolutionsBestellung formSolutionBestellung = createFormSolutionsBestellung(inputStream);
                 fsBestellungMap.put(transid, formSolutionBestellung);
 
-                setSuccessStatus(transid, 60, null);
+                mySqlHelper.updateEmail(transid, STATUS_PARSE, "platzhalter@email.fake");
             } catch (final Exception ex) {
-                setErrorStatus(transid, 60, null, "Fehler beim Parsen FormSolution", ex);
+                setErrorStatus(transid, STATUS_PARSE, null, "Fehler beim Parsen FormSolution", ex);
             }
         }
 
@@ -688,16 +687,15 @@ public class FormSolutionServerNewStuffAvailableAction implements UserAwareServe
     /**
      * DOCUMENT ME!
      *
-     * @param   transids            DOCUMENT ME!
+     * @param   fsXmlMap            transids DOCUMENT ME!
+     * @param   fsBestellungMap     DOCUMENT ME!
      * @param   insertExceptionMap  DOCUMENT ME!
      *
      * @return  DOCUMENT ME!
      */
-    private Map<String, CidsBean> createCidsEntries(final Collection<String> transids,
+    private Map<String, CidsBean> createCidsEntries(final Map<String, String> fsXmlMap,
+            final Map<String, FormSolutionsBestellung> fsBestellungMap,
             final Map<String, Exception> insertExceptionMap) {
-        final Map<String, String> fsXmlMap = extractXmlParts(transids);
-        final Map<String, FormSolutionsBestellung> fsBestellungMap = createBestellungMap(fsXmlMap);
-
         // nur die transids bearbeiten, bei denen das Parsen auch geklappt hat
         final Collection<String> transidsNew = new ArrayList<String>(fsBestellungMap.keySet());
 
@@ -716,13 +714,9 @@ public class FormSolutionServerNewStuffAvailableAction implements UserAwareServe
                         bestellungBean.getMetaObject());
                 if (insertException != null) {
                     try {
-                        final StringWriter sw = new StringWriter();
-                        insertException.printStackTrace(new PrintWriter(sw));
-                        bestellungBean.setProperty(
-                            "fehler",
-                            "Fehler beim Erzeugen des MySQL-Datensatzes"
-                                    + ":\n"
-                                    + sw.toString());
+                        bestellungBean.setProperty("fehler", "Fehler beim Erzeugen des MySQL-Datensatzes");
+                        bestellungBean.setProperty("exception", MAPPER.writeValueAsString(insertException));
+                        bestellungBean.setProperty("fehler_ts", new Timestamp(new java.util.Date().getTime()));
                     } catch (final Exception ex) {
                     }
                 }
@@ -730,9 +724,9 @@ public class FormSolutionServerNewStuffAvailableAction implements UserAwareServe
                 final CidsBean persistedBestellungBean = persistedMo.getBean();
                 fsBeanMap.put(transid, persistedBestellungBean);
 
-                setSuccessStatus(transid, 50, persistedBestellungBean);
+                mySqlHelper.updateStatus(transid, STATUS_SAVE);
             } catch (final Exception ex) {
-                setErrorStatus(transid, 50, null, "Fehler beim Erstellen des Bestellungs-Objektes", ex);
+                setErrorStatus(transid, STATUS_SAVE, null, "Fehler beim Erstellen des Bestellungs-Objektes", ex);
             }
         }
 
@@ -753,7 +747,7 @@ public class FormSolutionServerNewStuffAvailableAction implements UserAwareServe
             boolean mysqlEntryAlreadyExists = false;
             ResultSet resultSet = null;
             try {
-                resultSet = mySqlHelper.selectMySQL(transid);
+                resultSet = mySqlHelper.select(transid);
                 mysqlEntryAlreadyExists = (resultSet != null) && resultSet.next();
             } catch (final SQLException ex) {
                 LOG.error("check nach bereits vorhandenen transids fehlgeschlagen.", ex);
@@ -768,9 +762,9 @@ public class FormSolutionServerNewStuffAvailableAction implements UserAwareServe
 
             try {
                 if (mysqlEntryAlreadyExists) {
-                    mySqlHelper.updateMySQL(transid, 100);
+                    mySqlHelper.updateStatus(transid, 100);
                 } else {
-                    mySqlHelper.insertMySQL(transid, 100);
+                    mySqlHelper.insertMySql(transid, 100);
                 }
             } catch (final Exception ex) {
                 LOG.error("Fehler beim Erzeugen/Aktualisieren des MySQL-Datensatzes.", ex);
@@ -794,10 +788,10 @@ public class FormSolutionServerNewStuffAvailableAction implements UserAwareServe
                 try {
                     closeTransid(transid);
 
-                    setSuccessStatus(transid, 30, null);
+                    mySqlHelper.updateStatus(transid, STATUS_CLOSE);
                 } catch (Exception ex) {
                     fsBeanMap.remove(transid);
-                    setErrorStatus(transid, 30, bestellungBean, "Fehler beim Schließen der Transaktion.", ex);
+                    setErrorStatus(transid, STATUS_CLOSE, bestellungBean, "Fehler beim Schließen der Transaktion.", ex);
                     break;
                 }
             }
@@ -822,10 +816,15 @@ public class FormSolutionServerNewStuffAvailableAction implements UserAwareServe
                 try {
                     final URL productUrl = createProductUrl(bestellungBean);
                     fsUrlMap.put(transid, productUrl);
-                    setSuccessStatus(transid, 40, bestellungBean);
+                    mySqlHelper.updateStatus(transid, STATUS_CREATEURL);
                 } catch (final Exception ex) {
                     fsBeanMap.remove(transid);
-                    setErrorStatus(transid, 40, bestellungBean, "Fehler beim Erzeugen der Produkt-URL", ex);
+                    setErrorStatus(
+                        transid,
+                        STATUS_CREATEURL,
+                        bestellungBean,
+                        "Fehler beim Erzeugen der Produkt-URL",
+                        ex);
                 }
             }
         }
@@ -836,10 +835,9 @@ public class FormSolutionServerNewStuffAvailableAction implements UserAwareServe
      * DOCUMENT ME!
      *
      * @param  fsBeanMap  DOCUMENT ME!
+     * @param  fsUrlMap   DOCUMENT ME!
      */
-    private void downloadProdukte(final Map<String, CidsBean> fsBeanMap) {
-        final Map<String, URL> fsUrlMap = createUrlMap(fsBeanMap);
-
+    private void downloadProdukte(final Map<String, CidsBean> fsBeanMap, final Map<String, URL> fsUrlMap) {
         final Collection<String> transids = new ArrayList<String>(fsUrlMap.keySet());
 
         for (final String transid : transids) {
@@ -865,10 +863,14 @@ public class FormSolutionServerNewStuffAvailableAction implements UserAwareServe
                     bestellungBean.setProperty("produkt_dateipfad", filePath);
                     bestellungBean.setProperty("produkt_dateiname_orig", fileNameOrig);
 
-                    setSuccessStatus(transid, 20, bestellungBean);
+                    mySqlHelper.updateProdukt(
+                        transid,
+                        STATUS_DOWNLOAD,
+                        (String)bestellungBean.getProperty("produkt_dateipfad"),
+                        (String)bestellungBean.getProperty("produkt_dateiname_orig"));
                 } catch (final Exception ex) {
                     fsBeanMap.remove(transid);
-                    setErrorStatus(transid, 20, bestellungBean, "Fehler beim Erzeugen des Produktes", ex);
+                    setErrorStatus(transid, STATUS_DOWNLOAD, bestellungBean, "Fehler beim Erzeugen des Produktes", ex);
                 }
             }
         }
@@ -907,38 +909,20 @@ public class FormSolutionServerNewStuffAvailableAction implements UserAwareServe
         for (final String transid : transids) {
             final CidsBean bestellungBean = fsBeanMap.get(transid);
             if (bestellungBean != null) {
+                final int okStatus;
+                final Boolean propPostweg = (Boolean)bestellungBean.getProperty("postweg");
+                if (Boolean.TRUE.equals(propPostweg)) {
+                    okStatus = STATUS_PENDING;
+                } else {
+                    okStatus = STATUS_DONE;
+                }
                 try {
-                    final int okStatus;
-                    final Boolean propPostweg = (Boolean)bestellungBean.getProperty("postweg");
-                    if (Boolean.TRUE.equals(propPostweg)) {
-                        okStatus = 10;
-                    } else {
-                        okStatus = 0;
-                    }
-
-                    mySqlHelper.updateMySQL(
-                        transid,
-                        okStatus,
-                        (String)bestellungBean.getProperty("produkt_dateipfad"),
-                        (String)bestellungBean.getProperty("produkt_dateiname_orig"));
-                } catch (final SQLException ex) {
+                    mySqlHelper.updateStatus(transid, okStatus);
+                } catch (final Exception ex) {
                     setErrorStatus(transid, 10, bestellungBean, "Fehler beim Abschließen des MYSQL-Datensatzes", ex);
                 }
             }
         }
-    }
-
-    /**
-     * DOCUMENT ME!
-     *
-     * @param   transids  DOCUMENT ME!
-     *
-     * @return  DOCUMENT ME!
-     */
-    private Map<String, CidsBean> createEntries(final Collection<String> transids) {
-        final Map<String, Exception> insertExceptionMap = createMySqlEntries(transids);
-        final Map<String, CidsBean> fsBeanMap = createCidsEntries(transids, insertExceptionMap);
-        return fsBeanMap;
     }
 
     /**
@@ -953,27 +937,102 @@ public class FormSolutionServerNewStuffAvailableAction implements UserAwareServe
 
     @Override
     public Object execute(final Object body, final ServerActionParameter... params) {
-        Collection<String> transids = null;
+        boolean fetchFromFs = true;
+        boolean singleStep = false;
+        int startStep = STATUS_FETCH;
+
+        Collection<MetaObjectNode> mons = null;
+
+        if (params != null) {
+            for (final ServerActionParameter sap : params) {
+                if (sap.getKey().equals(PARAMETER_TYPE.METAOBJECTNODES.toString())) {
+                    mons = (Collection)sap.getValue();
+                    fetchFromFs = false;
+                } else if (sap.getKey().equals(PARAMETER_TYPE.STEP_TO_EXECUTE.toString())) {
+                    startStep = (Integer)sap.getValue();
+                } else if (sap.getKey().equals(PARAMETER_TYPE.SINGLE_STEP.toString())) {
+                    singleStep = (Boolean)sap.getValue();
+                }
+            }
+        }
+
+        if (fetchFromFs) {
+            // fetchFromFs always beginns with STATUS_FETCH
+            startStep = STATUS_FETCH;
+            singleStep = false;
+        } else {
+            if (startStep >= STATUS_SAVE) {
+                throw new IllegalStateException("fetch not allowed with metaobjectnodes");
+            }
+            if (mons == null) {
+                throw new IllegalStateException("metaobjectnodes are null");
+            }
+        }
 
         synchronized (mySqlHelper) {
-            try {
-                transids = getOpenTransids();
-            } catch (Exception ex) {
-                LOG.error("Die Liste der FormSolutions-Bestellungen konnte nicht abgerufen werden", ex);
+            final Map<String, CidsBean> fsBeanMap = new HashMap();
+
+            if (!fetchFromFs) {
+                if (mons != null) {
+                    for (final MetaObjectNode mon : mons) {
+                        final CidsBean bestellungBean;
+                        try {
+                            bestellungBean = DomainServerImpl.getServerInstance()
+                                        .getMetaObject(getUser(), mon.getObjectId(), mon.getClassId())
+                                        .getBean();
+                            final String transid = (String)bestellungBean.getProperty("transid");
+                            fsBeanMap.put(transid, bestellungBean);
+                            bestellungBean.setProperty("erledigt", false);
+                            bestellungBean.setProperty("fehler", null);
+                            bestellungBean.setProperty("fehler_ts", null);
+                            bestellungBean.setProperty("exception", null);
+                            bestellungBean.setProperty("produkt_dateipfad", null);
+                            bestellungBean.setProperty("produkt_dateiname_orig", null);
+                            metaService.updateMetaObject(getUser(), bestellungBean.getMetaObject());
+                        } catch (final Exception ex) {
+                            LOG.error(ex, ex);
+                        }
+                    }
+                }
             }
 
-            if (transids != null) {
-                // 1: in Bearbeitung
-                // 0: erfolgreich
-                // -1: Fehler beim Request/Parsen der FormSolution-Schnittstelle
-                // -2: Fehler beim Erzeugen des Cids-Objektes
-                // -3: Fehler beim Erzeugen/Runterladen des Produktes
-                // -4: Fehler beim Persistieren in Cids
-
-                final Map<String, CidsBean> fsBeanMap = createEntries(transids);
-                closeTransactions(fsBeanMap);
-                downloadProdukte(fsBeanMap);
-                finalizeEntries(fsBeanMap);
+            switch (startStep) {
+                case STATUS_FETCH:
+                case STATUS_PARSE:
+                case STATUS_SAVE: {
+                    if (fetchFromFs) {
+                        try {
+                            final Collection<String> transids = getOpenTransids();
+                            final Map<String, Exception> insertExceptionMap = createMySqlEntries(transids);
+                            final Map<String, String> fsXmlMap = extractXmlParts(transids);
+                            final Map<String, FormSolutionsBestellung> fsBestellungMap = createBestellungMap(fsXmlMap);
+                            fsBeanMap.putAll(createCidsEntries(fsXmlMap, fsBestellungMap, insertExceptionMap));
+                        } catch (Exception ex) {
+                            LOG.error("Die Liste der FormSolutions-Bestellungen konnte nicht abgerufen werden", ex);
+                        }
+                    }
+                    if (singleStep) {
+                        break;
+                    }
+                }
+                case STATUS_CLOSE: {
+                    closeTransactions(fsBeanMap);
+                    if (singleStep) {
+                        break;
+                    }
+                }
+                case STATUS_CREATEURL:
+                case STATUS_DOWNLOAD: {
+                    final Map<String, URL> fsUrlMap = createUrlMap(fsBeanMap);
+                    downloadProdukte(fsBeanMap, fsUrlMap);
+                    if (singleStep) {
+                        break;
+                    }
+                }
+                case STATUS_PENDING:
+                case STATUS_DONE: {
+                    finalizeEntries(fsBeanMap);
+                }
             }
         }
         return null;
