@@ -73,7 +73,10 @@ public class MetaObjectNodesBillingSearchStatement extends CidsBillingSearchStat
                     "WUNDA_BLAU",
                     metaObject.getID(),
                     metaObject.getClassID(),
-                    metaObject.getName());
+                    metaObject.getName(),
+                    null,
+                    null); // TODO: Check4CashedGeomAndLightweightJson
+
             metaObjectsNodes.add(node);
         }
         return metaObjectsNodes;

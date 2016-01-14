@@ -166,7 +166,8 @@ public class CidsBaulastSearchStatement extends AbstractCidsServerSearch impleme
             for (final ArrayList al : primaryResultList) {
                 final int cid = (Integer)al.get(0);
                 final int oid = (Integer)al.get(1);
-                final MetaObjectNode mon = new MetaObjectNode("WUNDA_BLAU", oid, cid, (String)al.get(2));
+                final MetaObjectNode mon = new MetaObjectNode("WUNDA_BLAU", oid, cid, (String)al.get(2), null, null); // TODO: Check4CashedGeomAndLightweightJson
+
                 aln.add(mon);
             }
 
@@ -180,7 +181,10 @@ public class CidsBaulastSearchStatement extends AbstractCidsServerSearch impleme
                             oid,
                             cid,
                             "indirekt: "
-                                    + (String)al.get(2));
+                                    + (String)al.get(2),
+                            null,
+                            null); // TODO: Check4CashedGeomAndLightweightJson
+
                     aln.add(mon);
                 }
             }

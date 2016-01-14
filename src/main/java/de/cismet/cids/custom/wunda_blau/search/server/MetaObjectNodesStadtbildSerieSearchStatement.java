@@ -176,7 +176,7 @@ public class MetaObjectNodesStadtbildSerieSearchStatement extends AbstractCidsSe
                     final int objectID = (Integer)stadtbildserie.get(1);
                     final String name = (String)stadtbildserie.get(2);
 
-                    final MetaObjectNode node = new MetaObjectNode(DOMAIN, objectID, classID, name);
+                    final MetaObjectNode node = new MetaObjectNode(DOMAIN, objectID, classID, name, null, null); // TODO: Check4CashedGeomAndLightweightJson
 
                     result.add(node);
                 }
