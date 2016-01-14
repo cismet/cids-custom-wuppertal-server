@@ -40,7 +40,9 @@ public class FormSolutionsMySqlHelper {
 
     private final PreparedStatement preparedSelectStatement;
     private final PreparedStatement preparedInsertStatement;
-    private final PreparedStatement preparedUpdateStatement;
+    private final PreparedStatement preparedUpdateProduktStatement;
+    private final PreparedStatement preparedUpdateEmailStatement;
+    private final PreparedStatement preparedUpdateStatusStatement;
 
     private Connection connect = null;
 
@@ -52,7 +54,9 @@ public class FormSolutionsMySqlHelper {
     private FormSolutionsMySqlHelper() {
         PreparedStatement preparedSelectStatement = null;
         PreparedStatement preparedInsertStatement = null;
-        PreparedStatement preparedUpdateStatement = null;
+        PreparedStatement preparedUpdateProduktStatement = null;
+        PreparedStatement preparedUpdateEmailStatement = null;
+        PreparedStatement preparedUpdateStatusStatement = null;
 
         try {
             Class.forName("com.mysql.jdbc.Driver");
@@ -64,13 +68,25 @@ public class FormSolutionsMySqlHelper {
             }
             try {
                 preparedInsertStatement = connect.prepareStatement(
-                        "INSERT INTO bestellung VALUES (default, ?, ?, null, null, ?);");
+                        "INSERT INTO bestellung VALUES (default, ?, ?, null, null, null, ?);");
             } catch (final SQLException ex) {
                 LOG.error(ex, ex);
             }
             try {
-                preparedUpdateStatement = connect.prepareStatement(
-                        "UPDATE bestellung SET status = ?, dokument_dateipfad = ?, dokument_dateiname = ?, last_update = ? WHERE transid = ?;");
+                preparedUpdateProduktStatement = connect.prepareStatement(
+                        "UPDATE bestellung SET status = ?, last_update = ?, dokument_dateipfad = ?, dokument_dateiname = ? WHERE transid = ?;");
+            } catch (final SQLException ex) {
+                LOG.error(ex, ex);
+            }
+            try {
+                preparedUpdateEmailStatement = connect.prepareStatement(
+                        "UPDATE bestellung SET status = ?, last_update = ?, email = ? WHERE transid = ?;");
+            } catch (final SQLException ex) {
+                LOG.error(ex, ex);
+            }
+            try {
+                preparedUpdateStatusStatement = connect.prepareStatement(
+                        "UPDATE bestellung SET status = ?, last_update = ? WHERE transid = ?;");
             } catch (final SQLException ex) {
                 LOG.error(ex, ex);
             }
@@ -79,7 +95,9 @@ public class FormSolutionsMySqlHelper {
         }
         this.preparedSelectStatement = preparedSelectStatement;
         this.preparedInsertStatement = preparedInsertStatement;
-        this.preparedUpdateStatement = preparedUpdateStatement;
+        this.preparedUpdateProduktStatement = preparedUpdateProduktStatement;
+        this.preparedUpdateEmailStatement = preparedUpdateEmailStatement;
+        this.preparedUpdateStatusStatement = preparedUpdateStatusStatement;
     }
 
     //~ Methods ----------------------------------------------------------------
@@ -104,10 +122,11 @@ public class FormSolutionsMySqlHelper {
      *
      * @throws  SQLException  DOCUMENT ME!
      */
-    public void insertMySQL(final String transid, final int status) throws SQLException {
-        preparedInsertStatement.setString(1, transid);
-        preparedInsertStatement.setInt(2, status);
-        preparedInsertStatement.setTimestamp(3, new Timestamp(new java.util.Date().getTime()));
+    public void insertMySql(final String transid, final int status) throws SQLException {
+        int index = 1;
+        preparedInsertStatement.setString(index++, transid);
+        preparedInsertStatement.setInt(index++, status);
+        preparedInsertStatement.setTimestamp(index++, new Timestamp(new java.util.Date().getTime()));
         preparedInsertStatement.executeUpdate();
     }
 
@@ -119,8 +138,30 @@ public class FormSolutionsMySqlHelper {
      *
      * @throws  SQLException  DOCUMENT ME!
      */
-    public void updateMySQL(final String transid, final int status) throws SQLException {
-        updateMySQL(transid, status, null, null);
+    public void updateStatus(final String transid, final int status) throws SQLException {
+        int index = 1;
+        preparedUpdateStatusStatement.setInt(index++, status);
+        preparedUpdateStatusStatement.setTimestamp(index++, new Timestamp(new java.util.Date().getTime()));
+        preparedUpdateStatusStatement.setString(index++, transid);
+        preparedUpdateStatusStatement.executeUpdate();
+    }
+
+    /**
+     * DOCUMENT ME!
+     *
+     * @param   transid  DOCUMENT ME!
+     * @param   status   DOCUMENT ME!
+     * @param   email    DOCUMENT ME!
+     *
+     * @throws  SQLException  DOCUMENT ME!
+     */
+    public void updateEmail(final String transid, final int status, final String email) throws SQLException {
+        int index = 1;
+        preparedUpdateEmailStatement.setInt(index++, status);
+        preparedUpdateEmailStatement.setTimestamp(index++, new Timestamp(new java.util.Date().getTime()));
+        preparedUpdateEmailStatement.setString(index++, email);
+        preparedUpdateEmailStatement.setString(index++, transid);
+        preparedUpdateEmailStatement.executeUpdate();
     }
 
     /**
@@ -133,14 +174,15 @@ public class FormSolutionsMySqlHelper {
      *
      * @throws  SQLException  DOCUMENT ME!
      */
-    public void updateMySQL(final String transid, final int status, final String filePath, final String origName)
+    public void updateProdukt(final String transid, final int status, final String filePath, final String origName)
             throws SQLException {
-        preparedUpdateStatement.setInt(1, status);
-        preparedUpdateStatement.setString(2, filePath);
-        preparedUpdateStatement.setString(3, origName);
-        preparedUpdateStatement.setTimestamp(4, new Timestamp(new java.util.Date().getTime()));
-        preparedUpdateStatement.setString(5, transid);
-        preparedUpdateStatement.executeUpdate();
+        int index = 1;
+        preparedUpdateProduktStatement.setInt(index++, status);
+        preparedUpdateProduktStatement.setTimestamp(index++, new Timestamp(new java.util.Date().getTime()));
+        preparedUpdateProduktStatement.setString(index++, filePath);
+        preparedUpdateProduktStatement.setString(index++, origName);
+        preparedUpdateProduktStatement.setString(index++, transid);
+        preparedUpdateProduktStatement.executeUpdate();
     }
 
     /**
@@ -152,7 +194,7 @@ public class FormSolutionsMySqlHelper {
      *
      * @throws  SQLException  DOCUMENT ME!
      */
-    public ResultSet selectMySQL(final String transid) throws SQLException {
+    public ResultSet select(final String transid) throws SQLException {
         preparedSelectStatement.setString(1, transid);
         final ResultSet resultSet = preparedSelectStatement.executeQuery();
         return resultSet;
