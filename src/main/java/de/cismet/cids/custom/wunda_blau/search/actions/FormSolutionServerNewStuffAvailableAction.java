@@ -768,7 +768,7 @@ public class FormSolutionServerNewStuffAvailableAction implements UserAwareServe
         final Collection<String> transids = new ArrayList<String>(fsBeanMap.keySet());
         for (final String transid : transids) {
             final CidsBean bestellungBean = fsBeanMap.get(transid);
-            if ((bestellungBean != null) && (bestellungBean.getProperty("fehler") == null)) {
+            if ((bestellungBean != null)) {
                 try {
                     closeTransid(transid);
 
