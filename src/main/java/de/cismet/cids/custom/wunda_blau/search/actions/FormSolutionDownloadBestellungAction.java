@@ -14,8 +14,6 @@ import Sirius.server.property.ServerProperties;
 
 import org.apache.log4j.Logger;
 
-import java.io.File;
-
 import de.cismet.cids.custom.utils.formsolutions.FormSolutionsConstants;
 
 import de.cismet.cids.dynamics.CidsBean;

@@ -36,16 +36,13 @@ import java.io.FileOutputStream;
 import java.io.InputStream;
 import java.io.InputStreamReader;
 import java.io.OutputStream;
-import java.io.PrintWriter;
 import java.io.StringReader;
-import java.io.StringWriter;
 
 import java.net.URL;
 
 import java.rmi.Remote;
 import java.rmi.RemoteException;
 
-import java.sql.Date;
 import java.sql.ResultSet;
 import java.sql.SQLException;
 import java.sql.Timestamp;
@@ -104,14 +101,11 @@ public class FormSolutionServerNewStuffAvailableAction implements UserAwareServe
     private static final String URL_AUFTRAG_DELETE =
         "https://demo.form-solutions.net/submission/retrieve/setStatus/DELETED/22222222-2222/%s";
 
-    private static MetaClass METACLASS_BESTELLUNG;
-    private static MetaClass METACLASS_PRODUKT;
-    private static MetaClass METACLASS_PRODUKT_TYP;
-    private static MetaClass METACLASS_ADRESSE;
-    private static MetaClass METACLASS_FORMAT;
+    private static Map<String, MetaClass> mcCache = new HashMap();
 
     public static final int STATUS_FETCH = 70;
     public static final int STATUS_PARSE = 60;
+    public static final int STATUS_GETFLURSTUECK = 55;
     public static final int STATUS_SAVE = 50;
     public static final int STATUS_CLOSE = 40;
     public static final int STATUS_CREATEURL = 30;
@@ -150,6 +144,8 @@ public class FormSolutionServerNewStuffAvailableAction implements UserAwareServe
     public FormSolutionServerNewStuffAvailableAction() {
         creds = new UsernamePasswordCredentials(FormSolutionsConstants.USER, FormSolutionsConstants.PASSWORD);
         mySqlHelper = FormSolutionsMySqlHelper.getInstance();
+
+//        MAPPER.configure(DeserializationFeature.FAIL_ON_UNKNOWN_PROPERTIES, false);
     }
 
     //~ Methods ----------------------------------------------------------------
@@ -157,81 +153,21 @@ public class FormSolutionServerNewStuffAvailableAction implements UserAwareServe
     /**
      * DOCUMENT ME!
      *
-     * @return  DOCUMENT ME!
-     */
-    private static MetaClass getBestellungMetaClass() {
-        if (METACLASS_BESTELLUNG == null) {
-            try {
-                METACLASS_BESTELLUNG = CidsBean.getMetaClassFromTableName("WUNDA_BLAU", "fs_bestellung");
-            } catch (final Exception ex) {
-                LOG.error("could not get metaclass of fs_bestellung", ex);
-            }
-        }
-        return METACLASS_BESTELLUNG;
-    }
-
-    /**
-     * DOCUMENT ME!
+     * @param   table_name  DOCUMENT ME!
      *
      * @return  DOCUMENT ME!
      */
-    private static MetaClass getProduktMetaClass() {
-        if (METACLASS_PRODUKT == null) {
+    private static MetaClass getMetaClass(final String table_name) {
+        if (!mcCache.containsKey(table_name)) {
+            MetaClass mc = null;
             try {
-                METACLASS_PRODUKT = CidsBean.getMetaClassFromTableName("WUNDA_BLAU", "fs_bestellung_produkt");
+                mc = CidsBean.getMetaClassFromTableName("WUNDA_BLAU", table_name);
             } catch (final Exception ex) {
-                LOG.error("could not get metaclass of fs_bestellung_produkt", ex);
+                LOG.error("could not get metaclass of " + table_name, ex);
             }
+            mcCache.put(table_name, mc);
         }
-        return METACLASS_PRODUKT;
-    }
-
-    /**
-     * DOCUMENT ME!
-     *
-     * @return  DOCUMENT ME!
-     */
-    private static MetaClass getProduktTypMetaClass() {
-        if (METACLASS_PRODUKT_TYP == null) {
-            try {
-                METACLASS_PRODUKT_TYP = CidsBean.getMetaClassFromTableName("WUNDA_BLAU", "fs_bestellung_produkt_typ");
-            } catch (final Exception ex) {
-                LOG.error("could not get metaclass of fs_bestellung_produkt_typ", ex);
-            }
-        }
-        return METACLASS_PRODUKT_TYP;
-    }
-
-    /**
-     * DOCUMENT ME!
-     *
-     * @return  DOCUMENT ME!
-     */
-    private static MetaClass getAdresseMetaClass() {
-        if (METACLASS_ADRESSE == null) {
-            try {
-                METACLASS_ADRESSE = CidsBean.getMetaClassFromTableName("WUNDA_BLAU", "fs_bestellung_adresse");
-            } catch (final Exception ex) {
-                LOG.error("could not get metaclass of fs_bestellung_adresse", ex);
-            }
-        }
-        return METACLASS_ADRESSE;
-    }
-
-    /**
-     * DOCUMENT ME!
-     *
-     * @return  DOCUMENT ME!
-     */
-    private static MetaClass getFormatMetaClass() {
-        if (METACLASS_FORMAT == null) {
-            try {
-                METACLASS_FORMAT = CidsBean.getMetaClassFromTableName("WUNDA_BLAU", "fs_bestellung_format");
-            } catch (final Exception ex) {
-                LOG.error("could not get metaclass of fs_bestellung_format", ex);
-            }
-        }
-        return METACLASS_FORMAT;
+        return mcCache.get(table_name);
     }
 
     /**
@@ -278,6 +214,25 @@ public class FormSolutionServerNewStuffAvailableAction implements UserAwareServe
             final CidsBean bestellungBean,
             final String message,
             final Exception exception) {
+        setErrorStatus(transid, status, bestellungBean, message, exception, true);
+    }
+
+    /**
+     * DOCUMENT ME!
+     *
+     * @param  transid         DOCUMENT ME!
+     * @param  status          DOCUMENT ME!
+     * @param  bestellungBean  DOCUMENT ME!
+     * @param  message         DOCUMENT ME!
+     * @param  exception       DOCUMENT ME!
+     * @param  persist         DOCUMENT ME!
+     */
+    private void setErrorStatus(final String transid,
+            final int status,
+            final CidsBean bestellungBean,
+            final String message,
+            final Exception exception,
+            final boolean persist) {
         LOG.error(message, exception);
         if (bestellungBean != null) {
             try {
@@ -285,7 +240,9 @@ public class FormSolutionServerNewStuffAvailableAction implements UserAwareServe
                 bestellungBean.setProperty("fehler", message);
                 bestellungBean.setProperty("fehler_ts", new Timestamp(new java.util.Date().getTime()));
                 bestellungBean.setProperty("exception", MAPPER.writeValueAsString(exception));
-                getMetaService().updateMetaObject(user, bestellungBean.getMetaObject());
+                if (persist) {
+                    getMetaService().updateMetaObject(user, bestellungBean.getMetaObject());
+                }
             } catch (final Exception ex) {
                 LOG.error("Fehler beim Persistieren der Bean", ex);
             }
@@ -401,9 +358,9 @@ public class FormSolutionServerNewStuffAvailableAction implements UserAwareServe
             formatKey = null;
         }
 
-        final MetaClass produktTypMc = getProduktTypMetaClass();
-        final MetaClass produktMc = getProduktMetaClass();
-        final MetaClass formatMc = getFormatMetaClass();
+        final MetaClass produktTypMc = getMetaClass("fs_bestellung_produkt_typ");
+        final MetaClass produktMc = getMetaClass("fs_bestellung_produkt");
+        final MetaClass formatMc = getMetaClass("fs_bestellung_format");
         final String produktQuery = "SELECT DISTINCT " + produktMc.getID() + ", "
                     + produktMc.getTableName() + "." + produktMc.getPrimaryKey() + " "
                     + "FROM " + produktMc.getTableName() + ", " + produktTypMc.getTableName() + ", "
@@ -429,14 +386,35 @@ public class FormSolutionServerNewStuffAvailableAction implements UserAwareServe
      * @throws  Exception  DOCUMENT ME!
      */
     private CidsBean createBestellungBean(final FormSolutionsBestellung formSolutionsBestellung) throws Exception {
-        final MetaClass bestellungMc = getBestellungMetaClass();
-        final MetaClass adresseMc = getAdresseMetaClass();
+        final MetaClass bestellungMc = getMetaClass("fs_bestellung");
+        final MetaClass adresseMc = getMetaClass("fs_bestellung_adresse");
+        final MetaClass geomMc = getMetaClass("geom");
+
         final CidsBean bestellungBean = bestellungMc.getEmptyInstance().getBean();
         final CidsBean adresseVersandBean = adresseMc.getEmptyInstance().getBean();
+        final CidsBean geomBean = geomMc.getEmptyInstance().getBean();
         final CidsBean adresseRechnungBean;
 
+        final String transid = formSolutionsBestellung.getTransId();
         final Integer massstab = (formSolutionsBestellung.getMassstab() != null)
             ? Integer.parseInt(formSolutionsBestellung.getMassstab().split(":")[1]) : null;
+
+        final String flurstueckskennzeichen1 = trimedNotEmpty(formSolutionsBestellung.getFlurstueckskennzeichen1());
+        final String flurstueckskennzeichen = trimedNotEmpty(formSolutionsBestellung.getFlurstueckskennzeichen());
+        final String landparcelcode = (flurstueckskennzeichen1 != null) ? flurstueckskennzeichen1
+                                                                        : flurstueckskennzeichen;
+
+        CidsBean flurstueck = null;
+        Geometry geom = null;
+        try {
+            flurstueck = getFlurstueck(landparcelcode);
+            if (flurstueck == null) {
+                throw new Exception("ALKIS Flurstück wurde nicht gefunden (" + landparcelcode + ")");
+            }
+            geom = (Geometry)flurstueck.getProperty("geometrie.geo_field");
+        } catch (final Exception ex) {
+            bestellungBean.setProperty("exception", MAPPER.writeValueAsString(ex));
+        }
 
         final CidsBean produktBean = getProduktBean(formSolutionsBestellung.getFarbauspraegung(),
                 formSolutionsBestellung.getFormat(),
@@ -466,21 +444,20 @@ public class FormSolutionServerNewStuffAvailableAction implements UserAwareServe
         }
 
         bestellungBean.setProperty("postweg", "Kartenausdruck".equals(formSolutionsBestellung.getBezugsweg()));
-        bestellungBean.setProperty("transid", formSolutionsBestellung.getTransId());
-        final String landparcelcode1 = trimedNotEmpty(formSolutionsBestellung.getFlurstueckskennzeichen1());
-        final String landparcelcode = trimedNotEmpty(formSolutionsBestellung.getFlurstueckskennzeichen());
-        if (landparcelcode1 != null) {
-            bestellungBean.setProperty("landparcelcode", landparcelcode1);
-        } else {
-            bestellungBean.setProperty("landparcelcode", landparcelcode);
-        }
+        bestellungBean.setProperty("transid", transid);
+        bestellungBean.setProperty("landparcelcode", landparcelcode);
         bestellungBean.setProperty("fk_produkt", produktBean);
         bestellungBean.setProperty("massstab", massstab);
         bestellungBean.setProperty("fk_adresse_versand", adresseVersandBean);
         bestellungBean.setProperty("fk_adresse_rechnung", adresseRechnungBean);
-        bestellungBean.setProperty("email", "platzhalter@email.fake"); // TODO reale email Adresse aus XML verwenden
+        bestellungBean.setProperty("email", trimedNotEmpty(formSolutionsBestellung.getEMailadresse()));
         bestellungBean.setProperty("erledigt", false);
         bestellungBean.setProperty("eingang_ts", new Timestamp(new java.util.Date().getTime()));
+
+        if (geom != null) {
+            geomBean.setProperty("geo_field", geom);
+            bestellungBean.setProperty("geometrie", geomBean);
+        }
 
         return bestellungBean;
     }
@@ -575,13 +552,11 @@ public class FormSolutionServerNewStuffAvailableAction implements UserAwareServe
         final Integer scale = (Integer)bestellungBean.getProperty("massstab");
 
         final AlkisProductDescription productDesc = getAlkisProductDescription(code, dinFormat, scale);
-
         final String flurstueckKennzeichen = (String)bestellungBean.getProperty("landparcelcode");
-        final CidsBean flurstueck = getFlurstueck(flurstueckKennzeichen);
 
         final String transid = (String)bestellungBean.getProperty("transid");
 
-        final Geometry geom = (Geometry)flurstueck.getProperty("geometrie.geo_field");
+        final Geometry geom = (Geometry)bestellungBean.getProperty("geometrie.geo_field");
         final Point center = geom.getCentroid();
 
         final URL url = AlkisProducts.getInstance()
@@ -595,6 +570,7 @@ public class FormSolutionServerNewStuffAvailableAction implements UserAwareServe
                         transid,
                         false,
                         null);
+
         return url;
     }
 
@@ -675,7 +651,7 @@ public class FormSolutionServerNewStuffAvailableAction implements UserAwareServe
                 final FormSolutionsBestellung formSolutionBestellung = createFormSolutionsBestellung(inputStream);
                 fsBestellungMap.put(transid, formSolutionBestellung);
 
-                mySqlHelper.updateEmail(transid, STATUS_PARSE, "platzhalter@email.fake");
+                mySqlHelper.updateEmail(transid, STATUS_PARSE, formSolutionBestellung.getEMailadresse());
             } catch (final Exception ex) {
                 setErrorStatus(transid, STATUS_PARSE, null, "Fehler beim Parsen FormSolution", ex);
             }
@@ -709,17 +685,25 @@ public class FormSolutionServerNewStuffAvailableAction implements UserAwareServe
 
                 final CidsBean bestellungBean = createBestellungBean(formSolutionBestellung);
                 bestellungBean.setProperty("form_xml_orig", auftragXml);
+                if (insertException != null) {
+                    bestellungBean.setProperty("fehler", "Fehler beim Erzeugen des MySQL-Datensatzes");
+                    bestellungBean.setProperty("exception", MAPPER.writeValueAsString(insertException));
+                    bestellungBean.setProperty("fehler_ts", new Timestamp(new java.util.Date().getTime()));
+                }
+                if ((bestellungBean.getProperty("geometrie") == null)
+                            && (bestellungBean.getProperty("exception") != null)) {
+                    setErrorStatus(
+                        transid,
+                        STATUS_GETFLURSTUECK,
+                        bestellungBean,
+                        "Fehler beim Laden des Flurstücks",
+                        MAPPER.readValue((String)bestellungBean.getProperty("exception"), Exception.class),
+                        false);
+                }
+
                 final MetaObject persistedMo = getMetaService().insertMetaObject(
                         user,
                         bestellungBean.getMetaObject());
-                if (insertException != null) {
-                    try {
-                        bestellungBean.setProperty("fehler", "Fehler beim Erzeugen des MySQL-Datensatzes");
-                        bestellungBean.setProperty("exception", MAPPER.writeValueAsString(insertException));
-                        bestellungBean.setProperty("fehler_ts", new Timestamp(new java.util.Date().getTime()));
-                    } catch (final Exception ex) {
-                    }
-                }
 
                 final CidsBean persistedBestellungBean = persistedMo.getBean();
                 fsBeanMap.put(transid, persistedBestellungBean);
@@ -784,13 +768,12 @@ public class FormSolutionServerNewStuffAvailableAction implements UserAwareServe
         final Collection<String> transids = new ArrayList<String>(fsBeanMap.keySet());
         for (final String transid : transids) {
             final CidsBean bestellungBean = fsBeanMap.get(transid);
-            if (bestellungBean != null) {
+            if ((bestellungBean != null) && (bestellungBean.getProperty("fehler") == null)) {
                 try {
                     closeTransid(transid);
 
                     mySqlHelper.updateStatus(transid, STATUS_CLOSE);
                 } catch (Exception ex) {
-                    fsBeanMap.remove(transid);
                     setErrorStatus(transid, STATUS_CLOSE, bestellungBean, "Fehler beim Schließen der Transaktion.", ex);
                     break;
                 }
@@ -812,13 +795,12 @@ public class FormSolutionServerNewStuffAvailableAction implements UserAwareServe
 
         for (final String transid : new ArrayList<String>(fsBeanMap.keySet())) {
             final CidsBean bestellungBean = fsBeanMap.get(transid);
-            if (bestellungBean != null) {
+            if ((bestellungBean != null) && (bestellungBean.getProperty("fehler") == null)) {
                 try {
                     final URL productUrl = createProductUrl(bestellungBean);
                     fsUrlMap.put(transid, productUrl);
                     mySqlHelper.updateStatus(transid, STATUS_CREATEURL);
                 } catch (final Exception ex) {
-                    fsBeanMap.remove(transid);
                     setErrorStatus(
                         transid,
                         STATUS_CREATEURL,
@@ -842,7 +824,7 @@ public class FormSolutionServerNewStuffAvailableAction implements UserAwareServe
 
         for (final String transid : transids) {
             final CidsBean bestellungBean = fsBeanMap.get(transid);
-            if (bestellungBean != null) {
+            if ((bestellungBean != null) && (bestellungBean.getProperty("fehler") == null)) {
                 final URL productUrl = fsUrlMap.get(transid);
                 try {
                     bestellungBean.setProperty("request_url", productUrl.toString());
@@ -869,7 +851,6 @@ public class FormSolutionServerNewStuffAvailableAction implements UserAwareServe
                         (String)bestellungBean.getProperty("produkt_dateipfad"),
                         (String)bestellungBean.getProperty("produkt_dateiname_orig"));
                 } catch (final Exception ex) {
-                    fsBeanMap.remove(transid);
                     setErrorStatus(transid, STATUS_DOWNLOAD, bestellungBean, "Fehler beim Erzeugen des Produktes", ex);
                 }
             }
@@ -885,7 +866,7 @@ public class FormSolutionServerNewStuffAvailableAction implements UserAwareServe
         final Collection<String> transids = new ArrayList<String>(fsBeanMap.keySet());
         for (final String transid : transids) {
             final CidsBean bestellungBean = fsBeanMap.get(transid);
-            if (bestellungBean != null) {
+            if ((bestellungBean != null) && (bestellungBean.getProperty("fehler") == null)) {
                 try {
                     final Boolean propPostweg = (Boolean)bestellungBean.getProperty("postweg");
                     if (!Boolean.TRUE.equals(propPostweg)) {
@@ -908,7 +889,7 @@ public class FormSolutionServerNewStuffAvailableAction implements UserAwareServe
         final Collection<String> transids = new ArrayList<String>(fsBeanMap.keySet());
         for (final String transid : transids) {
             final CidsBean bestellungBean = fsBeanMap.get(transid);
-            if (bestellungBean != null) {
+            if ((bestellungBean != null) && (bestellungBean.getProperty("fehler") == null)) {
                 final int okStatus;
                 final Boolean propPostweg = (Boolean)bestellungBean.getProperty("postweg");
                 if (Boolean.TRUE.equals(propPostweg)) {

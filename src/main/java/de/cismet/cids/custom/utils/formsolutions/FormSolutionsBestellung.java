@@ -175,4 +175,7 @@ public class FormSolutionsBestellung {
 
     @XmlElement(name = "AS_Hausnummer.1")
     private String asHausnummer1;
+
+    @XmlElement(name = "E-Mailadresse")
+    private String eMailadresse;
 }
