@@ -59,7 +59,6 @@ public class FormSolutionBestellungChangeStatusServerAction implements UserAware
 
     private User user;
     private MetaService metaService;
-    private final FormSolutionsMySqlHelper mySqlHelper;
 
     //~ Constructors -----------------------------------------------------------
 
@@ -67,10 +66,18 @@ public class FormSolutionBestellungChangeStatusServerAction implements UserAware
      * Creates a new FormSolutionBestellungChangeStatusServerAction object.
      */
     public FormSolutionBestellungChangeStatusServerAction() {
-        mySqlHelper = FormSolutionsMySqlHelper.getInstance();
     }
 
     //~ Methods ----------------------------------------------------------------
+
+    /**
+     * DOCUMENT ME!
+     *
+     * @return  DOCUMENT ME!
+     */
+    private FormSolutionsMySqlHelper getMySqlHelper() {
+        return FormSolutionsMySqlHelper.getInstance();
+    }
 
     @Override
     public Object execute(final Object body, final ServerActionParameter... params) {
@@ -109,7 +116,7 @@ public class FormSolutionBestellungChangeStatusServerAction implements UserAware
                 } else {
                     status = 10;
                 }
-                mySqlHelper.updateStatus(transid, status);
+                getMySqlHelper().updateStatus(transid, status);
                 bestellungBean.setProperty("erledigt", erledigt);
                 bestellungBean.setProperty("fehler", null);
                 DomainServerImpl.getServerInstance().updateMetaObject(getUser(), bestellungBean.getMetaObject());
