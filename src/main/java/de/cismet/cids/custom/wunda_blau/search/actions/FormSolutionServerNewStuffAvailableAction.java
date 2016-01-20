@@ -28,6 +28,7 @@ import com.vividsolutions.jts.geom.Point;
 import org.apache.commons.httpclient.UsernamePasswordCredentials;
 import org.apache.commons.io.IOUtils;
 
+import org.openide.util.Exceptions;
 import org.openide.util.Lookup;
 
 import java.io.BufferedReader;
@@ -92,22 +93,23 @@ public class FormSolutionServerNewStuffAvailableAction implements UserAwareServe
             FormSolutionServerNewStuffAvailableAction.class);
     public static final String TASK_NAME = "formSolutionServerNewStuffAvailable";
 
-    private static final ObjectMapper MAPPER = new ObjectMapper();
-
     private static final String URL_AUFTRAGSLISTE =
         "https://demo.form-solutions.net/submission/retrieve/transactionIDs/22222222-2222/AS_KF600200";
     private static final String URL_AUFTRAG =
         "https://demo.form-solutions.net/submission/retrieve/data/22222222-2222/%s";
     private static final String URL_AUFTRAG_DELETE =
         "https://demo.form-solutions.net/submission/retrieve/setStatus/DELETED/22222222-2222/%s";
+    private static final String STATUS_UPDATE_URL =
+        "http://www.wuppertal.de/kartendownload/index.php?tid=%s&secret=P4rFx9As1bBc2R9Ya8";
 
-    private static Map<String, MetaClass> mcCache = new HashMap();
+    private static final Map<String, MetaClass> METACLASS_CACHE = new HashMap();
+    private static final ObjectMapper MAPPER = new ObjectMapper();
 
     public static final int STATUS_FETCH = 70;
     public static final int STATUS_PARSE = 60;
-    public static final int STATUS_GETFLURSTUECK = 55;
-    public static final int STATUS_SAVE = 50;
-    public static final int STATUS_CLOSE = 40;
+    public static final int STATUS_CLOSE = 50;
+    public static final int STATUS_GETFLURSTUECK = 45;
+    public static final int STATUS_SAVE = 40;
     public static final int STATUS_CREATEURL = 30;
     public static final int STATUS_DOWNLOAD = 20;
     public static final int STATUS_PENDING = 10;
@@ -129,12 +131,12 @@ public class FormSolutionServerNewStuffAvailableAction implements UserAwareServe
 
     //~ Instance fields --------------------------------------------------------
 
+    private final SimpleHttpAccessHandler HTTP_HANDLER = new SimpleHttpAccessHandler();
+
     private final UsernamePasswordCredentials creds;
-    private final SimpleHttpAccessHandler handler = new SimpleHttpAccessHandler();
 
     private User user;
     private MetaService metaService;
-    private final FormSolutionsMySqlHelper mySqlHelper;
 
     //~ Constructors -----------------------------------------------------------
 
@@ -143,12 +145,38 @@ public class FormSolutionServerNewStuffAvailableAction implements UserAwareServe
      */
     public FormSolutionServerNewStuffAvailableAction() {
         creds = new UsernamePasswordCredentials(FormSolutionsConstants.USER, FormSolutionsConstants.PASSWORD);
-        mySqlHelper = FormSolutionsMySqlHelper.getInstance();
 
-//        MAPPER.configure(DeserializationFeature.FAIL_ON_UNKNOWN_PROPERTIES, false);
+//        getObjectMapper().configure(DeserializationFeature.FAIL_ON_UNKNOWN_PROPERTIES, false);
     }
 
     //~ Methods ----------------------------------------------------------------
+
+    /**
+     * DOCUMENT ME!
+     *
+     * @return  DOCUMENT ME!
+     */
+    private SimpleHttpAccessHandler getHttpAccessHandler() {
+        return HTTP_HANDLER;
+    }
+
+    /**
+     * DOCUMENT ME!
+     *
+     * @return  DOCUMENT ME!
+     */
+    private FormSolutionsMySqlHelper getMySqlHelper() {
+        return FormSolutionsMySqlHelper.getInstance();
+    }
+
+    /**
+     * DOCUMENT ME!
+     *
+     * @return  DOCUMENT ME!
+     */
+    private ObjectMapper getObjectMapper() {
+        return MAPPER;
+    }
 
     /**
      * DOCUMENT ME!
@@ -158,16 +186,16 @@ public class FormSolutionServerNewStuffAvailableAction implements UserAwareServe
      * @return  DOCUMENT ME!
      */
     private static MetaClass getMetaClass(final String table_name) {
-        if (!mcCache.containsKey(table_name)) {
+        if (!METACLASS_CACHE.containsKey(table_name)) {
             MetaClass mc = null;
             try {
                 mc = CidsBean.getMetaClassFromTableName("WUNDA_BLAU", table_name);
             } catch (final Exception ex) {
                 LOG.error("could not get metaclass of " + table_name, ex);
             }
-            mcCache.put(table_name, mc);
+            METACLASS_CACHE.put(table_name, mc);
         }
-        return mcCache.get(table_name);
+        return METACLASS_CACHE.get(table_name);
     }
 
     /**
@@ -179,7 +207,7 @@ public class FormSolutionServerNewStuffAvailableAction implements UserAwareServe
      */
     private Collection<String> getOpenTransids() throws Exception {
         final StringBuilder stringBuilder = new StringBuilder();
-        final InputStream inputStream = handler.doRequest(
+        final InputStream inputStream = getHttpAccessHandler().doRequest(
                 new URL(URL_AUFTRAGSLISTE),
                 new StringReader(""),
                 AccessHandler.ACCESS_METHODS.GET_REQUEST,
@@ -193,7 +221,7 @@ public class FormSolutionServerNewStuffAvailableAction implements UserAwareServe
         }
         inputStream.close();
 
-        final Map<String, Object> map = MAPPER.readValue("{ \"list\" : " + stringBuilder.toString() + "}",
+        final Map<String, Object> map = getObjectMapper().readValue("{ \"list\" : " + stringBuilder.toString() + "}",
                 new TypeReference<HashMap<String, Object>>() {
                 });
 
@@ -239,7 +267,7 @@ public class FormSolutionServerNewStuffAvailableAction implements UserAwareServe
                 bestellungBean.setProperty("erledigt", false);
                 bestellungBean.setProperty("fehler", message);
                 bestellungBean.setProperty("fehler_ts", new Timestamp(new java.util.Date().getTime()));
-                bestellungBean.setProperty("exception", MAPPER.writeValueAsString(exception));
+                bestellungBean.setProperty("exception", getObjectMapper().writeValueAsString(exception));
                 if (persist) {
                     getMetaService().updateMetaObject(user, bestellungBean.getMetaObject());
                 }
@@ -248,8 +276,9 @@ public class FormSolutionServerNewStuffAvailableAction implements UserAwareServe
             }
         }
         try {
-            mySqlHelper.updateStatus(transid, -status);
-        } catch (final SQLException ex2) {
+            getMySqlHelper().updateStatus(transid, -status);
+            doStatusChangedRequest(transid);
+        } catch (final Exception ex2) {
             LOG.error("Fehler beim Aktualisieren des MySQL-Datensatzes", ex2);
         }
     }
@@ -264,13 +293,15 @@ public class FormSolutionServerNewStuffAvailableAction implements UserAwareServe
      * @throws  Exception  DOCUMENT ME!
      */
     private String getAuftrag(final String auftrag) throws Exception {
-        final InputStream inputStream = handler.doRequest(
+        final InputStream inputStream = getHttpAccessHandler().doRequest(
                 new URL(String.format(URL_AUFTRAG, auftrag)),
                 new StringReader(""),
                 AccessHandler.ACCESS_METHODS.GET_REQUEST,
                 null,
                 creds);
-        final Map<String, Object> map = MAPPER.readValue(inputStream, new TypeReference<HashMap<String, Object>>() {
+        final Map<String, Object> map = getObjectMapper().readValue(
+                inputStream,
+                new TypeReference<HashMap<String, Object>>() {
                 });
         inputStream.close();
 
@@ -290,12 +321,27 @@ public class FormSolutionServerNewStuffAvailableAction implements UserAwareServe
         if (noClose) {
             return;
         }
-        handler.doRequest(
+        getHttpAccessHandler().doRequest(
             new URL(String.format(URL_AUFTRAG_DELETE, auftrag)),
             new StringReader(""),
             AccessHandler.ACCESS_METHODS.POST_REQUEST,
             null,
             creds);
+    }
+
+    /**
+     * DOCUMENT ME!
+     *
+     * @param  transid  DOCUMENT ME!
+     */
+    private void doStatusChangedRequest(final String transid) {
+        try {
+            getHttpAccessHandler().doRequest(new URL(String.format(STATUS_UPDATE_URL, transid)),
+                new StringReader(""),
+                AccessHandler.ACCESS_METHODS.GET_REQUEST);
+        } catch (final Exception ex) {
+            LOG.warn("STATUS_UPDATE_URL could not be requested", ex);
+        }
     }
 
     /**
@@ -413,7 +459,7 @@ public class FormSolutionServerNewStuffAvailableAction implements UserAwareServe
             }
             geom = (Geometry)flurstueck.getProperty("geometrie.geo_field");
         } catch (final Exception ex) {
-            bestellungBean.setProperty("exception", MAPPER.writeValueAsString(ex));
+            bestellungBean.setProperty("exception", getObjectMapper().writeValueAsString(ex));
         }
 
         final CidsBean produktBean = getProduktBean(formSolutionsBestellung.getFarbauspraegung(),
@@ -586,7 +632,7 @@ public class FormSolutionServerNewStuffAvailableAction implements UserAwareServe
         InputStream in = null;
         OutputStream out = null;
         try {
-            in = handler.doRequest(
+            in = getHttpAccessHandler().doRequest(
                     productUrl,
                     new StringReader(""),
                     AccessHandler.ACCESS_METHODS.GET_REQUEST,
@@ -624,7 +670,8 @@ public class FormSolutionServerNewStuffAvailableAction implements UserAwareServe
             try {
                 final String auftragXml = getAuftrag(transid);
                 fsXmlMap.put(transid, auftragXml);
-                mySqlHelper.updateStatus(transid, STATUS_FETCH);
+                getMySqlHelper().updateStatus(transid, STATUS_FETCH);
+                doStatusChangedRequest(transid);
             } catch (final Exception ex) {
                 setErrorStatus(transid, STATUS_FETCH, null, "Fehler beim Abholen FormSolution", ex);
             }
@@ -651,7 +698,8 @@ public class FormSolutionServerNewStuffAvailableAction implements UserAwareServe
                 final FormSolutionsBestellung formSolutionBestellung = createFormSolutionsBestellung(inputStream);
                 fsBestellungMap.put(transid, formSolutionBestellung);
 
-                mySqlHelper.updateEmail(transid, STATUS_PARSE, formSolutionBestellung.getEMailadresse());
+                getMySqlHelper().updateEmail(transid, STATUS_PARSE, formSolutionBestellung.getEMailadresse());
+                doStatusChangedRequest(transid);
             } catch (final Exception ex) {
                 setErrorStatus(transid, STATUS_PARSE, null, "Fehler beim Parsen FormSolution", ex);
             }
@@ -687,7 +735,7 @@ public class FormSolutionServerNewStuffAvailableAction implements UserAwareServe
                 bestellungBean.setProperty("form_xml_orig", auftragXml);
                 if (insertException != null) {
                     bestellungBean.setProperty("fehler", "Fehler beim Erzeugen des MySQL-Datensatzes");
-                    bestellungBean.setProperty("exception", MAPPER.writeValueAsString(insertException));
+                    bestellungBean.setProperty("exception", getObjectMapper().writeValueAsString(insertException));
                     bestellungBean.setProperty("fehler_ts", new Timestamp(new java.util.Date().getTime()));
                 }
                 if ((bestellungBean.getProperty("geometrie") == null)
@@ -697,7 +745,7 @@ public class FormSolutionServerNewStuffAvailableAction implements UserAwareServe
                         STATUS_GETFLURSTUECK,
                         bestellungBean,
                         "Fehler beim Laden des Flurstücks",
-                        MAPPER.readValue((String)bestellungBean.getProperty("exception"), Exception.class),
+                        getObjectMapper().readValue((String)bestellungBean.getProperty("exception"), Exception.class),
                         false);
                 }
 
@@ -708,7 +756,8 @@ public class FormSolutionServerNewStuffAvailableAction implements UserAwareServe
                 final CidsBean persistedBestellungBean = persistedMo.getBean();
                 fsBeanMap.put(transid, persistedBestellungBean);
 
-                mySqlHelper.updateStatus(transid, STATUS_SAVE);
+                getMySqlHelper().updateStatus(transid, STATUS_SAVE);
+                doStatusChangedRequest(transid);
             } catch (final Exception ex) {
                 setErrorStatus(transid, STATUS_SAVE, null, "Fehler beim Erstellen des Bestellungs-Objektes", ex);
             }
@@ -731,7 +780,7 @@ public class FormSolutionServerNewStuffAvailableAction implements UserAwareServe
             boolean mysqlEntryAlreadyExists = false;
             ResultSet resultSet = null;
             try {
-                resultSet = mySqlHelper.select(transid);
+                resultSet = getMySqlHelper().select(transid);
                 mysqlEntryAlreadyExists = (resultSet != null) && resultSet.next();
             } catch (final SQLException ex) {
                 LOG.error("check nach bereits vorhandenen transids fehlgeschlagen.", ex);
@@ -746,10 +795,11 @@ public class FormSolutionServerNewStuffAvailableAction implements UserAwareServe
 
             try {
                 if (mysqlEntryAlreadyExists) {
-                    mySqlHelper.updateStatus(transid, 100);
+                    getMySqlHelper().updateStatus(transid, 100);
                 } else {
-                    mySqlHelper.insertMySql(transid, 100);
+                    getMySqlHelper().insertMySql(transid, 100);
                 }
+                doStatusChangedRequest(transid);
             } catch (final Exception ex) {
                 LOG.error("Fehler beim Erzeugen/Aktualisieren des MySQL-Datensatzes.", ex);
                 insertExceptionMap.put(transid, ex);
@@ -772,7 +822,8 @@ public class FormSolutionServerNewStuffAvailableAction implements UserAwareServe
                 try {
                     closeTransid(transid);
 
-                    mySqlHelper.updateStatus(transid, STATUS_CLOSE);
+                    getMySqlHelper().updateStatus(transid, STATUS_CLOSE);
+                    doStatusChangedRequest(transid);
                 } catch (Exception ex) {
                     setErrorStatus(transid, STATUS_CLOSE, bestellungBean, "Fehler beim Schließen der Transaktion.", ex);
                     break;
@@ -799,7 +850,8 @@ public class FormSolutionServerNewStuffAvailableAction implements UserAwareServe
                 try {
                     final URL productUrl = createProductUrl(bestellungBean);
                     fsUrlMap.put(transid, productUrl);
-                    mySqlHelper.updateStatus(transid, STATUS_CREATEURL);
+                    getMySqlHelper().updateStatus(transid, STATUS_CREATEURL);
+                    doStatusChangedRequest(transid);
                 } catch (final Exception ex) {
                     setErrorStatus(
                         transid,
@@ -845,11 +897,12 @@ public class FormSolutionServerNewStuffAvailableAction implements UserAwareServe
                     bestellungBean.setProperty("produkt_dateipfad", filePath);
                     bestellungBean.setProperty("produkt_dateiname_orig", fileNameOrig);
 
-                    mySqlHelper.updateProdukt(
+                    getMySqlHelper().updateProdukt(
                         transid,
                         STATUS_DOWNLOAD,
                         (String)bestellungBean.getProperty("produkt_dateipfad"),
                         (String)bestellungBean.getProperty("produkt_dateiname_orig"));
+                    doStatusChangedRequest(transid);
                 } catch (final Exception ex) {
                     setErrorStatus(transid, STATUS_DOWNLOAD, bestellungBean, "Fehler beim Erzeugen des Produktes", ex);
                 }
@@ -898,7 +951,8 @@ public class FormSolutionServerNewStuffAvailableAction implements UserAwareServe
                     okStatus = STATUS_DONE;
                 }
                 try {
-                    mySqlHelper.updateStatus(transid, okStatus);
+                    getMySqlHelper().updateStatus(transid, okStatus);
+                    doStatusChangedRequest(transid);
                 } catch (final Exception ex) {
                     setErrorStatus(transid, 10, bestellungBean, "Fehler beim Abschließen des MYSQL-Datensatzes", ex);
                 }
@@ -950,7 +1004,7 @@ public class FormSolutionServerNewStuffAvailableAction implements UserAwareServe
             }
         }
 
-        synchronized (mySqlHelper) {
+        synchronized (this) {
             final Map<String, CidsBean> fsBeanMap = new HashMap();
 
             if (!fetchFromFs) {

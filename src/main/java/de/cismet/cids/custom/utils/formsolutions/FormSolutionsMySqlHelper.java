@@ -50,54 +50,23 @@ public class FormSolutionsMySqlHelper {
 
     /**
      * Creates a new FormSolutionsMySqlHelper object.
+     *
+     * @throws  Exception  DOCUMENT ME!
      */
-    private FormSolutionsMySqlHelper() {
-        PreparedStatement preparedSelectStatement = null;
-        PreparedStatement preparedInsertStatement = null;
-        PreparedStatement preparedUpdateProduktStatement = null;
-        PreparedStatement preparedUpdateEmailStatement = null;
-        PreparedStatement preparedUpdateStatusStatement = null;
+    private FormSolutionsMySqlHelper() throws Exception {
+        Class.forName("com.mysql.jdbc.Driver");
+        this.connect = DriverManager.getConnection(FormSolutionsConstants.MYSQL_JDBC);
 
-        try {
-            Class.forName("com.mysql.jdbc.Driver");
-            connect = DriverManager.getConnection(FormSolutionsConstants.MYSQL_JDBC);
-            try {
-                preparedSelectStatement = connect.prepareStatement("SELECT id FROM bestellung WHERE transid = ?;");
-            } catch (final SQLException ex) {
-                LOG.error(ex, ex);
-            }
-            try {
-                preparedInsertStatement = connect.prepareStatement(
-                        "INSERT INTO bestellung VALUES (default, ?, ?, null, null, null, ?);");
-            } catch (final SQLException ex) {
-                LOG.error(ex, ex);
-            }
-            try {
-                preparedUpdateProduktStatement = connect.prepareStatement(
-                        "UPDATE bestellung SET status = ?, last_update = ?, dokument_dateipfad = ?, dokument_dateiname = ? WHERE transid = ?;");
-            } catch (final SQLException ex) {
-                LOG.error(ex, ex);
-            }
-            try {
-                preparedUpdateEmailStatement = connect.prepareStatement(
-                        "UPDATE bestellung SET status = ?, last_update = ?, email = ? WHERE transid = ?;");
-            } catch (final SQLException ex) {
-                LOG.error(ex, ex);
-            }
-            try {
-                preparedUpdateStatusStatement = connect.prepareStatement(
-                        "UPDATE bestellung SET status = ?, last_update = ? WHERE transid = ?;");
-            } catch (final SQLException ex) {
-                LOG.error(ex, ex);
-            }
-        } catch (final Exception ex) {
-            Exceptions.printStackTrace(ex);
-        }
-        this.preparedSelectStatement = preparedSelectStatement;
-        this.preparedInsertStatement = preparedInsertStatement;
-        this.preparedUpdateProduktStatement = preparedUpdateProduktStatement;
-        this.preparedUpdateEmailStatement = preparedUpdateEmailStatement;
-        this.preparedUpdateStatusStatement = preparedUpdateStatusStatement;
+        this.preparedSelectStatement = connect.prepareStatement(
+                "SELECT id FROM bestellung WHERE transid = ?;");
+        this.preparedInsertStatement = connect.prepareStatement(
+                "INSERT INTO bestellung VALUES (default, ?, ?, null, null, null, ?);");
+        this.preparedUpdateProduktStatement = connect.prepareStatement(
+                "UPDATE bestellung SET status = ?, last_update = ?, dokument_dateipfad = ?, dokument_dateiname = ? WHERE transid = ?;");
+        this.preparedUpdateEmailStatement = connect.prepareStatement(
+                "UPDATE bestellung SET status = ?, last_update = ?, email = ? WHERE transid = ?;");
+        this.preparedUpdateStatusStatement = connect.prepareStatement(
+                "UPDATE bestellung SET status = ?, last_update = ? WHERE transid = ?;");
     }
 
     //~ Methods ----------------------------------------------------------------
@@ -109,7 +78,11 @@ public class FormSolutionsMySqlHelper {
      */
     public static FormSolutionsMySqlHelper getInstance() {
         if (INSTANCE == null) {
-            INSTANCE = new FormSolutionsMySqlHelper();
+            try {
+                INSTANCE = new FormSolutionsMySqlHelper();
+            } catch (final Exception ex) {
+                LOG.error("error while intiliazing FormSolutionsMySqlHelper", ex);
+            }
         }
         return INSTANCE;
     }
