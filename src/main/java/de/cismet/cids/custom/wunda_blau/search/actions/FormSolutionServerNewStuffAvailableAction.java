@@ -28,7 +28,6 @@ import com.vividsolutions.jts.geom.Point;
 import org.apache.commons.httpclient.UsernamePasswordCredentials;
 import org.apache.commons.io.IOUtils;
 
-import org.openide.util.Exceptions;
 import org.openide.util.Lookup;
 
 import java.io.BufferedReader;
@@ -375,19 +374,35 @@ public class FormSolutionServerNewStuffAvailableAction implements UserAwareServe
     /**
      * DOCUMENT ME!
      *
-     * @param   farbauspraegung  DOCUMENT ME!
-     * @param   rawDin           DOCUMENT ME!
-     * @param   rawAusrichtung   DOCUMENT ME!
+     * @param   formSolutionsBestellung  DOCUMENT ME!
      *
      * @return  DOCUMENT ME!
-     *
-     * @throws  RemoteException  DOCUMENT ME!
      */
-    private CidsBean getProduktBean(final String farbauspraegung, final String rawDin, final String rawAusrichtung)
-            throws RemoteException {
-        final String produktKey;
-        final String formatKey;
+    private static String extractProdukt(final FormSolutionsBestellung formSolutionsBestellung) {
+        final String farbauspraegung = formSolutionsBestellung.getFarbauspraegung();
+        final String massstab = formSolutionsBestellung.getMassstab();
 
+        final StringBuffer produktSB = new StringBuffer("Stadtgrundkarte mit kom. Erg.");
+        if ("farbig".equals(farbauspraegung)) {
+            produktSB.append(" (farbig)");
+        } else {
+            produktSB.append(" (sw)");
+        }
+        produktSB.append(", ").append(extractFormat(formSolutionsBestellung)).append(" ").append(massstab);
+        return produktSB.toString();
+    }
+
+    /**
+     * DOCUMENT ME!
+     *
+     * @param   formSolutionsBestellung  DOCUMENT ME!
+     *
+     * @return  DOCUMENT ME!
+     */
+    private static String extractProduktKey(final FormSolutionsBestellung formSolutionsBestellung) {
+        final String farbauspraegung = formSolutionsBestellung.getFarbauspraegung();
+
+        final String produktKey;
         if ("farbig".equals(farbauspraegung)) {
             produktKey = "LK.NRW.K.BF";
         } else if ("Graustufen".equals(farbauspraegung)) {
@@ -395,7 +410,21 @@ public class FormSolutionServerNewStuffAvailableAction implements UserAwareServe
         } else {
             produktKey = null;
         }
+        return produktKey;
+    }
 
+    /**
+     * DOCUMENT ME!
+     *
+     * @param   formSolutionsBestellung  DOCUMENT ME!
+     *
+     * @return  DOCUMENT ME!
+     */
+    private static String extractFormatKey(final FormSolutionsBestellung formSolutionsBestellung) {
+        final String rawDin = formSolutionsBestellung.getFormat();
+        final String rawAusrichtung = formSolutionsBestellung.getAusrichtung();
+
+        final String formatKey;
         if ((rawDin != null) && (rawAusrichtung != null)) {
             final String din = rawDin.trim().toUpperCase().split("DIN")[1].trim();
             final String ausrichtung = rawAusrichtung.trim().toLowerCase();
@@ -403,6 +432,47 @@ public class FormSolutionServerNewStuffAvailableAction implements UserAwareServe
         } else {
             formatKey = null;
         }
+        return formatKey;
+    }
+
+    /**
+     * DOCUMENT ME!
+     *
+     * @param   formSolutionsBestellung  DOCUMENT ME!
+     *
+     * @return  DOCUMENT ME!
+     */
+    private static String extractFormat(final FormSolutionsBestellung formSolutionsBestellung) {
+        final String rawDin = formSolutionsBestellung.getFormat();
+        final String rawAusrichtung = formSolutionsBestellung.getAusrichtung();
+
+        final String format;
+        if ((rawDin != null) && (rawAusrichtung != null)) {
+            final String din = rawDin.trim().toUpperCase();
+            final String ausrichtung = rawAusrichtung.trim().toLowerCase();
+            if ("hoch".equals(ausrichtung)) {
+                format = din + " Hochformat";
+            } else {
+                format = din + " Querformat";
+            }
+        } else {
+            format = null;
+        }
+        return format;
+    }
+
+    /**
+     * DOCUMENT ME!
+     *
+     * @param   formSolutionsBestellung  farbauspraegung DOCUMENT ME!
+     *
+     * @return  DOCUMENT ME!
+     *
+     * @throws  RemoteException  DOCUMENT ME!
+     */
+    private CidsBean getProduktBean(final FormSolutionsBestellung formSolutionsBestellung) throws RemoteException {
+        final String produktKey = extractProduktKey(formSolutionsBestellung);
+        final String formatKey = extractFormatKey(formSolutionsBestellung);
 
         final MetaClass produktTypMc = getMetaClass("fs_bestellung_produkt_typ");
         final MetaClass produktMc = getMetaClass("fs_bestellung_produkt");
@@ -428,6 +498,21 @@ public class FormSolutionServerNewStuffAvailableAction implements UserAwareServe
      * @param   formSolutionsBestellung  DOCUMENT ME!
      *
      * @return  DOCUMENT ME!
+     */
+    private static String extractLandparcelcode(final FormSolutionsBestellung formSolutionsBestellung) {
+        final String flurstueckskennzeichen1 = trimedNotEmpty(formSolutionsBestellung.getFlurstueckskennzeichen1());
+        final String flurstueckskennzeichen = trimedNotEmpty(formSolutionsBestellung.getFlurstueckskennzeichen());
+        final String landparcelcode = (flurstueckskennzeichen1 != null) ? flurstueckskennzeichen1
+                                                                        : flurstueckskennzeichen;
+        return landparcelcode;
+    }
+
+    /**
+     * DOCUMENT ME!
+     *
+     * @param   formSolutionsBestellung  DOCUMENT ME!
+     *
+     * @return  DOCUMENT ME!
      *
      * @throws  Exception  DOCUMENT ME!
      */
@@ -445,15 +530,11 @@ public class FormSolutionServerNewStuffAvailableAction implements UserAwareServe
         final Integer massstab = (formSolutionsBestellung.getMassstab() != null)
             ? Integer.parseInt(formSolutionsBestellung.getMassstab().split(":")[1]) : null;
 
-        final String flurstueckskennzeichen1 = trimedNotEmpty(formSolutionsBestellung.getFlurstueckskennzeichen1());
-        final String flurstueckskennzeichen = trimedNotEmpty(formSolutionsBestellung.getFlurstueckskennzeichen());
-        final String landparcelcode = (flurstueckskennzeichen1 != null) ? flurstueckskennzeichen1
-                                                                        : flurstueckskennzeichen;
+        final String landparcelcode = extractLandparcelcode(formSolutionsBestellung);
 
-        CidsBean flurstueck = null;
         Geometry geom = null;
         try {
-            flurstueck = getFlurstueck(landparcelcode);
+            final CidsBean flurstueck = getFlurstueck(landparcelcode);
             if (flurstueck == null) {
                 throw new Exception("ALKIS Flurstück wurde nicht gefunden (" + landparcelcode + ")");
             }
@@ -462,9 +543,7 @@ public class FormSolutionServerNewStuffAvailableAction implements UserAwareServe
             bestellungBean.setProperty("exception", getObjectMapper().writeValueAsString(ex));
         }
 
-        final CidsBean produktBean = getProduktBean(formSolutionsBestellung.getFarbauspraegung(),
-                formSolutionsBestellung.getFormat(),
-                formSolutionsBestellung.getAusrichtung());
+        final CidsBean produktBean = getProduktBean(formSolutionsBestellung);
 
         adresseVersandBean.setProperty("firma", trimedNotEmpty(formSolutionsBestellung.getFirma()));
         adresseVersandBean.setProperty("name", trimedNotEmpty(formSolutionsBestellung.getAsName()));
@@ -515,7 +594,7 @@ public class FormSolutionServerNewStuffAvailableAction implements UserAwareServe
      *
      * @return  DOCUMENT ME!
      */
-    private String trimedNotEmpty(final String string) {
+    private static String trimedNotEmpty(final String string) {
         if (string == null) {
             return null;
         } else {
@@ -695,10 +774,16 @@ public class FormSolutionServerNewStuffAvailableAction implements UserAwareServe
             try {
                 final String auftragXml = fsXmlMap.get(transid);
                 final InputStream inputStream = IOUtils.toInputStream(auftragXml, "UTF-8");
-                final FormSolutionsBestellung formSolutionBestellung = createFormSolutionsBestellung(inputStream);
-                fsBestellungMap.put(transid, formSolutionBestellung);
+                final FormSolutionsBestellung formSolutionsBestellung = createFormSolutionsBestellung(inputStream);
+                fsBestellungMap.put(transid, formSolutionsBestellung);
 
-                getMySqlHelper().updateEmail(transid, STATUS_PARSE, formSolutionBestellung.getEMailadresse());
+                getMySqlHelper().updateEmail(
+                    transid,
+                    STATUS_PARSE,
+                    extractLandparcelcode(formSolutionsBestellung),
+                    extractProdukt(formSolutionsBestellung),
+                    !"Kartenausdruck".equals(formSolutionsBestellung.getBezugsweg()),
+                    formSolutionsBestellung.getEMailadresse());
                 doStatusChangedRequest(transid);
             } catch (final Exception ex) {
                 setErrorStatus(transid, STATUS_PARSE, null, "Fehler beim Parsen FormSolution", ex);
