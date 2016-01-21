@@ -106,9 +106,9 @@ public class FormSolutionServerNewStuffAvailableAction implements UserAwareServe
 
     public static final int STATUS_FETCH = 70;
     public static final int STATUS_PARSE = 60;
-    public static final int STATUS_CLOSE = 50;
-    public static final int STATUS_GETFLURSTUECK = 45;
-    public static final int STATUS_SAVE = 40;
+    public static final int STATUS_GETFLURSTUECK = 55;
+    public static final int STATUS_SAVE = 50;
+    public static final int STATUS_CLOSE = 40;
     public static final int STATUS_CREATEURL = 30;
     public static final int STATUS_DOWNLOAD = 20;
     public static final int STATUS_PENDING = 10;
