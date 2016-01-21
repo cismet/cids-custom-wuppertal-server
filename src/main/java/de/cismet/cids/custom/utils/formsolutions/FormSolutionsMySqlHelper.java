@@ -12,8 +12,6 @@
  */
 package de.cismet.cids.custom.utils.formsolutions;
 
-import org.openide.util.Exceptions;
-
 import java.sql.Connection;
 import java.sql.DriverManager;
 import java.sql.PreparedStatement;
@@ -41,7 +39,7 @@ public class FormSolutionsMySqlHelper {
     private final PreparedStatement preparedSelectStatement;
     private final PreparedStatement preparedInsertStatement;
     private final PreparedStatement preparedUpdateProduktStatement;
-    private final PreparedStatement preparedUpdateEmailStatement;
+    private final PreparedStatement preparedUpdateInfoStatement;
     private final PreparedStatement preparedUpdateStatusStatement;
 
     private Connection connect = null;
@@ -60,11 +58,11 @@ public class FormSolutionsMySqlHelper {
         this.preparedSelectStatement = connect.prepareStatement(
                 "SELECT id FROM bestellung WHERE transid = ?;");
         this.preparedInsertStatement = connect.prepareStatement(
-                "INSERT INTO bestellung VALUES (default, ?, ?, null, null, null, ?);");
+                "INSERT INTO bestellung VALUES (default, ?, ?, null, null, null, null, null, null, ?);");
         this.preparedUpdateProduktStatement = connect.prepareStatement(
                 "UPDATE bestellung SET status = ?, last_update = ?, dokument_dateipfad = ?, dokument_dateiname = ? WHERE transid = ?;");
-        this.preparedUpdateEmailStatement = connect.prepareStatement(
-                "UPDATE bestellung SET status = ?, last_update = ?, email = ? WHERE transid = ?;");
+        this.preparedUpdateInfoStatement = connect.prepareStatement(
+                "UPDATE bestellung SET status = ?, last_update = ?, flurstueck = ?, produkt = ?, nur_download = ?, email = ? WHERE transid = ?;");
         this.preparedUpdateStatusStatement = connect.prepareStatement(
                 "UPDATE bestellung SET status = ?, last_update = ? WHERE transid = ?;");
     }
@@ -122,19 +120,30 @@ public class FormSolutionsMySqlHelper {
     /**
      * DOCUMENT ME!
      *
-     * @param   transid  DOCUMENT ME!
-     * @param   status   DOCUMENT ME!
-     * @param   email    DOCUMENT ME!
+     * @param   transid         DOCUMENT ME!
+     * @param   status          DOCUMENT ME!
+     * @param   landparcelcode  DOCUMENT ME!
+     * @param   produkt         DOCUMENT ME!
+     * @param   downloadOnly    DOCUMENT ME!
+     * @param   email           DOCUMENT ME!
      *
      * @throws  SQLException  DOCUMENT ME!
      */
-    public void updateEmail(final String transid, final int status, final String email) throws SQLException {
+    public void updateEmail(final String transid,
+            final int status,
+            final String landparcelcode,
+            final String produkt,
+            final boolean downloadOnly,
+            final String email) throws SQLException {
         int index = 1;
-        preparedUpdateEmailStatement.setInt(index++, status);
-        preparedUpdateEmailStatement.setTimestamp(index++, new Timestamp(new java.util.Date().getTime()));
-        preparedUpdateEmailStatement.setString(index++, email);
-        preparedUpdateEmailStatement.setString(index++, transid);
-        preparedUpdateEmailStatement.executeUpdate();
+        preparedUpdateInfoStatement.setInt(index++, status);
+        preparedUpdateInfoStatement.setTimestamp(index++, new Timestamp(new java.util.Date().getTime()));
+        preparedUpdateInfoStatement.setString(index++, landparcelcode);
+        preparedUpdateInfoStatement.setString(index++, produkt);
+        preparedUpdateInfoStatement.setBoolean(index++, downloadOnly);
+        preparedUpdateInfoStatement.setString(index++, email);
+        preparedUpdateInfoStatement.setString(index++, transid);
+        preparedUpdateInfoStatement.executeUpdate();
     }
 
     /**
