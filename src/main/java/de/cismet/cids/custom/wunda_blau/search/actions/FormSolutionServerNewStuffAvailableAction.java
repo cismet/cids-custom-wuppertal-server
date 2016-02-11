@@ -575,7 +575,7 @@ public class FormSolutionServerNewStuffAvailableAction implements UserAwareServe
         bestellungBean.setProperty("massstab", massstab);
         bestellungBean.setProperty("fk_adresse_versand", adresseVersandBean);
         bestellungBean.setProperty("fk_adresse_rechnung", adresseRechnungBean);
-        bestellungBean.setProperty("email", trimedNotEmpty(formSolutionsBestellung.getEMailadresse()));
+        bestellungBean.setProperty("email", "Kartenausdruck".equals(formSolutionsBestellung.getBezugsweg()) ? trimedNotEmpty(formSolutionsBestellung.getEMailadresse1()) : trimedNotEmpty(formSolutionsBestellung.getEMailadresse()));
         bestellungBean.setProperty("erledigt", false);
         bestellungBean.setProperty("eingang_ts", new Timestamp(new java.util.Date().getTime()));
 
