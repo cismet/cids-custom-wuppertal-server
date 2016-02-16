@@ -578,6 +578,7 @@ public class FormSolutionServerNewStuffAvailableAction implements UserAwareServe
         bestellungBean.setProperty("email", "Kartenausdruck".equals(formSolutionsBestellung.getBezugsweg()) ? trimedNotEmpty(formSolutionsBestellung.getEMailadresse1()) : trimedNotEmpty(formSolutionsBestellung.getEMailadresse()));
         bestellungBean.setProperty("erledigt", false);
         bestellungBean.setProperty("eingang_ts", new Timestamp(new java.util.Date().getTime()));
+        bestellungBean.setProperty("gebuehr", formSolutionsBestellung.getSumme());
 
         if (geom != null) {
             geomBean.setProperty("geo_field", geom);

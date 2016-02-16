@@ -117,7 +117,7 @@ public class FormSolutionsBestellung {
     private String westOst;
 
     @XmlElement(name = "Summe")
-    private String summe;
+    private Double summe;
 
     @XmlElement(name = "Firma")
     private String firma;
@@ -178,7 +178,7 @@ public class FormSolutionsBestellung {
 
     @XmlElement(name = "E-Mailadresse")
     private String eMailadresse;
-    
+
     @XmlElement(name = "E-Mailadresse.1")
-    private String eMailadresse1;    
+    private String eMailadresse1;
 }
