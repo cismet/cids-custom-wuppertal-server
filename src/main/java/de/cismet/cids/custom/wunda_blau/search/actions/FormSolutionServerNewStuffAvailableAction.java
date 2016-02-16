@@ -143,9 +143,15 @@ public class FormSolutionServerNewStuffAvailableAction implements UserAwareServe
      * Creates a new FormSolutionServerNewStuffAvailableAction object.
      */
     public FormSolutionServerNewStuffAvailableAction() {
-        creds = new UsernamePasswordCredentials(FormSolutionsConstants.USER, FormSolutionsConstants.PASSWORD);
-
-//        getObjectMapper().configure(DeserializationFeature.FAIL_ON_UNKNOWN_PROPERTIES, false);
+        UsernamePasswordCredentials creds = null;
+        try {
+            creds = new UsernamePasswordCredentials(FormSolutionsConstants.USER, FormSolutionsConstants.PASSWORD);
+        } catch (final Exception ex) {
+            LOG.error(
+                "UsernamePasswordCredentials couldn't be created. FormSolutionServerNewStuffAvailableAction will not work at all !",
+                ex);
+        }
+        this.creds = creds;
     }
 
     //~ Methods ----------------------------------------------------------------
@@ -575,7 +581,11 @@ public class FormSolutionServerNewStuffAvailableAction implements UserAwareServe
         bestellungBean.setProperty("massstab", massstab);
         bestellungBean.setProperty("fk_adresse_versand", adresseVersandBean);
         bestellungBean.setProperty("fk_adresse_rechnung", adresseRechnungBean);
-        bestellungBean.setProperty("email", "Kartenausdruck".equals(formSolutionsBestellung.getBezugsweg()) ? trimedNotEmpty(formSolutionsBestellung.getEMailadresse1()) : trimedNotEmpty(formSolutionsBestellung.getEMailadresse()));
+        bestellungBean.setProperty(
+            "email",
+            "Kartenausdruck".equals(formSolutionsBestellung.getBezugsweg())
+                ? trimedNotEmpty(formSolutionsBestellung.getEMailadresse1())
+                : trimedNotEmpty(formSolutionsBestellung.getEMailadresse()));
         bestellungBean.setProperty("erledigt", false);
         bestellungBean.setProperty("eingang_ts", new Timestamp(new java.util.Date().getTime()));
 
