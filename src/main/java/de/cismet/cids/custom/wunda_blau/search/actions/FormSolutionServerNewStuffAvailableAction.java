@@ -31,11 +31,8 @@ import org.apache.commons.io.IOUtils;
 import org.openide.util.Lookup;
 
 import java.io.BufferedReader;
-import java.io.File;
-import java.io.FileOutputStream;
 import java.io.InputStream;
 import java.io.InputStreamReader;
-import java.io.OutputStream;
 import java.io.StringReader;
 
 import java.net.URL;
@@ -61,6 +58,7 @@ import javax.xml.bind.ValidationEventHandler;
 
 import de.cismet.cids.custom.utils.alkis.AlkisProductDescription;
 import de.cismet.cids.custom.utils.alkis.AlkisProducts;
+import de.cismet.cids.custom.utils.formsolutions.FormSolutionFtpClient;
 import de.cismet.cids.custom.utils.formsolutions.FormSolutionsBestellung;
 import de.cismet.cids.custom.utils.formsolutions.FormSolutionsConstants;
 import de.cismet.cids.custom.utils.formsolutions.FormSolutionsMySqlHelper;
@@ -91,15 +89,6 @@ public class FormSolutionServerNewStuffAvailableAction implements UserAwareServe
     private static final transient org.apache.log4j.Logger LOG = org.apache.log4j.Logger.getLogger(
             FormSolutionServerNewStuffAvailableAction.class);
     public static final String TASK_NAME = "formSolutionServerNewStuffAvailable";
-
-    private static final String URL_AUFTRAGSLISTE =
-        "https://demo.form-solutions.net/submission/retrieve/transactionIDs/22222222-2222/AS_KF600200";
-    private static final String URL_AUFTRAG =
-        "https://demo.form-solutions.net/submission/retrieve/data/22222222-2222/%s";
-    private static final String URL_AUFTRAG_DELETE =
-        "https://demo.form-solutions.net/submission/retrieve/setStatus/DELETED/22222222-2222/%s";
-    private static final String STATUS_UPDATE_URL =
-        "http://www.wuppertal.de/kartendownload/index.php?tid=%s&secret=P4rFx9As1bBc2R9Ya8";
 
     private static final Map<String, MetaClass> METACLASS_CACHE = new HashMap();
     private static final ObjectMapper MAPPER = new ObjectMapper();
@@ -207,7 +196,7 @@ public class FormSolutionServerNewStuffAvailableAction implements UserAwareServe
     private Collection<String> getOpenTransids() throws Exception {
         final StringBuilder stringBuilder = new StringBuilder();
         final InputStream inputStream = getHttpAccessHandler().doRequest(
-                new URL(URL_AUFTRAGSLISTE),
+                new URL(FormSolutionsConstants.URL_AUFTRAGSLISTE_FS),
                 new StringReader(""),
                 AccessHandler.ACCESS_METHODS.GET_REQUEST,
                 null,
@@ -293,7 +282,7 @@ public class FormSolutionServerNewStuffAvailableAction implements UserAwareServe
      */
     private String getAuftrag(final String auftrag) throws Exception {
         final InputStream inputStream = getHttpAccessHandler().doRequest(
-                new URL(String.format(URL_AUFTRAG, auftrag)),
+                new URL(String.format(FormSolutionsConstants.URL_AUFTRAG_FS, auftrag)),
                 new StringReader(""),
                 AccessHandler.ACCESS_METHODS.GET_REQUEST,
                 null,
@@ -321,7 +310,7 @@ public class FormSolutionServerNewStuffAvailableAction implements UserAwareServe
             return;
         }
         getHttpAccessHandler().doRequest(
-            new URL(String.format(URL_AUFTRAG_DELETE, auftrag)),
+            new URL(String.format(FormSolutionsConstants.URL_AUFTRAG_DELETE_FS, auftrag)),
             new StringReader(""),
             AccessHandler.ACCESS_METHODS.POST_REQUEST,
             null,
@@ -335,7 +324,7 @@ public class FormSolutionServerNewStuffAvailableAction implements UserAwareServe
      */
     private void doStatusChangedRequest(final String transid) {
         try {
-            getHttpAccessHandler().doRequest(new URL(String.format(STATUS_UPDATE_URL, transid)),
+            getHttpAccessHandler().doRequest(new URL(String.format(FormSolutionsConstants.URL_STATUS_UPDATE, transid)),
                 new StringReader(""),
                 AccessHandler.ACCESS_METHODS.GET_REQUEST);
         } catch (final Exception ex) {
@@ -710,7 +699,6 @@ public class FormSolutionServerNewStuffAvailableAction implements UserAwareServe
      */
     private void downloadProdukt(final URL productUrl, final String destinationPath) throws Exception {
         InputStream in = null;
-        OutputStream out = null;
         try {
             in = getHttpAccessHandler().doRequest(
                     productUrl,
@@ -719,19 +707,10 @@ public class FormSolutionServerNewStuffAvailableAction implements UserAwareServe
                     null,
                     creds);
 
-            out = new FileOutputStream(destinationPath);
-            final byte[] buf = new byte[1024];
-            int len;
-            while ((len = in.read(buf)) > 0) {
-                out.write(buf, 0, len);
-            }
-            out.close();
+            FormSolutionFtpClient.getInstance().upload(in, FormSolutionsConstants.PRODUKT_BASEPATH + destinationPath);
         } finally {
             if (in != null) {
                 in.close();
-            }
-            if (out != null) {
-                out.close();
             }
         }
     }
@@ -967,11 +946,9 @@ public class FormSolutionServerNewStuffAvailableAction implements UserAwareServe
                 try {
                     bestellungBean.setProperty("request_url", productUrl.toString());
 
-                    final String filePath = bestellungBean.getProperty("transid") + ".pdf";
+                    final String fileName = bestellungBean.getProperty("transid") + ".pdf";
 
-                    final String fullFilePath = FormSolutionsConstants.PRODUKT_BASEPATH + File.separator + filePath;
-
-                    downloadProdukt(productUrl, fullFilePath);
+                    downloadProdukt(productUrl, fileName);
 
                     final String fileNameOrig = (String)bestellungBean.getProperty("fk_produkt.fk_typ.key")
                                 + "."
@@ -980,7 +957,7 @@ public class FormSolutionServerNewStuffAvailableAction implements UserAwareServe
                                     "--")
                                 + ".pdf";
 
-                    bestellungBean.setProperty("produkt_dateipfad", filePath);
+                    bestellungBean.setProperty("produkt_dateipfad", fileName);
                     bestellungBean.setProperty("produkt_dateiname_orig", fileNameOrig);
 
                     getMySqlHelper().updateProdukt(

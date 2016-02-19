@@ -14,11 +14,13 @@ import Sirius.server.property.ServerProperties;
 
 import org.apache.log4j.Logger;
 
+import java.io.ByteArrayOutputStream;
+
+import de.cismet.cids.custom.utils.formsolutions.FormSolutionFtpClient;
 import de.cismet.cids.custom.utils.formsolutions.FormSolutionsConstants;
 
 import de.cismet.cids.dynamics.CidsBean;
 
-import de.cismet.cids.server.actions.DownloadFileAction;
 import de.cismet.cids.server.actions.ServerAction;
 import de.cismet.cids.server.actions.ServerActionParameter;
 import de.cismet.cids.server.actions.UserAwareServerAction;
@@ -30,7 +32,7 @@ import de.cismet.cids.server.actions.UserAwareServerAction;
  * @version  $Revision$, $Date$
  */
 @org.openide.util.lookup.ServiceProvider(service = ServerAction.class)
-public class FormSolutionDownloadBestellungAction extends DownloadFileAction implements UserAwareServerAction {
+public class FormSolutionDownloadBestellungAction implements ServerAction, UserAwareServerAction {
 
     //~ Static fields/initializers ---------------------------------------------
 
@@ -65,18 +67,17 @@ public class FormSolutionDownloadBestellungAction extends DownloadFileAction imp
 
                 final ServerProperties serverProps = DomainServerImpl.getServerProperties();
                 final String s = serverProps.getFileSeparator();
-                final String fullFilePath = FormSolutionsConstants.PRODUKT_BASEPATH + s
-                            + filePath.replace("../", "");
-                final Object ret;
+                final String fullFilePath = FormSolutionsConstants.PRODUKT_BASEPATH + s + filePath;
+
+                final ByteArrayOutputStream out = new ByteArrayOutputStream();
+
                 if ("/".equals(s)) {
-                    ret = super.execute(fullFilePath);
+                    FormSolutionFtpClient.getInstance().download(fullFilePath, out);
                 } else {
-                    ret = super.execute(fullFilePath.replace("/", s));
+                    FormSolutionFtpClient.getInstance().download(fullFilePath.replace("/", s), out);
                 }
-                if (ret == null) {
-                    throw new RuntimeException("File not found: " + fullFilePath);
-                }
-                return ret;
+
+                return out.toByteArray();
             } catch (final Exception ex) {
                 LOG.error(ex, ex);
                 return ex;
