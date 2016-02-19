@@ -40,6 +40,9 @@ public class FormSolutionsConstants {
     public static final String URL_AUFTRAG_FS;
     public static final String URL_AUFTRAG_DELETE_FS;
     public static final String URL_STATUS_UPDATE;
+    public static final String FTP_HOST;
+    public static final String FTP_LOGIN;
+    public static final String FTP_PASS;
 
     static {
         final String user;
@@ -52,6 +55,9 @@ public class FormSolutionsConstants {
         final String urlAuftragFs;
         final String urlAuftragDeleteFs;
         final String urlStatusUpdate;
+        final String ftpHost;
+        final String ftpLogin;
+        final String ftpPass;
 
         try {
             final PropertyReader serviceProperties = new PropertyReader(PROPERTIES);
@@ -66,6 +72,9 @@ public class FormSolutionsConstants {
             urlAuftragFs = serviceProperties.getProperty("URL_AUFTRAG_FS");
             urlAuftragDeleteFs = serviceProperties.getProperty("URL_AUFTRAG_DELETE_FS");
             urlStatusUpdate = serviceProperties.getProperty("URL_STATUS_UPDATE");
+            ftpHost = serviceProperties.getProperty("FTP_HOST");
+            ftpLogin = serviceProperties.getProperty("FTP_LOGIN");
+            ftpPass = serviceProperties.getProperty("FTP_PASS");
         } catch (final Exception ex) {
             LOG.fatal("FormSolutionsConstants Error!", ex);
             throw new RuntimeException(ex);
@@ -81,5 +90,8 @@ public class FormSolutionsConstants {
         URL_AUFTRAG_FS = urlAuftragFs;
         URL_AUFTRAG_DELETE_FS = urlAuftragDeleteFs;
         URL_STATUS_UPDATE = urlStatusUpdate;
+        FTP_HOST = ftpHost;
+        FTP_LOGIN = ftpLogin;
+        FTP_PASS = ftpPass;
     }
 }
