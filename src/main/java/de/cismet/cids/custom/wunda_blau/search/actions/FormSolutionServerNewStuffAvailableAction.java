@@ -767,13 +767,16 @@ public class FormSolutionServerNewStuffAvailableAction implements UserAwareServe
                 final FormSolutionsBestellung formSolutionsBestellung = createFormSolutionsBestellung(inputStream);
                 fsBestellungMap.put(transid, formSolutionsBestellung);
 
+                final boolean downloadOnly = !"Kartenausdruck".equals(formSolutionsBestellung.getBezugsweg());
+                final String email = downloadOnly ? trimedNotEmpty(formSolutionsBestellung.getEMailadresse())
+                                                  : trimedNotEmpty(formSolutionsBestellung.getEMailadresse1());
                 getMySqlHelper().updateEmail(
                     transid,
                     STATUS_PARSE,
                     extractLandparcelcode(formSolutionsBestellung),
                     extractProdukt(formSolutionsBestellung),
-                    !"Kartenausdruck".equals(formSolutionsBestellung.getBezugsweg()),
-                    formSolutionsBestellung.getEMailadresse());
+                    downloadOnly,
+                    email);
                 doStatusChangedRequest(transid);
             } catch (final Exception ex) {
                 setErrorStatus(transid, STATUS_PARSE, null, "Fehler beim Parsen FormSolution", ex);
