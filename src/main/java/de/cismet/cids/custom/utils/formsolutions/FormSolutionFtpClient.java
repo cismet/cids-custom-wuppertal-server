@@ -32,10 +32,6 @@ public class FormSolutionFtpClient {
 
     private static FormSolutionFtpClient INSTANCE;
 
-    //~ Instance fields --------------------------------------------------------
-
-    private final FTPClient ftpClient = new FTPClient();
-
     //~ Constructors -----------------------------------------------------------
 
     /**
@@ -86,16 +82,15 @@ public class FormSolutionFtpClient {
      * @throws  Exception  DOCUMENT ME!
      */
     private FTPClient getConnectedFTPClient() throws Exception {
-        if (!ftpClient.isConnected()) {
-            ftpClient.connect(FormSolutionsConstants.FTP_HOST);
-            ftpClient.login(FormSolutionsConstants.FTP_LOGIN, FormSolutionsConstants.FTP_PASS);
-        }
+        final FTPClient ftpClient = new FTPClient();
+        ftpClient.connect(FormSolutionsConstants.FTP_HOST);
 
         final int reply = ftpClient.getReplyCode();
         if (!FTPReply.isPositiveCompletion(reply)) {
             ftpClient.disconnect();
             throw new Exception("Exception in connecting to FTP Server");
         }
+        ftpClient.login(FormSolutionsConstants.FTP_LOGIN, FormSolutionsConstants.FTP_PASS);
         return ftpClient;
     }
 
