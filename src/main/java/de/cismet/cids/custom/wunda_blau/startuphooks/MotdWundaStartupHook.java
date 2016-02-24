@@ -32,6 +32,9 @@ public class MotdWundaStartupHook implements DomainServerStartupHook {
 
     //~ Static fields/initializers ---------------------------------------------
 
+    private static final transient org.apache.log4j.Logger LOG = org.apache.log4j.Logger.getLogger(
+            MotdWundaStartupHook.class);
+
     // Title of the day
     public static final String MOTD_MESSAGE_TOTD = "totd";
 
@@ -53,21 +56,25 @@ public class MotdWundaStartupHook implements DomainServerStartupHook {
                         }
                     }
 
-                    MotdRetriever.getInstance().addMotdRetrieverListener(new MotdRetrieverListener() {
+                    try {
+                        MotdRetriever.getInstance().addMotdRetrieverListener(new MotdRetrieverListener() {
 
-                            @Override
-                            public void totdChanged(final MotdRetrieverListenerEvent event) {
-                                CidsServerMessageManagerImpl.getInstance()
-                                        .publishMessage(MOTD_MESSAGE_TOTD, event.getContent());
-                            }
+                                @Override
+                                public void totdChanged(final MotdRetrieverListenerEvent event) {
+                                    CidsServerMessageManagerImpl.getInstance()
+                                            .publishMessage(MOTD_MESSAGE_TOTD, event.getContent());
+                                }
 
-                            @Override
-                            public void motdChanged(final MotdRetrieverListenerEvent event) {
-                                CidsServerMessageManagerImpl.getInstance()
-                                        .publishMessage(MOTD_MESSAGE_MOTD, event.getContent());
-                            }
-                        });
-                    MotdRetriever.getInstance().start();
+                                @Override
+                                public void motdChanged(final MotdRetrieverListenerEvent event) {
+                                    CidsServerMessageManagerImpl.getInstance()
+                                            .publishMessage(MOTD_MESSAGE_MOTD, event.getContent());
+                                }
+                            });
+                        MotdRetriever.getInstance().start();
+                    } catch (final Exception ex) {
+                        LOG.error("Error while initializing the MotdRetriever !", ex);
+                    }
                 }
             }).start();
     }
