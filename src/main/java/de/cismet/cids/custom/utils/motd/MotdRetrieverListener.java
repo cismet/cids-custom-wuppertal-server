@@ -29,5 +29,12 @@ public interface MotdRetrieverListener extends EventListener {
      *
      * @param  event  DOCUMENT ME!
      */
+    void totdChanged(final MotdRetrieverListenerEvent event);
+
+    /**
+     * DOCUMENT ME!
+     *
+     * @param  event  DOCUMENT ME!
+     */
     void motdChanged(final MotdRetrieverListenerEvent event);
 }
