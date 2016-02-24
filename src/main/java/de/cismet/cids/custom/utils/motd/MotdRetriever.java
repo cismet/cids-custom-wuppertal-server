@@ -28,6 +28,8 @@ import java.util.TimerTask;
 import de.cismet.commons.security.AccessHandler;
 import de.cismet.commons.security.handler.SimpleHttpAccessHandler;
 
+import de.cismet.tools.PropertyReader;
+
 /**
  * DOCUMENT ME!
  *
@@ -38,10 +40,31 @@ public class MotdRetriever {
 
     //~ Static fields/initializers ---------------------------------------------
 
-    private static final String MOTD_URL = "http://wunda.wuppertal-intra.de/popupmeld_w.asp";
-    private static final String NO_MESSAGE = "Es liegen keine aktuellen Meldungen für WuNDa vor!";
-    private static final int SCHEDULE_INTERVAL = 5000;
     private static final transient org.apache.log4j.Logger LOG = org.apache.log4j.Logger.getLogger(MotdRetriever.class);
+    private static final String PROPERTIES = "/de/cismet/cids/custom/wunda_blau/res/motd/motd_conf.properties";
+
+    private static final String MOTD_URL;
+    private static final String NO_MESSAGE;
+    private static final int SCHEDULE_INTERVAL;
+
+    static {
+        final String motd_url;
+        final Integer retrieveRate;
+        final String noMessage;
+
+        try {
+            final PropertyReader serviceProperties = new PropertyReader(PROPERTIES);
+
+            motd_url = serviceProperties.getProperty("MOTD_URL");
+            retrieveRate = Integer.parseInt(serviceProperties.getProperty("RETRIEVE_RATE_IN_MS"));
+            noMessage = serviceProperties.getProperty("NO_MESSAGE");
+        } catch (final Exception ex) {
+            throw new RuntimeException(ex);
+        }
+        MOTD_URL = motd_url;
+        SCHEDULE_INTERVAL = retrieveRate;
+        NO_MESSAGE = noMessage;
+    }
 
     private static MotdRetriever INSTANCE;
 
@@ -61,7 +84,6 @@ public class MotdRetriever {
      * Creates a new MotdRetriever object.
      */
     private MotdRetriever() {
-        //
     }
 
     //~ Methods ----------------------------------------------------------------
