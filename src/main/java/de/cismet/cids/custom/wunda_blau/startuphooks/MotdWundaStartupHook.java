@@ -32,6 +32,10 @@ public class MotdWundaStartupHook implements DomainServerStartupHook {
 
     //~ Static fields/initializers ---------------------------------------------
 
+    // Title of the day
+    public static final String MOTD_MESSAGE_TOTD = "totd";
+
+    // Message of the day
     public static final String MOTD_MESSAGE_MOTD = "motd";
 
     //~ Methods ----------------------------------------------------------------
@@ -52,9 +56,15 @@ public class MotdWundaStartupHook implements DomainServerStartupHook {
                     MotdRetriever.getInstance().addMotdRetrieverListener(new MotdRetrieverListener() {
 
                             @Override
+                            public void totdChanged(final MotdRetrieverListenerEvent event) {
+                                CidsServerMessageManagerImpl.getInstance()
+                                        .publishMessage(MOTD_MESSAGE_TOTD, event.getContent());
+                            }
+
+                            @Override
                             public void motdChanged(final MotdRetrieverListenerEvent event) {
-                                final String motd = event.getMotd();
-                                CidsServerMessageManagerImpl.getInstance().publishMessage(MOTD_MESSAGE_MOTD, motd);
+                                CidsServerMessageManagerImpl.getInstance()
+                                        .publishMessage(MOTD_MESSAGE_MOTD, event.getContent());
                             }
                         });
                     MotdRetriever.getInstance().start();

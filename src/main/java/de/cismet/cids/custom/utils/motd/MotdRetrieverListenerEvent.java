@@ -25,26 +25,27 @@ public class MotdRetrieverListenerEvent extends EventObject {
     //~ Static fields/initializers ---------------------------------------------
 
     public static final int TYPE_MOTD_CHANGED = 1;
+    public static final int TYPE_TOTD_CHANGED = 2;
 
     //~ Instance fields --------------------------------------------------------
 
     private final int type;
-    private final String motd;
+    private final String content;
 
     //~ Constructors -----------------------------------------------------------
 
     /**
      * Creates a new MotdRetrieverListenerEvent object.
      *
-     * @param  type    DOCUMENT ME!
-     * @param  motd    DOCUMENT ME!
-     * @param  source  DOCUMENT ME!
+     * @param  type     DOCUMENT ME!
+     * @param  content  DOCUMENT ME!
+     * @param  source   DOCUMENT ME!
      */
-    public MotdRetrieverListenerEvent(final int type, final String motd, final MotdRetriever source) {
+    public MotdRetrieverListenerEvent(final int type, final String content, final MotdRetriever source) {
         super(source);
 
         this.type = type;
-        this.motd = motd;
+        this.content = content;
     }
 
     //~ Methods ----------------------------------------------------------------
@@ -59,8 +60,8 @@ public class MotdRetrieverListenerEvent extends EventObject {
      *
      * @return  DOCUMENT ME!
      */
-    public String getMotd() {
-        return motd;
+    public String getContent() {
+        return content;
     }
 
     /**

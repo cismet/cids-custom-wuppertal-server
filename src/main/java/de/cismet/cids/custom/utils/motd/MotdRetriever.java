@@ -52,6 +52,7 @@ public class MotdRetriever {
     private final MotdRetrieverListenerHandler listenerHandler = new MotdRetrieverListenerHandler();
     private final Timer timer = new Timer();
     private String motd = null;
+    private String totd = null;
     private boolean running;
 
     //~ Constructors -----------------------------------------------------------
@@ -84,6 +85,39 @@ public class MotdRetriever {
      */
     private SimpleHttpAccessHandler getHttpAccessHandler() {
         return httpHandler;
+    }
+
+    /**
+     * DOCUMENT ME!
+     *
+     * @return  DOCUMENT ME!
+     */
+    public String getTotd() {
+        return totd;
+    }
+
+    /**
+     * DOCUMENT ME!
+     *
+     * @param  totd  DOCUMENT ME!
+     */
+    private void setTotd(final String totd) {
+        final String old = this.totd;
+        final boolean changed;
+        if (totd != null) {
+            changed = !totd.equals(old);
+        } else {
+            changed = old != null;
+        }
+
+        if (changed) {
+            this.totd = totd;
+
+            listenerHandler.totdChanged(new MotdRetrieverListenerEvent(
+                    MotdRetrieverListenerEvent.TYPE_TOTD_CHANGED,
+                    totd,
+                    this));
+        }
     }
 
     /**
@@ -176,6 +210,21 @@ public class MotdRetriever {
         return listeners.remove(listener);
     }
 
+    /**
+     * DOCUMENT ME!
+     *
+     * @param   motd  DOCUMENT ME!
+     *
+     * @return  DOCUMENT ME!
+     */
+    private String extractTitle(final String motd) {
+        if (motd == null) {
+            return null;
+        } else {
+            return "Test-Title of the day"; // TODO extract title from motd
+        }
+    }
+
     //~ Inner Classes ----------------------------------------------------------
 
     /**
@@ -238,8 +287,10 @@ public class MotdRetriever {
 
                 if (newMotd.equals(NO_MESSAGE)) {
                     setMotd(null);
+                    setTotd(null);
                 } else {
                     setMotd(newMotd);
+                    setTotd(extractTitle(motd));
                 }
             } catch (final Exception ex) {
                 LOG.fatal(ex, ex);
@@ -264,6 +315,13 @@ public class MotdRetriever {
         public void motdChanged(final MotdRetrieverListenerEvent event) {
             for (final MotdRetrieverListener listener : listeners) {
                 listener.motdChanged(event);
+            }
+        }
+
+        @Override
+        public void totdChanged(final MotdRetrieverListenerEvent event) {
+            for (final MotdRetrieverListener listener : listeners) {
+                listener.totdChanged(event);
             }
         }
     }
