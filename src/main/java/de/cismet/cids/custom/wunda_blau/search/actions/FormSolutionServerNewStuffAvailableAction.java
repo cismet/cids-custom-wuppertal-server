@@ -46,6 +46,7 @@ import java.sql.Timestamp;
 
 import java.util.ArrayList;
 import java.util.Collection;
+import java.util.Date;
 import java.util.HashMap;
 import java.util.Map;
 
@@ -260,7 +261,7 @@ public class FormSolutionServerNewStuffAvailableAction implements UserAwareServe
             try {
                 bestellungBean.setProperty("erledigt", false);
                 bestellungBean.setProperty("fehler", message);
-                bestellungBean.setProperty("fehler_ts", new Timestamp(new java.util.Date().getTime()));
+                bestellungBean.setProperty("fehler_ts", new Timestamp(new Date().getTime()));
                 bestellungBean.setProperty("exception", getObjectMapper().writeValueAsString(exception));
                 if (persist) {
                     getMetaService().updateMetaObject(user, bestellungBean.getMetaObject());
@@ -576,7 +577,7 @@ public class FormSolutionServerNewStuffAvailableAction implements UserAwareServe
                 ? trimedNotEmpty(formSolutionsBestellung.getEMailadresse1())
                 : trimedNotEmpty(formSolutionsBestellung.getEMailadresse()));
         bestellungBean.setProperty("erledigt", false);
-        bestellungBean.setProperty("eingang_ts", new Timestamp(new java.util.Date().getTime()));
+        bestellungBean.setProperty("eingang_ts", new Timestamp(new Date().getTime()));
         bestellungBean.setProperty("gebuehr", formSolutionsBestellung.getSumme());
 
         if (geom != null) {
@@ -814,7 +815,7 @@ public class FormSolutionServerNewStuffAvailableAction implements UserAwareServe
                 if (insertException != null) {
                     bestellungBean.setProperty("fehler", "Fehler beim Erzeugen des MySQL-Datensatzes");
                     bestellungBean.setProperty("exception", getObjectMapper().writeValueAsString(insertException));
-                    bestellungBean.setProperty("fehler_ts", new Timestamp(new java.util.Date().getTime()));
+                    bestellungBean.setProperty("fehler_ts", new Timestamp(new Date().getTime()));
                 }
                 if ((bestellungBean.getProperty("geometrie") == null)
                             && (bestellungBean.getProperty("exception") != null)) {
@@ -956,7 +957,11 @@ public class FormSolutionServerNewStuffAvailableAction implements UserAwareServe
             final CidsBean bestellungBean = fsBeanMap.get(transid);
             if ((bestellungBean != null) && (bestellungBean.getProperty("fehler") == null)) {
                 final URL productUrl = fsUrlMap.get(transid);
-                try {
+                try {                    
+                    bestellungBean.setProperty("produkt_dateipfad", null);
+                    bestellungBean.setProperty("produkt_dateiname_orig", null);
+                    bestellungBean.setProperty("produkt_ts", null);
+                    
                     bestellungBean.setProperty("request_url", productUrl.toString());
 
                     final String fileName = bestellungBean.getProperty("transid") + ".pdf";
@@ -972,6 +977,7 @@ public class FormSolutionServerNewStuffAvailableAction implements UserAwareServe
 
                     bestellungBean.setProperty("produkt_dateipfad", fileName);
                     bestellungBean.setProperty("produkt_dateiname_orig", fileNameOrig);
+                    bestellungBean.setProperty("produkt_ts", new Timestamp(new Date().getTime()));
 
                     getMySqlHelper().updateProdukt(
                         transid,
