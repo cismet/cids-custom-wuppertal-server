@@ -511,9 +511,9 @@ public class FormSolutionServerNewStuffAvailableAction implements UserAwareServe
         final MetaClass geomMc = getMetaClass("geom");
 
         final CidsBean bestellungBean = bestellungMc.getEmptyInstance().getBean();
-        final CidsBean adresseVersandBean = adresseMc.getEmptyInstance().getBean();
+        final CidsBean adresseRechnungBean = adresseMc.getEmptyInstance().getBean();
         final CidsBean geomBean = geomMc.getEmptyInstance().getBean();
-        final CidsBean adresseRechnungBean;
+        final CidsBean adresseVersandBean;
 
         final String transid = formSolutionsBestellung.getTransId();
         final Integer massstab = (formSolutionsBestellung.getMassstab() != null)
@@ -534,26 +534,26 @@ public class FormSolutionServerNewStuffAvailableAction implements UserAwareServe
 
         final CidsBean produktBean = getProduktBean(formSolutionsBestellung);
 
-        adresseVersandBean.setProperty("firma", trimedNotEmpty(formSolutionsBestellung.getFirma()));
-        adresseVersandBean.setProperty("name", trimedNotEmpty(formSolutionsBestellung.getAsName()));
-        adresseVersandBean.setProperty("vorname", trimedNotEmpty(formSolutionsBestellung.getAsVorname()));
-        adresseVersandBean.setProperty("strasse", trimedNotEmpty(formSolutionsBestellung.getAsStrasse()));
-        adresseVersandBean.setProperty("hausnummer", trimedNotEmpty(formSolutionsBestellung.getAsHausnummer()));
-        adresseVersandBean.setProperty("plz", formSolutionsBestellung.getAsPlz());
-        adresseVersandBean.setProperty("ort", trimedNotEmpty(formSolutionsBestellung.getAsOrt()));
-        adresseVersandBean.setProperty("staat", trimedNotEmpty(formSolutionsBestellung.getStaat()));
+        adresseRechnungBean.setProperty("firma", trimedNotEmpty(formSolutionsBestellung.getFirma()));
+        adresseRechnungBean.setProperty("name", trimedNotEmpty(formSolutionsBestellung.getAsName()));
+        adresseRechnungBean.setProperty("vorname", trimedNotEmpty(formSolutionsBestellung.getAsVorname()));
+        adresseRechnungBean.setProperty("strasse", trimedNotEmpty(formSolutionsBestellung.getAsStrasse()));
+        adresseRechnungBean.setProperty("hausnummer", trimedNotEmpty(formSolutionsBestellung.getAsHausnummer()));
+        adresseRechnungBean.setProperty("plz", formSolutionsBestellung.getAsPlz());
+        adresseRechnungBean.setProperty("ort", trimedNotEmpty(formSolutionsBestellung.getAsOrt()));
+        adresseRechnungBean.setProperty("staat", trimedNotEmpty(formSolutionsBestellung.getStaat()));
 
         if ("ja".equalsIgnoreCase(formSolutionsBestellung.getRechnungsanschriftLieferanschrift())) {
-            adresseRechnungBean = adresseVersandBean;
+            adresseVersandBean = adresseRechnungBean;
         } else {
-            adresseRechnungBean = adresseMc.getEmptyInstance().getBean();
-            adresseRechnungBean.setProperty("firma", trimedNotEmpty(formSolutionsBestellung.getFirma1()));
-            adresseRechnungBean.setProperty("name", trimedNotEmpty(formSolutionsBestellung.getAsName1()));
-            adresseRechnungBean.setProperty("vorname", trimedNotEmpty(formSolutionsBestellung.getAsVorname1()));
-            adresseRechnungBean.setProperty("strasse", trimedNotEmpty(formSolutionsBestellung.getAsStrasse1()));
-            adresseRechnungBean.setProperty("hausnummer", trimedNotEmpty(formSolutionsBestellung.getAsHausnummer1()));
-            adresseRechnungBean.setProperty("plz", formSolutionsBestellung.getAsPlz1());
-            adresseRechnungBean.setProperty("ort", trimedNotEmpty(formSolutionsBestellung.getAsOrt1()));
+            adresseVersandBean = adresseMc.getEmptyInstance().getBean();
+            adresseVersandBean.setProperty("firma", trimedNotEmpty(formSolutionsBestellung.getFirma1()));
+            adresseVersandBean.setProperty("name", trimedNotEmpty(formSolutionsBestellung.getAsName1()));
+            adresseVersandBean.setProperty("vorname", trimedNotEmpty(formSolutionsBestellung.getAsVorname1()));
+            adresseVersandBean.setProperty("strasse", trimedNotEmpty(formSolutionsBestellung.getAsStrasse1()));
+            adresseVersandBean.setProperty("hausnummer", trimedNotEmpty(formSolutionsBestellung.getAsHausnummer1()));
+            adresseVersandBean.setProperty("plz", formSolutionsBestellung.getAsPlz1());
+            adresseVersandBean.setProperty("ort", trimedNotEmpty(formSolutionsBestellung.getAsOrt1()));
             adresseRechnungBean.setProperty("staat", trimedNotEmpty(formSolutionsBestellung.getStaat1()));
         }
 
