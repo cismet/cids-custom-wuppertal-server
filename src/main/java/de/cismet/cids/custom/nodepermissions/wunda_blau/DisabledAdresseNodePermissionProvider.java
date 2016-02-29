@@ -26,13 +26,13 @@ import de.cismet.cids.nodepermissions.AbstractCustomNodePermissionProvider;
  * @author   thorsten
  * @version  $Revision$, $Date$
  */
-public class AdresseNodePermissionProvider extends AbstractCustomNodePermissionProvider {
+public class DisabledAdresseNodePermissionProvider extends AbstractCustomNodePermissionProvider {
 
     //~ Static fields/initializers ---------------------------------------------
 
     static Geometry tester = null;
     private static final transient org.apache.log4j.Logger LOG = org.apache.log4j.Logger.getLogger(
-            AdresseNodePermissionProvider.class);
+            DisabledAdresseNodePermissionProvider.class);
 
     static {
         final GeometryFactory f = new GeometryFactory();
