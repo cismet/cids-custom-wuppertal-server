@@ -141,7 +141,7 @@ public class CidsVermessungRissSearchStatement extends AbstractCidsServerSearch 
                 final int objectID = (Integer)measurementPoint.get(1);
                 final String name = (String)measurementPoint.get(2);
 
-                final MetaObjectNode node = new MetaObjectNode(DOMAIN, objectID, classID, name);
+                final MetaObjectNode node = new MetaObjectNode(DOMAIN, objectID, classID, name, null, null); // TODO: Check4CashedGeomAndLightweightJson
 
                 result.add(node);
             }

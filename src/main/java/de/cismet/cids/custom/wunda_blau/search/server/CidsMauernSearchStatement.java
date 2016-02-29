@@ -172,7 +172,7 @@ public class CidsMauernSearchStatement extends AbstractCidsServerSearch implemen
                 final int objectID = (Integer)mauer.get(1);
                 final String name = (String)mauer.get(2);
 
-                final MetaObjectNode node = new MetaObjectNode(DOMAIN, objectID, classID, name);
+                final MetaObjectNode node = new MetaObjectNode(DOMAIN, objectID, classID, name, null, null); // TODO: Check4CashedGeomAndLightweightJson
 
                 result.add(node);
             }

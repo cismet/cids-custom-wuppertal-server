@@ -142,7 +142,8 @@ public class CidsLandParcelSearchStatement extends AbstractCidsServerSearch impl
                 final int cid = (Integer)al.get(0);
                 final int oid = (Integer)al.get(1);
                 final String nodename = (String)al.get(2);
-                final MetaObjectNode mon = new MetaObjectNode("WUNDA_BLAU", oid, cid, nodename);
+                final MetaObjectNode mon = new MetaObjectNode("WUNDA_BLAU", oid, cid, nodename, null, null); // TODO: Check4CashedGeomAndLightweightJson
+
                 result.add(mon);
             }
             return result;

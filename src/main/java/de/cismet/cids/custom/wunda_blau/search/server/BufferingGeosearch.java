@@ -44,10 +44,10 @@ public final class BufferingGeosearch extends DefaultGeoSearch {
         final String sql = ""                                                                                      // NOI18N
                     + "SELECT DISTINCT i.class_id , "                                                              // NOI18N
                     + "                i.object_id, "                                                              // NOI18N
-                    + "                s.stringrep "                                                               // NOI18N
+                    + "                s.stringrep,s.geometry,s.lightweight_json "                                 // NOI18N
                     + "FROM            geom g, "                                                                   // NOI18N
                     + "                cs_attr_object_derived i "                                                  // NOI18N
-                    + "                LEFT OUTER JOIN cs_stringrepcache s "                                       // NOI18N
+                    + "                LEFT OUTER JOIN cs_cache s "                                                // NOI18N
                     + "                ON              ( "                                                         // NOI18N
                     + "                                                s.class_id =i.class_id "                    // NOI18N
                     + "                                AND             s.object_id=i.object_id "                   // NOI18N
