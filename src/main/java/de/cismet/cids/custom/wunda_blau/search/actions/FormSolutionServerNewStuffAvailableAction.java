@@ -957,11 +957,11 @@ public class FormSolutionServerNewStuffAvailableAction implements UserAwareServe
             final CidsBean bestellungBean = fsBeanMap.get(transid);
             if ((bestellungBean != null) && (bestellungBean.getProperty("fehler") == null)) {
                 final URL productUrl = fsUrlMap.get(transid);
-                try {                    
+                try {
                     bestellungBean.setProperty("produkt_dateipfad", null);
                     bestellungBean.setProperty("produkt_dateiname_orig", null);
                     bestellungBean.setProperty("produkt_ts", null);
-                    
+
                     bestellungBean.setProperty("request_url", productUrl.toString());
 
                     final String fileName = bestellungBean.getProperty("transid") + ".pdf";
