@@ -12,6 +12,8 @@
  */
 package de.cismet.cids.custom.utils.motd;
 
+import Sirius.server.middleware.impls.domainserver.DomainServerImpl;
+
 import org.apache.commons.io.IOUtils;
 
 import java.io.IOException;
@@ -41,30 +43,7 @@ public class MotdRetriever {
     //~ Static fields/initializers ---------------------------------------------
 
     private static final transient org.apache.log4j.Logger LOG = org.apache.log4j.Logger.getLogger(MotdRetriever.class);
-    private static final String PROPERTIES = "/de/cismet/cids/custom/wunda_blau/res/motd/motd_conf.properties";
-
-    private static final String MOTD_URL;
-    private static final String NO_MESSAGE;
-    private static final int SCHEDULE_INTERVAL;
-
-    static {
-        final String motd_url;
-        final Integer retrieveRate;
-        final String noMessage;
-
-        try {
-            final PropertyReader serviceProperties = new PropertyReader(PROPERTIES);
-
-            motd_url = serviceProperties.getProperty("MOTD_URL");
-            retrieveRate = Integer.parseInt(serviceProperties.getProperty("RETRIEVE_RATE_IN_MS"));
-            noMessage = serviceProperties.getProperty("NO_MESSAGE");
-        } catch (final Exception ex) {
-            throw new RuntimeException(ex);
-        }
-        MOTD_URL = motd_url;
-        SCHEDULE_INTERVAL = retrieveRate;
-        NO_MESSAGE = noMessage;
-    }
+    private static final String PROPERTIES_PATH = "/de/cismet/cids/custom/motd/";
 
     private static MotdRetriever INSTANCE;
 
@@ -74,9 +53,13 @@ public class MotdRetriever {
     private final Collection<MotdRetrieverListener> listeners = new ArrayList<MotdRetrieverListener>();
     private final MotdRetrieverListenerHandler listenerHandler = new MotdRetrieverListenerHandler();
     private final Timer timer = new Timer();
+    private String domain;
     private String motd = null;
     private String totd = null;
     private boolean running;
+    private String motd_url;
+    private Integer retrieveRate;
+    private String noMessage;
 
     //~ Constructors -----------------------------------------------------------
 
@@ -87,6 +70,38 @@ public class MotdRetriever {
     }
 
     //~ Methods ----------------------------------------------------------------
+
+    /**
+     * DOCUMENT ME!
+     *
+     * @param   domain  DOCUMENT ME!
+     *
+     * @throws  Exception                 java.lang.Exception
+     * @throws  IllegalArgumentException  DOCUMENT ME!
+     * @throws  IllegalStateException     DOCUMENT ME!
+     */
+    public void init(final String domain) throws Exception {
+        if (domain == null) {
+            throw new IllegalArgumentException("Domain darf nicht null sein !");
+        }
+        if (this.domain != null) {
+            throw new IllegalStateException("MotdRetriever wurde bereits initialisiert !");
+        }
+        try {
+            final PropertyReader serviceProperties = new PropertyReader(PROPERTIES_PATH + domain.toLowerCase()
+                            + ".properties");
+
+            motd_url = serviceProperties.getProperty("MOTD_URL");
+            retrieveRate = Integer.parseInt(serviceProperties.getProperty("RETRIEVE_RATE_IN_MS"));
+            noMessage = serviceProperties.getProperty("NO_MESSAGE");
+
+            this.domain = domain;
+        } catch (final Exception ex) {
+            throw new Exception(
+                "Fehler beim Initialisieren des MotdRetrievers. Es werden keine aktuellen Meldungen verteilt !",
+                ex);
+        }
+    }
 
     /**
      * DOCUMENT ME!
@@ -177,11 +192,17 @@ public class MotdRetriever {
 
     /**
      * DOCUMENT ME!
+     *
+     * @throws  IllegalStateException  DOCUMENT ME!
      */
     public void start() {
+        if (domain == null) {
+            throw new IllegalStateException("MotdRetriever wurde nicht initialisiert !");
+        }
+
         synchronized (timer) {
             if (!running) {
-                startTimer(motd, SCHEDULE_INTERVAL);
+                startTimer(motd, retrieveRate);
             }
         }
     }
@@ -189,7 +210,7 @@ public class MotdRetriever {
     /**
      * DOCUMENT ME!
      */
-    private void stop() {
+    public void stop() {
         synchronized (timer) {
             if (running) {
                 timer.cancel();
@@ -284,12 +305,12 @@ public class MotdRetriever {
         private String retrieveMotd() {
             InputStream inputStream = null;
             try {
-                inputStream = getHttpAccessHandler().doRequest(new URL(MOTD_URL),
+                inputStream = getHttpAccessHandler().doRequest(new URL(motd_url),
                         new StringReader(""),
                         AccessHandler.ACCESS_METHODS.GET_REQUEST);
                 return IOUtils.toString(inputStream, "ISO-8859-1");
             } catch (final Exception ex) {
-                LOG.error("couldnt get the MOTD from " + MOTD_URL, ex);
+                LOG.error("couldnt get the MOTD from " + motd_url, ex);
             } finally {
                 if (inputStream != null) {
                     try {
@@ -307,7 +328,7 @@ public class MotdRetriever {
             try {
                 final String newMotd = retrieveMotd();
 
-                if (newMotd.equals(NO_MESSAGE)) {
+                if (newMotd.equals(noMessage)) {
                     setMotd(null);
                     setTotd(null);
                 } else {
