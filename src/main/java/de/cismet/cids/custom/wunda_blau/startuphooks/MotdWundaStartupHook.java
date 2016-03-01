@@ -57,6 +57,7 @@ public class MotdWundaStartupHook implements DomainServerStartupHook {
                     }
 
                     try {
+                        MotdRetriever.getInstance().init(getDomain());
                         MotdRetriever.getInstance().addMotdRetrieverListener(new MotdRetrieverListener() {
 
                                 @Override
@@ -73,7 +74,7 @@ public class MotdWundaStartupHook implements DomainServerStartupHook {
                             });
                         MotdRetriever.getInstance().start();
                     } catch (final Exception ex) {
-                        LOG.error("Error while initializing the MotdRetriever !", ex);
+                        LOG.warn("Error while initializing the MotdRetriever !", ex);
                     }
                 }
             }).start();
