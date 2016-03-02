@@ -555,7 +555,7 @@ public class FormSolutionServerNewStuffAvailableAction implements UserAwareServe
             adresseVersandBean.setProperty("hausnummer", trimedNotEmpty(formSolutionsBestellung.getAsHausnummer1()));
             adresseVersandBean.setProperty("plz", formSolutionsBestellung.getAsPlz1());
             adresseVersandBean.setProperty("ort", trimedNotEmpty(formSolutionsBestellung.getAsOrt1()));
-            adresseRechnungBean.setProperty("staat", trimedNotEmpty(formSolutionsBestellung.getStaat1()));
+            adresseVersandBean.setProperty("staat", trimedNotEmpty(formSolutionsBestellung.getStaat1()));
         }
 
         bestellungBean.setProperty("postweg", "Kartenausdruck".equals(formSolutionsBestellung.getBezugsweg()));
@@ -572,7 +572,7 @@ public class FormSolutionServerNewStuffAvailableAction implements UserAwareServe
                 : trimedNotEmpty(formSolutionsBestellung.getEMailadresse()));
         bestellungBean.setProperty("erledigt", false);
         bestellungBean.setProperty("eingang_ts", new Timestamp(new Date().getTime()));
-        bestellungBean.setProperty("gebuehr", formSolutionsBestellung.getSumme());
+        bestellungBean.setProperty("gebuehr", formSolutionsBestellung.getBetrag());
 
         if (geom != null) {
             geomBean.setProperty("geo_field", geom);
