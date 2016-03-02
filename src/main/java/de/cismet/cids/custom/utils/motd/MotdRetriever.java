@@ -12,9 +12,10 @@
  */
 package de.cismet.cids.custom.utils.motd;
 
-import Sirius.server.middleware.impls.domainserver.DomainServerImpl;
-
 import org.apache.commons.io.IOUtils;
+
+import org.jsoup.Jsoup;
+import org.jsoup.select.Elements;
 
 import java.io.IOException;
 import java.io.InputStream;
@@ -264,7 +265,12 @@ public class MotdRetriever {
         if (motd == null) {
             return null;
         } else {
-            return "Test-Title of the day"; // TODO extract title from motd
+            final Elements elements = Jsoup.parse(motd).select("span.totd");
+            if ((elements != null) && !elements.isEmpty() && (elements.get(0) != null)) {
+                return elements.get(0).text();
+            } else {
+                return null;
+            }
         }
     }
 
@@ -310,7 +316,7 @@ public class MotdRetriever {
                         AccessHandler.ACCESS_METHODS.GET_REQUEST);
                 return IOUtils.toString(inputStream, "ISO-8859-1");
             } catch (final Exception ex) {
-                LOG.error("couldnt get the MOTD from " + motd_url, ex);
+                LOG.info("couldnt get the MOTD from " + motd_url, ex);
             } finally {
                 if (inputStream != null) {
                     try {
@@ -327,16 +333,17 @@ public class MotdRetriever {
         public void run() {
             try {
                 final String newMotd = retrieveMotd();
-
-                if (newMotd.equals(noMessage)) {
-                    setMotd(null);
-                    setTotd(null);
-                } else {
-                    setMotd(newMotd);
-                    setTotd(extractTitle(motd));
+                if (newMotd != null) {
+                    if (newMotd.equals(noMessage)) {
+                        setMotd(null);
+                        setTotd(null);
+                    } else {
+                        setMotd(newMotd);
+                        setTotd(extractTitle(newMotd));
+                    }
                 }
             } catch (final Exception ex) {
-                LOG.fatal(ex, ex);
+                LOG.warn("couldnt retrieve motd", ex);
             } finally {
                 synchronized (timer) {
                     startTimer(getMotd(), intervall);
