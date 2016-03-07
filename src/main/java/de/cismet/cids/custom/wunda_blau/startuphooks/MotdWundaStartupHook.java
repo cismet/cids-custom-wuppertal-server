@@ -37,9 +37,11 @@ public class MotdWundaStartupHook implements DomainServerStartupHook {
 
     // Title of the day
     public static final String MOTD_MESSAGE_TOTD = "totd";
+    public static final String MOTD_MESSAGE_TOTD_EXTERN = "totd_extern";
 
     // Message of the day
     public static final String MOTD_MESSAGE_MOTD = "motd";
+    public static final String MOTD_MESSAGE_MOTD_EXTERN = "motd_extern";
 
     //~ Methods ----------------------------------------------------------------
 
@@ -62,14 +64,24 @@ public class MotdWundaStartupHook implements DomainServerStartupHook {
 
                                 @Override
                                 public void totdChanged(final MotdRetrieverListenerEvent event) {
-                                    CidsServerMessageManagerImpl.getInstance()
-                                            .publishMessage(MOTD_MESSAGE_TOTD, event.getContent());
+                                    if (event.isExtern()) {
+                                        CidsServerMessageManagerImpl.getInstance()
+                                                .publishMessage(MOTD_MESSAGE_TOTD_EXTERN, event.getContent());
+                                    } else {
+                                        CidsServerMessageManagerImpl.getInstance()
+                                                .publishMessage(MOTD_MESSAGE_TOTD, event.getContent());
+                                    }
                                 }
 
                                 @Override
                                 public void motdChanged(final MotdRetrieverListenerEvent event) {
-                                    CidsServerMessageManagerImpl.getInstance()
-                                            .publishMessage(MOTD_MESSAGE_MOTD, event.getContent());
+                                    if (event.isExtern()) {
+                                        CidsServerMessageManagerImpl.getInstance()
+                                                .publishMessage(MOTD_MESSAGE_MOTD_EXTERN, event.getContent());
+                                    } else {
+                                        CidsServerMessageManagerImpl.getInstance()
+                                                .publishMessage(MOTD_MESSAGE_MOTD, event.getContent());
+                                    }
                                 }
                             });
                         MotdRetriever.getInstance().start();

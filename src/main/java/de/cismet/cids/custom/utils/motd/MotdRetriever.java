@@ -56,9 +56,12 @@ public class MotdRetriever {
     private final Timer timer = new Timer();
     private String domain;
     private String motd = null;
+    private String motd_extern = null;
     private String totd = null;
+    private String totd_extern = null;
     private boolean running;
     private String motd_url;
+    private String motd_extern_url;
     private Integer retrieveRate;
     private String noMessage;
 
@@ -93,6 +96,7 @@ public class MotdRetriever {
                             + ".properties");
 
             motd_url = serviceProperties.getProperty("MOTD_URL");
+            motd_extern_url = serviceProperties.getProperty("MOTD_EXTERN_URL");
             retrieveRate = Integer.parseInt(serviceProperties.getProperty("RETRIEVE_RATE_IN_MS"));
             noMessage = serviceProperties.getProperty("NO_MESSAGE");
 
@@ -128,32 +132,40 @@ public class MotdRetriever {
     /**
      * DOCUMENT ME!
      *
+     * @param   extern  DOCUMENT ME!
+     *
      * @return  DOCUMENT ME!
      */
-    public String getTotd() {
+    public String getTotd(final boolean extern) {
         return totd;
     }
 
     /**
      * DOCUMENT ME!
      *
-     * @param  totd  DOCUMENT ME!
+     * @param  newTotd  DOCUMENT ME!
+     * @param  extern   DOCUMENT ME!
      */
-    private void setTotd(final String totd) {
-        final String old = this.totd;
+    private void setTotd(final String newTotd, final boolean extern) {
+        final String old = extern ? this.totd_extern : this.totd;
         final boolean changed;
-        if (totd != null) {
-            changed = !totd.equals(old);
+        if (newTotd != null) {
+            changed = !newTotd.equals(old);
         } else {
             changed = old != null;
         }
 
         if (changed) {
-            this.totd = totd;
+            if (extern) {
+                this.totd_extern = newTotd;
+            } else {
+                this.totd = newTotd;
+            }
 
             listenerHandler.totdChanged(new MotdRetrieverListenerEvent(
                     MotdRetrieverListenerEvent.TYPE_TOTD_CHANGED,
-                    totd,
+                    newTotd,
+                    extern,
                     this));
         }
     }
@@ -161,19 +173,22 @@ public class MotdRetriever {
     /**
      * DOCUMENT ME!
      *
+     * @param   extern  DOCUMENT ME!
+     *
      * @return  DOCUMENT ME!
      */
-    public String getMotd() {
-        return motd;
+    public String getMotd(final boolean extern) {
+        return extern ? motd_extern : motd;
     }
 
     /**
      * DOCUMENT ME!
      *
      * @param  newMotd  DOCUMENT ME!
+     * @param  extern   DOCUMENT ME!
      */
-    private void setMotd(final String newMotd) {
-        final String old = this.motd;
+    private void setMotd(final String newMotd, final boolean extern) {
+        final String old = extern ? this.motd_extern : this.motd;
         final boolean changed;
         if (newMotd != null) {
             changed = !newMotd.equals(old);
@@ -182,11 +197,16 @@ public class MotdRetriever {
         }
 
         if (changed) {
-            this.motd = newMotd;
+            if (extern) {
+                this.motd_extern = newMotd;
+            } else {
+                this.motd = newMotd;
+            }
 
             listenerHandler.motdChanged(new MotdRetrieverListenerEvent(
                     MotdRetrieverListenerEvent.TYPE_MOTD_CHANGED,
                     newMotd,
+                    extern,
                     this));
         }
     }
@@ -203,7 +223,7 @@ public class MotdRetriever {
 
         synchronized (timer) {
             if (!running) {
-                startTimer(motd, retrieveRate);
+                startTimer(retrieveRate);
             }
         }
     }
@@ -222,13 +242,12 @@ public class MotdRetriever {
     /**
      * DOCUMENT ME!
      *
-     * @param  motd        DOCUMENT ME!
      * @param  scheduleMs  DOCUMENT ME!
      */
-    private void startTimer(final String motd, final int scheduleMs) {
+    private void startTimer(final int scheduleMs) {
         running = true;
         synchronized (timer) {
-            timer.schedule(new RetrieveTimerTask(motd, scheduleMs), scheduleMs);
+            timer.schedule(new RetrieveTimerTask(scheduleMs), scheduleMs);
         }
     }
 
@@ -285,7 +304,6 @@ public class MotdRetriever {
 
         //~ Instance fields ----------------------------------------------------
 
-        private final String motd;
         private final int intervall;
 
         //~ Constructors -------------------------------------------------------
@@ -293,11 +311,9 @@ public class MotdRetriever {
         /**
          * Creates a new RetrieveTimerTask object.
          *
-         * @param  motd       DOCUMENT ME!
          * @param  intervall  DOCUMENT ME!
          */
-        public RetrieveTimerTask(final String motd, final int intervall) {
-            this.motd = motd;
+        public RetrieveTimerTask(final int intervall) {
             this.intervall = intervall;
         }
 
@@ -306,9 +322,11 @@ public class MotdRetriever {
         /**
          * DOCUMENT ME!
          *
+         * @param   motd_url  DOCUMENT ME!
+         *
          * @return  DOCUMENT ME!
          */
-        private String retrieveMotd() {
+        private String retrieveMotd(final String motd_url) {
             InputStream inputStream = null;
             try {
                 inputStream = getHttpAccessHandler().doRequest(new URL(motd_url),
@@ -329,24 +347,34 @@ public class MotdRetriever {
             return null;
         }
 
+        /**
+         * DOCUMENT ME!
+         *
+         * @param  extern  DOCUMENT ME!
+         */
+        private void processMotd(final boolean extern) {
+            final String newMotd = retrieveMotd(extern ? motd_extern_url : motd_url);
+            if (newMotd != null) {
+                if (newMotd.equals(noMessage)) {
+                    setMotd(null, extern);
+                    setTotd(null, extern);
+                } else {
+                    setMotd(newMotd, extern);
+                    setTotd(extractTitle(newMotd), extern);
+                }
+            }
+        }
+
         @Override
         public void run() {
             try {
-                final String newMotd = retrieveMotd();
-                if (newMotd != null) {
-                    if (newMotd.equals(noMessage)) {
-                        setMotd(null);
-                        setTotd(null);
-                    } else {
-                        setMotd(newMotd);
-                        setTotd(extractTitle(newMotd));
-                    }
-                }
+                processMotd(false); // intern
+                processMotd(true);  // extern
             } catch (final Exception ex) {
                 LOG.warn("couldnt retrieve motd", ex);
             } finally {
                 synchronized (timer) {
-                    startTimer(getMotd(), intervall);
+                    startTimer(intervall);
                 }
             }
         }
