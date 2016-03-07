@@ -12,6 +12,8 @@
  */
 package de.cismet.cids.custom.utils.motd;
 
+import lombok.Getter;
+
 import java.util.EventObject;
 
 /**
@@ -20,6 +22,7 @@ import java.util.EventObject;
  * @author   jruiz
  * @version  $Revision$, $Date$
  */
+@Getter
 public class MotdRetrieverListenerEvent extends EventObject {
 
     //~ Static fields/initializers ---------------------------------------------
@@ -31,6 +34,7 @@ public class MotdRetrieverListenerEvent extends EventObject {
 
     private final int type;
     private final String content;
+    private final boolean extern;
 
     //~ Constructors -----------------------------------------------------------
 
@@ -39,13 +43,18 @@ public class MotdRetrieverListenerEvent extends EventObject {
      *
      * @param  type     DOCUMENT ME!
      * @param  content  DOCUMENT ME!
+     * @param  extern   DOCUMENT ME!
      * @param  source   DOCUMENT ME!
      */
-    public MotdRetrieverListenerEvent(final int type, final String content, final MotdRetriever source) {
+    public MotdRetrieverListenerEvent(final int type,
+            final String content,
+            final boolean extern,
+            final MotdRetriever source) {
         super(source);
 
         this.type = type;
         this.content = content;
+        this.extern = extern;
     }
 
     //~ Methods ----------------------------------------------------------------
@@ -53,23 +62,5 @@ public class MotdRetrieverListenerEvent extends EventObject {
     @Override
     public MotdRetriever getSource() {
         return (MotdRetriever)super.getSource();
-    }
-
-    /**
-     * DOCUMENT ME!
-     *
-     * @return  DOCUMENT ME!
-     */
-    public String getContent() {
-        return content;
-    }
-
-    /**
-     * DOCUMENT ME!
-     *
-     * @return  DOCUMENT ME!
-     */
-    public int getType() {
-        return type;
     }
 }
