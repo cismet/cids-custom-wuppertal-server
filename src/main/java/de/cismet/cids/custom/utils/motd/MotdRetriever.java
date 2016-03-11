@@ -25,6 +25,8 @@ import java.net.URL;
 
 import java.util.ArrayList;
 import java.util.Collection;
+import java.util.HashMap;
+import java.util.Map;
 import java.util.Timer;
 import java.util.TimerTask;
 
@@ -64,6 +66,7 @@ public class MotdRetriever {
     private String motd_extern_url;
     private Integer retrieveRate;
     private String noMessage;
+    private Map<String, Boolean> retrieveSuccessfulMap = new HashMap<String, Boolean>();
 
     //~ Constructors -----------------------------------------------------------
 
@@ -332,15 +335,27 @@ public class MotdRetriever {
                 inputStream = getHttpAccessHandler().doRequest(new URL(motd_url),
                         new StringReader(""),
                         AccessHandler.ACCESS_METHODS.GET_REQUEST);
-                return IOUtils.toString(inputStream, "ISO-8859-1");
+                final String motd = IOUtils.toString(inputStream, "ISO-8859-1");
+                retrieveSuccessfulMap.put(motd_url, true);
+                return motd;
             } catch (final Exception ex) {
-                LOG.info("couldnt get the MOTD from " + motd_url, ex);
+                if (!retrieveSuccessfulMap.containsKey(motd_url)
+                            || Boolean.TRUE.equals(retrieveSuccessfulMap.get(motd_url))) {
+                    LOG.warn("couldnt get the MOTD from " + motd_url, ex);
+                } else {
+                    if (LOG.isDebugEnabled()) {
+                        LOG.debug("couldnt get the MOTD from " + motd_url, ex);
+                    }
+                }
+                retrieveSuccessfulMap.put(motd_url, false);
             } finally {
                 if (inputStream != null) {
                     try {
                         inputStream.close();
                     } catch (IOException ex) {
-                        LOG.warn("couldnt close the inputstream", ex);
+                        if (LOG.isDebugEnabled()) {
+                            LOG.debug("couldnt close the inputstream", ex);
+                        }
                     }
                 }
             }
