@@ -31,8 +31,7 @@ public class DisabledAdresseNodePermissionProvider extends AbstractCustomNodePer
     //~ Static fields/initializers ---------------------------------------------
 
     static Geometry tester = null;
-    private static final transient org.apache.log4j.Logger LOG = org.apache.log4j.Logger.getLogger(
-            DisabledAdresseNodePermissionProvider.class);
+    private static final transient org.apache.log4j.Logger LOG = org.apache.log4j.Logger.getLogger(DisabledAdresseNodePermissionProvider.class);
 
     static {
         final GeometryFactory f = new GeometryFactory();
