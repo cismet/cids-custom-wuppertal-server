@@ -116,8 +116,8 @@ public class FormSolutionsBestellung {
     @XmlElement(name = "West-Ost")
     private String westOst;
 
-    @XmlElement(name = "Summe")
-    private Double summe;
+    @XmlElement(name = "betrag")
+    private Double betrag;
 
     @XmlElement(name = "Firma")
     private String firma;

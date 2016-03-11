@@ -14,6 +14,9 @@ package de.cismet.cids.custom.utils.motd;
 
 import org.apache.commons.io.IOUtils;
 
+import org.jsoup.Jsoup;
+import org.jsoup.select.Elements;
+
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.StringReader;
@@ -22,6 +25,8 @@ import java.net.URL;
 
 import java.util.ArrayList;
 import java.util.Collection;
+import java.util.HashMap;
+import java.util.Map;
 import java.util.Timer;
 import java.util.TimerTask;
 
@@ -41,30 +46,7 @@ public class MotdRetriever {
     //~ Static fields/initializers ---------------------------------------------
 
     private static final transient org.apache.log4j.Logger LOG = org.apache.log4j.Logger.getLogger(MotdRetriever.class);
-    private static final String PROPERTIES = "/de/cismet/cids/custom/wunda_blau/res/motd/motd_conf.properties";
-
-    private static final String MOTD_URL;
-    private static final String NO_MESSAGE;
-    private static final int SCHEDULE_INTERVAL;
-
-    static {
-        final String motd_url;
-        final Integer retrieveRate;
-        final String noMessage;
-
-        try {
-            final PropertyReader serviceProperties = new PropertyReader(PROPERTIES);
-
-            motd_url = serviceProperties.getProperty("MOTD_URL");
-            retrieveRate = Integer.parseInt(serviceProperties.getProperty("RETRIEVE_RATE_IN_MS"));
-            noMessage = serviceProperties.getProperty("NO_MESSAGE");
-        } catch (final Exception ex) {
-            throw new RuntimeException(ex);
-        }
-        MOTD_URL = motd_url;
-        SCHEDULE_INTERVAL = retrieveRate;
-        NO_MESSAGE = noMessage;
-    }
+    private static final String PROPERTIES_PATH = "/de/cismet/cids/custom/motd/";
 
     private static MotdRetriever INSTANCE;
 
@@ -74,9 +56,17 @@ public class MotdRetriever {
     private final Collection<MotdRetrieverListener> listeners = new ArrayList<MotdRetrieverListener>();
     private final MotdRetrieverListenerHandler listenerHandler = new MotdRetrieverListenerHandler();
     private final Timer timer = new Timer();
+    private String domain;
     private String motd = null;
+    private String motd_extern = null;
     private String totd = null;
+    private String totd_extern = null;
     private boolean running;
+    private String motd_url;
+    private String motd_extern_url;
+    private Integer retrieveRate;
+    private String noMessage;
+    private Map<String, Boolean> retrieveSuccessfulMap = new HashMap<String, Boolean>();
 
     //~ Constructors -----------------------------------------------------------
 
@@ -87,6 +77,39 @@ public class MotdRetriever {
     }
 
     //~ Methods ----------------------------------------------------------------
+
+    /**
+     * DOCUMENT ME!
+     *
+     * @param   domain  DOCUMENT ME!
+     *
+     * @throws  Exception                 java.lang.Exception
+     * @throws  IllegalArgumentException  DOCUMENT ME!
+     * @throws  IllegalStateException     DOCUMENT ME!
+     */
+    public void init(final String domain) throws Exception {
+        if (domain == null) {
+            throw new IllegalArgumentException("Domain darf nicht null sein !");
+        }
+        if (this.domain != null) {
+            throw new IllegalStateException("MotdRetriever wurde bereits initialisiert !");
+        }
+        try {
+            final PropertyReader serviceProperties = new PropertyReader(PROPERTIES_PATH + domain.toLowerCase()
+                            + ".properties");
+
+            motd_url = serviceProperties.getProperty("MOTD_URL");
+            motd_extern_url = serviceProperties.getProperty("MOTD_EXTERN_URL");
+            retrieveRate = Integer.parseInt(serviceProperties.getProperty("RETRIEVE_RATE_IN_MS"));
+            noMessage = serviceProperties.getProperty("NO_MESSAGE");
+
+            this.domain = domain;
+        } catch (final Exception ex) {
+            throw new Exception(
+                "Fehler beim Initialisieren des MotdRetrievers. Es werden keine aktuellen Meldungen verteilt !",
+                ex);
+        }
+    }
 
     /**
      * DOCUMENT ME!
@@ -112,32 +135,40 @@ public class MotdRetriever {
     /**
      * DOCUMENT ME!
      *
+     * @param   extern  DOCUMENT ME!
+     *
      * @return  DOCUMENT ME!
      */
-    public String getTotd() {
+    public String getTotd(final boolean extern) {
         return totd;
     }
 
     /**
      * DOCUMENT ME!
      *
-     * @param  totd  DOCUMENT ME!
+     * @param  newTotd  DOCUMENT ME!
+     * @param  extern   DOCUMENT ME!
      */
-    private void setTotd(final String totd) {
-        final String old = this.totd;
+    private void setTotd(final String newTotd, final boolean extern) {
+        final String old = extern ? this.totd_extern : this.totd;
         final boolean changed;
-        if (totd != null) {
-            changed = !totd.equals(old);
+        if (newTotd != null) {
+            changed = !newTotd.equals(old);
         } else {
             changed = old != null;
         }
 
         if (changed) {
-            this.totd = totd;
+            if (extern) {
+                this.totd_extern = newTotd;
+            } else {
+                this.totd = newTotd;
+            }
 
             listenerHandler.totdChanged(new MotdRetrieverListenerEvent(
                     MotdRetrieverListenerEvent.TYPE_TOTD_CHANGED,
-                    totd,
+                    newTotd,
+                    extern,
                     this));
         }
     }
@@ -145,19 +176,22 @@ public class MotdRetriever {
     /**
      * DOCUMENT ME!
      *
+     * @param   extern  DOCUMENT ME!
+     *
      * @return  DOCUMENT ME!
      */
-    public String getMotd() {
-        return motd;
+    public String getMotd(final boolean extern) {
+        return extern ? motd_extern : motd;
     }
 
     /**
      * DOCUMENT ME!
      *
      * @param  newMotd  DOCUMENT ME!
+     * @param  extern   DOCUMENT ME!
      */
-    private void setMotd(final String newMotd) {
-        final String old = this.motd;
+    private void setMotd(final String newMotd, final boolean extern) {
+        final String old = extern ? this.motd_extern : this.motd;
         final boolean changed;
         if (newMotd != null) {
             changed = !newMotd.equals(old);
@@ -166,22 +200,33 @@ public class MotdRetriever {
         }
 
         if (changed) {
-            this.motd = newMotd;
+            if (extern) {
+                this.motd_extern = newMotd;
+            } else {
+                this.motd = newMotd;
+            }
 
             listenerHandler.motdChanged(new MotdRetrieverListenerEvent(
                     MotdRetrieverListenerEvent.TYPE_MOTD_CHANGED,
                     newMotd,
+                    extern,
                     this));
         }
     }
 
     /**
      * DOCUMENT ME!
+     *
+     * @throws  IllegalStateException  DOCUMENT ME!
      */
     public void start() {
+        if (domain == null) {
+            throw new IllegalStateException("MotdRetriever wurde nicht initialisiert !");
+        }
+
         synchronized (timer) {
             if (!running) {
-                startTimer(motd, SCHEDULE_INTERVAL);
+                startTimer(retrieveRate);
             }
         }
     }
@@ -189,7 +234,7 @@ public class MotdRetriever {
     /**
      * DOCUMENT ME!
      */
-    private void stop() {
+    public void stop() {
         synchronized (timer) {
             if (running) {
                 timer.cancel();
@@ -200,13 +245,12 @@ public class MotdRetriever {
     /**
      * DOCUMENT ME!
      *
-     * @param  motd        DOCUMENT ME!
      * @param  scheduleMs  DOCUMENT ME!
      */
-    private void startTimer(final String motd, final int scheduleMs) {
+    private void startTimer(final int scheduleMs) {
         running = true;
         synchronized (timer) {
-            timer.schedule(new RetrieveTimerTask(motd, scheduleMs), scheduleMs);
+            timer.schedule(new RetrieveTimerTask(scheduleMs), scheduleMs);
         }
     }
 
@@ -243,7 +287,12 @@ public class MotdRetriever {
         if (motd == null) {
             return null;
         } else {
-            return "Test-Title of the day"; // TODO extract title from motd
+            final Elements elements = Jsoup.parse(motd).select("span.totd");
+            if ((elements != null) && !elements.isEmpty() && (elements.get(0) != null)) {
+                return elements.get(0).text();
+            } else {
+                return null;
+            }
         }
     }
 
@@ -258,7 +307,6 @@ public class MotdRetriever {
 
         //~ Instance fields ----------------------------------------------------
 
-        private final String motd;
         private final int intervall;
 
         //~ Constructors -------------------------------------------------------
@@ -266,11 +314,9 @@ public class MotdRetriever {
         /**
          * Creates a new RetrieveTimerTask object.
          *
-         * @param  motd       DOCUMENT ME!
          * @param  intervall  DOCUMENT ME!
          */
-        public RetrieveTimerTask(final String motd, final int intervall) {
-            this.motd = motd;
+        public RetrieveTimerTask(final int intervall) {
             this.intervall = intervall;
         }
 
@@ -279,46 +325,71 @@ public class MotdRetriever {
         /**
          * DOCUMENT ME!
          *
+         * @param   motd_url  DOCUMENT ME!
+         *
          * @return  DOCUMENT ME!
          */
-        private String retrieveMotd() {
+        private String retrieveMotd(final String motd_url) {
             InputStream inputStream = null;
             try {
-                inputStream = getHttpAccessHandler().doRequest(new URL(MOTD_URL),
+                inputStream = getHttpAccessHandler().doRequest(new URL(motd_url),
                         new StringReader(""),
                         AccessHandler.ACCESS_METHODS.GET_REQUEST);
-                return IOUtils.toString(inputStream, "ISO-8859-1");
+                final String motd = IOUtils.toString(inputStream, "ISO-8859-1");
+                retrieveSuccessfulMap.put(motd_url, true);
+                return motd;
             } catch (final Exception ex) {
-                LOG.error("couldnt get the MOTD from " + MOTD_URL, ex);
+                if (!retrieveSuccessfulMap.containsKey(motd_url)
+                            || Boolean.TRUE.equals(retrieveSuccessfulMap.get(motd_url))) {
+                    LOG.warn("couldnt get the MOTD from " + motd_url, ex);
+                } else {
+                    if (LOG.isDebugEnabled()) {
+                        LOG.debug("couldnt get the MOTD from " + motd_url, ex);
+                    }
+                }
+                retrieveSuccessfulMap.put(motd_url, false);
             } finally {
                 if (inputStream != null) {
                     try {
                         inputStream.close();
                     } catch (IOException ex) {
-                        LOG.warn("couldnt close the inputstream", ex);
+                        if (LOG.isDebugEnabled()) {
+                            LOG.debug("couldnt close the inputstream", ex);
+                        }
                     }
                 }
             }
             return null;
         }
 
+        /**
+         * DOCUMENT ME!
+         *
+         * @param  extern  DOCUMENT ME!
+         */
+        private void processMotd(final boolean extern) {
+            final String newMotd = retrieveMotd(extern ? motd_extern_url : motd_url);
+            if (newMotd != null) {
+                if (newMotd.equals(noMessage)) {
+                    setMotd(null, extern);
+                    setTotd(null, extern);
+                } else {
+                    setMotd(newMotd, extern);
+                    setTotd(extractTitle(newMotd), extern);
+                }
+            }
+        }
+
         @Override
         public void run() {
             try {
-                final String newMotd = retrieveMotd();
-
-                if (newMotd.equals(NO_MESSAGE)) {
-                    setMotd(null);
-                    setTotd(null);
-                } else {
-                    setMotd(newMotd);
-                    setTotd(extractTitle(motd));
-                }
+                processMotd(false); // intern
+                processMotd(true);  // extern
             } catch (final Exception ex) {
-                LOG.fatal(ex, ex);
+                LOG.warn("couldnt retrieve motd", ex);
             } finally {
                 synchronized (timer) {
-                    startTimer(getMotd(), intervall);
+                    startTimer(intervall);
                 }
             }
         }
