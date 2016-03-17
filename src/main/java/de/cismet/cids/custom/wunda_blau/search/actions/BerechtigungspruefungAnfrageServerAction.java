@@ -97,7 +97,7 @@ public class BerechtigungspruefungAnfrageServerAction implements UserAwareServer
                     throw new IllegalArgumentException("aufruf enthält keine downloadinfo");
                 }
 
-                final BerechtigungspruefungDownloadInfo downloadInfo = BerechtigungspruefungHandler.extractFreigabeInfo(
+                final BerechtigungspruefungDownloadInfo downloadInfo = BerechtigungspruefungHandler.extractDownloadInfo(
                         downloadInfo_json);
 
                 BerechtigungspruefungHandler.getInstance().setMetaService(getMetaService());

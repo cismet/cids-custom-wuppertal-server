@@ -41,7 +41,7 @@ public class BerechtigungspruefungDownloadInfo {
     //~ Constructors -----------------------------------------------------------
 
     /**
-     * Creates a new BerechtigungspruefungDownloadInfo object.
+     * Creates a new BerechtigungspruefungFreigabeInfo object.
      *
      * @param  produktTyp  DOCUMENT ME!
      */

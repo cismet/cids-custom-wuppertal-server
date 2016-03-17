@@ -32,7 +32,7 @@ import lombok.Getter;
     getterVisibility = JsonAutoDetect.Visibility.NONE,
     setterVisibility = JsonAutoDetect.Visibility.NONE
 )
-public class BerechtigungspruefungInfo<D extends BerechtigungspruefungDownloadInfo> {
+public class BerechtigungspruefungFreigabeInfo<D extends BerechtigungspruefungDownloadInfo> {
 
     //~ Instance fields --------------------------------------------------------
 
@@ -49,7 +49,7 @@ public class BerechtigungspruefungInfo<D extends BerechtigungspruefungDownloadIn
      * @param  freigegeben                        DOCUMENT ME!
      * @param  berechtigungspruefungDownloadInfo  DOCUMENT ME!
      */
-    public BerechtigungspruefungInfo(@JsonProperty("kommentar") final String kommentar,
+    public BerechtigungspruefungFreigabeInfo(@JsonProperty("kommentar") final String kommentar,
             @JsonProperty("freigegeben") final Boolean freigegeben,
             @JsonProperty("berechtigungspruefungDownloadInfo") final D berechtigungspruefungDownloadInfo) {
         this.kommentar = kommentar;

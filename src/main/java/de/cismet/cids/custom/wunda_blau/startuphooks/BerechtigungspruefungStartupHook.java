@@ -20,8 +20,6 @@ import Sirius.server.newuser.UserGroup;
 import de.cismet.cids.custom.utils.berechtigungspruefung.BerechtigungspruefungHandler;
 import de.cismet.cids.custom.utils.berechtigungspruefung.BerechtigungspruefungProperties;
 
-import de.cismet.tools.PropertyReader;
-
 /**
  * DOCUMENT ME!
  *
@@ -53,10 +51,13 @@ public class BerechtigungspruefungStartupHook implements DomainServerStartupHook
 
                     try {
                         final User user = new User(
-                                BerechtigungspruefungProperties.CIDS_USERID,
-                                null,
+                                BerechtigungspruefungProperties.CIDS_USER_ID,
+                                BerechtigungspruefungProperties.CIDS_USER_NAME,
                                 getDomain(),
-                                new UserGroup(BerechtigungspruefungProperties.CIDS_GROUPID, null, getDomain()));
+                                new UserGroup(
+                                    BerechtigungspruefungProperties.CIDS_GROUP_ID,
+                                    BerechtigungspruefungProperties.CIDS_GROUP_NAME,
+                                    getDomain()));
                         BerechtigungspruefungHandler.getInstance().setMetaService(DomainServerImpl.getServerInstance());
                         BerechtigungspruefungHandler.getInstance().sendMessagesForAllOpenFreigaben(user);
                         BerechtigungspruefungHandler.getInstance().sendMessagesForAllOpenAnfragen(user);

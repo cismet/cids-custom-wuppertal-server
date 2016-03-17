@@ -91,7 +91,7 @@ public class BerechtigungspruefungHandler {
      * @param  user  DOCUMENT ME!
      */
     public void sendMessagesForAllOpenAnfragen(final User user) {
-        final Collection<CidsBean> allOpenPruefungen = loadOpenFreigabeBeans(user);
+        final Collection<CidsBean> allOpenPruefungen = loadOpenAnfrageBeans(user);
         if (allOpenPruefungen != null) {
             for (final CidsBean openPruefungen : allOpenPruefungen) {
                 sendAnfrageMessage((String)openPruefungen.getProperty("schluessel"));
@@ -118,7 +118,7 @@ public class BerechtigungspruefungHandler {
      * @param  user  DOCUMENT ME!
      */
     public void sendMessagesForAllOpenFreigaben(final User user) {
-        final Collection<CidsBean> allOpenDownloads = loadOpenDownloadBeans(user);
+        final Collection<CidsBean> allOpenDownloads = loadOpenFreigabeBeans(user);
         if (allOpenDownloads != null) {
             final Map<String, Collection> dm = new HashMap<String, Collection>();
             for (final CidsBean openDownload : allOpenDownloads) {
@@ -164,36 +164,36 @@ public class BerechtigungspruefungHandler {
     public void sendFreigabeMessage(final String userKey, final Collection<CidsBean> pruefungBeans) {
         if (pruefungBeans != null) {
             try {
-                final Map<String, BerechtigungspruefungInfo> pruefungInfoMap =
-                    new HashMap<String, BerechtigungspruefungInfo>();
+                final Map<String, BerechtigungspruefungFreigabeInfo> freigabeInfoMap =
+                    new HashMap<String, BerechtigungspruefungFreigabeInfo>();
 
                 for (final CidsBean pruefungBean : pruefungBeans) {
                     final String schluessel = (String)pruefungBean.getProperty("schluessel");
 
-                    final BerechtigungspruefungDownloadInfo downloadInfo = extractFreigabeInfo((String)
+                    final BerechtigungspruefungDownloadInfo downloadInfo = extractDownloadInfo((String)
                             pruefungBean.getProperty("downloadinfo_json"));
 
-                    final BerechtigungspruefungInfo berechtigungspruefungInfo;
+                    final BerechtigungspruefungFreigabeInfo freigabeInfo;
                     if (downloadInfo instanceof BerechtigungspruefungBescheinigungDownloadInfo) {
-                        berechtigungspruefungInfo =
-                            new BerechtigungspruefungInfo<BerechtigungspruefungBescheinigungDownloadInfo>((String)
-                                pruefungBean.getProperty("pruefkommentar"),
+                        freigabeInfo =
+                            new BerechtigungspruefungFreigabeInfo<BerechtigungspruefungBescheinigungDownloadInfo>(
+                                (String)pruefungBean.getProperty("pruefkommentar"),
                                 (Boolean)pruefungBean.getProperty("pruefstatus"),
                                 (BerechtigungspruefungBescheinigungDownloadInfo)downloadInfo);
                     } else {
-                        berechtigungspruefungInfo = new BerechtigungspruefungInfo((String)pruefungBean.getProperty(
+                        freigabeInfo = new BerechtigungspruefungFreigabeInfo((String)pruefungBean.getProperty(
                                     "pruefkommentar"),
                                 (Boolean)pruefungBean.getProperty("pruefstatus"),
                                 downloadInfo);
                     }
-                    pruefungInfoMap.put(
+                    freigabeInfoMap.put(
                         schluessel,
-                        berechtigungspruefungInfo);
+                        freigabeInfo);
                 }
                 CidsServerMessageManagerImpl.getInstance()
                         .publishMessage(
                             BerechtigungspruefungProperties.CSM_FREIGABE,
-                            MAPPER.writeValueAsString(pruefungInfoMap),
+                            MAPPER.writeValueAsString(freigabeInfoMap),
                             new HashSet(Arrays.asList(userKey)),
                             true);
             } catch (final Exception ex) {
@@ -303,7 +303,7 @@ public class BerechtigungspruefungHandler {
      *
      * @return  DOCUMENT ME!
      */
-    public List<CidsBean> loadOpenFreigabeBeans(final User user) {
+    public List<CidsBean> loadOpenAnfrageBeans(final User user) {
         final MetaObject[] mos;
         try {
             final List<CidsBean> beans = new ArrayList<CidsBean>();
@@ -350,7 +350,8 @@ public class BerechtigungspruefungHandler {
                         + "FROM " + mcBerechtigungspruefung.getTableName() + " "
                         + "WHERE benutzer ILIKE '" + userKey + "' "
                         + "AND " + mcBerechtigungspruefung.getTableName() + ".pruefstatus IS NOT NULL "
-                        + "AND " + mcBerechtigungspruefung.getTableName() + ".abgeholt IS NOT TRUE;";
+                        + "AND (" + mcBerechtigungspruefung.getTableName() + ".abgeholt IS NULL "
+                        + "OR " + mcBerechtigungspruefung.getTableName() + ".abgeholt IS FALSE);";
 
             mos = metaService.getMetaObject(user, pruefungQuery);
             if ((mos != null) && (mos.length > 0)) {
@@ -372,7 +373,7 @@ public class BerechtigungspruefungHandler {
      *
      * @return  DOCUMENT ME!
      */
-    public List<CidsBean> loadOpenDownloadBeans(final User user) {
+    public List<CidsBean> loadOpenFreigabeBeans(final User user) {
         final MetaObject[] mos;
         try {
             final List<CidsBean> beans = new ArrayList<CidsBean>();
@@ -384,7 +385,8 @@ public class BerechtigungspruefungHandler {
                         + mcBerechtigungspruefung.getTableName() + "." + mcBerechtigungspruefung.getPrimaryKey() + " "
                         + "FROM " + mcBerechtigungspruefung.getTableName() + " "
                         + "WHERE " + mcBerechtigungspruefung.getTableName() + ".pruefstatus IS NOT NULL "
-                        + "AND " + mcBerechtigungspruefung.getTableName() + ".abgeholt IS NOT TRUE;";
+                        + "AND (" + mcBerechtigungspruefung.getTableName() + ".abgeholt IS NULL "
+                        + "OR " + mcBerechtigungspruefung.getTableName() + ".abgeholt IS FALSE);";
 
             mos = metaService.getMetaObject(user, pruefungQuery);
             if ((mos != null) && (mos.length > 0)) {
@@ -438,7 +440,7 @@ public class BerechtigungspruefungHandler {
      *
      * @throws  Exception  DOCUMENT ME!
      */
-    public static BerechtigungspruefungDownloadInfo extractFreigabeInfo(final String freigabeInfo_json)
+    public static BerechtigungspruefungDownloadInfo extractDownloadInfo(final String freigabeInfo_json)
             throws Exception {
         final BerechtigungspruefungDownloadInfo berechtigungspruefungDownloadInfo = (BerechtigungspruefungDownloadInfo)
             MAPPER.readValue(freigabeInfo_json, BerechtigungspruefungDownloadInfo.class);
