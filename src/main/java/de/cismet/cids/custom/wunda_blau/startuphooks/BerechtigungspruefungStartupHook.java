@@ -28,12 +28,11 @@ import de.cismet.tools.PropertyReader;
  * @version  $Revision$, $Date$
  */
 @org.openide.util.lookup.ServiceProvider(service = DomainServerStartupHook.class)
-public class BerechtigungspruerungStartupHook implements DomainServerStartupHook {
+public class BerechtigungspruefungStartupHook implements DomainServerStartupHook {
 
     //~ Static fields/initializers ---------------------------------------------
 
-    private static final transient org.apache.log4j.Logger LOG = org.apache.log4j.Logger.getLogger(
-            BerechtigungspruerungStartupHook.class);
+    private static final transient org.apache.log4j.Logger LOG = org.apache.log4j.Logger.getLogger(BerechtigungspruefungStartupHook.class);
 
     private static final String PROPERTIES =
         "/de/cismet/cids/custom/berechtigungspruefung/berechtigungspruefung.properties";
