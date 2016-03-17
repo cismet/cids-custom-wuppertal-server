@@ -106,7 +106,9 @@ public class BerechtigungspruefungHandler {
      * @param  user     DOCUMENT ME!
      */
     public void sendMessagesForAllOpenFreigaben(final String userKey, final User user) {
-        final Collection<CidsBean> allOpenDownloads = BerechtigungspruefungHandler.this.loadOpenFreigabeBeans(userKey, user);
+        final Collection<CidsBean> allOpenDownloads = BerechtigungspruefungHandler.this.loadOpenFreigabeBeans(
+                userKey,
+                user);
         sendFreigabeMessage(userKey, allOpenDownloads);
     }
 
@@ -149,7 +151,8 @@ public class BerechtigungspruefungHandler {
      * @param  schluessel  openPruefung DOCUMENT ME!
      */
     private void sendAnfrageMessage(final String schluessel) {
-        CidsServerMessageManagerImpl.getInstance().publishMessage(BerechtigungspruefungProperties.CSM_ANFRAGE, schluessel);
+        CidsServerMessageManagerImpl.getInstance()
+                .publishMessage(BerechtigungspruefungProperties.CSM_ANFRAGE, schluessel);
     }
 
     /**

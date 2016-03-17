@@ -33,7 +33,8 @@ public class BerechtigungspruefungStartupHook implements DomainServerStartupHook
 
     //~ Static fields/initializers ---------------------------------------------
 
-    private static final transient org.apache.log4j.Logger LOG = org.apache.log4j.Logger.getLogger(BerechtigungspruefungStartupHook.class);
+    private static final transient org.apache.log4j.Logger LOG = org.apache.log4j.Logger.getLogger(
+            BerechtigungspruefungStartupHook.class);
 
     //~ Methods ----------------------------------------------------------------
 

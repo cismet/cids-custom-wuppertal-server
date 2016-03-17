@@ -58,6 +58,7 @@ public class BerechtigungspruefungBescheinigungBaulastInfo {
 
     @Override
     public String toString() {
-        return ((blattnummer != null) ? blattnummer : "kein Baulastbatt") + "/" + ((laufende_nummer != null) ? laufende_nummer : "keine laufende Nummer");
+        return ((blattnummer != null) ? blattnummer : "kein Baulastbatt") + "/"
+                    + ((laufende_nummer != null) ? laufende_nummer : "keine laufende Nummer");
     }
 }
