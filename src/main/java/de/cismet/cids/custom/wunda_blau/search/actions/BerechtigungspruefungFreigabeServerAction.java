@@ -93,22 +93,28 @@ public class BerechtigungspruefungFreigabeServerAction implements UserAwareServe
 
             BerechtigungspruefungHandler.getInstance().setMetaService(metaService);
 
-            final String schluessel = (String)body;
-            final CidsBean pruefungBean = BerechtigungspruefungHandler.getInstance()
-                        .loadAnfrageBean(getUser(), schluessel);
-            final String userKey = (String)pruefungBean.getProperty("benutzer");
+            synchronized (this) {
+                final String schluessel = (String)body;
+                final CidsBean pruefungBean = BerechtigungspruefungHandler.getInstance()
+                            .loadAnfrageBean(getUser(), schluessel);
 
-            pruefungBean.setProperty("pruefstatus", pruefstatus);
-            pruefungBean.setProperty("pruefer", getUser().getName());
-            pruefungBean.setProperty("pruefkommentar", begruendung);
-            pruefungBean.setProperty("pruefung_timestamp", new Timestamp(new Date().getTime()));
-            getMetaService().updateMetaObject(getUser(), pruefungBean.getMetaObject());
+                if (pruefungBean.getProperty("pruefstatus") != null) {
+                    return false;
+                }
+                final String userKey = (String)pruefungBean.getProperty("benutzer");
 
-            BerechtigungspruefungHandler.getInstance().sendMessagesForAllOpenFreigaben(userKey, getUser());
+                pruefungBean.setProperty("pruefstatus", pruefstatus);
+                pruefungBean.setProperty("pruefer", getUser().getName());
+                pruefungBean.setProperty("pruefkommentar", begruendung);
+                pruefungBean.setProperty("pruefung_timestamp", new Timestamp(new Date().getTime()));
+                getMetaService().updateMetaObject(getUser(), pruefungBean.getMetaObject());
+
+                BerechtigungspruefungHandler.getInstance().sendMessagesForAllOpenFreigaben(userKey, getUser());
+            }
         } catch (final Exception ex) {
             LOG.error("error while executing freigabe action", ex);
         }
-        return null;
+        return true;
     }
 
     @Override
