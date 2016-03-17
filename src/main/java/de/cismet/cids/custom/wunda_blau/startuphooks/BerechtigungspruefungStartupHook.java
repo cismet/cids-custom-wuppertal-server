@@ -18,6 +18,7 @@ import Sirius.server.newuser.User;
 import Sirius.server.newuser.UserGroup;
 
 import de.cismet.cids.custom.utils.berechtigungspruefung.BerechtigungspruefungHandler;
+import de.cismet.cids.custom.utils.berechtigungspruefung.BerechtigungspruefungProperties;
 
 import de.cismet.tools.PropertyReader;
 
@@ -33,29 +34,6 @@ public class BerechtigungspruefungStartupHook implements DomainServerStartupHook
     //~ Static fields/initializers ---------------------------------------------
 
     private static final transient org.apache.log4j.Logger LOG = org.apache.log4j.Logger.getLogger(BerechtigungspruefungStartupHook.class);
-
-    private static final String PROPERTIES =
-        "/de/cismet/cids/custom/berechtigungspruefung/berechtigungspruefung.properties";
-
-    public static final Integer CIDS_USERID;
-    public static final Integer CIDS_GROUPID;
-
-    static {
-        Integer cidsUserId = null;
-        Integer cidsGroupId = null;
-
-        try {
-            final PropertyReader serviceProperties = new PropertyReader(PROPERTIES);
-
-            cidsUserId = Integer.parseInt(serviceProperties.getProperty("CIDS_USERID"));
-            cidsGroupId = Integer.parseInt(serviceProperties.getProperty("CIDS_GROUPID"));
-        } catch (final Exception ex) {
-            LOG.error("error while loading properties", ex);
-        }
-
-        CIDS_USERID = cidsUserId;
-        CIDS_GROUPID = cidsGroupId;
-    }
 
     //~ Methods ----------------------------------------------------------------
 
@@ -74,13 +52,13 @@ public class BerechtigungspruefungStartupHook implements DomainServerStartupHook
 
                     try {
                         final User user = new User(
-                                CIDS_USERID,
+                                BerechtigungspruefungProperties.CIDS_USERID,
                                 null,
                                 getDomain(),
-                                new UserGroup(CIDS_GROUPID, null, getDomain()));
+                                new UserGroup(BerechtigungspruefungProperties.CIDS_GROUPID, null, getDomain()));
                         BerechtigungspruefungHandler.getInstance().setMetaService(DomainServerImpl.getServerInstance());
-                        BerechtigungspruefungHandler.getInstance().sendMessagesForAllOpenDownloads(user);
-                        BerechtigungspruefungHandler.getInstance().sendMessagesForAllOpenPruefungen(user);
+                        BerechtigungspruefungHandler.getInstance().sendMessagesForAllOpenFreigaben(user);
+                        BerechtigungspruefungHandler.getInstance().sendMessagesForAllOpenAnfragen(user);
                     } catch (final Exception ex) {
                         LOG.warn("Error while initializing the BerechtigungspruefungHandler !", ex);
                     }

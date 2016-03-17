@@ -95,7 +95,7 @@ public class BerechtigungspruefungFreigabeServerAction implements UserAwareServe
 
             final String schluessel = (String)body;
             final CidsBean pruefungBean = BerechtigungspruefungHandler.getInstance()
-                        .loadPruefungBean(getUser(), schluessel);
+                        .loadAnfrageBean(getUser(), schluessel);
             final String userKey = (String)pruefungBean.getProperty("benutzer");
 
             pruefungBean.setProperty("pruefstatus", pruefstatus);
@@ -104,7 +104,7 @@ public class BerechtigungspruefungFreigabeServerAction implements UserAwareServe
             pruefungBean.setProperty("pruefung_timestamp", new Timestamp(new Date().getTime()));
             getMetaService().updateMetaObject(getUser(), pruefungBean.getMetaObject());
 
-            BerechtigungspruefungHandler.getInstance().sendMessagesForAllOpenDownloads(userKey, getUser());
+            BerechtigungspruefungHandler.getInstance().sendMessagesForAllOpenFreigaben(userKey, getUser());
         } catch (final Exception ex) {
             LOG.error("error while executing freigabe action", ex);
         }

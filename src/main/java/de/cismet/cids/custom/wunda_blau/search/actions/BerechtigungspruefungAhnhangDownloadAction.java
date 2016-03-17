@@ -8,6 +8,7 @@
 package de.cismet.cids.custom.wunda_blau.search.actions;
 
 import de.cismet.cids.custom.utils.berechtigungspruefung.BerechtigungspruefungHandler;
+import de.cismet.cids.custom.utils.berechtigungspruefung.BerechtigungspruefungProperties;
 
 import de.cismet.cids.server.actions.DownloadFileAction;
 import de.cismet.cids.server.actions.ServerAction;
@@ -42,7 +43,7 @@ public class BerechtigungspruefungAhnhangDownloadAction extends DownloadFileActi
         } else {
             final String dateiname = (String)body;
 
-            final String filePath = BerechtigungspruefungHandler.UPLOAD_PATH + "/" + dateiname.replaceAll("../", "");
+            final String filePath = BerechtigungspruefungProperties.ANHANG_PFAD + "/" + dateiname.replaceAll("../", "");
             final Object ret = super.execute(filePath);
             if (ret == null) {
                 throw new RuntimeException("File not found.");

@@ -86,7 +86,7 @@ public class BerechtigungspruefungAnfrageServerAction implements UserAwareServer
 
             if (abgeholt != null) {
                 BerechtigungspruefungHandler.getInstance().setMetaService(getMetaService());
-                BerechtigungspruefungHandler.getInstance().closePruefung(user, abgeholt);
+                BerechtigungspruefungHandler.getInstance().closeAnfrage(user, abgeholt);
             } else {
                 final byte[] data = (byte[])body;
                 if ((body != null) && !(body instanceof byte[])) {
@@ -97,12 +97,12 @@ public class BerechtigungspruefungAnfrageServerAction implements UserAwareServer
                     throw new IllegalArgumentException("aufruf enthält keine downloadinfo");
                 }
 
-                final BerechtigungspruefungDownloadInfo downloadInfo = BerechtigungspruefungHandler.extractDownloadInfo(
+                final BerechtigungspruefungDownloadInfo downloadInfo = BerechtigungspruefungHandler.extractFreigabeInfo(
                         downloadInfo_json);
 
                 BerechtigungspruefungHandler.getInstance().setMetaService(getMetaService());
                 return BerechtigungspruefungHandler.getInstance()
-                            .addNewPruefung(
+                            .addNewAnfrage(
                                 getUser(),
                                 downloadInfo,
                                 berechtigungsgrund,

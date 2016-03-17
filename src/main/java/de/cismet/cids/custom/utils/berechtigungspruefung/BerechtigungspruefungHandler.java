@@ -53,11 +53,6 @@ public class BerechtigungspruefungHandler {
 
     //~ Static fields/initializers ---------------------------------------------
 
-    public static final String UPLOAD_PATH = "/tmp/";
-
-    public static final String MESSAGE_CATEGORY_ANFRAGE = "berechtigungspruefungAnfrage";
-    public static final String MESSAGE_CATEGORY_FREIGABE = "berechtigungspruefungFreigabe";
-
     private static final ObjectMapper MAPPER = new ObjectMapper();
 
     private static BerechtigungspruefungHandler INSTANCE;
@@ -95,11 +90,11 @@ public class BerechtigungspruefungHandler {
      *
      * @param  user  DOCUMENT ME!
      */
-    public void sendMessagesForAllOpenPruefungen(final User user) {
-        final Collection<CidsBean> allOpenPruefungen = loadOpenPruefungBeans(user);
+    public void sendMessagesForAllOpenAnfragen(final User user) {
+        final Collection<CidsBean> allOpenPruefungen = loadOpenFreigabeBeans(user);
         if (allOpenPruefungen != null) {
             for (final CidsBean openPruefungen : allOpenPruefungen) {
-                sendPruefungMessage((String)openPruefungen.getProperty("schluessel"));
+                sendAnfrageMessage((String)openPruefungen.getProperty("schluessel"));
             }
         }
     }
@@ -110,9 +105,9 @@ public class BerechtigungspruefungHandler {
      * @param  userKey  DOCUMENT ME!
      * @param  user     DOCUMENT ME!
      */
-    public void sendMessagesForAllOpenDownloads(final String userKey, final User user) {
-        final Collection<CidsBean> allOpenDownloads = loadOpenDownloadBeans(userKey, user);
-        sendDownloadMessage(userKey, allOpenDownloads);
+    public void sendMessagesForAllOpenFreigaben(final String userKey, final User user) {
+        final Collection<CidsBean> allOpenDownloads = BerechtigungspruefungHandler.this.loadOpenFreigabeBeans(userKey, user);
+        sendFreigabeMessage(userKey, allOpenDownloads);
     }
 
     /**
@@ -120,7 +115,7 @@ public class BerechtigungspruefungHandler {
      *
      * @param  user  DOCUMENT ME!
      */
-    public void sendMessagesForAllOpenDownloads(final User user) {
+    public void sendMessagesForAllOpenFreigaben(final User user) {
         final Collection<CidsBean> allOpenDownloads = loadOpenDownloadBeans(user);
         if (allOpenDownloads != null) {
             final Map<String, Collection> dm = new HashMap<String, Collection>();
@@ -134,7 +129,7 @@ public class BerechtigungspruefungHandler {
                 }
             }
             for (final String userKey : dm.keySet()) {
-                sendDownloadMessage(userKey, dm.get(userKey));
+                sendFreigabeMessage(userKey, dm.get(userKey));
             }
         }
     }
@@ -153,8 +148,8 @@ public class BerechtigungspruefungHandler {
      *
      * @param  schluessel  openPruefung DOCUMENT ME!
      */
-    private void sendPruefungMessage(final String schluessel) {
-        CidsServerMessageManagerImpl.getInstance().publishMessage(MESSAGE_CATEGORY_ANFRAGE, schluessel);
+    private void sendAnfrageMessage(final String schluessel) {
+        CidsServerMessageManagerImpl.getInstance().publishMessage(BerechtigungspruefungProperties.CSM_ANFRAGE, schluessel);
     }
 
     /**
@@ -163,7 +158,7 @@ public class BerechtigungspruefungHandler {
      * @param  userKey        DOCUMENT ME!
      * @param  pruefungBeans  DOCUMENT ME!
      */
-    public void sendDownloadMessage(final String userKey, final Collection<CidsBean> pruefungBeans) {
+    public void sendFreigabeMessage(final String userKey, final Collection<CidsBean> pruefungBeans) {
         if (pruefungBeans != null) {
             try {
                 final Map<String, BerechtigungspruefungInfo> pruefungInfoMap =
@@ -172,7 +167,7 @@ public class BerechtigungspruefungHandler {
                 for (final CidsBean pruefungBean : pruefungBeans) {
                     final String schluessel = (String)pruefungBean.getProperty("schluessel");
 
-                    final BerechtigungspruefungDownloadInfo downloadInfo = extractDownloadInfo((String)
+                    final BerechtigungspruefungDownloadInfo downloadInfo = extractFreigabeInfo((String)
                             pruefungBean.getProperty("downloadinfo_json"));
 
                     final BerechtigungspruefungInfo berechtigungspruefungInfo;
@@ -194,7 +189,7 @@ public class BerechtigungspruefungHandler {
                 }
                 CidsServerMessageManagerImpl.getInstance()
                         .publishMessage(
-                            BerechtigungspruefungHandler.MESSAGE_CATEGORY_FREIGABE,
+                            BerechtigungspruefungProperties.CSM_FREIGABE,
                             MAPPER.writeValueAsString(pruefungInfoMap),
                             new HashSet(Arrays.asList(userKey)),
                             true);
@@ -216,11 +211,11 @@ public class BerechtigungspruefungHandler {
      *
      * @throws  Exception  DOCUMENT ME!
      */
-    public String addNewPruefung(final User user,
+    public String addNewAnfrage(final User user,
             final BerechtigungspruefungDownloadInfo downloadInfo,
             final String berechtigungsgrund,
             final String begruendung) throws Exception {
-        return addNewPruefung(
+        return addNewAnfrage(
                 user,
                 downloadInfo,
                 berechtigungsgrund,
@@ -237,8 +232,8 @@ public class BerechtigungspruefungHandler {
      *
      * @throws  Exception  DOCUMENT ME!
      */
-    public void closePruefung(final User user, final String schluessel) throws Exception {
-        final CidsBean pruefungBean = loadPruefungBean(user, schluessel);
+    public void closeAnfrage(final User user, final String schluessel) throws Exception {
+        final CidsBean pruefungBean = loadAnfrageBean(user, schluessel);
         pruefungBean.setProperty("abholung_timestamp", new Timestamp(new Date().getTime()));
         pruefungBean.setProperty("abgeholt", true);
 
@@ -259,7 +254,7 @@ public class BerechtigungspruefungHandler {
      *
      * @throws  Exception  DOCUMENT ME!
      */
-    public String addNewPruefung(final User user,
+    public String addNewAnfrage(final User user,
             final BerechtigungspruefungDownloadInfo downloadInfo,
             final String berechtigungsgrund,
             final String begruendung,
@@ -269,10 +264,10 @@ public class BerechtigungspruefungHandler {
         String pruefungKey;
         do {
             pruefungKey = RandomStringUtils.randomAlphanumeric(8);
-        } while (loadPruefungBean(user, pruefungKey) != null);
+        } while (loadAnfrageBean(user, pruefungKey) != null);
 
         if ((data != null) && (dateiname != null)) {
-            final File file = new File(UPLOAD_PATH + pruefungKey);
+            final File file = new File(BerechtigungspruefungProperties.ANHANG_PFAD + "/" + pruefungKey);
             try {
                 FileUtils.writeByteArrayToFile(file, data);
             } catch (final IOException ex) {
@@ -293,7 +288,7 @@ public class BerechtigungspruefungHandler {
 
         DomainServerImpl.getServerInstance().insertMetaObject(user, newPruefungBean.getMetaObject());
 
-        sendPruefungMessage(pruefungKey);
+        sendAnfrageMessage(pruefungKey);
 
         return pruefungKey;
     }
@@ -305,7 +300,7 @@ public class BerechtigungspruefungHandler {
      *
      * @return  DOCUMENT ME!
      */
-    public List<CidsBean> loadOpenPruefungBeans(final User user) {
+    public List<CidsBean> loadOpenFreigabeBeans(final User user) {
         final MetaObject[] mos;
         try {
             final List<CidsBean> beans = new ArrayList<CidsBean>();
@@ -339,7 +334,7 @@ public class BerechtigungspruefungHandler {
      *
      * @return  DOCUMENT ME!
      */
-    public List<CidsBean> loadOpenDownloadBeans(final String userKey, final User user) {
+    public List<CidsBean> loadOpenFreigabeBeans(final String userKey, final User user) {
         final MetaObject[] mos;
         try {
             final List<CidsBean> beans = new ArrayList<CidsBean>();
@@ -409,7 +404,7 @@ public class BerechtigungspruefungHandler {
      *
      * @return  DOCUMENT ME!
      */
-    public CidsBean loadPruefungBean(final User user, final String schluessel) {
+    public CidsBean loadAnfrageBean(final User user, final String schluessel) {
         try {
             final MetaClass mcBerechtigungspruefung = CidsBean.getMetaClassFromTableName(
                     "WUNDA_BLAU",
@@ -434,21 +429,21 @@ public class BerechtigungspruefungHandler {
     /**
      * DOCUMENT ME!
      *
-     * @param   downloadInfo_json  DOCUMENT ME!
+     * @param   freigabeInfo_json  DOCUMENT ME!
      *
      * @return  DOCUMENT ME!
      *
      * @throws  Exception  DOCUMENT ME!
      */
-    public static BerechtigungspruefungDownloadInfo extractDownloadInfo(final String downloadInfo_json)
+    public static BerechtigungspruefungDownloadInfo extractFreigabeInfo(final String freigabeInfo_json)
             throws Exception {
         final BerechtigungspruefungDownloadInfo berechtigungspruefungDownloadInfo = (BerechtigungspruefungDownloadInfo)
-            MAPPER.readValue(downloadInfo_json, BerechtigungspruefungDownloadInfo.class);
+            MAPPER.readValue(freigabeInfo_json, BerechtigungspruefungDownloadInfo.class);
 
         // TODO weitere produkte haben eigene downloadinfo klassen
         if (BerechtigungspruefungBescheinigungDownloadInfo.PRODUKT_TYP.equals(
                         berechtigungspruefungDownloadInfo.getProduktTyp())) {
-            return MAPPER.readValue(downloadInfo_json, BerechtigungspruefungBescheinigungDownloadInfo.class);
+            return MAPPER.readValue(freigabeInfo_json, BerechtigungspruefungBescheinigungDownloadInfo.class);
         } else {
             throw new Exception("unbekannter Download-Typ");
         }
