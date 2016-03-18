@@ -50,10 +50,10 @@ public class BerechtigungspruefungProperties {
         try {
             final PropertyReader serviceProperties = new PropertyReader(PROPERTIES);
 
-            cidsUserId = Integer.parseInt(serviceProperties.getProperty("CIDS_USERID"));
+            cidsUserId = Integer.parseInt(serviceProperties.getProperty("CIDS_USER_ID"));
             cidsUserName = serviceProperties.getProperty("CIDS_USER_NAME");
-            cidsGroupId = Integer.parseInt(serviceProperties.getProperty("CIDS_GROUPID"));
-            cidsGroupName = serviceProperties.getProperty("CIDS_GROUPID");
+            cidsGroupId = Integer.parseInt(serviceProperties.getProperty("CIDS_GROUP_ID"));
+            cidsGroupName = serviceProperties.getProperty("CIDS_GROUP_NAME");
             if (serviceProperties.getProperty("ANHANG_PFAD") != null) {
                 anhangPfad = serviceProperties.getProperty("ANHANG_PFAD");
             }
