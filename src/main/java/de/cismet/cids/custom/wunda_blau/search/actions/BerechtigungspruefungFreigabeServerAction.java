@@ -43,6 +43,7 @@ public class BerechtigungspruefungFreigabeServerAction implements UserAwareServe
             BerechtigungspruefungFreigabeServerAction.class);
 
     public static final String TASK_NAME = "berechtigungspruefungFreigabe";
+    public static final String MODUS_PRUEFUNG = "PRUEFUNG";
     public static final String MODUS_FREIGABE = "FREIGABE";
     public static final String MODUS_STORNO = "STORNO";
 
@@ -58,6 +59,18 @@ public class BerechtigungspruefungFreigabeServerAction implements UserAwareServe
         //~ Enum constants -----------------------------------------------------
 
         MODUS, KOMMENTAR
+    }
+
+    /**
+     * DOCUMENT ME!
+     *
+     * @version  $Revision$, $Date$
+     */
+    public enum ReturnType {
+
+        //~ Enum constants -----------------------------------------------------
+
+        OK, PENDING, ALREADY
     }
 
     //~ Instance fields --------------------------------------------------------
@@ -82,11 +95,17 @@ public class BerechtigungspruefungFreigabeServerAction implements UserAwareServe
                 }
             }
 
-            final boolean pruefstatus;
-            if (MODUS_FREIGABE.equals(modus)) {
+            final boolean pruefungsAbschluss;
+            final Boolean pruefstatus;
+            if (MODUS_PRUEFUNG.equals(modus)) {
+                pruefstatus = null;
+                pruefungsAbschluss = false;
+            } else if (MODUS_FREIGABE.equals(modus)) {
                 pruefstatus = true;
+                pruefungsAbschluss = true;
             } else if (MODUS_STORNO.equals(modus)) {
                 pruefstatus = false;
+                pruefungsAbschluss = true;
             } else {
                 throw new Exception("weder Freigabe noch Storno");
             }
@@ -94,27 +113,39 @@ public class BerechtigungspruefungFreigabeServerAction implements UserAwareServe
             BerechtigungspruefungHandler.getInstance().setMetaService(metaService);
 
             synchronized (this) {
+                final String pruefer = getUser().getName();
                 final String schluessel = (String)body;
                 final CidsBean pruefungBean = BerechtigungspruefungHandler.getInstance()
                             .loadAnfrageBean(getUser(), schluessel);
 
                 if (pruefungBean.getProperty("pruefstatus") != null) {
-                    return false;
+                    return ReturnType.ALREADY;
+                } else if (pruefungsAbschluss && (pruefungBean.getProperty("pruefer") != null)
+                            && !pruefer.equals(pruefungBean.getProperty("pruefer"))) {
+                    return ReturnType.PENDING;
                 }
                 final String userKey = (String)pruefungBean.getProperty("benutzer");
 
+                final Timestamp now = new Timestamp(new Date().getTime());
+                pruefungBean.setProperty("pruefer", pruefer);
                 pruefungBean.setProperty("pruefstatus", pruefstatus);
-                pruefungBean.setProperty("pruefer", getUser().getName());
-                pruefungBean.setProperty("pruefkommentar", begruendung);
-                pruefungBean.setProperty("pruefung_timestamp", new Timestamp(new Date().getTime()));
+                if (pruefungsAbschluss) {
+                    pruefungBean.setProperty("freigabe_timestamp", now);
+                    pruefungBean.setProperty("pruefkommentar", begruendung);
+                } else {
+                    pruefungBean.setProperty("pruefung_timestamp", now);
+                }
+
                 getMetaService().updateMetaObject(getUser(), pruefungBean.getMetaObject());
 
-                BerechtigungspruefungHandler.getInstance().sendMessagesForAllOpenFreigaben(userKey, getUser());
+                if (pruefungsAbschluss) {
+                    BerechtigungspruefungHandler.getInstance().sendMessagesForAllOpenFreigaben(userKey, getUser());
+                }
             }
         } catch (final Exception ex) {
             LOG.error("error while executing freigabe action", ex);
         }
-        return true;
+        return ReturnType.OK;
     }
 
     @Override
