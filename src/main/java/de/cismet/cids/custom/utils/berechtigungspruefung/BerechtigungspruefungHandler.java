@@ -18,6 +18,7 @@ import Sirius.server.middleware.types.MetaClass;
 import Sirius.server.middleware.types.MetaObject;
 import Sirius.server.newuser.User;
 
+import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
 
 import org.apache.commons.io.FileUtils;
@@ -110,6 +111,27 @@ public class BerechtigungspruefungHandler {
                 userKey,
                 user);
         sendFreigabeMessage(userKey, allOpenDownloads);
+    }
+
+    /**
+     * DOCUMENT ME!
+     *
+     * @param  schluessel  DOCUMENT ME!
+     * @param  user        DOCUMENT ME!
+     */
+    public void sendPendingMessage(final String schluessel, final User user) {
+        final BerechtigungspruefungBearbeitungInfo bearbeitungInfo = new BerechtigungspruefungBearbeitungInfo(
+                schluessel,
+                user.getName(),
+                true);
+        try {
+            CidsServerMessageManagerImpl.getInstance()
+                    .publishMessage(
+                        BerechtigungspruefungProperties.CSM_BEARBEITUNG,
+                        MAPPER.writeValueAsBytes(bearbeitungInfo));
+        } catch (final JsonProcessingException ex) {
+            LOG.error("error while producing or sending message", ex);
+        }
     }
 
     /**

@@ -36,6 +36,7 @@ public class BerechtigungspruefungProperties {
     public static final String CIDS_GROUP_NAME;
     public static final String ANHANG_PFAD;
     public static final String CSM_ANFRAGE;
+    public static final String CSM_BEARBEITUNG;
     public static final String CSM_FREIGABE;
 
     static {
@@ -45,6 +46,7 @@ public class BerechtigungspruefungProperties {
         String cidsGroupName = null;
         String anhangPfad = "/tmp";
         String categoryAnfrage = "berechtigungspruefungAnfrage";
+        String categoryBearbeitung = "berechtigungspruefungBearbeitung";
         String categoryFreigabe = "berechtigungspruefungFreigabe";
 
         try {
@@ -60,6 +62,9 @@ public class BerechtigungspruefungProperties {
             if (serviceProperties.getProperty("CSM_ANFRAGE") != null) {
                 categoryAnfrage = serviceProperties.getProperty("CSM_ANFRAGE");
             }
+            if (serviceProperties.getProperty("CSM_BEARBEITUNG") != null) {
+                categoryBearbeitung = serviceProperties.getProperty("CSM_BEARBEITUNG");
+            }
             if (serviceProperties.getProperty("CSM_FREIGABE") != null) {
                 categoryFreigabe = serviceProperties.getProperty("CSM_FREIGABE");
             }
@@ -73,6 +78,7 @@ public class BerechtigungspruefungProperties {
         CIDS_GROUP_NAME = cidsGroupName;
         ANHANG_PFAD = anhangPfad;
         CSM_ANFRAGE = categoryAnfrage;
+        CSM_BEARBEITUNG = categoryBearbeitung;
         CSM_FREIGABE = categoryFreigabe;
     }
 }

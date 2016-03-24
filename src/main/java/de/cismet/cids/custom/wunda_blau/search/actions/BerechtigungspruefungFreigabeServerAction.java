@@ -140,6 +140,8 @@ public class BerechtigungspruefungFreigabeServerAction implements UserAwareServe
 
                 if (pruefungsAbschluss) {
                     BerechtigungspruefungHandler.getInstance().sendMessagesForAllOpenFreigaben(userKey, getUser());
+                } else {
+                    BerechtigungspruefungHandler.getInstance().sendPendingMessage(schluessel, getUser());
                 }
             }
         } catch (final Exception ex) {
