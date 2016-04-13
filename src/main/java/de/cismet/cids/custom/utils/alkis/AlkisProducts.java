@@ -32,7 +32,6 @@ import java.util.Map;
 
 import de.cismet.cids.dynamics.CidsBean;
 
-import de.cismet.tools.BrowserLauncher;
 import de.cismet.tools.PropertyReader;
 import de.cismet.tools.StaticHtmlTools;
 
@@ -86,14 +85,11 @@ public final class AlkisProducts {
     /**
      * Creates a new AlkisProducts object.
      *
-     * @param       user     DOCUMENT ME!
-     * @param       pw       DOCUMENT ME!
-     * @param       service  DOCUMENT ME!
-     *
-     * @deprecated  use getInstance instead
+     * @param  user     DOCUMENT ME!
+     * @param  pw       DOCUMENT ME!
+     * @param  service  DOCUMENT ME!
      */
-    @Deprecated
-    public AlkisProducts(final String user, final String pw, final String service) {
+    private AlkisProducts(final String user, final String pw, final String service) {
         final PropertyReader productProperties = new PropertyReader(
                 "/de/cismet/cids/custom/wunda_blau/res/alkis/alkis_products.properties");
         final List<AlkisProductDescription> mapProducts = new ArrayList<AlkisProductDescription>();
@@ -286,37 +282,6 @@ public final class AlkisProducts {
     /**
      * DOCUMENT ME!
      *
-     * @param       objectID     DOCUMENT ME!
-     * @param       productCode  format DOCUMENT ME!
-     *
-     * @deprecated  Opens a browser window with a URL including user credentials.
-     */
-    public void productEinzelNachweis(final String objectID, final String productCode) {
-        final String url = AlkisConstants.COMMONS.EINZEL_NACHWEIS_SERVICE + "?" + AlkisConstants.MLESSNUMBER
-                    + "&product=" + productCode + "&id=" + objectID + "&" + IDENTIFICATIONANDMORE;
-        log.info("Open product URL : " + url);
-        BrowserLauncher.openURLorFile(url);
-    }
-
-    /**
-     * Returns an URL object pointing to the Einzelnachweis of the given product.
-     *
-     * @param       objectID     The landparcel code
-     * @param       productCode  format Which document to show
-     *
-     * @return      DOCUMENT ME!
-     *
-     * @throws      MalformedURLException  DOCUMENT ME!
-     *
-     * @deprecated  use method with fertigungsVermerk instead
-     */
-    public URL productEinzelNachweisUrl(final String objectID, final String productCode) throws MalformedURLException {
-        return productEinzelNachweisUrl(objectID, productCode, null);
-    }
-
-    /**
-     * DOCUMENT ME!
-     *
      * @param   objectID           DOCUMENT ME!
      * @param   productCode        DOCUMENT ME!
      * @param   fertigungsVermerk  DOCUMENT ME!
@@ -353,34 +318,6 @@ public final class AlkisProducts {
     }
 
     /**
-     * DOCUMENT ME!
-     *
-     * @param       objectID     DOCUMENT ME!
-     * @param       objectArt    DOCUMENT ME!
-     * @param       productCode  format DOCUMENT ME!
-     *
-     * @deprecated  Opens a browser window with a URL including user credentials.
-     */
-    public void productListenNachweis(final String objectID, final String objectArt, final String productCode) {
-        productListenNachweis(objectArt + ":" + objectID, productCode);
-    }
-
-    /**
-     * DOCUMENT ME!
-     *
-     * @param       punktliste   DOCUMENT ME!
-     * @param       productCode  format DOCUMENT ME!
-     *
-     * @deprecated  Opens a browser window with a URL including user credentials.
-     */
-    public void productListenNachweis(final String punktliste, final String productCode) {
-        final String url = AlkisConstants.COMMONS.LISTEN_NACHWEIS_SERVICE + "?" + AlkisConstants.MLESSNUMBER
-                    + "&product=" + productCode + "&ids=" + punktliste + "&" + IDENTIFICATIONANDMORE;
-        log.info("Open product URL : " + url);
-        BrowserLauncher.openURLorFile(url);
-    }
-
-    /**
      * Returns a URL to a document for given points.
      *
      * @param   punktliste   The points.
@@ -391,55 +328,6 @@ public final class AlkisProducts {
     public String productListenNachweisUrl(final String punktliste, final String productCode) {
         return AlkisConstants.COMMONS.LISTEN_NACHWEIS_SERVICE + "?" + AlkisConstants.MLESSNUMBER + "&product="
                     + productCode + "&ids=" + punktliste + "&" + IDENTIFICATIONANDMORE;
-    }
-
-    /**
-     * DOCUMENT ME!
-     *
-     * @param       objectIDs    DOCUMENT ME!
-     * @param       objectArts   DOCUMENT ME!
-     * @param       productCode  DOCUMENT ME!
-     *
-     * @deprecated  Opens a browser window with a URL including user credentials.
-     */
-    public void productListenNachweis(final String[] objectIDs, final String[] objectArts, final String productCode) {
-        final StringBuilder punktListe = new StringBuilder();
-        for (int i = 0; i < objectIDs.length; ++i) {
-            if (punktListe.length() > 0) {
-                punktListe.append(",");
-            }
-            punktListe.append(objectArts[i]).append(":").append(objectIDs[i]);
-        }
-        productListenNachweis(punktListe.toString(), productCode);
-    }
-
-    /**
-     * DOCUMENT ME!
-     *
-     * @param       parcelCode  DOCUMENT ME!
-     *
-     * @deprecated  Opens a browser window with a URL including user credentials.
-     */
-    public void productKarte(final String parcelCode) {
-        final String url = AlkisConstants.COMMONS.LIEGENSCHAFTSKARTE_SERVICE + "?" + AlkisConstants.MLESSNUMBER
-                    + "&landparcel=" + parcelCode + "&" + IDENTIFICATIONANDMORE;
-        log.info("Open product URL : " + url);
-        BrowserLauncher.openURLorFile(url);
-    }
-
-    /**
-     * Returns a URL object pointing to a map of the given landparcel.
-     *
-     * @param       parcelCode  The code of the landparcel.
-     *
-     * @return      DOCUMENT ME!
-     *
-     * @throws      MalformedURLException  DOCUMENT ME!
-     *
-     * @deprecated  use method with fertigungsVermerk instead
-     */
-    public URL productKarteUrl(final String parcelCode) throws MalformedURLException {
-        return productKarteUrl(parcelCode, null);
     }
 
     /**
@@ -506,83 +394,6 @@ public final class AlkisProducts {
         return new URL(AlkisConstants.COMMONS.LIEGENSCHAFTSKARTE_SERVICE + "?" + AlkisConstants.MLESSNUMBER
                         + "&landparcel=" + parcelCode + "&" + IDENTIFICATIONANDMORE
                         + ((fabricationNotices != null) ? ("&" + fabricationNotices) : ""));
-    }
-
-    /**
-     * DOCUMENT ME!
-     *
-     * @param       parcelCode         DOCUMENT ME!
-     * @param       produkt            DOCUMENT ME!
-     * @param       winkel             DOCUMENT ME!
-     * @param       centerX            DOCUMENT ME!
-     * @param       centerY            DOCUMENT ME!
-     * @param       zusText            DOCUMENT ME!
-     * @param       auftragsNr         DOCUMENT ME!
-     * @param       moreThanOneParcel  DOCUMENT ME!
-     *
-     * @deprecated  Opens a browser window with a URL including user credentials.
-     */
-    public void productKarte(final String parcelCode,
-            final AlkisProductDescription produkt,
-            final int winkel,
-            final int centerX,
-            final int centerY,
-            final String zusText,
-            final String auftragsNr,
-            final boolean moreThanOneParcel) {
-        String url = AlkisConstants.COMMONS.LIEGENSCHAFTSKARTE_SERVICE + "?" + AlkisConstants.MLESSNUMBER
-                    + "&landparcel=" + parcelCode + "&angle=" + winkel + "&product=" + produkt.getCode() + "&centerx="
-                    + centerX + "&centery=" + centerY;
-        if ((zusText != null) && (zusText.length() > 0)) {
-            url += "&text=" + zusText;
-        }
-        if ((auftragsNr != null) && (auftragsNr.length() > 0)) {
-            url += "&ordernumber=" + auftragsNr;
-        }
-        if (moreThanOneParcel) {
-            url += "&additionalLandparcel=true";
-        }
-        url += "&" + IDENTIFICATIONANDMORE;
-        log.info("Open product URL : " + url);
-        BrowserLauncher.openURLorFile(url);
-    }
-
-    /**
-     * DOCUMENT ME!
-     *
-     * @param       parcelCode         DOCUMENT ME!
-     * @param       produkt            DOCUMENT ME!
-     * @param       winkel             DOCUMENT ME!
-     * @param       centerX            DOCUMENT ME!
-     * @param       centerY            DOCUMENT ME!
-     * @param       zusText            DOCUMENT ME!
-     * @param       auftragsNr         DOCUMENT ME!
-     * @param       moreThanOneParcel  DOCUMENT ME!
-     *
-     * @return      DOCUMENT ME!
-     *
-     * @throws      MalformedURLException  DOCUMENT ME!
-     *
-     * @deprecated  use method with fertigungsVermerk instead
-     */
-    public URL productKarteUrl(final String parcelCode,
-            final AlkisProductDescription produkt,
-            final int winkel,
-            final int centerX,
-            final int centerY,
-            final String zusText,
-            final String auftragsNr,
-            final boolean moreThanOneParcel) throws MalformedURLException {
-        return productKarteUrl(
-                parcelCode,
-                produkt,
-                winkel,
-                centerX,
-                centerY,
-                zusText,
-                auftragsNr,
-                moreThanOneParcel,
-                null);
     }
 
     /**

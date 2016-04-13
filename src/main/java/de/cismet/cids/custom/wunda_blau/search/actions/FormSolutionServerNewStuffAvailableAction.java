@@ -133,9 +133,15 @@ public class FormSolutionServerNewStuffAvailableAction implements UserAwareServe
      * Creates a new FormSolutionServerNewStuffAvailableAction object.
      */
     public FormSolutionServerNewStuffAvailableAction() {
-        creds = new UsernamePasswordCredentials(FormSolutionsConstants.USER, FormSolutionsConstants.PASSWORD);
-
-//        getObjectMapper().configure(DeserializationFeature.FAIL_ON_UNKNOWN_PROPERTIES, false);
+        UsernamePasswordCredentials creds = null;
+        try {
+            creds = new UsernamePasswordCredentials(FormSolutionsConstants.USER, FormSolutionsConstants.PASSWORD);
+        } catch (final Exception ex) {
+            LOG.error(
+                "UsernamePasswordCredentials couldn't be created. FormSolutionServerNewStuffAvailableAction will not work at all !",
+                ex);
+        }
+        this.creds = creds;
     }
 
     //~ Methods ----------------------------------------------------------------
@@ -891,7 +897,7 @@ public class FormSolutionServerNewStuffAvailableAction implements UserAwareServe
         final Collection<String> transids = new ArrayList<String>(fsBeanMap.keySet());
         for (final String transid : transids) {
             final CidsBean bestellungBean = fsBeanMap.get(transid);
-            if ((bestellungBean != null) && (bestellungBean.getProperty("fehler") == null)) {
+            if ((bestellungBean != null)) {
                 try {
                     closeTransid(transid);
 
@@ -951,11 +957,11 @@ public class FormSolutionServerNewStuffAvailableAction implements UserAwareServe
             final CidsBean bestellungBean = fsBeanMap.get(transid);
             if ((bestellungBean != null) && (bestellungBean.getProperty("fehler") == null)) {
                 final URL productUrl = fsUrlMap.get(transid);
-                try {                    
+                try {
                     bestellungBean.setProperty("produkt_dateipfad", null);
                     bestellungBean.setProperty("produkt_dateiname_orig", null);
                     bestellungBean.setProperty("produkt_ts", null);
-                    
+
                     bestellungBean.setProperty("request_url", productUrl.toString());
 
                     final String fileName = bestellungBean.getProperty("transid") + ".pdf";
