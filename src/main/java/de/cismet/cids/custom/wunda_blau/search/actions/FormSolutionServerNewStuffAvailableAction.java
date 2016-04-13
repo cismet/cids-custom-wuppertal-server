@@ -48,7 +48,10 @@ import java.util.ArrayList;
 import java.util.Collection;
 import java.util.Date;
 import java.util.HashMap;
+import java.util.Iterator;
+import java.util.LinkedHashSet;
 import java.util.Map;
+import java.util.Set;
 
 import javax.xml.bind.DatatypeConverter;
 import javax.xml.bind.JAXBContext;
@@ -496,11 +499,30 @@ public class FormSolutionServerNewStuffAvailableAction implements UserAwareServe
      * @return  DOCUMENT ME!
      */
     private static String extractLandparcelcode(final FormSolutionsBestellung formSolutionsBestellung) {
-        final String flurstueckskennzeichen1 = trimedNotEmpty(formSolutionsBestellung.getFlurstueckskennzeichen1());
+        final Set<String> fskz = new LinkedHashSet<String>();
         final String flurstueckskennzeichen = trimedNotEmpty(formSolutionsBestellung.getFlurstueckskennzeichen());
-        final String landparcelcode = (flurstueckskennzeichen1 != null) ? flurstueckskennzeichen1
-                                                                        : flurstueckskennzeichen;
-        return landparcelcode;
+        if (flurstueckskennzeichen != null) {
+            fskz.add(flurstueckskennzeichen);
+        }
+        if ("Anschrift".equals(formSolutionsBestellung.getAuswahlUeber())) {
+            final String flurstueckskennzeichen1 = trimedNotEmpty(formSolutionsBestellung.getFlurstueckskennzeichen1());
+            if (flurstueckskennzeichen1 != null) {
+                for (final String tmp : flurstueckskennzeichen1.split(",")) {
+                    fskz.add(tmp);
+                }
+            }
+        }
+
+        if (fskz.isEmpty()) {
+            return null;
+        } else {
+            final Iterator<String> it = fskz.iterator();
+            final StringBuffer sb = new StringBuffer(it.next());
+            while (it.hasNext()) {
+                sb.append(",").append(it.next());
+            }
+            return sb.toString();
+        }
     }
 
     /**
@@ -515,11 +537,9 @@ public class FormSolutionServerNewStuffAvailableAction implements UserAwareServe
     private CidsBean createBestellungBean(final FormSolutionsBestellung formSolutionsBestellung) throws Exception {
         final MetaClass bestellungMc = getMetaClass("fs_bestellung");
         final MetaClass adresseMc = getMetaClass("fs_bestellung_adresse");
-        final MetaClass geomMc = getMetaClass("geom");
 
         final CidsBean bestellungBean = bestellungMc.getEmptyInstance().getBean();
         final CidsBean adresseRechnungBean = adresseMc.getEmptyInstance().getBean();
-        final CidsBean geomBean = geomMc.getEmptyInstance().getBean();
         final CidsBean adresseVersandBean;
 
         final String transid = formSolutionsBestellung.getTransId();
@@ -527,17 +547,6 @@ public class FormSolutionServerNewStuffAvailableAction implements UserAwareServe
             ? Integer.parseInt(formSolutionsBestellung.getMassstab().split(":")[1]) : null;
 
         final String landparcelcode = extractLandparcelcode(formSolutionsBestellung);
-
-        Geometry geom = null;
-        try {
-            final CidsBean flurstueck = getFlurstueck(landparcelcode);
-            if (flurstueck == null) {
-                throw new Exception("ALKIS Flurstück wurde nicht gefunden (" + landparcelcode + ")");
-            }
-            geom = (Geometry)flurstueck.getProperty("geometrie.geo_field");
-        } catch (final Exception ex) {
-            bestellungBean.setProperty("exception", getObjectMapper().writeValueAsString(ex));
-        }
 
         final CidsBean produktBean = getProduktBean(formSolutionsBestellung);
 
@@ -579,11 +588,6 @@ public class FormSolutionServerNewStuffAvailableAction implements UserAwareServe
         bestellungBean.setProperty("erledigt", false);
         bestellungBean.setProperty("eingang_ts", new Timestamp(new Date().getTime()));
         bestellungBean.setProperty("gebuehr", formSolutionsBestellung.getBetrag());
-
-        if (geom != null) {
-            geomBean.setProperty("geo_field", geom);
-            bestellungBean.setProperty("geometrie", geomBean);
-        }
 
         return bestellungBean;
     }
@@ -817,8 +821,30 @@ public class FormSolutionServerNewStuffAvailableAction implements UserAwareServe
                     bestellungBean.setProperty("exception", getObjectMapper().writeValueAsString(insertException));
                     bestellungBean.setProperty("fehler_ts", new Timestamp(new Date().getTime()));
                 }
-                if ((bestellungBean.getProperty("geometrie") == null)
-                            && (bestellungBean.getProperty("exception") != null)) {
+
+                try {
+                    final String[] landparcelcodes = ((String)bestellungBean.getProperty("landparcelcode")).split(",");
+
+                    final MetaClass geomMc = getMetaClass("geom");
+                    final CidsBean geomBean = geomMc.getEmptyInstance().getBean();
+                    Geometry geom = null;
+                    for (final String landparcelcode : landparcelcodes) {
+                        final CidsBean flurstueck = getFlurstueck(landparcelcode);
+                        if (flurstueck == null) {
+                            throw new Exception("ALKIS Flurstück wurde nicht gefunden (" + landparcelcode + ")");
+                        }
+                        final Geometry flurgeom = (Geometry)flurstueck.getProperty("geometrie.geo_field");
+                        if (geom == null) {
+                            geom = flurgeom;
+                        } else {
+                            geom = flurgeom.union(geom);
+                        }
+                    }
+                    if (geom != null) {
+                        geomBean.setProperty("geo_field", geom);
+                        bestellungBean.setProperty("geometrie", geomBean);
+                    }
+                } catch (final Exception ex) {
                     setErrorStatus(
                         transid,
                         STATUS_GETFLURSTUECK,
