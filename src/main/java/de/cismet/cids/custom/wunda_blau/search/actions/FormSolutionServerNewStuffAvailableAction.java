@@ -682,7 +682,7 @@ public class FormSolutionServerNewStuffAvailableAction implements UserAwareServe
         final Integer scale = (Integer)bestellungBean.getProperty("massstab");
 
         final AlkisProductDescription productDesc = getAlkisProductDescription(code, dinFormat, scale);
-        final String flurstueckKennzeichen = (String)bestellungBean.getProperty("landparcelcode");
+        final String flurstueckKennzeichen = ((String)bestellungBean.getProperty("landparcelcode")).split(",")[0];
 
         final String transid = (String)bestellungBean.getProperty("transid");
 
@@ -996,7 +996,7 @@ public class FormSolutionServerNewStuffAvailableAction implements UserAwareServe
 
                     final String fileNameOrig = (String)bestellungBean.getProperty("fk_produkt.fk_typ.key")
                                 + "."
-                                + ((String)bestellungBean.getProperty("landparcelcode")).replace(
+                                + ((String)bestellungBean.getProperty("landparcelcode")).split(",")[0].replace(
                                     "/",
                                     "--")
                                 + ".pdf";
