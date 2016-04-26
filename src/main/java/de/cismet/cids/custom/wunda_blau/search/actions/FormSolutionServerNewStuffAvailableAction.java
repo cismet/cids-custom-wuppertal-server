@@ -583,7 +583,7 @@ public class FormSolutionServerNewStuffAvailableAction implements UserAwareServe
         bestellungBean.setProperty(
             "email",
             "Kartenausdruck".equals(formSolutionsBestellung.getBezugsweg())
-                ? trimedNotEmpty(formSolutionsBestellung.getEMailadresse1())
+                ? trimedNotEmpty(formSolutionsBestellung.getEMailadresse()) // 1
                 : trimedNotEmpty(formSolutionsBestellung.getEMailadresse()));
         bestellungBean.setProperty("erledigt", false);
         bestellungBean.setProperty("eingang_ts", new Timestamp(new Date().getTime()));
@@ -774,7 +774,7 @@ public class FormSolutionServerNewStuffAvailableAction implements UserAwareServe
 
                 final boolean downloadOnly = !"Kartenausdruck".equals(formSolutionsBestellung.getBezugsweg());
                 final String email = downloadOnly ? trimedNotEmpty(formSolutionsBestellung.getEMailadresse())
-                                                  : trimedNotEmpty(formSolutionsBestellung.getEMailadresse1());
+                                                  : trimedNotEmpty(formSolutionsBestellung.getEMailadresse()); // 1
                 getMySqlHelper().updateEmail(
                     transid,
                     STATUS_PARSE,
