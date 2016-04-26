@@ -179,6 +179,6 @@ public class FormSolutionsBestellung {
     @XmlElement(name = "E-Mailadresse")
     private String eMailadresse;
 
-    @XmlElement(name = "E-Mailadresse.1")
-    private String eMailadresse1;
+//    @XmlElement(name = "E-Mailadresse.1")
+//    private String eMailadresse1;
 }
