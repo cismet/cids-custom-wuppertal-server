@@ -83,8 +83,20 @@ public class BerechtigungspruefungBescheinigungFlurstueckInfo {
      *
      * @return  DOCUMENT ME!
      */
+    public String getLage() {
+        if (lage == null) {
+            return null;
+        }
+        return lage.substring(8);
+    }
+
+    /**
+     * DOCUMENT ME!
+     *
+     * @return  DOCUMENT ME!
+     */
     public String getNummer() {
-        final String nummer = zaehler + ((nenner != null) ? ("/" + nenner) : "");
+        final String nummer = Integer.parseInt(zaehler) + ((nenner != null) ? ("/" + Integer.parseInt(nenner)) : "");
         return nummer;
     }
 
