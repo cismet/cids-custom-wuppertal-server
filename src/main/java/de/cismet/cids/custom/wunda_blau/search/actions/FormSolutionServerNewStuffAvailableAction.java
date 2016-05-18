@@ -687,7 +687,7 @@ public class FormSolutionServerNewStuffAvailableAction implements UserAwareServe
         final String transid = (String)bestellungBean.getProperty("transid");
 
         final Geometry geom = (Geometry)bestellungBean.getProperty("geometrie.geo_field");
-        final Point center = geom.getCentroid();
+        final Point center = geom.getEnvelope().getCentroid();
 
         final URL url = AlkisProducts.getInstance()
                     .productKarteUrl(
