@@ -43,6 +43,7 @@ public class FormSolutionsConstants {
     public static final String FTP_HOST;
     public static final String FTP_LOGIN;
     public static final String FTP_PASS;
+    public static final boolean TEST;
 
     static {
         final String user;
@@ -58,6 +59,7 @@ public class FormSolutionsConstants {
         final String ftpHost;
         final String ftpLogin;
         final String ftpPass;
+        final boolean test;
 
         try {
             final PropertyReader serviceProperties = new PropertyReader(PROPERTIES);
@@ -75,6 +77,8 @@ public class FormSolutionsConstants {
             ftpHost = serviceProperties.getProperty("FTP_HOST");
             ftpLogin = serviceProperties.getProperty("FTP_LOGIN");
             ftpPass = serviceProperties.getProperty("FTP_PASS");
+            test = (serviceProperties.getProperty("TEST") != null)
+                        && "true".equals(serviceProperties.getProperty("TEST").trim().toLowerCase());
         } catch (final Exception ex) {
             LOG.fatal("FormSolutionsConstants Error!", ex);
             throw new RuntimeException(ex);
@@ -93,5 +97,6 @@ public class FormSolutionsConstants {
         FTP_HOST = ftpHost;
         FTP_LOGIN = ftpLogin;
         FTP_PASS = ftpPass;
+        TEST = test;
     }
 }
