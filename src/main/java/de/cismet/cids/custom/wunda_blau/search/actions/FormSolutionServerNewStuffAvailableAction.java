@@ -588,6 +588,7 @@ public class FormSolutionServerNewStuffAvailableAction implements UserAwareServe
         bestellungBean.setProperty("erledigt", false);
         bestellungBean.setProperty("eingang_ts", new Timestamp(new Date().getTime()));
         bestellungBean.setProperty("gebuehr", formSolutionsBestellung.getBetrag());
+        bestellungBean.setProperty("test", FormSolutionsConstants.TEST);
 
         return bestellungBean;
     }
