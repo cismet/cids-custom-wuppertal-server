@@ -59,4 +59,90 @@
             <jalopy.skip>true</jalopy.skip>
         </properties>
     </action>
+    
+    
+     <action>
+        <actionName>CUSTOM-registry</actionName>
+        <displayName>cids-registry</displayName>
+        <goals>
+            <goal>process-classes</goal>
+            <goal>org.codehaus.mojo:exec-maven-plugin:1.1.1:exec</goal>
+        </goals>
+        <activatedProfiles>
+            <activatedProfile>cismet-dev-exec</activatedProfile>
+        </activatedProfiles>
+        <properties>
+            <jalopy.skip>true</jalopy.skip>
+            <exec.format.skip>true</exec.format.skip>
+            <exec.classpathScope>runtime</exec.classpathScope>
+            <exec.workingdir>${de.cismet.cids.server.workingDir.registry}</exec.workingdir>
+            <exec.args>-Xdebug -Xrunjdwp:transport=dt_socket,server=y,address=8996,suspend=n -Xmx1024m -classpath ${de.cismet.cids.classpath} Sirius.server.registry.Registry runtime.properties</exec.args>
+            <exec.executable>java</exec.executable>
+        </properties>
+    </action>
+    <action>
+        <actionName>CUSTOM-broker</actionName>
+        <displayName>cids-broker</displayName>
+
+        <goals>
+            <goal>process-classes</goal>
+            <goal>org.codehaus.mojo:exec-maven-plugin:1.1.1:exec</goal>
+        </goals>
+        <activatedProfiles>
+            <activatedProfile>cismet-dev-exec</activatedProfile>
+        </activatedProfiles>
+        <properties>
+            <jalopy.skip>true</jalopy.skip>
+            <exec.format.skip>true</exec.format.skip>
+            <exec.classpathScope>runtime</exec.classpathScope>
+            <exec.workingdir>${de.cismet.cids.server.workingDir.broker}</exec.workingdir>
+            <exec.args>-Xdebug -Xrunjdwp:transport=dt_socket,server=y,address=8997,suspend=n -Xmx1024m -classpath ${de.cismet.cids.classpath} Sirius.server.middleware.impls.proxy.StartProxy runtime.properties</exec.args>
+            <exec.executable>java</exec.executable>
+        </properties>
+    </action>
+    
+     <action>
+        <actionName>CUSTOM-broker-2</actionName>
+        <displayName>cids-broker-2</displayName>
+
+        <goals>
+            <goal>process-classes</goal>
+            <goal>org.codehaus.mojo:exec-maven-plugin:1.1.1:exec</goal>
+        </goals>
+        <activatedProfiles>
+            <activatedProfile>cismet-dev-exec</activatedProfile>
+        </activatedProfiles>
+        <properties>
+            <jalopy.skip>true</jalopy.skip>
+            <exec.format.skip>true</exec.format.skip>
+            <exec.classpathScope>runtime</exec.classpathScope>
+            <exec.workingdir>${de.cismet.cids.server.workingDir.broker2}</exec.workingdir>
+            <exec.args>-Xdebug -Xrunjdwp:transport=dt_socket,server=y,address=8998,suspend=n -Xmx1024m -classpath ${de.cismet.cids.classpath} Sirius.server.middleware.impls.proxy.StartProxy runtime.properties</exec.args>
+            <exec.executable>java</exec.executable>
+        </properties>
+    </action>
+    
+    
+    <action>
+        <actionName>CUSTOM-non-simple-domainserver</actionName>
+        <displayName>non-simple-wunda_live-domainserver</displayName>
+        <goals>
+            <goal>process-classes</goal>
+            <goal>org.codehaus.mojo:exec-maven-plugin:1.1.1:exec</goal>
+        </goals>
+        <activatedProfiles>
+            <activatedProfile>cismet-dev-exec</activatedProfile>
+        </activatedProfiles>
+        <properties>
+            <jalopy.skip>true</jalopy.skip>
+            <exec.format.skip>true</exec.format.skip>
+            <exec.classpathScope>runtime</exec.classpathScope>
+            <exec.workingdir>${de.cismet.cids.server.workingDir.wunda.leo.non-sinmple}</exec.workingdir>
+            <exec.args>-Xdebug -Xrunjdwp:transport=dt_socket,server=y,address=8999,suspend=n -Xmx1024m -classpath ${de.cismet.cids.classpath} Sirius.server.middleware.impls.domainserver.DomainServerImpl runtime.properties</exec.args>
+            <exec.executable>java</exec.executable>
+        </properties>
+    </action>
+    
+    
+    
 </actions>
