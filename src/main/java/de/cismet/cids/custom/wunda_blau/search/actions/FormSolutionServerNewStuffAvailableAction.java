@@ -27,9 +27,11 @@ import com.vividsolutions.jts.geom.Point;
 
 import org.apache.commons.httpclient.UsernamePasswordCredentials;
 import org.apache.commons.io.IOUtils;
+import org.apache.commons.lang.RandomStringUtils;
 
 import org.openide.util.Lookup;
 
+import java.io.BufferedInputStream;
 import java.io.BufferedReader;
 import java.io.InputStream;
 import java.io.InputStreamReader;
@@ -93,6 +95,10 @@ public class FormSolutionServerNewStuffAvailableAction implements UserAwareServe
     private static final transient org.apache.log4j.Logger LOG = org.apache.log4j.Logger.getLogger(
             FormSolutionServerNewStuffAvailableAction.class);
     public static final String TASK_NAME = "formSolutionServerNewStuffAvailable";
+    private static final String TEST_CISMET00_XML_FILE =
+        "/de/cismet/cids/custom/wunda_blau/res/formsolutions/TEST_CISMET00.xml";
+
+    private static final String TEST_CISMET00_PREFIX = "TEST_CISMET00-";
 
     private static final Map<String, MetaClass> METACLASS_CACHE = new HashMap();
     private static final ObjectMapper MAPPER = new ObjectMapper();
@@ -129,6 +135,8 @@ public class FormSolutionServerNewStuffAvailableAction implements UserAwareServe
 
     private User user;
     private MetaService metaService;
+    private final String testCismet00Xml;
+    private final boolean testCismet00Enabled;
 
     //~ Constructors -----------------------------------------------------------
 
@@ -136,6 +144,15 @@ public class FormSolutionServerNewStuffAvailableAction implements UserAwareServe
      * Creates a new FormSolutionServerNewStuffAvailableAction object.
      */
     public FormSolutionServerNewStuffAvailableAction() {
+        this(false);
+    }
+
+    /**
+     * Creates a new FormSolutionServerNewStuffAvailableAction object.
+     *
+     * @param  fromStartupHook  DOCUMENT ME!
+     */
+    public FormSolutionServerNewStuffAvailableAction(final boolean fromStartupHook) {
         UsernamePasswordCredentials creds = null;
         try {
             creds = new UsernamePasswordCredentials(FormSolutionsConstants.USER, FormSolutionsConstants.PASSWORD);
@@ -144,6 +161,26 @@ public class FormSolutionServerNewStuffAvailableAction implements UserAwareServe
                 "UsernamePasswordCredentials couldn't be created. FormSolutionServerNewStuffAvailableAction will not work at all !",
                 ex);
         }
+
+        boolean testCismet00Enabled = false;
+        try {
+            testCismet00Enabled = fromStartupHook && FormSolutionsConstants.TEST_CISMET00;
+        } catch (final Exception ex) {
+            LOG.error("could not read FormSolutionsConstants.TEST_CISMET00. TEST_CISMET00 stays disabled", ex);
+        }
+        this.testCismet00Enabled = testCismet00Enabled;
+
+        String testCismet00Xml = null;
+        if (testCismet00Enabled) {
+            try {
+                testCismet00Xml = IOUtils.toString(new BufferedInputStream(
+                            getClass().getResourceAsStream(TEST_CISMET00_XML_FILE)));
+            } catch (final Exception ex) {
+                LOG.error("could not load " + TEST_CISMET00_XML_FILE, ex);
+            }
+        }
+        this.testCismet00Xml = testCismet00Xml;
+
         this.creds = creds;
     }
 
@@ -223,7 +260,17 @@ public class FormSolutionServerNewStuffAvailableAction implements UserAwareServe
                 new TypeReference<HashMap<String, Object>>() {
                 });
 
-        return (Collection<String>)map.get("list");
+        final Collection<String> transIds = (Collection<String>)map.get("list");
+
+        try {
+            if (testCismet00Enabled) {
+                transIds.add(TEST_CISMET00_PREFIX + RandomStringUtils.randomAlphanumeric(8));
+            }
+        } catch (final Exception ex) {
+            LOG.error("error while generating TEST_CISMET00 transid", ex);
+        }
+
+        return transIds;
     }
 
     /**
@@ -291,19 +338,23 @@ public class FormSolutionServerNewStuffAvailableAction implements UserAwareServe
      * @throws  Exception  DOCUMENT ME!
      */
     private String getAuftrag(final String auftrag) throws Exception {
-        final InputStream inputStream = getHttpAccessHandler().doRequest(
-                new URL(String.format(FormSolutionsConstants.URL_AUFTRAG_FS, auftrag)),
-                new StringReader(""),
-                AccessHandler.ACCESS_METHODS.GET_REQUEST,
-                null,
-                creds);
-        final Map<String, Object> map = getObjectMapper().readValue(
-                inputStream,
-                new TypeReference<HashMap<String, Object>>() {
-                });
-        inputStream.close();
+        if ((auftrag != null) && auftrag.startsWith(TEST_CISMET00_PREFIX)) {
+            return (testCismet00Xml != null) ? testCismet00Xml.replace("${TRANSID}", auftrag) : null;
+        } else {
+            final InputStream inputStream = getHttpAccessHandler().doRequest(
+                    new URL(String.format(FormSolutionsConstants.URL_AUFTRAG_FS, auftrag)),
+                    new StringReader(""),
+                    AccessHandler.ACCESS_METHODS.GET_REQUEST,
+                    null,
+                    creds);
+            final Map<String, Object> map = getObjectMapper().readValue(
+                    inputStream,
+                    new TypeReference<HashMap<String, Object>>() {
+                    });
+            inputStream.close();
 
-        return new String(DatatypeConverter.parseBase64Binary((String)map.get("xml")));
+            return new String(DatatypeConverter.parseBase64Binary((String)map.get("xml")));
+        }
     }
 
     /**
@@ -314,8 +365,8 @@ public class FormSolutionServerNewStuffAvailableAction implements UserAwareServe
      * @throws  Exception  DOCUMENT ME!
      */
     private void closeTransid(final String auftrag) throws Exception {
-        final boolean noClose = DomainServerImpl.getServerInstance()
-                    .hasConfigAttr(getUser(), "custom.formsolutions.noclose");
+        final boolean noClose = (auftrag == null) || auftrag.startsWith(TEST_CISMET00_PREFIX)
+                    || DomainServerImpl.getServerInstance().hasConfigAttr(getUser(), "custom.formsolutions.noclose");
         if (noClose) {
             return;
         }
@@ -588,7 +639,10 @@ public class FormSolutionServerNewStuffAvailableAction implements UserAwareServe
         bestellungBean.setProperty("erledigt", false);
         bestellungBean.setProperty("eingang_ts", new Timestamp(new Date().getTime()));
         bestellungBean.setProperty("gebuehr", formSolutionsBestellung.getBetrag());
-        bestellungBean.setProperty("test", FormSolutionsConstants.TEST);
+        bestellungBean.setProperty(
+            "test",
+            FormSolutionsConstants.TEST
+                    || ((transid != null) && transid.startsWith(TEST_CISMET00_PREFIX)));
 
         return bestellungBean;
     }
