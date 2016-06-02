@@ -29,6 +29,11 @@ import de.cismet.cids.custom.wunda_blau.search.actions.FormSolutionServerNewStuf
 @org.openide.util.lookup.ServiceProvider(service = DomainServerStartupHook.class)
 public class FormSolutionBestellungStartupHook implements DomainServerStartupHook {
 
+    //~ Static fields/initializers ---------------------------------------------
+
+    private static final transient org.apache.log4j.Logger LOG = org.apache.log4j.Logger.getLogger(
+            FormSolutionBestellungStartupHook.class);
+
     //~ Methods ----------------------------------------------------------------
 
     @Override
@@ -37,25 +42,32 @@ public class FormSolutionBestellungStartupHook implements DomainServerStartupHoo
 
                 @Override
                 public void run() {
-                    DomainServerImpl metaService = null;
-                    while (metaService == null) {
-                        metaService = DomainServerImpl.getServerInstance();
-                        try {
-                            Thread.sleep(1000);
-                        } catch (InterruptedException ex) {
+                    try {
+                        DomainServerImpl metaService = null;
+                        while (metaService == null) {
+                            metaService = DomainServerImpl.getServerInstance();
+                            try {
+                                Thread.sleep(1000);
+                            } catch (InterruptedException ex) {
+                            }
                         }
-                    }
 
-                    final FormSolutionServerNewStuffAvailableAction action =
-                        new FormSolutionServerNewStuffAvailableAction();
-                    action.setMetaService(DomainServerImpl.getServerInstance());
-                    action.setUser(
-                        new User(
-                            FormSolutionsConstants.CIDS_USERID,
-                            "formsulutions",
-                            getDomain(),
-                            new UserGroup(FormSolutionsConstants.CIDS_GROUPID, "_FS_Produkt_Bestellung", getDomain())));
-                    action.execute(null);
+                        final FormSolutionServerNewStuffAvailableAction action =
+                            new FormSolutionServerNewStuffAvailableAction(true);
+                        action.setMetaService(DomainServerImpl.getServerInstance());
+                        action.setUser(
+                            new User(
+                                FormSolutionsConstants.CIDS_USERID,
+                                "formsulutions",
+                                getDomain(),
+                                new UserGroup(
+                                    FormSolutionsConstants.CIDS_GROUPID,
+                                    "_FS_Produkt_Bestellung",
+                                    getDomain())));
+                        action.execute(null);
+                    } catch (final Exception ex) {
+                        LOG.error("error while executing FormSolutionBestellungStartupHook", ex);
+                    }
                 }
             }).start();
     }
