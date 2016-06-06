@@ -70,11 +70,13 @@ public class CidsBillingSearchStatement extends AbstractCidsServerSearch {
     private Date abrechnungsdatumFrom;
     private Date abrechnungsdatumTill;
     private StringBuilder query;
-    private SimpleDateFormat postgresDateFormat = new SimpleDateFormat("yyyy-MM-dd");
-    private User user;
+    private final SimpleDateFormat postgresDateFormat = new SimpleDateFormat("yyyy-MM-dd");
+    private final User user;
     private ArrayList<MetaObject> kundeMetaObjects = new ArrayList<MetaObject>();
     private String kundenname;
-    private boolean showOnlyStornierteBillings = false;
+
+    private Boolean showStornierteBillings = false;
+
     /**
      * <ul>
      *   <li>True: show only Abgerechnete Billings</li>
@@ -239,7 +241,7 @@ public class CidsBillingSearchStatement extends AbstractCidsServerSearch {
                 query.append(customerListString.toString());
             }
         } else {
-            query.append(" kunde.name ilike '%" + kundenname + "%' ");
+            query.append(" kunde.name ilike '%").append(kundenname).append("%' ");
         }
     }
 
@@ -249,7 +251,7 @@ public class CidsBillingSearchStatement extends AbstractCidsServerSearch {
     private void appendUserIds() {
         if ((userID != null) && !userID.equals("")) {
             // filter only for one userID
-            query.append("and angelegt_durch  = " + userID + " ");
+            query.append("and angelegt_durch  = ").append(userID).append(" ");
         }
     }
 
@@ -258,7 +260,7 @@ public class CidsBillingSearchStatement extends AbstractCidsServerSearch {
      */
     private void appendGeschaeftsbuchnummer() {
         if ((geschaeftsbuchnummer != null) && !geschaeftsbuchnummer.equals("")) {
-            query.append("and geschaeftsbuchnummer ilike '%" + geschaeftsbuchnummer + "%' ");
+            query.append("and geschaeftsbuchnummer ilike '%").append(geschaeftsbuchnummer).append("%' ");
         }
     }
 
@@ -267,7 +269,7 @@ public class CidsBillingSearchStatement extends AbstractCidsServerSearch {
      */
     private void appendProjekt() {
         if ((projekt != null) && !projekt.equals("")) {
-            query.append("and projektbezeichnung ilike '%" + projekt + "%' ");
+            query.append("and projektbezeichnung ilike '%").append(projekt).append("%' ");
         }
     }
 
@@ -285,7 +287,7 @@ public class CidsBillingSearchStatement extends AbstractCidsServerSearch {
             // remove last comma
             verwendungszweckListString.deleteCharAt(verwendungszweckListString.length() - 1);
             verwendungszweckListString.append(")");
-            query.append("and verwendungskey in " + verwendungszweckListString.toString() + " ");
+            query.append("and verwendungskey in ").append(verwendungszweckListString.toString()).append(" ");
         }
     }
 
@@ -348,7 +350,7 @@ public class CidsBillingSearchStatement extends AbstractCidsServerSearch {
      */
     private void appendAbrechnungsturnus() {
         if ((abrechnungsturnusID != null) && !abrechnungsturnusID.equals("")) {
-            query.append(" and kunde.abrechnungsturnus = " + abrechnungsturnusID + " ");
+            query.append(" and kunde.abrechnungsturnus = ").append(abrechnungsturnusID).append(" ");
         }
     }
 
@@ -356,9 +358,9 @@ public class CidsBillingSearchStatement extends AbstractCidsServerSearch {
      * DOCUMENT ME!
      */
     private void appendStornoAndAbgerechnet() {
-        if (showOnlyStornierteBillings) {
+        if (Boolean.TRUE.equals(showStornierteBillings)) {
             query.append(" and b.storniert is true ");
-        } else {                                                     // hide stornierte billings
+        } else if (Boolean.FALSE.equals(showStornierteBillings)) {
             query.append(" and b.storniert is not true ");
         }
         if (Boolean.TRUE.equals(showAbgerechneteBillings)) {
@@ -536,17 +538,17 @@ public class CidsBillingSearchStatement extends AbstractCidsServerSearch {
      *
      * @return  DOCUMENT ME!
      */
-    public boolean isShowOnlyStornierteBillings() {
-        return showOnlyStornierteBillings;
+    public Boolean isShowStornierteBillings() {
+        return showStornierteBillings;
     }
 
     /**
      * DOCUMENT ME!
      *
-     * @param  showOnlyStornierteBillings  DOCUMENT ME!
+     * @param  showStornierteBillings  DOCUMENT ME!
      */
-    public void setShowOnlyStornierteBillings(final boolean showOnlyStornierteBillings) {
-        this.showOnlyStornierteBillings = showOnlyStornierteBillings;
+    public void setShowStornierteBillings(final Boolean showStornierteBillings) {
+        this.showStornierteBillings = showStornierteBillings;
     }
 
     /**
@@ -558,7 +560,7 @@ public class CidsBillingSearchStatement extends AbstractCidsServerSearch {
      *
      * @return  DOCUMENT ME!
      */
-    public boolean isShowAbgerechneteBillings() {
+    public Boolean isShowAbgerechneteBillings() {
         return showAbgerechneteBillings;
     }
 
