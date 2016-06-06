@@ -541,7 +541,7 @@ public class CidsBillingSearchStatement extends AbstractCidsServerSearch {
     @Deprecated
     public boolean isShowOnlyStornierteBillings() {
         return Boolean.TRUE.equals(isShowStornierteBillings());
-    }    
+    }
     /**
      * DOCUMENT ME!
      *
@@ -558,7 +558,7 @@ public class CidsBillingSearchStatement extends AbstractCidsServerSearch {
      */
     public void setShowOnlyStornierteBillings(final boolean showOnlyStornierteBillings) {
         setShowStornierteBillings(showOnlyStornierteBillings);
-    }    
+    }
     /**
      * DOCUMENT ME!
      *
