@@ -27,9 +27,11 @@ import com.vividsolutions.jts.geom.Point;
 
 import org.apache.commons.httpclient.UsernamePasswordCredentials;
 import org.apache.commons.io.IOUtils;
+import org.apache.commons.lang.RandomStringUtils;
 
 import org.openide.util.Lookup;
 
+import java.io.BufferedInputStream;
 import java.io.BufferedReader;
 import java.io.InputStream;
 import java.io.InputStreamReader;
@@ -48,7 +50,10 @@ import java.util.ArrayList;
 import java.util.Collection;
 import java.util.Date;
 import java.util.HashMap;
+import java.util.Iterator;
+import java.util.LinkedHashSet;
 import java.util.Map;
+import java.util.Set;
 
 import javax.xml.bind.DatatypeConverter;
 import javax.xml.bind.JAXBContext;
@@ -90,6 +95,10 @@ public class FormSolutionServerNewStuffAvailableAction implements UserAwareServe
     private static final transient org.apache.log4j.Logger LOG = org.apache.log4j.Logger.getLogger(
             FormSolutionServerNewStuffAvailableAction.class);
     public static final String TASK_NAME = "formSolutionServerNewStuffAvailable";
+    private static final String TEST_CISMET00_XML_FILE =
+        "/de/cismet/cids/custom/wunda_blau/res/formsolutions/TEST_CISMET00.xml";
+
+    private static final String TEST_CISMET00_PREFIX = "TEST_CISMET00-";
 
     private static final Map<String, MetaClass> METACLASS_CACHE = new HashMap();
     private static final ObjectMapper MAPPER = new ObjectMapper();
@@ -126,6 +135,8 @@ public class FormSolutionServerNewStuffAvailableAction implements UserAwareServe
 
     private User user;
     private MetaService metaService;
+    private final String testCismet00Xml;
+    private final boolean testCismet00Enabled;
 
     //~ Constructors -----------------------------------------------------------
 
@@ -133,6 +144,15 @@ public class FormSolutionServerNewStuffAvailableAction implements UserAwareServe
      * Creates a new FormSolutionServerNewStuffAvailableAction object.
      */
     public FormSolutionServerNewStuffAvailableAction() {
+        this(false);
+    }
+
+    /**
+     * Creates a new FormSolutionServerNewStuffAvailableAction object.
+     *
+     * @param  fromStartupHook  DOCUMENT ME!
+     */
+    public FormSolutionServerNewStuffAvailableAction(final boolean fromStartupHook) {
         UsernamePasswordCredentials creds = null;
         try {
             creds = new UsernamePasswordCredentials(FormSolutionsConstants.USER, FormSolutionsConstants.PASSWORD);
@@ -141,6 +161,26 @@ public class FormSolutionServerNewStuffAvailableAction implements UserAwareServe
                 "UsernamePasswordCredentials couldn't be created. FormSolutionServerNewStuffAvailableAction will not work at all !",
                 ex);
         }
+
+        boolean testCismet00Enabled = false;
+        try {
+            testCismet00Enabled = fromStartupHook && FormSolutionsConstants.TEST_CISMET00;
+        } catch (final Exception ex) {
+            LOG.error("could not read FormSolutionsConstants.TEST_CISMET00. TEST_CISMET00 stays disabled", ex);
+        }
+        this.testCismet00Enabled = testCismet00Enabled;
+
+        String testCismet00Xml = null;
+        if (testCismet00Enabled) {
+            try {
+                testCismet00Xml = IOUtils.toString(new BufferedInputStream(
+                            getClass().getResourceAsStream(TEST_CISMET00_XML_FILE)));
+            } catch (final Exception ex) {
+                LOG.error("could not load " + TEST_CISMET00_XML_FILE, ex);
+            }
+        }
+        this.testCismet00Xml = testCismet00Xml;
+
         this.creds = creds;
     }
 
@@ -220,7 +260,17 @@ public class FormSolutionServerNewStuffAvailableAction implements UserAwareServe
                 new TypeReference<HashMap<String, Object>>() {
                 });
 
-        return (Collection<String>)map.get("list");
+        final Collection<String> transIds = (Collection<String>)map.get("list");
+
+        try {
+            if (testCismet00Enabled) {
+                transIds.add(TEST_CISMET00_PREFIX + RandomStringUtils.randomAlphanumeric(8));
+            }
+        } catch (final Exception ex) {
+            LOG.error("error while generating TEST_CISMET00 transid", ex);
+        }
+
+        return transIds;
     }
 
     /**
@@ -288,19 +338,23 @@ public class FormSolutionServerNewStuffAvailableAction implements UserAwareServe
      * @throws  Exception  DOCUMENT ME!
      */
     private String getAuftrag(final String auftrag) throws Exception {
-        final InputStream inputStream = getHttpAccessHandler().doRequest(
-                new URL(String.format(FormSolutionsConstants.URL_AUFTRAG_FS, auftrag)),
-                new StringReader(""),
-                AccessHandler.ACCESS_METHODS.GET_REQUEST,
-                null,
-                creds);
-        final Map<String, Object> map = getObjectMapper().readValue(
-                inputStream,
-                new TypeReference<HashMap<String, Object>>() {
-                });
-        inputStream.close();
+        if ((auftrag != null) && auftrag.startsWith(TEST_CISMET00_PREFIX)) {
+            return (testCismet00Xml != null) ? testCismet00Xml.replace("${TRANSID}", auftrag) : null;
+        } else {
+            final InputStream inputStream = getHttpAccessHandler().doRequest(
+                    new URL(String.format(FormSolutionsConstants.URL_AUFTRAG_FS, auftrag)),
+                    new StringReader(""),
+                    AccessHandler.ACCESS_METHODS.GET_REQUEST,
+                    null,
+                    creds);
+            final Map<String, Object> map = getObjectMapper().readValue(
+                    inputStream,
+                    new TypeReference<HashMap<String, Object>>() {
+                    });
+            inputStream.close();
 
-        return new String(DatatypeConverter.parseBase64Binary((String)map.get("xml")));
+            return new String(DatatypeConverter.parseBase64Binary((String)map.get("xml")));
+        }
     }
 
     /**
@@ -311,8 +365,8 @@ public class FormSolutionServerNewStuffAvailableAction implements UserAwareServe
      * @throws  Exception  DOCUMENT ME!
      */
     private void closeTransid(final String auftrag) throws Exception {
-        final boolean noClose = DomainServerImpl.getServerInstance()
-                    .hasConfigAttr(getUser(), "custom.formsolutions.noclose");
+        final boolean noClose = (auftrag == null) || auftrag.startsWith(TEST_CISMET00_PREFIX)
+                    || DomainServerImpl.getServerInstance().hasConfigAttr(getUser(), "custom.formsolutions.noclose");
         if (noClose) {
             return;
         }
@@ -496,11 +550,30 @@ public class FormSolutionServerNewStuffAvailableAction implements UserAwareServe
      * @return  DOCUMENT ME!
      */
     private static String extractLandparcelcode(final FormSolutionsBestellung formSolutionsBestellung) {
-        final String flurstueckskennzeichen1 = trimedNotEmpty(formSolutionsBestellung.getFlurstueckskennzeichen1());
+        final Set<String> fskz = new LinkedHashSet<String>();
         final String flurstueckskennzeichen = trimedNotEmpty(formSolutionsBestellung.getFlurstueckskennzeichen());
-        final String landparcelcode = (flurstueckskennzeichen1 != null) ? flurstueckskennzeichen1
-                                                                        : flurstueckskennzeichen;
-        return landparcelcode;
+        if (flurstueckskennzeichen != null) {
+            fskz.add(flurstueckskennzeichen);
+        }
+        if ("Anschrift".equals(formSolutionsBestellung.getAuswahlUeber())) {
+            final String flurstueckskennzeichen1 = trimedNotEmpty(formSolutionsBestellung.getFlurstueckskennzeichen1());
+            if (flurstueckskennzeichen1 != null) {
+                for (final String tmp : flurstueckskennzeichen1.split(",")) {
+                    fskz.add(tmp);
+                }
+            }
+        }
+
+        if (fskz.isEmpty()) {
+            return null;
+        } else {
+            final Iterator<String> it = fskz.iterator();
+            final StringBuffer sb = new StringBuffer(it.next());
+            while (it.hasNext()) {
+                sb.append(",").append(it.next());
+            }
+            return sb.toString();
+        }
     }
 
     /**
@@ -515,11 +588,9 @@ public class FormSolutionServerNewStuffAvailableAction implements UserAwareServe
     private CidsBean createBestellungBean(final FormSolutionsBestellung formSolutionsBestellung) throws Exception {
         final MetaClass bestellungMc = getMetaClass("fs_bestellung");
         final MetaClass adresseMc = getMetaClass("fs_bestellung_adresse");
-        final MetaClass geomMc = getMetaClass("geom");
 
         final CidsBean bestellungBean = bestellungMc.getEmptyInstance().getBean();
         final CidsBean adresseRechnungBean = adresseMc.getEmptyInstance().getBean();
-        final CidsBean geomBean = geomMc.getEmptyInstance().getBean();
         final CidsBean adresseVersandBean;
 
         final String transid = formSolutionsBestellung.getTransId();
@@ -527,17 +598,6 @@ public class FormSolutionServerNewStuffAvailableAction implements UserAwareServe
             ? Integer.parseInt(formSolutionsBestellung.getMassstab().split(":")[1]) : null;
 
         final String landparcelcode = extractLandparcelcode(formSolutionsBestellung);
-
-        Geometry geom = null;
-        try {
-            final CidsBean flurstueck = getFlurstueck(landparcelcode);
-            if (flurstueck == null) {
-                throw new Exception("ALKIS Flurstück wurde nicht gefunden (" + landparcelcode + ")");
-            }
-            geom = (Geometry)flurstueck.getProperty("geometrie.geo_field");
-        } catch (final Exception ex) {
-            bestellungBean.setProperty("exception", getObjectMapper().writeValueAsString(ex));
-        }
 
         final CidsBean produktBean = getProduktBean(formSolutionsBestellung);
 
@@ -574,16 +634,15 @@ public class FormSolutionServerNewStuffAvailableAction implements UserAwareServe
         bestellungBean.setProperty(
             "email",
             "Kartenausdruck".equals(formSolutionsBestellung.getBezugsweg())
-                ? trimedNotEmpty(formSolutionsBestellung.getEMailadresse1())
+                ? trimedNotEmpty(formSolutionsBestellung.getEMailadresse()) // 1
                 : trimedNotEmpty(formSolutionsBestellung.getEMailadresse()));
         bestellungBean.setProperty("erledigt", false);
         bestellungBean.setProperty("eingang_ts", new Timestamp(new Date().getTime()));
         bestellungBean.setProperty("gebuehr", formSolutionsBestellung.getBetrag());
-
-        if (geom != null) {
-            geomBean.setProperty("geo_field", geom);
-            bestellungBean.setProperty("geometrie", geomBean);
-        }
+        bestellungBean.setProperty(
+            "test",
+            FormSolutionsConstants.TEST
+                    || ((transid != null) && transid.startsWith(TEST_CISMET00_PREFIX)));
 
         return bestellungBean;
     }
@@ -678,12 +737,12 @@ public class FormSolutionServerNewStuffAvailableAction implements UserAwareServe
         final Integer scale = (Integer)bestellungBean.getProperty("massstab");
 
         final AlkisProductDescription productDesc = getAlkisProductDescription(code, dinFormat, scale);
-        final String flurstueckKennzeichen = (String)bestellungBean.getProperty("landparcelcode");
+        final String flurstueckKennzeichen = ((String)bestellungBean.getProperty("landparcelcode")).split(",")[0];
 
         final String transid = (String)bestellungBean.getProperty("transid");
 
         final Geometry geom = (Geometry)bestellungBean.getProperty("geometrie.geo_field");
-        final Point center = geom.getCentroid();
+        final Point center = geom.getEnvelope().getCentroid();
 
         final URL url = AlkisProducts.getInstance()
                     .productKarteUrl(
@@ -770,7 +829,7 @@ public class FormSolutionServerNewStuffAvailableAction implements UserAwareServe
 
                 final boolean downloadOnly = !"Kartenausdruck".equals(formSolutionsBestellung.getBezugsweg());
                 final String email = downloadOnly ? trimedNotEmpty(formSolutionsBestellung.getEMailadresse())
-                                                  : trimedNotEmpty(formSolutionsBestellung.getEMailadresse1());
+                                                  : trimedNotEmpty(formSolutionsBestellung.getEMailadresse()); // 1
                 getMySqlHelper().updateEmail(
                     transid,
                     STATUS_PARSE,
@@ -817,8 +876,30 @@ public class FormSolutionServerNewStuffAvailableAction implements UserAwareServe
                     bestellungBean.setProperty("exception", getObjectMapper().writeValueAsString(insertException));
                     bestellungBean.setProperty("fehler_ts", new Timestamp(new Date().getTime()));
                 }
-                if ((bestellungBean.getProperty("geometrie") == null)
-                            && (bestellungBean.getProperty("exception") != null)) {
+
+                try {
+                    final String[] landparcelcodes = ((String)bestellungBean.getProperty("landparcelcode")).split(",");
+
+                    final MetaClass geomMc = getMetaClass("geom");
+                    final CidsBean geomBean = geomMc.getEmptyInstance().getBean();
+                    Geometry geom = null;
+                    for (final String landparcelcode : landparcelcodes) {
+                        final CidsBean flurstueck = getFlurstueck(landparcelcode);
+                        if (flurstueck == null) {
+                            throw new Exception("ALKIS Flurstück wurde nicht gefunden (" + landparcelcode + ")");
+                        }
+                        final Geometry flurgeom = (Geometry)flurstueck.getProperty("geometrie.geo_field");
+                        if (geom == null) {
+                            geom = flurgeom;
+                        } else {
+                            geom = flurgeom.union(geom);
+                        }
+                    }
+                    if (geom != null) {
+                        geomBean.setProperty("geo_field", geom);
+                        bestellungBean.setProperty("geometrie", geomBean);
+                    }
+                } catch (final Exception ex) {
                     setErrorStatus(
                         transid,
                         STATUS_GETFLURSTUECK,
@@ -970,7 +1051,7 @@ public class FormSolutionServerNewStuffAvailableAction implements UserAwareServe
 
                     final String fileNameOrig = (String)bestellungBean.getProperty("fk_produkt.fk_typ.key")
                                 + "."
-                                + ((String)bestellungBean.getProperty("landparcelcode")).replace(
+                                + ((String)bestellungBean.getProperty("landparcelcode")).split(",")[0].replace(
                                     "/",
                                     "--")
                                 + ".pdf";
