@@ -15,7 +15,9 @@ package de.cismet.cids.custom.wunda_blau.startuphooks;
 import Sirius.server.middleware.impls.domainserver.DomainServerImpl;
 import Sirius.server.middleware.interfaces.domainserver.DomainServerStartupHook;
 import Sirius.server.newuser.User;
-import Sirius.server.newuser.UserGroup;
+import Sirius.server.newuser.UserServer;
+
+import java.rmi.Naming;
 
 import de.cismet.cids.custom.utils.formsolutions.FormSolutionsConstants;
 import de.cismet.cids.custom.wunda_blau.search.actions.FormSolutionServerNewStuffAvailableAction;
@@ -55,15 +57,14 @@ public class FormSolutionBestellungStartupHook implements DomainServerStartupHoo
                         final FormSolutionServerNewStuffAvailableAction action =
                             new FormSolutionServerNewStuffAvailableAction(true);
                         action.setMetaService(DomainServerImpl.getServerInstance());
-                        action.setUser(
-                            new User(
-                                FormSolutionsConstants.CIDS_USERID,
-                                "formsulutions",
-                                getDomain(),
-                                new UserGroup(
-                                    FormSolutionsConstants.CIDS_GROUPID,
-                                    "_FS_Produkt_Bestellung",
-                                    getDomain())));
+                        final Object userServer = Naming.lookup("rmi://localhost/userServer");
+                        final User user = ((UserServer)userServer).getUser(
+                                null,
+                                null,
+                                "WUNDA_BLAU",
+                                FormSolutionsConstants.CIDS_LOGIN,
+                                FormSolutionsConstants.CIDS_PASSWORD);
+                        action.setUser(user);
                         action.execute(null);
                     } catch (final Exception ex) {
                         LOG.error("error while executing FormSolutionBestellungStartupHook", ex);
