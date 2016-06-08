@@ -64,7 +64,6 @@ import javax.xml.bind.ValidationEventHandler;
 
 import de.cismet.cids.custom.utils.alkis.AlkisProductDescription;
 import de.cismet.cids.custom.utils.alkis.AlkisProducts;
-import de.cismet.cids.custom.utils.formsolutions.FormSolutionFtpClient;
 import de.cismet.cids.custom.utils.formsolutions.FormSolutionsBestellung;
 import de.cismet.cids.custom.utils.formsolutions.FormSolutionsConstants;
 import de.cismet.cids.custom.utils.formsolutions.FormSolutionsMySqlHelper;
@@ -777,7 +776,8 @@ public class FormSolutionServerNewStuffAvailableAction implements UserAwareServe
                     null,
                     creds);
 
-            FormSolutionFtpClient.getInstance().upload(in, FormSolutionsConstants.PRODUKT_BASEPATH + destinationPath);
+//TODO wieder rein !
+//            FormSolutionFtpClient.getInstance().upload(in, FormSolutionsConstants.PRODUKT_BASEPATH + destinationPath);
         } finally {
             if (in != null) {
                 in.close();
@@ -1089,10 +1089,118 @@ public class FormSolutionServerNewStuffAvailableAction implements UserAwareServe
                         bestellungBean.setProperty("erledigt", true);
                     }
                     getMetaService().updateMetaObject(user, bestellungBean.getMetaObject());
+                    doBilling(bestellungBean);
                 } catch (final Exception ex) {
                     LOG.error("Fehler beim Persistieren der Bestellung", ex);
                 }
             }
+        }
+    }
+
+    /**
+     * DOCUMENT ME!
+     *
+     * @param   loginName  DOCUMENT ME!
+     *
+     * @return  DOCUMENT ME!
+     *
+     * @throws  Exception  DOCUMENT ME!
+     */
+    public CidsBean getExternalUser(final String loginName) throws Exception {
+        final MetaClass mc = CidsBean.getMetaClassFromTableName("WUNDA_BLAU", "billing_kunden_logins");
+        if (mc == null) {
+            if (LOG.isDebugEnabled()) {
+                LOG.debug(
+                    "The metaclass for billing_kunden_logins is null. The current user has probably not the needed rights.");
+            }
+            return null;
+        }
+        String query = "SELECT " + mc.getID() + ", " + mc.getPrimaryKey() + " ";
+        query += "FROM " + mc.getTableName();
+        query += " WHERE name = '" + loginName + "'";
+
+        CidsBean externalUser = null;
+        final MetaObject[] metaObjects = getMetaService().getMetaObject(user, query);
+        if ((metaObjects != null) && (metaObjects.length > 0)) {
+            externalUser = metaObjects[0].getBean();
+        }
+        return externalUser;
+    }
+
+    /**
+     * DOCUMENT ME!
+     *
+     * @param  bestellungBean  DOCUMENT ME!
+     */
+    private void doBilling(final CidsBean bestellungBean) {
+        try {
+            final CidsBean cb = CidsBean.createNewCidsBeanFromTableName("WUNDA_BLAU", "Billing_Billing");
+
+            final String transid = (String)bestellungBean.getProperty("transid");
+            final boolean isPostweg = Boolean.TRUE.equals(bestellungBean.getProperty("postweg"));
+            final String din = (String)bestellungBean.getProperty("fk_produkt.fk_format.din");
+            final Timestamp abrechnungsdatum = (Timestamp)bestellungBean.getProperty("eingang_ts");
+            final Double gebuehr = (Double)bestellungBean.getProperty("gebuehr");
+            final String request_url = (String)bestellungBean.getProperty("request_url");
+            final String projektBezeichnung = ((bestellungBean.getProperty("fk_adresse_rechnung.firma") != null)
+                    ? ((String)bestellungBean.getProperty("fk_adresse_rechnung.firma") + ", ") : "")
+                        + (String)bestellungBean.getProperty("fk_adresse_rechnung.name") + " "
+                        + (String)bestellungBean.getProperty("fk_adresse_rechnung.vorname");
+
+            final String kunde_login = FormSolutionsConstants.BILLING_KUNDE_LOGIN;
+            final String modus = FormSolutionsConstants.BILLING_MODUS;
+            final String modusbezeichnung = FormSolutionsConstants.BILLING_MODUSBEZEICHNUNG;
+            final String verwendungszweck = isPostweg ? FormSolutionsConstants.BILLING_VERWENDUNGSZWECK_POSTWEG
+                                                      : FormSolutionsConstants.BILLING_VERWENDUNGSZWECK_DOWNLOAD;
+            final String verwendungskey = isPostweg ? FormSolutionsConstants.BILLING_VERWENDUNGSKEY_POSTWEG
+                                                    : FormSolutionsConstants.BILLING_VERWENDUNGSKEY_DOWNLOAD;
+            final String produktkey;
+            final String produktbezeichnung;
+            if ("A4".equals(din)) {
+                produktkey = FormSolutionsConstants.BILLING_PRODUKTKEY_DINA4;
+                produktbezeichnung = FormSolutionsConstants.BILLING_PRODUKTBEZEICHNUNG_DINA4;
+            } else if ("A3".equals(din)) {
+                produktkey = FormSolutionsConstants.BILLING_PRODUKTKEY_DINA3;
+                produktbezeichnung = FormSolutionsConstants.BILLING_PRODUKTBEZEICHNUNG_DINA3;
+            } else if ("A2".equals(din)) {
+                produktkey = FormSolutionsConstants.BILLING_PRODUKTKEY_DINA2;
+                produktbezeichnung = FormSolutionsConstants.BILLING_PRODUKTBEZEICHNUNG_DINA2;
+            } else if ("A1".equals(din)) {
+                produktkey = FormSolutionsConstants.BILLING_PRODUKTKEY_DINA1;
+                produktbezeichnung = FormSolutionsConstants.BILLING_PRODUKTBEZEICHNUNG_DINA1;
+            } else if ("A0".equals(din)) {
+                produktkey = FormSolutionsConstants.BILLING_PRODUKTKEY_DINA0;
+                produktbezeichnung = FormSolutionsConstants.BILLING_PRODUKTBEZEICHNUNG_DINA0;
+            } else {
+                produktkey = null;
+                produktbezeichnung = null;
+            }
+
+            cb.setProperty("username", kunde_login);
+            cb.setProperty("angelegt_durch", getExternalUser(kunde_login));
+            cb.setProperty("ts", abrechnungsdatum);
+            cb.setProperty("abrechnungsdatum", abrechnungsdatum);
+            cb.setProperty("modus", modus);
+            cb.setProperty("modusbezeichnung", modusbezeichnung);
+            cb.setProperty("produktkey", produktkey);
+            cb.setProperty("produktbezeichnung", produktbezeichnung);
+            cb.setProperty("netto_summe", gebuehr);
+            cb.setProperty("brutto_summe", gebuehr);
+            cb.setProperty("geschaeftsbuchnummer", transid);
+            cb.setProperty("verwendungszweck", verwendungszweck);
+            cb.setProperty("verwendungskey", verwendungskey);
+            cb.setProperty("projektbezeichnung", projektBezeichnung);
+            cb.setProperty("request", request_url);
+            cb.setProperty("mwst_satz", 0d);
+            cb.setProperty("angeschaeftsbuch", Boolean.FALSE);
+            cb.setProperty("abgerechnet", Boolean.TRUE);
+            if (FormSolutionsConstants.TEST || ((transid != null) && transid.startsWith(TEST_CISMET00_PREFIX))) {
+                LOG.info("Test-Object would have created this Billing-Entry: " + cb.getMOString());
+            } else {
+                getMetaService().insertMetaObject(user, cb.getMetaObject());
+            }
+        } catch (Exception e) {
+            LOG.error("Error during the persitence of the billing log.", e);
         }
     }
 
