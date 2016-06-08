@@ -64,6 +64,7 @@ import javax.xml.bind.ValidationEventHandler;
 
 import de.cismet.cids.custom.utils.alkis.AlkisProductDescription;
 import de.cismet.cids.custom.utils.alkis.AlkisProducts;
+import de.cismet.cids.custom.utils.formsolutions.FormSolutionFtpClient;
 import de.cismet.cids.custom.utils.formsolutions.FormSolutionsBestellung;
 import de.cismet.cids.custom.utils.formsolutions.FormSolutionsConstants;
 import de.cismet.cids.custom.utils.formsolutions.FormSolutionsMySqlHelper;
@@ -776,8 +777,7 @@ public class FormSolutionServerNewStuffAvailableAction implements UserAwareServe
                     null,
                     creds);
 
-//TODO wieder rein !
-//            FormSolutionFtpClient.getInstance().upload(in, FormSolutionsConstants.PRODUKT_BASEPATH + destinationPath);
+            FormSolutionFtpClient.getInstance().upload(in, FormSolutionsConstants.PRODUKT_BASEPATH + destinationPath);
         } finally {
             if (in != null) {
                 in.close();
