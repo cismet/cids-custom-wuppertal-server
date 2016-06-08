@@ -29,14 +29,19 @@ import java.io.IOException;
 
 import java.sql.Timestamp;
 
+import java.text.NumberFormat;
+
 import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.Calendar;
 import java.util.Collection;
 import java.util.Date;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
+import java.util.regex.Matcher;
+import java.util.regex.Pattern;
 
 import de.cismet.cids.custom.utils.berechtigungspruefung.baulastbescheinigung.BerechtigungspruefungBescheinigungDownloadInfo;
 
@@ -285,37 +290,63 @@ public class BerechtigungspruefungHandler {
             final String begruendung,
             final String dateiname,
             final byte[] data) throws Exception {
-        final String userKey = (String)user.getKey();
-        String pruefungKey;
-        do {
-            pruefungKey = RandomStringUtils.randomAlphanumeric(8);
-        } while (loadAnfrageBean(user, pruefungKey) != null);
-
-        if ((data != null) && (dateiname != null)) {
-            final File file = new File(BerechtigungspruefungProperties.ANHANG_PFAD + "/" + pruefungKey);
-            try {
-                FileUtils.writeByteArrayToFile(file, data);
-            } catch (final IOException ex) {
-                throw new Exception("Datei konnte nicht geschrieben werden.", ex);
+        synchronized (this) {
+            final String userKey = (String)user.getKey();
+            final String type = "BLaB";
+            final int year = Calendar.getInstance().get(Calendar.YEAR);
+            final CidsBean lastAnfrageBean = loadLastAnfrageBeanByTypeAndYear(user, type, year);
+            final String lastAnfrageSchluessel = (lastAnfrageBean != null)
+                ? (String)lastAnfrageBean.getProperty("schluessel") : null;
+            final int lastNumber;
+            if (lastAnfrageSchluessel != null) {
+                final Pattern pattern = Pattern.compile("^" + type + "-" + year + "-(\\d{5})$");
+                final Matcher matcher = pattern.matcher(lastAnfrageSchluessel);
+                if (matcher.matches()) {
+                    final String group = matcher.group(1);
+                    lastNumber = (group != null) ? Integer.parseInt(group) : 0;
+                } else {
+                    lastNumber = 0;
+                }
+            } else {
+                lastNumber = 0;
             }
+
+            final int newNumber = lastNumber + 1;
+
+            final NumberFormat format = NumberFormat.getIntegerInstance();
+            format.setMinimumIntegerDigits(5);
+            format.setGroupingUsed(false);
+
+            final String newAnfrageSchluessel = type + "-" + Integer.toString(year) + "-" + format.format(newNumber);
+
+            if ((data != null) && (dateiname != null)) {
+                final File file = new File(BerechtigungspruefungProperties.ANHANG_PFAD + "/" + newAnfrageSchluessel);
+                try {
+                    FileUtils.writeByteArrayToFile(file, data);
+                } catch (final IOException ex) {
+                    throw new Exception("Datei konnte nicht geschrieben werden.", ex);
+                }
+            }
+
+            final CidsBean newPruefungBean = CidsBean.createNewCidsBeanFromTableName(
+                    "WUNDA_BLAU",
+                    "berechtigungspruefung");
+            newPruefungBean.setProperty("dateiname", dateiname);
+            newPruefungBean.setProperty("schluessel", newAnfrageSchluessel);
+            newPruefungBean.setProperty("anfrage_timestamp", new Timestamp(new Date().getTime()));
+            newPruefungBean.setProperty("berechtigungsgrund", berechtigungsgrund);
+            newPruefungBean.setProperty("begruendung", begruendung);
+            newPruefungBean.setProperty("benutzer", userKey);
+            newPruefungBean.setProperty("abgeholt", false);
+            newPruefungBean.setProperty("pruefstatus", null);
+            newPruefungBean.setProperty("downloadinfo_json", new ObjectMapper().writeValueAsString(downloadInfo));
+
+            DomainServerImpl.getServerInstance().insertMetaObject(user, newPruefungBean.getMetaObject());
+
+            sendAnfrageMessage(newAnfrageSchluessel);
+
+            return newAnfrageSchluessel;
         }
-
-        final CidsBean newPruefungBean = CidsBean.createNewCidsBeanFromTableName("WUNDA_BLAU", "berechtigungspruefung");
-        newPruefungBean.setProperty("dateiname", dateiname);
-        newPruefungBean.setProperty("schluessel", pruefungKey);
-        newPruefungBean.setProperty("anfrage_timestamp", new Timestamp(new Date().getTime()));
-        newPruefungBean.setProperty("berechtigungsgrund", berechtigungsgrund);
-        newPruefungBean.setProperty("begruendung", begruendung);
-        newPruefungBean.setProperty("benutzer", userKey);
-        newPruefungBean.setProperty("abgeholt", false);
-        newPruefungBean.setProperty("pruefstatus", null);
-        newPruefungBean.setProperty("downloadinfo_json", new ObjectMapper().writeValueAsString(downloadInfo));
-
-        DomainServerImpl.getServerInstance().insertMetaObject(user, newPruefungBean.getMetaObject());
-
-        sendAnfrageMessage(pruefungKey);
-
-        return pruefungKey;
     }
 
     /**
@@ -441,6 +472,39 @@ public class BerechtigungspruefungHandler {
                         + mcBerechtigungspruefung.getTableName() + "." + mcBerechtigungspruefung.getPrimaryKey() + " "
                         + "FROM " + mcBerechtigungspruefung.getTableName() + " "
                         + "WHERE " + mcBerechtigungspruefung.getTableName() + ".schluessel LIKE '" + schluessel + "' "
+                        + "LIMIT 1;";
+
+            final MetaObject[] mos = metaService.getMetaObject(user, pruefungQuery);
+            if ((mos != null) && (mos.length > 0)) {
+                return mos[0].getBean();
+            }
+        } catch (final Exception ex) {
+            LOG.error("error while loading pruefung bean", ex);
+        }
+        return null;
+    }
+
+    /**
+     * DOCUMENT ME!
+     *
+     * @param   user  DOCUMENT ME!
+     * @param   type  DOCUMENT ME!
+     * @param   year  DOCUMENT ME!
+     *
+     * @return  DOCUMENT ME!
+     */
+    public CidsBean loadLastAnfrageBeanByTypeAndYear(final User user, final String type, final int year) {
+        try {
+            final MetaClass mcBerechtigungspruefung = CidsBean.getMetaClassFromTableName(
+                    "WUNDA_BLAU",
+                    "berechtigungspruefung");
+
+            final String tester = "^" + type + "-" + Integer.toString(year) + "-\\\\d{5}$";
+            final String pruefungQuery = "SELECT " + mcBerechtigungspruefung.getID() + ", "
+                        + mcBerechtigungspruefung.getTableName() + "." + mcBerechtigungspruefung.getPrimaryKey() + " "
+                        + "FROM " + mcBerechtigungspruefung.getTableName() + " "
+                        + "WHERE " + mcBerechtigungspruefung.getTableName() + ".schluessel ~ E'" + tester + "' "
+                        + "ORDER BY schluessel DESC "
                         + "LIMIT 1;";
 
             final MetaObject[] mos = metaService.getMetaObject(user, pruefungQuery);
