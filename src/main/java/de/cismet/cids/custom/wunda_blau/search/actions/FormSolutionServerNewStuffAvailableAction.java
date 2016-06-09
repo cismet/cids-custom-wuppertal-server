@@ -852,12 +852,14 @@ public class FormSolutionServerNewStuffAvailableAction implements UserAwareServe
      * @param   fsXmlMap            transids DOCUMENT ME!
      * @param   fsBestellungMap     DOCUMENT ME!
      * @param   insertExceptionMap  DOCUMENT ME!
+     * @param   billingBeanMap      DOCUMENT ME!
      *
      * @return  DOCUMENT ME!
      */
     private Map<String, CidsBean> createCidsEntries(final Map<String, String> fsXmlMap,
             final Map<String, FormSolutionsBestellung> fsBestellungMap,
-            final Map<String, Exception> insertExceptionMap) {
+            final Map<String, Exception> insertExceptionMap,
+            final Map<String, CidsBean> billingBeanMap) {
         // nur die transids bearbeiten, bei denen das Parsen auch geklappt hat
         final Collection<String> transidsNew = new ArrayList<String>(fsBestellungMap.keySet());
 
@@ -918,6 +920,8 @@ public class FormSolutionServerNewStuffAvailableAction implements UserAwareServe
 
                 getMySqlHelper().updateStatus(transid, STATUS_SAVE);
                 doStatusChangedRequest(transid);
+
+                billingBeanMap.put(transid, doBilling(persistedBestellungBean));
             } catch (final Exception ex) {
                 setErrorStatus(transid, STATUS_SAVE, null, "Fehler beim Erstellen des Bestellungs-Objektes", ex);
             }
@@ -995,11 +999,13 @@ public class FormSolutionServerNewStuffAvailableAction implements UserAwareServe
     /**
      * DOCUMENT ME!
      *
-     * @param   fsBeanMap  DOCUMENT ME!
+     * @param   fsBeanMap       DOCUMENT ME!
+     * @param   billingBeanMap  DOCUMENT ME!
      *
      * @return  DOCUMENT ME!
      */
-    private Map<String, URL> createUrlMap(final Map<String, CidsBean> fsBeanMap) {
+    private Map<String, URL> createUrlMap(final Map<String, CidsBean> fsBeanMap,
+            final Map<String, CidsBean> billingBeanMap) {
         final Collection<String> transids = new ArrayList<String>(fsBeanMap.keySet());
 
         final Map<String, URL> fsUrlMap = new HashMap<String, URL>(transids.size());
@@ -1012,6 +1018,20 @@ public class FormSolutionServerNewStuffAvailableAction implements UserAwareServe
                     fsUrlMap.put(transid, productUrl);
                     getMySqlHelper().updateStatus(transid, STATUS_CREATEURL);
                     doStatusChangedRequest(transid);
+
+                    final CidsBean billingBean = billingBeanMap.get(transid);
+                    if (billingBean != null) {
+                        billingBean.setProperty("request", productUrl.toString());
+                        billingBean.setProperty(
+                            "geometrie",
+                            (CidsBean)bestellungBean.getProperty("geometrie"));
+                        if (FormSolutionsConstants.TEST
+                                    || ((transid != null) && transid.startsWith(TEST_CISMET00_PREFIX))) {
+                            LOG.info("Test-Object would have update this Billing-Entry: " + billingBean.getMOString());
+                        } else {
+                            getMetaService().updateMetaObject(user, billingBean.getMetaObject());
+                        }
+                    }
                 } catch (final Exception ex) {
                     setErrorStatus(
                         transid,
@@ -1089,7 +1109,6 @@ public class FormSolutionServerNewStuffAvailableAction implements UserAwareServe
                         bestellungBean.setProperty("erledigt", true);
                     }
                     getMetaService().updateMetaObject(user, bestellungBean.getMetaObject());
-                    doBilling(bestellungBean);
                 } catch (final Exception ex) {
                     LOG.error("Fehler beim Persistieren der Bestellung", ex);
                 }
@@ -1130,18 +1149,19 @@ public class FormSolutionServerNewStuffAvailableAction implements UserAwareServe
     /**
      * DOCUMENT ME!
      *
-     * @param  bestellungBean  DOCUMENT ME!
+     * @param   bestellungBean  DOCUMENT ME!
+     *
+     * @return  DOCUMENT ME!
      */
-    private void doBilling(final CidsBean bestellungBean) {
+    private CidsBean doBilling(final CidsBean bestellungBean) {
         try {
-            final CidsBean cb = CidsBean.createNewCidsBeanFromTableName("WUNDA_BLAU", "Billing_Billing");
+            final CidsBean billingBean = CidsBean.createNewCidsBeanFromTableName("WUNDA_BLAU", "Billing_Billing");
 
             final String transid = (String)bestellungBean.getProperty("transid");
             final boolean isPostweg = Boolean.TRUE.equals(bestellungBean.getProperty("postweg"));
             final String din = (String)bestellungBean.getProperty("fk_produkt.fk_format.din");
             final Timestamp abrechnungsdatum = (Timestamp)bestellungBean.getProperty("eingang_ts");
             final Double gebuehr = (Double)bestellungBean.getProperty("gebuehr");
-            final String request_url = (String)bestellungBean.getProperty("request_url");
             final String projektBezeichnung = ((bestellungBean.getProperty("fk_adresse_rechnung.firma") != null)
                     ? ((String)bestellungBean.getProperty("fk_adresse_rechnung.firma") + ", ") : "")
                         + (String)bestellungBean.getProperty("fk_adresse_rechnung.name") + " "
@@ -1176,31 +1196,32 @@ public class FormSolutionServerNewStuffAvailableAction implements UserAwareServe
                 produktbezeichnung = null;
             }
 
-            cb.setProperty("username", kunde_login);
-            cb.setProperty("angelegt_durch", getExternalUser(kunde_login));
-            cb.setProperty("ts", abrechnungsdatum);
-            cb.setProperty("abrechnungsdatum", abrechnungsdatum);
-            cb.setProperty("modus", modus);
-            cb.setProperty("modusbezeichnung", modusbezeichnung);
-            cb.setProperty("produktkey", produktkey);
-            cb.setProperty("produktbezeichnung", produktbezeichnung);
-            cb.setProperty("netto_summe", gebuehr);
-            cb.setProperty("brutto_summe", gebuehr);
-            cb.setProperty("geschaeftsbuchnummer", transid);
-            cb.setProperty("verwendungszweck", verwendungszweck);
-            cb.setProperty("verwendungskey", verwendungskey);
-            cb.setProperty("projektbezeichnung", projektBezeichnung);
-            cb.setProperty("request", request_url);
-            cb.setProperty("mwst_satz", 0d);
-            cb.setProperty("angeschaeftsbuch", Boolean.FALSE);
-            cb.setProperty("abgerechnet", Boolean.TRUE);
+            billingBean.setProperty("username", kunde_login);
+            billingBean.setProperty("angelegt_durch", getExternalUser(kunde_login));
+            billingBean.setProperty("ts", abrechnungsdatum);
+            billingBean.setProperty("abrechnungsdatum", abrechnungsdatum);
+            billingBean.setProperty("modus", modus);
+            billingBean.setProperty("modusbezeichnung", modusbezeichnung);
+            billingBean.setProperty("produktkey", produktkey);
+            billingBean.setProperty("produktbezeichnung", produktbezeichnung);
+            billingBean.setProperty("netto_summe", gebuehr);
+            billingBean.setProperty("brutto_summe", gebuehr);
+            billingBean.setProperty("geschaeftsbuchnummer", transid);
+            billingBean.setProperty("verwendungszweck", verwendungszweck);
+            billingBean.setProperty("verwendungskey", verwendungskey);
+            billingBean.setProperty("projektbezeichnung", projektBezeichnung);
+            billingBean.setProperty("mwst_satz", 0d);
+            billingBean.setProperty("angeschaeftsbuch", Boolean.FALSE);
+            billingBean.setProperty("abgerechnet", Boolean.TRUE);
             if (FormSolutionsConstants.TEST || ((transid != null) && transid.startsWith(TEST_CISMET00_PREFIX))) {
-                LOG.info("Test-Object would have created this Billing-Entry: " + cb.getMOString());
+                LOG.info("Test-Object would have created this Billing-Entry: " + billingBean.getMOString());
+                return billingBean;
             } else {
-                getMetaService().insertMetaObject(user, cb.getMetaObject());
+                return getMetaService().insertMetaObject(user, billingBean.getMetaObject()).getBean();
             }
         } catch (Exception e) {
             LOG.error("Error during the persitence of the billing log.", e);
+            return null;
         }
     }
 
@@ -1302,6 +1323,7 @@ public class FormSolutionServerNewStuffAvailableAction implements UserAwareServe
                 }
             }
 
+            final Map<String, CidsBean> billingBeanMap = new HashMap<String, CidsBean>();
             switch (startStep) {
                 case STATUS_FETCH:
                 case STATUS_PARSE:
@@ -1312,7 +1334,11 @@ public class FormSolutionServerNewStuffAvailableAction implements UserAwareServe
                             final Map<String, Exception> insertExceptionMap = createMySqlEntries(transids);
                             final Map<String, String> fsXmlMap = extractXmlParts(transids);
                             final Map<String, FormSolutionsBestellung> fsBestellungMap = createBestellungMap(fsXmlMap);
-                            fsBeanMap.putAll(createCidsEntries(fsXmlMap, fsBestellungMap, insertExceptionMap));
+                            fsBeanMap.putAll(createCidsEntries(
+                                    fsXmlMap,
+                                    fsBestellungMap,
+                                    insertExceptionMap,
+                                    billingBeanMap));
                         } catch (Exception ex) {
                             LOG.error("Die Liste der FormSolutions-Bestellungen konnte nicht abgerufen werden", ex);
                         }
@@ -1329,7 +1355,7 @@ public class FormSolutionServerNewStuffAvailableAction implements UserAwareServe
                 }
                 case STATUS_CREATEURL:
                 case STATUS_DOWNLOAD: {
-                    final Map<String, URL> fsUrlMap = createUrlMap(fsBeanMap);
+                    final Map<String, URL> fsUrlMap = createUrlMap(fsBeanMap, billingBeanMap);
                     downloadProdukte(fsBeanMap, fsUrlMap);
                     if (singleStep) {
                         break;
