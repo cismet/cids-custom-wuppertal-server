@@ -16,6 +16,9 @@ import Sirius.server.middleware.impls.domainserver.DomainServerImpl;
 import Sirius.server.middleware.interfaces.domainserver.DomainServerStartupHook;
 import Sirius.server.newuser.User;
 import Sirius.server.newuser.UserGroup;
+import Sirius.server.newuser.UserServer;
+
+import java.rmi.Naming;
 
 import de.cismet.cids.custom.utils.berechtigungspruefung.BerechtigungspruefungHandler;
 import de.cismet.cids.custom.utils.berechtigungspruefung.BerechtigungspruefungProperties;
@@ -50,14 +53,13 @@ public class BerechtigungspruefungStartupHook implements DomainServerStartupHook
                     }
 
                     try {
-                        final User user = new User(
-                                BerechtigungspruefungProperties.CIDS_USER_ID,
-                                BerechtigungspruefungProperties.CIDS_USER_NAME,
-                                getDomain(),
-                                new UserGroup(
-                                    BerechtigungspruefungProperties.CIDS_GROUP_ID,
-                                    BerechtigungspruefungProperties.CIDS_GROUP_NAME,
-                                    getDomain()));
+                        final Object userServer = Naming.lookup("rmi://localhost/userServer");
+                        final User user = ((UserServer)userServer).getUser(
+                                null,
+                                null,
+                                "WUNDA_BLAU",
+                                BerechtigungspruefungProperties.CIDS_LOGIN,
+                                BerechtigungspruefungProperties.CIDS_PASSWORD);
                         BerechtigungspruefungHandler.getInstance().setMetaService(DomainServerImpl.getServerInstance());
                         BerechtigungspruefungHandler.getInstance().sendMessagesForAllOpenFreigaben(user);
                         BerechtigungspruefungHandler.getInstance().sendMessagesForAllOpenAnfragen(user);
