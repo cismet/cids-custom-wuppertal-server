@@ -27,9 +27,11 @@ import com.vividsolutions.jts.geom.Point;
 
 import org.apache.commons.httpclient.UsernamePasswordCredentials;
 import org.apache.commons.io.IOUtils;
+import org.apache.commons.lang.RandomStringUtils;
 
 import org.openide.util.Lookup;
 
+import java.io.BufferedInputStream;
 import java.io.BufferedReader;
 import java.io.InputStream;
 import java.io.InputStreamReader;
@@ -93,6 +95,10 @@ public class FormSolutionServerNewStuffAvailableAction implements UserAwareServe
     private static final transient org.apache.log4j.Logger LOG = org.apache.log4j.Logger.getLogger(
             FormSolutionServerNewStuffAvailableAction.class);
     public static final String TASK_NAME = "formSolutionServerNewStuffAvailable";
+    private static final String TEST_CISMET00_XML_FILE =
+        "/de/cismet/cids/custom/wunda_blau/res/formsolutions/TEST_CISMET00.xml";
+
+    private static final String TEST_CISMET00_PREFIX = "TEST_CISMET00-";
 
     private static final Map<String, MetaClass> METACLASS_CACHE = new HashMap();
     private static final ObjectMapper MAPPER = new ObjectMapper();
@@ -129,6 +135,8 @@ public class FormSolutionServerNewStuffAvailableAction implements UserAwareServe
 
     private User user;
     private MetaService metaService;
+    private final String testCismet00Xml;
+    private final boolean testCismet00Enabled;
 
     //~ Constructors -----------------------------------------------------------
 
@@ -136,6 +144,15 @@ public class FormSolutionServerNewStuffAvailableAction implements UserAwareServe
      * Creates a new FormSolutionServerNewStuffAvailableAction object.
      */
     public FormSolutionServerNewStuffAvailableAction() {
+        this(false);
+    }
+
+    /**
+     * Creates a new FormSolutionServerNewStuffAvailableAction object.
+     *
+     * @param  fromStartupHook  DOCUMENT ME!
+     */
+    public FormSolutionServerNewStuffAvailableAction(final boolean fromStartupHook) {
         UsernamePasswordCredentials creds = null;
         try {
             creds = new UsernamePasswordCredentials(FormSolutionsConstants.USER, FormSolutionsConstants.PASSWORD);
@@ -144,6 +161,26 @@ public class FormSolutionServerNewStuffAvailableAction implements UserAwareServe
                 "UsernamePasswordCredentials couldn't be created. FormSolutionServerNewStuffAvailableAction will not work at all !",
                 ex);
         }
+
+        boolean testCismet00Enabled = false;
+        try {
+            testCismet00Enabled = fromStartupHook && FormSolutionsConstants.TEST_CISMET00;
+        } catch (final Exception ex) {
+            LOG.error("could not read FormSolutionsConstants.TEST_CISMET00. TEST_CISMET00 stays disabled", ex);
+        }
+        this.testCismet00Enabled = testCismet00Enabled;
+
+        String testCismet00Xml = null;
+        if (testCismet00Enabled) {
+            try {
+                testCismet00Xml = IOUtils.toString(new BufferedInputStream(
+                            getClass().getResourceAsStream(TEST_CISMET00_XML_FILE)));
+            } catch (final Exception ex) {
+                LOG.error("could not load " + TEST_CISMET00_XML_FILE, ex);
+            }
+        }
+        this.testCismet00Xml = testCismet00Xml;
+
         this.creds = creds;
     }
 
@@ -223,7 +260,17 @@ public class FormSolutionServerNewStuffAvailableAction implements UserAwareServe
                 new TypeReference<HashMap<String, Object>>() {
                 });
 
-        return (Collection<String>)map.get("list");
+        final Collection<String> transIds = (Collection<String>)map.get("list");
+
+        try {
+            if (testCismet00Enabled) {
+                transIds.add(TEST_CISMET00_PREFIX + RandomStringUtils.randomAlphanumeric(8));
+            }
+        } catch (final Exception ex) {
+            LOG.error("error while generating TEST_CISMET00 transid", ex);
+        }
+
+        return transIds;
     }
 
     /**
@@ -291,19 +338,23 @@ public class FormSolutionServerNewStuffAvailableAction implements UserAwareServe
      * @throws  Exception  DOCUMENT ME!
      */
     private String getAuftrag(final String auftrag) throws Exception {
-        final InputStream inputStream = getHttpAccessHandler().doRequest(
-                new URL(String.format(FormSolutionsConstants.URL_AUFTRAG_FS, auftrag)),
-                new StringReader(""),
-                AccessHandler.ACCESS_METHODS.GET_REQUEST,
-                null,
-                creds);
-        final Map<String, Object> map = getObjectMapper().readValue(
-                inputStream,
-                new TypeReference<HashMap<String, Object>>() {
-                });
-        inputStream.close();
+        if ((auftrag != null) && auftrag.startsWith(TEST_CISMET00_PREFIX)) {
+            return (testCismet00Xml != null) ? testCismet00Xml.replace("${TRANSID}", auftrag) : null;
+        } else {
+            final InputStream inputStream = getHttpAccessHandler().doRequest(
+                    new URL(String.format(FormSolutionsConstants.URL_AUFTRAG_FS, auftrag)),
+                    new StringReader(""),
+                    AccessHandler.ACCESS_METHODS.GET_REQUEST,
+                    null,
+                    creds);
+            final Map<String, Object> map = getObjectMapper().readValue(
+                    inputStream,
+                    new TypeReference<HashMap<String, Object>>() {
+                    });
+            inputStream.close();
 
-        return new String(DatatypeConverter.parseBase64Binary((String)map.get("xml")));
+            return new String(DatatypeConverter.parseBase64Binary((String)map.get("xml")));
+        }
     }
 
     /**
@@ -314,8 +365,8 @@ public class FormSolutionServerNewStuffAvailableAction implements UserAwareServe
      * @throws  Exception  DOCUMENT ME!
      */
     private void closeTransid(final String auftrag) throws Exception {
-        final boolean noClose = DomainServerImpl.getServerInstance()
-                    .hasConfigAttr(getUser(), "custom.formsolutions.noclose");
+        final boolean noClose = (auftrag == null) || auftrag.startsWith(TEST_CISMET00_PREFIX)
+                    || DomainServerImpl.getServerInstance().hasConfigAttr(getUser(), "custom.formsolutions.noclose");
         if (noClose) {
             return;
         }
@@ -588,7 +639,10 @@ public class FormSolutionServerNewStuffAvailableAction implements UserAwareServe
         bestellungBean.setProperty("erledigt", false);
         bestellungBean.setProperty("eingang_ts", new Timestamp(new Date().getTime()));
         bestellungBean.setProperty("gebuehr", formSolutionsBestellung.getBetrag());
-        bestellungBean.setProperty("test", FormSolutionsConstants.TEST);
+        bestellungBean.setProperty(
+            "test",
+            FormSolutionsConstants.TEST
+                    || ((transid != null) && transid.startsWith(TEST_CISMET00_PREFIX)));
 
         return bestellungBean;
     }
@@ -1006,6 +1060,23 @@ public class FormSolutionServerNewStuffAvailableAction implements UserAwareServe
                     bestellungBean.setProperty("produkt_dateiname_orig", fileNameOrig);
                     bestellungBean.setProperty("produkt_ts", new Timestamp(new Date().getTime()));
 
+                    try {
+                        if (bestellungBean.getProperty("fk_billing") == null) {
+                            final CidsBean billingBean = doBilling(bestellungBean);
+                            if (billingBean != null) {
+                                bestellungBean.setProperty("fk_billing", billingBean);
+                                getMetaService().updateMetaObject(user, bestellungBean.getMetaObject());
+                            }
+                        }
+                    } catch (final Exception ex) {
+                        setErrorStatus(
+                            transid,
+                            STATUS_DOWNLOAD,
+                            bestellungBean,
+                            "Fehler beim Erzeugen des Billings",
+                            ex);
+                    }
+
                     getMySqlHelper().updateProdukt(
                         transid,
                         STATUS_DOWNLOAD,
@@ -1039,6 +1110,121 @@ public class FormSolutionServerNewStuffAvailableAction implements UserAwareServe
                     LOG.error("Fehler beim Persistieren der Bestellung", ex);
                 }
             }
+        }
+    }
+
+    /**
+     * DOCUMENT ME!
+     *
+     * @param   loginName  DOCUMENT ME!
+     *
+     * @return  DOCUMENT ME!
+     *
+     * @throws  Exception  DOCUMENT ME!
+     */
+    public CidsBean getExternalUser(final String loginName) throws Exception {
+        final MetaClass mc = CidsBean.getMetaClassFromTableName("WUNDA_BLAU", "billing_kunden_logins");
+        if (mc == null) {
+            if (LOG.isDebugEnabled()) {
+                LOG.debug(
+                    "The metaclass for billing_kunden_logins is null. The current user has probably not the needed rights.");
+            }
+            return null;
+        }
+        String query = "SELECT " + mc.getID() + ", " + mc.getPrimaryKey() + " ";
+        query += "FROM " + mc.getTableName();
+        query += " WHERE name = '" + loginName + "'";
+
+        CidsBean externalUser = null;
+        final MetaObject[] metaObjects = getMetaService().getMetaObject(user, query);
+        if ((metaObjects != null) && (metaObjects.length > 0)) {
+            externalUser = metaObjects[0].getBean();
+        }
+        return externalUser;
+    }
+
+    /**
+     * DOCUMENT ME!
+     *
+     * @param   bestellungBean  DOCUMENT ME!
+     *
+     * @return  DOCUMENT ME!
+     */
+    private CidsBean doBilling(final CidsBean bestellungBean) {
+        try {
+            final CidsBean billingBean = CidsBean.createNewCidsBeanFromTableName("WUNDA_BLAU", "Billing_Billing");
+
+            final String transid = (String)bestellungBean.getProperty("transid");
+            final boolean isPostweg = Boolean.TRUE.equals(bestellungBean.getProperty("postweg"));
+            final String din = (String)bestellungBean.getProperty("fk_produkt.fk_format.din");
+            final Timestamp abrechnungsdatum = (Timestamp)bestellungBean.getProperty("eingang_ts");
+            final Double gebuehr = (Double)bestellungBean.getProperty("gebuehr");
+            final String projektBezeichnung = ((bestellungBean.getProperty("fk_adresse_rechnung.firma") != null)
+                    ? ((String)bestellungBean.getProperty("fk_adresse_rechnung.firma") + ", ") : "")
+                        + (String)bestellungBean.getProperty("fk_adresse_rechnung.name") + " "
+                        + (String)bestellungBean.getProperty("fk_adresse_rechnung.vorname");
+            final String request_url = (String)bestellungBean.getProperty("request_url");
+
+            final String kunde_login = FormSolutionsConstants.BILLING_KUNDE_LOGIN;
+            final String modus = FormSolutionsConstants.BILLING_MODUS;
+            final String modusbezeichnung = FormSolutionsConstants.BILLING_MODUSBEZEICHNUNG;
+            final String verwendungszweck = isPostweg ? FormSolutionsConstants.BILLING_VERWENDUNGSZWECK_POSTWEG
+                                                      : FormSolutionsConstants.BILLING_VERWENDUNGSZWECK_DOWNLOAD;
+            final String verwendungskey = isPostweg ? FormSolutionsConstants.BILLING_VERWENDUNGSKEY_POSTWEG
+                                                    : FormSolutionsConstants.BILLING_VERWENDUNGSKEY_DOWNLOAD;
+            final String produktkey;
+            final String produktbezeichnung;
+            if ("A4".equals(din)) {
+                produktkey = FormSolutionsConstants.BILLING_PRODUKTKEY_DINA4;
+                produktbezeichnung = FormSolutionsConstants.BILLING_PRODUKTBEZEICHNUNG_DINA4;
+            } else if ("A3".equals(din)) {
+                produktkey = FormSolutionsConstants.BILLING_PRODUKTKEY_DINA3;
+                produktbezeichnung = FormSolutionsConstants.BILLING_PRODUKTBEZEICHNUNG_DINA3;
+            } else if ("A2".equals(din)) {
+                produktkey = FormSolutionsConstants.BILLING_PRODUKTKEY_DINA2;
+                produktbezeichnung = FormSolutionsConstants.BILLING_PRODUKTBEZEICHNUNG_DINA2;
+            } else if ("A1".equals(din)) {
+                produktkey = FormSolutionsConstants.BILLING_PRODUKTKEY_DINA1;
+                produktbezeichnung = FormSolutionsConstants.BILLING_PRODUKTBEZEICHNUNG_DINA1;
+            } else if ("A0".equals(din)) {
+                produktkey = FormSolutionsConstants.BILLING_PRODUKTKEY_DINA0;
+                produktbezeichnung = FormSolutionsConstants.BILLING_PRODUKTBEZEICHNUNG_DINA0;
+            } else {
+                produktkey = null;
+                produktbezeichnung = null;
+            }
+
+            billingBean.setProperty("request", request_url);
+            billingBean.setProperty(
+                "geometrie",
+                (CidsBean)bestellungBean.getProperty("geometrie"));
+
+            billingBean.setProperty("username", kunde_login);
+            billingBean.setProperty("angelegt_durch", getExternalUser(kunde_login));
+            billingBean.setProperty("ts", abrechnungsdatum);
+            billingBean.setProperty("abrechnungsdatum", abrechnungsdatum);
+            billingBean.setProperty("modus", modus);
+            billingBean.setProperty("modusbezeichnung", modusbezeichnung);
+            billingBean.setProperty("produktkey", produktkey);
+            billingBean.setProperty("produktbezeichnung", produktbezeichnung);
+            billingBean.setProperty("netto_summe", gebuehr);
+            billingBean.setProperty("brutto_summe", gebuehr);
+            billingBean.setProperty("geschaeftsbuchnummer", transid);
+            billingBean.setProperty("verwendungszweck", verwendungszweck);
+            billingBean.setProperty("verwendungskey", verwendungskey);
+            billingBean.setProperty("projektbezeichnung", projektBezeichnung);
+            billingBean.setProperty("mwst_satz", 0d);
+            billingBean.setProperty("angeschaeftsbuch", Boolean.FALSE);
+            billingBean.setProperty("abgerechnet", Boolean.TRUE);
+            if (FormSolutionsConstants.TEST || ((transid != null) && transid.startsWith(TEST_CISMET00_PREFIX))) {
+                LOG.info("Test-Object would have created this Billing-Entry: " + billingBean.getMOString());
+                return null;
+            } else {
+                return getMetaService().insertMetaObject(user, billingBean.getMetaObject()).getBean();
+            }
+        } catch (Exception e) {
+            LOG.error("Error during the persitence of the billing log.", e);
+            return null;
         }
     }
 
@@ -1150,7 +1336,10 @@ public class FormSolutionServerNewStuffAvailableAction implements UserAwareServe
                             final Map<String, Exception> insertExceptionMap = createMySqlEntries(transids);
                             final Map<String, String> fsXmlMap = extractXmlParts(transids);
                             final Map<String, FormSolutionsBestellung> fsBestellungMap = createBestellungMap(fsXmlMap);
-                            fsBeanMap.putAll(createCidsEntries(fsXmlMap, fsBestellungMap, insertExceptionMap));
+                            fsBeanMap.putAll(createCidsEntries(
+                                    fsXmlMap,
+                                    fsBestellungMap,
+                                    insertExceptionMap));
                         } catch (Exception ex) {
                             LOG.error("Die Liste der FormSolutions-Bestellungen konnte nicht abgerufen werden", ex);
                         }

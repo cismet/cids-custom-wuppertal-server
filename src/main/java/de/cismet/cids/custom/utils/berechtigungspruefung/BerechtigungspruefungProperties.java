@@ -30,20 +30,16 @@ public class BerechtigungspruefungProperties {
     private static final String PROPERTIES =
         "/de/cismet/cids/custom/berechtigungspruefung/berechtigungspruefung.properties";
 
-    public static final Integer CIDS_USER_ID;
-    public static final String CIDS_USER_NAME;
-    public static final Integer CIDS_GROUP_ID;
-    public static final String CIDS_GROUP_NAME;
+    public static final String CIDS_LOGIN;
+    public static final String CIDS_PASSWORD;
     public static final String ANHANG_PFAD;
     public static final String CSM_ANFRAGE;
     public static final String CSM_BEARBEITUNG;
     public static final String CSM_FREIGABE;
 
     static {
-        Integer cidsUserId = null;
-        String cidsUserName = null;
-        Integer cidsGroupId = null;
-        String cidsGroupName = null;
+        String cidsLogin = null;
+        String cidsPassword = null;
         String anhangPfad = "/tmp";
         String categoryAnfrage = "berechtigungspruefungAnfrage";
         String categoryBearbeitung = "berechtigungspruefungBearbeitung";
@@ -52,10 +48,8 @@ public class BerechtigungspruefungProperties {
         try {
             final PropertyReader serviceProperties = new PropertyReader(PROPERTIES);
 
-            cidsUserId = Integer.parseInt(serviceProperties.getProperty("CIDS_USER_ID"));
-            cidsUserName = serviceProperties.getProperty("CIDS_USER_NAME");
-            cidsGroupId = Integer.parseInt(serviceProperties.getProperty("CIDS_GROUP_ID"));
-            cidsGroupName = serviceProperties.getProperty("CIDS_GROUP_NAME");
+            cidsLogin = serviceProperties.getProperty("CIDS_LOGIN");
+            cidsPassword = serviceProperties.getProperty("CIDS_PASSWORD");
             if (serviceProperties.getProperty("ANHANG_PFAD") != null) {
                 anhangPfad = serviceProperties.getProperty("ANHANG_PFAD");
             }
@@ -72,10 +66,8 @@ public class BerechtigungspruefungProperties {
             LOG.error("error while loading properties", ex);
         }
 
-        CIDS_USER_ID = cidsUserId;
-        CIDS_USER_NAME = cidsUserName;
-        CIDS_GROUP_ID = cidsGroupId;
-        CIDS_GROUP_NAME = cidsGroupName;
+        CIDS_LOGIN = cidsLogin;
+        CIDS_PASSWORD = cidsPassword;
         ANHANG_PFAD = anhangPfad;
         CSM_ANFRAGE = categoryAnfrage;
         CSM_BEARBEITUNG = categoryBearbeitung;
