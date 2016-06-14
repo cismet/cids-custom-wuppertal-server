@@ -852,14 +852,12 @@ public class FormSolutionServerNewStuffAvailableAction implements UserAwareServe
      * @param   fsXmlMap            transids DOCUMENT ME!
      * @param   fsBestellungMap     DOCUMENT ME!
      * @param   insertExceptionMap  DOCUMENT ME!
-     * @param   billingBeanMap      DOCUMENT ME!
      *
      * @return  DOCUMENT ME!
      */
     private Map<String, CidsBean> createCidsEntries(final Map<String, String> fsXmlMap,
             final Map<String, FormSolutionsBestellung> fsBestellungMap,
-            final Map<String, Exception> insertExceptionMap,
-            final Map<String, CidsBean> billingBeanMap) {
+            final Map<String, Exception> insertExceptionMap) {
         // nur die transids bearbeiten, bei denen das Parsen auch geklappt hat
         final Collection<String> transidsNew = new ArrayList<String>(fsBestellungMap.keySet());
 
@@ -920,8 +918,6 @@ public class FormSolutionServerNewStuffAvailableAction implements UserAwareServe
 
                 getMySqlHelper().updateStatus(transid, STATUS_SAVE);
                 doStatusChangedRequest(transid);
-
-                billingBeanMap.put(transid, doBilling(persistedBestellungBean));
             } catch (final Exception ex) {
                 setErrorStatus(transid, STATUS_SAVE, null, "Fehler beim Erstellen des Bestellungs-Objektes", ex);
             }
@@ -999,13 +995,11 @@ public class FormSolutionServerNewStuffAvailableAction implements UserAwareServe
     /**
      * DOCUMENT ME!
      *
-     * @param   fsBeanMap       DOCUMENT ME!
-     * @param   billingBeanMap  DOCUMENT ME!
+     * @param   fsBeanMap  DOCUMENT ME!
      *
      * @return  DOCUMENT ME!
      */
-    private Map<String, URL> createUrlMap(final Map<String, CidsBean> fsBeanMap,
-            final Map<String, CidsBean> billingBeanMap) {
+    private Map<String, URL> createUrlMap(final Map<String, CidsBean> fsBeanMap) {
         final Collection<String> transids = new ArrayList<String>(fsBeanMap.keySet());
 
         final Map<String, URL> fsUrlMap = new HashMap<String, URL>(transids.size());
@@ -1018,20 +1012,6 @@ public class FormSolutionServerNewStuffAvailableAction implements UserAwareServe
                     fsUrlMap.put(transid, productUrl);
                     getMySqlHelper().updateStatus(transid, STATUS_CREATEURL);
                     doStatusChangedRequest(transid);
-
-                    final CidsBean billingBean = billingBeanMap.get(transid);
-                    if (billingBean != null) {
-                        billingBean.setProperty("request", productUrl.toString());
-                        billingBean.setProperty(
-                            "geometrie",
-                            (CidsBean)bestellungBean.getProperty("geometrie"));
-                        if (FormSolutionsConstants.TEST
-                                    || ((transid != null) && transid.startsWith(TEST_CISMET00_PREFIX))) {
-                            LOG.info("Test-Object would have update this Billing-Entry: " + billingBean.getMOString());
-                        } else {
-                            getMetaService().updateMetaObject(user, billingBean.getMetaObject());
-                        }
-                    }
                 } catch (final Exception ex) {
                     setErrorStatus(
                         transid,
@@ -1079,6 +1059,23 @@ public class FormSolutionServerNewStuffAvailableAction implements UserAwareServe
                     bestellungBean.setProperty("produkt_dateipfad", fileName);
                     bestellungBean.setProperty("produkt_dateiname_orig", fileNameOrig);
                     bestellungBean.setProperty("produkt_ts", new Timestamp(new Date().getTime()));
+
+                    try {
+                        if (bestellungBean.getProperty("fk_billing") == null) {
+                            final CidsBean billingBean = doBilling(bestellungBean);
+                            if (billingBean != null) {
+                                bestellungBean.setProperty("fk_billing", billingBean);
+                                getMetaService().updateMetaObject(user, bestellungBean.getMetaObject());
+                            }
+                        }
+                    } catch (final Exception ex) {
+                        setErrorStatus(
+                            transid,
+                            STATUS_DOWNLOAD,
+                            bestellungBean,
+                            "Fehler beim Erzeugen des Billings",
+                            ex);
+                    }
 
                     getMySqlHelper().updateProdukt(
                         transid,
@@ -1166,6 +1163,7 @@ public class FormSolutionServerNewStuffAvailableAction implements UserAwareServe
                     ? ((String)bestellungBean.getProperty("fk_adresse_rechnung.firma") + ", ") : "")
                         + (String)bestellungBean.getProperty("fk_adresse_rechnung.name") + " "
                         + (String)bestellungBean.getProperty("fk_adresse_rechnung.vorname");
+            final String request_url = (String)bestellungBean.getProperty("request_url");
 
             final String kunde_login = FormSolutionsConstants.BILLING_KUNDE_LOGIN;
             final String modus = FormSolutionsConstants.BILLING_MODUS;
@@ -1196,6 +1194,11 @@ public class FormSolutionServerNewStuffAvailableAction implements UserAwareServe
                 produktbezeichnung = null;
             }
 
+            billingBean.setProperty("request", request_url);
+            billingBean.setProperty(
+                "geometrie",
+                (CidsBean)bestellungBean.getProperty("geometrie"));
+
             billingBean.setProperty("username", kunde_login);
             billingBean.setProperty("angelegt_durch", getExternalUser(kunde_login));
             billingBean.setProperty("ts", abrechnungsdatum);
@@ -1215,7 +1218,7 @@ public class FormSolutionServerNewStuffAvailableAction implements UserAwareServe
             billingBean.setProperty("abgerechnet", Boolean.TRUE);
             if (FormSolutionsConstants.TEST || ((transid != null) && transid.startsWith(TEST_CISMET00_PREFIX))) {
                 LOG.info("Test-Object would have created this Billing-Entry: " + billingBean.getMOString());
-                return billingBean;
+                return null;
             } else {
                 return getMetaService().insertMetaObject(user, billingBean.getMetaObject()).getBean();
             }
@@ -1323,7 +1326,6 @@ public class FormSolutionServerNewStuffAvailableAction implements UserAwareServe
                 }
             }
 
-            final Map<String, CidsBean> billingBeanMap = new HashMap<String, CidsBean>();
             switch (startStep) {
                 case STATUS_FETCH:
                 case STATUS_PARSE:
@@ -1337,8 +1339,7 @@ public class FormSolutionServerNewStuffAvailableAction implements UserAwareServe
                             fsBeanMap.putAll(createCidsEntries(
                                     fsXmlMap,
                                     fsBestellungMap,
-                                    insertExceptionMap,
-                                    billingBeanMap));
+                                    insertExceptionMap));
                         } catch (Exception ex) {
                             LOG.error("Die Liste der FormSolutions-Bestellungen konnte nicht abgerufen werden", ex);
                         }
@@ -1355,7 +1356,7 @@ public class FormSolutionServerNewStuffAvailableAction implements UserAwareServe
                 }
                 case STATUS_CREATEURL:
                 case STATUS_DOWNLOAD: {
-                    final Map<String, URL> fsUrlMap = createUrlMap(fsBeanMap, billingBeanMap);
+                    final Map<String, URL> fsUrlMap = createUrlMap(fsBeanMap);
                     downloadProdukte(fsBeanMap, fsUrlMap);
                     if (singleStep) {
                         break;
