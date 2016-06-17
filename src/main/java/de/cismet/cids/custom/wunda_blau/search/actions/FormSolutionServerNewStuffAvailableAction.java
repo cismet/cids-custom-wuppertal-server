@@ -29,6 +29,7 @@ import org.apache.commons.httpclient.UsernamePasswordCredentials;
 import org.apache.commons.io.IOUtils;
 import org.apache.commons.lang.RandomStringUtils;
 
+import org.openide.util.Exceptions;
 import org.openide.util.Lookup;
 
 import java.io.BufferedInputStream;
@@ -110,6 +111,7 @@ public class FormSolutionServerNewStuffAvailableAction implements UserAwareServe
     public static final int STATUS_CLOSE = 40;
     public static final int STATUS_CREATEURL = 30;
     public static final int STATUS_DOWNLOAD = 20;
+    public static final int STATUS_BILLING = 15;
     public static final int STATUS_PENDING = 10;
     public static final int STATUS_DONE = 0;
 
@@ -1060,22 +1062,7 @@ public class FormSolutionServerNewStuffAvailableAction implements UserAwareServe
                     bestellungBean.setProperty("produkt_dateiname_orig", fileNameOrig);
                     bestellungBean.setProperty("produkt_ts", new Timestamp(new Date().getTime()));
 
-                    try {
-                        if (bestellungBean.getProperty("fk_billing") == null) {
-                            final CidsBean billingBean = doBilling(bestellungBean);
-                            if (billingBean != null) {
-                                bestellungBean.setProperty("fk_billing", billingBean);
-                                getMetaService().updateMetaObject(user, bestellungBean.getMetaObject());
-                            }
-                        }
-                    } catch (final Exception ex) {
-                        setErrorStatus(
-                            transid,
-                            STATUS_DOWNLOAD,
-                            bestellungBean,
-                            "Fehler beim Erzeugen des Billings",
-                            ex);
-                    }
+                    getMetaService().updateMetaObject(user, bestellungBean.getMetaObject());
 
                     getMySqlHelper().updateProdukt(
                         transid,
@@ -1087,6 +1074,31 @@ public class FormSolutionServerNewStuffAvailableAction implements UserAwareServe
                     setErrorStatus(transid, STATUS_DOWNLOAD, bestellungBean, "Fehler beim Erzeugen des Produktes", ex);
                 }
             }
+        }
+    }
+
+    /**
+     * DOCUMENT ME!
+     *
+     * @param  bestellungBean  DOCUMENT ME!
+     * @param  transid         DOCUMENT ME!
+     */
+    private void doPureBilling(final CidsBean bestellungBean, final String transid) {
+        try {
+            if (bestellungBean.getProperty("fk_billing") == null) {
+                final CidsBean billingBean = doBilling(bestellungBean);
+                if (billingBean != null) {
+                    bestellungBean.setProperty("fk_billing", billingBean);
+                    getMetaService().updateMetaObject(user, bestellungBean.getMetaObject());
+                }
+            }
+        } catch (final Exception ex) {
+            setErrorStatus(
+                transid,
+                STATUS_BILLING,
+                bestellungBean,
+                "Fehler beim Erzeugen des Billings",
+                ex);
         }
     }
 
@@ -1312,13 +1324,15 @@ public class FormSolutionServerNewStuffAvailableAction implements UserAwareServe
                                         .getBean();
                             final String transid = (String)bestellungBean.getProperty("transid");
                             fsBeanMap.put(transid, bestellungBean);
-                            bestellungBean.setProperty("erledigt", false);
-                            bestellungBean.setProperty("fehler", null);
-                            bestellungBean.setProperty("fehler_ts", null);
-                            bestellungBean.setProperty("exception", null);
-                            bestellungBean.setProperty("produkt_dateipfad", null);
-                            bestellungBean.setProperty("produkt_dateiname_orig", null);
-                            metaService.updateMetaObject(getUser(), bestellungBean.getMetaObject());
+                            if (!((startStep == STATUS_BILLING) && singleStep)) {
+                                bestellungBean.setProperty("erledigt", false);
+                                bestellungBean.setProperty("fehler", null);
+                                bestellungBean.setProperty("fehler_ts", null);
+                                bestellungBean.setProperty("exception", null);
+                                bestellungBean.setProperty("produkt_dateipfad", null);
+                                bestellungBean.setProperty("produkt_dateiname_orig", null);
+                                metaService.updateMetaObject(getUser(), bestellungBean.getMetaObject());
+                            }
                         } catch (final Exception ex) {
                             LOG.error(ex, ex);
                         }
@@ -1358,6 +1372,15 @@ public class FormSolutionServerNewStuffAvailableAction implements UserAwareServe
                 case STATUS_DOWNLOAD: {
                     final Map<String, URL> fsUrlMap = createUrlMap(fsBeanMap);
                     downloadProdukte(fsBeanMap, fsUrlMap);
+                    if (singleStep) {
+                        break;
+                    }
+                }
+                case STATUS_BILLING: {
+                    for (final String transid : new ArrayList<String>(fsBeanMap.keySet())) {
+                        final CidsBean bestellungBean = fsBeanMap.get(transid);
+                        doPureBilling(bestellungBean, transid);
+                    }
                     if (singleStep) {
                         break;
                     }
