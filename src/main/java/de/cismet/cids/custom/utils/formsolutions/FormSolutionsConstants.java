@@ -134,7 +134,7 @@ public class FormSolutionsConstants {
             billingProduktBezeichnungDina2 = serviceProperties.getProperty("BILLING_PRODUKTBEZEICHNUNG_DINA2");
             billingProduktBezeichnungDina1 = serviceProperties.getProperty("BILLING_PRODUKTBEZEICHNUNG_DINA1");
             billingProduktBezeichnungDina0 = serviceProperties.getProperty("BILLING_PRODUKTBEZEICHNUNG_DINA0");
-        } catch (final Exception ex) {
+        } catch (final Throwable ex) {
             LOG.fatal("FormSolutionsConstants Error!", ex);
             throw new RuntimeException(ex);
         }
