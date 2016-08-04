@@ -52,6 +52,7 @@ public final class AlkisConstants {
     public final String NIVP_HOST;
     public final String NIVP_PREFIX;
     public final String APMAPS_HOST;
+    public final String APMAPS_ETRS_HOST;
     public final String APMAPS_PREFIX;
     public final String VERMESSUNG_HOST_BILDER;
     public final String VERMESSUNG_HOST_GRENZNIEDERSCHRIFTEN;
@@ -100,6 +101,7 @@ public final class AlkisConstants {
             VERMESSUNG_HOST_BILDER = serviceProperties.getProperty("VERMESSUNG_HOST_BILDER");
             VERMESSUNG_HOST_GRENZNIEDERSCHRIFTEN = serviceProperties.getProperty(
                     "VERMESSUNG_HOST_GRENZNIEDERSCHRIFTEN");
+            APMAPS_ETRS_HOST = serviceProperties.getProperty("APMAPS_ETRS_HOST");
         } catch (final Exception ex) {
             log.fatal("AlkisCommons Error!", ex);
             throw new RuntimeException(ex);
