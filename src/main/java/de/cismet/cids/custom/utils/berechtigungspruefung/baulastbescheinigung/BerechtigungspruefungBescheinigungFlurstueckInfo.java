@@ -87,7 +87,11 @@ public class BerechtigungspruefungBescheinigungFlurstueckInfo {
         if (lage == null) {
             return null;
         }
-        return lage.substring(8);
+        if (lage.matches("^\\([0-9]{5}\\) .*$")) {
+            return lage.substring(8);
+        } else {
+            return lage;
+        }
     }
 
     /**
