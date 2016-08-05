@@ -37,6 +37,7 @@ import java.io.BufferedReader;
 import java.io.InputStream;
 import java.io.InputStreamReader;
 import java.io.StringReader;
+import java.io.UnsupportedEncodingException;
 
 import java.net.URL;
 
@@ -685,11 +686,24 @@ public class FormSolutionServerNewStuffAvailableAction implements UserAwareServe
             if (trimed.isEmpty()) {
                 return null;
             } else {
+                try {
+                    return new String(trimed.getBytes("UTF-8"), "ISO-8859-15");
+                } catch (UnsupportedEncodingException ex) {
+                    LOG.warn("error while changing charset from utf8 to latin9.", ex);
+                }
                 return trimed;
             }
         }
     }
 
+    /**
+     * DOCUMENT ME!
+     *
+     * @param  args  DOCUMENT ME!
+     */
+    public static void main(final String[] args) {
+        System.out.println("’  " + trimedNotEmpty("’"));
+    }
     /**
      * DOCUMENT ME!
      *
