@@ -117,7 +117,7 @@ public class FormSolutionsBestellung {
     private String westOst;
 
     @XmlElement(name = "betrag")
-    private Double betrag;
+    private String betrag;
 
     @XmlElement(name = "Firma")
     private String firma;
@@ -132,7 +132,7 @@ public class FormSolutionsBestellung {
     private String staat;
 
     @XmlElement(name = "AS_PLZ")
-    private Integer asPlz;
+    private String asPlz;
 
     @XmlElement(name = "AS_Ort")
     private String asOrt;
@@ -162,7 +162,7 @@ public class FormSolutionsBestellung {
     private String staat1;
 
     @XmlElement(name = "AS_PLZ.1")
-    private Integer asPlz1;
+    private String asPlz1;
 
     @XmlElement(name = "AS_Ort.1")
     private String asOrt1;

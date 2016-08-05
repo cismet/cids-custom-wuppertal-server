@@ -608,7 +608,14 @@ public class FormSolutionServerNewStuffAvailableAction implements UserAwareServe
         adresseRechnungBean.setProperty("vorname", trimedNotEmpty(formSolutionsBestellung.getAsVorname()));
         adresseRechnungBean.setProperty("strasse", trimedNotEmpty(formSolutionsBestellung.getAsStrasse()));
         adresseRechnungBean.setProperty("hausnummer", trimedNotEmpty(formSolutionsBestellung.getAsHausnummer()));
-        adresseRechnungBean.setProperty("plz", formSolutionsBestellung.getAsPlz());
+        Integer plz;
+        try {
+            plz = Integer.parseInt(formSolutionsBestellung.getAsPlz());
+        } catch (final Exception ex) {
+            LOG.warn("Exception while parsing PLZ", ex);
+            plz = null;
+        }
+        adresseRechnungBean.setProperty("plz", plz);
         adresseRechnungBean.setProperty("ort", trimedNotEmpty(formSolutionsBestellung.getAsOrt()));
         adresseRechnungBean.setProperty("staat", trimedNotEmpty(formSolutionsBestellung.getStaat()));
 
@@ -621,7 +628,14 @@ public class FormSolutionServerNewStuffAvailableAction implements UserAwareServe
             adresseVersandBean.setProperty("vorname", trimedNotEmpty(formSolutionsBestellung.getAsVorname1()));
             adresseVersandBean.setProperty("strasse", trimedNotEmpty(formSolutionsBestellung.getAsStrasse1()));
             adresseVersandBean.setProperty("hausnummer", trimedNotEmpty(formSolutionsBestellung.getAsHausnummer1()));
-            adresseVersandBean.setProperty("plz", formSolutionsBestellung.getAsPlz1());
+            Integer plz1;
+            try {
+                plz1 = Integer.parseInt(formSolutionsBestellung.getAsPlz1());
+            } catch (final Exception ex) {
+                LOG.warn("Exception while parsing PLZ1", ex);
+                plz1 = null;
+            }
+            adresseVersandBean.setProperty("plz", plz1);
             adresseVersandBean.setProperty("ort", trimedNotEmpty(formSolutionsBestellung.getAsOrt1()));
             adresseVersandBean.setProperty("staat", trimedNotEmpty(formSolutionsBestellung.getStaat1()));
         }
@@ -640,7 +654,14 @@ public class FormSolutionServerNewStuffAvailableAction implements UserAwareServe
                 : trimedNotEmpty(formSolutionsBestellung.getEMailadresse()));
         bestellungBean.setProperty("erledigt", false);
         bestellungBean.setProperty("eingang_ts", new Timestamp(new Date().getTime()));
-        bestellungBean.setProperty("gebuehr", formSolutionsBestellung.getBetrag());
+        Double gebuehr;
+        try {
+            gebuehr = Double.parseDouble(formSolutionsBestellung.getBetrag());
+        } catch (final Exception ex) {
+            LOG.warn("Exception while parsing Gebuehr", ex);
+            gebuehr = null;
+        }
+        bestellungBean.setProperty("gebuehr", gebuehr);
         bestellungBean.setProperty(
             "test",
             FormSolutionsConstants.TEST
