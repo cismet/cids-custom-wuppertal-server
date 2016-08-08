@@ -686,11 +686,6 @@ public class FormSolutionServerNewStuffAvailableAction implements UserAwareServe
             if (trimed.isEmpty()) {
                 return null;
             } else {
-                try {
-                    return new String(trimed.getBytes("UTF-8"), "ISO-8859-15");
-                } catch (UnsupportedEncodingException ex) {
-                    LOG.warn("error while changing charset from utf8 to latin9.", ex);
-                }
                 return trimed;
             }
         }
