@@ -25,11 +25,18 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 import com.vividsolutions.jts.geom.Geometry;
 import com.vividsolutions.jts.geom.Point;
 
+import net.sf.jasperreports.engine.JRDataSource;
+import net.sf.jasperreports.engine.JasperExportManager;
+import net.sf.jasperreports.engine.JasperFillManager;
+import net.sf.jasperreports.engine.JasperPrint;
+import net.sf.jasperreports.engine.JasperReport;
+import net.sf.jasperreports.engine.data.JRBeanCollectionDataSource;
+import net.sf.jasperreports.engine.util.JRLoader;
+
 import org.apache.commons.httpclient.UsernamePasswordCredentials;
 import org.apache.commons.io.IOUtils;
 import org.apache.commons.lang.RandomStringUtils;
 
-import org.openide.util.Exceptions;
 import org.openide.util.Lookup;
 
 import java.io.BufferedInputStream;
@@ -37,7 +44,6 @@ import java.io.BufferedReader;
 import java.io.InputStream;
 import java.io.InputStreamReader;
 import java.io.StringReader;
-import java.io.UnsupportedEncodingException;
 
 import java.net.URL;
 
@@ -48,7 +54,11 @@ import java.sql.ResultSet;
 import java.sql.SQLException;
 import java.sql.Timestamp;
 
+import java.text.DecimalFormat;
+import java.text.SimpleDateFormat;
+
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.Collection;
 import java.util.Date;
 import java.util.HashMap;
@@ -1060,6 +1070,85 @@ public class FormSolutionServerNewStuffAvailableAction implements UserAwareServe
     /**
      * DOCUMENT ME!
      *
+     * @param   bestellungBean  DOCUMENT ME!
+     *
+     * @return  DOCUMENT ME!
+     *
+     * @throws  Exception  DOCUMENT ME!
+     */
+    private JasperPrint createRechnung(final CidsBean bestellungBean) throws Exception {
+        final Map parameters = new HashMap();
+
+        parameters.put("DATUM_HEUTE", new SimpleDateFormat("dd.MM.yyyy").format(new Date()));
+        final String datumEingang = (bestellungBean.getProperty("eingang_ts") != null)
+            ? new SimpleDateFormat("dd.MM.yyyy").format(bestellungBean.getProperty("eingang_ts")) : "";
+        parameters.put("DATUM_EINGANG", datumEingang);
+        parameters.put("FLURSTUECKSKENNZEICHEN", bestellungBean.getProperty("landparcelcode"));
+        parameters.put("TRANSAKTIONSID", bestellungBean.getProperty("transid"));
+        parameters.put("LIEFER_FIRMA", bestellungBean.getProperty("fk_adresse_versand.firma"));
+        parameters.put("LIEFER_VORNAME", bestellungBean.getProperty("fk_adresse_versand.vorname"));
+        parameters.put("LIEFER_NAME", bestellungBean.getProperty("fk_adresse_versand.name"));
+        parameters.put("LIEFER_STRASSE", bestellungBean.getProperty("fk_adresse_versand.strasse"));
+        parameters.put(
+            "LIEFER_HAUSNUMMER",
+            bestellungBean.getProperty("fk_adresse_versand.hausnummer"));
+        final String plzVersand = (bestellungBean.getProperty("fk_adresse_versand.plz") != null)
+            ? Integer.toString((Integer)bestellungBean.getProperty("fk_adresse_versand.plz")) : "";
+        parameters.put("LIEFER_PLZ", plzVersand);
+        parameters.put("LIEFER_ORT", bestellungBean.getProperty("fk_adresse_versand.ort"));
+        parameters.put("RECHNUNG_FIRMA", bestellungBean.getProperty("fk_adresse_rechnung.firma"));
+        parameters.put("RECHNUNG_VORNAME", bestellungBean.getProperty("fk_adresse_rechnung.vorname"));
+        parameters.put("RECHNUNG_NAME", bestellungBean.getProperty("fk_adresse_rechnung.name"));
+        parameters.put("RECHNUNG_STRASSE", bestellungBean.getProperty("fk_adresse_rechnung.strasse"));
+        parameters.put(
+            "RECHNUNG_HAUSNUMMER",
+            bestellungBean.getProperty("fk_adresse_rechnung.hausnummer"));
+        final String plzRechnung = (bestellungBean.getProperty("fk_adresse_rechnung.plz") != null)
+            ? Integer.toString((Integer)bestellungBean.getProperty("fk_adresse_rechnung.plz")) : "";
+        parameters.put("RECHNUNG_PLZ", plzRechnung);
+        parameters.put("RECHNUNG_ORT", bestellungBean.getProperty("fk_adresse_rechnung.ort"));
+        parameters.put("RECHNUNG_FORMAT", bestellungBean.getProperty("fk_produkt.fk_format.format"));
+        parameters.put(
+            "RECHNUNG_LEISTUNG",
+            bestellungBean.getProperty("fk_produkt.fk_typ.name")
+                    + "\n"
+                    + bestellungBean.getProperty("transid"));
+
+        final DecimalFormat df = new DecimalFormat("#.00");
+        final String gebuehr = (bestellungBean.getProperty("gebuehr") != null)
+            ? df.format((Double)bestellungBean.getProperty("gebuehr")) : "";
+        parameters.put("RECHNUNG_GES_BETRAG", gebuehr);
+        parameters.put("RECHNUNG_EINZELPREIS", gebuehr);
+        parameters.put("RECHNUNG_GESAMMTPREIS", gebuehr);
+        parameters.put("RECHNUNG_BERECH_GRUNDLAGE", "VermWertGebT 2.1.1");
+        parameters.put("RECHNUNG_ANZAHL", "1");
+        parameters.put("RECHNUNG_RABATT", "");
+        parameters.put("RECHNUNG_UST", "");
+        final JRDataSource dataSource = new JRBeanCollectionDataSource(Arrays.asList(bestellungBean));
+
+        final JasperReport jasperReport = (JasperReport)JRLoader.loadObject(
+                FormSolutionBestellungChangeStatusServerAction.class.getResourceAsStream(
+                    "/de/cismet/cids/custom/wunda_blau/res/bestellung_rechnung.jasper"));
+        final JasperPrint print = JasperFillManager.fillReport(jasperReport, parameters, dataSource);
+        return print;
+    }
+
+    /**
+     * DOCUMENT ME!
+     *
+     * @param   fileName        DOCUMENT ME!
+     * @param   bestellungBean  DOCUMENT ME!
+     *
+     * @throws  Exception  DOCUMENT ME!
+     */
+    private void createRechnung(final String fileName, final CidsBean bestellungBean) throws Exception {
+        final JasperPrint print = createRechnung(bestellungBean);
+        JasperExportManager.exportReportToPdfFile(print, fileName);
+    }
+
+    /**
+     * DOCUMENT ME!
+     *
      * @param  fsBeanMap  DOCUMENT ME!
      * @param  fsUrlMap   DOCUMENT ME!
      */
@@ -1078,6 +1167,7 @@ public class FormSolutionServerNewStuffAvailableAction implements UserAwareServe
                     bestellungBean.setProperty("request_url", productUrl.toString());
 
                     final String fileName = bestellungBean.getProperty("transid") + ".pdf";
+                    final String fileNameRechnung = FormSolutionsConstants.PRODUKT_BASEPATH + "RE_" + transid + ".pdf";
 
                     downloadProdukt(productUrl, fileName);
 
@@ -1094,6 +1184,8 @@ public class FormSolutionServerNewStuffAvailableAction implements UserAwareServe
 
                     getMetaService().updateMetaObject(user, bestellungBean.getMetaObject());
 
+                    createRechnung(fileNameRechnung, bestellungBean);
+                    
                     getMySqlHelper().updateProdukt(
                         transid,
                         STATUS_DOWNLOAD,
