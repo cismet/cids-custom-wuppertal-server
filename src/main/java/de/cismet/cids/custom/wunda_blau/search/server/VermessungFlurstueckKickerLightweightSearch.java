@@ -44,7 +44,8 @@ import de.cismet.cidsx.server.search.builtin.legacy.LightweightMetaObjectsSearch
  */
 @ServiceProvider(service = RestApiCidsServerSearch.class)
 public class VermessungFlurstueckKickerLightweightSearch extends AbstractCidsServerSearch
-        implements RestApiCidsServerSearch, LightweightMetaObjectsSearch {
+        implements RestApiCidsServerSearch,
+            LightweightMetaObjectsSearch {
 
     //~ Static fields/initializers ---------------------------------------------
 
