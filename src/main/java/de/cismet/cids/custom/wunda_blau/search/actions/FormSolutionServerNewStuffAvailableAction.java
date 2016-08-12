@@ -29,7 +29,6 @@ import org.apache.commons.httpclient.UsernamePasswordCredentials;
 import org.apache.commons.io.IOUtils;
 import org.apache.commons.lang.RandomStringUtils;
 
-import org.openide.util.Exceptions;
 import org.openide.util.Lookup;
 
 import java.io.BufferedInputStream;
@@ -37,7 +36,6 @@ import java.io.BufferedReader;
 import java.io.InputStream;
 import java.io.InputStreamReader;
 import java.io.StringReader;
-import java.io.UnsupportedEncodingException;
 
 import java.net.URL;
 
@@ -52,6 +50,7 @@ import java.util.ArrayList;
 import java.util.Collection;
 import java.util.Date;
 import java.util.HashMap;
+import java.util.HashSet;
 import java.util.Iterator;
 import java.util.LinkedHashSet;
 import java.util.Map;
@@ -99,6 +98,8 @@ public class FormSolutionServerNewStuffAvailableAction implements UserAwareServe
     public static final String TASK_NAME = "formSolutionServerNewStuffAvailable";
     private static final String TEST_CISMET00_XML_FILE =
         "/de/cismet/cids/custom/wunda_blau/res/formsolutions/TEST_CISMET00.xml";
+    private static final String IGNORE_TRANSID_FILE =
+        "/de/cismet/cids/custom/wunda_blau/res/formsolutions/ignoreTransids.txt";
 
     private static final String TEST_CISMET00_PREFIX = "TEST_CISMET00-";
 
@@ -139,6 +140,7 @@ public class FormSolutionServerNewStuffAvailableAction implements UserAwareServe
     private User user;
     private MetaService metaService;
     private final String testCismet00Xml;
+    private final Set<String> ignoreTransids = new HashSet<String>();
     private final boolean testCismet00Enabled;
 
     //~ Constructors -----------------------------------------------------------
@@ -183,6 +185,19 @@ public class FormSolutionServerNewStuffAvailableAction implements UserAwareServe
             }
         }
         this.testCismet00Xml = testCismet00Xml;
+
+        try {
+            final String ignoreFileContent = IOUtils.toString(new BufferedInputStream(
+                        getClass().getResourceAsStream(IGNORE_TRANSID_FILE)));
+            final String[] lines = ignoreFileContent.split("\n");
+            for (final String line : lines) {
+                if (!line.trim().isEmpty()) {
+                    ignoreTransids.add(line.trim());
+                }
+            }
+        } catch (final Exception ex) {
+            LOG.error("could not load " + IGNORE_TRANSID_FILE, ex);
+        }
 
         this.creds = creds;
     }
@@ -273,6 +288,7 @@ public class FormSolutionServerNewStuffAvailableAction implements UserAwareServe
             LOG.error("error while generating TEST_CISMET00 transid", ex);
         }
 
+        transIds.removeAll(ignoreTransids);
         return transIds;
     }
 
