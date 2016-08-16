@@ -39,6 +39,10 @@ import java.io.StringReader;
 
 import java.net.URL;
 
+import java.nio.ByteBuffer;
+import java.nio.CharBuffer;
+import java.nio.charset.Charset;
+
 import java.rmi.Remote;
 import java.rmi.RemoteException;
 
@@ -372,7 +376,29 @@ public class FormSolutionServerNewStuffAvailableAction implements UserAwareServe
                     });
             inputStream.close();
 
-            return new String(DatatypeConverter.parseBase64Binary((String)map.get("xml")));
+            final String xml = new String(DatatypeConverter.parseBase64Binary((String)map.get("xml")));
+
+            final Charset utf8charset = Charset.forName("UTF-8");
+            final Charset iso885915charset = Charset.forName("ISO-8859-15");
+
+            final ByteBuffer inputBuffer = ByteBuffer.wrap(xml.getBytes());
+
+            // decode UTF-8
+            final CharBuffer data = utf8charset.decode(inputBuffer);
+
+            // encode ISO-8559-15
+            final ByteBuffer outputBuffer = iso885915charset.encode(data);
+            final byte[] outputData = outputBuffer.array();
+
+            String convertedXml;
+            try {
+                convertedXml = new String(new String(outputData, "ISO-8859-15").getBytes(), "UTF-8");
+            } catch (final UnsupportedEncodingException ex) {
+                LOG.warn("could not convert to LATIN9", ex);
+                convertedXml = xml;
+            }
+
+            return convertedXml;
         }
     }
 
