@@ -41,6 +41,8 @@ import org.openide.util.Lookup;
 
 import java.io.BufferedInputStream;
 import java.io.BufferedReader;
+import java.io.ByteArrayInputStream;
+import java.io.ByteArrayOutputStream;
 import java.io.InputStream;
 import java.io.InputStreamReader;
 import java.io.StringReader;
@@ -1188,7 +1190,31 @@ public class FormSolutionServerNewStuffAvailableAction implements UserAwareServe
      */
     private void createRechnung(final String fileName, final CidsBean bestellungBean) throws Exception {
         final JasperPrint print = createRechnung(bestellungBean);
-        JasperExportManager.exportReportToPdfFile(print, fileName);
+
+        ByteArrayOutputStream os = null;
+        ByteArrayInputStream is = null;
+        try {
+            os = new ByteArrayOutputStream();
+            JasperExportManager.exportReportToPdfStream(print, os);
+            final byte[] bytes = os.toByteArray();
+
+            is = new ByteArrayInputStream(bytes);
+
+            FormSolutionFtpClient.getInstance().upload(is, FormSolutionsConstants.PRODUKT_BASEPATH + fileName);
+        } finally {
+            try {
+                if (os != null) {
+                    os.close();
+                }
+            } catch (Exception e) {
+            }
+            try {
+                if (is != null) {
+                    is.close();
+                }
+            } catch (Exception e) {
+            }
+        }
     }
 
     /**
@@ -1211,8 +1237,8 @@ public class FormSolutionServerNewStuffAvailableAction implements UserAwareServe
 
                     bestellungBean.setProperty("request_url", productUrl.toString());
 
-                    final String fileName = bestellungBean.getProperty("transid") + ".pdf";
-                    final String fileNameRechnung = FormSolutionsConstants.PRODUKT_BASEPATH + "RE_" + transid + ".pdf";
+                    final String fileName = transid + ".pdf";
+                    final String fileNameRechnung = "RE_" + transid + ".pdf";
 
                     downloadProdukt(productUrl, fileName);
 
@@ -1230,7 +1256,7 @@ public class FormSolutionServerNewStuffAvailableAction implements UserAwareServe
                     getMetaService().updateMetaObject(user, bestellungBean.getMetaObject());
 
                     createRechnung(fileNameRechnung, bestellungBean);
-                    
+
                     getMySqlHelper().updateProdukt(
                         transid,
                         STATUS_DOWNLOAD,
