@@ -29,7 +29,6 @@ import org.apache.commons.httpclient.UsernamePasswordCredentials;
 import org.apache.commons.io.IOUtils;
 import org.apache.commons.lang.RandomStringUtils;
 
-import org.openide.util.Exceptions;
 import org.openide.util.Lookup;
 
 import java.io.BufferedInputStream;
@@ -40,6 +39,10 @@ import java.io.StringReader;
 import java.io.UnsupportedEncodingException;
 
 import java.net.URL;
+
+import java.nio.ByteBuffer;
+import java.nio.CharBuffer;
+import java.nio.charset.Charset;
 
 import java.rmi.Remote;
 import java.rmi.RemoteException;
@@ -356,7 +359,29 @@ public class FormSolutionServerNewStuffAvailableAction implements UserAwareServe
                     });
             inputStream.close();
 
-            return new String(DatatypeConverter.parseBase64Binary((String)map.get("xml")));
+            final String xml = new String(DatatypeConverter.parseBase64Binary((String)map.get("xml")));
+
+            final Charset utf8charset = Charset.forName("UTF-8");
+            final Charset iso885915charset = Charset.forName("ISO-8859-15");
+
+            final ByteBuffer inputBuffer = ByteBuffer.wrap(xml.getBytes());
+
+            // decode UTF-8
+            final CharBuffer data = utf8charset.decode(inputBuffer);
+
+            // encode ISO-8559-15
+            final ByteBuffer outputBuffer = iso885915charset.encode(data);
+            final byte[] outputData = outputBuffer.array();
+
+            String convertedXml;
+            try {
+                convertedXml = new String(new String(outputData, "ISO-8859-15").getBytes(), "UTF-8");
+            } catch (final UnsupportedEncodingException ex) {
+                LOG.warn("could not convert to LATIN9", ex);
+                convertedXml = xml;
+            }
+
+            return convertedXml;
         }
     }
 
@@ -686,11 +711,6 @@ public class FormSolutionServerNewStuffAvailableAction implements UserAwareServe
             if (trimed.isEmpty()) {
                 return null;
             } else {
-                try {
-                    return new String(trimed.getBytes("UTF-8"), "ISO-8859-15");
-                } catch (UnsupportedEncodingException ex) {
-                    LOG.warn("error while changing charset from utf8 to latin9.", ex);
-                }
                 return trimed;
             }
         }
