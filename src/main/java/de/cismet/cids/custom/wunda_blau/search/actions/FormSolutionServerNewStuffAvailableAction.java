@@ -46,6 +46,7 @@ import java.io.ByteArrayOutputStream;
 import java.io.InputStream;
 import java.io.InputStreamReader;
 import java.io.StringReader;
+import java.io.UnsupportedEncodingException;
 
 import java.net.URL;
 
@@ -1117,6 +1118,21 @@ public class FormSolutionServerNewStuffAvailableAction implements UserAwareServe
     /**
      * DOCUMENT ME!
      *
+     * @param   string  DOCUMENT ME!
+     *
+     * @return  DOCUMENT ME!
+     */
+    public static String noNullAndTrimed(final String string) {
+        if (string == null) {
+            return "";
+        } else {
+            return string.trim();
+        }
+    }
+
+    /**
+     * DOCUMENT ME!
+     *
      * @param   bestellungBean  DOCUMENT ME!
      *
      * @return  DOCUMENT ME!
@@ -1129,35 +1145,49 @@ public class FormSolutionServerNewStuffAvailableAction implements UserAwareServe
         parameters.put("DATUM_HEUTE", new SimpleDateFormat("dd.MM.yyyy").format(new Date()));
         final String datumEingang = (bestellungBean.getProperty("eingang_ts") != null)
             ? new SimpleDateFormat("dd.MM.yyyy").format(bestellungBean.getProperty("eingang_ts")) : "";
-        parameters.put("DATUM_EINGANG", datumEingang);
-        parameters.put("FLURSTUECKSKENNZEICHEN", bestellungBean.getProperty("landparcelcode"));
-        parameters.put("TRANSAKTIONSID", bestellungBean.getProperty("transid"));
-        parameters.put("LIEFER_FIRMA", bestellungBean.getProperty("fk_adresse_versand.firma"));
-        parameters.put("LIEFER_VORNAME", bestellungBean.getProperty("fk_adresse_versand.vorname"));
-        parameters.put("LIEFER_NAME", bestellungBean.getProperty("fk_adresse_versand.name"));
-        parameters.put("LIEFER_STRASSE", bestellungBean.getProperty("fk_adresse_versand.strasse"));
+        parameters.put("DATUM_EINGANG", noNullAndTrimed(datumEingang));
+        parameters.put("FLURSTUECKSKENNZEICHEN", noNullAndTrimed((String)bestellungBean.getProperty("landparcelcode")));
+        parameters.put("TRANSAKTIONSID", noNullAndTrimed((String)bestellungBean.getProperty("transid")));
+        parameters.put("LIEFER_FIRMA", noNullAndTrimed((String)bestellungBean.getProperty("fk_adresse_versand.firma")));
+        parameters.put(
+            "LIEFER_VORNAME",
+            noNullAndTrimed((String)bestellungBean.getProperty("fk_adresse_versand.vorname")));
+        parameters.put("LIEFER_NAME", noNullAndTrimed((String)bestellungBean.getProperty("fk_adresse_versand.name")));
+        parameters.put(
+            "LIEFER_STRASSE",
+            noNullAndTrimed((String)bestellungBean.getProperty("fk_adresse_versand.strasse")));
         parameters.put(
             "LIEFER_HAUSNUMMER",
-            bestellungBean.getProperty("fk_adresse_versand.hausnummer"));
+            noNullAndTrimed((String)bestellungBean.getProperty("fk_adresse_versand.hausnummer")));
         final String plzVersand = (bestellungBean.getProperty("fk_adresse_versand.plz") != null)
             ? Integer.toString((Integer)bestellungBean.getProperty("fk_adresse_versand.plz")) : "";
         parameters.put("LIEFER_PLZ", plzVersand);
-        parameters.put("LIEFER_ORT", bestellungBean.getProperty("fk_adresse_versand.ort"));
-        parameters.put("RECHNUNG_FIRMA", bestellungBean.getProperty("fk_adresse_rechnung.firma"));
-        parameters.put("RECHNUNG_VORNAME", bestellungBean.getProperty("fk_adresse_rechnung.vorname"));
-        parameters.put("RECHNUNG_NAME", bestellungBean.getProperty("fk_adresse_rechnung.name"));
-        parameters.put("RECHNUNG_STRASSE", bestellungBean.getProperty("fk_adresse_rechnung.strasse"));
+        parameters.put("LIEFER_ORT", noNullAndTrimed((String)bestellungBean.getProperty("fk_adresse_versand.ort")));
+        parameters.put(
+            "RECHNUNG_FIRMA",
+            noNullAndTrimed((String)bestellungBean.getProperty("fk_adresse_rechnung.firma")));
+        parameters.put(
+            "RECHNUNG_VORNAME",
+            noNullAndTrimed((String)bestellungBean.getProperty("fk_adresse_rechnung.vorname")));
+        parameters.put(
+            "RECHNUNG_NAME",
+            noNullAndTrimed((String)bestellungBean.getProperty("fk_adresse_rechnung.name")));
+        parameters.put(
+            "RECHNUNG_STRASSE",
+            noNullAndTrimed((String)bestellungBean.getProperty("fk_adresse_rechnung.strasse")));
         parameters.put(
             "RECHNUNG_HAUSNUMMER",
-            bestellungBean.getProperty("fk_adresse_rechnung.hausnummer"));
+            noNullAndTrimed((String)bestellungBean.getProperty("fk_adresse_rechnung.hausnummer")));
         final String plzRechnung = (bestellungBean.getProperty("fk_adresse_rechnung.plz") != null)
             ? Integer.toString((Integer)bestellungBean.getProperty("fk_adresse_rechnung.plz")) : "";
         parameters.put("RECHNUNG_PLZ", plzRechnung);
-        parameters.put("RECHNUNG_ORT", bestellungBean.getProperty("fk_adresse_rechnung.ort"));
-        parameters.put("RECHNUNG_FORMAT", bestellungBean.getProperty("fk_produkt.fk_format.format"));
+        parameters.put("RECHNUNG_ORT", noNullAndTrimed((String)bestellungBean.getProperty("fk_adresse_rechnung.ort")));
+        parameters.put(
+            "RECHNUNG_FORMAT",
+            noNullAndTrimed((String)bestellungBean.getProperty("fk_produkt.fk_format.format")));
         parameters.put(
             "RECHNUNG_LEISTUNG",
-            bestellungBean.getProperty("fk_produkt.fk_typ.name")
+            noNullAndTrimed((String)bestellungBean.getProperty("fk_produkt.fk_typ.name"))
                     + "\n"
                     + bestellungBean.getProperty("transid"));
 
