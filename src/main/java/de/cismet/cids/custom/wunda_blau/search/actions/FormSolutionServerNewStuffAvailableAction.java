@@ -25,20 +25,34 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 import com.vividsolutions.jts.geom.Geometry;
 import com.vividsolutions.jts.geom.Point;
 
+import net.sf.jasperreports.engine.JRDataSource;
+import net.sf.jasperreports.engine.JasperExportManager;
+import net.sf.jasperreports.engine.JasperFillManager;
+import net.sf.jasperreports.engine.JasperPrint;
+import net.sf.jasperreports.engine.JasperReport;
+import net.sf.jasperreports.engine.data.JRBeanCollectionDataSource;
+import net.sf.jasperreports.engine.util.JRLoader;
+
 import org.apache.commons.httpclient.UsernamePasswordCredentials;
 import org.apache.commons.io.IOUtils;
 import org.apache.commons.lang.RandomStringUtils;
 
-import org.openide.util.Exceptions;
 import org.openide.util.Lookup;
 
 import java.io.BufferedInputStream;
 import java.io.BufferedReader;
+import java.io.ByteArrayInputStream;
+import java.io.ByteArrayOutputStream;
 import java.io.InputStream;
 import java.io.InputStreamReader;
 import java.io.StringReader;
+import java.io.UnsupportedEncodingException;
 
 import java.net.URL;
+
+import java.nio.ByteBuffer;
+import java.nio.CharBuffer;
+import java.nio.charset.Charset;
 
 import java.rmi.Remote;
 import java.rmi.RemoteException;
@@ -47,10 +61,15 @@ import java.sql.ResultSet;
 import java.sql.SQLException;
 import java.sql.Timestamp;
 
+import java.text.DecimalFormat;
+import java.text.SimpleDateFormat;
+
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.Collection;
 import java.util.Date;
 import java.util.HashMap;
+import java.util.HashSet;
 import java.util.Iterator;
 import java.util.LinkedHashSet;
 import java.util.Map;
@@ -81,6 +100,7 @@ import de.cismet.cids.utils.MetaClassCacheService;
 
 import de.cismet.commons.security.AccessHandler;
 import de.cismet.commons.security.handler.SimpleHttpAccessHandler;
+import java.io.UnsupportedEncodingException;
 
 /**
  * DOCUMENT ME!
@@ -98,6 +118,8 @@ public class FormSolutionServerNewStuffAvailableAction implements UserAwareServe
     public static final String TASK_NAME = "formSolutionServerNewStuffAvailable";
     private static final String TEST_CISMET00_XML_FILE =
         "/de/cismet/cids/custom/wunda_blau/res/formsolutions/TEST_CISMET00.xml";
+    private static final String IGNORE_TRANSID_FILE =
+        "/de/cismet/cids/custom/wunda_blau/res/formsolutions/ignoreTransids.txt";
 
     private static final String TEST_CISMET00_PREFIX = "TEST_CISMET00-";
 
@@ -138,6 +160,7 @@ public class FormSolutionServerNewStuffAvailableAction implements UserAwareServe
     private User user;
     private MetaService metaService;
     private final String testCismet00Xml;
+    private final Set<String> ignoreTransids = new HashSet<String>();
     private final boolean testCismet00Enabled;
 
     //~ Constructors -----------------------------------------------------------
@@ -182,6 +205,19 @@ public class FormSolutionServerNewStuffAvailableAction implements UserAwareServe
             }
         }
         this.testCismet00Xml = testCismet00Xml;
+
+        try {
+            final String ignoreFileContent = IOUtils.toString(new BufferedInputStream(
+                        getClass().getResourceAsStream(IGNORE_TRANSID_FILE)));
+            final String[] lines = ignoreFileContent.split("\n");
+            for (final String line : lines) {
+                if (!line.trim().isEmpty()) {
+                    ignoreTransids.add(line.trim());
+                }
+            }
+        } catch (final Exception ex) {
+            LOG.error("could not load " + IGNORE_TRANSID_FILE, ex);
+        }
 
         this.creds = creds;
     }
@@ -272,6 +308,7 @@ public class FormSolutionServerNewStuffAvailableAction implements UserAwareServe
             LOG.error("error while generating TEST_CISMET00 transid", ex);
         }
 
+        transIds.removeAll(ignoreTransids);
         return transIds;
     }
 
@@ -355,7 +392,29 @@ public class FormSolutionServerNewStuffAvailableAction implements UserAwareServe
                     });
             inputStream.close();
 
-            return new String(DatatypeConverter.parseBase64Binary((String)map.get("xml")));
+            final String xml = new String(DatatypeConverter.parseBase64Binary((String)map.get("xml")));
+
+            final Charset utf8charset = Charset.forName("UTF-8");
+            final Charset iso885915charset = Charset.forName("ISO-8859-15");
+
+            final ByteBuffer inputBuffer = ByteBuffer.wrap(xml.getBytes());
+
+            // decode UTF-8
+            final CharBuffer data = utf8charset.decode(inputBuffer);
+
+            // encode ISO-8559-15
+            final ByteBuffer outputBuffer = iso885915charset.encode(data);
+            final byte[] outputData = outputBuffer.array();
+
+            String convertedXml;
+            try {
+                convertedXml = new String(new String(outputData, "ISO-8859-15").getBytes(), "UTF-8");
+            } catch (final UnsupportedEncodingException ex) {
+                LOG.warn("could not convert to LATIN9", ex);
+                convertedXml = xml;
+            }
+
+            return convertedXml;
         }
     }
 
@@ -608,7 +667,14 @@ public class FormSolutionServerNewStuffAvailableAction implements UserAwareServe
         adresseRechnungBean.setProperty("vorname", trimedNotEmpty(formSolutionsBestellung.getAsVorname()));
         adresseRechnungBean.setProperty("strasse", trimedNotEmpty(formSolutionsBestellung.getAsStrasse()));
         adresseRechnungBean.setProperty("hausnummer", trimedNotEmpty(formSolutionsBestellung.getAsHausnummer()));
-        adresseRechnungBean.setProperty("plz", formSolutionsBestellung.getAsPlz());
+        Integer plz;
+        try {
+            plz = Integer.parseInt(formSolutionsBestellung.getAsPlz());
+        } catch (final Exception ex) {
+            LOG.warn("Exception while parsing PLZ", ex);
+            plz = null;
+        }
+        adresseRechnungBean.setProperty("plz", plz);
         adresseRechnungBean.setProperty("ort", trimedNotEmpty(formSolutionsBestellung.getAsOrt()));
         adresseRechnungBean.setProperty("staat", trimedNotEmpty(formSolutionsBestellung.getStaat()));
 
@@ -621,7 +687,14 @@ public class FormSolutionServerNewStuffAvailableAction implements UserAwareServe
             adresseVersandBean.setProperty("vorname", trimedNotEmpty(formSolutionsBestellung.getAsVorname1()));
             adresseVersandBean.setProperty("strasse", trimedNotEmpty(formSolutionsBestellung.getAsStrasse1()));
             adresseVersandBean.setProperty("hausnummer", trimedNotEmpty(formSolutionsBestellung.getAsHausnummer1()));
-            adresseVersandBean.setProperty("plz", formSolutionsBestellung.getAsPlz1());
+            Integer plz1;
+            try {
+                plz1 = Integer.parseInt(formSolutionsBestellung.getAsPlz1());
+            } catch (final Exception ex) {
+                LOG.warn("Exception while parsing PLZ1", ex);
+                plz1 = null;
+            }
+            adresseVersandBean.setProperty("plz", plz1);
             adresseVersandBean.setProperty("ort", trimedNotEmpty(formSolutionsBestellung.getAsOrt1()));
             adresseVersandBean.setProperty("staat", trimedNotEmpty(formSolutionsBestellung.getStaat1()));
         }
@@ -640,7 +713,14 @@ public class FormSolutionServerNewStuffAvailableAction implements UserAwareServe
                 : trimedNotEmpty(formSolutionsBestellung.getEMailadresse()));
         bestellungBean.setProperty("erledigt", false);
         bestellungBean.setProperty("eingang_ts", new Timestamp(new Date().getTime()));
-        bestellungBean.setProperty("gebuehr", formSolutionsBestellung.getBetrag());
+        Double gebuehr;
+        try {
+            gebuehr = Double.parseDouble(formSolutionsBestellung.getBetrag());
+        } catch (final Exception ex) {
+            LOG.warn("Exception while parsing Gebuehr", ex);
+            gebuehr = null;
+        }
+        bestellungBean.setProperty("gebuehr", gebuehr);
         bestellungBean.setProperty(
             "test",
             FormSolutionsConstants.TEST
@@ -669,6 +749,14 @@ public class FormSolutionServerNewStuffAvailableAction implements UserAwareServe
         }
     }
 
+    /**
+     * DOCUMENT ME!
+     *
+     * @param  args  DOCUMENT ME!
+     */
+    public static void main(final String[] args) {
+        System.out.println("’  " + trimedNotEmpty("’"));
+    }
     /**
      * DOCUMENT ME!
      *
@@ -1030,6 +1118,138 @@ public class FormSolutionServerNewStuffAvailableAction implements UserAwareServe
     /**
      * DOCUMENT ME!
      *
+     * @param   string  DOCUMENT ME!
+     *
+     * @return  DOCUMENT ME!
+     */
+    public static String noNullAndTrimed(final String string) {
+        if (string == null) {
+            return "";
+        } else {
+            return string.trim();
+        }
+    }
+
+    /**
+     * DOCUMENT ME!
+     *
+     * @param   bestellungBean  DOCUMENT ME!
+     *
+     * @return  DOCUMENT ME!
+     *
+     * @throws  Exception  DOCUMENT ME!
+     */
+    private JasperPrint createRechnung(final CidsBean bestellungBean) throws Exception {
+        final Map parameters = new HashMap();
+
+        parameters.put("DATUM_HEUTE", new SimpleDateFormat("dd.MM.yyyy").format(new Date()));
+        final String datumEingang = (bestellungBean.getProperty("eingang_ts") != null)
+            ? new SimpleDateFormat("dd.MM.yyyy").format(bestellungBean.getProperty("eingang_ts")) : "";
+        parameters.put("DATUM_EINGANG", noNullAndTrimed(datumEingang));
+        parameters.put("FLURSTUECKSKENNZEICHEN", noNullAndTrimed((String)bestellungBean.getProperty("landparcelcode")));
+        parameters.put("TRANSAKTIONSID", noNullAndTrimed((String)bestellungBean.getProperty("transid")));
+        parameters.put("LIEFER_FIRMA", noNullAndTrimed((String)bestellungBean.getProperty("fk_adresse_versand.firma")));
+        parameters.put(
+            "LIEFER_VORNAME",
+            noNullAndTrimed((String)bestellungBean.getProperty("fk_adresse_versand.vorname")));
+        parameters.put("LIEFER_NAME", noNullAndTrimed((String)bestellungBean.getProperty("fk_adresse_versand.name")));
+        parameters.put(
+            "LIEFER_STRASSE",
+            noNullAndTrimed((String)bestellungBean.getProperty("fk_adresse_versand.strasse")));
+        parameters.put(
+            "LIEFER_HAUSNUMMER",
+            noNullAndTrimed((String)bestellungBean.getProperty("fk_adresse_versand.hausnummer")));
+        final String plzVersand = (bestellungBean.getProperty("fk_adresse_versand.plz") != null)
+            ? Integer.toString((Integer)bestellungBean.getProperty("fk_adresse_versand.plz")) : "";
+        parameters.put("LIEFER_PLZ", plzVersand);
+        parameters.put("LIEFER_ORT", noNullAndTrimed((String)bestellungBean.getProperty("fk_adresse_versand.ort")));
+        parameters.put(
+            "RECHNUNG_FIRMA",
+            noNullAndTrimed((String)bestellungBean.getProperty("fk_adresse_rechnung.firma")));
+        parameters.put(
+            "RECHNUNG_VORNAME",
+            noNullAndTrimed((String)bestellungBean.getProperty("fk_adresse_rechnung.vorname")));
+        parameters.put(
+            "RECHNUNG_NAME",
+            noNullAndTrimed((String)bestellungBean.getProperty("fk_adresse_rechnung.name")));
+        parameters.put(
+            "RECHNUNG_STRASSE",
+            noNullAndTrimed((String)bestellungBean.getProperty("fk_adresse_rechnung.strasse")));
+        parameters.put(
+            "RECHNUNG_HAUSNUMMER",
+            noNullAndTrimed((String)bestellungBean.getProperty("fk_adresse_rechnung.hausnummer")));
+        final String plzRechnung = (bestellungBean.getProperty("fk_adresse_rechnung.plz") != null)
+            ? Integer.toString((Integer)bestellungBean.getProperty("fk_adresse_rechnung.plz")) : "";
+        parameters.put("RECHNUNG_PLZ", plzRechnung);
+        parameters.put("RECHNUNG_ORT", noNullAndTrimed((String)bestellungBean.getProperty("fk_adresse_rechnung.ort")));
+        parameters.put(
+            "RECHNUNG_FORMAT",
+            noNullAndTrimed((String)bestellungBean.getProperty("fk_produkt.fk_format.format")));
+        parameters.put(
+            "RECHNUNG_LEISTUNG",
+            noNullAndTrimed((String)bestellungBean.getProperty("fk_produkt.fk_typ.name"))
+                    + "\n"
+                    + bestellungBean.getProperty("transid"));
+
+        final DecimalFormat df = new DecimalFormat("#.00");
+        final String gebuehr = (bestellungBean.getProperty("gebuehr") != null)
+            ? df.format((Double)bestellungBean.getProperty("gebuehr")) : "";
+        parameters.put("RECHNUNG_GES_BETRAG", gebuehr);
+        parameters.put("RECHNUNG_EINZELPREIS", gebuehr);
+        parameters.put("RECHNUNG_GESAMMTPREIS", gebuehr);
+        parameters.put("RECHNUNG_BERECH_GRUNDLAGE", "VermWertGebT 2.1.1");
+        parameters.put("RECHNUNG_ANZAHL", "1");
+        parameters.put("RECHNUNG_RABATT", "");
+        parameters.put("RECHNUNG_UST", "");
+        final JRDataSource dataSource = new JRBeanCollectionDataSource(Arrays.asList(bestellungBean));
+
+        final JasperReport jasperReport = (JasperReport)JRLoader.loadObject(
+                FormSolutionBestellungChangeStatusServerAction.class.getResourceAsStream(
+                    "/de/cismet/cids/custom/wunda_blau/res/bestellung_rechnung.jasper"));
+        final JasperPrint print = JasperFillManager.fillReport(jasperReport, parameters, dataSource);
+        return print;
+    }
+
+    /**
+     * DOCUMENT ME!
+     *
+     * @param   fileName        DOCUMENT ME!
+     * @param   bestellungBean  DOCUMENT ME!
+     *
+     * @throws  Exception  DOCUMENT ME!
+     */
+    private void createRechnung(final String fileName, final CidsBean bestellungBean) throws Exception {
+        final JasperPrint print = createRechnung(bestellungBean);
+
+        ByteArrayOutputStream os = null;
+        ByteArrayInputStream is = null;
+        try {
+            os = new ByteArrayOutputStream();
+            JasperExportManager.exportReportToPdfStream(print, os);
+            final byte[] bytes = os.toByteArray();
+
+            is = new ByteArrayInputStream(bytes);
+
+            FormSolutionFtpClient.getInstance().upload(is, FormSolutionsConstants.PRODUKT_BASEPATH + fileName);
+        } finally {
+            try {
+                if (os != null) {
+                    os.close();
+                }
+            } catch (Exception e) {
+            }
+            try {
+                if (is != null) {
+                    is.close();
+                }
+            } catch (Exception e) {
+            }
+        }
+    }
+
+    /**
+     * DOCUMENT ME!
+     *
      * @param  fsBeanMap  DOCUMENT ME!
      * @param  fsUrlMap   DOCUMENT ME!
      */
@@ -1047,7 +1267,8 @@ public class FormSolutionServerNewStuffAvailableAction implements UserAwareServe
 
                     bestellungBean.setProperty("request_url", productUrl.toString());
 
-                    final String fileName = bestellungBean.getProperty("transid") + ".pdf";
+                    final String fileName = transid + ".pdf";
+                    final String fileNameRechnung = "RE_" + transid + ".pdf";
 
                     downloadProdukt(productUrl, fileName);
 
@@ -1063,6 +1284,8 @@ public class FormSolutionServerNewStuffAvailableAction implements UserAwareServe
                     bestellungBean.setProperty("produkt_ts", new Timestamp(new Date().getTime()));
 
                     getMetaService().updateMetaObject(user, bestellungBean.getMetaObject());
+
+                    createRechnung(fileNameRechnung, bestellungBean);
 
                     getMySqlHelper().updateProdukt(
                         transid,
