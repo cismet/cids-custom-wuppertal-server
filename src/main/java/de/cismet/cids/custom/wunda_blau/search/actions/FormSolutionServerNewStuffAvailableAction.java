@@ -100,7 +100,6 @@ import de.cismet.cids.utils.MetaClassCacheService;
 
 import de.cismet.commons.security.AccessHandler;
 import de.cismet.commons.security.handler.SimpleHttpAccessHandler;
-import java.io.UnsupportedEncodingException;
 
 /**
  * DOCUMENT ME!
