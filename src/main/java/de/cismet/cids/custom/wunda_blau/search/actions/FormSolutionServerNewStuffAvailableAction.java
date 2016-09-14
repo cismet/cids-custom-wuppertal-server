@@ -278,36 +278,31 @@ public class FormSolutionServerNewStuffAvailableAction implements UserAwareServe
      * @throws  Exception  DOCUMENT ME!
      */
     private Collection<String> getOpenTransids() throws Exception {
-        final StringBuilder stringBuilder = new StringBuilder();
-        final InputStream inputStream = getHttpAccessHandler().doRequest(
-                new URL(FormSolutionsConstants.URL_AUFTRAGSLISTE_FS),
-                new StringReader(""),
-                AccessHandler.ACCESS_METHODS.GET_REQUEST,
-                null,
-                creds);
-
-        final BufferedReader reader = new BufferedReader(new InputStreamReader(inputStream));
-        String line;
-        while ((line = reader.readLine()) != null) {
-            stringBuilder.append(line);
-        }
-        inputStream.close();
-
-        final Map<String, Object> map = getObjectMapper().readValue("{ \"list\" : " + stringBuilder.toString() + "}",
-                new TypeReference<HashMap<String, Object>>() {
-                });
-
-        final Collection<String> transIds = (Collection<String>)map.get("list");
-
+        final Collection<String> transIds = new ArrayList<String>();
         try {
-            if (testCismet00Enabled) {
-                transIds.add(TEST_CISMET00_PREFIX + RandomStringUtils.randomAlphanumeric(8));
-            }
-        } catch (final Exception ex) {
-            LOG.error("error while generating TEST_CISMET00 transid", ex);
-        }
+            final StringBuilder stringBuilder = new StringBuilder();
+            final InputStream inputStream = getHttpAccessHandler().doRequest(
+                    new URL(FormSolutionsConstants.URL_AUFTRAGSLISTE_FS),
+                    new StringReader(""),
+                    AccessHandler.ACCESS_METHODS.GET_REQUEST,
+                    null,
+                    creds);
 
-        transIds.removeAll(ignoreTransids);
+            final BufferedReader reader = new BufferedReader(new InputStreamReader(inputStream));
+            String line;
+            while ((line = reader.readLine()) != null) {
+                stringBuilder.append(line);
+            }
+            inputStream.close();
+
+            final Map<String, Object> map = getObjectMapper().readValue("{ \"list\" : " + stringBuilder.toString()
+                            + "}",
+                    new TypeReference<HashMap<String, Object>>() {
+                    });
+            transIds.addAll((Collection<String>)map.get("list"));
+        } catch (final Exception ex) {
+            LOG.error("error while retrieving open transids", ex);
+        }
         return transIds;
     }
 
@@ -676,6 +671,7 @@ public class FormSolutionServerNewStuffAvailableAction implements UserAwareServe
         adresseRechnungBean.setProperty("plz", plz);
         adresseRechnungBean.setProperty("ort", trimedNotEmpty(formSolutionsBestellung.getAsOrt()));
         adresseRechnungBean.setProperty("staat", trimedNotEmpty(formSolutionsBestellung.getStaat()));
+        adresseRechnungBean.setProperty("alternativ", trimedNotEmpty(formSolutionsBestellung.getAltAdresse()));
 
         if ("ja".equalsIgnoreCase(formSolutionsBestellung.getRechnungsanschriftLieferanschrift())) {
             adresseVersandBean = adresseRechnungBean;
@@ -696,6 +692,7 @@ public class FormSolutionServerNewStuffAvailableAction implements UserAwareServe
             adresseVersandBean.setProperty("plz", plz1);
             adresseVersandBean.setProperty("ort", trimedNotEmpty(formSolutionsBestellung.getAsOrt1()));
             adresseVersandBean.setProperty("staat", trimedNotEmpty(formSolutionsBestellung.getStaat1()));
+            adresseVersandBean.setProperty("alternativ", trimedNotEmpty(formSolutionsBestellung.getAltAdresse1()));
         }
 
         bestellungBean.setProperty("postweg", "Kartenausdruck".equals(formSolutionsBestellung.getBezugsweg()));
@@ -1568,9 +1565,21 @@ public class FormSolutionServerNewStuffAvailableAction implements UserAwareServe
                 case STATUS_SAVE: {
                     if (fetchFromFs) {
                         try {
-                            final Collection<String> transids = getOpenTransids();
-                            final Map<String, Exception> insertExceptionMap = createMySqlEntries(transids);
-                            final Map<String, String> fsXmlMap = extractXmlParts(transids);
+                            final Collection<String> transIds = getOpenTransids();
+
+                            // TEST OBJECTS
+                            try {
+                                if (testCismet00Enabled) {
+                                    transIds.add(TEST_CISMET00_PREFIX + RandomStringUtils.randomAlphanumeric(8));
+                                }
+                            } catch (final Exception ex) {
+                                LOG.error("error while generating TEST_CISMET00 transid", ex);
+                            }
+                            transIds.removeAll(ignoreTransids);
+                            //
+
+                            final Map<String, Exception> insertExceptionMap = createMySqlEntries(transIds);
+                            final Map<String, String> fsXmlMap = extractXmlParts(transIds);
                             final Map<String, FormSolutionsBestellung> fsBestellungMap = createBestellungMap(fsXmlMap);
                             fsBeanMap.putAll(createCidsEntries(
                                     fsXmlMap,

@@ -146,6 +146,9 @@ public class FormSolutionsBestellung {
     @XmlElement(name = "AS_Hausnummer")
     private String asHausnummer;
 
+    @XmlElement(name = "Alt_Adresse")
+    private String altAdresse;
+
     @XmlElement(name = "Die_Rechnungsanschrift_ist_auch_die_Lieferanschrift")
     private String rechnungsanschriftLieferanschrift;
 
@@ -175,6 +178,9 @@ public class FormSolutionsBestellung {
 
     @XmlElement(name = "AS_Hausnummer.1")
     private String asHausnummer1;
+
+    @XmlElement(name = "Alt_Adresse.1")
+    private String altAdresse1;
 
     @XmlElement(name = "E-Mailadresse")
     private String eMailadresse;
