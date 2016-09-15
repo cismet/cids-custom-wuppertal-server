@@ -10,15 +10,16 @@ package de.cismet.cids.custom.wunda_blau.search.actions;
 import Sirius.server.middleware.impls.domainserver.DomainServerImpl;
 import Sirius.server.middleware.interfaces.domainserver.MetaService;
 import Sirius.server.middleware.interfaces.domainserver.MetaServiceStore;
-import Sirius.server.middleware.types.MetaObject;
 import Sirius.server.middleware.types.MetaObjectNode;
 import Sirius.server.newuser.User;
 
 import org.apache.log4j.Logger;
 
-import java.util.Collection;
+import java.sql.Connection;
+import java.sql.PreparedStatement;
+import java.sql.SQLException;
 
-import de.cismet.cids.dynamics.CidsBean;
+import java.util.Collection;
 
 import de.cismet.cids.server.actions.ServerAction;
 import de.cismet.cids.server.actions.ServerActionParameter;
@@ -80,28 +81,46 @@ public class WohnlagenKategorisierungServerAction implements ServerAction, UserA
             }
 
             if ((wohnlageNodes != null) && (kategorieNode != null)) {
-                final CidsBean kategorieBean = DomainServerImpl.getServerInstance()
-                            .getMetaObject(getUser(), kategorieNode.getObjectId(), kategorieNode.getClassId())
-                            .getBean();
-                for (final MetaObjectNode mon : wohnlageNodes) {
-                    final CidsBean wohnlagenBean = DomainServerImpl.getServerInstance()
-                                .getMetaObject(getUser(), mon.getObjectId(), mon.getClassId())
-                                .getBean();
-                    final CidsBean kategorisierungBean = CidsBean.createNewCidsBeanFromTableName(
-                            "WUNDA_BLAU",
-                            "WOHNLAGE_KATEGORISIERUNG");
-                    kategorisierungBean.setProperty("fk_wohnlage", wohnlagenBean);
-                    kategorisierungBean.setProperty("fk_kategorie", kategorieBean);
-                    kategorisierungBean.setProperty("login_name", getUser().getName());
-                    final MetaObject persistedMo = getMetaService().insertMetaObject(
-                            getUser(),
-                            kategorisierungBean.getMetaObject());
+                final String DELETE_QUERY =
+                    "DELETE FROM wohnlage_kategorisierung WHERE fk_wohnlage = ? AND login_name = ?";
+                final String INSERT_QUERY =
+                    "INSERT INTO wohnlage_kategorisierung (fk_wohnlage, fk_kategorie, login_name) VALUES (?, ?, ?)";
+                PreparedStatement delete;
+                PreparedStatement insert;
+
+                final Connection connection = DomainServerImpl.getServerInstance().getConnectionPool().getConnection();
+                delete = connection.prepareStatement(DELETE_QUERY);
+                insert = connection.prepareStatement(INSERT_QUERY);
+                try {
+                    connection.setAutoCommit(false);
+                    for (final MetaObjectNode wohnlageNode : wohnlageNodes) {
+                        delete.setInt(1, wohnlageNode.getObjectId());
+                        delete.setString(2, getUser().getName());
+                        delete.executeUpdate();
+
+                        insert.setInt(1, wohnlageNode.getObjectId());
+                        insert.setInt(2, kategorieNode.getObjectId());
+                        insert.setString(3, getUser().getName());
+                        insert.executeUpdate();
+                    }
+                    connection.commit();
+                } catch (final SQLException ex) {
+                    LOG.error("Error while updating wohnlage_kategorisierung. rolling back", ex);
+                    connection.rollback();
+                } finally {
+                    if (delete != null) {
+                        delete.close();
+                    }
+                    if (insert != null) {
+                        insert.close();
+                    }
                 }
             }
         } catch (final Exception ex) {
             LOG.error(ex, ex);
             return ex;
         }
+
         return null;
     }
 
