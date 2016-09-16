@@ -50,7 +50,7 @@ public class WohnlagenKategorisierungServerAction implements ServerAction, UserA
 
         //~ Enum constants -----------------------------------------------------
 
-        WOHNLAGEN, KATEGORIE
+        WOHNLAGEN, KATEGORIE, BEMERKUNG
     }
 
     //~ Instance fields --------------------------------------------------------
@@ -70,27 +70,37 @@ public class WohnlagenKategorisierungServerAction implements ServerAction, UserA
         try {
             Collection<MetaObjectNode> wohnlageNodes = null;
             MetaObjectNode kategorieNode = null;
+            String bemerkung = null;
             if (params != null) {
                 for (final ServerActionParameter sap : params) {
                     if (sap.getKey().equals(ParameterType.WOHNLAGEN.toString())) {
                         wohnlageNodes = (Collection)sap.getValue();
                     } else if (sap.getKey().equals(ParameterType.KATEGORIE.toString())) {
                         kategorieNode = (MetaObjectNode)sap.getValue();
+                    } else if (sap.getKey().equals(ParameterType.BEMERKUNG.toString())) {
+                        bemerkung = (String)sap.getValue();
                     }
                 }
             }
 
-            if ((wohnlageNodes != null) && (kategorieNode != null)) {
+            if (wohnlageNodes != null) {
                 final String DELETE_QUERY =
                     "DELETE FROM wohnlage_kategorisierung WHERE fk_wohnlage = ? AND login_name = ?";
-                final String INSERT_QUERY =
-                    "INSERT INTO wohnlage_kategorisierung (fk_wohnlage, fk_kategorie, login_name) VALUES (?, ?, ?)";
-                PreparedStatement delete;
-                PreparedStatement insert;
+                final String INSERT_QUERY_WITH_KATEGORIE =
+                    "INSERT INTO wohnlage_kategorisierung (fk_wohnlage, login_name, bemerkung, fk_kategorie) VALUES (?, ?, ?, ?)";
+                final String INSERT_QUERY_WITHOUT_KATEGORIE =
+                    "INSERT INTO wohnlage_kategorisierung (fk_wohnlage, login_name, bemerkung) VALUES (?, ?, ?)";
+                final PreparedStatement delete;
+                final PreparedStatement insert;
 
                 final Connection connection = DomainServerImpl.getServerInstance().getConnectionPool().getConnection();
                 delete = connection.prepareStatement(DELETE_QUERY);
-                insert = connection.prepareStatement(INSERT_QUERY);
+
+                if (kategorieNode == null) {
+                    insert = connection.prepareStatement(INSERT_QUERY_WITHOUT_KATEGORIE);
+                } else {
+                    insert = connection.prepareStatement(INSERT_QUERY_WITH_KATEGORIE);
+                }
                 try {
                     connection.setAutoCommit(false);
                     for (final MetaObjectNode wohnlageNode : wohnlageNodes) {
@@ -99,8 +109,11 @@ public class WohnlagenKategorisierungServerAction implements ServerAction, UserA
                         delete.executeUpdate();
 
                         insert.setInt(1, wohnlageNode.getObjectId());
-                        insert.setInt(2, kategorieNode.getObjectId());
-                        insert.setString(3, getUser().getName());
+                        insert.setString(2, getUser().getName());
+                        insert.setString(3, bemerkung);
+                        if (kategorieNode != null) {
+                            insert.setInt(4, kategorieNode.getObjectId());
+                        }
                         insert.executeUpdate();
                     }
                     connection.commit();
