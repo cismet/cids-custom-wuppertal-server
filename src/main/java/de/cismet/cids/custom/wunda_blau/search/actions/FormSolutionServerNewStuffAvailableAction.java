@@ -1278,7 +1278,11 @@ public class FormSolutionServerNewStuffAvailableAction implements UserAwareServe
                     bestellungBean.setProperty("produkt_dateipfad", fileName);
                     bestellungBean.setProperty("produkt_dateiname_orig", fileNameOrig);
                     bestellungBean.setProperty("rechnung_dateipfad", fileNameRechnung);
-                    bestellungBean.setProperty("rechnung_dateiname_orig", "Rechnung - Produktbestellung " + transid);
+                    bestellungBean.setProperty(
+                        "rechnung_dateiname_orig",
+                        "Rechnung - Produktbestellung "
+                                + transid
+                                + ".pdf");
                     bestellungBean.setProperty("produkt_ts", new Timestamp(new Date().getTime()));
 
                     getMetaService().updateMetaObject(user, bestellungBean.getMetaObject());
