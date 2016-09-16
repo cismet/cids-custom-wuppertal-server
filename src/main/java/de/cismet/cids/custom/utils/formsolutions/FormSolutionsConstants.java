@@ -34,6 +34,7 @@ public class FormSolutionsConstants {
     public static final String PASSWORD;
     public static final String MYSQL_JDBC;
     public static final String PRODUKT_BASEPATH;
+    public static final String RECHNUNG_BASEPATH;
     public static final String CIDS_LOGIN;
     public static final String CIDS_PASSWORD;
     public static final String URL_AUFTRAGSLISTE_FS;
@@ -68,6 +69,7 @@ public class FormSolutionsConstants {
         final String password;
         final String mysqlJdbc;
         final String produktBasepath;
+        final String rechnungBasepath;
         final String cidsLogin;
         final String cidsPassword;
         final String urlAuftragslisteFs;
@@ -104,6 +106,7 @@ public class FormSolutionsConstants {
             password = serviceProperties.getProperty("PASSWORD");
             mysqlJdbc = serviceProperties.getProperty("MYSQL_JDBC");
             produktBasepath = serviceProperties.getProperty("PRODUKT_BASEPATH");
+            rechnungBasepath = serviceProperties.getProperty("RECHNUNG_BASEPATH");
             cidsLogin = serviceProperties.getProperty("CIDS_LOGIN");
             cidsPassword = serviceProperties.getProperty("CIDS_PASSWORD");
             urlAuftragslisteFs = serviceProperties.getProperty("URL_AUFTRAGSLISTE_FS");
@@ -143,6 +146,7 @@ public class FormSolutionsConstants {
         PASSWORD = password;
         MYSQL_JDBC = mysqlJdbc;
         PRODUKT_BASEPATH = produktBasepath;
+        RECHNUNG_BASEPATH = rechnungBasepath;
         CIDS_LOGIN = cidsLogin;
         CIDS_PASSWORD = cidsPassword;
         URL_AUFTRAGSLISTE_FS = urlAuftragslisteFs;

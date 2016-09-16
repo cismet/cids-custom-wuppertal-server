@@ -39,6 +39,32 @@ public class FormSolutionDownloadBestellungAction implements ServerAction, UserA
     private static final transient Logger LOG = Logger.getLogger(FormSolutionDownloadBestellungAction.class);
     public static final String TASK_NAME = "formSolutionDownloadBestellung";
 
+    //~ Enums ------------------------------------------------------------------
+
+    /**
+     * DOCUMENT ME!
+     *
+     * @version  $Revision$, $Date$
+     */
+    public enum Parameter {
+
+        //~ Enum constants -----------------------------------------------------
+
+        TYPE
+    }
+
+    /**
+     * DOCUMENT ME!
+     *
+     * @version  $Revision$, $Date$
+     */
+    public enum Type {
+
+        //~ Enum constants -----------------------------------------------------
+
+        PRODUCT, RECHNUNG
+    }
+
     //~ Instance fields --------------------------------------------------------
 
     private User user;
@@ -58,16 +84,29 @@ public class FormSolutionDownloadBestellungAction implements ServerAction, UserA
             throw new RuntimeException("Wrong type for body, have to be an MetaObjectNode.");
         } else {
             try {
+                Type type = Type.PRODUCT;
+                if (params != null) {
+                    for (final ServerActionParameter sap : params) {
+                        if (sap.getKey().equals(Parameter.TYPE.toString())) {
+                            type = (Type)sap.getValue();
+                        }
+                    }
+                }
+
+                final boolean rechung = Type.RECHNUNG.equals(type);
+
                 final MetaObjectNode mon = (MetaObjectNode)body;
 
                 final CidsBean bestellungBean = DomainServerImpl.getServerInstance()
                             .getMetaObject(getUser(), mon.getObjectId(), mon.getClassId())
                             .getBean();
-                final String filePath = (String)bestellungBean.getProperty("produkt_dateipfad");
+                final String filePath = rechung ? (String)bestellungBean.getProperty("rechnung_dateipfad")
+                                                : (String)bestellungBean.getProperty("produkt_dateipfad");
 
                 final ServerProperties serverProps = DomainServerImpl.getServerProperties();
                 final String s = serverProps.getFileSeparator();
-                final String fullFilePath = FormSolutionsConstants.PRODUKT_BASEPATH + s + filePath;
+                final String fullFilePath = (rechung ? FormSolutionsConstants.RECHNUNG_BASEPATH
+                                                     : FormSolutionsConstants.PRODUKT_BASEPATH) + s + filePath;
 
                 final ByteArrayOutputStream out = new ByteArrayOutputStream();
 
