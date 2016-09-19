@@ -1160,7 +1160,7 @@ public class FormSolutionServerNewStuffAvailableAction implements UserAwareServe
                     "fk_adresse_versand.staat"));
         final String lieferAlternativ = noNullAndTrimed((String)bestellungBean.getProperty(
                     "fk_adresse_versand.alternativ"));
-        final String lieferAdresse = (lieferAlternativ.equals("-"))
+        final String lieferAdresse = (lieferAlternativ.isEmpty())
             ? (lieferStrasse + " " + lieferHausnummer + "\n" + lieferPlz + " " + lieferOrt)
             : (lieferAlternativ + "\n" + lieferStaat);
 
