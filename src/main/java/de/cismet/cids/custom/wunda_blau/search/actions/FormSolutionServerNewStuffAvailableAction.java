@@ -1149,16 +1149,28 @@ public class FormSolutionServerNewStuffAvailableAction implements UserAwareServe
             "LIEFER_VORNAME",
             noNullAndTrimed((String)bestellungBean.getProperty("fk_adresse_versand.vorname")));
         parameters.put("LIEFER_NAME", noNullAndTrimed((String)bestellungBean.getProperty("fk_adresse_versand.name")));
-        parameters.put(
-            "LIEFER_STRASSE",
-            noNullAndTrimed((String)bestellungBean.getProperty("fk_adresse_versand.strasse")));
-        parameters.put(
-            "LIEFER_HAUSNUMMER",
-            noNullAndTrimed((String)bestellungBean.getProperty("fk_adresse_versand.hausnummer")));
-        final String plzVersand = (bestellungBean.getProperty("fk_adresse_versand.plz") != null)
-            ? Integer.toString((Integer)bestellungBean.getProperty("fk_adresse_versand.plz")) : "";
-        parameters.put("LIEFER_PLZ", plzVersand);
-        parameters.put("LIEFER_ORT", noNullAndTrimed((String)bestellungBean.getProperty("fk_adresse_versand.ort")));
+
+        final String lieferStrasse = noNullAndTrimed((String)bestellungBean.getProperty("fk_adresse_versand.strasse"));
+        final String lieferHausnummer = noNullAndTrimed((String)bestellungBean.getProperty(
+                    "fk_adresse_versand.hausnummer"));
+        final String lieferPlz = noNullAndTrimed((bestellungBean.getProperty("fk_adresse_versand.plz") != null)
+                    ? Integer.toString((Integer)bestellungBean.getProperty("fk_adresse_versand.plz")) : null);
+        final String lieferOrt = noNullAndTrimed((String)bestellungBean.getProperty("fk_adresse_versand.ort"));
+        final String lieferStaat = noNullAndTrimed((String)bestellungBean.getProperty(
+                    "fk_adresse_versand.staat"));
+        final String lieferAlternativ = noNullAndTrimed((String)bestellungBean.getProperty(
+                    "fk_adresse_versand.alternativ"));
+        final String lieferAdresse = (lieferAlternativ.equals("-"))
+            ? (lieferStrasse + " " + lieferHausnummer + "\n" + lieferPlz + " " + lieferOrt)
+            : (lieferAlternativ + "\n" + lieferStaat);
+
+        parameters.put("LIEFER_STRASSE", lieferStrasse);
+        parameters.put("LIEFER_HAUSNUMMER", lieferHausnummer);
+        parameters.put("LIEFER_PLZ", lieferPlz);
+        parameters.put("LIEFER_ORT", lieferOrt);
+        parameters.put("LIEFER_ALTERNATIV", lieferAlternativ);
+        parameters.put("LIEFER_ADRESSE", lieferAdresse);
+
         parameters.put(
             "RECHNUNG_FIRMA",
             noNullAndTrimed((String)bestellungBean.getProperty("fk_adresse_rechnung.firma")));
