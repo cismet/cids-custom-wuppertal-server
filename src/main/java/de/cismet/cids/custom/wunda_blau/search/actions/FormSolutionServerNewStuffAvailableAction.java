@@ -100,6 +100,7 @@ import de.cismet.cids.utils.MetaClassCacheService;
 
 import de.cismet.commons.security.AccessHandler;
 import de.cismet.commons.security.handler.SimpleHttpAccessHandler;
+import net.sf.jasperreports.engine.JRException;
 
 /**
  * DOCUMENT ME!
@@ -119,6 +120,7 @@ public class FormSolutionServerNewStuffAvailableAction implements UserAwareServe
         "/de/cismet/cids/custom/wunda_blau/res/formsolutions/TEST_CISMET00.xml";
     private static final String IGNORE_TRANSID_FILE =
         "/de/cismet/cids/custom/wunda_blau/res/formsolutions/ignoreTransids.txt";
+    private static final String RECHNUNG_JASPER = "/de/cismet/cids/custom/wunda_blau/res/bestellung_rechnung.jasper";
 
     private static final String TEST_CISMET00_PREFIX = "TEST_CISMET00-";
 
@@ -161,6 +163,7 @@ public class FormSolutionServerNewStuffAvailableAction implements UserAwareServe
     private final String testCismet00Xml;
     private final Set<String> ignoreTransids = new HashSet<String>();
     private final boolean testCismet00Enabled;
+    private final JasperReport rechnungJasperReport;
 
     //~ Constructors -----------------------------------------------------------
 
@@ -217,6 +220,15 @@ public class FormSolutionServerNewStuffAvailableAction implements UserAwareServe
         } catch (final Exception ex) {
             LOG.error("could not load " + IGNORE_TRANSID_FILE, ex);
         }
+        
+        JasperReport report;
+        try {
+            report = (JasperReport)JRLoader.loadObject(FormSolutionBestellungChangeStatusServerAction.class.getResourceAsStream(RECHNUNG_JASPER));
+        } catch (JRException ex) {
+            LOG.error("could not load " + RECHNUNG_JASPER, ex);
+            report = null;
+        }
+        rechnungJasperReport = report;
 
         this.creds = creds;
     }
@@ -1211,10 +1223,7 @@ public class FormSolutionServerNewStuffAvailableAction implements UserAwareServe
         parameters.put("RECHNUNG_UST", "");
         final JRDataSource dataSource = new JRBeanCollectionDataSource(Arrays.asList(bestellungBean));
 
-        final JasperReport jasperReport = (JasperReport)JRLoader.loadObject(
-                FormSolutionBestellungChangeStatusServerAction.class.getResourceAsStream(
-                    "/de/cismet/cids/custom/wunda_blau/res/bestellung_rechnung.jasper"));
-        final JasperPrint print = JasperFillManager.fillReport(jasperReport, parameters, dataSource);
+        final JasperPrint print = JasperFillManager.fillReport(rechnungJasperReport, parameters, dataSource);
         return print;
     }
 
