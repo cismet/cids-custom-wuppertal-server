@@ -12,9 +12,8 @@
  */
 package de.cismet.cids.custom.wunda_blau.search.actions;
 
-import org.openide.util.Exceptions;
-
-import java.io.IOException;
+import de.cismet.cids.custom.utils.vermessungsunterlagen.VermessungsunterlagenHelper;
+import de.cismet.cids.custom.utils.vermessungsunterlagen.VermessungsunterlagenJob;
 
 import de.cismet.cids.server.actions.ServerAction;
 import de.cismet.cids.server.actions.ServerActionParameter;
@@ -33,9 +32,14 @@ public class VermessungsUnterlagenPortalGetJobErrorAction extends AbstractVermes
     @Override
     public Object execute(final Object body, final ServerActionParameter... params) {
         final String jobNumber = String.valueOf(params[0].getValue());
-        final String output = "PseudoErrorMessage@" + System.currentTimeMillis();
-        super.executeLog(jobNumber, output, "");
-        return "{\"getJobErrorReturn\":{\"$value\":\"" + output + "\"}}";
+
+        final VermessungsunterlagenHelper helper = new VermessungsunterlagenHelper(getMetaService(), getUser());
+        final VermessungsunterlagenJob job = helper.getJob(jobNumber);
+        final Exception exception = job.getException();
+        final String fehlerString = (exception != null) ? exception.getLocalizedMessage() : null;
+
+        super.executeLog(jobNumber, "PseudoErrorMessage@" + job.getJobkey(), "");
+        return "{\"getJobErrorReturn\":{\"$value\":\"" + fehlerString + "\"}}";
     }
 
     @Override

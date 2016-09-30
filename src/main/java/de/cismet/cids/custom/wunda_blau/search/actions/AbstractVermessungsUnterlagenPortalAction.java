@@ -12,11 +12,12 @@
  */
 package de.cismet.cids.custom.wunda_blau.search.actions;
 
+import Sirius.server.middleware.interfaces.domainserver.MetaService;
+import Sirius.server.middleware.interfaces.domainserver.MetaServiceStore;
 import Sirius.server.newuser.User;
 
 import org.apache.log4j.Logger;
 
-import org.openide.util.Exceptions;
 
 import java.io.FileWriter;
 import java.io.IOException;
@@ -25,8 +26,6 @@ import java.text.SimpleDateFormat;
 
 import java.util.Date;
 
-import de.cismet.cids.server.actions.ServerAction;
-import de.cismet.cids.server.actions.ServerActionParameter;
 import de.cismet.cids.server.actions.UserAwareServerAction;
 
 /**
@@ -35,7 +34,7 @@ import de.cismet.cids.server.actions.UserAwareServerAction;
  * @author   thorsten
  * @version  $Revision$, $Date$
  */
-public abstract class AbstractVermessungsUnterlagenPortalAction implements UserAwareServerAction {
+public abstract class AbstractVermessungsUnterlagenPortalAction implements UserAwareServerAction, MetaServiceStore {
 
     //~ Static fields/initializers ---------------------------------------------
 
@@ -46,6 +45,7 @@ public abstract class AbstractVermessungsUnterlagenPortalAction implements UserA
     private final Logger LOG = Logger.getLogger(this.getClass());
 
     private User user;
+    private MetaService metaService;
     private final FileWriter fw;
 
     //~ Constructors -----------------------------------------------------------
@@ -99,5 +99,15 @@ public abstract class AbstractVermessungsUnterlagenPortalAction implements UserA
     @Override
     public void setUser(final User user) {
         this.user = user;
+    }
+
+    @Override
+    public MetaService getMetaService() {
+        return metaService;
+    }
+
+    @Override
+    public void setMetaService(final MetaService metaService) {
+        this.metaService = metaService;
     }
 }

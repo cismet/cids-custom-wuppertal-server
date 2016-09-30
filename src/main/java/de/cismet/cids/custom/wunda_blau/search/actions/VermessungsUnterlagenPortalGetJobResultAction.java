@@ -12,10 +12,6 @@
  */
 package de.cismet.cids.custom.wunda_blau.search.actions;
 
-import org.openide.util.Exceptions;
-
-import java.io.IOException;
-
 import de.cismet.cids.server.actions.ServerAction;
 import de.cismet.cids.server.actions.ServerActionParameter;
 

@@ -12,9 +12,8 @@
  */
 package de.cismet.cids.custom.wunda_blau.search.actions;
 
-import org.openide.util.Exceptions;
-
-import java.io.IOException;
+import de.cismet.cids.custom.utils.vermessungsunterlagen.VermessungsunterlagenHelper;
+import de.cismet.cids.custom.utils.vermessungsunterlagen.VermessungsunterlagenJob;
 
 import de.cismet.cids.server.actions.ServerAction;
 import de.cismet.cids.server.actions.ServerActionParameter;
@@ -33,13 +32,31 @@ public class VermessungsUnterlagenPortalGetJobStatusAction extends AbstractVerme
     @Override
     public Object execute(final Object body, final ServerActionParameter... params) {
         final String jobNumber = String.valueOf(params[0].getValue());
-        final String status = "OK";
-        final String geschaeftsbuchnummer = "4711-test-geschaeftsbuchnummer-from-java-action@"
-                    + System.currentTimeMillis();
-        final String output = "[" + status + "," + geschaeftsbuchnummer + "]";
+
+        String status = null;
+        final VermessungsunterlagenHelper helper = new VermessungsunterlagenHelper(getMetaService(), getUser());
+        final VermessungsunterlagenJob job = helper.getJob(jobNumber);
+        if (null != job.getStatus()) {
+            switch (job.getStatus()) {
+                case FINISHED: {
+                    status = "OK";
+                    break;
+                }
+                case ERROR: {
+                    status = "ERROR";
+                    break;
+                }
+                default: {
+                    status = "RUNNING";
+                    break;
+                }
+            }
+        }
+
+        final String output = "[" + status + "," + jobNumber + "]";
         super.executeLog(jobNumber, output, "");
         return "{\"getJobStatusReturn\":{\"enumJobStatus\":{\"$value\":\"" + status
-                    + "\"},\"geschaeftsbuchnummer\":{\"$value\":\"" + geschaeftsbuchnummer + "\"}}}";
+                    + "\"},\"geschaeftsbuchnummer\":{\"$value\":\"" + jobNumber + "\"}}}";
     }
 
     @Override

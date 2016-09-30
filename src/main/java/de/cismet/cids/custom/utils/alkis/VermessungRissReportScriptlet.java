@@ -35,10 +35,23 @@ public class VermessungRissReportScriptlet extends JRDefaultScriptlet {
 
     protected static final Logger LOG = Logger.getLogger(VermessungRissReportScriptlet.class);
 
+    //~ Instance fields --------------------------------------------------------
+
     private final ExtendedAccessHandler extendedAccessHandler = new SimpleHttpAccessHandler();
-    
+
     //~ Methods ----------------------------------------------------------------
 
+    /**
+     * DOCUMENT ME!
+     *
+     * @param   host        DOCUMENT ME!
+     * @param   schluessel  DOCUMENT ME!
+     * @param   gemarkung   DOCUMENT ME!
+     * @param   flur        DOCUMENT ME!
+     * @param   blatt       DOCUMENT ME!
+     *
+     * @return  DOCUMENT ME!
+     */
     public Boolean isImageAvailable(final String host,
             final String schluessel,
             final Integer gemarkung,
@@ -50,12 +63,12 @@ public class VermessungRissReportScriptlet extends JRDefaultScriptlet {
     /**
      * DOCUMENT ME!
      *
-     * @param   host        DOCUMENT ME!
-     * @param   schluessel  DOCUMENT ME!
-     * @param   gemarkung   DOCUMENT ME!
-     * @param   flur        DOCUMENT ME!
-     * @param   blatt       DOCUMENT ME!
-     * @param extendedAccessHandler
+     * @param   host                   DOCUMENT ME!
+     * @param   schluessel             DOCUMENT ME!
+     * @param   gemarkung              DOCUMENT ME!
+     * @param   flur                   DOCUMENT ME!
+     * @param   blatt                  DOCUMENT ME!
+     * @param   extendedAccessHandler  DOCUMENT ME!
      *
      * @return  DOCUMENT ME!
      */
@@ -106,10 +119,15 @@ public class VermessungRissReportScriptlet extends JRDefaultScriptlet {
         return result;
     }
 
+    /**
+     * DOCUMENT ME!
+     *
+     * @return  DOCUMENT ME!
+     */
     public static VermessungRissReportScriptlet getInstance() {
         return LazyInitialiser.INSTANCE;
     }
-    
+
     //~ Inner Classes ----------------------------------------------------------
 
     /**

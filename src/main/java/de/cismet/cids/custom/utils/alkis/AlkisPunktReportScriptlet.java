@@ -53,12 +53,16 @@ public class AlkisPunktReportScriptlet extends JRDefaultScriptlet {
 
     private final transient SimpleHttpAccessHandler extendedAccessHandler = new SimpleHttpAccessHandler();
 
+    //~ Constructors -----------------------------------------------------------
+
+    /**
+     * Creates a new AlkisPunktReportScriptlet object.
+     */
+    private AlkisPunktReportScriptlet() {
+    }
+
     //~ Methods ----------------------------------------------------------------
 
-    private AlkisPunktReportScriptlet() {
-        
-    }
-    
     /**
      * DOCUMENT ME!
      *

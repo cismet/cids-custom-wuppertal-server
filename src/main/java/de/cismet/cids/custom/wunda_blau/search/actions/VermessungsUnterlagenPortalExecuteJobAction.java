@@ -12,6 +12,8 @@
  */
 package de.cismet.cids.custom.wunda_blau.search.actions;
 
+import de.cismet.cids.custom.utils.vermessungsunterlagen.VermessungsunterlagenHelper;
+
 import de.cismet.cids.server.actions.ServerAction;
 import de.cismet.cids.server.actions.ServerActionParameter;
 
@@ -28,8 +30,8 @@ public class VermessungsUnterlagenPortalExecuteJobAction extends AbstractVermess
 
     @Override
     public Object execute(final Object body, final ServerActionParameter... params) {
-        final String jobNumber = "1234567890-" + System.currentTimeMillis();
         final String jsonBody = new String((byte[])body);
+        final String jobNumber = new VermessungsunterlagenHelper(getMetaService(), getUser()).createJob(jsonBody);
         super.executeLog("[jsonObject]", jobNumber, jsonBody);
         return "{\"executeJobReturn\":{\"$value\":\"" + jobNumber + "\"}}";
     }
