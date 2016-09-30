@@ -59,14 +59,6 @@ public class AlkisPunktReportScriptlet extends JRDefaultScriptlet {
     private AlkisPunktReportScriptlet() {
     }
 
-    //~ Constructors -----------------------------------------------------------
-
-    /**
-     * Creates a new AlkisPunktReportScriptlet object.
-     */
-    private AlkisPunktReportScriptlet() {
-    }
-
     //~ Methods ----------------------------------------------------------------
 
     /**
@@ -76,7 +68,7 @@ public class AlkisPunktReportScriptlet extends JRDefaultScriptlet {
      *
      * @return  DOCUMENT ME!
      */
-    public Collection<URL> getCorrespondingURLs(final String pointcode) {
+    public static Collection<URL> getCorrespondingURLs(final String pointcode) {
         final Collection<URL> validURLs = new LinkedList<URL>();
 
         // The pointcode of a alkis point has a specific format:
@@ -234,34 +226,4 @@ public class AlkisPunktReportScriptlet extends JRDefaultScriptlet {
         return result;
     }
 
-    /**
-     * DOCUMENT ME!
-     *
-     * @return  DOCUMENT ME!
-     */
-    public static AlkisPunktReportScriptlet getInstance() {
-        return LazyInitialiser.INSTANCE;
-    }
-
-    //~ Inner Classes ----------------------------------------------------------
-
-    /**
-     * DOCUMENT ME!
-     *
-     * @version  $Revision$, $Date$
-     */
-    private static final class LazyInitialiser {
-
-        //~ Static fields/initializers -----------------------------------------
-
-        private static final AlkisPunktReportScriptlet INSTANCE = new AlkisPunktReportScriptlet();
-
-        //~ Constructors -------------------------------------------------------
-
-        /**
-         * Creates a new LazyInitialiser object.
-         */
-        private LazyInitialiser() {
-        }
-    }
 }
