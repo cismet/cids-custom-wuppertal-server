@@ -12,7 +12,6 @@
  */
 package de.cismet.cids.custom.utils.vermessungsunterlagen;
 
-
 import java.util.Collection;
 
 import de.cismet.cids.custom.wunda_blau.search.server.CidsAlkisSearchStatement;

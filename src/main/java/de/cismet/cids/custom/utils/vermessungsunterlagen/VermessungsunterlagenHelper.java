@@ -233,7 +233,7 @@ public class VermessungsunterlagenHelper {
             final String jobkey = createJob(anfrageBean);
             return jobkey;
         } catch (final Exception ex) {
-            LOG.fatal(ex, ex);
+            LOG.warn("error while creating job", ex);
             return null;
         }
     }
@@ -254,7 +254,6 @@ public class VermessungsunterlagenHelper {
         try {
             if (new VermessungsunterlagenValidator(this).validateAndGetErrorMessage(anfrageBean)) {
                 if (!anfrageBean.getNurPunktnummernreservierung()) {
-                    LOG.fatal(jobkey + " - PREPARE");
 
                     final Geometry geometry = anfrageBean.getAnfragepolygonArray()[0];
                     final int saum = Integer.parseInt(anfrageBean.getSaumAPSuche());
@@ -275,10 +274,7 @@ public class VermessungsunterlagenHelper {
                     job.addTask(new VermUntTaskRisseBilder(jobkey, risseBeans));
                     job.addTask(new VermUntTaskRisseGrenzniederschrift(jobkey, risseBeans));
 
-                    LOG.fatal(jobkey + " - EXECUTE");
-
                     CismetExecutors.newSingleThreadExecutor().execute(job);
-                    LOG.fatal(jobkey + " - DONE");
                 }
 
                 jobMap.put(jobkey, job);
