@@ -160,14 +160,23 @@ public class VermessungFlurstueckKickerLightweightSearch extends AbstractCidsSer
                 throw new SearchException(message);
             }
             final String query;
-            final MetaClass mc;
+            final MetaClass flurstueckKickerMetaClass;
+            final MetaClass vermessungsGemarkungenMetaClass;
+
             try {
-                mc = CidsBean.getMetaClassFromTableName("WUNDA_BLAU", FLURSTUECK_KICKER_TABLE_NAME);
+                flurstueckKickerMetaClass = CidsBean.getMetaClassFromTableName(
+                        "WUNDA_BLAU",
+                        FLURSTUECK_KICKER_TABLE_NAME);
+                vermessungsGemarkungenMetaClass = CidsBean.getMetaClassFromTableName(
+                        "WUNDA_BLAU",
+                        VERMESSUNG_GEMARKUNG_TABLE_NAME);
             } catch (final Exception ex) {
                 throw new SearchException("error while loadomg metaclass", ex);
             }
+            final MetaClass metaClassToUse;
             switch (searchFor) {
                 case ALLE_FLUSTUECKE: {
+                    metaClassToUse = flurstueckKickerMetaClass;
                     query = "select id,"
                                 + FLURSTUECK_GEMARKUNG + ","
                                 + FLURSTUECK_FLUR + ","
@@ -184,6 +193,7 @@ public class VermessungFlurstueckKickerLightweightSearch extends AbstractCidsSer
                 }
                 break;
                 case FLURSTUECKE: {
+                    metaClassToUse = flurstueckKickerMetaClass;
                     if (getGemarkungsnummer() == null) {
                         throw new SearchException("gemarkung has to be set");
                     }
@@ -227,7 +237,10 @@ public class VermessungFlurstueckKickerLightweightSearch extends AbstractCidsSer
                 }
                 break;
                 case ALLE_GEMARKUNGEN: {
-                    query = "select min(f.id) as id, "
+                    metaClassToUse = vermessungsGemarkungenMetaClass;
+                    query = "select  " + "f."
+                                + FLURSTUECK_GEMARKUNG
+                                + " as id, "
                                 + "f."
                                 + FLURSTUECK_GEMARKUNG
                                 + ", min("
@@ -255,9 +268,11 @@ public class VermessungFlurstueckKickerLightweightSearch extends AbstractCidsSer
                                 + " order by "
                                 + "f."
                                 + FLURSTUECK_GEMARKUNG;
+                    LOG.fatal("ALLE GEMARKUNGEN:" + query);
                 }
                 break;
                 case GEMARKUNG: {
+                    metaClassToUse = vermessungsGemarkungenMetaClass;
                     if (getGemarkungsnummer() == null) {
                         throw new SearchException("gemarkung has to be set");
                     }
@@ -271,6 +286,7 @@ public class VermessungFlurstueckKickerLightweightSearch extends AbstractCidsSer
                 }
                 break;
                 case FLURE: {
+                    metaClassToUse = flurstueckKickerMetaClass;
                     if (getGemarkungsnummer() == null) {
                         throw new SearchException("gemarkung has to be set");
                     }
@@ -290,6 +306,7 @@ public class VermessungFlurstueckKickerLightweightSearch extends AbstractCidsSer
                 }
                 break;
                 case ZAEHLER_NENNER: {
+                    metaClassToUse = flurstueckKickerMetaClass;
                     if (getGemarkungsnummer() == null) {
                         throw new SearchException("gemarkung has to be set");
                     }
@@ -300,6 +317,10 @@ public class VermessungFlurstueckKickerLightweightSearch extends AbstractCidsSer
                                 + FLURSTUECK_ZAEHLER
                                 + ", "
                                 + FLURSTUECK_NENNER
+                                + ", "
+                                + FLURSTUECK_FLUR
+                                + ", "
+                                + FLURSTUECK_GEMARKUNG
                                 + " from "
                                 // + FLURSTUECK_KICKER_TABLE_NAME_VIEW
                                 + FLURSTUECK_KICKER_TABLE_NAME
@@ -314,30 +335,37 @@ public class VermessungFlurstueckKickerLightweightSearch extends AbstractCidsSer
                                 + "' group by "
                                 + FLURSTUECK_ZAEHLER
                                 + ", "
-                                + FLURSTUECK_NENNER;
+                                + FLURSTUECK_NENNER
+                                + ", "
+                                + FLURSTUECK_FLUR
+                                + ", "
+                                + FLURSTUECK_GEMARKUNG;
                 }
                 break;
                 default: {
+                    metaClassToUse = flurstueckKickerMetaClass;
                     query = null;
                 }
             }
             try {
                 if (getRepresentationPattern() != null) {
                     return Arrays.asList(metaService.getLightweightMetaObjectsByQuery(
-                                mc.getID(),
+                                metaClassToUse.getID(),
                                 getUser(),
                                 query,
                                 getRepresentationFields(),
                                 getRepresentationPattern()));
                 } else {
                     return Arrays.asList(metaService.getLightweightMetaObjectsByQuery(
-                                mc.getID(),
+                                metaClassToUse.getID(),
                                 getUser(),
                                 query,
                                 getRepresentationFields()));
                 }
             } catch (final RemoteException ex) {
-                throw new SearchException("error while loading lwmos", ex);
+                throw new SearchException("error while loading lwmos (MetaClass:+" + metaClassToUse.getID() + ", Query:"
+                            + query + ")",
+                    ex);
             }
         } else {
             throw new SearchException("searchFor has to be set");
