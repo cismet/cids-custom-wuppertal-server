@@ -18,6 +18,7 @@ import java.net.URL;
 
 import java.util.List;
 
+import de.cismet.commons.security.handler.ExtendedAccessHandler;
 import de.cismet.commons.security.handler.SimpleHttpAccessHandler;
 
 import de.cismet.tools.Static2DTools;
@@ -34,7 +35,17 @@ public class VermessungRissReportScriptlet extends JRDefaultScriptlet {
 
     protected static final Logger LOG = Logger.getLogger(VermessungRissReportScriptlet.class);
 
+    private final ExtendedAccessHandler extendedAccessHandler = new SimpleHttpAccessHandler();
+    
     //~ Methods ----------------------------------------------------------------
+
+    public Boolean isImageAvailable(final String host,
+            final String schluessel,
+            final Integer gemarkung,
+            final String flur,
+            final String blatt) {
+        return isImageAvailable(host, schluessel, gemarkung, flur, blatt, extendedAccessHandler);
+    }
 
     /**
      * DOCUMENT ME!
@@ -44,14 +55,16 @@ public class VermessungRissReportScriptlet extends JRDefaultScriptlet {
      * @param   gemarkung   DOCUMENT ME!
      * @param   flur        DOCUMENT ME!
      * @param   blatt       DOCUMENT ME!
+     * @param extendedAccessHandler
      *
      * @return  DOCUMENT ME!
      */
-    public static Boolean isImageAvailable(final String host,
+    public Boolean isImageAvailable(final String host,
             final String schluessel,
             final Integer gemarkung,
             final String flur,
-            final String blatt) {
+            final String blatt,
+            final ExtendedAccessHandler extendedAccessHandler) {
         final List<URL> validURLs;
         if (host.equals(AlkisConstants.COMMONS.VERMESSUNG_HOST_GRENZNIEDERSCHRIFTEN)) {
             validURLs = VermessungsrissPictureFinder.getInstance()
@@ -64,7 +77,7 @@ public class VermessungRissReportScriptlet extends JRDefaultScriptlet {
         boolean imageAvailable = false;
         for (final URL urls : validURLs) {
             final URL url = urls;
-            if (new SimpleHttpAccessHandler().checkIfURLaccessible(url)) {
+            if (extendedAccessHandler.checkIfURLaccessible(url)) {
                 imageAvailable = true;
                 break;
             }
@@ -79,7 +92,7 @@ public class VermessungRissReportScriptlet extends JRDefaultScriptlet {
      *
      * @return  DOCUMENT ME!
      */
-    public static BufferedImage rotate(final BufferedImage imageToRotate) {
+    public BufferedImage rotate(final BufferedImage imageToRotate) {
         BufferedImage result = imageToRotate;
 
         if (imageToRotate == null) {
@@ -91,5 +104,31 @@ public class VermessungRissReportScriptlet extends JRDefaultScriptlet {
         }
 
         return result;
+    }
+
+    public static VermessungRissReportScriptlet getInstance() {
+        return LazyInitialiser.INSTANCE;
+    }
+    
+    //~ Inner Classes ----------------------------------------------------------
+
+    /**
+     * DOCUMENT ME!
+     *
+     * @version  $Revision$, $Date$
+     */
+    protected static final class LazyInitialiser {
+
+        //~ Static fields/initializers -----------------------------------------
+
+        private static final VermessungRissReportScriptlet INSTANCE = new VermessungRissReportScriptlet();
+
+        //~ Constructors -------------------------------------------------------
+
+        /**
+         * Creates a new LazyInitialiser object.
+         */
+        private LazyInitialiser() {
+        }
     }
 }
