@@ -13,7 +13,7 @@
 		<fieldDescription><![CDATA[pointcode]]></fieldDescription>
 	</field>
 	<variable name="HAS_ENTRIES_WO_APMAPS" class="java.lang.Boolean" calculation="Sum">
-		<variableExpression><![CDATA[Boolean.valueOf($V{HAS_ENTRIES_WO_APMAPS}.booleanValue() || Boolean.valueOf(!$P{REPORT_SCRIPTLET}.getInstance().isImageAvailable($F{pointcode}).booleanValue()).booleanValue())]]></variableExpression>
+		<variableExpression><![CDATA[Boolean.valueOf($V{HAS_ENTRIES_WO_APMAPS}.booleanValue() || Boolean.valueOf(!$P{REPORT_SCRIPTLET}.isImageAvailable($F{pointcode}).booleanValue()).booleanValue())]]></variableExpression>
 		<initialValueExpression><![CDATA[Boolean.FALSE]]></initialValueExpression>
 	</variable>
 	<title>
@@ -68,7 +68,7 @@
 		<band height="20">
 			<rectangle>
 				<reportElement x="5" y="1" width="545" height="18" backcolor="#C0C0C0" uuid="694e6ff5-3a22-4a92-a3b4-4601a6a0c6de">
-					<printWhenExpression><![CDATA[Boolean.valueOf(!$P{REPORT_SCRIPTLET}.getInstance().isImageAvailable($F{pointcode}).booleanValue())]]></printWhenExpression>
+					<printWhenExpression><![CDATA[Boolean.valueOf(!$P{REPORT_SCRIPTLET}.isImageAvailable($F{pointcode}).booleanValue())]]></printWhenExpression>
 				</reportElement>
 				<graphicElement>
 					<pen lineWidth="0.0" lineColor="#999999"/>

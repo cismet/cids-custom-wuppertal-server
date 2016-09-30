@@ -10,9 +10,9 @@
 		<band height="375">
 			<image hAlign="Center" vAlign="Middle" onErrorType="Blank">
 				<reportElement x="5" y="5" width="545" height="365" isRemoveLineWhenBlank="true" uuid="7ed349be-588e-4786-9a6a-57864b0aa6b5">
-					<printWhenExpression><![CDATA[$P{REPORT_SCRIPTLET}.getInstance().isImageAvailable($F{pointcode})]]></printWhenExpression>
+					<printWhenExpression><![CDATA[$P{REPORT_SCRIPTLET}.isImageAvailable($F{pointcode})]]></printWhenExpression>
 				</reportElement>
-				<imageExpression><![CDATA[$P{REPORT_SCRIPTLET}.getInstance().loadImage($F{pointcode})]]></imageExpression>
+				<imageExpression><![CDATA[$P{REPORT_SCRIPTLET}.loadImage($F{pointcode})]]></imageExpression>
 			</image>
 		</band>
 	</detail>

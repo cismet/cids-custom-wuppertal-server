@@ -49,9 +49,15 @@ public class AlkisPunktReportScriptlet extends JRDefaultScriptlet {
 
     public static final String[] SUFFIXES = new String[] { "tif", "jpg", "tiff", "jpeg" };
 
-    //~ Instance fields --------------------------------------------------------
+    private static final transient SimpleHttpAccessHandler EXTENDED_ACCESS_HANDLER = new SimpleHttpAccessHandler();
 
-    private final transient SimpleHttpAccessHandler extendedAccessHandler = new SimpleHttpAccessHandler();
+    //~ Constructors -----------------------------------------------------------
+
+    /**
+     * Creates a new AlkisPunktReportScriptlet object.
+     */
+    private AlkisPunktReportScriptlet() {
+    }
 
     //~ Constructors -----------------------------------------------------------
 
@@ -131,8 +137,8 @@ public class AlkisPunktReportScriptlet extends JRDefaultScriptlet {
      *
      * @return  DOCUMENT ME!
      */
-    public Boolean isImageAvailable(final String pointcode) {
-        return isImageAvailable(pointcode, extendedAccessHandler);
+    public static Boolean isImageAvailable(final String pointcode) {
+        return isImageAvailable(pointcode, EXTENDED_ACCESS_HANDLER);
     }
 
     /**
@@ -143,7 +149,7 @@ public class AlkisPunktReportScriptlet extends JRDefaultScriptlet {
      *
      * @return  DOCUMENT ME!
      */
-    public Boolean isImageAvailable(final String pointcode, final ExtendedAccessHandler extendedAccessHandler) {
+    public static Boolean isImageAvailable(final String pointcode, final ExtendedAccessHandler extendedAccessHandler) {
         final Collection<URL> validURLs = getCorrespondingURLs(pointcode);
 
         for (final URL url : validURLs) {
@@ -162,8 +168,8 @@ public class AlkisPunktReportScriptlet extends JRDefaultScriptlet {
      *
      * @return  DOCUMENT ME!
      */
-    public Image loadImage(final String pointcode) {
-        return loadImage(pointcode, extendedAccessHandler);
+    public static Image loadImage(final String pointcode) {
+        return loadImage(pointcode, EXTENDED_ACCESS_HANDLER);
     }
 
     /**
@@ -174,7 +180,7 @@ public class AlkisPunktReportScriptlet extends JRDefaultScriptlet {
      *
      * @return  DOCUMENT ME!
      */
-    public Image loadImage(final String pointcode, final ExtendedAccessHandler extendedAccessHandler) {
+    public static Image loadImage(final String pointcode, final ExtendedAccessHandler extendedAccessHandler) {
         final Collection<URL> validURLs = getCorrespondingURLs(pointcode);
         String suffix = "";
 
