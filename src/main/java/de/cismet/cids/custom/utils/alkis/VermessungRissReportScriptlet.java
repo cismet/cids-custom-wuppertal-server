@@ -35,9 +35,7 @@ public class VermessungRissReportScriptlet extends JRDefaultScriptlet {
 
     protected static final Logger LOG = Logger.getLogger(VermessungRissReportScriptlet.class);
 
-    //~ Instance fields --------------------------------------------------------
-
-    private final ExtendedAccessHandler extendedAccessHandler = new SimpleHttpAccessHandler();
+    private static final ExtendedAccessHandler EXTENDED_ACCESS_HANDLER = new SimpleHttpAccessHandler();
 
     //~ Methods ----------------------------------------------------------------
 
@@ -52,12 +50,12 @@ public class VermessungRissReportScriptlet extends JRDefaultScriptlet {
      *
      * @return  DOCUMENT ME!
      */
-    public Boolean isImageAvailable(final String host,
+    public static Boolean isImageAvailable(final String host,
             final String schluessel,
             final Integer gemarkung,
             final String flur,
             final String blatt) {
-        return isImageAvailable(host, schluessel, gemarkung, flur, blatt, extendedAccessHandler);
+        return isImageAvailable(host, schluessel, gemarkung, flur, blatt, EXTENDED_ACCESS_HANDLER);
     }
 
     /**
@@ -72,7 +70,7 @@ public class VermessungRissReportScriptlet extends JRDefaultScriptlet {
      *
      * @return  DOCUMENT ME!
      */
-    public Boolean isImageAvailable(final String host,
+    public static Boolean isImageAvailable(final String host,
             final String schluessel,
             final Integer gemarkung,
             final String flur,
@@ -105,7 +103,7 @@ public class VermessungRissReportScriptlet extends JRDefaultScriptlet {
      *
      * @return  DOCUMENT ME!
      */
-    public BufferedImage rotate(final BufferedImage imageToRotate) {
+    public static BufferedImage rotate(final BufferedImage imageToRotate) {
         BufferedImage result = imageToRotate;
 
         if (imageToRotate == null) {
@@ -117,36 +115,5 @@ public class VermessungRissReportScriptlet extends JRDefaultScriptlet {
         }
 
         return result;
-    }
-
-    /**
-     * DOCUMENT ME!
-     *
-     * @return  DOCUMENT ME!
-     */
-    public static VermessungRissReportScriptlet getInstance() {
-        return LazyInitialiser.INSTANCE;
-    }
-
-    //~ Inner Classes ----------------------------------------------------------
-
-    /**
-     * DOCUMENT ME!
-     *
-     * @version  $Revision$, $Date$
-     */
-    protected static final class LazyInitialiser {
-
-        //~ Static fields/initializers -----------------------------------------
-
-        private static final VermessungRissReportScriptlet INSTANCE = new VermessungRissReportScriptlet();
-
-        //~ Constructors -------------------------------------------------------
-
-        /**
-         * Creates a new LazyInitialiser object.
-         */
-        private LazyInitialiser() {
-        }
     }
 }
