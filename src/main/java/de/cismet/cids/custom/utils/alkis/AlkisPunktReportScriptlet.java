@@ -32,6 +32,7 @@ import javax.imageio.ImageIO;
 
 import javax.media.jai.RenderedImageAdapter;
 
+import de.cismet.commons.security.handler.ExtendedAccessHandler;
 import de.cismet.commons.security.handler.SimpleHttpAccessHandler;
 
 /**
@@ -47,10 +48,17 @@ public class AlkisPunktReportScriptlet extends JRDefaultScriptlet {
     protected static final Logger LOG = Logger.getLogger(AlkisPunktReportScriptlet.class);
 
     public static final String[] SUFFIXES = new String[] { "tif", "jpg", "tiff", "jpeg" };
-    private static final transient SimpleHttpAccessHandler HTTP_AH = new SimpleHttpAccessHandler();
+
+    //~ Instance fields --------------------------------------------------------
+
+    private final transient SimpleHttpAccessHandler extendedAccessHandler = new SimpleHttpAccessHandler();
 
     //~ Methods ----------------------------------------------------------------
 
+    private AlkisPunktReportScriptlet() {
+        
+    }
+    
     /**
      * DOCUMENT ME!
      *
@@ -58,7 +66,7 @@ public class AlkisPunktReportScriptlet extends JRDefaultScriptlet {
      *
      * @return  DOCUMENT ME!
      */
-    public static Collection<URL> getCorrespondingURLs(final String pointcode) {
+    public Collection<URL> getCorrespondingURLs(final String pointcode) {
         final Collection<URL> validURLs = new LinkedList<URL>();
 
         // The pointcode of a alkis point has a specific format:
@@ -120,10 +128,22 @@ public class AlkisPunktReportScriptlet extends JRDefaultScriptlet {
      * @return  DOCUMENT ME!
      */
     public Boolean isImageAvailable(final String pointcode) {
+        return isImageAvailable(pointcode, extendedAccessHandler);
+    }
+
+    /**
+     * DOCUMENT ME!
+     *
+     * @param   pointcode              DOCUMENT ME!
+     * @param   extendedAccessHandler  DOCUMENT ME!
+     *
+     * @return  DOCUMENT ME!
+     */
+    public Boolean isImageAvailable(final String pointcode, final ExtendedAccessHandler extendedAccessHandler) {
         final Collection<URL> validURLs = getCorrespondingURLs(pointcode);
 
         for (final URL url : validURLs) {
-            if (HTTP_AH.checkIfURLaccessible(url)) {
+            if (extendedAccessHandler.checkIfURLaccessible(url)) {
                 return true;
             }
         }
@@ -139,14 +159,26 @@ public class AlkisPunktReportScriptlet extends JRDefaultScriptlet {
      * @return  DOCUMENT ME!
      */
     public Image loadImage(final String pointcode) {
+        return loadImage(pointcode, extendedAccessHandler);
+    }
+
+    /**
+     * DOCUMENT ME!
+     *
+     * @param   pointcode              DOCUMENT ME!
+     * @param   extendedAccessHandler  DOCUMENT ME!
+     *
+     * @return  DOCUMENT ME!
+     */
+    public Image loadImage(final String pointcode, final ExtendedAccessHandler extendedAccessHandler) {
         final Collection<URL> validURLs = getCorrespondingURLs(pointcode);
         String suffix = "";
 
         InputStream streamToReadFrom = null;
         for (final URL url : validURLs) {
             try {
-                if (HTTP_AH.checkIfURLaccessible(url)) {
-                    streamToReadFrom = HTTP_AH.doRequest(url);
+                if (extendedAccessHandler.checkIfURLaccessible(url)) {
+                    streamToReadFrom = extendedAccessHandler.doRequest(url);
                     suffix = url.toExternalForm().substring(url.toExternalForm().lastIndexOf('.'));
                     if (streamToReadFrom != null) {
                         break;
@@ -160,12 +192,12 @@ public class AlkisPunktReportScriptlet extends JRDefaultScriptlet {
         }
 
         BufferedImage result = null;
-        if (streamToReadFrom == null) {
-            LOG.error("Couldn't get a connection to associated ap map.");
-            return result;
-        }
-
         try {
+            if (streamToReadFrom == null) {
+                LOG.error("Couldn't get a connection to associated ap map.");
+                return result;
+            }
+
             if (suffix.endsWith("tif") || suffix.endsWith("tiff") || suffix.endsWith("TIF")
                         || suffix.endsWith("TIFF")) {
                 final TIFFDecodeParam param = null;
@@ -190,5 +222,36 @@ public class AlkisPunktReportScriptlet extends JRDefaultScriptlet {
         }
 
         return result;
+    }
+
+    /**
+     * DOCUMENT ME!
+     *
+     * @return  DOCUMENT ME!
+     */
+    public static AlkisPunktReportScriptlet getInstance() {
+        return LazyInitialiser.INSTANCE;
+    }
+
+    //~ Inner Classes ----------------------------------------------------------
+
+    /**
+     * DOCUMENT ME!
+     *
+     * @version  $Revision$, $Date$
+     */
+    private static final class LazyInitialiser {
+
+        //~ Static fields/initializers -----------------------------------------
+
+        private static final AlkisPunktReportScriptlet INSTANCE = new AlkisPunktReportScriptlet();
+
+        //~ Constructors -------------------------------------------------------
+
+        /**
+         * Creates a new LazyInitialiser object.
+         */
+        private LazyInitialiser() {
+        }
     }
 }
