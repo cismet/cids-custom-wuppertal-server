@@ -12,9 +12,16 @@
  */
 package de.cismet.cids.custom.utils.vermessungsunterlagen;
 
+import Sirius.server.middleware.types.MetaObjectNode;
+
+import java.util.ArrayList;
 import java.util.Collection;
 
 import de.cismet.cids.custom.wunda_blau.search.server.CidsAlkisSearchStatement;
+
+import de.cismet.cids.dynamics.CidsBean;
+
+import de.cismet.cids.server.search.CidsServerSearch;
 
 /**
  * DOCUMENT ME!
@@ -46,6 +53,8 @@ public class VermessungsunterlagenValidator {
 
     //~ Instance fields --------------------------------------------------------
 
+    private Collection<CidsBean> flurstuecke = new ArrayList<CidsBean>();
+
     private final VermessungsunterlagenHelper helper;
 
     //~ Constructors -----------------------------------------------------------
@@ -64,14 +73,24 @@ public class VermessungsunterlagenValidator {
     /**
      * DOCUMENT ME!
      *
+     * @return  DOCUMENT ME!
+     */
+    public Collection<CidsBean> getFlurstuecke() {
+        return flurstuecke;
+    }
+
+    /**
+     * DOCUMENT ME!
+     *
      * @param   anfrageBean  DOCUMENT ME!
      *
      * @return  if validation passed returns {@link #ISVALID}. If validation failed returns error message for enduser in
      *          plain text
      *
-     * @throws  Exception  DOCUMENT ME!
+     * @throws  VermessungsunterlagenException  DOCUMENT ME!
      */
-    public boolean validateAndGetErrorMessage(final VermessungsunterlagenAnfrageBean anfrageBean) throws Exception {
+    public boolean validateAndGetErrorMessage(final VermessungsunterlagenAnfrageBean anfrageBean)
+            throws VermessungsunterlagenException {
         // Prüfung ob Benutzername des ÖBVIs in Wuppertal bekannt (registriert) ist
         if (!isUserNameVermPortalKnown(anfrageBean.getNameVermessungsstelle())) {
             throw getExceptionByErrorCode(Error.UNKOWN_USER);
@@ -181,7 +200,7 @@ public class VermessungsunterlagenValidator {
      *
      * @return  Error message plain text
      */
-    private Exception getExceptionByErrorCode(final Error code) {
+    private VermessungsunterlagenException getExceptionByErrorCode(final Error code) {
         final String message;
         switch (code) {
             // Unbekannter ÖBVI
@@ -256,11 +275,11 @@ public class VermessungsunterlagenValidator {
                 message = "";
             }
         }
-        return new Exception(message);
+        return new VermessungsunterlagenException(message);
     }
 
     /**
-     * TODO implement me.
+     * DOCUMENT ME!
      *
      * @param   usernameVermPortal  DOCUMENT ME!
      *
@@ -272,17 +291,17 @@ public class VermessungsunterlagenValidator {
     }
 
     /**
-     * TODO implement me.
+     * DOCUMENT ME!
      *
      * @param   flurstueckBean  DOCUMENT ME!
      *
      * @return  true if WuNDa contains a flurstueck defined by gemarkung, flur, flurstuecksnummer. Also true if the
      *          containing flurstueck ist historic!
      *
-     * @throws  Exception  DOCUMENT ME!
+     * @throws  VermessungsunterlagenException  Exception DOCUMENT ME!
      */
     private boolean existFlurstueck(final VermessungsunterlagenAnfrageBean.AntragsflurstueckBean flurstueckBean)
-            throws Exception {
+            throws VermessungsunterlagenException {
         if (flurstueckBean == null) {
             return false;
         }
@@ -315,14 +334,23 @@ public class VermessungsunterlagenValidator {
             return false;
         }
 
-        final CidsAlkisSearchStatement search = new CidsAlkisSearchStatement(
+        final CidsServerSearch search = new CidsAlkisSearchStatement(
                 CidsAlkisSearchStatement.Resulttyp.FLURSTUECK,
                 CidsAlkisSearchStatement.SucheUeber.FLURSTUECKSNUMMER,
                 fsKey,
                 null);
-        final Collection result = helper.performSearch(search);
-        // TODO recursive search if Flurstueck is historic
-        return (result != null)
-                    && !result.isEmpty();
+        try {
+            final Collection<MetaObjectNode> result = helper.performSearch(search);
+            // TODO recursive search if Flurstueck is historic
+            final boolean found = (result != null)
+                        && !result.isEmpty();
+            if (found) {
+                final CidsBean cidsBean = helper.loadCidsBean(result.iterator().next());
+                flurstuecke.add(cidsBean);
+            }
+            return found;
+        } catch (final Exception ex) {
+            throw new VermessungsunterlagenException("Fehler beim laden des Flurstuecks: " + fsKey, ex);
+        }
     }
 }

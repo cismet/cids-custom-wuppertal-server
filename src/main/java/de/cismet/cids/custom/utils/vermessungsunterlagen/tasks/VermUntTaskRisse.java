@@ -55,25 +55,33 @@ public abstract class VermUntTaskRisse extends VermessungsunterlagenTask {
 
     private final Collection<CidsBean> risseBeans;
     private final String host;
+    private final String auftragsnummer;
+    private final String projektnummer;
 
     //~ Constructors -----------------------------------------------------------
 
     /**
      * Creates a new VermUntTaskRisse object.
      *
-     * @param  type        DOCUMENT ME!
-     * @param  jobkey      DOCUMENT ME!
-     * @param  risseBeans  DOCUMENT ME!
-     * @param  host        DOCUMENT ME!
+     * @param  type            DOCUMENT ME!
+     * @param  jobkey          DOCUMENT ME!
+     * @param  risseBeans      DOCUMENT ME!
+     * @param  host            DOCUMENT ME!
+     * @param  auftragsnummer  DOCUMENT ME!
+     * @param  projektnummer   DOCUMENT ME!
      */
     public VermUntTaskRisse(final String type,
             final String jobkey,
             final Collection<CidsBean> risseBeans,
-            final String host) {
+            final String host,
+            final String auftragsnummer,
+            final String projektnummer) {
         super(type, jobkey);
 
         this.risseBeans = risseBeans;
         this.host = host;
+        this.auftragsnummer = auftragsnummer;
+        this.projektnummer = projektnummer;
     }
 
     //~ Methods ----------------------------------------------------------------
@@ -85,8 +93,8 @@ public abstract class VermUntTaskRisse extends VermessungsunterlagenTask {
                     + ".pdf";
 
         final Object[] tmp = VermessungsRissReportHelper.generateReportData(
-                getJobkey(),
-                "",
+                auftragsnummer,
+                projektnummer,
                 risseBeans,
                 host,
                 MultiPagePictureReader.class);
@@ -126,7 +134,7 @@ public abstract class VermUntTaskRisse extends VermessungsunterlagenTask {
                 LOG.warn("could not download additional File", ex);
                 VermessungsunterlagenHelper.writeExceptionJson(
                     ex,
-                    VermessungsunterlagenHelper.getPath(getJobkey())
+                    VermessungsunterlagenHelper.getPath(getJobKey())
                             + "/fehlerprotokoll_"
                             + pureAdditionalFilename
                             + ".json");

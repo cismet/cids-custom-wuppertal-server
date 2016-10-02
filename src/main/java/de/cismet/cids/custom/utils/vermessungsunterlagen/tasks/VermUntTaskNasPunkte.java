@@ -28,18 +28,19 @@ public class VermUntTaskNasPunkte extends VermUntTaskNas {
 
     //~ Static fields/initializers ---------------------------------------------
 
-    public static final String TYPE = "NAS_PUNKTE";
+    public static final String TYPE = "NAS_Punkte";
 
     //~ Constructors -----------------------------------------------------------
 
     /**
      * Creates a new VermUntTaskNasPunkte object.
      *
-     * @param  jobKey    DOCUMENT ME!
-     * @param  user      DOCUMENT ME!
-     * @param  geometry  DOCUMENT ME!
+     * @param  jobKey     DOCUMENT ME!
+     * @param  user       DOCUMENT ME!
+     * @param  requestId  DOCUMENT ME!
+     * @param  geometry   DOCUMENT ME!
      */
-    public VermUntTaskNasPunkte(final String jobKey, final User user, final Geometry geometry) {
-        super(TYPE, jobKey, user, geometry, VermessungsunterlagenHelper.NAS_PRODUCT_PUNKTE);
+    public VermUntTaskNasPunkte(final String jobKey, final User user, final String requestId, final Geometry geometry) {
+        super(TYPE, jobKey, user, requestId, geometry, VermessungsunterlagenHelper.NAS_PRODUCT_PUNKTE);
     }
 }

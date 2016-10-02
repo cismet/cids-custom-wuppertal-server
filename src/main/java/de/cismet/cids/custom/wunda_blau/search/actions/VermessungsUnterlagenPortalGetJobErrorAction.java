@@ -12,6 +12,7 @@
  */
 package de.cismet.cids.custom.wunda_blau.search.actions;
 
+import de.cismet.cids.custom.utils.vermessungsunterlagen.VermessungsunterlagenException;
 import de.cismet.cids.custom.utils.vermessungsunterlagen.VermessungsunterlagenHelper;
 import de.cismet.cids.custom.utils.vermessungsunterlagen.VermessungsunterlagenJob;
 
@@ -27,23 +28,30 @@ import de.cismet.cids.server.actions.ServerActionParameter;
 @org.openide.util.lookup.ServiceProvider(service = ServerAction.class)
 public class VermessungsUnterlagenPortalGetJobErrorAction extends AbstractVermessungsUnterlagenPortalAction {
 
+    //~ Static fields/initializers ---------------------------------------------
+
+    public static final String TASK_NAME = "VUPgetJobErrorAction";
+
+    private static final String RETURN = "{\"getJobErrorReturn\":{\"$value\":\"%s\"}}";
+
     //~ Methods ----------------------------------------------------------------
 
     @Override
     public Object execute(final Object body, final ServerActionParameter... params) {
-        final String jobNumber = String.valueOf(params[0].getValue());
+        final String jobKey = exctractJobKey(params);
+        final VermessungsunterlagenJob job = VermessungsunterlagenHelper.getInstance().getJob(jobKey);
 
-        final VermessungsunterlagenHelper helper = new VermessungsunterlagenHelper(getMetaService(), getUser());
-        final VermessungsunterlagenJob job = helper.getJob(jobNumber);
-        final Exception exception = job.getException();
-        final String fehlerString = (exception != null) ? exception.getLocalizedMessage() : null;
+        final VermessungsunterlagenException exception = job.getException();
+        final String fehlermeldung = (exception != null) ? exception.getMessage() : null;
 
-        super.executeLog(jobNumber, "PseudoErrorMessage@" + job.getJobkey(), "");
-        return "{\"getJobErrorReturn\":{\"$value\":\"" + fehlerString + "\"}}";
+        VermessungsunterlagenHelper.getInstance().cleanUp(jobKey);
+
+        super.executeLog(jobKey, fehlermeldung, "");
+        return String.format(RETURN, fehlermeldung);
     }
 
     @Override
     public String getTaskName() {
-        return "VUPgetJobErrorAction";
+        return TASK_NAME;
     }
 }

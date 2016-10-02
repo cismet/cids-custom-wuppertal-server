@@ -51,26 +51,30 @@ public abstract class VermUntTaskNas extends VermessungsunterlagenTask {
     private final Geometry geometry;
     private final NasProduct product;
     private final User user;
+    private final String requestId;
 
     //~ Constructors -----------------------------------------------------------
 
     /**
      * Creates a new VermUntTaskNas object.
      *
-     * @param  type      DOCUMENT ME!
-     * @param  jobkey    DOCUMENT ME!
-     * @param  user      DOCUMENT ME!
-     * @param  geometry  DOCUMENT ME!
-     * @param  product   DOCUMENT ME!
+     * @param  type       DOCUMENT ME!
+     * @param  jobkey     DOCUMENT ME!
+     * @param  user       DOCUMENT ME!
+     * @param  requestId  DOCUMENT ME!
+     * @param  geometry   DOCUMENT ME!
+     * @param  product    DOCUMENT ME!
      */
     public VermUntTaskNas(final String type,
             final String jobkey,
             final User user,
+            final String requestId,
             final Geometry geometry,
             final NasProduct product) {
         super(type, jobkey);
 
         this.user = user;
+        this.requestId = requestId;
         this.geometry = geometry;
         this.product = product;
     }
@@ -97,10 +101,9 @@ public abstract class VermUntTaskNas extends VermessungsunterlagenTask {
             extension = isNASOrderSplitted(geometryCollection) ? ZIP_EXTENSION : XML_EXTENSION;
         }
 
-        final File fileToSaveTo = new File(getPath() + "/" + getJobkey() + extension);
+        final File fileToSaveTo = new File(getPath() + "/" + getJobKey() + extension);
 
-        // TODO anfragename ?!
-        final String orderId = sendNasRequest(product, geometryCollection, getJobkey());
+        final String orderId = sendNasRequest(product, geometryCollection, requestId);
         if (orderId == null) {
             return;
         }

@@ -27,40 +27,30 @@ import de.cismet.cids.server.actions.ServerActionParameter;
 @org.openide.util.lookup.ServiceProvider(service = ServerAction.class)
 public class VermessungsUnterlagenPortalGetJobStatusAction extends AbstractVermessungsUnterlagenPortalAction {
 
+    //~ Static fields/initializers ---------------------------------------------
+
+    private static final String RETURN =
+        "{\"getJobStatusReturn\":{\"enumJobStatus\":{\"$value\":\"%s\"},\"geschaeftsbuchnummer\":{\"$value\":\"%s\"}}}";
+
+    //~ Instance fields --------------------------------------------------------
+
+    public final String TASK_NAME = "VUPgetJobStatusAction";
+
     //~ Methods ----------------------------------------------------------------
 
     @Override
     public Object execute(final Object body, final ServerActionParameter... params) {
-        final String jobNumber = String.valueOf(params[0].getValue());
+        final String jobKey = exctractJobKey(params);
+        final VermessungsunterlagenJob job = VermessungsunterlagenHelper.getInstance().getJob(jobKey);
 
-        String status = null;
-        final VermessungsunterlagenHelper helper = new VermessungsunterlagenHelper(getMetaService(), getUser());
-        final VermessungsunterlagenJob job = helper.getJob(jobNumber);
-        if (null != job.getStatus()) {
-            switch (job.getStatus()) {
-                case FINISHED: {
-                    status = "OK";
-                    break;
-                }
-                case ERROR: {
-                    status = "ERROR";
-                    break;
-                }
-                default: {
-                    status = "RUNNING";
-                    break;
-                }
-            }
-        }
+        final VermessungsunterlagenJob.Status status = job.getStatus();
 
-        final String output = "[" + status + "," + jobNumber + "]";
-        super.executeLog(jobNumber, output, "");
-        return "{\"getJobStatusReturn\":{\"enumJobStatus\":{\"$value\":\"" + status
-                    + "\"},\"geschaeftsbuchnummer\":{\"$value\":\"" + jobNumber + "\"}}}";
+        super.executeLog(jobKey, "[" + status + "," + jobKey + "]", "");
+        return String.format(RETURN, status, jobKey);
     }
 
     @Override
     public String getTaskName() {
-        return "VUPgetJobStatusAction";
+        return TASK_NAME;
     }
 }

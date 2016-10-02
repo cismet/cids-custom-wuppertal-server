@@ -16,7 +16,9 @@ package de.cismet.cids.custom.utils.vermessungsunterlagen;
  *
  ***************************************************
  */
+import Sirius.server.middleware.impls.domainserver.DomainServerImpl;
 import Sirius.server.middleware.interfaces.domainserver.MetaService;
+import Sirius.server.middleware.types.MetaClass;
 import Sirius.server.middleware.types.MetaObjectNode;
 import Sirius.server.newuser.User;
 
@@ -40,6 +42,8 @@ import net.sf.jasperreports.engine.util.JRLoader;
 
 import org.apache.commons.io.IOUtils;
 import org.apache.commons.lang.RandomStringUtils;
+import org.apache.commons.net.ftp.FTPClient;
+import org.apache.commons.net.ftp.FTPReply;
 import org.apache.log4j.Logger;
 
 import java.io.File;
@@ -55,24 +59,18 @@ import java.net.URL;
 import java.rmi.Remote;
 import java.rmi.RemoteException;
 
+import java.sql.Timestamp;
+
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collection;
+import java.util.Date;
 import java.util.HashMap;
-import java.util.LinkedList;
 import java.util.List;
 import java.util.Map;
 import java.util.Properties;
 
 import de.cismet.cids.custom.utils.nas.NasProduct;
-import de.cismet.cids.custom.utils.vermessungsunterlagen.tasks.VermUntTaskAPList;
-import de.cismet.cids.custom.utils.vermessungsunterlagen.tasks.VermUntTaskAPMap;
-import de.cismet.cids.custom.utils.vermessungsunterlagen.tasks.VermUntTaskNasKomplett;
-import de.cismet.cids.custom.utils.vermessungsunterlagen.tasks.VermUntTaskNasPunkte;
-import de.cismet.cids.custom.utils.vermessungsunterlagen.tasks.VermUntTaskRisseBilder;
-import de.cismet.cids.custom.utils.vermessungsunterlagen.tasks.VermUntTaskRisseGrenzniederschrift;
-import de.cismet.cids.custom.wunda_blau.search.server.CidsMeasurementPointSearchStatement;
-import de.cismet.cids.custom.wunda_blau.search.server.CidsVermessungRissSearchStatement;
 
 import de.cismet.cids.dynamics.CidsBean;
 
@@ -86,6 +84,8 @@ import de.cismet.commons.security.handler.SimpleHttpAccessHandler;
 
 import de.cismet.tools.PropertyReader;
 
+import static org.apache.commons.net.ftp.FTP.BINARY_FILE_TYPE;
+
 /**
  * DOCUMENT ME!
  *
@@ -97,32 +97,28 @@ public class VermessungsunterlagenHelper {
     //~ Static fields/initializers ---------------------------------------------
 
     private static final transient Logger LOG = Logger.getLogger(VermessungsunterlagenHelper.class);
-    private static final String PROPERTIES =
-        "/de/cismet/cids/custom/wunda_blau/res/vermessungsunterlagen/vermessungsunterlagen_conf.properties";
+
     private static final int MAX_BUFFER_SIZE = 1024;
-    private static final int SRID = 25832;
     private static final ObjectMapper EXCEPTION_MAPPER = new ObjectMapper();
+    private static final ObjectMapper JOB_MAPPER;
 
-    private static final String PATH_TMP;
+    private static final PropertyReader PROPERTIES = new PropertyReader(
+            "/de/cismet/cids/custom/wunda_blau/res/vermessungsunterlagenportal/vup_conf.properties");
+    public static final String CIDS_LOGIN = readProperty("CIDS_LOGIN", null);
+    public static final String PATH_TMP = readProperty("PATH_TMP", "/tmp");
+    public static final String FTP_HOST = readProperty("FTP_HOST", null);
+    public static final String FTP_LOGIN = readProperty("FTP_LOGIN", null);
+    public static final String FTP_PASS = readProperty("FTP_PASS", null);
+    public static final String FTP_PATH = readProperty("FTP_PATH", null);
+    public static final String PATH_TEST = readProperty("PATH_TEST", null);
 
-    static {
-        String pathTmp = "/tmp";
-        try {
-            final PropertyReader serviceProperties = new PropertyReader(PROPERTIES);
-            pathTmp = serviceProperties.getProperty("PATH_TMP");
-        } catch (final Exception ex) {
-            LOG.warn("could not read " + PROPERTIES + ". setting PATH_TMP to default value: " + pathTmp, ex);
-        } finally {
-            PATH_TMP = pathTmp;
-        }
-    }
-
-    private static final ObjectMapper MAPPER;
+    public static final String ALLOWED_TASKS_CONFIG_ATTR = "vup.tasks_allowed";
+    public static final int SRID = 25832;
 
     static {
         final ObjectMapper mapper = new ObjectMapper();
         mapper.configure(DeserializationFeature.FAIL_ON_UNKNOWN_PROPERTIES, false);
-        MAPPER = mapper;
+        JOB_MAPPER = mapper;
     }
 
     public static final NasProduct NAS_PRODUCT_KOMPLETT;
@@ -144,36 +140,81 @@ public class VermessungsunterlagenHelper {
                     productKomplett = nasProduct;
                 }
             }
-        } catch (IOException ex) {
-            LOG.error(ex, ex);
+        } catch (final IOException ex) {
+            final String message = "could not load NasProducts";
+            LOG.error(message, ex);
+            throw new RuntimeException(message, ex);
         }
         NAS_PRODUCT_PUNKTE = productPunkte;
         NAS_PRODUCT_KOMPLETT = productKomplett;
     }
 
-    private static final String PATH_TEST = "/home/jruiz/tmp";
-
     //~ Instance fields --------------------------------------------------------
+
+    private MetaClass mc_VERMESSUNGSUNTERLAGENAUFTRAG;
+    private MetaClass mc_VERMESSUNGSUNTERLAGENAUFTRAG_FLURSTUECK;
+    private MetaClass mc_VERMESSUNGSUNTERLAGENAUFTRAG_PUNKTNUMMER;
+    private MetaClass mc_VERMESSUNGSUNTERLAGENAUFTRAG_VERMESSUNGSART;
+    private MetaClass mc_GEOM;
 
     private final Map<String, VermessungsunterlagenJob> jobMap = new HashMap<String, VermessungsunterlagenJob>();
 
-    private final MetaService metaService;
-    private final User user;
+    private MetaService metaService;
+    private User user;
 
     //~ Constructors -----------------------------------------------------------
 
     /**
      * Creates a new VermessungsunterlagenHelper object.
-     *
-     * @param  metaService  DOCUMENT ME!
-     * @param  user         DOCUMENT ME!
      */
-    public VermessungsunterlagenHelper(final MetaService metaService, final User user) {
-        this.metaService = metaService;
-        this.user = user;
+    private VermessungsunterlagenHelper() {
     }
 
     //~ Methods ----------------------------------------------------------------
+
+    /**
+     * DOCUMENT ME!
+     *
+     * @param   property      DOCUMENT ME!
+     * @param   defaultValue  DOCUMENT ME!
+     *
+     * @return  DOCUMENT ME!
+     */
+    private static String readProperty(final String property, final String defaultValue) {
+        String value = defaultValue;
+        try {
+            value = PROPERTIES.getProperty(property);
+        } catch (final Exception ex) {
+            final String message = "could not read " + property + " from " + PROPERTIES.getFilename()
+                        + ". setting to default value: " + defaultValue;
+            LOG.warn(message, ex);
+        }
+        return value;
+    }
+
+    /**
+     * DOCUMENT ME!
+     *
+     * @param   metaService  DOCUMENT ME!
+     * @param   user         DOCUMENT ME!
+     *
+     * @throws  Exception  DOCUMENT ME!
+     */
+    public void init(final MetaService metaService, final User user) throws Exception {
+        this.metaService = metaService;
+        this.user = user;
+
+        this.mc_GEOM = getMetaService().getClassByTableName(getUser(), "geom");
+        this.mc_VERMESSUNGSUNTERLAGENAUFTRAG_PUNKTNUMMER = getMetaService()
+                    .getClassByTableName(getUser(), "vermessungsunterlagenauftrag_punktnummer");
+        this.mc_VERMESSUNGSUNTERLAGENAUFTRAG = getMetaService().getClassByTableName(
+                getUser(),
+                "vermessungsunterlagenauftrag");
+        this.mc_VERMESSUNGSUNTERLAGENAUFTRAG_VERMESSUNGSART = getMetaService()
+                    .getClassByTableName(getUser(), "vermessungsunterlagenauftrag_vermessungsart");
+        this.mc_VERMESSUNGSUNTERLAGENAUFTRAG_FLURSTUECK = getMetaService()
+                    .getClassByTableName(getUser(), "vermessungsunterlagenauftrag_flurstueck");
+    }
 
     /**
      * DOCUMENT ME!
@@ -217,23 +258,64 @@ public class VermessungsunterlagenHelper {
     /**
      * DOCUMENT ME!
      *
-     * @param   anfrageContent  DOCUMENT ME!
+     * @return  DOCUMENT ME!
+     *
+     * @throws  Exception  DOCUMENT ME!
+     */
+    private FTPClient getConnectedFTPClient() throws Exception {
+        final FTPClient ftpClient = new FTPClient();
+        ftpClient.connect(FTP_HOST);
+
+        final int reply = ftpClient.getReplyCode();
+        if (!FTPReply.isPositiveCompletion(reply)) {
+            ftpClient.disconnect();
+            throw new Exception("Exception in connecting to FTP Server");
+        }
+        ftpClient.login(FTP_LOGIN, FTP_PASS);
+        return ftpClient;
+    }
+
+    /**
+     * DOCUMENT ME!
+     *
+     * @param   in           DOCUMENT ME!
+     * @param   ftpFilePath  DOCUMENT ME!
+     *
+     * @throws  Exception  DOCUMENT ME!
+     */
+    public void uploadToFTP(final InputStream in, final String ftpFilePath) throws Exception {
+        final FTPClient connectedFtpClient = getConnectedFTPClient();
+        connectedFtpClient.enterLocalPassiveMode();
+        connectedFtpClient.setFileType(BINARY_FILE_TYPE);
+        connectedFtpClient.storeFile(ftpFilePath, in);
+    }
+
+    /**
+     * DOCUMENT ME!
+     *
+     * @param   executeJobContent  DOCUMENT ME!
      *
      * @return  DOCUMENT ME!
      */
-    public String createJob(final String anfrageContent) {
+    public String createJob(final String executeJobContent) {
         try {
-            final VermessungsunterlagenAnfrageBean anfrageBean = createAnfrageBean(anfrageContent);
-
-//            final ObjectMapper mapper = new ObjectMapper();
-//            mapper.registerModule(new JtsModule());
-//            LOG.info("Created object: " + mapper.writeValueAsString(anfrageBean));
-//            LOG.info("----");
-
-            final String jobkey = createJob(anfrageBean);
-            return jobkey;
+            final String jobKey = generateUniqueJobKey();
+            final VermessungsunterlagenAnfrageBean anfrageBean = createAnfrageBean(executeJobContent);
+            final VermessungsunterlagenJob job = new VermessungsunterlagenJob(jobKey, anfrageBean);
+            try {
+                persistJobCidsBean(job, executeJobContent);
+                CismetExecutors.newSingleThreadExecutor().execute(job);
+            } catch (final Exception ex) {
+                LOG.info("error while persisting Job", ex);
+                job.setStatus(VermessungsunterlagenJob.Status.ERROR);
+                job.setException(new VermessungsunterlagenException(
+                        "Der Datensatz konnte nicht abgespeichert werden.",
+                        ex));
+            }
+            jobMap.put(jobKey, job);
+            return jobKey;
         } catch (final Exception ex) {
-            LOG.warn("error while creating job", ex);
+            LOG.error("Unexpected error while creating job !", ex);
             return null;
         }
     }
@@ -241,65 +323,59 @@ public class VermessungsunterlagenHelper {
     /**
      * DOCUMENT ME!
      *
-     * @param   anfrageBean  DOCUMENT ME!
+     * @param   mon  DOCUMENT ME!
      *
      * @return  DOCUMENT ME!
+     *
+     * @throws  Exception  DOCUMENT ME!
      */
-    public String createJob(final VermessungsunterlagenAnfrageBean anfrageBean) {
-        final String jobkey = generateUniqueJobKey();
-
-        final VermessungsunterlagenJob job = new VermessungsunterlagenJob(jobkey, anfrageBean);
-        persistJob(job);
-
-        try {
-            if (new VermessungsunterlagenValidator(this).validateAndGetErrorMessage(anfrageBean)) {
-                if (!anfrageBean.getNurPunktnummernreservierung()) {
-
-                    final Geometry geometry = anfrageBean.getAnfragepolygonArray()[0];
-                    final int saum = Integer.parseInt(anfrageBean.getSaumAPSuche());
-                    final Geometry geometrySaum = geometry.buffer(saum);
-                    geometrySaum.setSRID(geometry.getSRID());
-
-                    final Collection<CidsBean> apBeans = getAPs(geometrySaum);
-                    final Collection<VermessungsunterlagenAnfrageBean.AntragsflurstueckBean> flurstuecke = Arrays
-                                .asList(
-                                    anfrageBean.getAntragsflurstuecksArray());
-
-                    final Collection<CidsBean> risseBeans = getRisse(flurstuecke);
-
-                    job.addTask(new VermUntTaskNasKomplett(jobkey, getUser(), geometry));
-                    job.addTask(new VermUntTaskNasPunkte(jobkey, getUser(), geometry));
-                    job.addTask(new VermUntTaskAPMap(jobkey, apBeans));
-                    job.addTask(new VermUntTaskAPList(jobkey, apBeans));
-                    job.addTask(new VermUntTaskRisseBilder(jobkey, risseBeans));
-                    job.addTask(new VermUntTaskRisseGrenzniederschrift(jobkey, risseBeans));
-
-                    CismetExecutors.newSingleThreadExecutor().execute(job);
-                }
-
-                jobMap.put(jobkey, job);
-            }
-        } catch (final Exception ex) {
-            LOG.info(ex.getMessage());
-            job.setStatus(VermessungsunterlagenJob.Status.ERROR);
-            job.setException(ex);
-        }
-
-        return jobkey;
+    public CidsBean loadCidsBean(final MetaObjectNode mon) throws Exception {
+        return getMetaService().getMetaObject(getUser(), mon.getObjectId(), mon.getClassId()).getBean();
     }
 
     /**
      * DOCUMENT ME!
      *
      * @return  DOCUMENT ME!
+     *
+     * @throws  Exception  DOCUMENT ME!
      */
-    private String generateUniqueJobKey() {
+    private String generateUniqueJobKey() throws Exception {
         String jobKey;
         do {
             jobKey = RandomStringUtils.randomAlphanumeric(8);
-        } while (jobMap.containsKey(jobKey));
+        } while (isJobKeyAlreadyExisting(jobKey));
         return jobKey;
     }
+
+    /**
+     * DOCUMENT ME!
+     *
+     * @param   jobKey  DOCUMENT ME!
+     *
+     * @return  DOCUMENT ME!
+     *
+     * @throws  Exception  DOCUMENT ME!
+     */
+    private boolean isJobKeyAlreadyExisting(final String jobKey) throws Exception {
+        if (jobMap.containsKey(jobKey)) { // exists in memory ?
+            return true;
+        } else {                          // exists in database ?
+            final List result = getMetaService().performCustomSearch("SELECT schluessel FROM "
+                            + mc_VERMESSUNGSUNTERLAGENAUFTRAG + " WHERE schluessel LIKE '" + jobKey + "'");
+            return !result.isEmpty();
+        }
+    }
+
+    /**
+     * DOCUMENT ME!
+     *
+     * @param  jobKey  DOCUMENT ME!
+     */
+    public void cleanUp(final String jobKey) {
+        jobMap.remove(jobKey);
+    }
+
     /**
      * DOCUMENT ME!
      *
@@ -318,10 +394,144 @@ public class VermessungsunterlagenHelper {
     /**
      * DOCUMENT ME!
      *
-     * @param  job  DOCUMENT ME!
+     * @param   job                anfrageBean DOCUMENT ME!
+     * @param   executeJobContent  DOCUMENT ME!
+     *
+     * @throws  Exception  DOCUMENT ME!
      */
-    private void persistJob(final VermessungsunterlagenJob job) {
-        // TODO
+    private void persistJobCidsBean(final VermessungsunterlagenJob job, final String executeJobContent)
+            throws Exception {
+        final VermessungsunterlagenAnfrageBean anfrageBean = job.getAnfrageBean();
+
+        final Polygon[] aparr = anfrageBean.getAnfragepolygonArray();
+        final Geometry geometry = ((aparr != null) && (aparr.length > 0)) ? aparr[0] : null;
+        final CidsBean geomBean;
+        if (geometry != null) {
+            geometry.setSRID(SRID);
+            geomBean = CidsBean.createNewCidsBeanFromTableName("WUNDA_BLAU", mc_GEOM.getTableName());
+        } else {
+            geomBean = null;
+        }
+
+        final CidsBean jobCidsBean = CidsBean.createNewCidsBeanFromTableName(
+                "WUNDA_BLAU",
+                mc_VERMESSUNGSUNTERLAGENAUFTRAG.getTableName());
+        jobCidsBean.setProperty("executejob_json", executeJobContent);
+        jobCidsBean.setProperty("schluessel", job.getKey());
+        jobCidsBean.setProperty("geometrie", geomBean);
+        jobCidsBean.setProperty("aktenzeichen", anfrageBean.getAktenzeichenKatasteramt());
+        for (final VermessungsunterlagenAnfrageBean.AntragsflurstueckBean flurstueckBean
+                    : anfrageBean.getAntragsflurstuecksArray()) {
+            final CidsBean flurstueck = CidsBean.createNewCidsBeanFromTableName(
+                    "WUNDA_BLAU",
+                    mc_VERMESSUNGSUNTERLAGENAUFTRAG_FLURSTUECK.getTableName());
+            flurstueck.setProperty("gemarkung", flurstueckBean.getGemarkungsID());
+            flurstueck.setProperty("flur", flurstueckBean.getFlurID());
+            flurstueck.setProperty("flurstueck", flurstueckBean.getFlurstuecksID());
+            jobCidsBean.getBeanCollectionProperty("flurstuecke").add(flurstueck);
+        }
+        for (final VermessungsunterlagenAnfrageBean.PunktnummernreservierungBean pnrBean
+                    : anfrageBean.getPunktnummernreservierungsArray()) {
+            final CidsBean pnr = CidsBean.createNewCidsBeanFromTableName(
+                    "WUNDA_BLAU",
+                    mc_VERMESSUNGSUNTERLAGENAUFTRAG_PUNKTNUMMER.getTableName());
+            pnr.setProperty("anzahl", pnrBean.getAnzahlPunktnummern());
+            pnr.setProperty("katasteramt", pnrBean.getKatasteramtsID());
+            pnr.setProperty("kilometerquadrat", pnrBean.getUtmKilometerQuadrat());
+            jobCidsBean.getBeanCollectionProperty("punktnummern").add(pnr);
+        }
+        jobCidsBean.setProperty("mit_grenzniederschriften", anfrageBean.getMitGrenzniederschriften());
+        jobCidsBean.setProperty("geschaeftsbuchnummer", anfrageBean.getGeschaeftsbuchnummer());
+        jobCidsBean.setProperty("auftragsnummer", anfrageBean.getKatasteramtAuftragsnummer());
+        jobCidsBean.setProperty("katasteramtsid", anfrageBean.getKatasteramtsId());
+        jobCidsBean.setProperty("vermessungsstelle", anfrageBean.getZulassungsnummerVermessungsstelle());
+        jobCidsBean.setProperty("nur_punktnummernreservierung", anfrageBean.getNurPunktnummernreservierung());
+        jobCidsBean.setProperty("saumap", Integer.parseInt(anfrageBean.getSaumAPSuche()));
+        for (final String art : anfrageBean.getArtderVermessung()) {
+            final CidsBean pnr = CidsBean.createNewCidsBeanFromTableName(
+                    "WUNDA_BLAU",
+                    mc_VERMESSUNGSUNTERLAGENAUFTRAG_VERMESSUNGSART.getTableName());
+            pnr.setProperty("name", art);
+            jobCidsBean.getBeanCollectionProperty("vermessungsarten").add(pnr);
+        }
+        jobCidsBean.setProperty("timestamp", new Timestamp(new Date().getTime()));
+        jobCidsBean.setProperty("tasks", Arrays.toString(getAllowedTasks().toArray()));
+
+        job.setCidsBean(getMetaService().insertMetaObject(getUser(), jobCidsBean.getMetaObject()).getBean());
+    }
+
+    /**
+     * DOCUMENT ME!
+     *
+     * @return  DOCUMENT ME!
+     *
+     * @throws  Exception  DOCUMENT ME!
+     */
+    public Collection<String> getAllowedTasks() throws Exception {
+        final String rawAllowedTasks = DomainServerImpl.getServerInstance()
+                    .getConfigAttr(getUser(), ALLOWED_TASKS_CONFIG_ATTR);
+        final Collection<String> allowedTasks = new ArrayList<String>();
+        if (rawAllowedTasks != null) {
+            for (final String allowedTask : Arrays.asList(rawAllowedTasks.split("\n"))) {
+                if (allowedTask != null) {
+                    allowedTasks.add(allowedTask.trim());
+                }
+            }
+        }
+        return allowedTasks;
+    }
+
+    /**
+     * DOCUMENT ME!
+     *
+     * @param   job           DOCUMENT ME!
+     * @param   zipDateiname  DOCUMENT ME!
+     *
+     * @throws  Exception  DOCUMENT ME!
+     */
+    public final void updateJobCidsBeanZip(final VermessungsunterlagenJob job, final String zipDateiname)
+            throws Exception {
+        final CidsBean jobCidsBean = job.getCidsBean();
+
+        jobCidsBean.setProperty("zip_pfad", zipDateiname);
+        jobCidsBean.setProperty("zip_timestamp", new Timestamp(new Date().getTime()));
+
+        getMetaService().updateMetaObject(getUser(), jobCidsBean.getMetaObject());
+    }
+
+    /**
+     * DOCUMENT ME!
+     *
+     * @param   job  DOCUMENT ME!
+     * @param   ex   DOCUMENT ME!
+     *
+     * @throws  Exception  DOCUMENT ME!
+     */
+    public final void updateJobCidsBeanException(final VermessungsunterlagenJob job, final Exception ex)
+            throws Exception {
+        final CidsBean jobCidsBean = job.getCidsBean();
+
+        jobCidsBean.setProperty("exception_json", EXCEPTION_MAPPER.writeValueAsString(ex));
+        jobCidsBean.setProperty("exception_timestamp", new Timestamp(new Date().getTime()));
+
+        getMetaService().updateMetaObject(getUser(), jobCidsBean.getMetaObject());
+    }
+
+    /**
+     * DOCUMENT ME!
+     *
+     * @param   vermessungsart  DOCUMENT ME!
+     *
+     * @return  DOCUMENT ME!
+     *
+     * @throws  Exception  DOCUMENT ME!
+     */
+    public CidsBean selectOrCreateVermessungArt(final String vermessungsart) throws Exception {
+        final CidsBean bean = CidsBean.createNewCidsBeanFromTableName(
+                "WUNDA_BLAU",
+                mc_VERMESSUNGSUNTERLAGENAUFTRAG_VERMESSUNGSART.getTableName());
+        getMetaService().getMetaObject(getUser(), "SELECT FROM ");
+        return null;
     }
 
     /**
@@ -334,7 +544,7 @@ public class VermessungsunterlagenHelper {
      * @throws  IOException  DOCUMENT ME!
      */
     public static VermessungsunterlagenAnfrageBean createAnfrageBean(final String json) throws IOException {
-        final JsonNode rootNode = MAPPER.readTree(json);
+        final JsonNode rootNode = JOB_MAPPER.readTree(json);
         final JsonNode in0 = rootNode.get("in0");
 
         final VermessungsunterlagenAnfrageBean anfrageBean = new VermessungsunterlagenAnfrageBean();
@@ -427,39 +637,43 @@ public class VermessungsunterlagenHelper {
      */
     public void test() {
         try {
-            final File directory = new File(PATH_TEST);
-            final File[] executeJobFiles = directory.listFiles(new FilenameFilter() {
+            if ((PATH_TEST != null) && !PATH_TEST.isEmpty()) {
+                final File directory = new File(PATH_TEST);
+                if (directory.exists()) {
+                    final File[] executeJobFiles = directory.listFiles(new FilenameFilter() {
 
-                        @Override
-                        public boolean accept(final File dir, final String name) {
-                            return name.startsWith("executeJob.") && name.endsWith(".json");
-                                // return name.equals("executeJob.2016-09-20T12:22:21.783Z.1988.json");
-                        }
-                    });
-
-            for (final File executeJobFile : executeJobFiles) {
-                new Thread(new Runnable() {
-
-                        @Override
-                        public void run() {
-                            try {
-                                if (LOG.isDebugEnabled()) {
-                                    LOG.debug("----");
-                                    LOG.debug("Path: " + executeJobFile.getAbsolutePath());
+                                @Override
+                                public boolean accept(final File dir, final String name) {
+                                    return name.startsWith("executeJob.") && name.endsWith(".json");
                                 }
+                            });
 
-                                final String executeJobContent = IOUtils.toString(new FileInputStream(executeJobFile));
-                                if (LOG.isDebugEnabled()) {
-                                    LOG.debug("Content: " + executeJobContent);
+                    for (final File executeJobFile : executeJobFiles) {
+                        new Thread(new Runnable() {
+
+                                @Override
+                                public void run() {
+                                    try {
+                                        if (LOG.isDebugEnabled()) {
+                                            LOG.debug("----");
+                                            LOG.debug("Path: " + executeJobFile.getAbsolutePath());
+                                        }
+
+                                        final String executeJobContent = IOUtils.toString(
+                                                new FileInputStream(executeJobFile));
+                                        if (LOG.isDebugEnabled()) {
+                                            LOG.debug("Content: " + executeJobContent);
+                                        }
+
+                                        final String jobkey = createJob(executeJobContent);
+                                        LOG.info("Job created: " + jobkey);
+                                    } catch (final Exception ex) {
+                                        LOG.error(ex, ex);
+                                    }
                                 }
-
-                                final String jobkey = createJob(executeJobContent);
-                                LOG.info("Job created: " + jobkey);
-                            } catch (IOException ex) {
-                                LOG.error(ex, ex);
-                            }
-                        }
-                    }).start();
+                            }).start();
+                    }
+                }
             }
         } catch (final Exception ex) {
             LOG.error(ex, ex);
@@ -492,7 +706,7 @@ public class VermessungsunterlagenHelper {
                 final String executeJobContent = IOUtils.toString(new FileInputStream(executeJobFile));
                 LOG.info("Content: " + executeJobContent);
 
-                final VermessungsunterlagenAnfrageBean executeJobBean = createAnfrageBean(executeJobContent);
+                final VermessungsunterlagenAnfrageBean anfrageBean = createAnfrageBean(executeJobContent);
 
 ////import com.bedatadriven.jackson.datatype.jts.JtsModule;
 ///*
@@ -505,7 +719,7 @@ public class VermessungsunterlagenHelper {
 //
 //                final ObjectMapper mapper = new ObjectMapper();
 //                mapper.registerModule(new JtsModule());
-//                LOG.info("Created object: " + mapper.writeValueAsString(executeJobBean));
+//                LOG.info("Created object: " + mapper.writeValueAsString(anfrageBean));
 //                LOG.info("----");
             }
         } catch (final Exception ex) {
@@ -518,7 +732,7 @@ public class VermessungsunterlagenHelper {
      *
      * @return  DOCUMENT ME!
      */
-    public MetaService getMetaService() {
+    public final MetaService getMetaService() {
         return metaService;
     }
 
@@ -527,40 +741,8 @@ public class VermessungsunterlagenHelper {
      *
      * @return  DOCUMENT ME!
      */
-    public User getUser() {
+    public final User getUser() {
         return user;
-    }
-
-    /**
-     * DOCUMENT ME!
-     *
-     * @param   geometry  DOCUMENT ME!
-     *
-     * @return  DOCUMENT ME!
-     */
-    private Collection<CidsBean> getAPs(final Geometry geometry) {
-        try {
-            final Collection<CidsMeasurementPointSearchStatement.Pointtype> pointtypes = Arrays.asList(
-                    CidsMeasurementPointSearchStatement.Pointtype.AUFNAHMEPUNKTE,
-                    CidsMeasurementPointSearchStatement.Pointtype.SONSTIGE_VERMESSUNGSPUNKTE
-                    // CidsMeasurementPointSearchStatement.Pointtype.GRENZPUNKTE,
-                    // CidsMeasurementPointSearchStatement.Pointtype.BESONDERE_GEBAEUDEPUNKTE,
-                    // CidsMeasurementPointSearchStatement.Pointtype.BESONDERE_BAUWERKSPUNKTE,
-                    // CidsMeasurementPointSearchStatement.Pointtype.BESONDERE_TOPOGRAPHISCHE_PUNKTE,
-                    // CidsMeasurementPointSearchStatement.Pointtype.NIVELLEMENT_PUNKTE
-                    );
-
-            final CidsServerSearch serverSearch = new CidsMeasurementPointSearchStatement(
-                    "",
-                    pointtypes,
-                    null,
-                    geometry);
-            final Collection<MetaObjectNode> mons = performSearch(serverSearch);
-            return loadBeans(mons);
-        } catch (final SearchException ex) {
-            LOG.error("error while searching for APs", ex);
-            return null;
-        }
     }
 
     /**
@@ -582,7 +764,8 @@ public class VermessungsunterlagenHelper {
      */
     public static void writeExceptionJson(final Exception ex, final String filname) {
         try {
-            EXCEPTION_MAPPER.writeValue(new File(filname), ex);
+            final File file = new File(filname);
+            EXCEPTION_MAPPER.writeValue(file, ex);
         } catch (final IOException ex1) {
             LOG.error(filname + " could not be written !", ex1);
         }
@@ -619,62 +802,6 @@ public class VermessungsunterlagenHelper {
     /**
      * DOCUMENT ME!
      *
-     * @param   flurstueckBeans  DOCUMENT ME!
-     *
-     * @return  DOCUMENT ME!
-     */
-    private Collection<CidsBean> getRisse(
-            final Collection<VermessungsunterlagenAnfrageBean.AntragsflurstueckBean> flurstueckBeans) {
-        try {
-            final Collection<String> schluesselCollection = Arrays.asList(
-                    "503",
-                    "504",
-                    "505",
-                    "506",
-                    "507",
-                    "508");
-
-            final Collection<Map<String, String>> flurstuecke = new LinkedList<Map<String, String>>();
-
-            for (final VermessungsunterlagenAnfrageBean.AntragsflurstueckBean flurstueckBean : flurstueckBeans) {
-                final String[] split = flurstueckBean.getFlurstuecksID().split("/");
-                final String zaehler = split[0];
-                final String nenner = (split.length == 1) ? null : split[1];
-                final Map<String, String> flurstueckMap = new HashMap<String, String>();
-                flurstueckMap.put(
-                    CidsVermessungRissSearchStatement.FLURSTUECK_GEMARKUNG,
-                    flurstueckBean.getGemarkungsID());
-                flurstueckMap.put(
-                    CidsVermessungRissSearchStatement.FLURSTUECK_FLUR,
-                    flurstueckBean.getFlurID());
-                flurstueckMap.put(
-                    CidsVermessungRissSearchStatement.FLURSTUECK_ZAEHLER,
-                    zaehler);
-                flurstueckMap.put(
-                    CidsVermessungRissSearchStatement.FLURSTUECK_NENNER,
-                    nenner);
-                flurstuecke.add(flurstueckMap);
-            }
-
-            final CidsServerSearch serverSearch = new CidsVermessungRissSearchStatement(
-                    null,
-                    null,
-                    null,
-                    null,
-                    schluesselCollection,
-                    null,
-                    flurstuecke);
-            final Collection<MetaObjectNode> mons = performSearch(serverSearch);
-            return loadBeans(mons);
-        } catch (SearchException ex) {
-            LOG.error("error while loading risse", ex);
-            return null;
-        }
-    }
-
-    /**
-     * DOCUMENT ME!
-     *
      * @param   serverSearch  DOCUMENT ME!
      *
      * @return  DOCUMENT ME!
@@ -697,7 +824,7 @@ public class VermessungsunterlagenHelper {
      *
      * @return  DOCUMENT ME!
      */
-    private Collection<CidsBean> loadBeans(final Collection<MetaObjectNode> mons) {
+    public Collection<CidsBean> loadBeans(final Collection<MetaObjectNode> mons) {
         if (mons != null) {
             final Collection<CidsBean> beans = new ArrayList<CidsBean>(mons.size());
             for (final MetaObjectNode mon : mons) {
@@ -804,5 +931,36 @@ public class VermessungsunterlagenHelper {
         p.put("log4j.appender.Remote.locationInfo", "true");
         p.put("log4j.rootLogger", "DEBUG,Remote");
         org.apache.log4j.PropertyConfigurator.configure(p);
+    }
+
+    /**
+     * DOCUMENT ME!
+     *
+     * @return  DOCUMENT ME!
+     */
+    public static VermessungsunterlagenHelper getInstance() {
+        return LazyInitialiser.INSTANCE;
+    }
+
+    //~ Inner Classes ----------------------------------------------------------
+
+    /**
+     * DOCUMENT ME!
+     *
+     * @version  $Revision$, $Date$
+     */
+    private static final class LazyInitialiser {
+
+        //~ Static fields/initializers -----------------------------------------
+
+        private static final VermessungsunterlagenHelper INSTANCE = new VermessungsunterlagenHelper();
+
+        //~ Constructors -------------------------------------------------------
+
+        /**
+         * Creates a new LazyInitialiser object.
+         */
+        private LazyInitialiser() {
+        }
     }
 }

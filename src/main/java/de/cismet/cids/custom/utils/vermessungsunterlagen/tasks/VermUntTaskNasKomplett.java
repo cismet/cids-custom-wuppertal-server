@@ -28,18 +28,22 @@ public class VermUntTaskNasKomplett extends VermUntTaskNas {
 
     //~ Static fields/initializers ---------------------------------------------
 
-    public static final String TYPE = "NAS_KOMPLETT";
+    public static final String TYPE = "NAS_Komplett";
 
     //~ Constructors -----------------------------------------------------------
 
     /**
      * Creates a new VermUntTaskNasKomplett object.
      *
-     * @param  jobKey    DOCUMENT ME!
-     * @param  user      DOCUMENT ME!
-     * @param  geometry  DOCUMENT ME!
+     * @param  jobKey     DOCUMENT ME!
+     * @param  user       DOCUMENT ME!
+     * @param  requestId  DOCUMENT ME!
+     * @param  geometry   DOCUMENT ME!
      */
-    public VermUntTaskNasKomplett(final String jobKey, final User user, final Geometry geometry) {
-        super(TYPE, jobKey, user, geometry, VermessungsunterlagenHelper.NAS_PRODUCT_KOMPLETT);
+    public VermUntTaskNasKomplett(final String jobKey,
+            final User user,
+            final String requestId,
+            final Geometry geometry) {
+        super(TYPE, jobKey, user, requestId, geometry, VermessungsunterlagenHelper.NAS_PRODUCT_KOMPLETT);
     }
 }

@@ -28,12 +28,12 @@ import de.cismet.cids.custom.utils.vermessungsunterlagen.VermessungsunterlagenHe
  * @version  $Revision$, $Date$
  */
 @org.openide.util.lookup.ServiceProvider(service = DomainServerStartupHook.class)
-public class VermessungTestStartupHook implements DomainServerStartupHook {
+public class VermessungsunterlagenStartupHook implements DomainServerStartupHook {
 
     //~ Static fields/initializers ---------------------------------------------
 
     private static final transient org.apache.log4j.Logger LOG = org.apache.log4j.Logger.getLogger(
-            VermessungTestStartupHook.class);
+            VermessungsunterlagenStartupHook.class);
 
     //~ Methods ----------------------------------------------------------------
 
@@ -53,19 +53,21 @@ public class VermessungTestStartupHook implements DomainServerStartupHook {
                             }
                         }
 
+                        final String login_name = VermessungsunterlagenHelper.CIDS_LOGIN;
+
+                        final VermessungsunterlagenHelper helper = VermessungsunterlagenHelper.getInstance();
+
                         final Object userServer = Naming.lookup("rmi://localhost/userServer");
                         final User user = ((UserServer)userServer).getUser(
                                 null,
                                 null,
                                 "WUNDA_BLAU",
-                                "admin",
+                                login_name,
                                 "");
-                        final VermessungsunterlagenHelper helper = new VermessungsunterlagenHelper(
-                                DomainServerImpl.getServerInstance(),
-                                user);
+                        helper.init(DomainServerImpl.getServerInstance(), user);
                         helper.test();
                     } catch (final Exception ex) {
-                        LOG.error("error while executing VermessungTestStartupHook", ex);
+                        LOG.error("error while executing VermessungsunterlagenStartupHook", ex);
                     }
                 }
             }).start();

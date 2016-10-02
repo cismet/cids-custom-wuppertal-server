@@ -28,21 +28,28 @@ public class VermUntTaskRisseBilder extends VermUntTaskRisse {
 
     //~ Static fields/initializers ---------------------------------------------
 
-    public static final String TYPE = "Risse_vermriss";
+    public static final String TYPE = "RISSE_Bilder";
 
     //~ Constructors -----------------------------------------------------------
 
     /**
      * Creates a new VermUntTaskRisseBilder object.
      *
-     * @param  jobKey      DOCUMENT ME!
-     * @param  risseBeans  DOCUMENT ME!
+     * @param  jobKey          DOCUMENT ME!
+     * @param  risseBeans      DOCUMENT ME!
+     * @param  auftragsnummer  DOCUMENT ME!
+     * @param  projektnummer   DOCUMENT ME!
      */
-    public VermUntTaskRisseBilder(final String jobKey, final Collection<CidsBean> risseBeans) {
+    public VermUntTaskRisseBilder(final String jobKey,
+            final Collection<CidsBean> risseBeans,
+            final String auftragsnummer,
+            final String projektnummer) {
         super(
             TYPE,
             jobKey,
             risseBeans,
-            AlkisConstants.COMMONS.VERMESSUNG_HOST_BILDER);
+            AlkisConstants.COMMONS.VERMESSUNG_HOST_BILDER,
+            auftragsnummer,
+            projektnummer);
     }
 }

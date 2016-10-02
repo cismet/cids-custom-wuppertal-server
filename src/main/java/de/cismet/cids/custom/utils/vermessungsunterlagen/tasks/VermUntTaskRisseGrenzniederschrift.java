@@ -28,21 +28,28 @@ public class VermUntTaskRisseGrenzniederschrift extends VermUntTaskRisse {
 
     //~ Static fields/initializers ---------------------------------------------
 
-    public static final String TYPE = "Risse_ergdok";
+    public static final String TYPE = "RISSE_ErgaenzendeDokumente";
 
     //~ Constructors -----------------------------------------------------------
 
     /**
      * Creates a new VermUntTaskRisseGrenzniederschrift object.
      *
-     * @param  jobKey      DOCUMENT ME!
-     * @param  risseBeans  DOCUMENT ME!
+     * @param  jobKey          DOCUMENT ME!
+     * @param  risseBeans      DOCUMENT ME!
+     * @param  auftragsnummer  DOCUMENT ME!
+     * @param  projektnummer   DOCUMENT ME!
      */
-    public VermUntTaskRisseGrenzniederschrift(final String jobKey, final Collection<CidsBean> risseBeans) {
+    public VermUntTaskRisseGrenzniederschrift(final String jobKey,
+            final Collection<CidsBean> risseBeans,
+            final String auftragsnummer,
+            final String projektnummer) {
         super(
             TYPE,
             jobKey,
             risseBeans,
-            AlkisConstants.COMMONS.VERMESSUNG_HOST_GRENZNIEDERSCHRIFTEN);
+            AlkisConstants.COMMONS.VERMESSUNG_HOST_GRENZNIEDERSCHRIFTEN,
+            auftragsnummer,
+            projektnummer);
     }
 }

@@ -25,6 +25,7 @@ import java.text.SimpleDateFormat;
 
 import java.util.Date;
 
+import de.cismet.cids.server.actions.ServerActionParameter;
 import de.cismet.cids.server.actions.UserAwareServerAction;
 
 /**
@@ -38,10 +39,29 @@ public abstract class AbstractVermessungsUnterlagenPortalAction implements UserA
     //~ Static fields/initializers ---------------------------------------------
 
     private static final SimpleDateFormat SDF = new SimpleDateFormat("yyyy-MM-dd HH:mm:ss");
+    private static final Logger LOG = Logger.getLogger(AbstractVermessungsUnterlagenPortalAction.class);
+
+    //~ Enums ------------------------------------------------------------------
+
+    /**
+     * DOCUMENT ME!
+     *
+     * @version  $Revision$, $Date$
+     */
+    public static enum Parameter {
+
+        //~ Enum constants -----------------------------------------------------
+
+        JOB_KEY {
+
+            @Override
+            public String toString() {
+                return "jobNumber";
+            }
+        }
+    }
 
     //~ Instance fields --------------------------------------------------------
-
-    private final Logger LOG = Logger.getLogger(this.getClass());
 
     private User user;
     private MetaService metaService;
@@ -63,6 +83,25 @@ public abstract class AbstractVermessungsUnterlagenPortalAction implements UserA
     }
 
     //~ Methods ----------------------------------------------------------------
+
+    /**
+     * DOCUMENT ME!
+     *
+     * @param   params  DOCUMENT ME!
+     *
+     * @return  DOCUMENT ME!
+     */
+    protected String exctractJobKey(final ServerActionParameter[] params) {
+        String jobKey = null;
+        if (params != null) {
+            for (final ServerActionParameter param : params) {
+                if (param.getKey().equals(Parameter.JOB_KEY.toString())) {
+                    jobKey = (String)param.getValue();
+                }
+            }
+        }
+        return jobKey;
+    }
 
     /**
      * DOCUMENT ME!

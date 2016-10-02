@@ -39,7 +39,7 @@ public class VermUntTaskAPMap extends VermUntTaskAP {
 
     //~ Static fields/initializers ---------------------------------------------
 
-    public static final String TYPE = "APMap";
+    public static final String TYPE = "AP_Map";
     private static final String REPORT_APMAPS = "/de/cismet/cids/custom/wunda_blau/res/apmaps.jasper";
 
     //~ Constructors -----------------------------------------------------------

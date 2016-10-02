@@ -16,7 +16,6 @@ import java.io.File;
 import java.io.FileOutputStream;
 import java.io.InputStream;
 import java.io.OutputStream;
-import java.io.StringReader;
 
 import java.net.URL;
 
@@ -28,7 +27,6 @@ import de.cismet.cids.custom.utils.vermessungsunterlagen.VermessungsunterlagenHe
 import de.cismet.cids.dynamics.CidsBean;
 
 import static de.cismet.cids.custom.utils.vermessungsunterlagen.VermessungsunterlagenHelper.doGetRequest;
-import static de.cismet.cids.custom.utils.vermessungsunterlagen.VermessungsunterlagenHelper.doPostRequest;
 
 /**
  * DOCUMENT ME!
@@ -40,7 +38,7 @@ public class VermUntTaskAPList extends VermUntTaskAP {
 
     //~ Static fields/initializers ---------------------------------------------
 
-    public static final String TYPE = "APList";
+    public static final String TYPE = "AP_List";
     private static final AlkisProducts PRODUCTS = AlkisProducts.getInstance();
 
     //~ Constructors -----------------------------------------------------------
@@ -71,15 +69,7 @@ public class VermUntTaskAPList extends VermUntTaskAP {
                     InputStream in = null;
                     OutputStream out = null;
                     try {
-                        final int parameterPosition = url.indexOf('?');
-                        if (parameterPosition < 0) {
-                            in = doGetRequest(new URL(url));
-                        } else {
-                            final String parameters = url.substring(parameterPosition + 1);
-                            in = doPostRequest(new URL(url.substring(0, parameterPosition)),
-                                    new StringReader(parameters));
-                        }
-
+                        in = doGetRequest(new URL(url));
                         out = new FileOutputStream(fileToSaveTo);
                         VermessungsunterlagenHelper.downloadStream(in, out);
                     } finally {

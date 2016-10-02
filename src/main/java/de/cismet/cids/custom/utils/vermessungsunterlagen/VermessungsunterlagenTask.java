@@ -51,7 +51,7 @@ public abstract class VermessungsunterlagenTask implements Runnable {
 
     @Getter private final String type;
 
-    @Getter private final String jobkey;
+    @Getter private final String jobKey;
 
     @Getter private Status status = Status.NONE;
 
@@ -69,9 +69,7 @@ public abstract class VermessungsunterlagenTask implements Runnable {
      */
     protected VermessungsunterlagenTask(final String type, final String jobkey) {
         this.type = type;
-        this.jobkey = jobkey;
-
-        new File(getPath()).mkdirs();
+        this.jobKey = jobkey;
     }
 
     //~ Methods ----------------------------------------------------------------
@@ -92,7 +90,7 @@ public abstract class VermessungsunterlagenTask implements Runnable {
      */
     protected void setStatus(final Status status) {
         if (LOG.isDebugEnabled()) {
-            LOG.debug("Task status changed (" + getJobkey() + "/" + getType() + "): " + status.toString());
+            LOG.debug("Task status changed (" + getJobKey() + "/" + getType() + "): " + status.toString());
         }
         this.status = status;
     }
@@ -101,6 +99,7 @@ public abstract class VermessungsunterlagenTask implements Runnable {
     public void run() {
         setStatus(Status.RUNNING);
         try {
+            new File(getPath()).mkdirs();
             performTask();
             setStatus(Status.FINISHED);
         } catch (final Exception ex) {
@@ -131,6 +130,6 @@ public abstract class VermessungsunterlagenTask implements Runnable {
      * @return  DOCUMENT ME!
      */
     public String getPath() {
-        return VermessungsunterlagenHelper.getPath(jobkey) + getSubPath();
+        return VermessungsunterlagenHelper.getPath(jobKey) + getSubPath();
     }
 }
