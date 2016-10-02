@@ -12,6 +12,9 @@
  */
 package de.cismet.cids.custom.wunda_blau.search.actions;
 
+import de.cismet.cids.custom.utils.vermessungsunterlagen.VermessungsunterlagenHelper;
+import de.cismet.cids.custom.utils.vermessungsunterlagen.VermessungsunterlagenJob;
+
 import de.cismet.cids.server.actions.ServerAction;
 import de.cismet.cids.server.actions.ServerActionParameter;
 
@@ -24,18 +27,25 @@ import de.cismet.cids.server.actions.ServerActionParameter;
 @org.openide.util.lookup.ServiceProvider(service = ServerAction.class)
 public class VermessungsUnterlagenPortalExecuteJobAction extends AbstractVermessungsUnterlagenPortalAction {
 
+    //~ Static fields/initializers ---------------------------------------------
+
+    public static final String TASK_NAME = "VUPexecuteJobAction";
+
+    private static final String RETURN = "{\"executeJobReturn\":{\"$value\":\"%s\"}}";
+
     //~ Methods ----------------------------------------------------------------
 
     @Override
     public Object execute(final Object body, final ServerActionParameter... params) {
-        final String jobNumber = "1234567890-" + System.currentTimeMillis();
         final String jsonBody = new String((byte[])body);
-        super.executeLog("[jsonObject]", jobNumber, jsonBody);
-        return "{\"executeJobReturn\":{\"$value\":\"" + jobNumber + "\"}}";
+        final String jobKey = VermessungsunterlagenHelper.getInstance().createJob(jsonBody);
+
+        super.executeLog("[jsonObject]", jobKey, jsonBody);
+        return String.format(RETURN, jobKey);
     }
 
     @Override
     public String getTaskName() {
-        return "VUPexecuteJobAction";
+        return TASK_NAME;
     }
 }

@@ -26,6 +26,7 @@ import com.vividsolutions.jts.geom.Geometry;
 import com.vividsolutions.jts.geom.Point;
 
 import net.sf.jasperreports.engine.JRDataSource;
+import net.sf.jasperreports.engine.JRException;
 import net.sf.jasperreports.engine.JasperExportManager;
 import net.sf.jasperreports.engine.JasperFillManager;
 import net.sf.jasperreports.engine.JasperPrint;
@@ -100,7 +101,6 @@ import de.cismet.cids.utils.MetaClassCacheService;
 
 import de.cismet.commons.security.AccessHandler;
 import de.cismet.commons.security.handler.SimpleHttpAccessHandler;
-import net.sf.jasperreports.engine.JRException;
 
 /**
  * DOCUMENT ME!
@@ -220,10 +220,11 @@ public class FormSolutionServerNewStuffAvailableAction implements UserAwareServe
         } catch (final Exception ex) {
             LOG.error("could not load " + IGNORE_TRANSID_FILE, ex);
         }
-        
+
         JasperReport report;
         try {
-            report = (JasperReport)JRLoader.loadObject(FormSolutionBestellungChangeStatusServerAction.class.getResourceAsStream(RECHNUNG_JASPER));
+            report = (JasperReport)JRLoader.loadObject(FormSolutionBestellungChangeStatusServerAction.class
+                            .getResourceAsStream(RECHNUNG_JASPER));
         } catch (JRException ex) {
             LOG.error("could not load " + RECHNUNG_JASPER, ex);
             report = null;

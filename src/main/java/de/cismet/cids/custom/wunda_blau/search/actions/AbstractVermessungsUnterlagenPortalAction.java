@@ -12,11 +12,11 @@
  */
 package de.cismet.cids.custom.wunda_blau.search.actions;
 
+import Sirius.server.middleware.interfaces.domainserver.MetaService;
+import Sirius.server.middleware.interfaces.domainserver.MetaServiceStore;
 import Sirius.server.newuser.User;
 
 import org.apache.log4j.Logger;
-
-import org.openide.util.Exceptions;
 
 import java.io.FileWriter;
 import java.io.IOException;
@@ -25,7 +25,6 @@ import java.text.SimpleDateFormat;
 
 import java.util.Date;
 
-import de.cismet.cids.server.actions.ServerAction;
 import de.cismet.cids.server.actions.ServerActionParameter;
 import de.cismet.cids.server.actions.UserAwareServerAction;
 
@@ -35,17 +34,37 @@ import de.cismet.cids.server.actions.UserAwareServerAction;
  * @author   thorsten
  * @version  $Revision$, $Date$
  */
-public abstract class AbstractVermessungsUnterlagenPortalAction implements UserAwareServerAction {
+public abstract class AbstractVermessungsUnterlagenPortalAction implements UserAwareServerAction, MetaServiceStore {
 
     //~ Static fields/initializers ---------------------------------------------
 
     private static final SimpleDateFormat SDF = new SimpleDateFormat("yyyy-MM-dd HH:mm:ss");
+    private static final Logger LOG = Logger.getLogger(AbstractVermessungsUnterlagenPortalAction.class);
+
+    //~ Enums ------------------------------------------------------------------
+
+    /**
+     * DOCUMENT ME!
+     *
+     * @version  $Revision$, $Date$
+     */
+    public static enum Parameter {
+
+        //~ Enum constants -----------------------------------------------------
+
+        JOB_KEY {
+
+            @Override
+            public String toString() {
+                return "jobNumber";
+            }
+        }
+    }
 
     //~ Instance fields --------------------------------------------------------
 
-    private final Logger LOG = Logger.getLogger(this.getClass());
-
     private User user;
+    private MetaService metaService;
     private final FileWriter fw;
 
     //~ Constructors -----------------------------------------------------------
@@ -64,6 +83,25 @@ public abstract class AbstractVermessungsUnterlagenPortalAction implements UserA
     }
 
     //~ Methods ----------------------------------------------------------------
+
+    /**
+     * DOCUMENT ME!
+     *
+     * @param   params  DOCUMENT ME!
+     *
+     * @return  DOCUMENT ME!
+     */
+    protected String exctractJobKey(final ServerActionParameter[] params) {
+        String jobKey = null;
+        if (params != null) {
+            for (final ServerActionParameter param : params) {
+                if (param.getKey().equals(Parameter.JOB_KEY.toString())) {
+                    jobKey = (String)param.getValue();
+                }
+            }
+        }
+        return jobKey;
+    }
 
     /**
      * DOCUMENT ME!
@@ -99,5 +137,15 @@ public abstract class AbstractVermessungsUnterlagenPortalAction implements UserA
     @Override
     public void setUser(final User user) {
         this.user = user;
+    }
+
+    @Override
+    public MetaService getMetaService() {
+        return metaService;
+    }
+
+    @Override
+    public void setMetaService(final MetaService metaService) {
+        this.metaService = metaService;
     }
 }

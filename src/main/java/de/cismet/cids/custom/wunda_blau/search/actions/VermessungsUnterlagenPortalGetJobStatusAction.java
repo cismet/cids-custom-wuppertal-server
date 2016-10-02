@@ -12,9 +12,8 @@
  */
 package de.cismet.cids.custom.wunda_blau.search.actions;
 
-import org.openide.util.Exceptions;
-
-import java.io.IOException;
+import de.cismet.cids.custom.utils.vermessungsunterlagen.VermessungsunterlagenHelper;
+import de.cismet.cids.custom.utils.vermessungsunterlagen.VermessungsunterlagenJob;
 
 import de.cismet.cids.server.actions.ServerAction;
 import de.cismet.cids.server.actions.ServerActionParameter;
@@ -28,22 +27,30 @@ import de.cismet.cids.server.actions.ServerActionParameter;
 @org.openide.util.lookup.ServiceProvider(service = ServerAction.class)
 public class VermessungsUnterlagenPortalGetJobStatusAction extends AbstractVermessungsUnterlagenPortalAction {
 
+    //~ Static fields/initializers ---------------------------------------------
+
+    private static final String RETURN =
+        "{\"getJobStatusReturn\":{\"enumJobStatus\":{\"$value\":\"%s\"},\"geschaeftsbuchnummer\":{\"$value\":\"%s\"}}}";
+
+    //~ Instance fields --------------------------------------------------------
+
+    public final String TASK_NAME = "VUPgetJobStatusAction";
+
     //~ Methods ----------------------------------------------------------------
 
     @Override
     public Object execute(final Object body, final ServerActionParameter... params) {
-        final String jobNumber = String.valueOf(params[0].getValue());
-        final String status = "OK";
-        final String geschaeftsbuchnummer = "4711-test-geschaeftsbuchnummer-from-java-action@"
-                    + System.currentTimeMillis();
-        final String output = "[" + status + "," + geschaeftsbuchnummer + "]";
-        super.executeLog(jobNumber, output, "");
-        return "{\"getJobStatusReturn\":{\"enumJobStatus\":{\"$value\":\"" + status
-                    + "\"},\"geschaeftsbuchnummer\":{\"$value\":\"" + geschaeftsbuchnummer + "\"}}}";
+        final String jobKey = exctractJobKey(params);
+        final VermessungsunterlagenJob job = VermessungsunterlagenHelper.getInstance().getJob(jobKey);
+
+        final VermessungsunterlagenJob.Status status = job.getStatus();
+
+        super.executeLog(jobKey, "[" + status + "," + jobKey + "]", "");
+        return String.format(RETURN, status, jobKey);
     }
 
     @Override
     public String getTaskName() {
-        return "VUPgetJobStatusAction";
+        return TASK_NAME;
     }
 }

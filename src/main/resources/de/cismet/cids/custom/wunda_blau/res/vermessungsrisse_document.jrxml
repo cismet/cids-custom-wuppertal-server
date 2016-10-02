@@ -1,0 +1,27 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<jasperReport xmlns="http://jasperreports.sourceforge.net/jasperreports" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://jasperreports.sourceforge.net/jasperreports http://jasperreports.sourceforge.net/xsd/jasperreport.xsd" name="RasterdokumentVermessungsriss" pageWidth="555" pageHeight="750" columnWidth="535" leftMargin="0" rightMargin="0" topMargin="0" bottomMargin="0" scriptletClass="de.cismet.cids.custom.utils.alkis.VermessungRissReportScriptlet" whenResourceMissingType="Empty" uuid="67db82ac-84e2-4a12-a3bf-7ff5fa005993">
+	<property name="ireport.zoom" value="1.0"/>
+	<property name="ireport.x" value="0"/>
+	<property name="ireport.y" value="0"/>
+	<field name="description" class="java.lang.String">
+		<fieldDescription><![CDATA[description]]></fieldDescription>
+	</field>
+	<field name="page" class="java.lang.Integer">
+		<fieldDescription><![CDATA[page]]></fieldDescription>
+	</field>
+	<field name="reader" class="de.cismet.commons.utils.MultiPagePictureReader">
+		<fieldDescription><![CDATA[reader]]></fieldDescription>
+	</field>
+	<detail>
+		<band height="750">
+			<image vAlign="Middle">
+				<reportElement x="5" y="25" width="545" height="720" uuid="52d9a691-f264-4fd6-8bf8-320cb1232861"/>
+				<imageExpression><![CDATA[$P{REPORT_SCRIPTLET}.rotate($F{reader}.loadPage($F{page}.intValue()))]]></imageExpression>
+			</image>
+			<textField isBlankWhenNull="true">
+				<reportElement x="5" y="5" width="545" height="20" isRemoveLineWhenBlank="true" uuid="7eb8828c-caaf-428b-9695-516f3ed3d121"/>
+				<textFieldExpression><![CDATA[$F{description}]]></textFieldExpression>
+			</textField>
+		</band>
+	</detail>
+</jasperReport>
