@@ -19,6 +19,7 @@ package de.cismet.cids.custom.utils.vermessungsunterlagen;
 import Sirius.server.middleware.impls.domainserver.DomainServerImpl;
 import Sirius.server.middleware.interfaces.domainserver.MetaService;
 import Sirius.server.middleware.types.MetaClass;
+import Sirius.server.middleware.types.MetaObject;
 import Sirius.server.middleware.types.MetaObjectNode;
 import Sirius.server.newuser.User;
 
@@ -45,6 +46,8 @@ import org.apache.commons.lang.RandomStringUtils;
 import org.apache.commons.net.ftp.FTPClient;
 import org.apache.commons.net.ftp.FTPReply;
 import org.apache.log4j.Logger;
+
+import org.openide.util.Lookup;
 
 import java.io.File;
 import java.io.FileInputStream;
@@ -76,6 +79,8 @@ import de.cismet.cids.dynamics.CidsBean;
 
 import de.cismet.cids.server.search.CidsServerSearch;
 import de.cismet.cids.server.search.SearchException;
+
+import de.cismet.cids.utils.MetaClassCacheService;
 
 import de.cismet.commons.concurrency.CismetExecutors;
 
@@ -830,8 +835,14 @@ public class VermessungsunterlagenHelper {
             for (final MetaObjectNode mon : mons) {
                 if (mon != null) {
                     try {
-                        beans.add(getMetaService().getMetaObject(getUser(), mon.getObjectId(), mon.getClassId())
-                                    .getBean());
+                        final MetaObject mo = getMetaService().getMetaObject(
+                                getUser(),
+                                mon.getObjectId(),
+                                mon.getClassId());
+                        mo.setAllClasses(
+                            ((MetaClassCacheService)Lookup.getDefault().lookup(MetaClassCacheService.class))
+                                        .getAllClasses(mo.getDomain()));
+                        beans.add(mo.getBean());
                     } catch (final RemoteException ex) {
                         LOG.warn("error while loading AP: OID:" + mon.getObjectId() + ", GID: " + mon.getClassId(), ex);
                     }

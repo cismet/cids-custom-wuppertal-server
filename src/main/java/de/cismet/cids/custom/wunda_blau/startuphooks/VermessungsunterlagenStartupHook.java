@@ -64,7 +64,7 @@ public class VermessungsunterlagenStartupHook implements DomainServerStartupHook
                                 "WUNDA_BLAU",
                                 login_name,
                                 "");
-                        helper.init(DomainServerImpl.getServerInstance(), user);
+                        helper.init(metaService, user);
                         helper.test();
                     } catch (final Exception ex) {
                         LOG.error("error while executing VermessungsunterlagenStartupHook", ex);
