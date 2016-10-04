@@ -14,7 +14,9 @@ package de.cismet.cids.custom.wunda_blau.search.actions;
 
 import Sirius.server.middleware.types.MetaObjectNode;
 
+import net.sf.jasperreports.engine.JasperReport;
 import net.sf.jasperreports.engine.data.JRBeanCollectionDataSource;
+import net.sf.jasperreports.engine.util.JRLoader;
 
 import java.util.ArrayList;
 import java.util.Collection;
@@ -42,8 +44,20 @@ public class VermessungsrissReportServerAction extends JasperReportServerAction 
 
     //~ Static fields/initializers ---------------------------------------------
 
-    public static final String JASPER = "/de/cismet/cids/custom/wunda_blau/res/reports/vermessungsrisse.jasper";
     public static final String TASK_NAME = "vermessungsrissReport";
+
+    public static final JasperReport JASPER;
+
+    static {
+        final String jasperPath = "/de/cismet/cids/custom/wunda_blau/res/reports/vermessungsrisse.jasper";
+        JasperReport report = null;
+        try {
+            report = (JasperReport)JRLoader.loadObject(JasperReportServerAction.class.getResourceAsStream(jasperPath));
+        } catch (final Exception ex) {
+            LOG.error("Error while loading " + jasperPath, ex);
+        }
+        JASPER = report;
+    }
 
     //~ Enums ------------------------------------------------------------------
 
@@ -120,7 +134,7 @@ public class VermessungsrissReportServerAction extends JasperReportServerAction 
     }
 
     @Override
-    protected String getJasperPath() {
+    protected JasperReport getJasperReport() {
         return JASPER;
     }
 }

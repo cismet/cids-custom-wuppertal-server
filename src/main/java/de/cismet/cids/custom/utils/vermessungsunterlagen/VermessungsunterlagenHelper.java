@@ -39,7 +39,6 @@ import net.sf.jasperreports.engine.JasperExportManager;
 import net.sf.jasperreports.engine.JasperFillManager;
 import net.sf.jasperreports.engine.JasperPrint;
 import net.sf.jasperreports.engine.JasperReport;
-import net.sf.jasperreports.engine.util.JRLoader;
 
 import org.apache.commons.io.IOUtils;
 import org.apache.commons.lang.RandomStringUtils;
@@ -74,6 +73,8 @@ import java.util.Map;
 import java.util.Properties;
 
 import de.cismet.cids.custom.utils.nas.NasProduct;
+import de.cismet.cids.custom.wunda_blau.search.actions.AlkisPointReportServerAction;
+import de.cismet.cids.custom.wunda_blau.search.actions.VermessungsrissReportServerAction;
 
 import de.cismet.cids.dynamics.CidsBean;
 
@@ -119,6 +120,16 @@ public class VermessungsunterlagenHelper {
 
     public static final String ALLOWED_TASKS_CONFIG_ATTR = "vup.tasks_allowed";
     public static final int SRID = 25832;
+
+    private static final Map<String, JasperReport> REPORT_MAP = new HashMap<String, JasperReport>();
+
+    public static final String VERMRISS_REPORT = "VERMRISS_REPORT";
+    public static final String AP_REPORT = "AP_REPORT";
+
+    static {
+        REPORT_MAP.put(VERMRISS_REPORT, VermessungsrissReportServerAction.JASPER);
+        REPORT_MAP.put(AP_REPORT, AlkisPointReportServerAction.JASPER);
+    }
 
     static {
         final ObjectMapper mapper = new ObjectMapper();
@@ -877,9 +888,7 @@ public class VermessungsunterlagenHelper {
             final Map parameters,
             final JRDataSource dataSource,
             final OutputStream outputStream) throws Exception {
-        final JasperReport jasperReport = (JasperReport)JRLoader.loadObject(VermessungsunterlagenHelper.class
-                        .getResourceAsStream(
-                            reportResourceName));
+        final JasperReport jasperReport = REPORT_MAP.get(reportResourceName);
         final JasperPrint print = JasperFillManager.fillReport(jasperReport, parameters, dataSource);
         JasperExportManager.exportReportToPdfStream(print, outputStream);
     }

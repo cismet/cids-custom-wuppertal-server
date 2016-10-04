@@ -27,7 +27,6 @@ import de.cismet.cids.custom.utils.alkis.AlkisConstants;
 import de.cismet.cids.custom.utils.alkis.VermessungsRissReportHelper;
 import de.cismet.cids.custom.utils.vermessungsunterlagen.VermessungsunterlagenHelper;
 import de.cismet.cids.custom.utils.vermessungsunterlagen.VermessungsunterlagenTask;
-import de.cismet.cids.custom.wunda_blau.search.actions.VermessungsrissReportServerAction;
 
 import de.cismet.cids.dynamics.CidsBean;
 
@@ -106,7 +105,7 @@ public abstract class VermUntTaskRisse extends VermessungsunterlagenTask {
             OutputStream out = null;
             try {
                 out = new FileOutputStream(filename);
-                jasperReportDownload(VermessungsrissReportServerAction.JASPER, parameters, dataSource, out);
+                jasperReportDownload(VermessungsunterlagenHelper.AP_REPORT, parameters, dataSource, out);
             } finally {
                 closeStream(out);
             }
