@@ -38,7 +38,6 @@ public class VermUntTaskPNR extends VermessungsunterlagenTask {
 
     //~ Instance fields --------------------------------------------------------
 
-    private final String prefix;
     private final String auftragsnummer;
     private final VermessungsunterlagenAnfrageBean.PunktnummernreservierungBean[] punktnummernreservierungBeans;
 
@@ -48,19 +47,16 @@ public class VermUntTaskPNR extends VermessungsunterlagenTask {
      * Creates a new VermUntTaskRisseBilder object.
      *
      * @param  jobKey                         DOCUMENT ME!
-     * @param  prefix                         DOCUMENT ME!
      * @param  auftragsnummer                 DOCUMENT ME!
      * @param  punktnummernreservierungBeans  DOCUMENT ME!
      */
     public VermUntTaskPNR(final String jobKey,
-            final String prefix,
             final String auftragsnummer,
             final VermessungsunterlagenAnfrageBean.PunktnummernreservierungBean[] punktnummernreservierungBeans) {
         super(
             TYPE,
             jobKey);
 
-        this.prefix = prefix;
         this.auftragsnummer = auftragsnummer;
         this.punktnummernreservierungBeans = punktnummernreservierungBeans;
     }
@@ -75,7 +71,7 @@ public class VermUntTaskPNR extends VermessungsunterlagenTask {
                 try {
                     final String protokoll = doReservations(bean).getProtokoll();
 
-                    final String filename = getPath() + "/" + prefix + "_" + auftragsnummer + "_"
+                    final String filename = getPath() + "/" + auftragsnummer + "_"
                                 + bean.getUtmKilometerQuadrat() + ".txt";
                     FileUtils.writeStringToFile(new File(filename), protokoll);
                 } catch (final Exception exception) {
@@ -118,9 +114,9 @@ public class VermUntTaskPNR extends VermessungsunterlagenTask {
                     PointNumberReserverationServerAction.PARAMETER_TYPE.ACTION.toString(),
                     PointNumberReserverationServerAction.ACTION_TYPE.DO_RESERVATION);
         }
-        final ServerActionParameter sapPrefix = new ServerActionParameter(
+        final ServerActionParameter sapZulNmr = new ServerActionParameter(
                 PointNumberReserverationServerAction.PARAMETER_TYPE.PREFIX.toString(),
-                prefix);
+                bean.getKatasteramtsID().substring(2));
         final ServerActionParameter sapAuftragsnummer = new ServerActionParameter(
                 PointNumberReserverationServerAction.PARAMETER_TYPE.AUFTRAG_NUMMER.toString(),
                 auftragsnummer);
@@ -138,7 +134,7 @@ public class VermUntTaskPNR extends VermessungsunterlagenTask {
         final PointNumberReservationRequest request = (PointNumberReservationRequest)action.execute(
                 null,
                 sapAction,
-                sapPrefix,
+                sapZulNmr,
                 sapAuftragsnummer,
                 sapNummerierungsbezirk,
                 sapAnzahl,

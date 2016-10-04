@@ -302,9 +302,9 @@ public class VermessungsunterlagenJob implements Runnable {
                     new File(getPath()).mkdirs();
                     if (anfrageBean.getNurPunktnummernreservierung()) {
                         submitTask(new VermUntTaskPNR(
-                                key,
-                                anfrageBean.getAktenzeichenKatasteramt(), // TODO prefix?
-                                anfrageBean.getGeschaeftsbuchnummer(), // TODO auftragsnummer?
+                                getKey(),
+                                "PortalTest_"
+                                        + anfrageBean.getGeschaeftsbuchnummer(),
                                 anfrageBean.getPunktnummernreservierungsArray()));
                     } else {
                         if (isTaskAllowed(VermUntTaskAPMap.TYPE) || isTaskAllowed(VermUntTaskAPList.TYPE)) {
@@ -315,8 +315,8 @@ public class VermessungsunterlagenJob implements Runnable {
 
                             final Collection<CidsBean> saumAps = searchAPs(geometrySaum);
                             if (!saumAps.isEmpty()) {
-                                submitTask(new VermUntTaskAPMap(key, saumAps));
-                                submitTask(new VermUntTaskAPList(key, saumAps));
+                                submitTask(new VermUntTaskAPMap(getKey(), saumAps));
+                                submitTask(new VermUntTaskAPList(getKey(), saumAps));
                             }
                         }
 
@@ -325,22 +325,25 @@ public class VermessungsunterlagenJob implements Runnable {
                         if (isTaskAllowed(VermUntTaskNasKomplett.TYPE) || isTaskAllowed(VermUntTaskNasPunkte.TYPE)) {
                             final String requestId = getKey(); // TODO requestId ?
                             submitTask(new VermUntTaskNasKomplett(
-                                    key,
+                                    getKey(),
                                     helper.getUser(),
                                     requestId,
                                     geometryFlurstuecke));
-                            submitTask(new VermUntTaskNasPunkte(key, helper.getUser(), requestId, geometryFlurstuecke));
+                            submitTask(new VermUntTaskNasPunkte(
+                                    getKey(),
+                                    helper.getUser(),
+                                    requestId,
+                                    geometryFlurstuecke));
                         }
 
                         if (isTaskAllowed(VermUntTaskAPUebersicht.TYPE)) {
                             final Collection<CidsBean> fsAps = searchAPs(geometryFlurstuecke);
                             if (!fsAps.isEmpty()) {
                                 submitTask(new VermUntTaskAPUebersicht(
-                                        key,
+                                        getKey(),
                                         fsAps,
                                         validator.getFlurstuecke(),
-                                        anfrageBean.getGeschaeftsbuchnummer() // TODO auftragsnummer?
-                                        ));
+                                        anfrageBean.getGeschaeftsbuchnummer()));
                             }
                         }
 
@@ -351,17 +354,16 @@ public class VermessungsunterlagenJob implements Runnable {
 
                             final Collection<CidsBean> risse = searchRisse(antragsFlurstueckBeans);
                             if (!risse.isEmpty()) {
-                                // TODO auftragsnummer / projektname richtig ?
                                 submitTask(new VermUntTaskRisseBilder(
-                                        key,
+                                        getKey(),
                                         risse,
                                         anfrageBean.getGeschaeftsbuchnummer(),
-                                        key));
+                                        ""));
                                 submitTask(new VermUntTaskRisseGrenzniederschrift(
-                                        key,
+                                        getKey(),
                                         risse,
-                                        anfrageBean.getGeschaeftsbuchnummer(), // TODO auftragsnummer?
-                                        key));
+                                        anfrageBean.getGeschaeftsbuchnummer(),
+                                        ""));
                             }
                         }
                     }

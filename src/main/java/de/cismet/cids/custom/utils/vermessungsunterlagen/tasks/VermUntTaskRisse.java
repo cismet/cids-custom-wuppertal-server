@@ -105,7 +105,7 @@ public abstract class VermUntTaskRisse extends VermessungsunterlagenTask {
             OutputStream out = null;
             try {
                 out = new FileOutputStream(filename);
-                jasperReportDownload(VermessungsunterlagenHelper.AP_REPORT, parameters, dataSource, out);
+                jasperReportDownload(VermessungsunterlagenHelper.VERMRISS_REPORT, parameters, dataSource, out);
             } finally {
                 closeStream(out);
             }
