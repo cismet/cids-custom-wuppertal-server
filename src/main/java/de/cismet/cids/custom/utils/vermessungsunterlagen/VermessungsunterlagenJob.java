@@ -420,7 +420,7 @@ public class VermessungsunterlagenJob implements Runnable {
     public void uploadZip(final File file) throws VermessungsunterlagenException {
         this.ftpZipPath = null;
         try {
-            final String ftpZipPath = FTP_PATH + "/" + file.getName();
+            final String ftpZipPath = (FTP_PATH.isEmpty() ? "" : ("/" + FTP_PATH)) + file.getName();
             VermessungsunterlagenHelper.getInstance().uploadToFTP(new FileInputStream(file), ftpZipPath);
             this.ftpZipPath = ftpZipPath;
         } catch (final Exception ex) {
