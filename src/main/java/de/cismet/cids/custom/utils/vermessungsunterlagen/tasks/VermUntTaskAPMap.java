@@ -24,10 +24,9 @@ import java.util.HashMap;
 import de.cismet.cids.custom.utils.alkis.AlkisPointReportBean;
 import de.cismet.cids.custom.utils.alkis.AlkisProducts;
 import de.cismet.cids.custom.utils.vermessungsunterlagen.VermessungsunterlagenHelper;
+import de.cismet.cids.custom.wunda_blau.search.actions.AlkisPointReportServerAction;
 
 import de.cismet.cids.dynamics.CidsBean;
-
-import static de.cismet.cids.custom.utils.vermessungsunterlagen.VermessungsunterlagenHelper.jasperReportDownload;
 
 /**
  * DOCUMENT ME!
@@ -40,7 +39,6 @@ public class VermUntTaskAPMap extends VermUntTaskAP {
     //~ Static fields/initializers ---------------------------------------------
 
     public static final String TYPE = "AP_Map";
-    private static final String REPORT_APMAPS = "/de/cismet/cids/custom/wunda_blau/res/apmaps.jasper";
 
     //~ Constructors -----------------------------------------------------------
 
@@ -62,8 +60,8 @@ public class VermUntTaskAPMap extends VermUntTaskAP {
         try {
             final String filename = getPath() + "/" + AlkisProducts.getInstance().PUNKTLISTE_PDF + ".pdf";
             out = new FileOutputStream(filename);
-            jasperReportDownload(
-                REPORT_APMAPS,
+            VermessungsunterlagenHelper.jasperReportDownload(
+                AlkisPointReportServerAction.JASPER,
                 new HashMap(),
                 new JRBeanCollectionDataSource(Arrays.asList(new AlkisPointReportBean(getAlkisPoints()))),
                 out);

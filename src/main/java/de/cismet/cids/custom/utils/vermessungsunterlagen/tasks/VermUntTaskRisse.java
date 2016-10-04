@@ -27,6 +27,7 @@ import de.cismet.cids.custom.utils.alkis.AlkisConstants;
 import de.cismet.cids.custom.utils.alkis.VermessungsRissReportHelper;
 import de.cismet.cids.custom.utils.vermessungsunterlagen.VermessungsunterlagenHelper;
 import de.cismet.cids.custom.utils.vermessungsunterlagen.VermessungsunterlagenTask;
+import de.cismet.cids.custom.wunda_blau.search.actions.VermessungsrissReportServerAction;
 
 import de.cismet.cids.dynamics.CidsBean;
 
@@ -46,10 +47,6 @@ import static de.cismet.cids.custom.utils.vermessungsunterlagen.Vermessungsunter
  * @version  $Revision$, $Date$
  */
 public abstract class VermUntTaskRisse extends VermessungsunterlagenTask {
-
-    //~ Static fields/initializers ---------------------------------------------
-
-    private static final String REPORT_RISSE = "/de/cismet/cids/custom/wunda_blau/res/vermessungsrisse.jasper";
 
     //~ Instance fields --------------------------------------------------------
 
@@ -109,7 +106,7 @@ public abstract class VermUntTaskRisse extends VermessungsunterlagenTask {
             OutputStream out = null;
             try {
                 out = new FileOutputStream(filename);
-                jasperReportDownload(REPORT_RISSE, parameters, dataSource, out);
+                jasperReportDownload(VermessungsrissReportServerAction.JASPER, parameters, dataSource, out);
             } finally {
                 closeStream(out);
             }
