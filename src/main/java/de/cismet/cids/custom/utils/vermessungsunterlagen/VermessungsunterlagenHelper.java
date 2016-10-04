@@ -581,13 +581,22 @@ public class VermessungsunterlagenHelper {
         final Collection<VermessungsunterlagenAnfrageBean.AntragsflurstueckBean> antragsflurstueckList =
             new ArrayList<VermessungsunterlagenAnfrageBean.AntragsflurstueckBean>();
         final JsonNode antragsflurstuecksArrayNode = in0.get("antragsflurstuecksArray").get("antragsflurstuecksArray");
-        if ((antragsflurstuecksArrayNode != null) && antragsflurstuecksArrayNode.isArray()) {
-            for (final JsonNode objNode : antragsflurstuecksArrayNode) {
+        if (antragsflurstuecksArrayNode != null) {
+            if (antragsflurstuecksArrayNode.isArray()) {
+                for (final JsonNode objNode : antragsflurstuecksArrayNode) {
+                    final VermessungsunterlagenAnfrageBean.AntragsflurstueckBean antragsflurstueckBean =
+                        new VermessungsunterlagenAnfrageBean.AntragsflurstueckBean();
+                    antragsflurstueckBean.setFlurID(getString("flurID", objNode));
+                    antragsflurstueckBean.setFlurstuecksID(getString("flurstuecksID", objNode));
+                    antragsflurstueckBean.setGemarkungsID(getString("gemarkungsID", objNode));
+                    antragsflurstueckList.add(antragsflurstueckBean);
+                }
+            } else {
                 final VermessungsunterlagenAnfrageBean.AntragsflurstueckBean antragsflurstueckBean =
                     new VermessungsunterlagenAnfrageBean.AntragsflurstueckBean();
-                antragsflurstueckBean.setFlurID(getString("flurID", objNode));
-                antragsflurstueckBean.setFlurstuecksID(getString("flurstuecksID", objNode));
-                antragsflurstueckBean.setGemarkungsID(getString("gemarkungsID", objNode));
+                antragsflurstueckBean.setFlurID(getString("flurID", antragsflurstuecksArrayNode));
+                antragsflurstueckBean.setFlurstuecksID(getString("flurstuecksID", antragsflurstuecksArrayNode));
+                antragsflurstueckBean.setGemarkungsID(getString("gemarkungsID", antragsflurstuecksArrayNode));
                 antragsflurstueckList.add(antragsflurstueckBean);
             }
         }
