@@ -12,9 +12,10 @@
  */
 package de.cismet.cids.custom.utils.vermessungsunterlagen.tasks;
 
+import com.vividsolutions.jts.geom.Coordinate;
+import com.vividsolutions.jts.geom.Envelope;
 import com.vividsolutions.jts.geom.Geometry;
 import com.vividsolutions.jts.geom.GeometryFactory;
-import com.vividsolutions.jts.geom.Point;
 
 import java.io.FileOutputStream;
 import java.io.InputStream;
@@ -77,22 +78,73 @@ public class VermUntTaskAPUebersicht extends VermUntTaskAP {
     /**
      * DOCUMENT ME!
      *
+     * @param   box     DOCUMENT ME!
+     * @param   width   DOCUMENT ME!
+     * @param   height  DOCUMENT ME!
+     * @param   scale   DOCUMENT ME!
+     *
      * @return  DOCUMENT ME!
      */
-    private AlkisProductDescription determineProduct() {
-        // TODO algorithmus für bestes format
-
+    private boolean doesBoundingBoxFitIntoLayout(final Envelope box,
+            final int width,
+            final int height,
+            final double scale) {
+        final double realWorldLayoutWidth = ((double)width) / 1000.0d * scale;
+        final double realWorldLayoutHeigth = ((double)height) / 1000.0d * scale;
+        return (realWorldLayoutWidth >= box.getWidth()) && (realWorldLayoutHeigth >= box.getHeight());
+    }
+    /**
+     * DOCUMENT ME!
+     *
+     * @param   boundingBox  DOCUMENT ME!
+     *
+     * @return  DOCUMENT ME!
+     */
+    private AlkisProductDescription determineProduct(final Envelope boundingBox) {
         final String clazz = String.valueOf("WUP-Kommunal");
         final String type = String.valueOf("AP-Übersicht");
-        final String scale = String.valueOf(2500);
-        final String layout = String.valueOf("DINA4 Querformat");
+        AlkisProductDescription minimalWidthFittingProduct = null;
+        AlkisProductDescription minimalHeightFittingProduct = null;
+        AlkisProductDescription defaultProduct = null;
         for (final AlkisProductDescription product : AlkisProducts.getInstance().ALKIS_MAP_PRODUCTS) {
-            if (clazz.equals(product.getClazz()) && type.equals(product.getType())
-                        && scale.equals(product.getMassstab()) && layout.equals(product.getDinFormat())) {
-                return product;
+            if (clazz.equals(product.getClazz()) && type.equals(product.getType())) {
+                if (product.isDefaultProduct()) {
+                    defaultProduct = product;
+                }
+                final boolean fitting = doesBoundingBoxFitIntoLayout(
+                        boundingBox,
+                        product.getWidth(),
+                        product.getHeight(),
+                        Integer.parseInt(String.valueOf(product.getMassstab())));
+                if (fitting) {
+                    if ((minimalWidthFittingProduct == null)
+                                || (product.getWidth() < minimalWidthFittingProduct.getWidth())) {
+                        minimalWidthFittingProduct = product;
+                    }
+                    if ((minimalHeightFittingProduct == null)
+                                || (product.getHeight() < minimalHeightFittingProduct.getHeight())) {
+                        minimalHeightFittingProduct = product;
+                    }
+                }
             }
         }
-        return null;
+
+        if ((minimalWidthFittingProduct != null) && (minimalHeightFittingProduct != null)) {
+            final int minimalWidthArea = minimalWidthFittingProduct.getWidth() * minimalWidthFittingProduct.getHeight();
+            final int minimalHeightArea = minimalHeightFittingProduct.getWidth()
+                        * minimalHeightFittingProduct.getHeight();
+            if (minimalWidthArea <= minimalHeightArea) {
+                return minimalWidthFittingProduct;
+            } else {
+                return minimalHeightFittingProduct;
+            }
+        } else if (minimalWidthFittingProduct != null) {
+            return minimalWidthFittingProduct;
+        } else if (minimalHeightFittingProduct != null) {
+            return minimalHeightFittingProduct;
+        } else {
+            return defaultProduct;
+        }
     }
 
     @Override
@@ -103,21 +155,21 @@ public class VermUntTaskAPUebersicht extends VermUntTaskAP {
             final Geometry geom = (Geometry)alkisPoint.getProperty("geom.geo_field");
             geometries.add(geom);
         }
-        final Geometry envelope = geometryFactory.createGeometryCollection(geometries.toArray(new Geometry[0]))
-                    .getEnvelope();
+        final Envelope envelope = geometryFactory.createGeometryCollection(geometries.toArray(new Geometry[0]))
+                    .getEnvelopeInternal();
 
-        final Point center = envelope.getCentroid();
+        final Coordinate center = envelope.centre();
 
         final String landparcelcode = (String)flurstuecke.iterator().next().getProperty("alkis_id");
-        final AlkisProductDescription product = determineProduct();
+        final AlkisProductDescription product = determineProduct(envelope);
 
         final URL url = AlkisProducts.getInstance()
                     .productKarteUrl(
                         landparcelcode,
                         product,
                         Double.valueOf(0).intValue(),
-                        Double.valueOf(center.getX()).intValue(),
-                        Double.valueOf(center.getY()).intValue(),
+                        Double.valueOf(center.x).intValue(),
+                        Double.valueOf(center.y).intValue(),
                         "",
                         auftragsnummer,
                         false,
@@ -136,25 +188,5 @@ public class VermUntTaskAPUebersicht extends VermUntTaskAP {
             VermessungsunterlagenHelper.closeStream(in);
             VermessungsunterlagenHelper.closeStream(out);
         }
-    }
-
-    /**
-     * DOCUMENT ME!
-     *
-     * @param   alkisPoints  DOCUMENT ME!
-     *
-     * @return  DOCUMENT ME!
-     */
-    private static String getPunktlistenStringForChosenPoints(final Collection<CidsBean> alkisPoints) {
-        final StringBuffer punktListeString = new StringBuffer();
-
-        for (final CidsBean alkisPoint : alkisPoints) {
-            if (punktListeString.length() > 0) {
-                punktListeString.append(",");
-            }
-            punktListeString.append(PRODUCTS.getPointDataForProduct(alkisPoint));
-        }
-
-        return punktListeString.toString();
     }
 }
