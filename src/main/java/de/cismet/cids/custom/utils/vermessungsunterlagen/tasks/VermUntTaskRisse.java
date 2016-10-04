@@ -111,11 +111,9 @@ public abstract class VermUntTaskRisse extends VermessungsunterlagenTask {
             }
         }
 
-        final String filePath = filename.substring(0, filename.lastIndexOf('/'));
-
         final ExtendedAccessHandler extendedAccessHandler = new SimpleHttpAccessHandler();
         for (final URL additionalFileToDownload : additionalFilesToDownload) {
-            final String additionalFilename = filePath
+            final String additionalFilename = getPath()
                         + additionalFileToDownload.getFile()
                         .substring(additionalFileToDownload.getFile().lastIndexOf('/') + 1);
             final String pureAdditionalFilename = additionalFilename.substring(0, additionalFilename.lastIndexOf('.'));
