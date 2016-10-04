@@ -37,7 +37,7 @@ public class VermUntTaskAPMap extends VermUntTaskAP {
 
     //~ Static fields/initializers ---------------------------------------------
 
-    public static final String TYPE = "AP_Map";
+    public static final String TYPE = "AP_Karten";
 
     //~ Constructors -----------------------------------------------------------
 
@@ -60,7 +60,7 @@ public class VermUntTaskAPMap extends VermUntTaskAP {
             final String filename = getPath() + "/" + AlkisProducts.getInstance().PUNKTLISTE_PDF + ".pdf";
             out = new FileOutputStream(filename);
             VermessungsunterlagenHelper.jasperReportDownload(
-                VermessungsunterlagenHelper.VERMRISS_REPORT,
+                VermessungsunterlagenHelper.AP_REPORT,
                 new HashMap(),
                 new JRBeanCollectionDataSource(Arrays.asList(new AlkisPointReportBean(getAlkisPoints()))),
                 out);
