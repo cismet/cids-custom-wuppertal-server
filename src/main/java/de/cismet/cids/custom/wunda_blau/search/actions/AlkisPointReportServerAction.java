@@ -39,7 +39,7 @@ public class AlkisPointReportServerAction extends JasperReportServerAction {
 
     //~ Static fields/initializers ---------------------------------------------
 
-    private static final String JASPER = "/de/cismet/cids/custom/wunda_blau/res/apmaps.jasper";
+    public static final String JASPER = "/de/cismet/cids/custom/wunda_blau/res/reports/apmaps.jasper";
     public static final String TASK_NAME = "alkisPointReport";
 
     //~ Enums ------------------------------------------------------------------

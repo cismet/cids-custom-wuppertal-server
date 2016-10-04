@@ -42,7 +42,7 @@ public class VermessungsrissReportServerAction extends JasperReportServerAction 
 
     //~ Static fields/initializers ---------------------------------------------
 
-    private static final String JASPER = "/de/cismet/cids/custom/wunda_blau/res/vermessungsrisse.jasper";
+    public static final String JASPER = "/de/cismet/cids/custom/wunda_blau/res/reports/vermessungsrisse.jasper";
     public static final String TASK_NAME = "vermessungsrissReport";
 
     //~ Enums ------------------------------------------------------------------

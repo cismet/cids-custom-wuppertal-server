@@ -315,7 +315,6 @@ public class VermessungsunterlagenJob implements Runnable {
 
                             final Collection<CidsBean> saumAps = searchAPs(geometrySaum);
                             if (!saumAps.isEmpty()) {
-                                // TODO checken: auftragsnummer / projektname ?
                                 submitTask(new VermUntTaskAPMap(key, saumAps));
                                 submitTask(new VermUntTaskAPList(key, saumAps));
                             }
