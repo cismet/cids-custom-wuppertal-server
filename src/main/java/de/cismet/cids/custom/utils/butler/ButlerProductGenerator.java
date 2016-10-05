@@ -103,7 +103,7 @@ public class ButlerProductGenerator {
             BUTLER_TEMPLATES_RES_PATH = resPath + BUTLER_TEMPLATES_RES_PATH;
             final Properties butlerProperties = new Properties();
             butlerProperties.load(CachedServerResourcesLoader.getInstance().getStringReaderResource(
-                    TextServerResources.NAS_SERVER_PROPERTIES));
+                    TextServerResources.BUTLER_PROPERTIES));
             butlerBasePath = butlerProperties.getProperty("butlerBasePath");
             requestFolder = butlerBasePath + System.getProperty("file.separator")
                         + butlerProperties.getProperty("butler1RequestPath");
