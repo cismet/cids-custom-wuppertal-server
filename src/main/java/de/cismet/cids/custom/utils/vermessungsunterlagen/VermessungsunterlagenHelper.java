@@ -120,6 +120,8 @@ public class VermessungsunterlagenHelper {
     public static final String FTP_PATH = readProperty("FTP_PATH", null);
     public static final String PATH_TEST = readProperty("PATH_TEST", null);
 
+    private static final String DIR_PREFIX = "VermUnterlagen";
+
     public static final String ALLOWED_TASKS_CONFIG_ATTR = "vup.tasks_allowed";
     public static final int SRID = 25832;
 
@@ -780,7 +782,7 @@ public class VermessungsunterlagenHelper {
      * @return  DOCUMENT ME!
      */
     public static String getPath(final String jobkey) {
-        return PATH_TMP + "/" + jobkey;
+        return PATH_TMP + "/" + DIR_PREFIX + "_" + jobkey;
     }
 
     /**
