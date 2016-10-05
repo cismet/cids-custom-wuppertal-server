@@ -73,6 +73,9 @@ import javax.xml.parsers.DocumentBuilder;
 import javax.xml.parsers.DocumentBuilderFactory;
 import javax.xml.parsers.ParserConfigurationException;
 
+import de.cismet.cids.utils.serverresources.CachedServerResourcesLoader;
+import de.cismet.cids.utils.serverresources.TextServerResources;
+
 import de.cismet.cidsx.server.api.types.ActionTask;
 
 /*
@@ -142,7 +145,8 @@ public class NASProductGenerator {
                 return;
             }
 
-            serviceProperties.load(NASProductGenerator.class.getResourceAsStream("nasServer_conf.properties"));
+            serviceProperties.load(CachedServerResourcesLoader.getInstance().getStringReaderResource(
+                    TextServerResources.NAS_SERVER_PROPERTIES));
             SERVICE_URL = serviceProperties.getProperty("service");
             USER = serviceProperties.getProperty("user");
             PW = serviceProperties.getProperty("pw");

@@ -82,6 +82,8 @@ import de.cismet.cids.server.search.CidsServerSearch;
 import de.cismet.cids.server.search.SearchException;
 
 import de.cismet.cids.utils.MetaClassCacheService;
+import de.cismet.cids.utils.serverresources.CachedServerResourcesLoader;
+import de.cismet.cids.utils.serverresources.TextServerResources;
 
 import de.cismet.commons.concurrency.CismetExecutors;
 
@@ -146,8 +148,8 @@ public class VermessungsunterlagenHelper {
         NasProduct productKomplett = null;
         final ArrayList<NasProduct> nasProducts;
         try {
-            nasProducts = mapper.readValue(VermessungsunterlagenHelper.class.getResourceAsStream(
-                        "/de/cismet/cids/custom/nas/nasProductDescription.json"),
+            nasProducts = mapper.readValue(CachedServerResourcesLoader.getInstance().getStringReaderResource(
+                        TextServerResources.NAS_PRODUCT_DESCRIPTION_JSON),
                     mapper.getTypeFactory().constructCollectionType(List.class, NasProduct.class));
             for (final NasProduct nasProduct : nasProducts) {
                 if ("punkte".equals(nasProduct.getKey())) {
@@ -156,7 +158,7 @@ public class VermessungsunterlagenHelper {
                     productKomplett = nasProduct;
                 }
             }
-        } catch (final IOException ex) {
+        } catch (final Exception ex) {
             final String message = "could not load NasProducts";
             LOG.error(message, ex);
             throw new RuntimeException(message, ex);

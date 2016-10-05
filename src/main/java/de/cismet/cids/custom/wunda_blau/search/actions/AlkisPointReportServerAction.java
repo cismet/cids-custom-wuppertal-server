@@ -16,7 +16,6 @@ import Sirius.server.middleware.types.MetaObjectNode;
 
 import net.sf.jasperreports.engine.JasperReport;
 import net.sf.jasperreports.engine.data.JRBeanCollectionDataSource;
-import net.sf.jasperreports.engine.util.JRLoader;
 
 import java.util.ArrayList;
 import java.util.Collection;
@@ -29,6 +28,9 @@ import de.cismet.cids.dynamics.CidsBean;
 import de.cismet.cids.server.actions.JasperReportServerAction;
 import de.cismet.cids.server.actions.ServerAction;
 import de.cismet.cids.server.actions.ServerActionParameter;
+
+import de.cismet.cids.utils.serverresources.CachedServerResourcesLoader;
+import de.cismet.cids.utils.serverresources.JasperReportServerResources;
 
 /**
  * DOCUMENT ME!
@@ -44,12 +46,12 @@ public class AlkisPointReportServerAction extends JasperReportServerAction {
     public static final JasperReport JASPER;
 
     static {
-        final String jasperPath = "/de/cismet/cids/custom/wunda_blau/res/reports/apmaps.jasper";
         JasperReport report = null;
         try {
-            report = (JasperReport)JRLoader.loadObject(JasperReportServerAction.class.getResourceAsStream(jasperPath));
+            report = CachedServerResourcesLoader.getInstance()
+                        .getJasperReportResource(JasperReportServerResources.AP_MAPS_JASPER);
         } catch (final Exception ex) {
-            LOG.error("Error while loading " + jasperPath, ex);
+            LOG.error("Error while loading " + JasperReportServerResources.AP_MAPS_JASPER, ex);
         }
         JASPER = report;
     }

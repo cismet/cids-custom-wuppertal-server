@@ -21,8 +21,6 @@ import org.apache.log4j.Logger;
 
 import org.openide.util.Exceptions;
 
-import java.io.IOException;
-
 import java.rmi.RemoteException;
 
 import java.sql.Connection;
@@ -39,6 +37,9 @@ import de.cismet.cids.custom.wunda_blau.search.server.CidsMauernSearchStatement;
 
 import de.cismet.cids.server.search.AbstractCidsServerSearch;
 import de.cismet.cids.server.search.SearchException;
+
+import de.cismet.cids.utils.serverresources.CachedServerResourcesLoader;
+import de.cismet.cids.utils.serverresources.TextServerResources;
 
 import de.cismet.cismap.commons.jtsgeometryfactories.PostGisGeometryFactory;
 
@@ -77,16 +78,17 @@ public class NasZaehlObjekteSearch extends AbstractCidsServerSearch {
     static {
         try {
             final Properties serviceProperties = new Properties();
-            serviceProperties.load(NasZaehlObjekteSearch.class.getResourceAsStream("fme_db_conn.properties"));
+            serviceProperties.load(CachedServerResourcesLoader.getInstance().getStringReaderResource(
+                    TextServerResources.FME_DB_CONN_PROPERTIES));
             url = serviceProperties.getProperty("connection_url");
             user = serviceProperties.getProperty("connection_username");
             pw = serviceProperties.getProperty("connection_pw");
             initConnection();
-        } catch (SearchException ex) {
+        } catch (final SearchException ex) {
             if (LOG.isDebugEnabled()) {
                 LOG.debug("error during initialisation of fme db connection.", ex);
             }
-        } catch (IOException ex) {
+        } catch (final Exception ex) {
             initError = true;
             LOG.warn(
                 "error during initialisation of fme db connection. Could not read properties file. Search disabled",

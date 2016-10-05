@@ -13,8 +13,6 @@ package de.cismet.cids.custom.wunda_blau.search.actions;
 
 import org.apache.log4j.Logger;
 
-import org.openide.util.Exceptions;
-
 import java.awt.image.BufferedImage;
 import java.awt.image.RenderedImage;
 
@@ -36,6 +34,9 @@ import javax.imageio.stream.ImageOutputStream;
 
 import de.cismet.cids.server.actions.ServerAction;
 import de.cismet.cids.server.actions.ServerActionParameter;
+
+import de.cismet.cids.utils.serverresources.CachedServerResourcesLoader;
+import de.cismet.cids.utils.serverresources.TextServerResources;
 
 import static de.cismet.cids.custom.wunda_blau.search.actions.TifferAction.ParameterType.*;
 
@@ -79,7 +80,8 @@ public class TifferAction implements ServerAction {
      */
     public TifferAction() {
         try {
-            res = new PropertyResourceBundle(this.getClass().getResourceAsStream("tifferAction.cfg"));
+            res = new PropertyResourceBundle(CachedServerResourcesLoader.getInstance().getStringReaderResource(
+                        TextServerResources.TIFFER_ACTION_CFG));
         } catch (Exception e) {
             LOG.error("Resource not found");
         }

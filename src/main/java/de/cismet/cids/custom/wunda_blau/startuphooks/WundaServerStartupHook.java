@@ -14,6 +14,7 @@ package de.cismet.cids.custom.wunda_blau.startuphooks;
 
 import Sirius.server.middleware.interfaces.domainserver.DomainServerStartupHook;
 
+import de.cismet.cids.custom.utils.ServerResourcesPreloader;
 import de.cismet.cids.custom.utils.alkis.AlkisProducts;
 import de.cismet.cids.custom.utils.butler.ButlerProductGenerator;
 import de.cismet.cids.custom.utils.nas.NASProductGenerator;
@@ -37,6 +38,7 @@ public class WundaServerStartupHook implements DomainServerStartupHook {
          * initialized during server startup to avoid that these resources are loaded from an eventually changed jar,
          * which will cause an vm crash or Exception
          */
+        ServerResourcesPreloader.getInstance();
         NASProductGenerator.instance();
         ButlerProductGenerator.getInstance();
         PointNumberReservationService.instance();

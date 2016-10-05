@@ -43,6 +43,9 @@ import javax.ws.rs.core.MediaType;
 
 import de.cismet.cids.custom.utils.nas.CidsActionClient;
 
+import de.cismet.cids.utils.serverresources.CachedServerResourcesLoader;
+import de.cismet.cids.utils.serverresources.TextServerResources;
+
 import de.cismet.cidsx.server.api.types.ActionTask;
 
 /**
@@ -99,7 +102,8 @@ public class ButlerProductGenerator {
             final String resPath = serverProps.getServerResourcesBasePath();
             BUTLER_TEMPLATES_RES_PATH = resPath + BUTLER_TEMPLATES_RES_PATH;
             final Properties butlerProperties = new Properties();
-            butlerProperties.load(ButlerProductGenerator.class.getResourceAsStream("butler.properties"));
+            butlerProperties.load(CachedServerResourcesLoader.getInstance().getStringReaderResource(
+                    TextServerResources.NAS_SERVER_PROPERTIES));
             butlerBasePath = butlerProperties.getProperty("butlerBasePath");
             requestFolder = butlerBasePath + System.getProperty("file.separator")
                         + butlerProperties.getProperty("butler1RequestPath");

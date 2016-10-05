@@ -26,13 +26,11 @@ import com.vividsolutions.jts.geom.Geometry;
 import com.vividsolutions.jts.geom.Point;
 
 import net.sf.jasperreports.engine.JRDataSource;
-import net.sf.jasperreports.engine.JRException;
 import net.sf.jasperreports.engine.JasperExportManager;
 import net.sf.jasperreports.engine.JasperFillManager;
 import net.sf.jasperreports.engine.JasperPrint;
 import net.sf.jasperreports.engine.JasperReport;
 import net.sf.jasperreports.engine.data.JRBeanCollectionDataSource;
-import net.sf.jasperreports.engine.util.JRLoader;
 
 import org.apache.commons.httpclient.UsernamePasswordCredentials;
 import org.apache.commons.io.IOUtils;
@@ -40,7 +38,6 @@ import org.apache.commons.lang.RandomStringUtils;
 
 import org.openide.util.Lookup;
 
-import java.io.BufferedInputStream;
 import java.io.BufferedReader;
 import java.io.ByteArrayInputStream;
 import java.io.ByteArrayOutputStream;
@@ -98,6 +95,9 @@ import de.cismet.cids.server.actions.ServerActionParameter;
 import de.cismet.cids.server.actions.UserAwareServerAction;
 
 import de.cismet.cids.utils.MetaClassCacheService;
+import de.cismet.cids.utils.serverresources.CachedServerResourcesLoader;
+import de.cismet.cids.utils.serverresources.JasperReportServerResources;
+import de.cismet.cids.utils.serverresources.TextServerResources;
 
 import de.cismet.commons.security.AccessHandler;
 import de.cismet.commons.security.handler.SimpleHttpAccessHandler;
@@ -116,11 +116,6 @@ public class FormSolutionServerNewStuffAvailableAction implements UserAwareServe
     private static final transient org.apache.log4j.Logger LOG = org.apache.log4j.Logger.getLogger(
             FormSolutionServerNewStuffAvailableAction.class);
     public static final String TASK_NAME = "formSolutionServerNewStuffAvailable";
-    private static final String TEST_CISMET00_XML_FILE =
-        "/de/cismet/cids/custom/wunda_blau/res/formsolutions/TEST_CISMET00.xml";
-    private static final String IGNORE_TRANSID_FILE =
-        "/de/cismet/cids/custom/wunda_blau/res/formsolutions/ignoreTransids.txt";
-    private static final String RECHNUNG_JASPER = "/de/cismet/cids/custom/wunda_blau/res/bestellung_rechnung.jasper";
 
     private static final String TEST_CISMET00_PREFIX = "TEST_CISMET00-";
 
@@ -200,17 +195,17 @@ public class FormSolutionServerNewStuffAvailableAction implements UserAwareServe
         String testCismet00Xml = null;
         if (testCismet00Enabled) {
             try {
-                testCismet00Xml = IOUtils.toString(new BufferedInputStream(
-                            getClass().getResourceAsStream(TEST_CISMET00_XML_FILE)));
+                testCismet00Xml = CachedServerResourcesLoader.getInstance()
+                            .getStringResource(TextServerResources.FS_TEST_XML);
             } catch (final Exception ex) {
-                LOG.error("could not load " + TEST_CISMET00_XML_FILE, ex);
+                LOG.error("could not load " + TextServerResources.FS_TEST_XML.getValue(), ex);
             }
         }
         this.testCismet00Xml = testCismet00Xml;
 
         try {
-            final String ignoreFileContent = IOUtils.toString(new BufferedInputStream(
-                        getClass().getResourceAsStream(IGNORE_TRANSID_FILE)));
+            final String ignoreFileContent = CachedServerResourcesLoader.getInstance()
+                        .getStringResource(TextServerResources.FS_IGNORE_TRANSID_TXT);
             final String[] lines = ignoreFileContent.split("\n");
             for (final String line : lines) {
                 if (!line.trim().isEmpty()) {
@@ -218,15 +213,15 @@ public class FormSolutionServerNewStuffAvailableAction implements UserAwareServe
                 }
             }
         } catch (final Exception ex) {
-            LOG.error("could not load " + IGNORE_TRANSID_FILE, ex);
+            LOG.error("could not load " + TextServerResources.FS_IGNORE_TRANSID_TXT.getValue(), ex);
         }
 
         JasperReport report;
         try {
-            report = (JasperReport)JRLoader.loadObject(FormSolutionBestellungChangeStatusServerAction.class
-                            .getResourceAsStream(RECHNUNG_JASPER));
-        } catch (JRException ex) {
-            LOG.error("could not load " + RECHNUNG_JASPER, ex);
+            report = CachedServerResourcesLoader.getInstance()
+                        .getJasperReportResource(JasperReportServerResources.FS_RECHNUNG_JASPER);
+        } catch (final Exception ex) {
+            LOG.error("could not load " + JasperReportServerResources.FS_RECHNUNG_JASPER, ex);
             report = null;
         }
         rechnungJasperReport = report;

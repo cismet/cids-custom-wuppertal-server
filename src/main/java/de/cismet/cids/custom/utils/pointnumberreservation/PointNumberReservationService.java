@@ -38,9 +38,11 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Properties;
-import java.util.TimeZone;
 import java.util.zip.GZIPInputStream;
 import java.util.zip.GZIPOutputStream;
+
+import de.cismet.cids.utils.serverresources.CachedServerResourcesLoader;
+import de.cismet.cids.utils.serverresources.TextServerResources;
 
 /**
  * DOCUMENT ME!
@@ -93,8 +95,8 @@ public class PointNumberReservationService {
     private PointNumberReservationService() {
         final Properties serviceProperties = new Properties();
         try {
-            serviceProperties.load(PointNumberReservationService.class.getResourceAsStream(
-                    "pointNumberRes_conf.properties"));
+            serviceProperties.load(CachedServerResourcesLoader.getInstance().getStringReaderResource(
+                    TextServerResources.PNR_PROPERTIES));
             final ServerProperties serverProps = DomainServerImpl.getServerProperties();
             final String serverRespath = serverProps.getServerResourcesBasePath();
             TEMPLATE_BEN_AUFTR_ALL = serverRespath

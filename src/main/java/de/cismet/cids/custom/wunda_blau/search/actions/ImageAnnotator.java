@@ -28,6 +28,9 @@ import java.util.*;
 import javax.imageio.*;
 import javax.imageio.stream.*;
 
+import de.cismet.cids.utils.serverresources.CachedServerResourcesLoader;
+import de.cismet.cids.utils.serverresources.TruetypeFontServerResources;
+
 //import com.sun.media.jai.codec.*;
 /**
  * DOCUMENT ME!
@@ -44,12 +47,9 @@ public class ImageAnnotator {
 
     static {
         try {
-            final InputStream is = ImageAnnotator.class.getResourceAsStream("Calibri_Bold.ttf");
-            calibriFont = Font.createFont(Font.TRUETYPE_FONT, is);
-        } catch (FontFormatException ex) {
-            Log.warn("Calibri could not be loaded", ex);
-            calibriFont = new Font(Font.SANS_SERIF, Font.BOLD, 100);
-        } catch (IOException ex) {
+            calibriFont = CachedServerResourcesLoader.getInstance()
+                        .getTrueTypeFontResource(TruetypeFontServerResources.IMAGE_ANNOTATOR_FONT);
+        } catch (Exception ex) {
             Log.warn("Calibri could not be loaded", ex);
             calibriFont = new Font(Font.SANS_SERIF, Font.BOLD, 100);
         }
