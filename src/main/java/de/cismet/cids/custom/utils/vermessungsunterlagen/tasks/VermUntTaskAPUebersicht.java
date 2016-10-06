@@ -117,23 +117,45 @@ public class VermUntTaskAPUebersicht extends VermUntTaskAP {
                         product.getHeight(),
                         Integer.parseInt(String.valueOf(product.getMassstab())));
                 if (fitting) {
-                    if ((minimalWidthFittingProduct == null)
-                                || (product.getWidth() < minimalWidthFittingProduct.getWidth())) {
+                    if (minimalWidthFittingProduct == null) {
+                        // at least the first is the minimal
                         minimalWidthFittingProduct = product;
+                    } else if (product.getWidth() <= minimalWidthFittingProduct.getWidth()) {
+                        // is smaller or equals
+                        if (product.getWidth() < minimalWidthFittingProduct.getWidth()) {
+                            // is smaller
+                            minimalWidthFittingProduct = product;
+                        } else if (Integer.parseInt(String.valueOf(product.getMassstab()))
+                                    < Integer.parseInt(String.valueOf(minimalHeightFittingProduct.getMassstab()))) {
+                            // not smaller (equals) in size but in scale
+                            minimalWidthFittingProduct = product;
+                        }
                     }
-                    if ((minimalHeightFittingProduct == null)
-                                || (product.getHeight() < minimalHeightFittingProduct.getHeight())) {
+                    // same as for width but now with height
+                    if (minimalHeightFittingProduct == null) {
                         minimalHeightFittingProduct = product;
+                    } else if (product.getHeight() <= minimalHeightFittingProduct.getHeight()) {
+                        if (product.getHeight() < minimalHeightFittingProduct.getHeight()) {
+                            minimalHeightFittingProduct = product;
+                        } else if (Integer.parseInt(String.valueOf(product.getMassstab()))
+                                    < Integer.parseInt(String.valueOf(minimalHeightFittingProduct.getMassstab()))) {
+                            minimalHeightFittingProduct = product;
+                        }
                     }
                 }
             }
         }
 
         if ((minimalWidthFittingProduct != null) && (minimalHeightFittingProduct != null)) {
-            final int minimalWidthArea = minimalWidthFittingProduct.getWidth() * minimalWidthFittingProduct.getHeight();
-            final int minimalHeightArea = minimalHeightFittingProduct.getWidth()
-                        * minimalHeightFittingProduct.getHeight();
-            if (minimalWidthArea <= minimalHeightArea) {
+            final boolean isMinimalWidthHoch = minimalWidthFittingProduct.getWidth()
+                        < minimalWidthFittingProduct.getHeight();
+            final boolean isMinimalHeightHoch = minimalHeightFittingProduct.getWidth()
+                        < minimalHeightFittingProduct.getHeight();
+
+            // hochkannt priorisieren
+            if (isMinimalWidthHoch && isMinimalHeightHoch) {
+                return minimalWidthFittingProduct;
+            } else if (isMinimalWidthHoch) {
                 return minimalWidthFittingProduct;
             } else {
                 return minimalHeightFittingProduct;
