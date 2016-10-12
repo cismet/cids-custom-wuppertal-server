@@ -15,7 +15,6 @@ package de.cismet.cids.custom.wunda_blau.startuphooks;
 import Sirius.server.middleware.impls.domainserver.DomainServerImpl;
 import Sirius.server.middleware.interfaces.domainserver.DomainServerStartupHook;
 import Sirius.server.newuser.User;
-import Sirius.server.newuser.UserGroup;
 import Sirius.server.newuser.UserServer;
 
 import java.rmi.Naming;
@@ -45,7 +44,9 @@ public class BerechtigungspruefungStartupHook implements DomainServerStartupHook
 
                 @Override
                 public void run() {
-                    while (DomainServerImpl.getServerInstance() == null) {
+                    DomainServerImpl metaService = null;
+                    while (metaService == null) {
+                        metaService = DomainServerImpl.getServerInstance();
                         try {
                             Thread.sleep(1000);
                         } catch (InterruptedException ex) {
@@ -60,7 +61,7 @@ public class BerechtigungspruefungStartupHook implements DomainServerStartupHook
                                 "WUNDA_BLAU",
                                 BerechtigungspruefungProperties.CIDS_LOGIN,
                                 BerechtigungspruefungProperties.CIDS_PASSWORD);
-                        BerechtigungspruefungHandler.getInstance().setMetaService(DomainServerImpl.getServerInstance());
+                        BerechtigungspruefungHandler.getInstance().setMetaService(metaService);
                         BerechtigungspruefungHandler.getInstance().sendMessagesForAllOpenFreigaben(user);
                         BerechtigungspruefungHandler.getInstance().sendMessagesForAllOpenAnfragen(user);
                     } catch (final Exception ex) {

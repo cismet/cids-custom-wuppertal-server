@@ -20,11 +20,11 @@ import de.cismet.cids.server.actions.ServerActionParameter;
  * @version  $Revision$, $Date$
  */
 @org.openide.util.lookup.ServiceProvider(service = ServerAction.class)
-public class BerechtigungspruefungAhnhangDownloadAction extends DownloadFileAction {
+public class BerechtigungspruefungAnhangDownloadAction extends DownloadFileAction {
 
     //~ Static fields/initializers ---------------------------------------------
 
-    public static final String TASK_NAME = "berechtigungsgrundAhnhangDownload";
+    public static final String TASK_NAME = "berechtigungspruefungAnhangDownload";
 
     //~ Methods ----------------------------------------------------------------
 
