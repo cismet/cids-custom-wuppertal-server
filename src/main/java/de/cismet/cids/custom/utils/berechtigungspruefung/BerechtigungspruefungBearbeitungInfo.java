@@ -36,22 +36,22 @@ public class BerechtigungspruefungBearbeitungInfo {
 
     @JsonProperty private final String schluessel;
     @JsonProperty private final String pruefer;
-    @JsonProperty private final boolean bearbeitung;
+    @JsonProperty private final Boolean status;
 
     //~ Constructors -----------------------------------------------------------
 
     /**
      * Creates a new BerechtigungspruefungInfo object.
      *
-     * @param  schluessel   kommentar DOCUMENT ME!
-     * @param  pruefer      freigegeben DOCUMENT ME!
-     * @param  bearbeitung  berechtigungspruefungDownloadInfo DOCUMENT ME!
+     * @param  schluessel  kommentar DOCUMENT ME!
+     * @param  pruefer     freigegeben DOCUMENT ME!
+     * @param  status      berechtigungspruefungDownloadInfo DOCUMENT ME!
      */
     public BerechtigungspruefungBearbeitungInfo(@JsonProperty("schluessel") final String schluessel,
             @JsonProperty("pruefer") final String pruefer,
-            @JsonProperty("bearbeitung") final boolean bearbeitung) {
+            @JsonProperty("bearbeitung") final Boolean status) {
         this.schluessel = schluessel;
         this.pruefer = pruefer;
-        this.bearbeitung = bearbeitung;
+        this.status = status;
     }
 }

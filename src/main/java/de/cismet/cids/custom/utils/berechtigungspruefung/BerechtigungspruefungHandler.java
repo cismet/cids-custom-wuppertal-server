@@ -98,11 +98,7 @@ public class BerechtigungspruefungHandler {
      */
     public void sendMessagesForAllOpenAnfragen(final User user) {
         final Collection<CidsBean> allOpenPruefungen = loadOpenAnfrageBeans(user);
-        if (allOpenPruefungen != null) {
-            for (final CidsBean openPruefungen : allOpenPruefungen) {
-                sendAnfrageMessage((String)openPruefungen.getProperty("schluessel"));
-            }
-        }
+        sendAnfrageMessages(allOpenPruefungen);
     }
 
     /**
@@ -124,16 +120,19 @@ public class BerechtigungspruefungHandler {
      * @param  schluessel  DOCUMENT ME!
      * @param  user        DOCUMENT ME!
      */
-    public void sendPendingMessage(final String schluessel, final User user) {
+    public void sendProcessingMessage(final String schluessel, final User user) {
         final BerechtigungspruefungBearbeitungInfo bearbeitungInfo = new BerechtigungspruefungBearbeitungInfo(
                 schluessel,
                 user.getName(),
                 true);
+        final Map<String, BerechtigungspruefungBearbeitungInfo> bearbeitungInfoMap =
+            new HashMap<String, BerechtigungspruefungBearbeitungInfo>();
+        bearbeitungInfoMap.put(schluessel, bearbeitungInfo);
         try {
             CidsServerMessageManagerImpl.getInstance()
                     .publishMessage(
                         BerechtigungspruefungProperties.CSM_BEARBEITUNG,
-                        MAPPER.writeValueAsBytes(bearbeitungInfo));
+                        MAPPER.writeValueAsString(bearbeitungInfoMap));
         } catch (final JsonProcessingException ex) {
             LOG.error("error while producing or sending message", ex);
         }
@@ -175,11 +174,18 @@ public class BerechtigungspruefungHandler {
     /**
      * DOCUMENT ME!
      *
-     * @param  schluessel  openPruefung DOCUMENT ME!
+     * @param  anfrageBeans  schluessel openPruefung DOCUMENT ME!
      */
-    private void sendAnfrageMessage(final String schluessel) {
+    private void sendAnfrageMessages(final Collection<CidsBean> anfrageBeans) {
+        final Collection<String> schluesselList = new ArrayList<String>();
+        if (anfrageBeans != null) {
+            for (final CidsBean anfrageBean : anfrageBeans) {
+                schluesselList.add((String)anfrageBean.getProperty("schluessel"));
+            }
+        }
+
         CidsServerMessageManagerImpl.getInstance()
-                .publishMessage(BerechtigungspruefungProperties.CSM_ANFRAGE, schluessel);
+                .publishMessage(BerechtigungspruefungProperties.CSM_ANFRAGE, schluesselList);
     }
 
     /**
@@ -193,6 +199,8 @@ public class BerechtigungspruefungHandler {
             try {
                 final Map<String, BerechtigungspruefungFreigabeInfo> freigabeInfoMap =
                     new HashMap<String, BerechtigungspruefungFreigabeInfo>();
+                final Map<String, BerechtigungspruefungBearbeitungInfo> bearbeitungInfoMap =
+                    new HashMap<String, BerechtigungspruefungBearbeitungInfo>();
 
                 for (final CidsBean pruefungBean : pruefungBeans) {
                     final String schluessel = (String)pruefungBean.getProperty("schluessel");
@@ -216,13 +224,33 @@ public class BerechtigungspruefungHandler {
                     freigabeInfoMap.put(
                         schluessel,
                         freigabeInfo);
+
+                    final BerechtigungspruefungBearbeitungInfo bearbeitungInfo =
+                        new BerechtigungspruefungBearbeitungInfo(
+                            schluessel,
+                            userKey,
+                            (Boolean)pruefungBean.getProperty("pruefstatus"));
+
+                    bearbeitungInfoMap.put(schluessel, bearbeitungInfo);
                 }
-                CidsServerMessageManagerImpl.getInstance()
-                        .publishMessage(
-                            BerechtigungspruefungProperties.CSM_FREIGABE,
-                            MAPPER.writeValueAsString(freigabeInfoMap),
-                            new HashSet(Arrays.asList(userKey)),
-                            true);
+
+                if (!bearbeitungInfoMap.isEmpty()) {
+                    // an den Pruefer
+                    CidsServerMessageManagerImpl.getInstance()
+                            .publishMessage(
+                                BerechtigungspruefungProperties.CSM_BEARBEITUNG,
+                                MAPPER.writeValueAsString(bearbeitungInfoMap));
+                }
+
+                if (!freigabeInfoMap.isEmpty()) {
+                    // an den Anfragenden
+                    CidsServerMessageManagerImpl.getInstance()
+                            .publishMessage(
+                                BerechtigungspruefungProperties.CSM_FREIGABE,
+                                MAPPER.writeValueAsString(freigabeInfoMap),
+                                new HashSet(Arrays.asList(userKey)),
+                                true);
+                }
             } catch (final Exception ex) {
                 LOG.error("error while producing or sending message", ex);
             }
@@ -343,7 +371,7 @@ public class BerechtigungspruefungHandler {
 
             DomainServerImpl.getServerInstance().insertMetaObject(user, newPruefungBean.getMetaObject());
 
-            sendAnfrageMessage(newAnfrageSchluessel);
+            sendAnfrageMessages(Arrays.asList(newPruefungBean));
 
             return newAnfrageSchluessel;
         }

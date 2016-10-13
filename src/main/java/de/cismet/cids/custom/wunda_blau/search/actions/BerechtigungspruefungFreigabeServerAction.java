@@ -18,6 +18,7 @@ import Sirius.server.newuser.User;
 
 import java.sql.Timestamp;
 
+import java.util.Arrays;
 import java.util.Date;
 
 import de.cismet.cids.custom.utils.berechtigungspruefung.BerechtigungspruefungHandler;
@@ -139,9 +140,10 @@ public class BerechtigungspruefungFreigabeServerAction implements UserAwareServe
                 getMetaService().updateMetaObject(getUser(), pruefungBean.getMetaObject());
 
                 if (pruefungsAbschluss) {
-                    BerechtigungspruefungHandler.getInstance().sendMessagesForAllOpenFreigaben(userKey, getUser());
+                    BerechtigungspruefungHandler.getInstance()
+                            .sendFreigabeMessage(userKey, Arrays.asList(pruefungBean));
                 } else {
-                    BerechtigungspruefungHandler.getInstance().sendPendingMessage(schluessel, getUser());
+                    BerechtigungspruefungHandler.getInstance().sendProcessingMessage(schluessel, getUser());
                 }
             }
         } catch (final Exception ex) {
