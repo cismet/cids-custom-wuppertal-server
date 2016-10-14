@@ -367,6 +367,7 @@ public class BerechtigungspruefungHandler {
             newPruefungBean.setProperty("benutzer", userKey);
             newPruefungBean.setProperty("abgeholt", false);
             newPruefungBean.setProperty("pruefstatus", null);
+            newPruefungBean.setProperty("produkttyp", downloadInfo.getProduktTyp());
             newPruefungBean.setProperty("downloadinfo_json", new ObjectMapper().writeValueAsString(downloadInfo));
 
             DomainServerImpl.getServerInstance().insertMetaObject(user, newPruefungBean.getMetaObject());
