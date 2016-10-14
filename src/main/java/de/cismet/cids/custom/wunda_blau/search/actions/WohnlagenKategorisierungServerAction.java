@@ -12,6 +12,7 @@ import Sirius.server.middleware.interfaces.domainserver.MetaService;
 import Sirius.server.middleware.interfaces.domainserver.MetaServiceStore;
 import Sirius.server.middleware.types.MetaObjectNode;
 import Sirius.server.newuser.User;
+import Sirius.server.sql.DBConnection;
 
 import org.apache.log4j.Logger;
 
@@ -127,6 +128,7 @@ public class WohnlagenKategorisierungServerAction implements ServerAction, UserA
                     if (insert != null) {
                         insert.close();
                     }
+                    DBConnection.closeConnections(connection);
                 }
             }
         } catch (final Exception ex) {
