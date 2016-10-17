@@ -66,10 +66,10 @@ public class MotdWundaStartupHook implements DomainServerStartupHook {
                                 public void totdChanged(final MotdRetrieverListenerEvent event) {
                                     if (event.isExtern()) {
                                         CidsServerMessageManagerImpl.getInstance()
-                                                .publishMessage(MOTD_MESSAGE_TOTD_EXTERN, event.getContent());
+                                                .publishMessage(MOTD_MESSAGE_TOTD_EXTERN, event.getContent(), true);
                                     } else {
                                         CidsServerMessageManagerImpl.getInstance()
-                                                .publishMessage(MOTD_MESSAGE_TOTD, event.getContent());
+                                                .publishMessage(MOTD_MESSAGE_TOTD, event.getContent(), true);
                                     }
                                 }
 
@@ -77,10 +77,10 @@ public class MotdWundaStartupHook implements DomainServerStartupHook {
                                 public void motdChanged(final MotdRetrieverListenerEvent event) {
                                     if (event.isExtern()) {
                                         CidsServerMessageManagerImpl.getInstance()
-                                                .publishMessage(MOTD_MESSAGE_MOTD_EXTERN, event.getContent());
+                                                .publishMessage(MOTD_MESSAGE_MOTD_EXTERN, event.getContent(), false);
                                     } else {
                                         CidsServerMessageManagerImpl.getInstance()
-                                                .publishMessage(MOTD_MESSAGE_MOTD, event.getContent());
+                                                .publishMessage(MOTD_MESSAGE_MOTD, event.getContent(), false);
                                     }
                                 }
                             });

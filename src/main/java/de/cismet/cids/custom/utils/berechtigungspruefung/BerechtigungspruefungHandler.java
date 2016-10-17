@@ -22,7 +22,6 @@ import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
 
 import org.apache.commons.io.FileUtils;
-import org.apache.commons.lang.RandomStringUtils;
 
 import java.io.File;
 import java.io.IOException;
@@ -132,7 +131,8 @@ public class BerechtigungspruefungHandler {
             CidsServerMessageManagerImpl.getInstance()
                     .publishMessage(
                         BerechtigungspruefungProperties.CSM_BEARBEITUNG,
-                        MAPPER.writeValueAsString(bearbeitungInfoMap));
+                        MAPPER.writeValueAsString(bearbeitungInfoMap),
+                        true);
         } catch (final JsonProcessingException ex) {
             LOG.error("error while producing or sending message", ex);
         }
@@ -185,7 +185,7 @@ public class BerechtigungspruefungHandler {
         }
 
         CidsServerMessageManagerImpl.getInstance()
-                .publishMessage(BerechtigungspruefungProperties.CSM_ANFRAGE, schluesselList);
+                .publishMessage(BerechtigungspruefungProperties.CSM_ANFRAGE, schluesselList, true);
     }
 
     /**
@@ -239,7 +239,8 @@ public class BerechtigungspruefungHandler {
                     CidsServerMessageManagerImpl.getInstance()
                             .publishMessage(
                                 BerechtigungspruefungProperties.CSM_BEARBEITUNG,
-                                MAPPER.writeValueAsString(bearbeitungInfoMap));
+                                MAPPER.writeValueAsString(bearbeitungInfoMap),
+                                true);
                 }
 
                 if (!freigabeInfoMap.isEmpty()) {
@@ -248,6 +249,7 @@ public class BerechtigungspruefungHandler {
                             .publishMessage(
                                 BerechtigungspruefungProperties.CSM_FREIGABE,
                                 MAPPER.writeValueAsString(freigabeInfoMap),
+                                false,
                                 new HashSet(Arrays.asList(userKey)),
                                 true);
                 }
