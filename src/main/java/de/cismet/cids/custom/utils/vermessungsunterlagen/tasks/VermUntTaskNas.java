@@ -101,7 +101,14 @@ public abstract class VermUntTaskNas extends VermessungsunterlagenTask {
             extension = isNASOrderSplitted(geometryCollection) ? ZIP_EXTENSION : XML_EXTENSION;
         }
 
-        final File fileToSaveTo = new File(getPath() + "/" + getJobKey() + extension);
+        final String filename;
+        if (VermessungsunterlagenHelper.NAS_PRODUCT_PUNKTE.getKey().equals(product.getKey())) {
+            filename = getJobKey() + "_Koord";
+        } else {
+            filename = getJobKey();
+        }
+
+        final File fileToSaveTo = new File(getPath() + "/" + filename + extension);
 
         final String orderId = sendNasRequest(product, geometryCollection, requestId);
         if (orderId == null) {
