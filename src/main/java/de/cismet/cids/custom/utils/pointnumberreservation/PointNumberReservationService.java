@@ -41,8 +41,9 @@ import java.util.Properties;
 import java.util.zip.GZIPInputStream;
 import java.util.zip.GZIPOutputStream;
 
+import de.cismet.cids.custom.utils.WundaBlauServerResources;
+
 import de.cismet.cids.utils.serverresources.CachedServerResourcesLoader;
-import de.cismet.cids.utils.serverresources.TextServerResources;
 
 /**
  * DOCUMENT ME!
@@ -93,10 +94,9 @@ public class PointNumberReservationService {
      * Creates a new PointNumberService object.
      */
     private PointNumberReservationService() {
-        final Properties serviceProperties = new Properties();
+        final Properties serviceProperties = CachedServerResourcesLoader.getInstance()
+                    .getPropertiesResource(WundaBlauServerResources.PNR_PROPERTIES.getValue());
         try {
-            serviceProperties.load(CachedServerResourcesLoader.getInstance().getStringReaderResource(
-                    TextServerResources.PNR_PROPERTIES));
             final ServerProperties serverProps = DomainServerImpl.getServerProperties();
             final String serverRespath = serverProps.getServerResourcesBasePath();
             TEMPLATE_BEN_AUFTR_ALL = serverRespath

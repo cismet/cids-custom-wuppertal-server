@@ -12,9 +12,12 @@
  */
 package de.cismet.cids.custom.utils.formsolutions;
 
+import java.util.Properties;
+
+import de.cismet.cids.custom.utils.WundaBlauServerResources;
 import de.cismet.cids.custom.utils.alkis.AlkisConstants;
 
-import de.cismet.tools.PropertyReader;
+import de.cismet.cids.utils.serverresources.CachedServerResourcesLoader;
 
 /**
  * DOCUMENT ME!
@@ -27,8 +30,6 @@ public class FormSolutionsConstants {
     //~ Static fields/initializers ---------------------------------------------
 
     private static final org.apache.log4j.Logger LOG = org.apache.log4j.Logger.getLogger(AlkisConstants.class);
-
-    private static final String PROPERTIES = "/de/cismet/cids/custom/wunda_blau/res/formsolutions/fs_conf.properties";
 
     public static final String USER;
     public static final String PASSWORD;
@@ -100,8 +101,8 @@ public class FormSolutionsConstants {
         final String billingProduktBezeichnungDina0;
 
         try {
-            final PropertyReader serviceProperties = new PropertyReader(PROPERTIES);
-
+            final Properties serviceProperties = CachedServerResourcesLoader.getInstance()
+                        .getPropertiesResource(WundaBlauServerResources.FORMSOLUTIONS_PROPERTIES.getValue());
             user = serviceProperties.getProperty("USER");
             password = serviceProperties.getProperty("PASSWORD");
             mysqlJdbc = serviceProperties.getProperty("MYSQL_JDBC");

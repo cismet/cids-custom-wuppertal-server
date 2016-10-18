@@ -14,7 +14,6 @@ import org.jdom.input.SAXBuilder;
 
 import java.awt.Point;
 
-import java.io.InputStream;
 import java.io.UnsupportedEncodingException;
 
 import java.net.MalformedURLException;
@@ -29,10 +28,14 @@ import java.util.Date;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.Properties;
+
+import de.cismet.cids.custom.utils.WundaBlauServerResources;
 
 import de.cismet.cids.dynamics.CidsBean;
 
-import de.cismet.tools.PropertyReader;
+import de.cismet.cids.utils.serverresources.CachedServerResourcesLoader;
+
 import de.cismet.tools.StaticHtmlTools;
 
 /**
@@ -90,8 +93,8 @@ public final class AlkisProducts {
      * @param  service  DOCUMENT ME!
      */
     private AlkisProducts(final String user, final String pw, final String service) {
-        final PropertyReader productProperties = new PropertyReader(
-                "/de/cismet/cids/custom/wunda_blau/res/alkis/alkis_products.properties");
+        final Properties productProperties = CachedServerResourcesLoader.getInstance()
+                    .getPropertiesResource(WundaBlauServerResources.ALKIS_PRODUCTS.getValue());
         final List<AlkisProductDescription> mapProducts = new ArrayList<AlkisProductDescription>();
         final Map<String, Point> formatMap = new HashMap<String, Point>();
         ALKIS_FORMATS = Collections.unmodifiableMap(formatMap);
@@ -128,12 +131,11 @@ public final class AlkisProducts {
         PUNKTLISTE_HTML = productProperties.getProperty("PUNKTLISTE_HTML");
         PUNKTLISTE_TXT = productProperties.getProperty("PUNKTLISTE_TXT");
         try {
-            final PropertyReader formats = new PropertyReader(
-                    "/de/cismet/cids/custom/wunda_blau/res/alkis/formats.properties");
-            final InputStream is = AlkisConstants.class.getClassLoader()
-                        .getResourceAsStream(
-                            "de/cismet/cids/custom/wunda_blau/res/alkis/Produktbeschreibung_ALKIS.xml");
-            final Document document = new SAXBuilder().build(is);
+            final Properties formats = CachedServerResourcesLoader.getInstance()
+                        .getPropertiesResource(WundaBlauServerResources.ALKIS_FORMATS.getValue());
+            final Document document =
+                new SAXBuilder().build(CachedServerResourcesLoader.getInstance().getStringReaderResource(
+                        WundaBlauServerResources.ALKIS_PRODUKTBESCHREIBUNG_XML.getValue()));
             // ---------Kartenprodukte----------
             for (final Object o0 : document.getRootElement().getChildren()) {
                 final Element category = (Element)o0;

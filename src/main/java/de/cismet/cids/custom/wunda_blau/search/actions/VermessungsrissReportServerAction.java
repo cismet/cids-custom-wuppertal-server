@@ -21,6 +21,7 @@ import java.util.ArrayList;
 import java.util.Collection;
 import java.util.Map;
 
+import de.cismet.cids.custom.utils.WundaBlauServerResources;
 import de.cismet.cids.custom.utils.alkis.VermessungRissReportBean;
 import de.cismet.cids.custom.utils.alkis.VermessungsRissReportHelper;
 
@@ -31,7 +32,6 @@ import de.cismet.cids.server.actions.ServerAction;
 import de.cismet.cids.server.actions.ServerActionParameter;
 
 import de.cismet.cids.utils.serverresources.CachedServerResourcesLoader;
-import de.cismet.cids.utils.serverresources.JasperReportServerResources;
 
 import de.cismet.commons.utils.MultiPagePictureReader;
 
@@ -54,9 +54,9 @@ public class VermessungsrissReportServerAction extends JasperReportServerAction 
         JasperReport report = null;
         try {
             report = CachedServerResourcesLoader.getInstance()
-                        .getJasperReportResource(JasperReportServerResources.VERMESSUNGSRISSE_JASPER);
+                        .getJasperReportResource(WundaBlauServerResources.VERMESSUNGSRISSE_JASPER.getValue());
         } catch (final Exception ex) {
-            LOG.error("Error while loading " + JasperReportServerResources.VERMESSUNGSRISSE_JASPER, ex);
+            LOG.error("Error while loading " + WundaBlauServerResources.VERMESSUNGSRISSE_JASPER.getValue(), ex);
         }
         JASPER = report;
     }

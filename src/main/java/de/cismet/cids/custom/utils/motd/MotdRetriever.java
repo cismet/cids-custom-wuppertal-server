@@ -27,13 +27,16 @@ import java.util.ArrayList;
 import java.util.Collection;
 import java.util.HashMap;
 import java.util.Map;
+import java.util.Properties;
 import java.util.Timer;
 import java.util.TimerTask;
 
+import de.cismet.cids.custom.utils.WundaBlauServerResources;
+
+import de.cismet.cids.utils.serverresources.CachedServerResourcesLoader;
+
 import de.cismet.commons.security.AccessHandler;
 import de.cismet.commons.security.handler.SimpleHttpAccessHandler;
-
-import de.cismet.tools.PropertyReader;
 
 /**
  * DOCUMENT ME!
@@ -46,7 +49,6 @@ public class MotdRetriever {
     //~ Static fields/initializers ---------------------------------------------
 
     private static final transient org.apache.log4j.Logger LOG = org.apache.log4j.Logger.getLogger(MotdRetriever.class);
-    private static final String PROPERTIES_PATH = "/de/cismet/cids/custom/motd/";
 
     private static MotdRetriever INSTANCE;
 
@@ -83,11 +85,13 @@ public class MotdRetriever {
      *
      * @param   domain  DOCUMENT ME!
      *
+     * @return  DOCUMENT ME!
+     *
      * @throws  Exception                 java.lang.Exception
      * @throws  IllegalArgumentException  DOCUMENT ME!
      * @throws  IllegalStateException     DOCUMENT ME!
      */
-    public void init(final String domain) throws Exception {
+    public boolean init(final String domain) throws Exception {
         if (domain == null) {
             throw new IllegalArgumentException("Domain darf nicht null sein !");
         }
@@ -95,8 +99,22 @@ public class MotdRetriever {
             throw new IllegalStateException("MotdRetriever wurde bereits initialisiert !");
         }
         try {
-            final PropertyReader serviceProperties = new PropertyReader(PROPERTIES_PATH + domain.toLowerCase()
-                            + ".properties");
+            final Properties serviceProperties;
+            if (domain.equalsIgnoreCase("wunda_blau")) {
+                serviceProperties = CachedServerResourcesLoader.getInstance()
+                            .getPropertiesResource(WundaBlauServerResources.MOTD_WUNDA_BLAU_PROPERTIES.getValue());
+            } else if (domain.equalsIgnoreCase("verdis_grundis")) {
+                serviceProperties = CachedServerResourcesLoader.getInstance()
+                            .getPropertiesResource(WundaBlauServerResources.MOTD_VERDIS_GRUNDIS_PROPERTIES.getValue());
+            } else if (domain.equalsIgnoreCase("lagis")) {
+                serviceProperties = CachedServerResourcesLoader.getInstance()
+                            .getPropertiesResource(WundaBlauServerResources.MOTD_LAGIS_PROPERTIES.getValue());
+            } else if (domain.equalsIgnoreCase("belis2")) {
+                serviceProperties = CachedServerResourcesLoader.getInstance()
+                            .getPropertiesResource(WundaBlauServerResources.MOTD_BELIS2_PROPERTIES.getValue());
+            } else {
+                return false;
+            }
 
             motd_url = serviceProperties.getProperty("MOTD_URL");
             motd_extern_url = serviceProperties.getProperty("MOTD_EXTERN_URL");
@@ -104,6 +122,7 @@ public class MotdRetriever {
             noMessage = serviceProperties.getProperty("NO_MESSAGE");
 
             this.domain = domain;
+            return true;
         } catch (final Exception ex) {
             throw new Exception(
                 "Fehler beim Initialisieren des MotdRetrievers. Es werden keine aktuellen Meldungen verteilt !",

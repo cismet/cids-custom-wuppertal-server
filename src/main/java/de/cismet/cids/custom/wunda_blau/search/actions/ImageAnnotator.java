@@ -28,8 +28,9 @@ import java.util.*;
 import javax.imageio.*;
 import javax.imageio.stream.*;
 
+import de.cismet.cids.custom.utils.WundaBlauServerResources;
+
 import de.cismet.cids.utils.serverresources.CachedServerResourcesLoader;
-import de.cismet.cids.utils.serverresources.TruetypeFontServerResources;
 
 //import com.sun.media.jai.codec.*;
 /**
@@ -48,7 +49,7 @@ public class ImageAnnotator {
     static {
         try {
             calibriFont = CachedServerResourcesLoader.getInstance()
-                        .getTrueTypeFontResource(TruetypeFontServerResources.IMAGE_ANNOTATOR_FONT);
+                        .getTrueTypeFontResource(WundaBlauServerResources.IMAGE_ANNOTATOR_FONT.getValue());
         } catch (Exception ex) {
             Log.warn("Calibri could not be loaded", ex);
             calibriFont = new Font(Font.SANS_SERIF, Font.BOLD, 100);

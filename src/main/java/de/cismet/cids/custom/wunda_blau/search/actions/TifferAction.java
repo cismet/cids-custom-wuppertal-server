@@ -32,11 +32,12 @@ import javax.imageio.ImageWriteParam;
 import javax.imageio.ImageWriter;
 import javax.imageio.stream.ImageOutputStream;
 
+import de.cismet.cids.custom.utils.WundaBlauServerResources;
+
 import de.cismet.cids.server.actions.ServerAction;
 import de.cismet.cids.server.actions.ServerActionParameter;
 
 import de.cismet.cids.utils.serverresources.CachedServerResourcesLoader;
-import de.cismet.cids.utils.serverresources.TextServerResources;
 
 import static de.cismet.cids.custom.wunda_blau.search.actions.TifferAction.ParameterType.*;
 
@@ -81,7 +82,7 @@ public class TifferAction implements ServerAction {
     public TifferAction() {
         try {
             res = new PropertyResourceBundle(CachedServerResourcesLoader.getInstance().getStringReaderResource(
-                        TextServerResources.TIFFER_ACTION_CFG));
+                        WundaBlauServerResources.TIFFER_ACTION_CFG.getValue()));
         } catch (Exception e) {
             LOG.error("Resource not found");
         }

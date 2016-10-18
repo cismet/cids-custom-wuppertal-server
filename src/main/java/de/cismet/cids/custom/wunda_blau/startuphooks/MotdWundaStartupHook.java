@@ -59,32 +59,36 @@ public class MotdWundaStartupHook implements DomainServerStartupHook {
                     }
 
                     try {
-                        MotdRetriever.getInstance().init(getDomain());
-                        MotdRetriever.getInstance().addMotdRetrieverListener(new MotdRetrieverListener() {
+                        if (MotdRetriever.getInstance().init(getDomain())) {
+                            MotdRetriever.getInstance().addMotdRetrieverListener(new MotdRetrieverListener() {
 
-                                @Override
-                                public void totdChanged(final MotdRetrieverListenerEvent event) {
-                                    if (event.isExtern()) {
-                                        CidsServerMessageManagerImpl.getInstance()
-                                                .publishMessage(MOTD_MESSAGE_TOTD_EXTERN, event.getContent(), true);
-                                    } else {
-                                        CidsServerMessageManagerImpl.getInstance()
-                                                .publishMessage(MOTD_MESSAGE_TOTD, event.getContent(), true);
+                                    @Override
+                                    public void totdChanged(final MotdRetrieverListenerEvent event) {
+                                        if (event.isExtern()) {
+                                            CidsServerMessageManagerImpl.getInstance()
+                                                    .publishMessage(MOTD_MESSAGE_TOTD_EXTERN, event.getContent(), true);
+                                        } else {
+                                            CidsServerMessageManagerImpl.getInstance()
+                                                    .publishMessage(MOTD_MESSAGE_TOTD, event.getContent(), true);
+                                        }
                                     }
-                                }
 
-                                @Override
-                                public void motdChanged(final MotdRetrieverListenerEvent event) {
-                                    if (event.isExtern()) {
-                                        CidsServerMessageManagerImpl.getInstance()
-                                                .publishMessage(MOTD_MESSAGE_MOTD_EXTERN, event.getContent(), false);
-                                    } else {
-                                        CidsServerMessageManagerImpl.getInstance()
-                                                .publishMessage(MOTD_MESSAGE_MOTD, event.getContent(), false);
+                                    @Override
+                                    public void motdChanged(final MotdRetrieverListenerEvent event) {
+                                        if (event.isExtern()) {
+                                            CidsServerMessageManagerImpl.getInstance()
+                                                    .publishMessage(
+                                                        MOTD_MESSAGE_MOTD_EXTERN,
+                                                        event.getContent(),
+                                                        false);
+                                        } else {
+                                            CidsServerMessageManagerImpl.getInstance()
+                                                    .publishMessage(MOTD_MESSAGE_MOTD, event.getContent(), false);
+                                        }
                                     }
-                                }
-                            });
-                        MotdRetriever.getInstance().start();
+                                });
+                            MotdRetriever.getInstance().start();
+                        }
                     } catch (final Exception ex) {
                         LOG.warn("Error while initializing the MotdRetriever !", ex);
                     }

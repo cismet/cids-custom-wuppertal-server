@@ -12,7 +12,11 @@
  */
 package de.cismet.cids.custom.utils.berechtigungspruefung;
 
-import de.cismet.tools.PropertyReader;
+import java.util.Properties;
+
+import de.cismet.cids.custom.utils.WundaBlauServerResources;
+
+import de.cismet.cids.utils.serverresources.CachedServerResourcesLoader;
 
 /**
  * DOCUMENT ME!
@@ -26,9 +30,6 @@ public class BerechtigungspruefungProperties {
 
     private static final transient org.apache.log4j.Logger LOG = org.apache.log4j.Logger.getLogger(
             BerechtigungspruefungProperties.class);
-
-    private static final String PROPERTIES =
-        "/de/cismet/cids/custom/berechtigungspruefung/berechtigungspruefung.properties";
 
     public static final String CIDS_LOGIN;
     public static final String CIDS_PASSWORD;
@@ -46,7 +47,8 @@ public class BerechtigungspruefungProperties {
         String categoryFreigabe = "berechtigungspruefungFreigabe";
 
         try {
-            final PropertyReader serviceProperties = new PropertyReader(PROPERTIES);
+            final Properties serviceProperties = CachedServerResourcesLoader.getInstance()
+                        .getPropertiesResource(WundaBlauServerResources.BERECHTIGUNGSPRUEFUNG_PROPERTIES.getValue());
 
             cidsLogin = serviceProperties.getProperty("CIDS_LOGIN");
             cidsPassword = serviceProperties.getProperty("CIDS_PASSWORD");

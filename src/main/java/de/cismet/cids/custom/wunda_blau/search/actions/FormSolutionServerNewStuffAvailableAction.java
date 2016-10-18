@@ -80,6 +80,7 @@ import javax.xml.bind.Unmarshaller;
 import javax.xml.bind.ValidationEvent;
 import javax.xml.bind.ValidationEventHandler;
 
+import de.cismet.cids.custom.utils.WundaBlauServerResources;
 import de.cismet.cids.custom.utils.alkis.AlkisProductDescription;
 import de.cismet.cids.custom.utils.alkis.AlkisProducts;
 import de.cismet.cids.custom.utils.formsolutions.FormSolutionFtpClient;
@@ -96,8 +97,6 @@ import de.cismet.cids.server.actions.UserAwareServerAction;
 
 import de.cismet.cids.utils.MetaClassCacheService;
 import de.cismet.cids.utils.serverresources.CachedServerResourcesLoader;
-import de.cismet.cids.utils.serverresources.JasperReportServerResources;
-import de.cismet.cids.utils.serverresources.TextServerResources;
 
 import de.cismet.commons.security.AccessHandler;
 import de.cismet.commons.security.handler.SimpleHttpAccessHandler;
@@ -196,16 +195,16 @@ public class FormSolutionServerNewStuffAvailableAction implements UserAwareServe
         if (testCismet00Enabled) {
             try {
                 testCismet00Xml = CachedServerResourcesLoader.getInstance()
-                            .getStringResource(TextServerResources.FS_TEST_XML);
+                            .getStringResource(WundaBlauServerResources.FS_TEST_XML.getValue());
             } catch (final Exception ex) {
-                LOG.error("could not load " + TextServerResources.FS_TEST_XML.getValue(), ex);
+                LOG.error("could not load " + WundaBlauServerResources.FS_TEST_XML.getValue(), ex);
             }
         }
         this.testCismet00Xml = testCismet00Xml;
 
         try {
             final String ignoreFileContent = CachedServerResourcesLoader.getInstance()
-                        .getStringResource(TextServerResources.FS_IGNORE_TRANSID_TXT);
+                        .getStringResource(WundaBlauServerResources.FS_IGNORE_TRANSID_TXT.getValue());
             final String[] lines = ignoreFileContent.split("\n");
             for (final String line : lines) {
                 if (!line.trim().isEmpty()) {
@@ -213,15 +212,15 @@ public class FormSolutionServerNewStuffAvailableAction implements UserAwareServe
                 }
             }
         } catch (final Exception ex) {
-            LOG.error("could not load " + TextServerResources.FS_IGNORE_TRANSID_TXT.getValue(), ex);
+            LOG.error("could not load " + WundaBlauServerResources.FS_IGNORE_TRANSID_TXT.getValue(), ex);
         }
 
         JasperReport report;
         try {
             report = CachedServerResourcesLoader.getInstance()
-                        .getJasperReportResource(JasperReportServerResources.FS_RECHNUNG_JASPER);
+                        .getJasperReportResource(WundaBlauServerResources.FS_RECHNUNG_JASPER.getValue());
         } catch (final Exception ex) {
-            LOG.error("could not load " + JasperReportServerResources.FS_RECHNUNG_JASPER, ex);
+            LOG.error("could not load " + WundaBlauServerResources.FS_RECHNUNG_JASPER.getValue(), ex);
             report = null;
         }
         rechnungJasperReport = report;

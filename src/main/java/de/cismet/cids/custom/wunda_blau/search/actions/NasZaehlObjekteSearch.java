@@ -33,13 +33,13 @@ import java.util.ArrayList;
 import java.util.Collection;
 import java.util.Properties;
 
+import de.cismet.cids.custom.utils.WundaBlauServerResources;
 import de.cismet.cids.custom.wunda_blau.search.server.CidsMauernSearchStatement;
 
 import de.cismet.cids.server.search.AbstractCidsServerSearch;
 import de.cismet.cids.server.search.SearchException;
 
 import de.cismet.cids.utils.serverresources.CachedServerResourcesLoader;
-import de.cismet.cids.utils.serverresources.TextServerResources;
 
 import de.cismet.cismap.commons.jtsgeometryfactories.PostGisGeometryFactory;
 
@@ -79,7 +79,7 @@ public class NasZaehlObjekteSearch extends AbstractCidsServerSearch {
         try {
             final Properties serviceProperties = new Properties();
             serviceProperties.load(CachedServerResourcesLoader.getInstance().getStringReaderResource(
-                    TextServerResources.FME_DB_CONN_PROPERTIES));
+                    WundaBlauServerResources.FME_DB_CONN_PROPERTIES.getValue()));
             url = serviceProperties.getProperty("connection_url");
             user = serviceProperties.getProperty("connection_username");
             pw = serviceProperties.getProperty("connection_pw");

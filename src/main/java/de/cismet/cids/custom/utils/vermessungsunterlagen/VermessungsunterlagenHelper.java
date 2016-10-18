@@ -72,6 +72,7 @@ import java.util.List;
 import java.util.Map;
 import java.util.Properties;
 
+import de.cismet.cids.custom.utils.WundaBlauServerResources;
 import de.cismet.cids.custom.utils.nas.NasProduct;
 import de.cismet.cids.custom.wunda_blau.search.actions.AlkisPointReportServerAction;
 import de.cismet.cids.custom.wunda_blau.search.actions.VermessungsrissReportServerAction;
@@ -83,14 +84,11 @@ import de.cismet.cids.server.search.SearchException;
 
 import de.cismet.cids.utils.MetaClassCacheService;
 import de.cismet.cids.utils.serverresources.CachedServerResourcesLoader;
-import de.cismet.cids.utils.serverresources.TextServerResources;
 
 import de.cismet.commons.concurrency.CismetExecutors;
 
 import de.cismet.commons.security.AccessHandler;
 import de.cismet.commons.security.handler.SimpleHttpAccessHandler;
-
-import de.cismet.tools.PropertyReader;
 
 import static org.apache.commons.net.ftp.FTP.BINARY_FILE_TYPE;
 
@@ -110,8 +108,9 @@ public class VermessungsunterlagenHelper {
     private static final ObjectMapper EXCEPTION_MAPPER = new ObjectMapper();
     private static final ObjectMapper JOB_MAPPER;
 
-    private static final PropertyReader PROPERTIES = new PropertyReader(
-            "/de/cismet/cids/custom/wunda_blau/res/vermessungsunterlagenportal/vup_conf.properties");
+    private static final Properties PROPERTIES = CachedServerResourcesLoader.getInstance()
+                .getPropertiesResource(WundaBlauServerResources.VERMESSUNGSUNTERLAGENPORTAL_PROPERTIES.getValue());
+
     public static final String CIDS_LOGIN = readProperty("CIDS_LOGIN", null);
     public static final String PATH_TMP = readProperty("PATH_TMP", "/tmp");
     public static final String FTP_HOST = readProperty("FTP_HOST", null);
@@ -151,7 +150,7 @@ public class VermessungsunterlagenHelper {
         final ArrayList<NasProduct> nasProducts;
         try {
             nasProducts = mapper.readValue(CachedServerResourcesLoader.getInstance().getStringReaderResource(
-                        TextServerResources.NAS_PRODUCT_DESCRIPTION_JSON),
+                        WundaBlauServerResources.NAS_PRODUCT_DESCRIPTION_JSON.getValue()),
                     mapper.getTypeFactory().constructCollectionType(List.class, NasProduct.class));
             for (final NasProduct nasProduct : nasProducts) {
                 if ("punkte".equals(nasProduct.getKey())) {
@@ -205,7 +204,8 @@ public class VermessungsunterlagenHelper {
         try {
             value = PROPERTIES.getProperty(property);
         } catch (final Exception ex) {
-            final String message = "could not read " + property + " from " + PROPERTIES.getFilename()
+            final String message = "could not read " + property + " from "
+                        + WundaBlauServerResources.VERMESSUNGSUNTERLAGENPORTAL_PROPERTIES.getValue()
                         + ". setting to default value: " + defaultValue;
             LOG.warn(message, ex);
         }

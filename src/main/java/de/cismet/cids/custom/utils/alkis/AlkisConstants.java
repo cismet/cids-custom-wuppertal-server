@@ -11,7 +11,11 @@
  */
 package de.cismet.cids.custom.utils.alkis;
 
-import de.cismet.tools.PropertyReader;
+import java.util.Properties;
+
+import de.cismet.cids.custom.utils.WundaBlauServerResources;
+
+import de.cismet.cids.utils.serverresources.CachedServerResourcesLoader;
 
 /**
  * DOCUMENT ME!
@@ -68,8 +72,8 @@ public final class AlkisConstants {
      */
     private AlkisConstants() {
         try {
-            final PropertyReader serviceProperties = new PropertyReader(
-                    "/de/cismet/cids/custom/wunda_blau/res/alkis/alkis_conf.properties");
+            final Properties serviceProperties = CachedServerResourcesLoader.getInstance()
+                        .getPropertiesResource(WundaBlauServerResources.ALKIS_CONF.getValue());
 
             SERVER = serviceProperties.getProperty("SERVER");
             SERVICE = serviceProperties.getProperty("SERVICE");

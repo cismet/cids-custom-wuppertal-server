@@ -41,10 +41,10 @@ import java.util.Properties;
 
 import javax.ws.rs.core.MediaType;
 
+import de.cismet.cids.custom.utils.WundaBlauServerResources;
 import de.cismet.cids.custom.utils.nas.CidsActionClient;
 
 import de.cismet.cids.utils.serverresources.CachedServerResourcesLoader;
-import de.cismet.cids.utils.serverresources.TextServerResources;
 
 import de.cismet.cidsx.server.api.types.ActionTask;
 
@@ -103,7 +103,7 @@ public class ButlerProductGenerator {
             BUTLER_TEMPLATES_RES_PATH = resPath + BUTLER_TEMPLATES_RES_PATH;
             final Properties butlerProperties = new Properties();
             butlerProperties.load(CachedServerResourcesLoader.getInstance().getStringReaderResource(
-                    TextServerResources.BUTLER_PROPERTIES));
+                    WundaBlauServerResources.BUTLER_PROPERTIES.getValue()));
             butlerBasePath = butlerProperties.getProperty("butlerBasePath");
             requestFolder = butlerBasePath + System.getProperty("file.separator")
                         + butlerProperties.getProperty("butler1RequestPath");

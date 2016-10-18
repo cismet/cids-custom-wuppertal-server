@@ -13,9 +13,6 @@
 package de.cismet.cids.custom.utils;
 
 import de.cismet.cids.utils.serverresources.CachedServerResourcesLoader;
-import de.cismet.cids.utils.serverresources.JasperReportServerResources;
-import de.cismet.cids.utils.serverresources.TextServerResources;
-import de.cismet.cids.utils.serverresources.TruetypeFontServerResources;
 
 /**
  * DOCUMENT ME!
@@ -23,23 +20,31 @@ import de.cismet.cids.utils.serverresources.TruetypeFontServerResources;
  * @author   jruiz
  * @version  $Revision$, $Date$
  */
-public class ServerResourcesPreloader {
+public class WundaBlauServerResourcesPreloader {
 
     //~ Constructors -----------------------------------------------------------
 
     /**
      * Creates a new ServerResourcesPreloader object.
      */
-    private ServerResourcesPreloader() {
+    private WundaBlauServerResourcesPreloader() {
         final CachedServerResourcesLoader loader = CachedServerResourcesLoader.getInstance();
-        for (final JasperReportServerResources resource : JasperReportServerResources.values()) {
-            loader.loadJasperReportResource(resource);
-        }
-        for (final TextServerResources resource : TextServerResources.values()) {
-            loader.loadTextResource(resource);
-        }
-        for (final TruetypeFontServerResources truetypeFontResource : TruetypeFontServerResources.values()) {
-            loader.loadTruetypeFontResource(truetypeFontResource);
+        for (final WundaBlauServerResources resource : WundaBlauServerResources.values()) {
+            final String resourceValue = resource.getValue();
+            switch (resource.getType()) {
+                case JASPER_REPORT: {
+                    loader.loadJasperReportResource(resourceValue);
+                }
+                break;
+                case TEXT: {
+                    loader.loadTextResource(resourceValue);
+                }
+                break;
+                case TRUETYPE_FONT: {
+                    loader.loadTruetypeFontResource(resourceValue);
+                }
+                break;
+            }
         }
     }
 
@@ -50,7 +55,7 @@ public class ServerResourcesPreloader {
      *
      * @return  DOCUMENT ME!
      */
-    public static ServerResourcesPreloader getInstance() {
+    public static WundaBlauServerResourcesPreloader getInstance() {
         return LazyInitialiser.INSTANCE;
     }
 
@@ -65,7 +70,7 @@ public class ServerResourcesPreloader {
 
         //~ Static fields/initializers -----------------------------------------
 
-        private static final ServerResourcesPreloader INSTANCE = new ServerResourcesPreloader();
+        private static final WundaBlauServerResourcesPreloader INSTANCE = new WundaBlauServerResourcesPreloader();
 
         //~ Constructors -------------------------------------------------------
 

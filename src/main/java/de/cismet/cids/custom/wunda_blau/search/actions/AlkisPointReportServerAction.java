@@ -21,6 +21,7 @@ import java.util.ArrayList;
 import java.util.Collection;
 import java.util.HashMap;
 
+import de.cismet.cids.custom.utils.WundaBlauServerResources;
 import de.cismet.cids.custom.utils.alkis.AlkisPointReportBean;
 
 import de.cismet.cids.dynamics.CidsBean;
@@ -30,7 +31,6 @@ import de.cismet.cids.server.actions.ServerAction;
 import de.cismet.cids.server.actions.ServerActionParameter;
 
 import de.cismet.cids.utils.serverresources.CachedServerResourcesLoader;
-import de.cismet.cids.utils.serverresources.JasperReportServerResources;
 
 /**
  * DOCUMENT ME!
@@ -49,9 +49,9 @@ public class AlkisPointReportServerAction extends JasperReportServerAction {
         JasperReport report = null;
         try {
             report = CachedServerResourcesLoader.getInstance()
-                        .getJasperReportResource(JasperReportServerResources.AP_MAPS_JASPER);
+                        .getJasperReportResource(WundaBlauServerResources.AP_MAPS_JASPER.getValue());
         } catch (final Exception ex) {
-            LOG.error("Error while loading " + JasperReportServerResources.AP_MAPS_JASPER, ex);
+            LOG.error("Error while loading " + WundaBlauServerResources.AP_MAPS_JASPER.getValue(), ex);
         }
         JASPER = report;
     }
