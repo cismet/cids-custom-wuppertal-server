@@ -17,7 +17,7 @@ import org.apache.log4j.Logger;
 import java.io.ByteArrayOutputStream;
 
 import de.cismet.cids.custom.utils.formsolutions.FormSolutionFtpClient;
-import de.cismet.cids.custom.utils.formsolutions.FormSolutionsConstants;
+import de.cismet.cids.custom.utils.formsolutions.FormSolutionsProperties;
 
 import de.cismet.cids.dynamics.CidsBean;
 
@@ -105,8 +105,9 @@ public class FormSolutionDownloadBestellungAction implements ServerAction, UserA
 
                 final ServerProperties serverProps = DomainServerImpl.getServerProperties();
                 final String s = serverProps.getFileSeparator();
-                final String fullFilePath = (rechung ? FormSolutionsConstants.RECHNUNG_BASEPATH
-                                                     : FormSolutionsConstants.PRODUKT_BASEPATH) + s + filePath;
+                final String fullFilePath = (rechung ? FormSolutionsProperties.getInstance().getRechnungBasepath()
+                                                     : FormSolutionsProperties.getInstance().getProduktBasepath()) + s
+                            + filePath;
 
                 final ByteArrayOutputStream out = new ByteArrayOutputStream();
 

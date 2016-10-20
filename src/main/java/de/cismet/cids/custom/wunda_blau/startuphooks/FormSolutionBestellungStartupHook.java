@@ -19,7 +19,7 @@ import Sirius.server.newuser.UserServer;
 
 import java.rmi.Naming;
 
-import de.cismet.cids.custom.utils.formsolutions.FormSolutionsConstants;
+import de.cismet.cids.custom.utils.formsolutions.FormSolutionsProperties;
 import de.cismet.cids.custom.wunda_blau.search.actions.FormSolutionServerNewStuffAvailableAction;
 
 /**
@@ -62,8 +62,8 @@ public class FormSolutionBestellungStartupHook implements DomainServerStartupHoo
                                 null,
                                 null,
                                 "WUNDA_BLAU",
-                                FormSolutionsConstants.CIDS_LOGIN,
-                                FormSolutionsConstants.CIDS_PASSWORD);
+                                FormSolutionsProperties.getInstance().getCidsLogin(),
+                                FormSolutionsProperties.getInstance().getCidsPassword());
                         action.setUser(user);
                         action.execute(null);
                     } catch (final Exception ex) {

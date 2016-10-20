@@ -53,7 +53,7 @@ public class FormSolutionsMySqlHelper {
      */
     private FormSolutionsMySqlHelper() throws Exception {
         Class.forName("com.mysql.jdbc.Driver");
-        this.connect = DriverManager.getConnection(FormSolutionsConstants.MYSQL_JDBC);
+        this.connect = DriverManager.getConnection(FormSolutionsProperties.getInstance().getMysqlJdbc());
 
         this.preparedSelectStatement = connect.prepareStatement(
                 "SELECT id FROM bestellung WHERE transid = ?;");

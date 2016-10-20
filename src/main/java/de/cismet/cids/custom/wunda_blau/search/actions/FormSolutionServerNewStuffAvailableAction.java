@@ -85,8 +85,8 @@ import de.cismet.cids.custom.utils.alkis.AlkisProductDescription;
 import de.cismet.cids.custom.utils.alkis.ServerAlkisProducts;
 import de.cismet.cids.custom.utils.formsolutions.FormSolutionFtpClient;
 import de.cismet.cids.custom.utils.formsolutions.FormSolutionsBestellung;
-import de.cismet.cids.custom.utils.formsolutions.FormSolutionsConstants;
 import de.cismet.cids.custom.utils.formsolutions.FormSolutionsMySqlHelper;
+import de.cismet.cids.custom.utils.formsolutions.FormSolutionsProperties;
 import de.cismet.cids.custom.wunda_blau.search.server.CidsAlkisSearchStatement;
 
 import de.cismet.cids.dynamics.CidsBean;
@@ -176,7 +176,8 @@ public class FormSolutionServerNewStuffAvailableAction implements UserAwareServe
     public FormSolutionServerNewStuffAvailableAction(final boolean fromStartupHook) {
         UsernamePasswordCredentials creds = null;
         try {
-            creds = new UsernamePasswordCredentials(FormSolutionsConstants.USER, FormSolutionsConstants.PASSWORD);
+            creds = new UsernamePasswordCredentials(FormSolutionsProperties.getInstance().getUser(),
+                    FormSolutionsProperties.getInstance().getPassword());
         } catch (final Exception ex) {
             LOG.error(
                 "UsernamePasswordCredentials couldn't be created. FormSolutionServerNewStuffAvailableAction will not work at all !",
@@ -185,7 +186,7 @@ public class FormSolutionServerNewStuffAvailableAction implements UserAwareServe
 
         boolean testCismet00Enabled = false;
         try {
-            testCismet00Enabled = fromStartupHook && FormSolutionsConstants.TEST_CISMET00;
+            testCismet00Enabled = fromStartupHook && FormSolutionsProperties.getInstance().isTestCismet00();
         } catch (final Exception ex) {
             LOG.error("could not read FormSolutionsConstants.TEST_CISMET00. TEST_CISMET00 stays disabled", ex);
         }
@@ -288,8 +289,8 @@ public class FormSolutionServerNewStuffAvailableAction implements UserAwareServe
         final Collection<String> transIds = new ArrayList<String>();
         try {
             final StringBuilder stringBuilder = new StringBuilder();
-            final InputStream inputStream = getHttpAccessHandler().doRequest(
-                    new URL(FormSolutionsConstants.URL_AUFTRAGSLISTE_FS),
+            final InputStream inputStream = getHttpAccessHandler().doRequest(new URL(
+                        FormSolutionsProperties.getInstance().getUrlAuftragslisteFs()),
                     new StringReader(""),
                     AccessHandler.ACCESS_METHODS.GET_REQUEST,
                     null,
@@ -381,8 +382,8 @@ public class FormSolutionServerNewStuffAvailableAction implements UserAwareServe
         if ((auftrag != null) && auftrag.startsWith(TEST_CISMET00_PREFIX)) {
             return (testCismet00Xml != null) ? testCismet00Xml.replace("${TRANSID}", auftrag) : null;
         } else {
-            final InputStream inputStream = getHttpAccessHandler().doRequest(
-                    new URL(String.format(FormSolutionsConstants.URL_AUFTRAG_FS, auftrag)),
+            final InputStream inputStream = getHttpAccessHandler().doRequest(new URL(
+                        String.format(FormSolutionsProperties.getInstance().getUrlAuftragFs(), auftrag)),
                     new StringReader(""),
                     AccessHandler.ACCESS_METHODS.GET_REQUEST,
                     null,
@@ -432,8 +433,8 @@ public class FormSolutionServerNewStuffAvailableAction implements UserAwareServe
         if (noClose) {
             return;
         }
-        getHttpAccessHandler().doRequest(
-            new URL(String.format(FormSolutionsConstants.URL_AUFTRAG_DELETE_FS, auftrag)),
+        getHttpAccessHandler().doRequest(new URL(
+                String.format(FormSolutionsProperties.getInstance().getUrlAuftragDeleteFs(), auftrag)),
             new StringReader(""),
             AccessHandler.ACCESS_METHODS.POST_REQUEST,
             null,
@@ -447,7 +448,8 @@ public class FormSolutionServerNewStuffAvailableAction implements UserAwareServe
      */
     private void doStatusChangedRequest(final String transid) {
         try {
-            getHttpAccessHandler().doRequest(new URL(String.format(FormSolutionsConstants.URL_STATUS_UPDATE, transid)),
+            getHttpAccessHandler().doRequest(new URL(
+                    String.format(FormSolutionsProperties.getInstance().getUrlStatusUpdate(), transid)),
                 new StringReader(""),
                 AccessHandler.ACCESS_METHODS.GET_REQUEST);
         } catch (final Exception ex) {
@@ -726,7 +728,7 @@ public class FormSolutionServerNewStuffAvailableAction implements UserAwareServe
         bestellungBean.setProperty("gebuehr", gebuehr);
         bestellungBean.setProperty(
             "test",
-            FormSolutionsConstants.TEST
+            FormSolutionsProperties.getInstance().isTest()
                     || ((transid != null) && transid.startsWith(TEST_CISMET00_PREFIX)));
 
         return bestellungBean;
@@ -870,7 +872,8 @@ public class FormSolutionServerNewStuffAvailableAction implements UserAwareServe
                     null,
                     creds);
 
-            FormSolutionFtpClient.getInstance().upload(in, FormSolutionsConstants.PRODUKT_BASEPATH + destinationPath);
+            FormSolutionFtpClient.getInstance()
+                    .upload(in, FormSolutionsProperties.getInstance().getProduktBasepath() + destinationPath);
         } finally {
             if (in != null) {
                 in.close();
@@ -1242,7 +1245,8 @@ public class FormSolutionServerNewStuffAvailableAction implements UserAwareServe
 
             is = new ByteArrayInputStream(bytes);
 
-            FormSolutionFtpClient.getInstance().upload(is, FormSolutionsConstants.PRODUKT_BASEPATH + fileName);
+            FormSolutionFtpClient.getInstance()
+                    .upload(is, FormSolutionsProperties.getInstance().getProduktBasepath() + fileName);
         } finally {
             try {
                 if (os != null) {
@@ -1418,30 +1422,32 @@ public class FormSolutionServerNewStuffAvailableAction implements UserAwareServe
                         + (String)bestellungBean.getProperty("fk_adresse_rechnung.vorname");
             final String request_url = (String)bestellungBean.getProperty("request_url");
 
-            final String kunde_login = FormSolutionsConstants.BILLING_KUNDE_LOGIN;
-            final String modus = FormSolutionsConstants.BILLING_MODUS;
-            final String modusbezeichnung = FormSolutionsConstants.BILLING_MODUSBEZEICHNUNG;
-            final String verwendungszweck = isPostweg ? FormSolutionsConstants.BILLING_VERWENDUNGSZWECK_POSTWEG
-                                                      : FormSolutionsConstants.BILLING_VERWENDUNGSZWECK_DOWNLOAD;
-            final String verwendungskey = isPostweg ? FormSolutionsConstants.BILLING_VERWENDUNGSKEY_POSTWEG
-                                                    : FormSolutionsConstants.BILLING_VERWENDUNGSKEY_DOWNLOAD;
+            final String kunde_login = FormSolutionsProperties.getInstance().getBillingKundeLogin();
+            final String modus = FormSolutionsProperties.getInstance().getBillingModus();
+            final String modusbezeichnung = FormSolutionsProperties.getInstance().getBillingModusbezeichnung();
+            final String verwendungszweck = isPostweg
+                ? FormSolutionsProperties.getInstance().getBillingVerwendungskeyPostweg()
+                : FormSolutionsProperties.getInstance().getBillingVerwendungszweckDownload();
+            final String verwendungskey = isPostweg
+                ? FormSolutionsProperties.getInstance().getBillingVerwendungskeyPostweg()
+                : FormSolutionsProperties.getInstance().getBillingVerwendungskeyDownload();
             final String produktkey;
             final String produktbezeichnung;
             if ("A4".equals(din)) {
-                produktkey = FormSolutionsConstants.BILLING_PRODUKTKEY_DINA4;
-                produktbezeichnung = FormSolutionsConstants.BILLING_PRODUKTBEZEICHNUNG_DINA4;
+                produktkey = FormSolutionsProperties.getInstance().getBillingProduktKeyDina4();
+                produktbezeichnung = FormSolutionsProperties.getInstance().getBillingProduktBezeichnungDina4();
             } else if ("A3".equals(din)) {
-                produktkey = FormSolutionsConstants.BILLING_PRODUKTKEY_DINA3;
-                produktbezeichnung = FormSolutionsConstants.BILLING_PRODUKTBEZEICHNUNG_DINA3;
+                produktkey = FormSolutionsProperties.getInstance().getBillingProduktKeyDina3();
+                produktbezeichnung = FormSolutionsProperties.getInstance().getBillingProduktBezeichnungDina3();
             } else if ("A2".equals(din)) {
-                produktkey = FormSolutionsConstants.BILLING_PRODUKTKEY_DINA2;
-                produktbezeichnung = FormSolutionsConstants.BILLING_PRODUKTBEZEICHNUNG_DINA2;
+                produktkey = FormSolutionsProperties.getInstance().getBillingProduktKeyDina2();
+                produktbezeichnung = FormSolutionsProperties.getInstance().getBillingProduktBezeichnungDina2();
             } else if ("A1".equals(din)) {
-                produktkey = FormSolutionsConstants.BILLING_PRODUKTKEY_DINA1;
-                produktbezeichnung = FormSolutionsConstants.BILLING_PRODUKTBEZEICHNUNG_DINA1;
+                produktkey = FormSolutionsProperties.getInstance().getBillingProduktKeyDina1();
+                produktbezeichnung = FormSolutionsProperties.getInstance().getBillingProduktBezeichnungDina1();
             } else if ("A0".equals(din)) {
-                produktkey = FormSolutionsConstants.BILLING_PRODUKTKEY_DINA0;
-                produktbezeichnung = FormSolutionsConstants.BILLING_PRODUKTBEZEICHNUNG_DINA0;
+                produktkey = FormSolutionsProperties.getInstance().getBillingProduktKeyDina0();
+                produktbezeichnung = FormSolutionsProperties.getInstance().getBillingProduktBezeichnungDina0();
             } else {
                 produktkey = null;
                 produktbezeichnung = null;
@@ -1469,7 +1475,8 @@ public class FormSolutionServerNewStuffAvailableAction implements UserAwareServe
             billingBean.setProperty("mwst_satz", 0d);
             billingBean.setProperty("angeschaeftsbuch", Boolean.FALSE);
             billingBean.setProperty("abgerechnet", Boolean.TRUE);
-            if (FormSolutionsConstants.TEST || ((transid != null) && transid.startsWith(TEST_CISMET00_PREFIX))) {
+            if (FormSolutionsProperties.getInstance().isTest()
+                        || ((transid != null) && transid.startsWith(TEST_CISMET00_PREFIX))) {
                 LOG.info("Test-Object would have created this Billing-Entry: " + billingBean.getMOString());
                 return null;
             } else {

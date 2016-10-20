@@ -83,14 +83,15 @@ public class FormSolutionFtpClient {
      */
     private FTPClient getConnectedFTPClient() throws Exception {
         final FTPClient ftpClient = new FTPClient();
-        ftpClient.connect(FormSolutionsConstants.FTP_HOST);
+        ftpClient.connect(FormSolutionsProperties.getInstance().getFtpHost());
 
         final int reply = ftpClient.getReplyCode();
         if (!FTPReply.isPositiveCompletion(reply)) {
             ftpClient.disconnect();
             throw new Exception("Exception in connecting to FTP Server");
         }
-        ftpClient.login(FormSolutionsConstants.FTP_LOGIN, FormSolutionsConstants.FTP_PASS);
+        ftpClient.login(FormSolutionsProperties.getInstance().getFtpLogin(),
+            FormSolutionsProperties.getInstance().getFtpPass());
         return ftpClient;
     }
 
