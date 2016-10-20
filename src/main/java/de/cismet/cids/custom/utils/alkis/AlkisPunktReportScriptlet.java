@@ -22,11 +22,9 @@ import java.awt.image.RenderedImage;
 import java.io.IOException;
 import java.io.InputStream;
 
-import java.net.MalformedURLException;
 import java.net.URL;
 
 import java.util.Collection;
-import java.util.LinkedList;
 
 import javax.imageio.ImageIO;
 
@@ -56,67 +54,6 @@ public class AlkisPunktReportScriptlet extends JRDefaultScriptlet {
     /**
      * DOCUMENT ME!
      *
-     * @param   pointcode  dgkBlattnummer the value of dgkBlattnummer
-     *
-     * @return  DOCUMENT ME!
-     */
-    public static Collection<URL> getCorrespondingURLs(final String pointcode) {
-        final Collection<URL> validURLs = new LinkedList<URL>();
-
-        // The pointcode of a alkis point has a specific format:
-        // 25xx56xx1xxxxx
-        // ^  ^
-        // |  Part 2 of the "Kilometerquadrat"
-        // Part 1 of the "Kilometerquadrat"
-        if ((pointcode == null) || (pointcode.trim().length() < 9) || (pointcode.trim().length() > 15)) {
-            return validURLs;
-        }
-
-        final StringBuilder urlBuilder;
-        if (pointcode.trim().length() < 15) {
-            urlBuilder = new StringBuilder(ServerAlkisConf.getInstance().APMAPS_HOST);
-
-            final String kilometerquadratPart1 = pointcode.substring(2, 4);
-            final String kilometerquadratPart2 = pointcode.substring(6, 8);
-
-            urlBuilder.append('/');
-            urlBuilder.append(kilometerquadratPart1);
-            urlBuilder.append(kilometerquadratPart2);
-            urlBuilder.append('/');
-            urlBuilder.append(ServerAlkisConf.getInstance().APMAPS_PREFIX);
-            urlBuilder.append(pointcode);
-            urlBuilder.append('.');
-        } else {
-            urlBuilder = new StringBuilder(ServerAlkisConf.getInstance().APMAPS_ETRS_HOST);
-            urlBuilder.append('/');
-            urlBuilder.append(ServerAlkisConf.getInstance().APMAPS_PREFIX);
-            urlBuilder.append(pointcode);
-            urlBuilder.append('.');
-        }
-        for (final String suffix : SUFFIXES) {
-            URL urlToTry = null;
-            try {
-                urlToTry = new URL(urlBuilder.toString() + suffix);
-            } catch (MalformedURLException ex) {
-                LOG.warn("The URL '" + urlBuilder.toString() + suffix
-                            + "' is malformed. Can't load the corresponding picture.",
-                    ex);
-            }
-
-            if (urlToTry != null) {
-                if (LOG.isDebugEnabled()) {
-                    LOG.debug("Valid URL: " + urlToTry.toExternalForm());
-                }
-
-                validURLs.add(urlToTry);
-            }
-        }
-        return validURLs;
-    }
-
-    /**
-     * DOCUMENT ME!
-     *
      * @param   pointcode  DOCUMENT ME!
      *
      * @return  DOCUMENT ME!
@@ -134,7 +71,7 @@ public class AlkisPunktReportScriptlet extends JRDefaultScriptlet {
      * @return  DOCUMENT ME!
      */
     public static Boolean isImageAvailable(final String pointcode, final ExtendedAccessHandler extendedAccessHandler) {
-        final Collection<URL> validURLs = getCorrespondingURLs(pointcode);
+        final Collection<URL> validURLs = AlkisProducts.getCorrespondingPointURLs(pointcode);
 
         for (final URL url : validURLs) {
             if (extendedAccessHandler.checkIfURLaccessible(url)) {
@@ -165,7 +102,7 @@ public class AlkisPunktReportScriptlet extends JRDefaultScriptlet {
      * @return  DOCUMENT ME!
      */
     public static Image loadImage(final String pointcode, final ExtendedAccessHandler extendedAccessHandler) {
-        final Collection<URL> validURLs = getCorrespondingURLs(pointcode);
+        final Collection<URL> validURLs = AlkisProducts.getCorrespondingPointURLs(pointcode);
         String suffix = "";
 
         InputStream streamToReadFrom = null;

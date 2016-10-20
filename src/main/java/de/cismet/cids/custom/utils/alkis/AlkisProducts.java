@@ -12,8 +12,6 @@
  */
 package de.cismet.cids.custom.utils.alkis;
 
-import org.apache.commons.io.IOUtils;
-
 import org.jdom.Attribute;
 import org.jdom.Document;
 import org.jdom.Element;
@@ -31,17 +29,20 @@ import java.net.URLEncoder;
 import java.text.SimpleDateFormat;
 
 import java.util.ArrayList;
+import java.util.Collection;
 import java.util.Collections;
 import java.util.Date;
 import java.util.HashMap;
+import java.util.LinkedList;
 import java.util.List;
 import java.util.Map;
 import java.util.Properties;
 
 import de.cismet.cids.dynamics.CidsBean;
 
-import de.cismet.tools.PropertyReader;
 import de.cismet.tools.StaticHtmlTools;
+
+import static de.cismet.cids.custom.utils.alkis.AlkisPunktReportScriptlet.SUFFIXES;
 
 /**
  * DOCUMENT ME!
@@ -264,38 +265,6 @@ public class AlkisProducts {
     /**
      * DOCUMENT ME!
      *
-     * @return  DOCUMENT ME!
-     *
-     * @throws  RuntimeException  DOCUMENT ME!
-     */
-    @Deprecated
-    public static AlkisProducts getInstance() {
-        if (INSTANCE == null) {
-            try {
-                final PropertyReader serviceProperties = new PropertyReader(
-                        "/de/cismet/cids/custom/wunda_blau/res/alkis/alkis_conf.properties");
-                final PropertyReader productProperties = new PropertyReader(
-                        "/de/cismet/cids/custom/wunda_blau/res/alkis/alkis_products.properties");
-                final PropertyReader formatProperties = new PropertyReader(
-                        "/de/cismet/cids/custom/wunda_blau/res/alkis/formats.properties");
-                final String productbeschreibung = IOUtils.toString(AlkisConstants.class.getClassLoader()
-                                .getResourceAsStream(
-                                    "de/cismet/cids/custom/wunda_blau/res/alkis/Produktbeschreibung_ALKIS.xml"));
-
-                INSTANCE = new AlkisProducts(new AlkisConf(serviceProperties.getInternalProperties()),
-                        productProperties.getInternalProperties(),
-                        formatProperties.getInternalProperties(),
-                        productbeschreibung);
-            } catch (final Exception ex) {
-                throw new RuntimeException("error in AlkisProducts.getInstance()", ex);
-            }
-        }
-        return INSTANCE;
-    }
-
-    /**
-     * DOCUMENT ME!
-     *
      * @param   pointBean  DOCUMENT ME!
      *
      * @return  DOCUMENT ME!
@@ -488,5 +457,66 @@ public class AlkisProducts {
         }
 
         return new URL(url.toString());
+    }
+
+    /**
+     * DOCUMENT ME!
+     *
+     * @param   pointcode  dgkBlattnummer the value of dgkBlattnummer
+     *
+     * @return  DOCUMENT ME!
+     */
+    public static Collection<URL> getCorrespondingPointURLs(final String pointcode) {
+        final Collection<URL> validURLs = new LinkedList<URL>();
+
+        // The pointcode of a alkis point has a specific format:
+        // 25xx56xx1xxxxx
+        // ^  ^
+        // |  Part 2 of the "Kilometerquadrat"
+        // Part 1 of the "Kilometerquadrat"
+        if ((pointcode == null) || (pointcode.trim().length() < 9) || (pointcode.trim().length() > 15)) {
+            return validURLs;
+        }
+
+        final StringBuilder urlBuilder;
+        if (pointcode.trim().length() < 15) {
+            urlBuilder = new StringBuilder(ServerAlkisConf.getInstance().APMAPS_HOST);
+
+            final String kilometerquadratPart1 = pointcode.substring(2, 4);
+            final String kilometerquadratPart2 = pointcode.substring(6, 8);
+
+            urlBuilder.append('/');
+            urlBuilder.append(kilometerquadratPart1);
+            urlBuilder.append(kilometerquadratPart2);
+            urlBuilder.append('/');
+            urlBuilder.append(ServerAlkisConf.getInstance().APMAPS_PREFIX);
+            urlBuilder.append(pointcode);
+            urlBuilder.append('.');
+        } else {
+            urlBuilder = new StringBuilder(ServerAlkisConf.getInstance().APMAPS_ETRS_HOST);
+            urlBuilder.append('/');
+            urlBuilder.append(ServerAlkisConf.getInstance().APMAPS_PREFIX);
+            urlBuilder.append(pointcode);
+            urlBuilder.append('.');
+        }
+        for (final String suffix : SUFFIXES) {
+            URL urlToTry = null;
+            try {
+                urlToTry = new URL(urlBuilder.toString() + suffix);
+            } catch (MalformedURLException ex) {
+                LOG.warn("The URL '" + urlBuilder.toString() + suffix
+                            + "' is malformed. Can't load the corresponding picture.",
+                    ex);
+            }
+
+            if (urlToTry != null) {
+                if (LOG.isDebugEnabled()) {
+                    LOG.debug("Valid URL: " + urlToTry.toExternalForm());
+                }
+
+                validURLs.add(urlToTry);
+            }
+        }
+        return validURLs;
     }
 }
