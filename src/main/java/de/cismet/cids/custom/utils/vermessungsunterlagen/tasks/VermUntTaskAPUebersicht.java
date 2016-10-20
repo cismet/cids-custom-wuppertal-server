@@ -45,7 +45,6 @@ public class VermUntTaskAPUebersicht extends VermUntTaskAP {
     //~ Static fields/initializers ---------------------------------------------
 
     public static final String TYPE = "AP_Uebersicht";
-    private static final ServerAlkisProducts PRODUCTS = ServerAlkisProducts.getInstance();
 
     //~ Instance fields --------------------------------------------------------
 

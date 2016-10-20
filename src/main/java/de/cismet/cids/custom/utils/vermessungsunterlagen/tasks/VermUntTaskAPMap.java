@@ -12,6 +12,8 @@
  */
 package de.cismet.cids.custom.utils.vermessungsunterlagen.tasks;
 
+import Sirius.server.middleware.impls.domainserver.DomainServerImpl;
+
 import net.sf.jasperreports.engine.data.JRBeanCollectionDataSource;
 
 import java.io.FileOutputStream;
@@ -20,6 +22,7 @@ import java.io.OutputStream;
 import java.util.Arrays;
 import java.util.Collection;
 import java.util.HashMap;
+import java.util.Map;
 
 import de.cismet.cids.custom.utils.alkis.AlkisPointReportBean;
 import de.cismet.cids.custom.utils.alkis.ServerAlkisProducts;
@@ -59,9 +62,11 @@ public class VermUntTaskAPMap extends VermUntTaskAP {
         try {
             final String filename = getPath() + "/" + ServerAlkisProducts.getInstance().PUNKTLISTE_PDF + ".pdf";
             out = new FileOutputStream(filename);
+            final Map parameters = new HashMap();
+            parameters.put("SUBREPORT_DIR", DomainServerImpl.getServerProperties().getServerResourcesBasePath() + "/");
             VermessungsunterlagenHelper.jasperReportDownload(
                 VermessungsunterlagenHelper.AP_REPORT,
-                new HashMap(),
+                parameters,
                 new JRBeanCollectionDataSource(Arrays.asList(new AlkisPointReportBean(getAlkisPoints()))),
                 out);
         } finally {
