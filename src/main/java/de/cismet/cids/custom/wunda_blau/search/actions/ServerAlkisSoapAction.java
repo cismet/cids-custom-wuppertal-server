@@ -20,6 +20,7 @@ import javassist.bytecode.CodeAttribute;
 import java.rmi.RemoteException;
 
 import de.cismet.cids.custom.utils.alkis.SOAPAccessProvider;
+import de.cismet.cids.custom.utils.alkis.ServerAlkisConf;
 
 import de.cismet.cids.server.actions.ServerAction;
 import de.cismet.cids.server.actions.ServerActionParameter;
@@ -127,7 +128,7 @@ public class ServerAlkisSoapAction implements ServerAction {
 
         //~ Static fields/initializers -----------------------------------------
 
-        private static final SOAPAccessProvider soapProvider = new SOAPAccessProvider();
+        private static final SOAPAccessProvider soapProvider = new SOAPAccessProvider(ServerAlkisConf.getInstance());
 
         //~ Constructors -------------------------------------------------------
 

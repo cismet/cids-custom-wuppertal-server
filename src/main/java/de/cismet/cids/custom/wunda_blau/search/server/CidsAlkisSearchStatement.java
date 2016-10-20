@@ -24,6 +24,7 @@ import java.util.Collection;
 import java.util.List;
 
 import de.cismet.cids.custom.utils.alkis.SOAPAccessProvider;
+import de.cismet.cids.custom.utils.alkis.ServerAlkisConf;
 
 import de.cismet.cids.server.search.AbstractCidsServerSearch;
 import de.cismet.cids.server.search.MetaObjectNodeServerSearch;
@@ -159,7 +160,7 @@ public class CidsAlkisSearchStatement extends AbstractCidsServerSearch implement
     public Collection<MetaObjectNode> performServerSearch() {
         try {
             final List<MetaObjectNode> result = new ArrayList<MetaObjectNode>();
-            final SOAPAccessProvider accessProvider = new SOAPAccessProvider();
+            final SOAPAccessProvider accessProvider = new SOAPAccessProvider(ServerAlkisConf.getInstance());
             final ALKISSearchServices searchService = accessProvider.getAlkisSearchService();
 
             String query = null;
