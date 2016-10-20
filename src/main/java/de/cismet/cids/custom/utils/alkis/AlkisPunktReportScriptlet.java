@@ -71,7 +71,7 @@ public class AlkisPunktReportScriptlet extends JRDefaultScriptlet {
      * @return  DOCUMENT ME!
      */
     public static Boolean isImageAvailable(final String pointcode, final ExtendedAccessHandler extendedAccessHandler) {
-        final Collection<URL> validURLs = AlkisProducts.getCorrespondingPointURLs(pointcode);
+        final Collection<URL> validURLs = ServerAlkisProducts.getInstance().getCorrespondingPointURLs(pointcode);
 
         for (final URL url : validURLs) {
             if (extendedAccessHandler.checkIfURLaccessible(url)) {
@@ -102,7 +102,7 @@ public class AlkisPunktReportScriptlet extends JRDefaultScriptlet {
      * @return  DOCUMENT ME!
      */
     public static Image loadImage(final String pointcode, final ExtendedAccessHandler extendedAccessHandler) {
-        final Collection<URL> validURLs = AlkisProducts.getCorrespondingPointURLs(pointcode);
+        final Collection<URL> validURLs = ServerAlkisProducts.getInstance().getCorrespondingPointURLs(pointcode);
         String suffix = "";
 
         InputStream streamToReadFrom = null;

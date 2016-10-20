@@ -56,7 +56,6 @@ public class AlkisProducts {
 
     private static final org.apache.log4j.Logger LOG = org.apache.log4j.Logger.getLogger(AlkisProducts.class);
 
-    private static AlkisProducts INSTANCE;
     public static final String MLESSNUMBER =
         "nmless=5061756C612030352E31322E32303035204A75737475732032352E30372E323030382054616E6A612030362E31302E31393734";
 
@@ -466,7 +465,7 @@ public class AlkisProducts {
      *
      * @return  DOCUMENT ME!
      */
-    public static Collection<URL> getCorrespondingPointURLs(final String pointcode) {
+    public Collection<URL> getCorrespondingPointURLs(final String pointcode) {
         final Collection<URL> validURLs = new LinkedList<URL>();
 
         // The pointcode of a alkis point has a specific format:
@@ -480,7 +479,7 @@ public class AlkisProducts {
 
         final StringBuilder urlBuilder;
         if (pointcode.trim().length() < 15) {
-            urlBuilder = new StringBuilder(ServerAlkisConf.getInstance().APMAPS_HOST);
+            urlBuilder = new StringBuilder(alkisConf.APMAPS_HOST);
 
             final String kilometerquadratPart1 = pointcode.substring(2, 4);
             final String kilometerquadratPart2 = pointcode.substring(6, 8);
@@ -489,13 +488,13 @@ public class AlkisProducts {
             urlBuilder.append(kilometerquadratPart1);
             urlBuilder.append(kilometerquadratPart2);
             urlBuilder.append('/');
-            urlBuilder.append(ServerAlkisConf.getInstance().APMAPS_PREFIX);
+            urlBuilder.append(alkisConf.APMAPS_PREFIX);
             urlBuilder.append(pointcode);
             urlBuilder.append('.');
         } else {
-            urlBuilder = new StringBuilder(ServerAlkisConf.getInstance().APMAPS_ETRS_HOST);
+            urlBuilder = new StringBuilder(alkisConf.APMAPS_ETRS_HOST);
             urlBuilder.append('/');
-            urlBuilder.append(ServerAlkisConf.getInstance().APMAPS_PREFIX);
+            urlBuilder.append(alkisConf.APMAPS_PREFIX);
             urlBuilder.append(pointcode);
             urlBuilder.append('.');
         }
