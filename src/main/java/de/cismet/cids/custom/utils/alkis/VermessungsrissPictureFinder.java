@@ -51,8 +51,8 @@ public class VermessungsrissPictureFinder {
         };
     public static final String SUFFIX_REDUCED_SIZE = "_rs";
     private static final String LINKEXTENSION = ".txt";
-    public static String PATH_VERMESSUNG = ServerAlkisConf.getInstance().VERMESSUNG_HOST_BILDER; //
-    public static String PATH_GRENZNIEDERSCHRIFT = ServerAlkisConf.getInstance().VERMESSUNG_HOST_GRENZNIEDERSCHRIFTEN;
+    public static String PATH_VERMESSUNG = getInstance().alkisConf.VERMESSUNG_HOST_BILDER; //
+    public static String PATH_GRENZNIEDERSCHRIFT = getInstance().alkisConf.VERMESSUNG_HOST_GRENZNIEDERSCHRIFTEN;
     private static final String GRENZNIEDERSCHRIFT_PREFIX = "GN";
     private static final String VERMESSUNGSRISS_PREFIX = "VR";
     private static final String PATH_PLATZHALTER = "platzhalter";
@@ -60,6 +60,7 @@ public class VermessungsrissPictureFinder {
     //~ Instance fields --------------------------------------------------------
 
     private final ExtendedAccessHandler simpleUrlAccessHandler;
+    private final AlkisConf alkisConf;
 
     //~ Constructors -----------------------------------------------------------
 
@@ -67,9 +68,12 @@ public class VermessungsrissPictureFinder {
      * Creates a new VermessungsrissPictureFinder object.
      *
      * @param  simpleUrlAccessHandler  DOCUMENT ME!
+     * @param  alkisConf               DOCUMENT ME!
      */
-    protected VermessungsrissPictureFinder(final ExtendedAccessHandler simpleUrlAccessHandler) {
+    protected VermessungsrissPictureFinder(final ExtendedAccessHandler simpleUrlAccessHandler,
+            final AlkisConf alkisConf) {
         this.simpleUrlAccessHandler = simpleUrlAccessHandler;
+        this.alkisConf = alkisConf;
     }
 
     /**
@@ -77,6 +81,7 @@ public class VermessungsrissPictureFinder {
      */
     private VermessungsrissPictureFinder() {
         this.simpleUrlAccessHandler = new SimpleHttpAccessHandler();
+        this.alkisConf = ServerAlkisConf.getInstance();
     }
 
     //~ Methods ----------------------------------------------------------------
