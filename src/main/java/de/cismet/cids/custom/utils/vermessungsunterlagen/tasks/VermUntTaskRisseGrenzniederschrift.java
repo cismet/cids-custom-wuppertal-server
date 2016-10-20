@@ -14,7 +14,7 @@ package de.cismet.cids.custom.utils.vermessungsunterlagen.tasks;
 
 import java.util.Collection;
 
-import de.cismet.cids.custom.utils.alkis.AlkisConstants;
+import de.cismet.cids.custom.utils.alkis.ServerAlkisConf;
 
 import de.cismet.cids.dynamics.CidsBean;
 
@@ -48,7 +48,7 @@ public class VermUntTaskRisseGrenzniederschrift extends VermUntTaskRisse {
             TYPE,
             jobKey,
             risseBeans,
-            AlkisConstants.COMMONS.VERMESSUNG_HOST_GRENZNIEDERSCHRIFTEN,
+            ServerAlkisConf.getInstance().VERMESSUNG_HOST_GRENZNIEDERSCHRIFTEN,
             auftragsnummer,
             projektnummer);
     }

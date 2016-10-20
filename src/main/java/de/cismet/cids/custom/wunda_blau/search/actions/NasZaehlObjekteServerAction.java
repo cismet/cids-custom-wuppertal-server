@@ -12,6 +12,7 @@
 package de.cismet.cids.custom.wunda_blau.search.actions;
 
 import Sirius.server.middleware.interfaces.domainserver.MetaService;
+import Sirius.server.middleware.interfaces.domainserver.MetaServiceStore;
 
 import com.vividsolutions.jts.geom.Geometry;
 import com.vividsolutions.jts.geom.MultiPolygon;
@@ -30,13 +31,13 @@ import java.sql.SQLException;
 import java.sql.Statement;
 
 import java.util.ArrayList;
-import java.util.Collection;
 import java.util.Properties;
 
 import de.cismet.cids.custom.utils.WundaBlauServerResources;
 import de.cismet.cids.custom.wunda_blau.search.server.CidsMauernSearchStatement;
 
-import de.cismet.cids.server.search.AbstractCidsServerSearch;
+import de.cismet.cids.server.actions.ServerAction;
+import de.cismet.cids.server.actions.ServerActionParameter;
 import de.cismet.cids.server.search.SearchException;
 
 import de.cismet.cids.utils.serverresources.CachedServerResourcesLoader;
@@ -49,12 +50,14 @@ import de.cismet.cismap.commons.jtsgeometryfactories.PostGisGeometryFactory;
  * @author   daniel
  * @version  $Revision$, $Date$
  */
-@Deprecated
-public class NasZaehlObjekteSearch extends AbstractCidsServerSearch {
+@org.openide.util.lookup.ServiceProvider(service = ServerAction.class)
+public class NasZaehlObjekteServerAction implements ServerAction, MetaServiceStore {
 
     //~ Static fields/initializers ---------------------------------------------
 
     private static final Logger LOG = Logger.getLogger(CidsMauernSearchStatement.class);
+    public static final String TASK_NAME = "nasZaehlObjekte";
+
     private static final String FLURSTUECK_STMT =
         "select count(*) as Anzahl from ax_flurstueck where st_intersects(wkb_geometry,<geom>)";
     private static final String GEAEUDE_STMT =
@@ -70,13 +73,54 @@ public class NasZaehlObjekteSearch extends AbstractCidsServerSearch {
                 + " AND i.class_id IN (6)"
                 + " AND geo_field && GeometryFromText('<geom>')"
                 + " AND intersects(st_buffer(geo_field, 0.000001),st_buffer(GeometryFromText('<geom>'), 0.000001)) ORDER BY 1,2,3";
-    private static Connection fmeConn = null;
-    private static String url;
-    private static String user;
-    private static String pw;
-    private static boolean initError = false;
 
-    static {
+    //~ Enums ------------------------------------------------------------------
+
+    /**
+     * DOCUMENT ME!
+     *
+     * @version  $Revision$, $Date$
+     */
+    public enum Parameter {
+
+        //~ Enum constants -----------------------------------------------------
+
+        GEOMETRY, SEARCH_TYPE
+    }
+
+    /**
+     * DOCUMENT ME!
+     *
+     * @version  $Revision$, $Date$
+     */
+    public enum NasSearchType {
+
+        //~ Enum constants -----------------------------------------------------
+
+        FLURSTUECKE, GEBAEUDE, ADRESSE, DACHPUNKTE, BODENPUNKTE
+    }
+
+    //~ Instance fields --------------------------------------------------------
+
+    private Connection fmeConn = null;
+    private final String url;
+    private final String user;
+    private final String pw;
+    private final boolean initError;
+
+    private MetaService metaService;
+
+    //~ Constructors -----------------------------------------------------------
+
+    /**
+     * Creates a new NasZaehlObjekteSearch object.
+     */
+    public NasZaehlObjekteServerAction() {
+        boolean initError = false;
+        String url = null;
+        String user = null;
+        String pw = null;
+
         try {
             final Properties serviceProperties = new Properties();
             serviceProperties.load(CachedServerResourcesLoader.getInstance().getStringReaderResource(
@@ -95,99 +139,148 @@ public class NasZaehlObjekteSearch extends AbstractCidsServerSearch {
                 "error during initialisation of fme db connection. Could not read properties file. Search disabled",
                 ex);
         }
-    }
-
-    //~ Enums ------------------------------------------------------------------
-
-    /**
-     * DOCUMENT ME!
-     *
-     * @version  $Revision$, $Date$
-     */
-    public enum NasSearchType {
-
-        //~ Enum constants -----------------------------------------------------
-
-        FLURSTUECKE, GEBAEUDE, ADRESSE, DACHPUNKTE, BODENPUNKTE
-    }
-
-    //~ Instance fields --------------------------------------------------------
-
-    final Geometry geometry;
-    final NasZaehlObjekteSearch.NasSearchType searchType;
-
-    //~ Constructors -----------------------------------------------------------
-
-    /**
-     * Creates a new NasZaehlObjekteSearch object.
-     *
-     * @param  g     DOCUMENT ME!
-     * @param  type  useCids DOCUMENT ME!
-     */
-    public NasZaehlObjekteSearch(final Geometry g, final NasZaehlObjekteSearch.NasSearchType type) {
-        geometry = g;
-        this.searchType = type;
+        this.initError = initError;
+        this.url = url;
+        this.user = user;
+        this.pw = pw;
     }
 
     //~ Methods ----------------------------------------------------------------
 
-    /**
-     * DOCUMENT ME!
-     *
-     * @return  DOCUMENT ME!
-     *
-     * @throws  SearchException  DOCUMENT ME!
-     */
-    private int getFlurstueckObjectsCount() throws SearchException {
-        return getObjectsCount(FLURSTUECK_STMT);
+    @Override
+    public MetaService getMetaService() {
+        return metaService;
+    }
+
+    @Override
+    public void setMetaService(final MetaService metaService) {
+        this.metaService = metaService;
+    }
+
+    @Override
+    public String getTaskName() {
+        return TASK_NAME;
+    }
+
+    @Override
+    public Object execute(final Object body, final ServerActionParameter... params) {
+        Geometry geometry = null;
+        NasSearchType searchType = null;
+        if (params != null) {
+            for (final ServerActionParameter sap : params) {
+                if (sap.getKey().equals(Parameter.SEARCH_TYPE.toString())) {
+                    searchType = (NasSearchType)sap.getValue();
+                } else if (sap.getKey().equals(Parameter.GEOMETRY.toString())) {
+                    geometry = (Geometry)sap.getValue();
+                }
+            }
+        }
+        final ArrayList<Integer> resultList = new ArrayList<Integer>();
+        if (initError) {
+            LOG.warn(
+                "NasZaehlObjekteSearch initialisation error. An error during reading fme_db_con properties occured.");
+            return resultList;
+        }
+
+        try {
+            if (null != searchType) {
+                switch (searchType) {
+                    case FLURSTUECKE: {
+                        resultList.add(getFlurstueckObjectsCount(geometry));
+                    }
+                    break;
+                    case GEBAEUDE: {
+                        resultList.add(getGebaeudeObjectsCount(geometry));
+                    }
+                    break;
+                    case ADRESSE: {
+                        resultList.add(getAddressenCount(geometry));
+                    }
+                    break;
+                    case BODENPUNKTE: {
+                        resultList.add(getBodenpunkteObjectsCount(geometry));
+                    }
+                    break;
+                    case DACHPUNKTE: {
+                        resultList.add(getDachpunkteObjectsCount(geometry));
+                    }
+                    break;
+                    default: {
+                    }
+                }
+            }
+            return resultList;
+        } catch (final SearchException ex) {
+            LOG.error(ex, ex);
+            return null;
+        }
     }
 
     /**
      * DOCUMENT ME!
      *
+     * @param   geometry  DOCUMENT ME!
+     *
      * @return  DOCUMENT ME!
      *
      * @throws  SearchException  DOCUMENT ME!
      */
-    private int getGebaeudeObjectsCount() throws SearchException {
-        return getObjectsCount(GEAEUDE_STMT);
+    private int getFlurstueckObjectsCount(final Geometry geometry) throws SearchException {
+        return getObjectsCount(FLURSTUECK_STMT, geometry);
     }
 
     /**
      * DOCUMENT ME!
      *
+     * @param   geometry  DOCUMENT ME!
+     *
      * @return  DOCUMENT ME!
      *
      * @throws  SearchException  DOCUMENT ME!
      */
-    private int getBodenpunkteObjectsCount() throws SearchException {
-        return getObjectsCount(BODEN_PKT_STMT);
+    private int getGebaeudeObjectsCount(final Geometry geometry) throws SearchException {
+        return getObjectsCount(GEAEUDE_STMT, geometry);
     }
 
     /**
      * DOCUMENT ME!
      *
+     * @param   geometry  DOCUMENT ME!
+     *
      * @return  DOCUMENT ME!
      *
      * @throws  SearchException  DOCUMENT ME!
      */
-    private int getDachpunkteObjectsCount() throws SearchException {
-        return getObjectsCount(DACH_PKT_STMT);
+    private int getBodenpunkteObjectsCount(final Geometry geometry) throws SearchException {
+        return getObjectsCount(BODEN_PKT_STMT, geometry);
+    }
+
+    /**
+     * DOCUMENT ME!
+     *
+     * @param   geometry  DOCUMENT ME!
+     *
+     * @return  DOCUMENT ME!
+     *
+     * @throws  SearchException  DOCUMENT ME!
+     */
+    private int getDachpunkteObjectsCount(final Geometry geometry) throws SearchException {
+        return getObjectsCount(DACH_PKT_STMT, geometry);
     }
 
     /**
      * DOCUMENT ME!
      *
      * @param   statement  DOCUMENT ME!
+     * @param   geometry   DOCUMENT ME!
      *
      * @return  DOCUMENT ME!
      *
      * @throws  SearchException  DOCUMENT ME!
      */
-    private synchronized int getObjectsCount(final String statement) throws SearchException {
+    private synchronized int getObjectsCount(final String statement, final Geometry geometry) throws SearchException {
         Statement st = null;
         try {
-//            initConnection();
             if ((fmeConn == null) || fmeConn.isClosed()) {
                 initConnection();
             }
@@ -228,12 +321,14 @@ public class NasZaehlObjekteSearch extends AbstractCidsServerSearch {
     /**
      * DOCUMENT ME!
      *
+     * @param   geometry  DOCUMENT ME!
+     *
      * @return  DOCUMENT ME!
      *
      * @throws  SearchException  DOCUMENT ME!
      */
-    private int getAddressenCount() throws SearchException {
-        final MetaService ms = (MetaService)getActiveLocalServers().get("WUNDA_BLAU");
+    private int getAddressenCount(final Geometry geometry) throws SearchException {
+        final MetaService ms = getMetaService();
 
         if (ms != null) {
             try {
@@ -264,52 +359,13 @@ public class NasZaehlObjekteSearch extends AbstractCidsServerSearch {
      *
      * @throws  SearchException  DOCUMENT ME!
      */
-    private static void initConnection() throws SearchException {
+    private void initConnection() throws SearchException {
         try {
-            fmeConn = DriverManager.getConnection(url,
-                    user, pw);
-        } catch (SQLException ex) {
+            fmeConn = DriverManager.getConnection(url, user, pw);
+        } catch (final SQLException ex) {
             throw new SearchException(
-                "Error during NasZaehlObjekte search.Could not create db connection to fme_import database");
+                "Error during NasZaehlObjekte search.Could not create db connection to fme_import database",
+                ex);
         }
-    }
-
-    @Override
-    public Collection performServerSearch() throws SearchException {
-        final ArrayList<Integer> resultList = new ArrayList<Integer>();
-        if (initError) {
-            LOG.warn(
-                "NasZaehlObjekteSearch initialisation error. An error during reading fme_db_con properties occured.");
-            return resultList;
-        }
-
-        if (searchType == NasZaehlObjekteSearch.NasSearchType.FLURSTUECKE) {
-            resultList.add(getFlurstueckObjectsCount());
-        } else if (searchType == NasZaehlObjekteSearch.NasSearchType.GEBAEUDE) {
-            resultList.add(getGebaeudeObjectsCount());
-        } else if (searchType == NasZaehlObjekteSearch.NasSearchType.ADRESSE) {
-            resultList.add(getAddressenCount());
-        } else if (searchType == NasZaehlObjekteSearch.NasSearchType.BODENPUNKTE) {
-            resultList.add(getBodenpunkteObjectsCount());
-        } else if (searchType == NasZaehlObjekteSearch.NasSearchType.DACHPUNKTE) {
-            resultList.add(getDachpunkteObjectsCount());
-        }
-        return resultList;
-    }
-
-    /**
-     * DOCUMENT ME!
-     *
-     * @param  args  DOCUMENT ME!
-     */
-    public static void main(final String[] args) {
-        final NasZaehlObjekteSearch search = new NasZaehlObjekteSearch(
-                null,
-                NasZaehlObjekteSearch.NasSearchType.GEBAEUDE);
-//        try {
-////            search.initConnection();
-//        } catch (SearchException ex) {
-//            Exceptions.printStackTrace(ex);
-//        }
     }
 }

@@ -42,7 +42,10 @@ public final class SOAPAccessProvider {
      * Creates a new SOAPAccessProvider object.
      */
     public SOAPAccessProvider() {
-        this(AlkisConstants.COMMONS.USER, AlkisConstants.COMMONS.PASSWORD, AlkisConstants.COMMONS.SERVICE);
+        this(
+            ServerAlkisConf.getInstance().USER,
+            ServerAlkisConf.getInstance().PASSWORD,
+            ServerAlkisConf.getInstance().SERVICE);
     }
 
     /**
@@ -55,12 +58,12 @@ public final class SOAPAccessProvider {
         this(
             identityCard,
             service,
-            AlkisConstants.COMMONS.SERVER
-                    + AlkisConstants.COMMONS.CATALOG_SERVICE,
-            AlkisConstants.COMMONS.SERVER
-                    + AlkisConstants.COMMONS.INFO_SERVICE,
-            AlkisConstants.COMMONS.SERVER
-                    + AlkisConstants.COMMONS.SEARCH_SERVICE);
+            ServerAlkisConf.getInstance().SERVER
+                    + ServerAlkisConf.getInstance().CATALOG_SERVICE,
+            ServerAlkisConf.getInstance().SERVER
+                    + ServerAlkisConf.getInstance().INFO_SERVICE,
+            ServerAlkisConf.getInstance().SERVER
+                    + ServerAlkisConf.getInstance().SEARCH_SERVICE);
     }
 
     /**
@@ -99,12 +102,13 @@ public final class SOAPAccessProvider {
             this.alkisSearchService = new ALKISSearchServicesServiceLocator().getALKISSearchServices(new URL(
                         searchService));
         } catch (Exception ex) {
-            throw new IllegalStateException("Can not create SOAPAccessProvider" + AlkisConstants.COMMONS.SERVER + "|"
-                        + AlkisConstants.COMMONS.CATALOG_SERVICE + "|"
-                        + AlkisConstants.COMMONS.SERVER + "|"
-                        + AlkisConstants.COMMONS.INFO_SERVICE + "|"
-                        + AlkisConstants.COMMONS.SERVER + "|"
-                        + AlkisConstants.COMMONS.SEARCH_SERVICE,
+            throw new IllegalStateException("Can not create SOAPAccessProvider" + ServerAlkisConf.getInstance().SERVER
+                        + "|"
+                        + ServerAlkisConf.getInstance().CATALOG_SERVICE + "|"
+                        + ServerAlkisConf.getInstance().SERVER + "|"
+                        + ServerAlkisConf.getInstance().INFO_SERVICE + "|"
+                        + ServerAlkisConf.getInstance().SERVER + "|"
+                        + ServerAlkisConf.getInstance().SEARCH_SERVICE,
                 ex);
         }
     }

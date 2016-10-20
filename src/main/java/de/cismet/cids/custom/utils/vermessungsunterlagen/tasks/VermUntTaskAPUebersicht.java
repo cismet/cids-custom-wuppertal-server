@@ -27,7 +27,7 @@ import java.util.ArrayList;
 import java.util.Collection;
 
 import de.cismet.cids.custom.utils.alkis.AlkisProductDescription;
-import de.cismet.cids.custom.utils.alkis.AlkisProducts;
+import de.cismet.cids.custom.utils.alkis.ServerAlkisProducts;
 import de.cismet.cids.custom.utils.vermessungsunterlagen.VermessungsunterlagenHelper;
 
 import de.cismet.cids.dynamics.CidsBean;
@@ -45,7 +45,7 @@ public class VermUntTaskAPUebersicht extends VermUntTaskAP {
     //~ Static fields/initializers ---------------------------------------------
 
     public static final String TYPE = "AP_Uebersicht";
-    private static final AlkisProducts PRODUCTS = AlkisProducts.getInstance();
+    private static final ServerAlkisProducts PRODUCTS = ServerAlkisProducts.getInstance();
 
     //~ Instance fields --------------------------------------------------------
 
@@ -106,7 +106,7 @@ public class VermUntTaskAPUebersicht extends VermUntTaskAP {
         AlkisProductDescription minimalWidthFittingProduct = null;
         AlkisProductDescription minimalHeightFittingProduct = null;
         AlkisProductDescription defaultProduct = null;
-        for (final AlkisProductDescription product : AlkisProducts.getInstance().ALKIS_MAP_PRODUCTS) {
+        for (final AlkisProductDescription product : ServerAlkisProducts.getInstance().ALKIS_MAP_PRODUCTS) {
             if (clazz.equals(product.getClazz()) && type.equals(product.getType())) {
                 if (product.isDefaultProduct()) {
                     defaultProduct = product;
@@ -185,7 +185,7 @@ public class VermUntTaskAPUebersicht extends VermUntTaskAP {
         final String landparcelcode = (String)flurstuecke.iterator().next().getProperty("alkis_id");
         final AlkisProductDescription product = determineProduct(envelope);
 
-        final URL url = AlkisProducts.getInstance()
+        final URL url = ServerAlkisProducts.getInstance()
                     .productKarteUrl(
                         landparcelcode,
                         product,

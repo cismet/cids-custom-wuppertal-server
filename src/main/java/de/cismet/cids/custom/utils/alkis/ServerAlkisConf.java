@@ -10,7 +10,11 @@
  * To change this template file, choose Tools | Templates
  * and open the template in the editor.
  */
-package de.cismet.cids.custom.utils;
+package de.cismet.cids.custom.utils.alkis;
+
+import de.cismet.cids.custom.utils.WundaBlauServerResources;
+
+import de.cismet.cids.utils.serverresources.CachedServerResourcesLoader;
 
 /**
  * DOCUMENT ME!
@@ -18,48 +22,28 @@ package de.cismet.cids.custom.utils;
  * @author   jruiz
  * @version  $Revision$, $Date$
  */
-public class WundaBlauServerResourcesPreloader {
-
-    //~ Static fields/initializers ---------------------------------------------
-
-    private static final org.apache.log4j.Logger LOG = org.apache.log4j.Logger.getLogger(
-            WundaBlauServerResourcesPreloader.class);
+public class ServerAlkisConf extends AlkisConf {
 
     //~ Constructors -----------------------------------------------------------
 
     /**
-     * Creates a new ServerResourcesPreloader object.
+     * Creates a new ServerAlkisConf object.
+     *
+     * @throws  Exception  DOCUMENT ME!
      */
-    private WundaBlauServerResourcesPreloader() {
+    private ServerAlkisConf() throws Exception {
+        super(CachedServerResourcesLoader.getInstance().getPropertiesResource(
+                WundaBlauServerResources.ALKIS_CONF.getValue()));
     }
 
     //~ Methods ----------------------------------------------------------------
 
     /**
      * DOCUMENT ME!
-     */
-    public void loadAll() {
-        boolean error = false;
-        for (final WundaBlauServerResources resource : WundaBlauServerResources.values()) {
-            try {
-                resource.loadWithCachedServerResourcesLoader();
-            } catch (final Exception ex) {
-                LOG.warn("Exception while loading resource from the resources base path.", ex);
-                error = true;
-            }
-        }
-
-        if (error) {
-            LOG.warn("Not all server resources could be loaded !");
-        }
-    }
-
-    /**
-     * DOCUMENT ME!
      *
      * @return  DOCUMENT ME!
      */
-    public static WundaBlauServerResourcesPreloader getInstance() {
+    public static ServerAlkisConf getInstance() {
         return LazyInitialiser.INSTANCE;
     }
 
@@ -74,7 +58,15 @@ public class WundaBlauServerResourcesPreloader {
 
         //~ Static fields/initializers -----------------------------------------
 
-        private static final WundaBlauServerResourcesPreloader INSTANCE = new WundaBlauServerResourcesPreloader();
+        private static final ServerAlkisConf INSTANCE;
+
+        static {
+            try {
+                INSTANCE = new ServerAlkisConf();
+            } catch (final Exception ex) {
+                throw new RuntimeException("Exception while initializing ServerAlkisConf", ex);
+            }
+        }
 
         //~ Constructors -------------------------------------------------------
 

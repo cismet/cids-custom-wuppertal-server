@@ -48,8 +48,11 @@ public class ImageAnnotator {
 
     static {
         try {
-            calibriFont = CachedServerResourcesLoader.getInstance()
-                        .getTrueTypeFontResource(WundaBlauServerResources.IMAGE_ANNOTATOR_FONT.getValue());
+            calibriFont = Font.createFont(
+                    Font.TRUETYPE_FONT,
+                    new ByteArrayInputStream(
+                        CachedServerResourcesLoader.getInstance().getBinaryResource(
+                            WundaBlauServerResources.IMAGE_ANNOTATOR_FONT.getValue())));
         } catch (Exception ex) {
             Log.warn("Calibri could not be loaded", ex);
             calibriFont = new Font(Font.SANS_SERIF, Font.BOLD, 100);

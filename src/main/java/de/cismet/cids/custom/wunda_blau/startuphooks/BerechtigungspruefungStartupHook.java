@@ -59,8 +59,8 @@ public class BerechtigungspruefungStartupHook implements DomainServerStartupHook
                                 null,
                                 null,
                                 "WUNDA_BLAU",
-                                BerechtigungspruefungProperties.CIDS_LOGIN,
-                                BerechtigungspruefungProperties.CIDS_PASSWORD);
+                                BerechtigungspruefungProperties.getInstance().getCidsLogin(),
+                                BerechtigungspruefungProperties.getInstance().getCidsPassword());
                         BerechtigungspruefungHandler.getInstance().setMetaService(metaService);
                         BerechtigungspruefungHandler.getInstance().sendMessagesForAllOpenFreigaben(user);
                         BerechtigungspruefungHandler.getInstance().sendMessagesForAllOpenAnfragen(user);

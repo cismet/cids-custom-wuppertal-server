@@ -14,9 +14,6 @@ package de.cismet.cids.custom.proxy.startuphooks;
 
 import Sirius.server.middleware.impls.proxy.ProxyStartupHook;
 
-import de.cismet.cids.custom.utils.alkis.AlkisProducts;
-import de.cismet.cids.custom.wunda_blau.search.actions.NasZaehlObjekteSearch;
-
 /**
  * DOCUMENT ME!
  *
@@ -30,10 +27,5 @@ public class WuppProxyStartupHook implements ProxyStartupHook {
 
     @Override
     public void proxyStarted() {
-        AlkisProducts.getInstance();
-
-        final NasZaehlObjekteSearch search = new NasZaehlObjekteSearch(
-                null,
-                NasZaehlObjekteSearch.NasSearchType.ADRESSE);
     }
 }

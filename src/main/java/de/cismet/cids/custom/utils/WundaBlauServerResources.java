@@ -35,6 +35,7 @@ public enum WundaBlauServerResources {
         CachedServerResourcesLoader.Type.JASPER_REPORT),
 
     BUTLER_PROPERTIES("/de/cismet/cids/custom/utils/butler/butler.properties", CachedServerResourcesLoader.Type.TEXT),
+
     NAS_SERVER_PROPERTIES(
         "/de/cismet/cids/custom/utils/nas/nasServer_conf.properties",
         CachedServerResourcesLoader.Type.TEXT),
@@ -59,10 +60,13 @@ public enum WundaBlauServerResources {
     ALKIS_CONF(
         "/de/cismet/cids/custom/wunda_blau/res/alkis/alkis_conf.properties",
         CachedServerResourcesLoader.Type.TEXT),
-    ALKIS_PRODUCTS(
+    ALKIS_PRODUCTS_PROPERTIES(
         "/de/cismet/cids/custom/wunda_blau/res/alkis/alkis_products.properties",
         CachedServerResourcesLoader.Type.TEXT),
-    ALKIS_FORMATS(
+    ALKIS_BUCHUNTSBLATTBEZIRKE_JSON(
+        "/de/cismet/cids/custom/wunda_blau/res/alkis/buchungsblattbezirke.json",
+        CachedServerResourcesLoader.Type.TEXT),
+    ALKIS_FORMATS_PROPERTIES(
         "/de/cismet/cids/custom/wunda_blau/res/alkis/formats.properties",
         CachedServerResourcesLoader.Type.TEXT),
     ALKIS_PRODUKTBESCHREIBUNG_XML(
@@ -70,6 +74,9 @@ public enum WundaBlauServerResources {
         CachedServerResourcesLoader.Type.TEXT),
     BERECHTIGUNGSPRUEFUNG_PROPERTIES(
         "/de/cismet/cids/custom/berechtigungspruefung/berechtigungspruefung.properties",
+        CachedServerResourcesLoader.Type.TEXT),
+    BERECHTIGUNGSPRUEFUNG_CONF_JSON(
+        "/de/cismet/cids/custom/berechtigungspruefung/berechtigungspruefung_conf.json",
         CachedServerResourcesLoader.Type.TEXT),
     FORMSOLUTIONS_PROPERTIES(
         "/de/cismet/cids/custom/wunda_blau/res/formsolutions/fs_conf.properties",
@@ -86,9 +93,34 @@ public enum WundaBlauServerResources {
     MOTD_LAGIS_PROPERTIES("/de/cismet/cids/custom/motd/lagis.properties", CachedServerResourcesLoader.Type.TEXT),
     MOTD_BELIS2_PROPERTIES("/de/cismet/cids/custom/motd/belis2.properties", CachedServerResourcesLoader.Type.TEXT),
 
+    PNR_TEMPLATE_BEN_AUFTR_ALL(
+        "/de/cismet/cids/custom/utils/pointnumberreservation/A_Ben_Auftr_alle_PKZ.xml",
+        CachedServerResourcesLoader.Type.TEXT),
+    PNR_TEMPLATE_BEN_AUFTR_ONE_ANR(
+        "/de/cismet/cids/custom/utils/pointnumberreservation/A_Ben_Auftr_eine_ANR.xml",
+        CachedServerResourcesLoader.Type.TEXT),
+    PNR_TEMPLATE_BEN_AUFTR_WILDCARD(
+        "/de/cismet/cids/custom/utils/pointnumberreservation/A_Ben_Auftr_ANR_Praefix_Wildcard.xml",
+        CachedServerResourcesLoader.Type.TEXT),
+    PNR_TEMPLATE_FREIGABE(
+        "/de/cismet/cids/custom/utils/pointnumberreservation/A_Freigabe.xml",
+        CachedServerResourcesLoader.Type.TEXT),
+    PNR_TEMPLATE_PROLONG(
+        "/de/cismet/cids/custom/utils/pointnumberreservation/A_Verlaengern.xml",
+        CachedServerResourcesLoader.Type.TEXT),
+    PNR_TEMPLATE_PROLONG_SUB(
+        "/de/cismet/cids/custom/utils/pointnumberreservation/A_Verlaengern__Sub.xml",
+        CachedServerResourcesLoader.Type.TEXT),
+    PNR_TEMPLATE_RESERVIERUNG(
+        "/de/cismet/cids/custom/utils/pointnumberreservation/A_reservierung.xml",
+        CachedServerResourcesLoader.Type.TEXT),
+    PNR_TEMPLATE_RESERVIERUNG_SW(
+        "/de/cismet/cids/custom/utils/pointnumberreservation/A_reservierung_startwert.xml",
+        CachedServerResourcesLoader.Type.TEXT),
+
     IMAGE_ANNOTATOR_FONT(
         "/de/cismet/cids/custom/wunda_blau/search/actions/Calibri_Bold.ttf",
-        CachedServerResourcesLoader.Type.TRUETYPE_FONT);
+        CachedServerResourcesLoader.Type.BINARY);
 
     //~ Instance fields --------------------------------------------------------
 
@@ -126,5 +158,30 @@ public enum WundaBlauServerResources {
      */
     public CachedServerResourcesLoader.Type getType() {
         return type;
+    }
+
+    /**
+     * DOCUMENT ME!
+     *
+     * @return  DOCUMENT ME!
+     *
+     * @throws  Exception  DOCUMENT ME!
+     */
+    public Object loadWithCachedServerResourcesLoader() throws Exception {
+        final CachedServerResourcesLoader loader = CachedServerResourcesLoader.getInstance();
+        switch (type) {
+            case JASPER_REPORT: {
+                return loader.loadJasperReportResource(value);
+            }
+            case TEXT: {
+                return loader.loadTextResource(value);
+            }
+            case BINARY: {
+                return loader.loadBinaryResource(value);
+            }
+            default: {
+                throw new Exception("unknown serverResource type");
+            }
+        }
     }
 }

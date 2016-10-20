@@ -108,9 +108,6 @@ public class VermessungsunterlagenHelper {
     private static final ObjectMapper EXCEPTION_MAPPER = new ObjectMapper();
     private static final ObjectMapper JOB_MAPPER;
 
-    private static final Properties PROPERTIES = CachedServerResourcesLoader.getInstance()
-                .getPropertiesResource(WundaBlauServerResources.VERMESSUNGSUNTERLAGENPORTAL_PROPERTIES.getValue());
-
     public static final String CIDS_LOGIN = readProperty("CIDS_LOGIN", null);
     public static final String PATH_TMP = readProperty("PATH_TMP", "/tmp");
     public static final String FTP_HOST = readProperty("FTP_HOST", null);
@@ -170,6 +167,8 @@ public class VermessungsunterlagenHelper {
 
     //~ Instance fields --------------------------------------------------------
 
+    private final Properties properties;
+
     private MetaClass mc_VERMESSUNGSUNTERLAGENAUFTRAG;
     private MetaClass mc_VERMESSUNGSUNTERLAGENAUFTRAG_FLURSTUECK;
     private MetaClass mc_VERMESSUNGSUNTERLAGENAUFTRAG_PUNKTNUMMER;
@@ -187,9 +186,27 @@ public class VermessungsunterlagenHelper {
      * Creates a new VermessungsunterlagenHelper object.
      */
     private VermessungsunterlagenHelper() {
+        Properties properties = null;
+        try {
+            properties = CachedServerResourcesLoader.getInstance()
+                        .getPropertiesResource(WundaBlauServerResources.VERMESSUNGSUNTERLAGENPORTAL_PROPERTIES
+                                .getValue());
+        } catch (final Exception ex) {
+            LOG.error("VermessungsunterlagenHelper could not load the properties", ex);
+        }
+        this.properties = properties;
     }
 
     //~ Methods ----------------------------------------------------------------
+
+    /**
+     * DOCUMENT ME!
+     *
+     * @return  DOCUMENT ME!
+     */
+    private Properties getProperties() {
+        return properties;
+    }
 
     /**
      * DOCUMENT ME!
@@ -202,7 +219,7 @@ public class VermessungsunterlagenHelper {
     private static String readProperty(final String property, final String defaultValue) {
         String value = defaultValue;
         try {
-            value = PROPERTIES.getProperty(property);
+            value = getInstance().getProperties().getProperty(property);
         } catch (final Exception ex) {
             final String message = "could not read " + property + " from "
                         + WundaBlauServerResources.VERMESSUNGSUNTERLAGENPORTAL_PROPERTIES.getValue()

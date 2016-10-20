@@ -23,7 +23,7 @@ import java.net.URL;
 import java.util.Collection;
 import java.util.Map;
 
-import de.cismet.cids.custom.utils.alkis.AlkisConstants;
+import de.cismet.cids.custom.utils.alkis.ServerAlkisConf;
 import de.cismet.cids.custom.utils.alkis.VermessungsRissReportHelper;
 import de.cismet.cids.custom.utils.vermessungsunterlagen.VermessungsunterlagenHelper;
 import de.cismet.cids.custom.utils.vermessungsunterlagen.VermessungsunterlagenTask;
@@ -85,7 +85,8 @@ public abstract class VermUntTaskRisse extends VermessungsunterlagenTask {
     @Override
     public void performTask() throws Exception {
         final String filename = getPath() + "/"
-                    + (AlkisConstants.COMMONS.VERMESSUNG_HOST_BILDER.equalsIgnoreCase(host) ? "vermriss" : "ergdok")
+                    + (ServerAlkisConf.getInstance().VERMESSUNG_HOST_BILDER.equalsIgnoreCase(host) ? "vermriss"
+                                                                                                   : "ergdok")
                     + ".pdf";
 
         final Object[] tmp = VermessungsRissReportHelper.generateReportData(

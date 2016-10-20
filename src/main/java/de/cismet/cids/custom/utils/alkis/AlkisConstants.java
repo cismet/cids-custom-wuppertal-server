@@ -23,6 +23,7 @@ import de.cismet.cids.utils.serverresources.CachedServerResourcesLoader;
  * @author   srichter
  * @version  $Revision$, $Date$
  */
+@Deprecated
 public final class AlkisConstants {
 
     //~ Static fields/initializers ---------------------------------------------

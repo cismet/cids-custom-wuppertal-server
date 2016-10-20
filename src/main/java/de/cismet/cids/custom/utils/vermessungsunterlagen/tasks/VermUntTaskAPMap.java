@@ -22,7 +22,7 @@ import java.util.Collection;
 import java.util.HashMap;
 
 import de.cismet.cids.custom.utils.alkis.AlkisPointReportBean;
-import de.cismet.cids.custom.utils.alkis.AlkisProducts;
+import de.cismet.cids.custom.utils.alkis.ServerAlkisProducts;
 import de.cismet.cids.custom.utils.vermessungsunterlagen.VermessungsunterlagenHelper;
 
 import de.cismet.cids.dynamics.CidsBean;
@@ -57,7 +57,7 @@ public class VermUntTaskAPMap extends VermUntTaskAP {
     public void performTask() throws Exception {
         OutputStream out = null;
         try {
-            final String filename = getPath() + "/" + AlkisProducts.getInstance().PUNKTLISTE_PDF + ".pdf";
+            final String filename = getPath() + "/" + ServerAlkisProducts.getInstance().PUNKTLISTE_PDF + ".pdf";
             out = new FileOutputStream(filename);
             VermessungsunterlagenHelper.jasperReportDownload(
                 VermessungsunterlagenHelper.AP_REPORT,

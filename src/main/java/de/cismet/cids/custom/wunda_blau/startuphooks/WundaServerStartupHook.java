@@ -12,13 +12,10 @@
  */
 package de.cismet.cids.custom.wunda_blau.startuphooks;
 
+import Sirius.server.middleware.impls.domainserver.DomainServerImpl;
 import Sirius.server.middleware.interfaces.domainserver.DomainServerStartupHook;
 
 import de.cismet.cids.custom.utils.WundaBlauServerResourcesPreloader;
-import de.cismet.cids.custom.utils.alkis.AlkisProducts;
-import de.cismet.cids.custom.utils.butler.ButlerProductGenerator;
-import de.cismet.cids.custom.utils.nas.NASProductGenerator;
-import de.cismet.cids.custom.utils.pointnumberreservation.PointNumberReservationService;
 
 /**
  * DOCUMENT ME!
@@ -33,16 +30,7 @@ public class WundaServerStartupHook implements DomainServerStartupHook {
 
     @Override
     public void domainServerStarted() {
-        /*
-         * this class is used to guarantee that all classes that need to loads resources from the res.jar are
-         * initialized during server startup to avoid that these resources are loaded from an eventually changed jar,
-         * which will cause an vm crash or Exception
-         */
-        WundaBlauServerResourcesPreloader.getInstance();
-        NASProductGenerator.instance();
-        ButlerProductGenerator.getInstance();
-        PointNumberReservationService.instance();
-        AlkisProducts.getInstance();
+        WundaBlauServerResourcesPreloader.getInstance().loadAll();
     }
 
     @Override

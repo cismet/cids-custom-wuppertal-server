@@ -74,7 +74,7 @@ public class AlkisPunktReportScriptlet extends JRDefaultScriptlet {
 
         final StringBuilder urlBuilder;
         if (pointcode.trim().length() < 15) {
-            urlBuilder = new StringBuilder(AlkisConstants.COMMONS.APMAPS_HOST);
+            urlBuilder = new StringBuilder(ServerAlkisConf.getInstance().APMAPS_HOST);
 
             final String kilometerquadratPart1 = pointcode.substring(2, 4);
             final String kilometerquadratPart2 = pointcode.substring(6, 8);
@@ -83,13 +83,13 @@ public class AlkisPunktReportScriptlet extends JRDefaultScriptlet {
             urlBuilder.append(kilometerquadratPart1);
             urlBuilder.append(kilometerquadratPart2);
             urlBuilder.append('/');
-            urlBuilder.append(AlkisConstants.COMMONS.APMAPS_PREFIX);
+            urlBuilder.append(ServerAlkisConf.getInstance().APMAPS_PREFIX);
             urlBuilder.append(pointcode);
             urlBuilder.append('.');
         } else {
-            urlBuilder = new StringBuilder(AlkisConstants.COMMONS.APMAPS_ETRS_HOST);
+            urlBuilder = new StringBuilder(ServerAlkisConf.getInstance().APMAPS_ETRS_HOST);
             urlBuilder.append('/');
-            urlBuilder.append(AlkisConstants.COMMONS.APMAPS_PREFIX);
+            urlBuilder.append(ServerAlkisConf.getInstance().APMAPS_PREFIX);
             urlBuilder.append(pointcode);
             urlBuilder.append('.');
         }

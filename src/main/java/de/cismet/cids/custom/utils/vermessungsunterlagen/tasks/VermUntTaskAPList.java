@@ -21,7 +21,7 @@ import java.net.URL;
 
 import java.util.Collection;
 
-import de.cismet.cids.custom.utils.alkis.AlkisProducts;
+import de.cismet.cids.custom.utils.alkis.ServerAlkisProducts;
 import de.cismet.cids.custom.utils.vermessungsunterlagen.VermessungsunterlagenHelper;
 
 import de.cismet.cids.dynamics.CidsBean;
@@ -39,7 +39,7 @@ public class VermUntTaskAPList extends VermUntTaskAP {
     //~ Static fields/initializers ---------------------------------------------
 
     public static final String TYPE = "AP_List";
-    private static final AlkisProducts PRODUCTS = AlkisProducts.getInstance();
+    private static final ServerAlkisProducts PRODUCTS = ServerAlkisProducts.getInstance();
 
     //~ Constructors -----------------------------------------------------------
 
@@ -59,7 +59,7 @@ public class VermUntTaskAPList extends VermUntTaskAP {
     public void performTask() throws Exception {
         final String punktListenString = getPunktlistenStringForChosenPoints(getAlkisPoints());
         final String code = PRODUCTS.PUNKTLISTE_TXT;
-        final String filename = getPath() + "/" + AlkisProducts.getInstance().PUNKTLISTE_TXT + ".plst";
+        final String filename = getPath() + "/" + ServerAlkisProducts.getInstance().PUNKTLISTE_TXT + ".plst";
         final File fileToSaveTo = new File(filename);
 
         if (punktListenString.length() > 3) {

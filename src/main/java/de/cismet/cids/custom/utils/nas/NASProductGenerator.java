@@ -102,9 +102,6 @@ public class NASProductGenerator {
 
     //~ Instance fields --------------------------------------------------------
 
-    private String EIGENTUEMER_TEMPLATE_RES = "/de/cismet/cids/custom/utils/nas/A_o_eigentuemer.xml";
-    private String KOMPLETT_TEMPLATE_RES = "/de/cismet/cids/custom/utils/nas/A_komplett.xml";
-    private String POINTS_TEMPLATE_RES = "/de/cismet/cids/custom/utils/nas/A_points.xml";
     private File openOrdersLogFile;
     private File undeliveredOrdersLogFile;
     private final transient org.apache.log4j.Logger log = org.apache.log4j.Logger.getLogger(this.getClass());
@@ -133,19 +130,6 @@ public class NASProductGenerator {
     private NASProductGenerator() {
         final Properties serviceProperties = new Properties();
         try {
-            final ServerProperties serverProps = DomainServerImpl.getServerProperties();
-            final String resFolder = serverProps.getServerResourcesBasePath();
-            KOMPLETT_TEMPLATE_RES = resFolder + "/de/cismet/cids/custom/utils/nas/A_komplett.xml";
-            EIGENTUEMER_TEMPLATE_RES = resFolder + "/de/cismet/cids/custom/utils/nas/A_o_eigentuemer.xml";
-            POINTS_TEMPLATE_RES = resFolder + "/de/cismet/cids/custom/utils/nas/A_points.xml";
-
-            if (!checkTemplateFilesAccesible()) {
-                log.warn(
-                    "NAS Datenabgabe initialisation Error. Could not read all necessary template files. NAS support is disabled");
-                initError = true;
-                return;
-            }
-
             serviceProperties.load(CachedServerResourcesLoader.getInstance().getStringReaderResource(
                     WundaBlauServerResources.NAS_SERVER_PROPERTIES.getValue()));
             SERVICE_URL = serviceProperties.getProperty("service");
@@ -1115,19 +1099,6 @@ public class NASProductGenerator {
                 Exceptions.printStackTrace(ex);
             }
         }
-    }
-
-    /**
-     * DOCUMENT ME!
-     *
-     * @return  DOCUMENT ME!
-     */
-    private boolean checkTemplateFilesAccesible() {
-        final File komplettTemplate = new File(KOMPLETT_TEMPLATE_RES);
-        final File eignetuemerTemplate = new File(EIGENTUEMER_TEMPLATE_RES);
-        final File pointTemplate = new File(POINTS_TEMPLATE_RES);
-
-        return (komplettTemplate.canRead() && eignetuemerTemplate.canRead() && pointTemplate.canRead());
     }
 
     //~ Inner Classes ----------------------------------------------------------

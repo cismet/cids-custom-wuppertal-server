@@ -37,8 +37,6 @@ import javax.xml.parsers.DocumentBuilder;
 import javax.xml.parsers.DocumentBuilderFactory;
 import javax.xml.parsers.ParserConfigurationException;
 
-import de.cismet.cids.custom.utils.alkis.AlkisConstants;
-
 /**
  * This class provides an easy way to convert JTS Geometry Collections into an xml representation that is suited to the
  * 3A Server interface used in for NAS-queries.

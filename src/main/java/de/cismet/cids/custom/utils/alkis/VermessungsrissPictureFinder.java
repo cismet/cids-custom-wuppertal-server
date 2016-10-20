@@ -51,8 +51,8 @@ public class VermessungsrissPictureFinder {
         };
     public static final String SUFFIX_REDUCED_SIZE = "_rs";
     private static final String LINKEXTENSION = ".txt";
-    public static String PATH_VERMESSUNG = AlkisConstants.COMMONS.VERMESSUNG_HOST_BILDER; //
-    public static String PATH_GRENZNIEDERSCHRIFT = AlkisConstants.COMMONS.VERMESSUNG_HOST_GRENZNIEDERSCHRIFTEN;
+    public static String PATH_VERMESSUNG = ServerAlkisConf.getInstance().VERMESSUNG_HOST_BILDER; //
+    public static String PATH_GRENZNIEDERSCHRIFT = ServerAlkisConf.getInstance().VERMESSUNG_HOST_GRENZNIEDERSCHRIFTEN;
     private static final String GRENZNIEDERSCHRIFT_PREFIX = "GN";
     private static final String VERMESSUNGSRISS_PREFIX = "VR";
     private static final String PATH_PLATZHALTER = "platzhalter";

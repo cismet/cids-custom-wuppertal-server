@@ -42,7 +42,8 @@ public class BerechtigungspruefungAnhangDownloadAction extends DownloadFileActio
         } else {
             final String dateiname = (String)body;
 
-            final String filePath = BerechtigungspruefungProperties.ANHANG_PFAD + "/" + dateiname.replaceAll("../", "");
+            final String filePath = BerechtigungspruefungProperties.getInstance().getAnhangPfad() + "/"
+                        + dateiname.replaceAll("../", "");
             final Object ret = super.execute(filePath);
             if (ret == null) {
                 throw new RuntimeException("File not found.");

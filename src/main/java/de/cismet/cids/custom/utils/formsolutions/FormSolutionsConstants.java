@@ -15,7 +15,6 @@ package de.cismet.cids.custom.utils.formsolutions;
 import java.util.Properties;
 
 import de.cismet.cids.custom.utils.WundaBlauServerResources;
-import de.cismet.cids.custom.utils.alkis.AlkisConstants;
 
 import de.cismet.cids.utils.serverresources.CachedServerResourcesLoader;
 
@@ -29,7 +28,7 @@ public class FormSolutionsConstants {
 
     //~ Static fields/initializers ---------------------------------------------
 
-    private static final org.apache.log4j.Logger LOG = org.apache.log4j.Logger.getLogger(AlkisConstants.class);
+    private static final org.apache.log4j.Logger LOG = org.apache.log4j.Logger.getLogger(FormSolutionsConstants.class);
 
     public static final String USER;
     public static final String PASSWORD;

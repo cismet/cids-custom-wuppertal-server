@@ -7,9 +7,6 @@
 ****************************************************/
 package de.cismet.cids.custom.utils.pointnumberreservation;
 
-import Sirius.server.middleware.impls.domainserver.DomainServerImpl;
-import Sirius.server.property.ServerProperties;
-
 import de.aed_sicad.namespaces.svr.AuftragsManager;
 import de.aed_sicad.namespaces.svr.AuftragsManagerLocator;
 import de.aed_sicad.namespaces.svr.AuftragsManagerSoap;
@@ -17,8 +14,6 @@ import de.aed_sicad.namespaces.svr.AuftragsManagerSoap;
 import java.io.BufferedReader;
 import java.io.ByteArrayInputStream;
 import java.io.ByteArrayOutputStream;
-import java.io.File;
-import java.io.FileInputStream;
 import java.io.FileNotFoundException;
 import java.io.IOException;
 import java.io.InputStream;
@@ -74,9 +69,9 @@ public class PointNumberReservationService {
 
     //~ Instance fields --------------------------------------------------------
 
-    private final String SERVICE_URL;
-    private final String USER;
-    private final String PW;
+    private String SERVICE_URL;
+    private String USER;
+    private String PW;
     private AuftragsManagerSoap manager;
     private boolean initError = false;
     private String TEMPLATE_BEN_AUFTR_ALL;
@@ -94,43 +89,44 @@ public class PointNumberReservationService {
      * Creates a new PointNumberService object.
      */
     private PointNumberReservationService() {
-        final Properties serviceProperties = CachedServerResourcesLoader.getInstance()
-                    .getPropertiesResource(WundaBlauServerResources.PNR_PROPERTIES.getValue());
         try {
-            final ServerProperties serverProps = DomainServerImpl.getServerProperties();
-            final String serverRespath = serverProps.getServerResourcesBasePath();
-            TEMPLATE_BEN_AUFTR_ALL = serverRespath
-                        + "/de/cismet/cids/custom/utils/pointnumberreservation/A_Ben_Auftr_alle_PKZ.xml";
-            TEMPLATE_BEN_AUFTR_ONE_ANR = serverRespath
-                        + "/de/cismet/cids/custom/utils/pointnumberreservation/A_Ben_Auftr_eine_ANR.xml";
-            TEMPLATE_BEN_AUFTR_WILDCARD = serverRespath
-                        + "/de/cismet/cids/custom/utils/pointnumberreservation/A_Ben_Auftr_ANR_Praefix_Wildcard.xml";
-            TEMPLATE_FREIGABE = serverRespath + "/de/cismet/cids/custom/utils/pointnumberreservation/A_Freigabe.xml";
-            TEMPLATE_PROLONG = serverRespath + "/de/cismet/cids/custom/utils/pointnumberreservation/A_Verlaengern.xml";
-            TEMPLATE_PROLONG_SUB = serverRespath
-                        + "/de/cismet/cids/custom/utils/pointnumberreservation/A_Verlaengern__Sub.xml";
-            TEMPLATE_RESERVIERUNG = serverRespath
-                        + "/de/cismet/cids/custom/utils/pointnumberreservation/A_reservierung.xml";
-            TEMPLATE_RESERVIERUNG_SW = serverRespath
-                        + "/de/cismet/cids/custom/utils/pointnumberreservation/A_reservierung_startwert.xml";
+            final Properties serviceProperties = CachedServerResourcesLoader.getInstance()
+                        .getPropertiesResource(WundaBlauServerResources.PNR_PROPERTIES.getValue());
+            TEMPLATE_BEN_AUFTR_ALL = CachedServerResourcesLoader.getInstance()
+                        .getTextResource(WundaBlauServerResources.PNR_TEMPLATE_BEN_AUFTR_ALL.getValue());
+            TEMPLATE_BEN_AUFTR_ONE_ANR = CachedServerResourcesLoader.getInstance()
+                        .getTextResource(WundaBlauServerResources.PNR_TEMPLATE_BEN_AUFTR_ONE_ANR.getValue());
+            TEMPLATE_BEN_AUFTR_WILDCARD = CachedServerResourcesLoader.getInstance()
+                        .getTextResource(WundaBlauServerResources.PNR_TEMPLATE_BEN_AUFTR_WILDCARD.getValue());
+            TEMPLATE_FREIGABE = CachedServerResourcesLoader.getInstance()
+                        .getTextResource(WundaBlauServerResources.PNR_TEMPLATE_FREIGABE.getValue());
+            TEMPLATE_PROLONG = CachedServerResourcesLoader.getInstance()
+                        .getTextResource(WundaBlauServerResources.PNR_TEMPLATE_PROLONG.getValue());
+            TEMPLATE_PROLONG_SUB = CachedServerResourcesLoader.getInstance()
+                        .getTextResource(WundaBlauServerResources.PNR_TEMPLATE_PROLONG_SUB.getValue());
+            TEMPLATE_RESERVIERUNG = CachedServerResourcesLoader.getInstance()
+                        .getTextResource(WundaBlauServerResources.PNR_TEMPLATE_RESERVIERUNG.getValue());
+            TEMPLATE_RESERVIERUNG_SW = CachedServerResourcesLoader.getInstance()
+                        .getTextResource(WundaBlauServerResources.PNR_TEMPLATE_RESERVIERUNG_SW.getValue());
+            ;
 
             if (!checkTemplateFilesAccessible()) {
                 LOG.warn("Punktnummernreservierung initialisation Error!");
                 initError = true;
             }
+            if (!serviceProperties.containsKey("service") || !serviceProperties.containsKey("user")
+                        || !serviceProperties.containsKey("password")) {
+                LOG.warn(
+                    "Could not read all necessary properties from pointNumberRes_conf.properties. Disabling PointNumberReservationService!");
+                initError = true;
+            }
+            SERVICE_URL = serviceProperties.getProperty("service", "");
+            USER = serviceProperties.getProperty("user", "");
+            PW = serviceProperties.getProperty("password", "");
         } catch (Exception ex) {
             LOG.warn("Punktnummernreservierung initialisation Error!", ex);
             initError = true;
         }
-        if (!serviceProperties.containsKey("service") || !serviceProperties.containsKey("user")
-                    || !serviceProperties.containsKey("password")) {
-            LOG.warn(
-                "Could not read all necessary properties from pointNumberRes_conf.properties. Disabling PointNumberReservationService!");
-            initError = true;
-        }
-        SERVICE_URL = serviceProperties.getProperty("service", "");
-        USER = serviceProperties.getProperty("user", "");
-        PW = serviceProperties.getProperty("password", "");
     }
 
     //~ Methods ----------------------------------------------------------------
@@ -328,17 +324,10 @@ public class PointNumberReservationService {
             LOG.info("PointNumberReservationService initialisation error");
             return null;
         }
-        final InputStream templateFile;
-        String result = null;
-        try {
-            templateFile = new FileInputStream(TEMPLATE_BEN_AUFTR_ALL);
-            final String request = readFile(templateFile);
-            final InputStream preparedQuery = new ByteArrayInputStream(request.getBytes());
+        final String request = TEMPLATE_BEN_AUFTR_ALL;
+        final InputStream preparedQuery = new ByteArrayInputStream(request.getBytes());
 
-            result = sendRequestAndAwaitResult(preparedQuery);
-        } catch (FileNotFoundException ex) {
-            LOG.error("Could not find PointnumberReservation tempalte file " + TEMPLATE_BEN_AUFTR_ALL);
-        }
+        final String result = sendRequestAndAwaitResult(preparedQuery);
 
         if (result == null) {
             return null;
@@ -358,18 +347,12 @@ public class PointNumberReservationService {
             LOG.info("PointNumberReservationService initialisation error");
             return null;
         }
-        InputStream templateFile = null;
-        try {
-            templateFile = new FileInputStream(TEMPLATE_BEN_AUFTR_ONE_ANR);
-        } catch (FileNotFoundException ex) {
-            LOG.error("Could not find PointnumberReservation tempalte file " + TEMPLATE_BEN_AUFTR_ONE_ANR);
-        }
 
-        if (templateFile == null) {
+        if (TEMPLATE_BEN_AUFTR_ONE_ANR == null) {
             return null;
         }
 
-        final String request = readFile(templateFile);
+        final String request = TEMPLATE_BEN_AUFTR_ONE_ANR;
         final String preparedRequest = request.replaceAll(AUFTRAGS_NUMMER, anr);
 
         final InputStream preparedQuery = new ByteArrayInputStream(preparedRequest.getBytes());
@@ -407,17 +390,11 @@ public class PointNumberReservationService {
             LOG.info("PointNumberReservationService initialisation error");
             return null;
         }
-        InputStream templateFile = null;
-        try {
-            templateFile = new FileInputStream(TEMPLATE_BEN_AUFTR_WILDCARD);
-        } catch (FileNotFoundException ex) {
-            LOG.error("Could not find PointnumberReservation tempalte file " + TEMPLATE_BEN_AUFTR_WILDCARD);
-        }
-        if (templateFile == null) {
+        if (TEMPLATE_BEN_AUFTR_WILDCARD == null) {
             return null;
         }
 
-        final String request = readFile(templateFile);
+        final String request = TEMPLATE_BEN_AUFTR_WILDCARD;
         // ToDo: Replace the ANR number
         final String preparedRequest = request.replaceAll(AUFTRAGS_NUMMER, anr);
 
@@ -508,18 +485,11 @@ public class PointNumberReservationService {
             return null;
         }
 
-        InputStream templateFile = null;
-        try {
-            templateFile = new FileInputStream(TEMPLATE_FREIGABE);
-        } catch (FileNotFoundException ex) {
-            LOG.error("Could not find PointnumberReservation tempalte file " + TEMPLATE_FREIGABE);
-        }
-
-        if (templateFile == null) {
+        if (TEMPLATE_FREIGABE == null) {
             return null;
         }
 
-        String request = readFile(templateFile);
+        String request = TEMPLATE_FREIGABE;
         request = request.replaceAll(AUFTRAGS_NUMMER, anr);
         request = request.replaceAll(NUMMERIERUNGS_BEZIRK, nummerierungsbezirk);
         request = request.replaceAll(VERMESSUNG_STELLE, prefix);
@@ -556,21 +526,7 @@ public class PointNumberReservationService {
             return null;
         }
 
-        InputStream templateFile = null;
-        try {
-            templateFile = new FileInputStream(TEMPLATE_PROLONG);
-        } catch (FileNotFoundException ex) {
-            LOG.error("Could not find PointnumberProlong template file " + TEMPLATE_PROLONG);
-        }
-
-        InputStream templateSubFile = null;
-        try {
-            templateSubFile = new FileInputStream(TEMPLATE_PROLONG_SUB);
-        } catch (FileNotFoundException ex) {
-            LOG.error("Could not find PointnumberProlong template file " + TEMPLATE_PROLONG_SUB);
-        }
-
-        if ((templateFile == null) || (templateSubFile == null)) {
+        if ((TEMPLATE_PROLONG == null) || (TEMPLATE_PROLONG_SUB == null)) {
             return null;
         }
 
@@ -589,10 +545,10 @@ public class PointNumberReservationService {
                 }
             }
 
-            String request = readFile(templateFile);
+            String request = TEMPLATE_PROLONG;
             request = request.replaceAll(AUFTRAGS_NUMMER, anr);
 
-            final String requestSub = readFile(templateSubFile);
+            final String requestSub = TEMPLATE_PROLONG_SUB;
             final StringBuffer subs = new StringBuffer();
 
             for (final Integer point : points) {
@@ -655,22 +611,11 @@ public class PointNumberReservationService {
         // errorMsg = "Point number for startValue " + startValue + "and point amount " + anzahl + " will exceed maximum
         // number 999999. Can not execute request."; LOG.error(errorMsg); throw new IllegalStateException(errorMsg); }
 
-        InputStream templateFile = null;
-        try {
-            if (startValue == 0) {
-                templateFile = new FileInputStream(TEMPLATE_RESERVIERUNG);
-            } else {
-                templateFile = new FileInputStream(TEMPLATE_RESERVIERUNG_SW);
-            }
-        } catch (FileNotFoundException ex) {
-            LOG.error("Could not find PointnumberReservation tempalte file " + TEMPLATE_FREIGABE);
-        }
-
-        if (templateFile == null) {
+        if (TEMPLATE_RESERVIERUNG == null) {
             return null;
         }
 
-        String request = readFile(templateFile);
+        String request = TEMPLATE_RESERVIERUNG;
         // Insert values in the template file,
         request = request.replaceAll(AUFTRAGS_NUMMER, requestId);
         request = request.replaceAll(NUMMERIERUNGS_BEZIRK, nummerierungsbezirk);
@@ -721,18 +666,18 @@ public class PointNumberReservationService {
      * @return  DOCUMENT ME!
      */
     private boolean checkTemplateFilesAccessible() {
-        final File benAuftrAllTempl = new File(TEMPLATE_BEN_AUFTR_ALL);
-        final File benAuftrOneTempl = new File(TEMPLATE_BEN_AUFTR_ONE_ANR);
-        final File benAuftrWildTempl = new File(TEMPLATE_BEN_AUFTR_WILDCARD);
-        final File releaseTempl = new File(TEMPLATE_FREIGABE);
-        final File prolongTempl = new File(TEMPLATE_PROLONG);
-        final File prolongSubTempl = new File(TEMPLATE_PROLONG_SUB);
-        final File reservationTempl = new File(TEMPLATE_RESERVIERUNG);
-        final File reservationSWTempl = new File(TEMPLATE_RESERVIERUNG_SW);
+        final boolean benAuftrAllTempl = TEMPLATE_BEN_AUFTR_ALL != null;
+        final boolean benAuftrOneTempl = TEMPLATE_BEN_AUFTR_ONE_ANR != null;
+        final boolean benAuftrWildTempl = TEMPLATE_BEN_AUFTR_WILDCARD != null;
+        final boolean releaseTempl = TEMPLATE_FREIGABE != null;
+        final boolean prolongTempl = TEMPLATE_PROLONG != null;
+        final boolean prolongSubTempl = TEMPLATE_PROLONG_SUB != null;
+        final boolean reservationTempl = TEMPLATE_RESERVIERUNG != null;
+        final boolean reservationSWTempl = TEMPLATE_RESERVIERUNG_SW != null;
 
-        return benAuftrAllTempl.canRead() && benAuftrOneTempl.canRead() && benAuftrWildTempl.canRead()
-                    && releaseTempl.canRead() && prolongTempl.canRead() && prolongSubTempl.canRead()
-                    && reservationSWTempl.canRead()
-                    && reservationTempl.canRead();
+        return benAuftrAllTempl && benAuftrOneTempl && benAuftrWildTempl
+                    && releaseTempl && prolongTempl && prolongSubTempl
+                    && reservationSWTempl
+                    && reservationTempl;
     }
 }

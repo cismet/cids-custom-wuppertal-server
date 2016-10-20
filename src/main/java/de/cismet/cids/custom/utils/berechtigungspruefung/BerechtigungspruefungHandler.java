@@ -129,8 +129,7 @@ public class BerechtigungspruefungHandler {
         bearbeitungInfoMap.put(schluessel, bearbeitungInfo);
         try {
             CidsServerMessageManagerImpl.getInstance()
-                    .publishMessage(
-                        BerechtigungspruefungProperties.CSM_BEARBEITUNG,
+                    .publishMessage(BerechtigungspruefungProperties.getInstance().getCsmBearbeitung(),
                         MAPPER.writeValueAsString(bearbeitungInfoMap),
                         true);
         } catch (final JsonProcessingException ex) {
@@ -185,7 +184,7 @@ public class BerechtigungspruefungHandler {
         }
 
         CidsServerMessageManagerImpl.getInstance()
-                .publishMessage(BerechtigungspruefungProperties.CSM_ANFRAGE, schluesselList, true);
+                .publishMessage(BerechtigungspruefungProperties.getInstance().getCsmAnfrage(), schluesselList, true);
     }
 
     /**
@@ -237,8 +236,7 @@ public class BerechtigungspruefungHandler {
                 if (!bearbeitungInfoMap.isEmpty()) {
                     // an den Pruefer
                     CidsServerMessageManagerImpl.getInstance()
-                            .publishMessage(
-                                BerechtigungspruefungProperties.CSM_BEARBEITUNG,
+                            .publishMessage(BerechtigungspruefungProperties.getInstance().getCsmBearbeitung(),
                                 MAPPER.writeValueAsString(bearbeitungInfoMap),
                                 true);
                 }
@@ -246,8 +244,7 @@ public class BerechtigungspruefungHandler {
                 if (!freigabeInfoMap.isEmpty()) {
                     // an den Anfragenden
                     CidsServerMessageManagerImpl.getInstance()
-                            .publishMessage(
-                                BerechtigungspruefungProperties.CSM_FREIGABE,
+                            .publishMessage(BerechtigungspruefungProperties.getInstance().getCsmFreigabe(),
                                 MAPPER.writeValueAsString(freigabeInfoMap),
                                 false,
                                 new HashSet(Arrays.asList(userKey)),
@@ -350,7 +347,8 @@ public class BerechtigungspruefungHandler {
             final String newAnfrageSchluessel = type + "-" + Integer.toString(year) + "-" + format.format(newNumber);
 
             if ((data != null) && (dateiname != null)) {
-                final File file = new File(BerechtigungspruefungProperties.ANHANG_PFAD + "/" + newAnfrageSchluessel);
+                final File file = new File(BerechtigungspruefungProperties.getInstance().getAnhangPfad() + "/"
+                                + newAnfrageSchluessel);
                 try {
                     FileUtils.writeByteArrayToFile(file, data);
                 } catch (final IOException ex) {

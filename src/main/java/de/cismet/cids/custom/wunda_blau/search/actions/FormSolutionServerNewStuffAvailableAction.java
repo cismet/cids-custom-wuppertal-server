@@ -82,7 +82,7 @@ import javax.xml.bind.ValidationEventHandler;
 
 import de.cismet.cids.custom.utils.WundaBlauServerResources;
 import de.cismet.cids.custom.utils.alkis.AlkisProductDescription;
-import de.cismet.cids.custom.utils.alkis.AlkisProducts;
+import de.cismet.cids.custom.utils.alkis.ServerAlkisProducts;
 import de.cismet.cids.custom.utils.formsolutions.FormSolutionFtpClient;
 import de.cismet.cids.custom.utils.formsolutions.FormSolutionsBestellung;
 import de.cismet.cids.custom.utils.formsolutions.FormSolutionsConstants;
@@ -195,7 +195,7 @@ public class FormSolutionServerNewStuffAvailableAction implements UserAwareServe
         if (testCismet00Enabled) {
             try {
                 testCismet00Xml = CachedServerResourcesLoader.getInstance()
-                            .getStringResource(WundaBlauServerResources.FS_TEST_XML.getValue());
+                            .getTextResource(WundaBlauServerResources.FS_TEST_XML.getValue());
             } catch (final Exception ex) {
                 LOG.error("could not load " + WundaBlauServerResources.FS_TEST_XML.getValue(), ex);
             }
@@ -204,7 +204,7 @@ public class FormSolutionServerNewStuffAvailableAction implements UserAwareServe
 
         try {
             final String ignoreFileContent = CachedServerResourcesLoader.getInstance()
-                        .getStringResource(WundaBlauServerResources.FS_IGNORE_TRANSID_TXT.getValue());
+                        .getTextResource(WundaBlauServerResources.FS_IGNORE_TRANSID_TXT.getValue());
             final String[] lines = ignoreFileContent.split("\n");
             for (final String line : lines) {
                 if (!line.trim().isEmpty()) {
@@ -774,7 +774,7 @@ public class FormSolutionServerNewStuffAvailableAction implements UserAwareServe
             final Integer massstab) {
         final String scale = Integer.toString(massstab);
         AlkisProductDescription selectedProduct = null;
-        for (final AlkisProductDescription product : AlkisProducts.getInstance().ALKIS_MAP_PRODUCTS) {
+        for (final AlkisProductDescription product : ServerAlkisProducts.getInstance().ALKIS_MAP_PRODUCTS) {
             if (product.getCode().startsWith(produktKey) && scale.equals(product.getMassstab())
                         && dinFormat.equals(product.getDinFormat())) {
                 selectedProduct = product;
@@ -837,7 +837,7 @@ public class FormSolutionServerNewStuffAvailableAction implements UserAwareServe
         final Geometry geom = (Geometry)bestellungBean.getProperty("geometrie.geo_field");
         final Point center = geom.getEnvelope().getCentroid();
 
-        final URL url = AlkisProducts.getInstance()
+        final URL url = ServerAlkisProducts.getInstance()
                     .productKarteUrl(
                         flurstueckKennzeichen,
                         productDesc,

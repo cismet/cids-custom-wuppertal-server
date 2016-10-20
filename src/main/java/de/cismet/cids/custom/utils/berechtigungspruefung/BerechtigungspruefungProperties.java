@@ -18,6 +18,8 @@ import de.cismet.cids.custom.utils.WundaBlauServerResources;
 
 import de.cismet.cids.utils.serverresources.CachedServerResourcesLoader;
 
+import de.cismet.tools.PropertyReader;
+
 /**
  * DOCUMENT ME!
  *
@@ -31,48 +33,175 @@ public class BerechtigungspruefungProperties {
     private static final transient org.apache.log4j.Logger LOG = org.apache.log4j.Logger.getLogger(
             BerechtigungspruefungProperties.class);
 
-    public static final String CIDS_LOGIN;
-    public static final String CIDS_PASSWORD;
-    public static final String ANHANG_PFAD;
-    public static final String CSM_ANFRAGE;
-    public static final String CSM_BEARBEITUNG;
-    public static final String CSM_FREIGABE;
+    @Deprecated public static final String CIDS_LOGIN;
+    @Deprecated public static final String CIDS_PASSWORD;
+    @Deprecated public static final String ANHANG_PFAD;
+    @Deprecated public static final String CSM_ANFRAGE;
+    @Deprecated public static final String CSM_BEARBEITUNG;
+    @Deprecated public static final String CSM_FREIGABE;
 
     static {
+        @Deprecated
+        final BerechtigungspruefungProperties props = new BerechtigungspruefungProperties(
+                new PropertyReader("/de/cismet/cids/custom/berechtigungspruefung/berechtigungspruefung.properties")
+                            .getInternalProperties());
+        CIDS_LOGIN = props.getCidsLogin();
+        CIDS_PASSWORD = props.getCidsPassword();
+        ANHANG_PFAD = props.getAnhangPfad();
+        CSM_ANFRAGE = props.getCsmAnfrage();
+        CSM_BEARBEITUNG = props.getCsmBearbeitung();
+        CSM_FREIGABE = props.getCsmBearbeitung();
+    }
+
+    //~ Instance fields --------------------------------------------------------
+
+    private final String cidsLogin;
+    private final String cidsPassword;
+    private final String anhangPfad;
+    private final String csmAnfrage;
+    private final String csmBearbeitung;
+    private final String csmFreigabe;
+
+    //~ Constructors -----------------------------------------------------------
+
+    /**
+     * Creates a new BerechtigungspruefungProperties object.
+     *
+     * @param  serviceProperties  DOCUMENT ME!
+     */
+    public BerechtigungspruefungProperties(final Properties serviceProperties) {
         String cidsLogin = null;
         String cidsPassword = null;
         String anhangPfad = "/tmp";
-        String categoryAnfrage = "berechtigungspruefungAnfrage";
-        String categoryBearbeitung = "berechtigungspruefungBearbeitung";
-        String categoryFreigabe = "berechtigungspruefungFreigabe";
+        String csmAnfrage = "berechtigungspruefungAnfrage";
+        String csmBearbeitung = "berechtigungspruefungBearbeitung";
+        String csmFreigabe = "berechtigungspruefungFreigabe";
 
         try {
-            final Properties serviceProperties = CachedServerResourcesLoader.getInstance()
-                        .getPropertiesResource(WundaBlauServerResources.BERECHTIGUNGSPRUEFUNG_PROPERTIES.getValue());
-
             cidsLogin = serviceProperties.getProperty("CIDS_LOGIN");
             cidsPassword = serviceProperties.getProperty("CIDS_PASSWORD");
             if (serviceProperties.getProperty("ANHANG_PFAD") != null) {
                 anhangPfad = serviceProperties.getProperty("ANHANG_PFAD");
             }
             if (serviceProperties.getProperty("CSM_ANFRAGE") != null) {
-                categoryAnfrage = serviceProperties.getProperty("CSM_ANFRAGE");
+                csmAnfrage = serviceProperties.getProperty("CSM_ANFRAGE");
             }
             if (serviceProperties.getProperty("CSM_BEARBEITUNG") != null) {
-                categoryBearbeitung = serviceProperties.getProperty("CSM_BEARBEITUNG");
+                csmBearbeitung = serviceProperties.getProperty("CSM_BEARBEITUNG");
             }
             if (serviceProperties.getProperty("CSM_FREIGABE") != null) {
-                categoryFreigabe = serviceProperties.getProperty("CSM_FREIGABE");
+                csmFreigabe = serviceProperties.getProperty("CSM_FREIGABE");
             }
         } catch (final Exception ex) {
             LOG.error("error while loading properties", ex);
         }
 
-        CIDS_LOGIN = cidsLogin;
-        CIDS_PASSWORD = cidsPassword;
-        ANHANG_PFAD = anhangPfad;
-        CSM_ANFRAGE = categoryAnfrage;
-        CSM_BEARBEITUNG = categoryBearbeitung;
-        CSM_FREIGABE = categoryFreigabe;
+        this.cidsLogin = cidsLogin;
+        this.cidsPassword = cidsPassword;
+        this.anhangPfad = anhangPfad;
+        this.csmAnfrage = csmAnfrage;
+        this.csmBearbeitung = csmBearbeitung;
+        this.csmFreigabe = csmFreigabe;
+    }
+
+    //~ Methods ----------------------------------------------------------------
+
+    /**
+     * DOCUMENT ME!
+     *
+     * @return  DOCUMENT ME!
+     */
+    public String getCidsLogin() {
+        return cidsLogin;
+    }
+
+    /**
+     * DOCUMENT ME!
+     *
+     * @return  DOCUMENT ME!
+     */
+    public String getCidsPassword() {
+        return cidsPassword;
+    }
+
+    /**
+     * DOCUMENT ME!
+     *
+     * @return  DOCUMENT ME!
+     */
+    public String getAnhangPfad() {
+        return anhangPfad;
+    }
+
+    /**
+     * DOCUMENT ME!
+     *
+     * @return  DOCUMENT ME!
+     */
+    public String getCsmAnfrage() {
+        return csmAnfrage;
+    }
+
+    /**
+     * DOCUMENT ME!
+     *
+     * @return  DOCUMENT ME!
+     */
+    public String getCsmBearbeitung() {
+        return csmBearbeitung;
+    }
+
+    /**
+     * DOCUMENT ME!
+     *
+     * @return  DOCUMENT ME!
+     */
+    public String getCsmFreigabe() {
+        return csmFreigabe;
+    }
+
+    /**
+     * DOCUMENT ME!
+     *
+     * @return  DOCUMENT ME!
+     */
+    public static BerechtigungspruefungProperties getInstance() {
+        return LazyInitialiser.INSTANCE;
+    }
+
+    //~ Inner Classes ----------------------------------------------------------
+
+    /**
+     * DOCUMENT ME!
+     *
+     * @version  $Revision$, $Date$
+     */
+    private static final class LazyInitialiser {
+
+        //~ Static fields/initializers -----------------------------------------
+
+        private static final BerechtigungspruefungProperties INSTANCE;
+
+        static {
+            BerechtigungspruefungProperties instance = null;
+
+            try {
+                instance = new BerechtigungspruefungProperties(CachedServerResourcesLoader.getInstance()
+                                .getPropertiesResource(
+                                    WundaBlauServerResources.BERECHTIGUNGSPRUEFUNG_PROPERTIES.getValue()));
+            } catch (final Exception ex) {
+                LOG.error(ex, ex);
+            }
+
+            INSTANCE = instance;
+        }
+
+        //~ Constructors -------------------------------------------------------
+
+        /**
+         * Creates a new LazyInitialiser object.
+         */
+        private LazyInitialiser() {
+        }
     }
 }
