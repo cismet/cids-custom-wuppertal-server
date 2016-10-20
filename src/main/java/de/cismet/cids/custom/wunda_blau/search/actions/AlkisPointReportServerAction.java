@@ -12,6 +12,7 @@
  */
 package de.cismet.cids.custom.wunda_blau.search.actions;
 
+import Sirius.server.middleware.impls.domainserver.DomainServerImpl;
 import Sirius.server.middleware.types.MetaObjectNode;
 
 import net.sf.jasperreports.engine.JasperReport;
@@ -20,6 +21,7 @@ import net.sf.jasperreports.engine.data.JRBeanCollectionDataSource;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.HashMap;
+import java.util.Map;
 
 import de.cismet.cids.custom.utils.WundaBlauServerResources;
 import de.cismet.cids.custom.utils.alkis.AlkisPointReportBean;
@@ -49,9 +51,9 @@ public class AlkisPointReportServerAction extends JasperReportServerAction {
         JasperReport report = null;
         try {
             report = CachedServerResourcesLoader.getInstance()
-                        .getJasperReportResource(WundaBlauServerResources.AP_MAPS_JASPER.getValue());
+                        .getJasperReportResource(WundaBlauServerResources.APMAPS_JASPER.getValue());
         } catch (final Exception ex) {
-            LOG.error("Error while loading " + WundaBlauServerResources.AP_MAPS_JASPER.getValue(), ex);
+            LOG.error("Error while loading " + WundaBlauServerResources.APMAPS_JASPER.getValue(), ex);
         }
         JASPER = report;
     }
@@ -101,7 +103,13 @@ public class AlkisPointReportServerAction extends JasperReportServerAction {
                 reportBeans.add(new AlkisPointReportBean(cidsBeans));
                 final JRBeanCollectionDataSource dataSource = new JRBeanCollectionDataSource(reportBeans);
 
-                return generateReport(new HashMap<String, Object>(), dataSource);
+                final Map<String, Object> parameters = new HashMap<String, Object>();
+                parameters.put(
+                    "SUBREPORT_DIR",
+                    DomainServerImpl.getServerProperties().getServerResourcesBasePath()
+                            + "/");
+
+                return generateReport(parameters, dataSource);
             } else {
                 return null;
             }

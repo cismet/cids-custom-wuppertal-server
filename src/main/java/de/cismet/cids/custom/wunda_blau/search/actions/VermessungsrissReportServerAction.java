@@ -109,12 +109,13 @@ public class VermessungsrissReportServerAction extends JasperReportServerAction 
                     selectedVermessungsrisse.add(bean);
                 }
 
-                final Object[] tmp = VermessungsRissReportHelper.generateReportData(
-                        jobNumber,
-                        projectName,
-                        selectedVermessungsrisse,
-                        host,
-                        MultiPagePictureReader.class);
+                final Object[] tmp = VermessungsRissReportHelper.getInstance()
+                            .generateReportData(
+                                jobNumber,
+                                projectName,
+                                selectedVermessungsrisse,
+                                host,
+                                MultiPagePictureReader.class);
                 final Collection<VermessungRissReportBean> reportBeans = (Collection)tmp[0];
                 final Map parameters = (Map)tmp[1];
 

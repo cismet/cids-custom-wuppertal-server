@@ -12,6 +12,8 @@
  */
 package de.cismet.cids.custom.utils.alkis;
 
+import Sirius.server.middleware.impls.domainserver.DomainServerImpl;
+
 import org.apache.log4j.Logger;
 
 import java.net.URL;
@@ -46,6 +48,22 @@ public class VermessungsRissReportHelper {
     private static final String PARAMETER_TYPE = "TYPE";
     private static final String PARAMETER_STARTINGPAGES = "STARTINGPAGES";
     private static final String PARAMETER_IMAGEAVAILABLE = "IMAGEAVAILABLE";
+    private static final String SUBREPORT_DIR = "SUBREPORT_DIR";
+
+    //~ Instance fields --------------------------------------------------------
+
+    private final AlkisConf alkisConf;
+
+    //~ Constructors -----------------------------------------------------------
+
+    /**
+     * Creates a new VermessungsRissReportHelper object.
+     *
+     * @param  alkisConf  DOCUMENT ME!
+     */
+    protected VermessungsRissReportHelper(final AlkisConf alkisConf) {
+        this.alkisConf = alkisConf;
+    }
 
     //~ Methods ----------------------------------------------------------------
 
@@ -60,7 +78,7 @@ public class VermessungsRissReportHelper {
      *
      * @return  DOCUMENT ME!
      */
-    public static Object[] generateReportData(final String jobNumber,
+    public Object[] generateReportData(final String jobNumber,
             final String projectName,
             final Collection<CidsBean> selectedVermessungsrisse,
             final String host,
@@ -105,7 +123,7 @@ public class VermessungsRissReportHelper {
             }
 
             final StringBuilder description;
-            if (host.equals(ServerAlkisConf.getInstance().VERMESSUNG_HOST_GRENZNIEDERSCHRIFTEN)) {
+            if (host.equals(alkisConf.VERMESSUNG_HOST_GRENZNIEDERSCHRIFTEN)) {
                 description = new StringBuilder("Ergänzende Dokumente zum Vermessungsriss ");
             } else {
                 description = new StringBuilder("Vermessungsriss ");
@@ -121,7 +139,7 @@ public class VermessungsRissReportHelper {
 
             final List<URL> urlList;
             // we search for reduced size images, since we need the reduced size image for the report
-            if (host.equals(ServerAlkisConf.getInstance().VERMESSUNG_HOST_GRENZNIEDERSCHRIFTEN)) {
+            if (host.equals(alkisConf.VERMESSUNG_HOST_GRENZNIEDERSCHRIFTEN)) {
                 urlList = VermessungsrissPictureFinder.getInstance()
                             .findGrenzniederschriftPicture(
                                     true,
@@ -205,8 +223,8 @@ public class VermessungsRissReportHelper {
             startingPage += pageCount;
         }
 
-        final String type = host.equals(ServerAlkisConf.getInstance().VERMESSUNG_HOST_GRENZNIEDERSCHRIFTEN)
-            ? TYPE_COMPLEMENTARYDOCUMENTS : TYPE_VERMESSUNGSRISSE;
+        final String type = host.equals(alkisConf.VERMESSUNG_HOST_GRENZNIEDERSCHRIFTEN) ? TYPE_COMPLEMENTARYDOCUMENTS
+                                                                                        : TYPE_VERMESSUNGSRISSE;
 
         final HashMap parameters = new HashMap();
         parameters.put(PARAMETER_JOBNUMBER, jobNumber);
@@ -214,10 +232,43 @@ public class VermessungsRissReportHelper {
         parameters.put(PARAMETER_TYPE, type);
         parameters.put(PARAMETER_STARTINGPAGES, startingPages);
         parameters.put(PARAMETER_IMAGEAVAILABLE, imageAvailable);
+        parameters.put(SUBREPORT_DIR, DomainServerImpl.getServerProperties().getServerResourcesBasePath() + "/");
 
         final Collection<VermessungRissReportBean> reportBeans = new LinkedList<VermessungRissReportBean>();
         reportBeans.add(new VermessungRissReportBean(selectedVermessungsrisse, imageBeans));
 
         return new Object[] { reportBeans, parameters, additionalFilesToDownload };
+    }
+
+    /**
+     * DOCUMENT ME!
+     *
+     * @return  DOCUMENT ME!
+     */
+    public static VermessungsRissReportHelper getInstance() {
+        return LazyInitialiser.INSTANCE;
+    }
+
+    //~ Inner Classes ----------------------------------------------------------
+
+    /**
+     * DOCUMENT ME!
+     *
+     * @version  $Revision$, $Date$
+     */
+    private static final class LazyInitialiser {
+
+        //~ Static fields/initializers -----------------------------------------
+
+        private static final VermessungsRissReportHelper INSTANCE = new VermessungsRissReportHelper(ServerAlkisConf
+                        .getInstance());
+
+        //~ Constructors -------------------------------------------------------
+
+        /**
+         * Creates a new LazyInitialiser object.
+         */
+        private LazyInitialiser() {
+        }
     }
 }

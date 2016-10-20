@@ -89,12 +89,13 @@ public abstract class VermUntTaskRisse extends VermessungsunterlagenTask {
                                                                                                    : "ergdok")
                     + ".pdf";
 
-        final Object[] tmp = VermessungsRissReportHelper.generateReportData(
-                auftragsnummer,
-                projektnummer,
-                risseBeans,
-                host,
-                MultiPagePictureReader.class);
+        final Object[] tmp = VermessungsRissReportHelper.getInstance()
+                    .generateReportData(
+                        auftragsnummer,
+                        projektnummer,
+                        risseBeans,
+                        host,
+                        MultiPagePictureReader.class);
 
         final Collection<CidsBean> reportBeans = (Collection)tmp[0];
         final Map parameters = (Map)tmp[1];

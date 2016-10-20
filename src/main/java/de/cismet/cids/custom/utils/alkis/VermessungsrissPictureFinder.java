@@ -51,8 +51,6 @@ public class VermessungsrissPictureFinder {
         };
     public static final String SUFFIX_REDUCED_SIZE = "_rs";
     private static final String LINKEXTENSION = ".txt";
-    public static String PATH_VERMESSUNG = getInstance().alkisConf.VERMESSUNG_HOST_BILDER; //
-    public static String PATH_GRENZNIEDERSCHRIFT = getInstance().alkisConf.VERMESSUNG_HOST_GRENZNIEDERSCHRIFTEN;
     private static final String GRENZNIEDERSCHRIFT_PREFIX = "GN";
     private static final String VERMESSUNGSRISS_PREFIX = "VR";
     private static final String PATH_PLATZHALTER = "platzhalter";
@@ -238,7 +236,8 @@ public class VermessungsrissPictureFinder {
     public String getObjectPath(final boolean isGrenzNiederschrift, final String filename) {
         final Integer gemarkung;
         if (filename.startsWith(PATH_PLATZHALTER)) {
-            return (isGrenzNiederschrift ? PATH_GRENZNIEDERSCHRIFT : PATH_VERMESSUNG) + filename;
+            return (isGrenzNiederschrift ? alkisConf.VERMESSUNG_HOST_GRENZNIEDERSCHRIFTEN
+                                         : alkisConf.VERMESSUNG_HOST_BILDER) + filename;
         }
         final String[] splittedFilename = filename.split("-");
         gemarkung = Integer.parseInt(splittedFilename[1]);
@@ -409,9 +408,9 @@ public class VermessungsrissPictureFinder {
     public String getFolder(final boolean isGrenzniederschrift, final Integer gemarkung) {
         final StringBuffer buf;
         if (isGrenzniederschrift) {
-            buf = new StringBuffer(PATH_GRENZNIEDERSCHRIFT);
+            buf = new StringBuffer(alkisConf.VERMESSUNG_HOST_GRENZNIEDERSCHRIFTEN);
         } else {
-            buf = new StringBuffer(PATH_VERMESSUNG);
+            buf = new StringBuffer(alkisConf.VERMESSUNG_HOST_BILDER);
         }
         return buf.append(String.format("%04d", gemarkung)).toString();
     }

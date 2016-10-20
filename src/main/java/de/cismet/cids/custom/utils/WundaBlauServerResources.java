@@ -27,11 +27,26 @@ public enum WundaBlauServerResources {
     VERMESSUNGSRISSE_JASPER(
         "/de/cismet/cids/custom/wunda_blau/res/reports/vermessungsrisse.jasper",
         CachedServerResourcesLoader.Type.JASPER_REPORT),
-    AP_MAPS_JASPER(
+    VERMESSUNGSRISSE_DOCUMENT_JASPER(
+        "/de/cismet/cids/custom/wunda_blau/res/reports/vermessungsrisse_document.jasper",
+        CachedServerResourcesLoader.Type.JASPER_REPORT),
+    VERMESSUNGSRISSE_OVERVIEW_JASPER(
+        "/de/cismet/cids/custom/wunda_blau/res/reports/vermessungsrisse_overview.jasper",
+        CachedServerResourcesLoader.Type.JASPER_REPORT),
+    APMAPS_JASPER(
         "/de/cismet/cids/custom/wunda_blau/res/reports/apmaps.jasper",
+        CachedServerResourcesLoader.Type.JASPER_REPORT),
+    APMAPS_DOCUMENT_JASPER(
+        "/de/cismet/cids/custom/wunda_blau/res/reports/apmaps_document.jasper",
+        CachedServerResourcesLoader.Type.JASPER_REPORT),
+    APMAPS_OVERVIEW_JASPER(
+        "/de/cismet/cids/custom/wunda_blau/res/reports/apmaps_overview.jasper",
         CachedServerResourcesLoader.Type.JASPER_REPORT),
     FS_RECHNUNG_JASPER(
         "/de/cismet/cids/custom/wunda_blau/res/bestellung_rechnung.jasper",
+        CachedServerResourcesLoader.Type.JASPER_REPORT),
+    FS_RECHNUNG_RUECKSEITE_JASPER(
+        "/de/cismet/cids/custom/wunda_blau/res/bestellung_rechnung_rueckseite.jasper",
         CachedServerResourcesLoader.Type.JASPER_REPORT),
 
     BUTLER_PROPERTIES("/de/cismet/cids/custom/utils/butler/butler.properties", CachedServerResourcesLoader.Type.TEXT),
