@@ -43,6 +43,8 @@ import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
 import de.cismet.cids.custom.utils.berechtigungspruefung.baulastbescheinigung.BerechtigungspruefungBescheinigungDownloadInfo;
+import de.cismet.cids.custom.utils.berechtigungspruefung.katasterauszug.BerechtigungspruefungAlkisDownloadInfo;
+import de.cismet.cids.custom.utils.berechtigungspruefung.katasterauszug.BerechtigungspruefungAlkisKarteDownloadInfo;
 
 import de.cismet.cids.dynamics.CidsBean;
 
@@ -120,21 +122,8 @@ public class BerechtigungspruefungHandler {
      * @param  user        DOCUMENT ME!
      */
     public void sendProcessingMessage(final String schluessel, final User user) {
-        final BerechtigungspruefungBearbeitungInfo bearbeitungInfo = new BerechtigungspruefungBearbeitungInfo(
-                schluessel,
-                user.getName(),
-                true);
-        final Map<String, BerechtigungspruefungBearbeitungInfo> bearbeitungInfoMap =
-            new HashMap<String, BerechtigungspruefungBearbeitungInfo>();
-        bearbeitungInfoMap.put(schluessel, bearbeitungInfo);
-        try {
-            CidsServerMessageManagerImpl.getInstance()
-                    .publishMessage(BerechtigungspruefungProperties.getInstance().getCsmBearbeitung(),
-                        MAPPER.writeValueAsString(bearbeitungInfoMap),
-                        true);
-        } catch (final JsonProcessingException ex) {
-            LOG.error("error while producing or sending message", ex);
-        }
+        CidsServerMessageManagerImpl.getInstance()
+                .publishMessage(BerechtigungspruefungProperties.getInstance().getCsmBearbeitung(), schluessel, true);
     }
 
     /**
@@ -196,56 +185,22 @@ public class BerechtigungspruefungHandler {
     public void sendFreigabeMessage(final String userKey, final Collection<CidsBean> pruefungBeans) {
         if (pruefungBeans != null) {
             try {
-                final Map<String, BerechtigungspruefungFreigabeInfo> freigabeInfoMap =
-                    new HashMap<String, BerechtigungspruefungFreigabeInfo>();
-                final Map<String, BerechtigungspruefungBearbeitungInfo> bearbeitungInfoMap =
-                    new HashMap<String, BerechtigungspruefungBearbeitungInfo>();
+                final List<String> schluesselList = new ArrayList<String>();
 
                 for (final CidsBean pruefungBean : pruefungBeans) {
-                    final String schluessel = (String)pruefungBean.getProperty("schluessel");
-
-                    final BerechtigungspruefungDownloadInfo downloadInfo = extractDownloadInfo((String)
-                            pruefungBean.getProperty("downloadinfo_json"));
-
-                    final BerechtigungspruefungFreigabeInfo freigabeInfo;
-                    if (downloadInfo instanceof BerechtigungspruefungBescheinigungDownloadInfo) {
-                        freigabeInfo =
-                            new BerechtigungspruefungFreigabeInfo<BerechtigungspruefungBescheinigungDownloadInfo>(
-                                (String)pruefungBean.getProperty("pruefkommentar"),
-                                (Boolean)pruefungBean.getProperty("pruefstatus"),
-                                (BerechtigungspruefungBescheinigungDownloadInfo)downloadInfo);
-                    } else {
-                        freigabeInfo = new BerechtigungspruefungFreigabeInfo((String)pruefungBean.getProperty(
-                                    "pruefkommentar"),
-                                (Boolean)pruefungBean.getProperty("pruefstatus"),
-                                downloadInfo);
-                    }
-                    freigabeInfoMap.put(
-                        schluessel,
-                        freigabeInfo);
-
-                    final BerechtigungspruefungBearbeitungInfo bearbeitungInfo =
-                        new BerechtigungspruefungBearbeitungInfo(
-                            schluessel,
-                            userKey,
-                            (Boolean)pruefungBean.getProperty("pruefstatus"));
-
-                    bearbeitungInfoMap.put(schluessel, bearbeitungInfo);
+                    schluesselList.add((String)pruefungBean.getProperty("schluessel"));
                 }
 
-                if (!bearbeitungInfoMap.isEmpty()) {
+                if (!schluesselList.isEmpty()) {
                     // an den Pruefer
                     CidsServerMessageManagerImpl.getInstance()
                             .publishMessage(BerechtigungspruefungProperties.getInstance().getCsmBearbeitung(),
-                                MAPPER.writeValueAsString(bearbeitungInfoMap),
+                                schluesselList,
                                 true);
-                }
-
-                if (!freigabeInfoMap.isEmpty()) {
                     // an den Anfragenden
                     CidsServerMessageManagerImpl.getInstance()
                             .publishMessage(BerechtigungspruefungProperties.getInstance().getCsmFreigabe(),
-                                MAPPER.writeValueAsString(freigabeInfoMap),
+                                schluesselList,
                                 false,
                                 new HashSet(Arrays.asList(userKey)),
                                 true);
@@ -564,6 +519,9 @@ public class BerechtigungspruefungHandler {
         if (BerechtigungspruefungBescheinigungDownloadInfo.PRODUKT_TYP.equals(
                         berechtigungspruefungDownloadInfo.getProduktTyp())) {
             return MAPPER.readValue(freigabeInfo_json, BerechtigungspruefungBescheinigungDownloadInfo.class);
+        } else if (BerechtigungspruefungAlkisKarteDownloadInfo.PRODUKT_TYP.equals(
+                        berechtigungspruefungDownloadInfo.getProduktTyp())) {
+            return MAPPER.readValue(freigabeInfo_json, BerechtigungspruefungAlkisDownloadInfo.class);
         } else {
             throw new Exception("unbekannter Download-Typ");
         }

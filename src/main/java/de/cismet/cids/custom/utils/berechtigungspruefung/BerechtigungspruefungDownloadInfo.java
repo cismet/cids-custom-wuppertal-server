@@ -45,7 +45,7 @@ public class BerechtigungspruefungDownloadInfo {
      *
      * @param  produktTyp  DOCUMENT ME!
      */
-    public BerechtigungspruefungDownloadInfo(@JsonProperty("produktType") final String produktTyp) {
+    public BerechtigungspruefungDownloadInfo(@JsonProperty("produktTyp") final String produktTyp) {
         this.produktTyp = produktTyp;
     }
 }
