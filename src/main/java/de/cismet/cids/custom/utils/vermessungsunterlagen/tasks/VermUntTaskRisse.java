@@ -23,12 +23,15 @@ import java.net.URL;
 import java.util.Collection;
 import java.util.Map;
 
+import de.cismet.cids.custom.utils.WundaBlauServerResources;
 import de.cismet.cids.custom.utils.alkis.ServerAlkisConf;
 import de.cismet.cids.custom.utils.alkis.VermessungsRissReportHelper;
 import de.cismet.cids.custom.utils.vermessungsunterlagen.VermessungsunterlagenHelper;
 import de.cismet.cids.custom.utils.vermessungsunterlagen.VermessungsunterlagenTask;
 
 import de.cismet.cids.dynamics.CidsBean;
+
+import de.cismet.cids.utils.serverresources.ServerResourcesLoader;
 
 import de.cismet.commons.security.handler.ExtendedAccessHandler;
 import de.cismet.commons.security.handler.SimpleHttpAccessHandler;
@@ -107,7 +110,11 @@ public abstract class VermUntTaskRisse extends VermessungsunterlagenTask {
             OutputStream out = null;
             try {
                 out = new FileOutputStream(filename);
-                jasperReportDownload(VermessungsunterlagenHelper.VERMRISS_REPORT, parameters, dataSource, out);
+                jasperReportDownload(ServerResourcesLoader.getInstance().loadJasperReportResource(
+                        WundaBlauServerResources.VERMESSUNGSRISSE_JASPER.getValue()),
+                    parameters,
+                    dataSource,
+                    out);
             } finally {
                 closeStream(out);
             }

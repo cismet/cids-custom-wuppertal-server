@@ -32,7 +32,7 @@ import de.cismet.cids.server.actions.JasperReportServerAction;
 import de.cismet.cids.server.actions.ServerAction;
 import de.cismet.cids.server.actions.ServerActionParameter;
 
-import de.cismet.cids.utils.serverresources.CachedServerResourcesLoader;
+import de.cismet.cids.utils.serverresources.ServerResourcesLoader;
 
 /**
  * DOCUMENT ME!
@@ -44,19 +44,6 @@ import de.cismet.cids.utils.serverresources.CachedServerResourcesLoader;
 public class AlkisPointReportServerAction extends JasperReportServerAction {
 
     //~ Static fields/initializers ---------------------------------------------
-
-    public static final JasperReport JASPER;
-
-    static {
-        JasperReport report = null;
-        try {
-            report = CachedServerResourcesLoader.getInstance()
-                        .getJasperReportResource(WundaBlauServerResources.APMAPS_JASPER.getValue());
-        } catch (final Exception ex) {
-            LOG.error("Error while loading " + WundaBlauServerResources.APMAPS_JASPER.getValue(), ex);
-        }
-        JASPER = report;
-    }
 
     public static final String TASK_NAME = "alkisPointReport";
 
@@ -125,7 +112,8 @@ public class AlkisPointReportServerAction extends JasperReportServerAction {
     }
 
     @Override
-    protected JasperReport getJasperReport() {
-        return JASPER;
+    protected JasperReport getJasperReport() throws Exception {
+        return ServerResourcesLoader.getInstance()
+                    .loadJasperReportResource(WundaBlauServerResources.APMAPS_JASPER.getValue());
     }
 }

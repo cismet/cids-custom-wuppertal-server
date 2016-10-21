@@ -33,7 +33,7 @@ import java.util.TimerTask;
 
 import de.cismet.cids.custom.utils.WundaBlauServerResources;
 
-import de.cismet.cids.utils.serverresources.CachedServerResourcesLoader;
+import de.cismet.cids.utils.serverresources.ServerResourcesLoader;
 
 import de.cismet.commons.security.AccessHandler;
 import de.cismet.commons.security.handler.SimpleHttpAccessHandler;
@@ -101,17 +101,17 @@ public class MotdRetriever {
         try {
             final Properties serviceProperties;
             if (domain.equalsIgnoreCase("wunda_blau")) {
-                serviceProperties = CachedServerResourcesLoader.getInstance()
-                            .getPropertiesResource(WundaBlauServerResources.MOTD_WUNDA_BLAU_PROPERTIES.getValue());
+                serviceProperties = ServerResourcesLoader.getInstance()
+                            .loadPropertiesResource(WundaBlauServerResources.MOTD_WUNDA_BLAU_PROPERTIES.getValue());
             } else if (domain.equalsIgnoreCase("verdis_grundis")) {
-                serviceProperties = CachedServerResourcesLoader.getInstance()
-                            .getPropertiesResource(WundaBlauServerResources.MOTD_VERDIS_GRUNDIS_PROPERTIES.getValue());
+                serviceProperties = ServerResourcesLoader.getInstance()
+                            .loadPropertiesResource(WundaBlauServerResources.MOTD_VERDIS_GRUNDIS_PROPERTIES.getValue());
             } else if (domain.equalsIgnoreCase("lagis")) {
-                serviceProperties = CachedServerResourcesLoader.getInstance()
-                            .getPropertiesResource(WundaBlauServerResources.MOTD_LAGIS_PROPERTIES.getValue());
+                serviceProperties = ServerResourcesLoader.getInstance()
+                            .loadPropertiesResource(WundaBlauServerResources.MOTD_LAGIS_PROPERTIES.getValue());
             } else if (domain.equalsIgnoreCase("belis2")) {
-                serviceProperties = CachedServerResourcesLoader.getInstance()
-                            .getPropertiesResource(WundaBlauServerResources.MOTD_BELIS2_PROPERTIES.getValue());
+                serviceProperties = ServerResourcesLoader.getInstance()
+                            .loadPropertiesResource(WundaBlauServerResources.MOTD_BELIS2_PROPERTIES.getValue());
             } else {
                 return false;
             }

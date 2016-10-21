@@ -24,11 +24,14 @@ import java.util.Collection;
 import java.util.HashMap;
 import java.util.Map;
 
+import de.cismet.cids.custom.utils.WundaBlauServerResources;
 import de.cismet.cids.custom.utils.alkis.AlkisPointReportBean;
 import de.cismet.cids.custom.utils.alkis.ServerAlkisProducts;
 import de.cismet.cids.custom.utils.vermessungsunterlagen.VermessungsunterlagenHelper;
 
 import de.cismet.cids.dynamics.CidsBean;
+
+import de.cismet.cids.utils.serverresources.ServerResourcesLoader;
 
 /**
  * DOCUMENT ME!
@@ -64,8 +67,10 @@ public class VermUntTaskAPMap extends VermUntTaskAP {
             out = new FileOutputStream(filename);
             final Map parameters = new HashMap();
             parameters.put("SUBREPORT_DIR", DomainServerImpl.getServerProperties().getServerResourcesBasePath() + "/");
+
             VermessungsunterlagenHelper.jasperReportDownload(
-                VermessungsunterlagenHelper.AP_REPORT,
+                ServerResourcesLoader.getInstance().loadJasperReportResource(
+                    WundaBlauServerResources.APMAPS_JASPER.getValue()),
                 parameters,
                 new JRBeanCollectionDataSource(Arrays.asList(new AlkisPointReportBean(getAlkisPoints()))),
                 out);

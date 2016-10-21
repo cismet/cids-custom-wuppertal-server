@@ -83,7 +83,7 @@ import de.cismet.cids.server.search.CidsServerSearch;
 import de.cismet.cids.server.search.SearchException;
 
 import de.cismet.cids.utils.MetaClassCacheService;
-import de.cismet.cids.utils.serverresources.CachedServerResourcesLoader;
+import de.cismet.cids.utils.serverresources.ServerResourcesLoader;
 
 import de.cismet.commons.concurrency.CismetExecutors;
 
@@ -121,16 +121,6 @@ public class VermessungsunterlagenHelper {
     public static final String ALLOWED_TASKS_CONFIG_ATTR = "vup.tasks_allowed";
     public static final int SRID = 25832;
 
-    private static final Map<String, JasperReport> REPORT_MAP = new HashMap<String, JasperReport>();
-
-    public static final String VERMRISS_REPORT = "VERMRISS_REPORT";
-    public static final String AP_REPORT = "AP_REPORT";
-
-    static {
-        REPORT_MAP.put(VERMRISS_REPORT, VermessungsrissReportServerAction.JASPER);
-        REPORT_MAP.put(AP_REPORT, AlkisPointReportServerAction.JASPER);
-    }
-
     static {
         final ObjectMapper mapper = new ObjectMapper();
         mapper.configure(DeserializationFeature.FAIL_ON_UNKNOWN_PROPERTIES, false);
@@ -146,7 +136,7 @@ public class VermessungsunterlagenHelper {
         NasProduct productKomplett = null;
         final ArrayList<NasProduct> nasProducts;
         try {
-            nasProducts = mapper.readValue(CachedServerResourcesLoader.getInstance().getStringReaderResource(
+            nasProducts = mapper.readValue(ServerResourcesLoader.getInstance().loadStringReaderResource(
                         WundaBlauServerResources.NAS_PRODUCT_DESCRIPTION_JSON.getValue()),
                     mapper.getTypeFactory().constructCollectionType(List.class, NasProduct.class));
             for (final NasProduct nasProduct : nasProducts) {
@@ -188,8 +178,8 @@ public class VermessungsunterlagenHelper {
     private VermessungsunterlagenHelper() {
         Properties properties = null;
         try {
-            properties = CachedServerResourcesLoader.getInstance()
-                        .getPropertiesResource(WundaBlauServerResources.VERMESSUNGSUNTERLAGENPORTAL_PROPERTIES
+            properties = ServerResourcesLoader.getInstance()
+                        .loadPropertiesResource(WundaBlauServerResources.VERMESSUNGSUNTERLAGENPORTAL_PROPERTIES
                                 .getValue());
         } catch (final Exception ex) {
             LOG.error("VermessungsunterlagenHelper could not load the properties", ex);
@@ -898,18 +888,17 @@ public class VermessungsunterlagenHelper {
     /**
      * DOCUMENT ME!
      *
-     * @param   reportResourceName  DOCUMENT ME!
-     * @param   parameters          DOCUMENT ME!
-     * @param   dataSource          DOCUMENT ME!
-     * @param   outputStream        filename DOCUMENT ME!
+     * @param   jasperReport  reportResourceName DOCUMENT ME!
+     * @param   parameters    DOCUMENT ME!
+     * @param   dataSource    DOCUMENT ME!
+     * @param   outputStream  filename DOCUMENT ME!
      *
      * @throws  Exception  DOCUMENT ME!
      */
-    public static void jasperReportDownload(final String reportResourceName,
+    public static void jasperReportDownload(final JasperReport jasperReport,
             final Map parameters,
             final JRDataSource dataSource,
             final OutputStream outputStream) throws Exception {
-        final JasperReport jasperReport = REPORT_MAP.get(reportResourceName);
         final JasperPrint print = JasperFillManager.fillReport(jasperReport, parameters, dataSource);
         JasperExportManager.exportReportToPdfStream(print, outputStream);
     }

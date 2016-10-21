@@ -14,7 +14,7 @@ package de.cismet.cids.custom.utils.alkis;
 
 import de.cismet.cids.custom.utils.WundaBlauServerResources;
 
-import de.cismet.cids.utils.serverresources.CachedServerResourcesLoader;
+import de.cismet.cids.utils.serverresources.ServerResourcesLoader;
 
 /**
  * DOCUMENT ME!
@@ -32,7 +32,7 @@ public class ServerAlkisConf extends AlkisConf {
      * @throws  Exception  DOCUMENT ME!
      */
     private ServerAlkisConf() throws Exception {
-        super(CachedServerResourcesLoader.getInstance().getPropertiesResource(
+        super(ServerResourcesLoader.getInstance().loadPropertiesResource(
                 WundaBlauServerResources.ALKIS_CONF.getValue()));
     }
 

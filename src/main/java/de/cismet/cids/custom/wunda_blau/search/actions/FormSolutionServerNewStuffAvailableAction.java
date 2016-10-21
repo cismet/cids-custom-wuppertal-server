@@ -96,7 +96,7 @@ import de.cismet.cids.server.actions.ServerActionParameter;
 import de.cismet.cids.server.actions.UserAwareServerAction;
 
 import de.cismet.cids.utils.MetaClassCacheService;
-import de.cismet.cids.utils.serverresources.CachedServerResourcesLoader;
+import de.cismet.cids.utils.serverresources.ServerResourcesLoader;
 
 import de.cismet.commons.security.AccessHandler;
 import de.cismet.commons.security.handler.SimpleHttpAccessHandler;
@@ -157,7 +157,6 @@ public class FormSolutionServerNewStuffAvailableAction implements UserAwareServe
     private final String testCismet00Xml;
     private final Set<String> ignoreTransids = new HashSet<String>();
     private final boolean testCismet00Enabled;
-    private final JasperReport rechnungJasperReport;
 
     //~ Constructors -----------------------------------------------------------
 
@@ -175,57 +174,50 @@ public class FormSolutionServerNewStuffAvailableAction implements UserAwareServe
      */
     public FormSolutionServerNewStuffAvailableAction(final boolean fromStartupHook) {
         UsernamePasswordCredentials creds = null;
-        try {
-            creds = new UsernamePasswordCredentials(FormSolutionsProperties.getInstance().getUser(),
-                    FormSolutionsProperties.getInstance().getPassword());
-        } catch (final Exception ex) {
-            LOG.error(
-                "UsernamePasswordCredentials couldn't be created. FormSolutionServerNewStuffAvailableAction will not work at all !",
-                ex);
-        }
-
         boolean testCismet00Enabled = false;
-        try {
-            testCismet00Enabled = fromStartupHook && FormSolutionsProperties.getInstance().isTestCismet00();
-        } catch (final Exception ex) {
-            LOG.error("could not read FormSolutionsConstants.TEST_CISMET00. TEST_CISMET00 stays disabled", ex);
-        }
-        this.testCismet00Enabled = testCismet00Enabled;
-
         String testCismet00Xml = null;
-        if (testCismet00Enabled) {
-            try {
-                testCismet00Xml = CachedServerResourcesLoader.getInstance()
-                            .getTextResource(WundaBlauServerResources.FS_TEST_XML.getValue());
-            } catch (final Exception ex) {
-                LOG.error("could not load " + WundaBlauServerResources.FS_TEST_XML.getValue(), ex);
-            }
-        }
-        this.testCismet00Xml = testCismet00Xml;
 
-        try {
-            final String ignoreFileContent = CachedServerResourcesLoader.getInstance()
-                        .getTextResource(WundaBlauServerResources.FS_IGNORE_TRANSID_TXT.getValue());
-            final String[] lines = ignoreFileContent.split("\n");
-            for (final String line : lines) {
-                if (!line.trim().isEmpty()) {
-                    ignoreTransids.add(line.trim());
+        if ((DomainServerImpl.getServerProperties() != null)
+                    && "WUNDA_BLAU".equals(DomainServerImpl.getServerProperties().getServerName())) {
+            try {
+                creds = new UsernamePasswordCredentials(FormSolutionsProperties.getInstance().getUser(),
+                        FormSolutionsProperties.getInstance().getPassword());
+            } catch (final Exception ex) {
+                LOG.error(
+                    "UsernamePasswordCredentials couldn't be created. FormSolutionServerNewStuffAvailableAction will not work at all !",
+                    ex);
+            }
+
+            try {
+                testCismet00Enabled = fromStartupHook && FormSolutionsProperties.getInstance().isTestCismet00();
+            } catch (final Exception ex) {
+                LOG.error("could not read FormSolutionsConstants.TEST_CISMET00. TEST_CISMET00 stays disabled", ex);
+            }
+
+            if (testCismet00Enabled) {
+                try {
+                    testCismet00Xml = ServerResourcesLoader.getInstance()
+                                .loadTextResource(WundaBlauServerResources.FS_TEST_XML.getValue());
+                } catch (final Exception ex) {
+                    LOG.error("could not load " + WundaBlauServerResources.FS_TEST_XML.getValue(), ex);
                 }
             }
-        } catch (final Exception ex) {
-            LOG.error("could not load " + WundaBlauServerResources.FS_IGNORE_TRANSID_TXT.getValue(), ex);
-        }
 
-        JasperReport report;
-        try {
-            report = CachedServerResourcesLoader.getInstance()
-                        .getJasperReportResource(WundaBlauServerResources.FS_RECHNUNG_JASPER.getValue());
-        } catch (final Exception ex) {
-            LOG.error("could not load " + WundaBlauServerResources.FS_RECHNUNG_JASPER.getValue(), ex);
-            report = null;
+            try {
+                final String ignoreFileContent = ServerResourcesLoader.getInstance()
+                            .loadTextResource(WundaBlauServerResources.FS_IGNORE_TRANSID_TXT.getValue());
+                final String[] lines = ignoreFileContent.split("\n");
+                for (final String line : lines) {
+                    if (!line.trim().isEmpty()) {
+                        ignoreTransids.add(line.trim());
+                    }
+                }
+            } catch (final Exception ex) {
+                LOG.error("could not load " + WundaBlauServerResources.FS_IGNORE_TRANSID_TXT.getValue(), ex);
+            }
         }
-        rechnungJasperReport = report;
-
+        this.testCismet00Enabled = testCismet00Enabled;
+        this.testCismet00Xml = testCismet00Xml;
         this.creds = creds;
     }
 
@@ -1222,6 +1214,8 @@ public class FormSolutionServerNewStuffAvailableAction implements UserAwareServe
         parameters.put("SUBREPORT_DIR", DomainServerImpl.getServerProperties().getServerResourcesBasePath() + "/");
         final JRDataSource dataSource = new JRBeanCollectionDataSource(Arrays.asList(bestellungBean));
 
+        final JasperReport rechnungJasperReport = ServerResourcesLoader.getInstance()
+                    .loadJasperReportResource(WundaBlauServerResources.FS_RECHNUNG_JASPER.getValue());
         final JasperPrint print = JasperFillManager.fillReport(rechnungJasperReport, parameters, dataSource);
         return print;
     }

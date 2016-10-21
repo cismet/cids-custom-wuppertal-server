@@ -30,7 +30,7 @@ import javax.imageio.stream.*;
 
 import de.cismet.cids.custom.utils.WundaBlauServerResources;
 
-import de.cismet.cids.utils.serverresources.CachedServerResourcesLoader;
+import de.cismet.cids.utils.serverresources.ServerResourcesLoader;
 
 //import com.sun.media.jai.codec.*;
 /**
@@ -51,7 +51,7 @@ public class ImageAnnotator {
             calibriFont = Font.createFont(
                     Font.TRUETYPE_FONT,
                     new ByteArrayInputStream(
-                        CachedServerResourcesLoader.getInstance().getBinaryResource(
+                        ServerResourcesLoader.getInstance().loadBinaryResource(
                             WundaBlauServerResources.IMAGE_ANNOTATOR_FONT.getValue())));
         } catch (Exception ex) {
             Log.warn("Calibri could not be loaded", ex);

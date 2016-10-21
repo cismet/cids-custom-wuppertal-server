@@ -11,6 +11,7 @@
  */
 package de.cismet.cids.custom.wunda_blau.search.actions;
 
+import Sirius.server.middleware.impls.domainserver.DomainServerImpl;
 import Sirius.server.middleware.interfaces.domainserver.MetaService;
 import Sirius.server.middleware.interfaces.domainserver.MetaServiceStore;
 
@@ -40,7 +41,7 @@ import de.cismet.cids.server.actions.ServerAction;
 import de.cismet.cids.server.actions.ServerActionParameter;
 import de.cismet.cids.server.search.SearchException;
 
-import de.cismet.cids.utils.serverresources.CachedServerResourcesLoader;
+import de.cismet.cids.utils.serverresources.ServerResourcesLoader;
 
 import de.cismet.cismap.commons.jtsgeometryfactories.PostGisGeometryFactory;
 
@@ -122,13 +123,18 @@ public class NasZaehlObjekteServerAction implements ServerAction, MetaServiceSto
         String pw = null;
 
         try {
-            final Properties serviceProperties = new Properties();
-            serviceProperties.load(CachedServerResourcesLoader.getInstance().getStringReaderResource(
-                    WundaBlauServerResources.FME_DB_CONN_PROPERTIES.getValue()));
-            url = serviceProperties.getProperty("connection_url");
-            user = serviceProperties.getProperty("connection_username");
-            pw = serviceProperties.getProperty("connection_pw");
-            initConnection();
+            if ((DomainServerImpl.getServerProperties() != null)
+                        && "WUNDA_BLAU".equals(DomainServerImpl.getServerProperties().getServerName())) {
+                final Properties serviceProperties = new Properties();
+                serviceProperties.load(ServerResourcesLoader.getInstance().loadStringReaderResource(
+                        WundaBlauServerResources.FME_DB_CONN_PROPERTIES.getValue()));
+                url = serviceProperties.getProperty("connection_url");
+                user = serviceProperties.getProperty("connection_username");
+                pw = serviceProperties.getProperty("connection_pw");
+                initConnection();
+            } else {
+                initError = true;
+            }
         } catch (final SearchException ex) {
             if (LOG.isDebugEnabled()) {
                 LOG.debug("error during initialisation of fme db connection.", ex);

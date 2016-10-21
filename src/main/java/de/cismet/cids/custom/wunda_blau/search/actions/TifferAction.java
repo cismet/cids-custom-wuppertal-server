@@ -11,6 +11,8 @@
  */
 package de.cismet.cids.custom.wunda_blau.search.actions;
 
+import Sirius.server.middleware.impls.domainserver.DomainServerImpl;
+
 import org.apache.log4j.Logger;
 
 import java.awt.image.BufferedImage;
@@ -37,7 +39,7 @@ import de.cismet.cids.custom.utils.WundaBlauServerResources;
 import de.cismet.cids.server.actions.ServerAction;
 import de.cismet.cids.server.actions.ServerActionParameter;
 
-import de.cismet.cids.utils.serverresources.CachedServerResourcesLoader;
+import de.cismet.cids.utils.serverresources.ServerResourcesLoader;
 
 import static de.cismet.cids.custom.wunda_blau.search.actions.TifferAction.ParameterType.*;
 
@@ -72,7 +74,7 @@ public class TifferAction implements ServerAction {
 
     //~ Instance fields --------------------------------------------------------
 
-    PropertyResourceBundle res = null;
+    private final PropertyResourceBundle res;
 
     //~ Constructors -----------------------------------------------------------
 
@@ -80,12 +82,17 @@ public class TifferAction implements ServerAction {
      * Creates a new TifferAction object.
      */
     public TifferAction() {
-        try {
-            res = new PropertyResourceBundle(CachedServerResourcesLoader.getInstance().getStringReaderResource(
-                        WundaBlauServerResources.TIFFER_ACTION_CFG.getValue()));
-        } catch (Exception e) {
-            LOG.error("Resource not found");
+        PropertyResourceBundle res = null;
+        if ((DomainServerImpl.getServerProperties() != null)
+                    && "WUNDA_BLAU".equals(DomainServerImpl.getServerProperties().getServerName())) {
+            try {
+                res = new PropertyResourceBundle(ServerResourcesLoader.getInstance().loadStringReaderResource(
+                            WundaBlauServerResources.TIFFER_ACTION_CFG.getValue()));
+            } catch (Exception e) {
+                LOG.error("Resource not found");
+            }
         }
+        this.res = res;
     }
 
     //~ Methods ----------------------------------------------------------------

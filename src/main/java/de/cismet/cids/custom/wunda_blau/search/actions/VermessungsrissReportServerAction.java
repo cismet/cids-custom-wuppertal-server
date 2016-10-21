@@ -31,7 +31,7 @@ import de.cismet.cids.server.actions.JasperReportServerAction;
 import de.cismet.cids.server.actions.ServerAction;
 import de.cismet.cids.server.actions.ServerActionParameter;
 
-import de.cismet.cids.utils.serverresources.CachedServerResourcesLoader;
+import de.cismet.cids.utils.serverresources.ServerResourcesLoader;
 
 import de.cismet.commons.utils.MultiPagePictureReader;
 
@@ -47,19 +47,6 @@ public class VermessungsrissReportServerAction extends JasperReportServerAction 
     //~ Static fields/initializers ---------------------------------------------
 
     public static final String TASK_NAME = "vermessungsrissReport";
-
-    public static final JasperReport JASPER;
-
-    static {
-        JasperReport report = null;
-        try {
-            report = CachedServerResourcesLoader.getInstance()
-                        .getJasperReportResource(WundaBlauServerResources.VERMESSUNGSRISSE_JASPER.getValue());
-        } catch (final Exception ex) {
-            LOG.error("Error while loading " + WundaBlauServerResources.VERMESSUNGSRISSE_JASPER.getValue(), ex);
-        }
-        JASPER = report;
-    }
 
     //~ Enums ------------------------------------------------------------------
 
@@ -137,7 +124,8 @@ public class VermessungsrissReportServerAction extends JasperReportServerAction 
     }
 
     @Override
-    protected JasperReport getJasperReport() {
-        return JASPER;
+    protected JasperReport getJasperReport() throws Exception {
+        return ServerResourcesLoader.getInstance()
+                    .loadJasperReportResource(WundaBlauServerResources.VERMESSUNGSRISSE_JASPER.getValue());
     }
 }

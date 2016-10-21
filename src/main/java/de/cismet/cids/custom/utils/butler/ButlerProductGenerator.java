@@ -44,7 +44,7 @@ import javax.ws.rs.core.MediaType;
 import de.cismet.cids.custom.utils.WundaBlauServerResources;
 import de.cismet.cids.custom.utils.nas.CidsActionClient;
 
-import de.cismet.cids.utils.serverresources.CachedServerResourcesLoader;
+import de.cismet.cids.utils.serverresources.ServerResourcesLoader;
 
 import de.cismet.cidsx.server.api.types.ActionTask;
 
@@ -87,7 +87,7 @@ public class ButlerProductGenerator {
         new HashMap<Integer, HashMap<String, ButlerRequestInfo>>();
     private String requestFolder;
     private String butlerBasePath;
-    private String BUTLER_TEMPLATES_RES_PATH = "/de/cismet/cids/custom/utils/butler/";
+    private String BUTLER_TEMPLATES_RES_PATH = "/butler/";
     private boolean initError = false;
     private WmpsCidsAction wmpsActionClient;
 
@@ -102,7 +102,7 @@ public class ButlerProductGenerator {
             final String resPath = serverProps.getServerResourcesBasePath();
             BUTLER_TEMPLATES_RES_PATH = resPath + BUTLER_TEMPLATES_RES_PATH;
             final Properties butlerProperties = new Properties();
-            butlerProperties.load(CachedServerResourcesLoader.getInstance().getStringReaderResource(
+            butlerProperties.load(ServerResourcesLoader.getInstance().loadStringReaderResource(
                     WundaBlauServerResources.BUTLER_PROPERTIES.getValue()));
             butlerBasePath = butlerProperties.getProperty("butlerBasePath");
             requestFolder = butlerBasePath + System.getProperty("file.separator")

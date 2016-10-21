@@ -12,7 +12,7 @@
  */
 package de.cismet.cids.custom.utils;
 
-import de.cismet.cids.utils.serverresources.CachedServerResourcesLoader;
+import de.cismet.cids.utils.serverresources.ServerResourcesLoader;
 
 /**
  * DOCUMENT ME!
@@ -24,123 +24,75 @@ public enum WundaBlauServerResources {
 
     //~ Enum constants ---------------------------------------------------------
 
-    VERMESSUNGSRISSE_JASPER(
-        "/de/cismet/cids/custom/wunda_blau/res/reports/vermessungsrisse.jasper",
-        CachedServerResourcesLoader.Type.JASPER_REPORT),
+    VERMESSUNGSRISSE_JASPER("/reports/vermessungsrisse.jasper", ServerResourcesLoader.Type.JASPER_REPORT),
     VERMESSUNGSRISSE_DOCUMENT_JASPER(
-        "/de/cismet/cids/custom/wunda_blau/res/reports/vermessungsrisse_document.jasper",
-        CachedServerResourcesLoader.Type.JASPER_REPORT),
+        "/reports/vermessungsrisse_document.jasper",
+        ServerResourcesLoader.Type.JASPER_REPORT),
     VERMESSUNGSRISSE_OVERVIEW_JASPER(
-        "/de/cismet/cids/custom/wunda_blau/res/reports/vermessungsrisse_overview.jasper",
-        CachedServerResourcesLoader.Type.JASPER_REPORT),
-    APMAPS_JASPER(
-        "/de/cismet/cids/custom/wunda_blau/res/reports/apmaps.jasper",
-        CachedServerResourcesLoader.Type.JASPER_REPORT),
-    APMAPS_DOCUMENT_JASPER(
-        "/de/cismet/cids/custom/wunda_blau/res/reports/apmaps_document.jasper",
-        CachedServerResourcesLoader.Type.JASPER_REPORT),
-    APMAPS_OVERVIEW_JASPER(
-        "/de/cismet/cids/custom/wunda_blau/res/reports/apmaps_overview.jasper",
-        CachedServerResourcesLoader.Type.JASPER_REPORT),
-    FS_RECHNUNG_JASPER(
-        "/de/cismet/cids/custom/wunda_blau/res/bestellung_rechnung.jasper",
-        CachedServerResourcesLoader.Type.JASPER_REPORT),
+        "/reports/vermessungsrisse_overview.jasper",
+        ServerResourcesLoader.Type.JASPER_REPORT),
+    APMAPS_JASPER("/reports/apmaps.jasper", ServerResourcesLoader.Type.JASPER_REPORT),
+    APMAPS_DOCUMENT_JASPER("/reports/apmaps_document.jasper", ServerResourcesLoader.Type.JASPER_REPORT),
+    APMAPS_OVERVIEW_JASPER("/reports/apmaps_overview.jasper", ServerResourcesLoader.Type.JASPER_REPORT),
+    FS_RECHNUNG_JASPER("/reports/bestellung_rechnung.jasper", ServerResourcesLoader.Type.JASPER_REPORT),
     FS_RECHNUNG_RUECKSEITE_JASPER(
-        "/de/cismet/cids/custom/wunda_blau/res/bestellung_rechnung_rueckseite.jasper",
-        CachedServerResourcesLoader.Type.JASPER_REPORT),
+        "/reports/bestellung_rechnung_rueckseite.jasper",
+        ServerResourcesLoader.Type.JASPER_REPORT),
 
-    BUTLER_PROPERTIES("/de/cismet/cids/custom/utils/butler/butler.properties", CachedServerResourcesLoader.Type.TEXT),
+    BUTLER_PROPERTIES("/butler/butler.properties", ServerResourcesLoader.Type.TEXT),
 
-    NAS_SERVER_PROPERTIES(
-        "/de/cismet/cids/custom/utils/nas/nasServer_conf.properties",
-        CachedServerResourcesLoader.Type.TEXT),
-    PNR_PROPERTIES(
-        "/de/cismet/cids/custom/utils/pointnumberreservation/pointNumberRes_conf.properties",
-        CachedServerResourcesLoader.Type.TEXT),
-    NAS_PRODUCT_DESCRIPTION_JSON(
-        "/de/cismet/cids/custom/nas/nasProductDescription.json",
-        CachedServerResourcesLoader.Type.TEXT),
-    FS_TEST_XML(
-        "/de/cismet/cids/custom/wunda_blau/res/formsolutions/TEST_CISMET00.xml",
-        CachedServerResourcesLoader.Type.TEXT),
-    FS_IGNORE_TRANSID_TXT(
-        "/de/cismet/cids/custom/wunda_blau/res/formsolutions/ignoreTransids.txt",
-        CachedServerResourcesLoader.Type.TEXT),
-    FME_DB_CONN_PROPERTIES(
-        "/de/cismet/cids/custom/wunda_blau/search/actions/fme_db_conn.properties",
-        CachedServerResourcesLoader.Type.TEXT),
-    TIFFER_ACTION_CFG(
-        "/de/cismet/cids/custom/wunda_blau/search/actions/tifferAction.cfg",
-        CachedServerResourcesLoader.Type.TEXT),
-    ALKIS_CONF(
-        "/de/cismet/cids/custom/wunda_blau/res/alkis/alkis_conf.properties",
-        CachedServerResourcesLoader.Type.TEXT),
-    ALKIS_PRODUCTS_PROPERTIES(
-        "/de/cismet/cids/custom/wunda_blau/res/alkis/alkis_products.properties",
-        CachedServerResourcesLoader.Type.TEXT),
-    ALKIS_BUCHUNTSBLATTBEZIRKE_JSON(
-        "/de/cismet/cids/custom/wunda_blau/res/alkis/buchungsblattbezirke.json",
-        CachedServerResourcesLoader.Type.TEXT),
-    ALKIS_FORMATS_PROPERTIES(
-        "/de/cismet/cids/custom/wunda_blau/res/alkis/formats.properties",
-        CachedServerResourcesLoader.Type.TEXT),
-    ALKIS_PRODUKTBESCHREIBUNG_XML(
-        "/de/cismet/cids/custom/wunda_blau/res/alkis/Produktbeschreibung_ALKIS.xml",
-        CachedServerResourcesLoader.Type.TEXT),
+    NAS_SERVER_PROPERTIES("/nas/nasServer_conf.properties", ServerResourcesLoader.Type.TEXT),
+    FME_DB_CONN_PROPERTIES("/nas/fme_db_conn.properties", ServerResourcesLoader.Type.TEXT),
+    NAS_PRODUCT_DESCRIPTION_JSON("/nas/nasProductDescription.json", ServerResourcesLoader.Type.TEXT),
+
+    PNR_PROPERTIES("/pointnumberreservation/pointNumberRes_conf.properties", ServerResourcesLoader.Type.TEXT),
+
+    FS_TEST_XML("/formsolutions/TEST_CISMET00.xml", ServerResourcesLoader.Type.TEXT),
+    FS_IGNORE_TRANSID_TXT("/formsolutions/ignoreTransids.txt", ServerResourcesLoader.Type.TEXT),
+    FORMSOLUTIONS_PROPERTIES("/formsolutions/fs_conf.properties", ServerResourcesLoader.Type.TEXT),
+
+    TIFFER_ACTION_CFG("/tiffer/tifferAction.cfg", ServerResourcesLoader.Type.TEXT),
+    IMAGE_ANNOTATOR_FONT("/tiffer/Calibri_Bold.ttf", ServerResourcesLoader.Type.BINARY),
+
+    ALKIS_CONF("/alkis/alkis_conf.properties", ServerResourcesLoader.Type.TEXT),
+    ALKIS_PRODUCTS_PROPERTIES("/alkis/alkis_products.properties", ServerResourcesLoader.Type.TEXT),
+    ALKIS_BUCHUNTSBLATTBEZIRKE_JSON("/alkis/buchungsblattbezirke.json", ServerResourcesLoader.Type.TEXT),
+    ALKIS_FORMATS_PROPERTIES("/alkis/formats.properties", ServerResourcesLoader.Type.TEXT),
+    ALKIS_PRODUKTBESCHREIBUNG_XML("/alkis/Produktbeschreibung_ALKIS.xml", ServerResourcesLoader.Type.TEXT),
+
     BERECHTIGUNGSPRUEFUNG_PROPERTIES(
-        "/de/cismet/cids/custom/berechtigungspruefung/berechtigungspruefung.properties",
-        CachedServerResourcesLoader.Type.TEXT),
+        "/berechtigungspruefung/berechtigungspruefung.properties",
+        ServerResourcesLoader.Type.TEXT),
     BERECHTIGUNGSPRUEFUNG_CONF_JSON(
-        "/de/cismet/cids/custom/berechtigungspruefung/berechtigungspruefung_conf.json",
-        CachedServerResourcesLoader.Type.TEXT),
-    FORMSOLUTIONS_PROPERTIES(
-        "/de/cismet/cids/custom/wunda_blau/res/formsolutions/fs_conf.properties",
-        CachedServerResourcesLoader.Type.TEXT),
+        "/berechtigungspruefung/berechtigungspruefung_conf.json",
+        ServerResourcesLoader.Type.TEXT),
+
     VERMESSUNGSUNTERLAGENPORTAL_PROPERTIES(
-        "/de/cismet/cids/custom/wunda_blau/res/vermessungsunterlagenportal/vup_conf.properties",
-        CachedServerResourcesLoader.Type.TEXT),
-    MOTD_WUNDA_BLAU_PROPERTIES(
-        "/de/cismet/cids/custom/motd/wunda_blau.properties",
-        CachedServerResourcesLoader.Type.TEXT),
-    MOTD_VERDIS_GRUNDIS_PROPERTIES(
-        "/de/cismet/cids/custom/motd/verdis_grundis.properties",
-        CachedServerResourcesLoader.Type.TEXT),
-    MOTD_LAGIS_PROPERTIES("/de/cismet/cids/custom/motd/lagis.properties", CachedServerResourcesLoader.Type.TEXT),
-    MOTD_BELIS2_PROPERTIES("/de/cismet/cids/custom/motd/belis2.properties", CachedServerResourcesLoader.Type.TEXT),
+        "/vermessungsunterlagenportal/vup_conf.properties",
+        ServerResourcesLoader.Type.TEXT),
 
-    PNR_TEMPLATE_BEN_AUFTR_ALL(
-        "/de/cismet/cids/custom/utils/pointnumberreservation/A_Ben_Auftr_alle_PKZ.xml",
-        CachedServerResourcesLoader.Type.TEXT),
-    PNR_TEMPLATE_BEN_AUFTR_ONE_ANR(
-        "/de/cismet/cids/custom/utils/pointnumberreservation/A_Ben_Auftr_eine_ANR.xml",
-        CachedServerResourcesLoader.Type.TEXT),
+    MOTD_WUNDA_BLAU_PROPERTIES("/motd/wunda_blau.properties", ServerResourcesLoader.Type.TEXT),
+    MOTD_VERDIS_GRUNDIS_PROPERTIES("/motd/verdis_grundis.properties", ServerResourcesLoader.Type.TEXT),
+    MOTD_LAGIS_PROPERTIES("/motd/lagis.properties", ServerResourcesLoader.Type.TEXT),
+    MOTD_BELIS2_PROPERTIES("/motd/belis2.properties", ServerResourcesLoader.Type.TEXT),
+
+    PNR_TEMPLATE_BEN_AUFTR_ALL("/pointnumberreservation/A_Ben_Auftr_alle_PKZ.xml", ServerResourcesLoader.Type.TEXT),
+    PNR_TEMPLATE_BEN_AUFTR_ONE_ANR("/pointnumberreservation/A_Ben_Auftr_eine_ANR.xml", ServerResourcesLoader.Type.TEXT),
     PNR_TEMPLATE_BEN_AUFTR_WILDCARD(
-        "/de/cismet/cids/custom/utils/pointnumberreservation/A_Ben_Auftr_ANR_Praefix_Wildcard.xml",
-        CachedServerResourcesLoader.Type.TEXT),
-    PNR_TEMPLATE_FREIGABE(
-        "/de/cismet/cids/custom/utils/pointnumberreservation/A_Freigabe.xml",
-        CachedServerResourcesLoader.Type.TEXT),
-    PNR_TEMPLATE_PROLONG(
-        "/de/cismet/cids/custom/utils/pointnumberreservation/A_Verlaengern.xml",
-        CachedServerResourcesLoader.Type.TEXT),
-    PNR_TEMPLATE_PROLONG_SUB(
-        "/de/cismet/cids/custom/utils/pointnumberreservation/A_Verlaengern__Sub.xml",
-        CachedServerResourcesLoader.Type.TEXT),
-    PNR_TEMPLATE_RESERVIERUNG(
-        "/de/cismet/cids/custom/utils/pointnumberreservation/A_reservierung.xml",
-        CachedServerResourcesLoader.Type.TEXT),
+        "/pointnumberreservation/A_Ben_Auftr_ANR_Praefix_Wildcard.xml",
+        ServerResourcesLoader.Type.TEXT),
+    PNR_TEMPLATE_FREIGABE("/pointnumberreservation/A_Freigabe.xml", ServerResourcesLoader.Type.TEXT),
+    PNR_TEMPLATE_PROLONG("/pointnumberreservation/A_Verlaengern.xml", ServerResourcesLoader.Type.TEXT),
+    PNR_TEMPLATE_PROLONG_SUB("/pointnumberreservation/A_Verlaengern__Sub.xml", ServerResourcesLoader.Type.TEXT),
+    PNR_TEMPLATE_RESERVIERUNG("/pointnumberreservation/A_reservierung.xml", ServerResourcesLoader.Type.TEXT),
     PNR_TEMPLATE_RESERVIERUNG_SW(
-        "/de/cismet/cids/custom/utils/pointnumberreservation/A_reservierung_startwert.xml",
-        CachedServerResourcesLoader.Type.TEXT),
-
-    IMAGE_ANNOTATOR_FONT(
-        "/de/cismet/cids/custom/wunda_blau/search/actions/Calibri_Bold.ttf",
-        CachedServerResourcesLoader.Type.BINARY);
+        "/pointnumberreservation/A_reservierung_startwert.xml",
+        ServerResourcesLoader.Type.TEXT);
 
     //~ Instance fields --------------------------------------------------------
 
     private final String value;
-    private final CachedServerResourcesLoader.Type type;
+    private final ServerResourcesLoader.Type type;
 
     //~ Constructors -----------------------------------------------------------
 
@@ -150,7 +102,7 @@ public enum WundaBlauServerResources {
      * @param  value  DOCUMENT ME!
      * @param  type   DOCUMENT ME!
      */
-    WundaBlauServerResources(final String value, final CachedServerResourcesLoader.Type type) {
+    WundaBlauServerResources(final String value, final ServerResourcesLoader.Type type) {
         this.value = value;
         this.type = type;
     }
@@ -171,7 +123,7 @@ public enum WundaBlauServerResources {
      *
      * @return  DOCUMENT ME!
      */
-    public CachedServerResourcesLoader.Type getType() {
+    public ServerResourcesLoader.Type getType() {
         return type;
     }
 
@@ -182,8 +134,8 @@ public enum WundaBlauServerResources {
      *
      * @throws  Exception  DOCUMENT ME!
      */
-    public Object loadWithCachedServerResourcesLoader() throws Exception {
-        final CachedServerResourcesLoader loader = CachedServerResourcesLoader.getInstance();
+    public Object loadServerResources() throws Exception {
+        final ServerResourcesLoader loader = ServerResourcesLoader.getInstance();
         switch (type) {
             case JASPER_REPORT: {
                 return loader.loadJasperReportResource(value);

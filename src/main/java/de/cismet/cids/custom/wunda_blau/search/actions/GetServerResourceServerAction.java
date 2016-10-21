@@ -17,7 +17,7 @@ import de.cismet.cids.custom.utils.WundaBlauServerResources;
 import de.cismet.cids.server.actions.ServerAction;
 import de.cismet.cids.server.actions.ServerActionParameter;
 
-import de.cismet.cids.utils.serverresources.CachedServerResourcesLoader;
+import de.cismet.cids.utils.serverresources.ServerResourcesLoader;
 
 /**
  * DOCUMENT ME!
@@ -43,16 +43,16 @@ public class GetServerResourceServerAction implements ServerAction {
             final WundaBlauServerResources serverResource = (WundaBlauServerResources)body;
 
             final String value = serverResource.getValue();
-            final CachedServerResourcesLoader loader = CachedServerResourcesLoader.getInstance();
+            final ServerResourcesLoader loader = ServerResourcesLoader.getInstance();
             switch (serverResource.getType()) {
                 case JASPER_REPORT: {
-                    return loader.getJasperReportResource(value);
+                    return loader.loadJasperReportResource(value);
                 }
                 case TEXT: {
-                    return loader.getTextResource(value);
+                    return loader.loadTextResource(value);
                 }
                 case BINARY: {
-                    return loader.getBinaryResource(value);
+                    return loader.loadBinaryResource(value);
                 }
                 default: {
                     throw new Exception("unknown serverResource type");

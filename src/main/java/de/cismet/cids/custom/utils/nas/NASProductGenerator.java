@@ -75,7 +75,7 @@ import javax.xml.parsers.ParserConfigurationException;
 
 import de.cismet.cids.custom.utils.WundaBlauServerResources;
 
-import de.cismet.cids.utils.serverresources.CachedServerResourcesLoader;
+import de.cismet.cids.utils.serverresources.ServerResourcesLoader;
 
 import de.cismet.cidsx.server.api.types.ActionTask;
 
@@ -130,7 +130,7 @@ public class NASProductGenerator {
     private NASProductGenerator() {
         final Properties serviceProperties = new Properties();
         try {
-            serviceProperties.load(CachedServerResourcesLoader.getInstance().getStringReaderResource(
+            serviceProperties.load(ServerResourcesLoader.getInstance().loadStringReaderResource(
                     WundaBlauServerResources.NAS_SERVER_PROPERTIES.getValue()));
             SERVICE_URL = serviceProperties.getProperty("service");
             USER = serviceProperties.getProperty("user");

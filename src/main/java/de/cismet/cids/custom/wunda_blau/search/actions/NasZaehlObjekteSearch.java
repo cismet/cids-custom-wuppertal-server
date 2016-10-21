@@ -39,7 +39,7 @@ import de.cismet.cids.custom.wunda_blau.search.server.CidsMauernSearchStatement;
 import de.cismet.cids.server.search.AbstractCidsServerSearch;
 import de.cismet.cids.server.search.SearchException;
 
-import de.cismet.cids.utils.serverresources.CachedServerResourcesLoader;
+import de.cismet.cids.utils.serverresources.ServerResourcesLoader;
 
 import de.cismet.cismap.commons.jtsgeometryfactories.PostGisGeometryFactory;
 
@@ -79,7 +79,7 @@ public class NasZaehlObjekteSearch extends AbstractCidsServerSearch {
     static {
         try {
             final Properties serviceProperties = new Properties();
-            serviceProperties.load(CachedServerResourcesLoader.getInstance().getStringReaderResource(
+            serviceProperties.load(ServerResourcesLoader.getInstance().loadStringReaderResource(
                     WundaBlauServerResources.FME_DB_CONN_PROPERTIES.getValue()));
             url = serviceProperties.getProperty("connection_url");
             user = serviceProperties.getProperty("connection_username");

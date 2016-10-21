@@ -11,7 +11,7 @@ import java.util.Properties;
 
 import de.cismet.cids.custom.utils.WundaBlauServerResources;
 
-import de.cismet.cids.utils.serverresources.CachedServerResourcesLoader;
+import de.cismet.cids.utils.serverresources.ServerResourcesLoader;
 
 /**
  * DOCUMENT ME!
@@ -57,11 +57,11 @@ public final class ServerAlkisProducts extends AlkisProducts {
             try {
                 INSTANCE = new ServerAlkisProducts(
                         ServerAlkisConf.getInstance(),
-                        CachedServerResourcesLoader.getInstance().getPropertiesResource(
+                        ServerResourcesLoader.getInstance().loadPropertiesResource(
                             WundaBlauServerResources.ALKIS_PRODUCTS_PROPERTIES.getValue()),
-                        CachedServerResourcesLoader.getInstance().getPropertiesResource(
+                        ServerResourcesLoader.getInstance().loadPropertiesResource(
                             WundaBlauServerResources.ALKIS_FORMATS_PROPERTIES.getValue()),
-                        CachedServerResourcesLoader.getInstance().getTextResource(
+                        ServerResourcesLoader.getInstance().loadTextResource(
                             WundaBlauServerResources.ALKIS_PRODUKTBESCHREIBUNG_XML.getValue()));
             } catch (final Exception ex) {
                 throw new RuntimeException("Error while parsing Alkis Product Description!", ex);

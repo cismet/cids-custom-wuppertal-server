@@ -20,7 +20,7 @@ import java.util.Properties;
 
 import de.cismet.cids.custom.utils.WundaBlauServerResources;
 
-import de.cismet.cids.utils.serverresources.CachedServerResourcesLoader;
+import de.cismet.cids.utils.serverresources.ServerResourcesLoader;
 
 /**
  * DOCUMENT ME!
@@ -143,8 +143,8 @@ public class FormSolutionsProperties {
         static {
             FormSolutionsProperties fsprop;
             try {
-                final Properties properties = CachedServerResourcesLoader.getInstance()
-                            .getPropertiesResource(WundaBlauServerResources.FORMSOLUTIONS_PROPERTIES.getValue());
+                final Properties properties = ServerResourcesLoader.getInstance()
+                            .loadPropertiesResource(WundaBlauServerResources.FORMSOLUTIONS_PROPERTIES.getValue());
 
                 fsprop = new FormSolutionsProperties(properties);
             } catch (final Throwable ex) {

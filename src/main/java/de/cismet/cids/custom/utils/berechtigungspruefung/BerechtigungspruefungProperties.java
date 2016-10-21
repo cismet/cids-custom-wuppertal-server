@@ -16,9 +16,7 @@ import java.util.Properties;
 
 import de.cismet.cids.custom.utils.WundaBlauServerResources;
 
-import de.cismet.cids.utils.serverresources.CachedServerResourcesLoader;
-
-import de.cismet.tools.PropertyReader;
+import de.cismet.cids.utils.serverresources.ServerResourcesLoader;
 
 /**
  * DOCUMENT ME!
@@ -32,26 +30,6 @@ public class BerechtigungspruefungProperties {
 
     private static final transient org.apache.log4j.Logger LOG = org.apache.log4j.Logger.getLogger(
             BerechtigungspruefungProperties.class);
-
-    @Deprecated public static final String CIDS_LOGIN;
-    @Deprecated public static final String CIDS_PASSWORD;
-    @Deprecated public static final String ANHANG_PFAD;
-    @Deprecated public static final String CSM_ANFRAGE;
-    @Deprecated public static final String CSM_BEARBEITUNG;
-    @Deprecated public static final String CSM_FREIGABE;
-
-    static {
-        @Deprecated
-        final BerechtigungspruefungProperties props = new BerechtigungspruefungProperties(
-                new PropertyReader("/de/cismet/cids/custom/berechtigungspruefung/berechtigungspruefung.properties")
-                            .getInternalProperties());
-        CIDS_LOGIN = props.getCidsLogin();
-        CIDS_PASSWORD = props.getCidsPassword();
-        ANHANG_PFAD = props.getAnhangPfad();
-        CSM_ANFRAGE = props.getCsmAnfrage();
-        CSM_BEARBEITUNG = props.getCsmBearbeitung();
-        CSM_FREIGABE = props.getCsmBearbeitung();
-    }
 
     //~ Instance fields --------------------------------------------------------
 
@@ -186,8 +164,8 @@ public class BerechtigungspruefungProperties {
             BerechtigungspruefungProperties instance = null;
 
             try {
-                instance = new BerechtigungspruefungProperties(CachedServerResourcesLoader.getInstance()
-                                .getPropertiesResource(
+                instance = new BerechtigungspruefungProperties(ServerResourcesLoader.getInstance()
+                                .loadPropertiesResource(
                                     WundaBlauServerResources.BERECHTIGUNGSPRUEFUNG_PROPERTIES.getValue()));
             } catch (final Exception ex) {
                 LOG.error(ex, ex);
