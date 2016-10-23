@@ -17,6 +17,7 @@ import com.fasterxml.jackson.annotation.JsonProperty;
 
 import lombok.Getter;
 
+import java.util.Date;
 import java.util.List;
 
 /**
@@ -37,6 +38,7 @@ public class BerechtigungspruefungAlkisEinzelnachweisDownloadInfo extends Berech
     //~ Instance fields --------------------------------------------------------
 
     @JsonProperty private final String alkisProdukt;
+    @JsonProperty private final Date date;
 
     //~ Constructors -----------------------------------------------------------
 
@@ -51,9 +53,26 @@ public class BerechtigungspruefungAlkisEinzelnachweisDownloadInfo extends Berech
             final AlkisObjektTyp alkisObjectTyp,
             final String alkisProdukt,
             final List<String> alkisCodes) {
+        this(alkisObjectTyp, alkisProdukt, null, alkisCodes);
+    }
+
+    /**
+     * Creates a new BerechtigungspruefungAlkisEinzelnachweisDownloadInfo object.
+     *
+     * @param  alkisObjectTyp  DOCUMENT ME!
+     * @param  alkisProdukt    DOCUMENT ME!
+     * @param  stichtag        DOCUMENT ME!
+     * @param  alkisCodes      DOCUMENT ME!
+     */
+    public BerechtigungspruefungAlkisEinzelnachweisDownloadInfo(
+            final AlkisObjektTyp alkisObjectTyp,
+            final String alkisProdukt,
+            final Date stichtag,
+            final List<String> alkisCodes) {
         super(PRODUKT_TYP, alkisObjectTyp, AlkisDownloadTyp.EINZELNACHWEIS, alkisCodes);
 
         this.alkisProdukt = alkisProdukt;
+        this.date = stichtag;
     }
 
     /**
@@ -63,13 +82,15 @@ public class BerechtigungspruefungAlkisEinzelnachweisDownloadInfo extends Berech
      * @param  alkisObjectTyp    DOCUMENT ME!
      * @param  alkisDownloadTyp  DOCUMENT ME!
      * @param  alkisProdukt      DOCUMENT ME!
+     * @param  stichtag          DOCUMENT ME!
      * @param  alkisCodes        DOCUMENT ME!
      */
     public BerechtigungspruefungAlkisEinzelnachweisDownloadInfo(@JsonProperty("produktTyp") final String produktTyp,
             @JsonProperty("alkisObjectTyp") final AlkisObjektTyp alkisObjectTyp,
             @JsonProperty("alkisDownloadTyp") final AlkisDownloadTyp alkisDownloadTyp,
             @JsonProperty("alkisProdukt") final String alkisProdukt,
+            @JsonProperty("stichtag") final Date stichtag,
             @JsonProperty("alkisCodes") final List<String> alkisCodes) {
-        this(alkisObjectTyp, alkisProdukt, alkisCodes);
+        this(alkisObjectTyp, alkisProdukt, stichtag, alkisCodes);
     }
 }
