@@ -168,12 +168,13 @@ public class CidsAlkisSearchStatement extends AbstractCidsServerSearch implement
         try {
             final List<MetaObjectNode> result = new ArrayList<MetaObjectNode>();
             final Properties properties = new Properties();
-            properties.load(new StringReader(name));
             final ActionService as = (ActionService)getActiveLocalServers().get("WUNDA_BLAU");
-            as.executeTask(
-                getUser(),
-                GetServerResourceServerAction.TASK_NAME,
-                WundaBlauServerResources.ALKIS_CONF.getValue());
+            properties.load(new StringReader(
+                    (String)as.executeTask(
+                        getUser(),
+                        GetServerResourceServerAction.TASK_NAME,
+                        WundaBlauServerResources.ALKIS_CONF)));
+
             final SOAPAccessProvider accessProvider = new SOAPAccessProvider(new AlkisConf(properties));
             final ALKISSearchServices searchService = accessProvider.getAlkisSearchService();
 
