@@ -28,6 +28,7 @@ import java.util.List;
 import java.util.Properties;
 
 import de.cismet.cids.custom.utils.WundaBlauServerResources;
+import de.cismet.cids.custom.utils.alkis.AlkisConf;
 import de.cismet.cids.custom.utils.alkis.SOAPAccessProvider;
 import de.cismet.cids.custom.utils.alkis.ServerAlkisConf;
 import de.cismet.cids.custom.wunda_blau.search.actions.GetServerResourceServerAction;
@@ -173,7 +174,7 @@ public class CidsAlkisSearchStatement extends AbstractCidsServerSearch implement
                 getUser(),
                 GetServerResourceServerAction.TASK_NAME,
                 WundaBlauServerResources.ALKIS_CONF.getValue());
-            final SOAPAccessProvider accessProvider = new SOAPAccessProvider(ServerAlkisConf.getInstance());
+            final SOAPAccessProvider accessProvider = new SOAPAccessProvider(new AlkisConf(properties));
             final ALKISSearchServices searchService = accessProvider.getAlkisSearchService();
 
             String query = null;
