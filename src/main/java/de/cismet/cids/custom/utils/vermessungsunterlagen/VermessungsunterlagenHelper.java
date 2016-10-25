@@ -74,8 +74,6 @@ import java.util.Properties;
 
 import de.cismet.cids.custom.utils.WundaBlauServerResources;
 import de.cismet.cids.custom.utils.nas.NasProduct;
-import de.cismet.cids.custom.wunda_blau.search.actions.AlkisPointReportServerAction;
-import de.cismet.cids.custom.wunda_blau.search.actions.VermessungsrissReportServerAction;
 
 import de.cismet.cids.dynamics.CidsBean;
 
@@ -674,7 +672,8 @@ public class VermessungsunterlagenHelper {
     public void test() {
         try {
             if ((PATH_TEST != null) && !PATH_TEST.isEmpty()) {
-                final File directory = new File(PATH_TEST);
+                final File directory = new File(DomainServerImpl.getServerProperties().getServerResourcesBasePath()
+                                + "/" + PATH_TEST);
                 if (directory.exists()) {
                     final File[] executeJobFiles = directory.listFiles(new FilenameFilter() {
 
@@ -789,7 +788,8 @@ public class VermessungsunterlagenHelper {
      * @return  DOCUMENT ME!
      */
     public static String getPath(final String jobkey) {
-        return PATH_TMP + "/" + DIR_PREFIX + "_" + jobkey;
+        return DomainServerImpl.getServerProperties().getServerResourcesBasePath() + "/" + PATH_TMP + "/" + DIR_PREFIX
+                    + "_" + jobkey;
     }
 
     /**
