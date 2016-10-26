@@ -20,6 +20,7 @@ import java.io.File;
 
 import java.util.ArrayList;
 import java.util.Collection;
+import java.util.concurrent.Callable;
 
 /**
  * DOCUMENT ME!
@@ -27,7 +28,7 @@ import java.util.Collection;
  * @author   jruiz
  * @version  $Revision$, $Date$
  */
-public abstract class VermessungsunterlagenTask implements Runnable {
+public abstract class VermessungsunterlagenTask implements Callable<VermessungsunterlagenTask> {
 
     //~ Static fields/initializers ---------------------------------------------
 
@@ -96,7 +97,7 @@ public abstract class VermessungsunterlagenTask implements Runnable {
     }
 
     @Override
-    public void run() {
+    public VermessungsunterlagenTask call() throws Exception {
         setStatus(Status.RUNNING);
         try {
             new File(getPath()).mkdirs();
@@ -108,6 +109,7 @@ public abstract class VermessungsunterlagenTask implements Runnable {
             setStatus(Status.ERROR);
             VermessungsunterlagenHelper.writeExceptionJson(ex, getPath() + "/fehlerprotokoll_" + getType() + ".json");
         }
+        return this;
     }
 
     /**

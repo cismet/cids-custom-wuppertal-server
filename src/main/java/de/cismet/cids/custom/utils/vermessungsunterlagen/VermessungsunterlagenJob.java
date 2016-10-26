@@ -34,6 +34,8 @@ import java.util.Collection;
 import java.util.HashMap;
 import java.util.LinkedList;
 import java.util.Map;
+import java.util.concurrent.CompletionService;
+import java.util.concurrent.ExecutorCompletionService;
 import java.util.concurrent.Future;
 import java.util.concurrent.ThreadPoolExecutor;
 import java.util.zip.ZipEntry;
@@ -102,7 +104,10 @@ public class VermessungsunterlagenJob implements Runnable {
     @Getter private String ftpZipPath;
 
     private final transient ThreadPoolExecutor taskExecutor = (ThreadPoolExecutor)CismetExecutors.newFixedThreadPool(
-            10);
+            Runtime.getRuntime().availableProcessors());
+
+    private final transient CompletionService<VermessungsunterlagenTask> completionService =
+        new ExecutorCompletionService<VermessungsunterlagenTask>(taskExecutor);
 
     private final transient VermessungsunterlagenHelper helper = VermessungsunterlagenHelper.getInstance();
 
@@ -151,7 +156,7 @@ public class VermessungsunterlagenJob implements Runnable {
      */
     public void submitTask(final VermessungsunterlagenTask task) throws Exception {
         if (isTaskAllowed(task.getType())) {
-            this.taskMap.put(task, taskExecutor.submit(task));
+            this.taskMap.put(task, completionService.submit(task));
         } else {
             LOG.info("Not allowed to run task of Type " + task.getType() + ".");
         }
@@ -368,9 +373,18 @@ public class VermessungsunterlagenJob implements Runnable {
                         }
                     }
 
-                    final Collection<Future> taskFutures = new ArrayList<Future>(taskMap.values());
-                    for (final Future taskFuture : taskFutures) { // wait for each task to finish
-                        taskFuture.get();
+                    int received = 0;
+                    while (received < taskMap.size()) {
+                        final Future<VermessungsunterlagenTask> resultFuture = completionService.take();
+                        final VermessungsunterlagenTask task = resultFuture.get();
+                        if (VermessungsunterlagenTask.Status.ERROR.equals(task.getStatus())) {
+                            throw new VermessungsunterlagenException(
+                                "Ein unerwarteter Fehler ist beim Ausführen des Tasks "
+                                        + task.getType()
+                                        + " aufgetreten.",
+                                task.getException());
+                        }
+                        received++;
                     }
 
                     final String zipFilePath = getPath() + ".zip";
@@ -388,6 +402,8 @@ public class VermessungsunterlagenJob implements Runnable {
                 } catch (final Exception ex) {
                     writeExceptionJson(ex, getPath() + "/fehlerprotokoll.json");
                     throw ex;
+                } finally {
+                    taskExecutor.shutdown();
                 }
             }
         } catch (final Exception ex) {
