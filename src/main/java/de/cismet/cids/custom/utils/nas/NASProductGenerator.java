@@ -130,7 +130,7 @@ public class NASProductGenerator {
     private NASProductGenerator() {
         final Properties serviceProperties = new Properties();
         try {
-            serviceProperties.load(ServerResourcesLoader.getInstance().loadStringReaderResource(
+            serviceProperties.load(ServerResourcesLoader.getInstance().loadStringReader(
                     WundaBlauServerResources.NAS_SERVER_PROPERTIES.getValue()));
             SERVICE_URL = serviceProperties.getProperty("service");
             USER = serviceProperties.getProperty("user");

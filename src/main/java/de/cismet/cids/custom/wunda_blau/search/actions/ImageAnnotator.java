@@ -51,7 +51,7 @@ public class ImageAnnotator {
             calibriFont = Font.createFont(
                     Font.TRUETYPE_FONT,
                     new ByteArrayInputStream(
-                        ServerResourcesLoader.getInstance().loadBinaryResource(
+                        ServerResourcesLoader.getInstance().loadBinary(
                             WundaBlauServerResources.IMAGE_ANNOTATOR_FONT.getValue())));
         } catch (Exception ex) {
             Log.warn("Calibri could not be loaded", ex);

@@ -57,11 +57,11 @@ public final class ServerAlkisProducts extends AlkisProducts {
             try {
                 INSTANCE = new ServerAlkisProducts(
                         ServerAlkisConf.getInstance(),
-                        ServerResourcesLoader.getInstance().loadPropertiesResource(
+                        ServerResourcesLoader.getInstance().loadProperties(
                             WundaBlauServerResources.ALKIS_PRODUCTS_PROPERTIES.getValue()),
-                        ServerResourcesLoader.getInstance().loadPropertiesResource(
+                        ServerResourcesLoader.getInstance().loadProperties(
                             WundaBlauServerResources.ALKIS_FORMATS_PROPERTIES.getValue()),
-                        ServerResourcesLoader.getInstance().loadTextResource(
+                        ServerResourcesLoader.getInstance().loadText(
                             WundaBlauServerResources.ALKIS_PRODUKTBESCHREIBUNG_XML.getValue()));
             } catch (final Exception ex) {
                 throw new RuntimeException("Error while parsing Alkis Product Description!", ex);

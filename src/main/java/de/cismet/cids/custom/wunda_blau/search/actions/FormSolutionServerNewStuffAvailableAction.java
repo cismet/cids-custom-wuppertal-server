@@ -197,7 +197,7 @@ public class FormSolutionServerNewStuffAvailableAction implements UserAwareServe
             if (testCismet00Enabled) {
                 try {
                     testCismet00Xml = ServerResourcesLoader.getInstance()
-                                .loadTextResource(WundaBlauServerResources.FS_TEST_XML.getValue());
+                                .loadText(WundaBlauServerResources.FS_TEST_XML.getValue());
                 } catch (final Exception ex) {
                     LOG.error("could not load " + WundaBlauServerResources.FS_TEST_XML.getValue(), ex);
                 }
@@ -205,7 +205,7 @@ public class FormSolutionServerNewStuffAvailableAction implements UserAwareServe
 
             try {
                 final String ignoreFileContent = ServerResourcesLoader.getInstance()
-                            .loadTextResource(WundaBlauServerResources.FS_IGNORE_TRANSID_TXT.getValue());
+                            .loadText(WundaBlauServerResources.FS_IGNORE_TRANSID_TXT.getValue());
                 final String[] lines = ignoreFileContent.split("\n");
                 for (final String line : lines) {
                     if (!line.trim().isEmpty()) {
@@ -1215,7 +1215,7 @@ public class FormSolutionServerNewStuffAvailableAction implements UserAwareServe
         final JRDataSource dataSource = new JRBeanCollectionDataSource(Arrays.asList(bestellungBean));
 
         final JasperReport rechnungJasperReport = ServerResourcesLoader.getInstance()
-                    .loadJasperReportResource(WundaBlauServerResources.FS_RECHNUNG_JASPER.getValue());
+                    .loadJasperReport(WundaBlauServerResources.FS_RECHNUNG_JASPER.getValue());
         final JasperPrint print = JasperFillManager.fillReport(rechnungJasperReport, parameters, dataSource);
         return print;
     }

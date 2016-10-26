@@ -74,7 +74,7 @@ public final class AlkisConstants {
     private AlkisConstants() {
         try {
             final Properties serviceProperties = ServerResourcesLoader.getInstance()
-                        .loadPropertiesResource(WundaBlauServerResources.ALKIS_CONF.getValue());
+                        .loadProperties(WundaBlauServerResources.ALKIS_CONF.getValue());
 
             SERVER = serviceProperties.getProperty("SERVER");
             SERVICE = serviceProperties.getProperty("SERVICE");

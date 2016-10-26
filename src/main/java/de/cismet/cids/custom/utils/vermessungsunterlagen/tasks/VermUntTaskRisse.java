@@ -110,7 +110,7 @@ public abstract class VermUntTaskRisse extends VermessungsunterlagenTask {
             OutputStream out = null;
             try {
                 out = new FileOutputStream(filename);
-                jasperReportDownload(ServerResourcesLoader.getInstance().loadJasperReportResource(
+                jasperReportDownload(ServerResourcesLoader.getInstance().loadJasperReport(
                         WundaBlauServerResources.VERMESSUNGSRISSE_JASPER.getValue()),
                     parameters,
                     dataSource,

@@ -102,16 +102,16 @@ public class MotdRetriever {
             final Properties serviceProperties;
             if (domain.equalsIgnoreCase("wunda_blau")) {
                 serviceProperties = ServerResourcesLoader.getInstance()
-                            .loadPropertiesResource(WundaBlauServerResources.MOTD_WUNDA_BLAU_PROPERTIES.getValue());
+                            .loadProperties(WundaBlauServerResources.MOTD_WUNDA_BLAU_PROPERTIES.getValue());
             } else if (domain.equalsIgnoreCase("verdis_grundis")) {
                 serviceProperties = ServerResourcesLoader.getInstance()
-                            .loadPropertiesResource(WundaBlauServerResources.MOTD_VERDIS_GRUNDIS_PROPERTIES.getValue());
+                            .loadProperties(WundaBlauServerResources.MOTD_VERDIS_GRUNDIS_PROPERTIES.getValue());
             } else if (domain.equalsIgnoreCase("lagis")) {
                 serviceProperties = ServerResourcesLoader.getInstance()
-                            .loadPropertiesResource(WundaBlauServerResources.MOTD_LAGIS_PROPERTIES.getValue());
+                            .loadProperties(WundaBlauServerResources.MOTD_LAGIS_PROPERTIES.getValue());
             } else if (domain.equalsIgnoreCase("belis2")) {
                 serviceProperties = ServerResourcesLoader.getInstance()
-                            .loadPropertiesResource(WundaBlauServerResources.MOTD_BELIS2_PROPERTIES.getValue());
+                            .loadProperties(WundaBlauServerResources.MOTD_BELIS2_PROPERTIES.getValue());
             } else {
                 return false;
             }

@@ -113,7 +113,6 @@ public class AlkisPointReportServerAction extends JasperReportServerAction {
 
     @Override
     protected JasperReport getJasperReport() throws Exception {
-        return ServerResourcesLoader.getInstance()
-                    .loadJasperReportResource(WundaBlauServerResources.APMAPS_JASPER.getValue());
+        return ServerResourcesLoader.getInstance().loadJasperReport(WundaBlauServerResources.APMAPS_JASPER.getValue());
     }
 }

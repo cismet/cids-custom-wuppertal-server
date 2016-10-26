@@ -18,6 +18,8 @@ import org.apache.log4j.Logger;
 
 import de.cismet.cids.custom.utils.WundaBlauServerResources;
 
+import de.cismet.cids.utils.serverresources.ServerResourcesLoader;
+
 /**
  * DOCUMENT ME!
  *
@@ -48,9 +50,9 @@ public class WundaServerStartupHook implements DomainServerStartupHook {
      */
     public void loadAllServerResources() {
         boolean error = false;
-        for (final WundaBlauServerResources resource : WundaBlauServerResources.values()) {
+        for (final WundaBlauServerResources wundaServerResources : WundaBlauServerResources.values()) {
             try {
-                resource.loadServerResources();
+                ServerResourcesLoader.getInstance().load(wundaServerResources.getValue());
             } catch (final Exception ex) {
                 LOG.warn("Exception while loading resource from the resources base path.", ex);
                 error = true;

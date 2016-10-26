@@ -79,7 +79,7 @@ public class NasZaehlObjekteSearch extends AbstractCidsServerSearch {
     static {
         try {
             final Properties serviceProperties = new Properties();
-            serviceProperties.load(ServerResourcesLoader.getInstance().loadStringReaderResource(
+            serviceProperties.load(ServerResourcesLoader.getInstance().loadStringReader(
                     WundaBlauServerResources.FME_DB_CONN_PROPERTIES.getValue()));
             url = serviceProperties.getProperty("connection_url");
             user = serviceProperties.getProperty("connection_username");

@@ -32,7 +32,7 @@ public class ServerAlkisConf extends AlkisConf {
      * @throws  Exception  DOCUMENT ME!
      */
     private ServerAlkisConf() throws Exception {
-        super(ServerResourcesLoader.getInstance().loadPropertiesResource(
+        super(ServerResourcesLoader.getInstance().loadProperties(
                 WundaBlauServerResources.ALKIS_CONF.getValue()));
     }
 

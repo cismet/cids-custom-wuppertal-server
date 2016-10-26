@@ -102,7 +102,7 @@ public class ButlerProductGenerator {
             final String resPath = serverProps.getServerResourcesBasePath();
             BUTLER_TEMPLATES_RES_PATH = resPath + BUTLER_TEMPLATES_RES_PATH;
             final Properties butlerProperties = new Properties();
-            butlerProperties.load(ServerResourcesLoader.getInstance().loadStringReaderResource(
+            butlerProperties.load(ServerResourcesLoader.getInstance().loadStringReader(
                     WundaBlauServerResources.BUTLER_PROPERTIES.getValue()));
             butlerBasePath = butlerProperties.getProperty("butlerBasePath");
             requestFolder = butlerBasePath + System.getProperty("file.separator")

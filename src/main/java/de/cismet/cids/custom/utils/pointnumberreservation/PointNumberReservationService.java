@@ -91,23 +91,23 @@ public class PointNumberReservationService {
     private PointNumberReservationService() {
         try {
             final Properties serviceProperties = ServerResourcesLoader.getInstance()
-                        .loadPropertiesResource(WundaBlauServerResources.PNR_PROPERTIES.getValue());
+                        .loadProperties(WundaBlauServerResources.PNR_PROPERTIES.getValue());
             TEMPLATE_BEN_AUFTR_ALL = ServerResourcesLoader.getInstance()
-                        .loadTextResource(WundaBlauServerResources.PNR_TEMPLATE_BEN_AUFTR_ALL.getValue());
+                        .loadText(WundaBlauServerResources.PNR_TEMPLATE_BEN_AUFTR_ALL.getValue());
             TEMPLATE_BEN_AUFTR_ONE_ANR = ServerResourcesLoader.getInstance()
-                        .loadTextResource(WundaBlauServerResources.PNR_TEMPLATE_BEN_AUFTR_ONE_ANR.getValue());
+                        .loadText(WundaBlauServerResources.PNR_TEMPLATE_BEN_AUFTR_ONE_ANR.getValue());
             TEMPLATE_BEN_AUFTR_WILDCARD = ServerResourcesLoader.getInstance()
-                        .loadTextResource(WundaBlauServerResources.PNR_TEMPLATE_BEN_AUFTR_WILDCARD.getValue());
+                        .loadText(WundaBlauServerResources.PNR_TEMPLATE_BEN_AUFTR_WILDCARD.getValue());
             TEMPLATE_FREIGABE = ServerResourcesLoader.getInstance()
-                        .loadTextResource(WundaBlauServerResources.PNR_TEMPLATE_FREIGABE.getValue());
+                        .loadText(WundaBlauServerResources.PNR_TEMPLATE_FREIGABE.getValue());
             TEMPLATE_PROLONG = ServerResourcesLoader.getInstance()
-                        .loadTextResource(WundaBlauServerResources.PNR_TEMPLATE_PROLONG.getValue());
+                        .loadText(WundaBlauServerResources.PNR_TEMPLATE_PROLONG.getValue());
             TEMPLATE_PROLONG_SUB = ServerResourcesLoader.getInstance()
-                        .loadTextResource(WundaBlauServerResources.PNR_TEMPLATE_PROLONG_SUB.getValue());
+                        .loadText(WundaBlauServerResources.PNR_TEMPLATE_PROLONG_SUB.getValue());
             TEMPLATE_RESERVIERUNG = ServerResourcesLoader.getInstance()
-                        .loadTextResource(WundaBlauServerResources.PNR_TEMPLATE_RESERVIERUNG.getValue());
+                        .loadText(WundaBlauServerResources.PNR_TEMPLATE_RESERVIERUNG.getValue());
             TEMPLATE_RESERVIERUNG_SW = ServerResourcesLoader.getInstance()
-                        .loadTextResource(WundaBlauServerResources.PNR_TEMPLATE_RESERVIERUNG_SW.getValue());
+                        .loadText(WundaBlauServerResources.PNR_TEMPLATE_RESERVIERUNG_SW.getValue());
             ;
 
             if (!checkTemplateFilesAccessible()) {

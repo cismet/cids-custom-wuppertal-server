@@ -12,7 +12,12 @@
  */
 package de.cismet.cids.custom.utils;
 
-import de.cismet.cids.utils.serverresources.ServerResourcesLoader;
+import lombok.Getter;
+
+import de.cismet.cids.utils.serverresources.BinaryServerResource;
+import de.cismet.cids.utils.serverresources.JasperReportServerResource;
+import de.cismet.cids.utils.serverresources.ServerResource;
+import de.cismet.cids.utils.serverresources.TextServerResource;
 
 /**
  * DOCUMENT ME!
@@ -24,75 +29,59 @@ public enum WundaBlauServerResources {
 
     //~ Enum constants ---------------------------------------------------------
 
-    VERMESSUNGSRISSE_JASPER("/reports/vermessungsrisse.jasper", ServerResourcesLoader.Type.JASPER_REPORT),
-    VERMESSUNGSRISSE_DOCUMENT_JASPER(
-        "/reports/vermessungsrisse_document.jasper",
-        ServerResourcesLoader.Type.JASPER_REPORT),
-    VERMESSUNGSRISSE_OVERVIEW_JASPER(
-        "/reports/vermessungsrisse_overview.jasper",
-        ServerResourcesLoader.Type.JASPER_REPORT),
-    APMAPS_JASPER("/reports/apmaps.jasper", ServerResourcesLoader.Type.JASPER_REPORT),
-    APMAPS_DOCUMENT_JASPER("/reports/apmaps_document.jasper", ServerResourcesLoader.Type.JASPER_REPORT),
-    APMAPS_OVERVIEW_JASPER("/reports/apmaps_overview.jasper", ServerResourcesLoader.Type.JASPER_REPORT),
-    FS_RECHNUNG_JASPER("/reports/bestellung_rechnung.jasper", ServerResourcesLoader.Type.JASPER_REPORT),
-    FS_RECHNUNG_RUECKSEITE_JASPER(
-        "/reports/bestellung_rechnung_rueckseite.jasper",
-        ServerResourcesLoader.Type.JASPER_REPORT),
+    VERMESSUNGSRISSE_JASPER(new JasperReportServerResource("/reports/vermessungsrisse.jasper")),
+    VERMESSUNGSRISSE_DOCUMENT_JASPER(new JasperReportServerResource("/reports/vermessungsrisse_document.jasper")),
+    VERMESSUNGSRISSE_OVERVIEW_JASPER(new JasperReportServerResource("/reports/vermessungsrisse_overview.jasper")),
+    APMAPS_JASPER(new JasperReportServerResource("/reports/apmaps.jasper")),
+    APMAPS_DOCUMENT_JASPER(new JasperReportServerResource("/reports/apmaps_document.jasper")),
+    APMAPS_OVERVIEW_JASPER(new JasperReportServerResource("/reports/apmaps_overview.jasper")),
+    FS_RECHNUNG_JASPER(new JasperReportServerResource("/reports/bestellung_rechnung.jasper")),
+    FS_RECHNUNG_RUECKSEITE_JASPER(new JasperReportServerResource("/reports/bestellung_rechnung_rueckseite.jasper")),
 
-    BUTLER_PROPERTIES("/butler/butler.properties", ServerResourcesLoader.Type.TEXT),
+    BUTLER_PROPERTIES(new TextServerResource("/butler/butler.properties")),
 
-    NAS_SERVER_PROPERTIES("/nas/nasServer_conf.properties", ServerResourcesLoader.Type.TEXT),
-    FME_DB_CONN_PROPERTIES("/nas/fme_db_conn.properties", ServerResourcesLoader.Type.TEXT),
-    NAS_PRODUCT_DESCRIPTION_JSON("/nas/nasProductDescription.json", ServerResourcesLoader.Type.TEXT),
+    NAS_SERVER_PROPERTIES(new TextServerResource("/nas/nasServer_conf.properties")),
+    FME_DB_CONN_PROPERTIES(new TextServerResource("/nas/fme_db_conn.properties")),
+    NAS_PRODUCT_DESCRIPTION_JSON(new TextServerResource("/nas/nasProductDescription.json")),
 
-    PNR_PROPERTIES("/pointnumberreservation/pointNumberRes_conf.properties", ServerResourcesLoader.Type.TEXT),
+    PNR_PROPERTIES(new TextServerResource("/pointnumberreservation/pointNumberRes_conf.properties")),
 
-    FS_TEST_XML("/formsolutions/TEST_CISMET00.xml", ServerResourcesLoader.Type.TEXT),
-    FS_IGNORE_TRANSID_TXT("/formsolutions/ignoreTransids.txt", ServerResourcesLoader.Type.TEXT),
-    FORMSOLUTIONS_PROPERTIES("/formsolutions/fs_conf.properties", ServerResourcesLoader.Type.TEXT),
+    FS_TEST_XML(new TextServerResource("/formsolutions/TEST_CISMET00.xml")),
+    FS_IGNORE_TRANSID_TXT(new TextServerResource("/formsolutions/ignoreTransids.txt")),
+    FORMSOLUTIONS_PROPERTIES(new TextServerResource("/formsolutions/fs_conf.properties")),
 
-    TIFFER_ACTION_CFG("/tiffer/tifferAction.cfg", ServerResourcesLoader.Type.TEXT),
-    IMAGE_ANNOTATOR_FONT("/tiffer/Calibri_Bold.ttf", ServerResourcesLoader.Type.BINARY),
+    TIFFER_ACTION_CFG(new TextServerResource("/tiffer/tifferAction.cfg")),
+    IMAGE_ANNOTATOR_FONT(new BinaryServerResource("/tiffer/Calibri_Bold.ttf")),
 
-    ALKIS_CONF("/alkis/alkis_conf.properties", ServerResourcesLoader.Type.TEXT),
-    ALKIS_PRODUCTS_PROPERTIES("/alkis/alkis_products.properties", ServerResourcesLoader.Type.TEXT),
-    ALKIS_BUCHUNTSBLATTBEZIRKE_JSON("/alkis/buchungsblattbezirke.json", ServerResourcesLoader.Type.TEXT),
-    ALKIS_FORMATS_PROPERTIES("/alkis/formats.properties", ServerResourcesLoader.Type.TEXT),
-    ALKIS_PRODUKTBESCHREIBUNG_XML("/alkis/Produktbeschreibung_ALKIS.xml", ServerResourcesLoader.Type.TEXT),
+    ALKIS_CONF(new TextServerResource("/alkis/alkis_conf.properties")),
+    ALKIS_PRODUCTS_PROPERTIES(new TextServerResource("/alkis/alkis_products.properties")),
+    ALKIS_BUCHUNTSBLATTBEZIRKE_JSON(new TextServerResource("/alkis/buchungsblattbezirke.json")),
+    ALKIS_FORMATS_PROPERTIES(new TextServerResource("/alkis/formats.properties")),
+    ALKIS_PRODUKTBESCHREIBUNG_XML(new TextServerResource("/alkis/Produktbeschreibung_ALKIS.xml")),
 
-    BERECHTIGUNGSPRUEFUNG_PROPERTIES(
-        "/berechtigungspruefung/berechtigungspruefung.properties",
-        ServerResourcesLoader.Type.TEXT),
-    BERECHTIGUNGSPRUEFUNG_CONF_JSON(
-        "/berechtigungspruefung/berechtigungspruefung_conf.json",
-        ServerResourcesLoader.Type.TEXT),
+    BERECHTIGUNGSPRUEFUNG_PROPERTIES(new TextServerResource("/berechtigungspruefung/berechtigungspruefung.properties")),
+    BERECHTIGUNGSPRUEFUNG_CONF_JSON(new TextServerResource("/berechtigungspruefung/berechtigungspruefung_conf.json")),
 
-    VERMESSUNGSUNTERLAGENPORTAL_PROPERTIES(
-        "/vermessungsunterlagenportal/vup_conf.properties",
-        ServerResourcesLoader.Type.TEXT),
+    VERMESSUNGSUNTERLAGENPORTAL_PROPERTIES(new TextServerResource("/vermessungsunterlagenportal/vup_conf.properties")),
 
-    MOTD_WUNDA_BLAU_PROPERTIES("/motd/wunda_blau.properties", ServerResourcesLoader.Type.TEXT),
-    MOTD_VERDIS_GRUNDIS_PROPERTIES("/motd/verdis_grundis.properties", ServerResourcesLoader.Type.TEXT),
-    MOTD_LAGIS_PROPERTIES("/motd/lagis.properties", ServerResourcesLoader.Type.TEXT),
-    MOTD_BELIS2_PROPERTIES("/motd/belis2.properties", ServerResourcesLoader.Type.TEXT),
+    MOTD_WUNDA_BLAU_PROPERTIES(new TextServerResource("/motd/wunda_blau.properties")),
+    MOTD_VERDIS_GRUNDIS_PROPERTIES(new TextServerResource("/motd/verdis_grundis.properties")),
+    MOTD_LAGIS_PROPERTIES(new TextServerResource("/motd/lagis.properties")),
+    MOTD_BELIS2_PROPERTIES(new TextServerResource("/motd/belis2.properties")),
 
-    PNR_TEMPLATE_BEN_AUFTR_ALL("/pointnumberreservation/A_Ben_Auftr_alle_PKZ.xml", ServerResourcesLoader.Type.TEXT),
-    PNR_TEMPLATE_BEN_AUFTR_ONE_ANR("/pointnumberreservation/A_Ben_Auftr_eine_ANR.xml", ServerResourcesLoader.Type.TEXT),
-    PNR_TEMPLATE_BEN_AUFTR_WILDCARD(
-        "/pointnumberreservation/A_Ben_Auftr_ANR_Praefix_Wildcard.xml",
-        ServerResourcesLoader.Type.TEXT),
-    PNR_TEMPLATE_FREIGABE("/pointnumberreservation/A_Freigabe.xml", ServerResourcesLoader.Type.TEXT),
-    PNR_TEMPLATE_PROLONG("/pointnumberreservation/A_Verlaengern.xml", ServerResourcesLoader.Type.TEXT),
-    PNR_TEMPLATE_PROLONG_SUB("/pointnumberreservation/A_Verlaengern__Sub.xml", ServerResourcesLoader.Type.TEXT),
-    PNR_TEMPLATE_RESERVIERUNG("/pointnumberreservation/A_reservierung.xml", ServerResourcesLoader.Type.TEXT),
-    PNR_TEMPLATE_RESERVIERUNG_SW(
-        "/pointnumberreservation/A_reservierung_startwert.xml",
-        ServerResourcesLoader.Type.TEXT);
+    PNR_TEMPLATE_BEN_AUFTR_ALL(new TextServerResource("/pointnumberreservation/A_Ben_Auftr_alle_PKZ.xml")),
+    PNR_TEMPLATE_BEN_AUFTR_ONE_ANR(new TextServerResource("/pointnumberreservation/A_Ben_Auftr_eine_ANR.xml")),
+    PNR_TEMPLATE_BEN_AUFTR_WILDCARD(new TextServerResource(
+            "/pointnumberreservation/A_Ben_Auftr_ANR_Praefix_Wildcard.xml")),
+    PNR_TEMPLATE_FREIGABE(new TextServerResource("/pointnumberreservation/A_Freigabe.xml")),
+    PNR_TEMPLATE_PROLONG(new TextServerResource("/pointnumberreservation/A_Verlaengern.xml")),
+    PNR_TEMPLATE_PROLONG_SUB(new TextServerResource("/pointnumberreservation/A_Verlaengern__Sub.xml")),
+    PNR_TEMPLATE_RESERVIERUNG(new TextServerResource("/pointnumberreservation/A_reservierung.xml")),
+    PNR_TEMPLATE_RESERVIERUNG_SW(new TextServerResource("/pointnumberreservation/A_reservierung_startwert.xml"));
 
     //~ Instance fields --------------------------------------------------------
 
-    private final String value;
-    private final ServerResourcesLoader.Type type;
+    @Getter private final ServerResource value;
 
     //~ Constructors -----------------------------------------------------------
 
@@ -100,55 +89,8 @@ public enum WundaBlauServerResources {
      * Creates a new Props object.
      *
      * @param  value  DOCUMENT ME!
-     * @param  type   DOCUMENT ME!
      */
-    WundaBlauServerResources(final String value, final ServerResourcesLoader.Type type) {
+    private WundaBlauServerResources(final ServerResource value) {
         this.value = value;
-        this.type = type;
-    }
-
-    //~ Methods ----------------------------------------------------------------
-
-    /**
-     * DOCUMENT ME!
-     *
-     * @return  DOCUMENT ME!
-     */
-    public String getValue() {
-        return value;
-    }
-
-    /**
-     * DOCUMENT ME!
-     *
-     * @return  DOCUMENT ME!
-     */
-    public ServerResourcesLoader.Type getType() {
-        return type;
-    }
-
-    /**
-     * DOCUMENT ME!
-     *
-     * @return  DOCUMENT ME!
-     *
-     * @throws  Exception  DOCUMENT ME!
-     */
-    public Object loadServerResources() throws Exception {
-        final ServerResourcesLoader loader = ServerResourcesLoader.getInstance();
-        switch (type) {
-            case JASPER_REPORT: {
-                return loader.loadJasperReportResource(value);
-            }
-            case TEXT: {
-                return loader.loadTextResource(value);
-            }
-            case BINARY: {
-                return loader.loadBinaryResource(value);
-            }
-            default: {
-                throw new Exception("unknown serverResource type");
-            }
-        }
     }
 }

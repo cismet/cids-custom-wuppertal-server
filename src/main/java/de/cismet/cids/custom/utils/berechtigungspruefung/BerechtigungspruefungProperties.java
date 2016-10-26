@@ -164,9 +164,8 @@ public class BerechtigungspruefungProperties {
             BerechtigungspruefungProperties instance = null;
 
             try {
-                instance = new BerechtigungspruefungProperties(ServerResourcesLoader.getInstance()
-                                .loadPropertiesResource(
-                                    WundaBlauServerResources.BERECHTIGUNGSPRUEFUNG_PROPERTIES.getValue()));
+                instance = new BerechtigungspruefungProperties(ServerResourcesLoader.getInstance().loadProperties(
+                            WundaBlauServerResources.BERECHTIGUNGSPRUEFUNG_PROPERTIES.getValue()));
             } catch (final Exception ex) {
                 LOG.error(ex, ex);
             }

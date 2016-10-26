@@ -126,6 +126,6 @@ public class VermessungsrissReportServerAction extends JasperReportServerAction 
     @Override
     protected JasperReport getJasperReport() throws Exception {
         return ServerResourcesLoader.getInstance()
-                    .loadJasperReportResource(WundaBlauServerResources.VERMESSUNGSRISSE_JASPER.getValue());
+                    .loadJasperReport(WundaBlauServerResources.VERMESSUNGSRISSE_JASPER.getValue());
     }
 }

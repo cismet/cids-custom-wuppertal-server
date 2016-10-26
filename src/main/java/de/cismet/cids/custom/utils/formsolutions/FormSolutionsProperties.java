@@ -144,7 +144,7 @@ public class FormSolutionsProperties {
             FormSolutionsProperties fsprop;
             try {
                 final Properties properties = ServerResourcesLoader.getInstance()
-                            .loadPropertiesResource(WundaBlauServerResources.FORMSOLUTIONS_PROPERTIES.getValue());
+                            .loadProperties(WundaBlauServerResources.FORMSOLUTIONS_PROPERTIES.getValue());
 
                 fsprop = new FormSolutionsProperties(properties);
             } catch (final Throwable ex) {

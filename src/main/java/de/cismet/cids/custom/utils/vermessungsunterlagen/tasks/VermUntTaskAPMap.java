@@ -69,7 +69,7 @@ public class VermUntTaskAPMap extends VermUntTaskAP {
             parameters.put("SUBREPORT_DIR", DomainServerImpl.getServerProperties().getServerResourcesBasePath() + "/");
 
             VermessungsunterlagenHelper.jasperReportDownload(
-                ServerResourcesLoader.getInstance().loadJasperReportResource(
+                ServerResourcesLoader.getInstance().loadJasperReport(
                     WundaBlauServerResources.APMAPS_JASPER.getValue()),
                 parameters,
                 new JRBeanCollectionDataSource(Arrays.asList(new AlkisPointReportBean(getAlkisPoints()))),

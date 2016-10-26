@@ -86,7 +86,7 @@ public class TifferAction implements ServerAction {
         if ((DomainServerImpl.getServerProperties() != null)
                     && "WUNDA_BLAU".equals(DomainServerImpl.getServerProperties().getServerName())) {
             try {
-                res = new PropertyResourceBundle(ServerResourcesLoader.getInstance().loadStringReaderResource(
+                res = new PropertyResourceBundle(ServerResourcesLoader.getInstance().loadStringReader(
                             WundaBlauServerResources.TIFFER_ACTION_CFG.getValue()));
             } catch (Exception e) {
                 LOG.error("Resource not found");

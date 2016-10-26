@@ -134,7 +134,7 @@ public class VermessungsunterlagenHelper {
         NasProduct productKomplett = null;
         final ArrayList<NasProduct> nasProducts;
         try {
-            nasProducts = mapper.readValue(ServerResourcesLoader.getInstance().loadStringReaderResource(
+            nasProducts = mapper.readValue(ServerResourcesLoader.getInstance().loadStringReader(
                         WundaBlauServerResources.NAS_PRODUCT_DESCRIPTION_JSON.getValue()),
                     mapper.getTypeFactory().constructCollectionType(List.class, NasProduct.class));
             for (final NasProduct nasProduct : nasProducts) {
@@ -177,8 +177,7 @@ public class VermessungsunterlagenHelper {
         Properties properties = null;
         try {
             properties = ServerResourcesLoader.getInstance()
-                        .loadPropertiesResource(WundaBlauServerResources.VERMESSUNGSUNTERLAGENPORTAL_PROPERTIES
-                                .getValue());
+                        .loadProperties(WundaBlauServerResources.VERMESSUNGSUNTERLAGENPORTAL_PROPERTIES.getValue());
         } catch (final Exception ex) {
             LOG.error("VermessungsunterlagenHelper could not load the properties", ex);
         }
