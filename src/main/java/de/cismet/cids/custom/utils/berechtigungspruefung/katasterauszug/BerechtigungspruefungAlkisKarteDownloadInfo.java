@@ -41,11 +41,13 @@ public class BerechtigungspruefungAlkisKarteDownloadInfo extends Berechtigungspr
      *
      * @param  alkisObjectTyp  produktbezeichnung DOCUMENT ME!
      * @param  alkisCodes      auftragsnummer DOCUMENT ME!
+     * @param  billingId       DOCUMENT ME!
      */
     public BerechtigungspruefungAlkisKarteDownloadInfo(
             final AlkisObjektTyp alkisObjectTyp,
-            final List<String> alkisCodes) {
-        super(PRODUKT_TYP, alkisObjectTyp, AlkisDownloadTyp.KARTE, alkisCodes);
+            final List<String> alkisCodes,
+            final Integer billingId) {
+        super(PRODUKT_TYP, alkisObjectTyp, AlkisDownloadTyp.KARTE, alkisCodes, billingId);
     }
 
     /**
@@ -55,11 +57,13 @@ public class BerechtigungspruefungAlkisKarteDownloadInfo extends Berechtigungspr
      * @param  alkisObjectTyp    DOCUMENT ME!
      * @param  alkisDownloadTyp  DOCUMENT ME!
      * @param  alkisCodes        DOCUMENT ME!
+     * @param  billingId         DOCUMENT ME!
      */
     public BerechtigungspruefungAlkisKarteDownloadInfo(@JsonProperty("produktTyp") final String produktTyp,
             @JsonProperty("alkisObjectTyp") final AlkisObjektTyp alkisObjectTyp,
             @JsonProperty("alkisDownloadTyp") final AlkisDownloadTyp alkisDownloadTyp,
-            @JsonProperty("alkisCodes") final List<String> alkisCodes) {
-        this(alkisObjectTyp, alkisCodes);
+            @JsonProperty("alkisCodes") final List<String> alkisCodes,
+            @JsonProperty("billingId") final Integer billingId) {
+        this(alkisObjectTyp, alkisCodes, billingId);
     }
 }

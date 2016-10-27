@@ -18,7 +18,7 @@ import lombok.Getter;
 
 import java.util.List;
 
-import de.cismet.cids.custom.utils.berechtigungspruefung.BerechtigungspruefungDownloadInfo;
+import de.cismet.cids.custom.utils.berechtigungspruefung.BerechtigungspruefungBillingDownloadInfo;
 
 /**
  * DOCUMENT ME!
@@ -27,7 +27,7 @@ import de.cismet.cids.custom.utils.berechtigungspruefung.BerechtigungspruefungDo
  * @version  $Revision$, $Date$
  */
 @Getter
-public class BerechtigungspruefungAlkisDownloadInfo extends BerechtigungspruefungDownloadInfo {
+public class BerechtigungspruefungAlkisDownloadInfo extends BerechtigungspruefungBillingDownloadInfo {
 
     //~ Static fields/initializers ---------------------------------------------
 
@@ -73,12 +73,14 @@ public class BerechtigungspruefungAlkisDownloadInfo extends Berechtigungspruefun
      * @param  alkisObjectTyp    DOCUMENT ME!
      * @param  alkisDownloadTyp  DOCUMENT ME!
      * @param  alkisCodes        DOCUMENT ME!
+     * @param  billingId         DOCUMENT ME!
      */
     public BerechtigungspruefungAlkisDownloadInfo(@JsonProperty("produktTyp") final String produktTyp,
             @JsonProperty("alkisObjectTyp") final AlkisObjektTyp alkisObjectTyp,
             @JsonProperty("alkisDownloadTyp") final AlkisDownloadTyp alkisDownloadTyp,
-            @JsonProperty("alkisCodes") final List<String> alkisCodes) {
-        this(alkisObjectTyp, alkisDownloadTyp, alkisCodes);
+            @JsonProperty("alkisCodes") final List<String> alkisCodes,
+            @JsonProperty("billingId") final Integer billingId) {
+        this(alkisObjectTyp, alkisDownloadTyp, alkisCodes, billingId);
     }
 
     /**
@@ -87,12 +89,14 @@ public class BerechtigungspruefungAlkisDownloadInfo extends Berechtigungspruefun
      * @param  alkisObjectTyp    DOCUMENT ME!
      * @param  alkisDownloadTyp  DOCUMENT ME!
      * @param  alkisCodes        DOCUMENT ME!
+     * @param  billingId         DOCUMENT ME!
      */
     protected BerechtigungspruefungAlkisDownloadInfo(
             final AlkisObjektTyp alkisObjectTyp,
             final AlkisDownloadTyp alkisDownloadTyp,
-            final List<String> alkisCodes) {
-        super(PRODUKT_TYP);
+            final List<String> alkisCodes,
+            final Integer billingId) {
+        super(PRODUKT_TYP, billingId);
         this.alkisObjectTyp = alkisObjectTyp;
         this.alkisDownloadTyp = alkisDownloadTyp;
         this.alkisCodes = alkisCodes;

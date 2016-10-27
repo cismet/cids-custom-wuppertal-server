@@ -17,7 +17,7 @@ import com.fasterxml.jackson.annotation.JsonProperty;
 
 import lombok.Getter;
 
-import de.cismet.cids.custom.utils.berechtigungspruefung.BerechtigungspruefungDownloadInfo;
+import de.cismet.cids.custom.utils.berechtigungspruefung.BerechtigungspruefungBillingDownloadInfo;
 
 /**
  * DOCUMENT ME!
@@ -32,7 +32,7 @@ import de.cismet.cids.custom.utils.berechtigungspruefung.BerechtigungspruefungDo
     getterVisibility = JsonAutoDetect.Visibility.NONE,
     setterVisibility = JsonAutoDetect.Visibility.NONE
 )
-public class BerechtigungspruefungBescheinigungDownloadInfo extends BerechtigungspruefungDownloadInfo {
+public class BerechtigungspruefungBescheinigungDownloadInfo extends BerechtigungspruefungBillingDownloadInfo {
 
     //~ Static fields/initializers ---------------------------------------------
 
@@ -56,14 +56,16 @@ public class BerechtigungspruefungBescheinigungDownloadInfo extends Berechtigung
      * @param  auftragsnummer      DOCUMENT ME!
      * @param  protokoll           DOCUMENT ME!
      * @param  bescheinigungsInfo  DOCUMENT ME!
+     * @param  billingId           DOCUMENT ME!
      */
     public BerechtigungspruefungBescheinigungDownloadInfo(
             final String jobname,
             final String produktbezeichnung,
             final String auftragsnummer,
             final String protokoll,
-            final BerechtigungspruefungBescheinigungInfo bescheinigungsInfo) {
-        this(PRODUKT_TYP, jobname, produktbezeichnung, auftragsnummer, protokoll, bescheinigungsInfo);
+            final BerechtigungspruefungBescheinigungInfo bescheinigungsInfo,
+            final Integer billingId) {
+        this(PRODUKT_TYP, jobname, produktbezeichnung, auftragsnummer, protokoll, bescheinigungsInfo, billingId);
     }
 
     /**
@@ -75,14 +77,16 @@ public class BerechtigungspruefungBescheinigungDownloadInfo extends Berechtigung
      * @param  auftragsnummer      DOCUMENT ME!
      * @param  protokoll           DOCUMENT ME!
      * @param  bescheinigungsInfo  DOCUMENT ME!
+     * @param  billingId           DOCUMENT ME!
      */
     public BerechtigungspruefungBescheinigungDownloadInfo(@JsonProperty("produktTyp") final String produktTyp,
             @JsonProperty("jobname") final String jobname,
             @JsonProperty("produktbezeichnung") final String produktbezeichnung,
             @JsonProperty("auftragsnummer") final String auftragsnummer,
             @JsonProperty("protokoll") final String protokoll,
-            @JsonProperty("bescheinigungsInfo") final BerechtigungspruefungBescheinigungInfo bescheinigungsInfo) {
-        super(PRODUKT_TYP);
+            @JsonProperty("bescheinigungsInfo") final BerechtigungspruefungBescheinigungInfo bescheinigungsInfo,
+            @JsonProperty("billingId") final Integer billingId) {
+        super(PRODUKT_TYP, billingId);
         this.jobname = jobname;
         this.produktbezeichnung = produktbezeichnung;
         this.auftragsnummer = auftragsnummer;

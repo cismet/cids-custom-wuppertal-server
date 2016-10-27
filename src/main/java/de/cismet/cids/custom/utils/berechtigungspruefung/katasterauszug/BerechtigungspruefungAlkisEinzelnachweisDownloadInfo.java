@@ -48,12 +48,14 @@ public class BerechtigungspruefungAlkisEinzelnachweisDownloadInfo extends Berech
      * @param  alkisObjectTyp  produktbezeichnung DOCUMENT ME!
      * @param  alkisProdukt    auftragsnummer DOCUMENT ME!
      * @param  alkisCodes      protokoll DOCUMENT ME!
+     * @param  billingId       DOCUMENT ME!
      */
     public BerechtigungspruefungAlkisEinzelnachweisDownloadInfo(
             final AlkisObjektTyp alkisObjectTyp,
             final String alkisProdukt,
-            final List<String> alkisCodes) {
-        this(alkisObjectTyp, alkisProdukt, null, alkisCodes);
+            final List<String> alkisCodes,
+            final Integer billingId) {
+        this(alkisObjectTyp, alkisProdukt, null, alkisCodes, billingId);
     }
 
     /**
@@ -63,13 +65,15 @@ public class BerechtigungspruefungAlkisEinzelnachweisDownloadInfo extends Berech
      * @param  alkisProdukt    DOCUMENT ME!
      * @param  stichtag        DOCUMENT ME!
      * @param  alkisCodes      DOCUMENT ME!
+     * @param  billingId       DOCUMENT ME!
      */
     public BerechtigungspruefungAlkisEinzelnachweisDownloadInfo(
             final AlkisObjektTyp alkisObjectTyp,
             final String alkisProdukt,
             final Date stichtag,
-            final List<String> alkisCodes) {
-        super(PRODUKT_TYP, alkisObjectTyp, AlkisDownloadTyp.EINZELNACHWEIS, alkisCodes);
+            final List<String> alkisCodes,
+            final Integer billingId) {
+        super(PRODUKT_TYP, alkisObjectTyp, AlkisDownloadTyp.EINZELNACHWEIS, alkisCodes, billingId);
 
         this.alkisProdukt = alkisProdukt;
         this.date = stichtag;
@@ -84,13 +88,15 @@ public class BerechtigungspruefungAlkisEinzelnachweisDownloadInfo extends Berech
      * @param  alkisProdukt      DOCUMENT ME!
      * @param  stichtag          DOCUMENT ME!
      * @param  alkisCodes        DOCUMENT ME!
+     * @param  billingId         DOCUMENT ME!
      */
     public BerechtigungspruefungAlkisEinzelnachweisDownloadInfo(@JsonProperty("produktTyp") final String produktTyp,
             @JsonProperty("alkisObjectTyp") final AlkisObjektTyp alkisObjectTyp,
             @JsonProperty("alkisDownloadTyp") final AlkisDownloadTyp alkisDownloadTyp,
             @JsonProperty("alkisProdukt") final String alkisProdukt,
             @JsonProperty("stichtag") final Date stichtag,
-            @JsonProperty("alkisCodes") final List<String> alkisCodes) {
-        this(alkisObjectTyp, alkisProdukt, stichtag, alkisCodes);
+            @JsonProperty("alkisCodes") final List<String> alkisCodes,
+            @JsonProperty("billingId") final Integer billingId) {
+        this(alkisObjectTyp, alkisProdukt, stichtag, alkisCodes, billingId);
     }
 }

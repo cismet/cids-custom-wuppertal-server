@@ -65,7 +65,7 @@ public class BerechtigungspruefungAnfrageServerAction implements UserAwareServer
         try {
             String dateiname = null;
             String begruendung = null;
-            String downloadInfo_json = null;
+            String downloadinfoJson = null;
             String berechtigungsgrund = null;
             String abgeholt = null;
             if (params != null) {
@@ -77,7 +77,7 @@ public class BerechtigungspruefungAnfrageServerAction implements UserAwareServer
                     } else if (sap.getKey().equals(ParameterType.BERECHTIGUNGSGRUND.toString())) {
                         berechtigungsgrund = (String)sap.getValue();
                     } else if (sap.getKey().equals(ParameterType.DOWNLOADINFO_JSON.toString())) {
-                        downloadInfo_json = (String)sap.getValue();
+                        downloadinfoJson = (String)sap.getValue();
                     } else if (sap.getKey().equals(ParameterType.ABGEHOLT.toString())) {
                         abgeholt = (String)sap.getValue();
                     }
@@ -93,12 +93,12 @@ public class BerechtigungspruefungAnfrageServerAction implements UserAwareServer
                     throw new IllegalArgumentException("body has to be a byte array");
                 }
 
-                if (downloadInfo_json == null) {
+                if (downloadinfoJson == null) {
                     throw new IllegalArgumentException("aufruf enthält keine downloadinfo");
                 }
 
                 final BerechtigungspruefungDownloadInfo downloadInfo = BerechtigungspruefungHandler.extractDownloadInfo(
-                        downloadInfo_json);
+                        downloadinfoJson);
 
                 BerechtigungspruefungHandler.getInstance().setMetaService(getMetaService());
                 return BerechtigungspruefungHandler.getInstance()
