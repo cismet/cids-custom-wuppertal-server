@@ -16,8 +16,11 @@ import Sirius.server.middleware.interfaces.domainserver.MetaService;
 import Sirius.server.middleware.interfaces.domainserver.MetaServiceStore;
 import Sirius.server.newuser.User;
 
+import de.cismet.cids.custom.utils.berechtigungspruefung.BerechtigungspruefungBillingDownloadInfo;
 import de.cismet.cids.custom.utils.berechtigungspruefung.BerechtigungspruefungDownloadInfo;
 import de.cismet.cids.custom.utils.berechtigungspruefung.BerechtigungspruefungHandler;
+
+import de.cismet.cids.dynamics.CidsBean;
 
 import de.cismet.cids.server.actions.ServerAction;
 import de.cismet.cids.server.actions.ServerActionParameter;
@@ -101,7 +104,8 @@ public class BerechtigungspruefungAnfrageServerAction implements UserAwareServer
                         downloadinfoJson);
 
                 BerechtigungspruefungHandler.getInstance().setMetaService(getMetaService());
-                return BerechtigungspruefungHandler.getInstance()
+
+                final String schluessel = BerechtigungspruefungHandler.getInstance()
                             .addNewAnfrage(
                                 getUser(),
                                 downloadInfo,
@@ -109,6 +113,24 @@ public class BerechtigungspruefungAnfrageServerAction implements UserAwareServer
                                 begruendung,
                                 dateiname,
                                 data);
+
+                if (downloadInfo instanceof BerechtigungspruefungBillingDownloadInfo) {
+                    final BerechtigungspruefungBillingDownloadInfo billingDownloadInfo =
+                        (BerechtigungspruefungBillingDownloadInfo)downloadInfo;
+                    final Integer billingId = billingDownloadInfo.getBillingId();
+
+                    final CidsBean billingBean = BerechtigungspruefungHandler.getInstance()
+                                .loadBillingBean(user, billingId);
+
+                    try {
+                        billingBean.setProperty("geschaeftsbuchnummer", schluessel);
+                        getMetaService().updateMetaObject(getUser(), billingBean.getMetaObject());
+                    } catch (Exception ex) {
+                        LOG.error("Error while setting 'storniert' of billing", ex);
+                    }
+                }
+
+                return schluessel;
             }
         } catch (final Exception ex) {
             LOG.error("error while executing anfrage task", ex);
