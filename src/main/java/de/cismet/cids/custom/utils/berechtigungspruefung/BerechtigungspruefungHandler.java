@@ -18,7 +18,6 @@ import Sirius.server.middleware.types.MetaClass;
 import Sirius.server.middleware.types.MetaObject;
 import Sirius.server.newuser.User;
 
-import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
 
 import org.apache.commons.io.FileUtils;
@@ -110,7 +109,7 @@ public class BerechtigungspruefungHandler {
      * @param  user     DOCUMENT ME!
      */
     public void sendMessagesForAllOpenFreigaben(final String userKey, final User user) {
-        final Collection<CidsBean> allOpenDownloads = BerechtigungspruefungHandler.this.loadOpenFreigabeBeans(
+        final Collection<CidsBean> allOpenDownloads = loadOpenFreigabeBeans(
                 userKey,
                 user);
         sendFreigabeMessage(userKey, allOpenDownloads);
@@ -275,7 +274,15 @@ public class BerechtigungspruefungHandler {
             final byte[] data) throws Exception {
         synchronized (this) {
             final String userKey = (String)user.getKey();
-            final String type = "BLaB";
+            final String type;
+            if (BerechtigungspruefungBescheinigungDownloadInfo.PRODUKT_TYP.equals(downloadInfo.getProduktTyp())) {
+                type = "BLaB";
+            } else if (BerechtigungspruefungAlkisDownloadInfo.PRODUKT_TYP.equals(downloadInfo.getProduktTyp())) {
+                type = "LB";
+            } else {
+                type = "?";
+            }
+             
             final int year = Calendar.getInstance().get(Calendar.YEAR);
             final CidsBean lastAnfrageBean = loadLastAnfrageBeanByTypeAndYear(user, type, year);
             final String lastAnfrageSchluessel = (lastAnfrageBean != null)
@@ -505,39 +512,39 @@ public class BerechtigungspruefungHandler {
     /**
      * DOCUMENT ME!
      *
-     * @param   downloadinf_json  DOCUMENT ME!
+     * @param   downloadinfoJson  DOCUMENT ME!
      *
      * @return  DOCUMENT ME!
      *
      * @throws  Exception  DOCUMENT ME!
      */
-    public static BerechtigungspruefungDownloadInfo extractDownloadInfo(final String downloadinf_json)
+    public static BerechtigungspruefungDownloadInfo extractDownloadInfo(final String downloadinfoJson)
             throws Exception {
         final BerechtigungspruefungDownloadInfo berechtigungspruefungDownloadInfo = (BerechtigungspruefungDownloadInfo)
-            MAPPER.readValue(downloadinf_json, BerechtigungspruefungDownloadInfo.class);
+            MAPPER.readValue(downloadinfoJson, BerechtigungspruefungDownloadInfo.class);
 
         if (BerechtigungspruefungBescheinigungDownloadInfo.PRODUKT_TYP.equals(
                         berechtigungspruefungDownloadInfo.getProduktTyp())) {
-            return MAPPER.readValue(downloadinf_json, BerechtigungspruefungBescheinigungDownloadInfo.class);
+            return MAPPER.readValue(downloadinfoJson, BerechtigungspruefungBescheinigungDownloadInfo.class);
         } else if (BerechtigungspruefungAlkisDownloadInfo.PRODUKT_TYP.equals(
                         berechtigungspruefungDownloadInfo.getProduktTyp())) {
             final BerechtigungspruefungAlkisDownloadInfo alkisDownloadInfo = MAPPER.readValue(
-                    downloadinf_json,
+                    downloadinfoJson,
                     BerechtigungspruefungAlkisDownloadInfo.class);
 //            if  (BerechtigungspruefungAlkisDownloadInfo.AlkisObjektTyp.FLURSTUECKE.equals(alkisDownloadInfo.getAlkisObjectTyp())) {
             if (BerechtigungspruefungAlkisDownloadInfo.AlkisDownloadTyp.EINZELNACHWEIS.equals(
                             alkisDownloadInfo.getAlkisDownloadTyp())) {
-                return MAPPER.readValue(downloadinf_json, BerechtigungspruefungAlkisEinzelnachweisDownloadInfo.class);
+                return MAPPER.readValue(downloadinfoJson, BerechtigungspruefungAlkisEinzelnachweisDownloadInfo.class);
             } else if (BerechtigungspruefungAlkisDownloadInfo.AlkisDownloadTyp.KARTE.equals(
                             alkisDownloadInfo.getAlkisDownloadTyp())) {
-                return MAPPER.readValue(downloadinf_json, BerechtigungspruefungAlkisKarteDownloadInfo.class);
+                return MAPPER.readValue(downloadinfoJson, BerechtigungspruefungAlkisKarteDownloadInfo.class);
             }
 //            } else if (BerechtigungspruefungAlkisDownloadInfo.AlkisObjektTyp.BUCHUNGSBLAETTER.equals(alkisDownloadInfo.getAlkisObjectTyp())) {
 //
 //            }
         } else if (BerechtigungspruefungAlkisEinzelnachweisDownloadInfo.PRODUKT_TYP.equals(
                         berechtigungspruefungDownloadInfo.getProduktTyp())) {
-            return MAPPER.readValue(downloadinf_json, BerechtigungspruefungAlkisEinzelnachweisDownloadInfo.class);
+            return MAPPER.readValue(downloadinfoJson, BerechtigungspruefungAlkisEinzelnachweisDownloadInfo.class);
         }
         throw new Exception("unbekannter Download-Typ");
     }
