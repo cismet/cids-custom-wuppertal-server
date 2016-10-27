@@ -282,7 +282,7 @@ public class BerechtigungspruefungHandler {
             } else {
                 type = "?";
             }
-             
+
             final int year = Calendar.getInstance().get(Calendar.YEAR);
             final CidsBean lastAnfrageBean = loadLastAnfrageBeanByTypeAndYear(user, type, year);
             final String lastAnfrageSchluessel = (lastAnfrageBean != null)
@@ -472,6 +472,52 @@ public class BerechtigungspruefungHandler {
             }
         } catch (final Exception ex) {
             LOG.error("error while loading pruefung bean", ex);
+        }
+        return null;
+    }
+
+    /**
+     * DOCUMENT ME!
+     *
+     * @param   user  DOCUMENT ME!
+     * @param   id    DOCUMENT ME!
+     *
+     * @return  DOCUMENT ME!
+     */
+    public CidsBean loadBillingBean(final User user, final Integer id) {
+        try {
+            final MetaClass mcBillingBilling = CidsBean.getMetaClassFromTableName(
+                    "WUNDA_BLAU",
+                    "billing_billing");
+
+            final MetaObject mo = metaService.getMetaObject(user, id, mcBillingBilling.getID());
+            return mo.getBean();
+        } catch (final Exception ex) {
+            LOG.error("error while loading billing_billing bean", ex);
+        }
+        return null;
+    }
+
+    /**
+     * DOCUMENT ME!
+     *
+     * @param   user  DOCUMENT ME!
+     *
+     * @return  DOCUMENT ME!
+     */
+    public CidsBean loadBillingStornogrundBean(final User user) {
+        try {
+            final MetaClass mcBillingStornogrund = CidsBean.getMetaClassFromTableName(
+                    "WUNDA_BLAU",
+                    "billing_stornogrund");
+
+            final MetaObject mo = metaService.getMetaObject(
+                    user,
+                    BerechtigungspruefungProperties.getInstance().getBillingStornogrundId(),
+                    mcBillingStornogrund.getID());
+            return mo.getBean();
+        } catch (final Exception ex) {
+            LOG.error("error while loading billing_billing bean", ex);
         }
         return null;
     }

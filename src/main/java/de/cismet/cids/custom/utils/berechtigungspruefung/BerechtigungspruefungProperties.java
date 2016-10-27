@@ -12,6 +12,8 @@
  */
 package de.cismet.cids.custom.utils.berechtigungspruefung;
 
+import lombok.Getter;
+
 import java.util.Properties;
 
 import de.cismet.cids.custom.utils.WundaBlauServerResources;
@@ -24,6 +26,7 @@ import de.cismet.cids.utils.serverresources.ServerResourcesLoader;
  * @author   jruiz
  * @version  $Revision$, $Date$
  */
+@Getter
 public class BerechtigungspruefungProperties {
 
     //~ Static fields/initializers ---------------------------------------------
@@ -39,6 +42,7 @@ public class BerechtigungspruefungProperties {
     private final String csmAnfrage;
     private final String csmBearbeitung;
     private final String csmFreigabe;
+    private final Integer billingStornogrundId;
 
     //~ Constructors -----------------------------------------------------------
 
@@ -54,6 +58,7 @@ public class BerechtigungspruefungProperties {
         String csmAnfrage = "berechtigungspruefungAnfrage";
         String csmBearbeitung = "berechtigungspruefungBearbeitung";
         String csmFreigabe = "berechtigungspruefungFreigabe";
+        Integer billingStornogrundId = null;
 
         try {
             cidsLogin = serviceProperties.getProperty("CIDS_LOGIN");
@@ -70,6 +75,9 @@ public class BerechtigungspruefungProperties {
             if (serviceProperties.getProperty("CSM_FREIGABE") != null) {
                 csmFreigabe = serviceProperties.getProperty("CSM_FREIGABE");
             }
+            if (serviceProperties.getProperty("BILLING_STORNOGRUND_ID") != null) {
+                billingStornogrundId = Integer.parseInt(serviceProperties.getProperty("BILLING_STORNOGRUND_ID"));
+            }
         } catch (final Exception ex) {
             LOG.error("error while loading properties", ex);
         }
@@ -80,63 +88,10 @@ public class BerechtigungspruefungProperties {
         this.csmAnfrage = csmAnfrage;
         this.csmBearbeitung = csmBearbeitung;
         this.csmFreigabe = csmFreigabe;
+        this.billingStornogrundId = billingStornogrundId;
     }
 
     //~ Methods ----------------------------------------------------------------
-
-    /**
-     * DOCUMENT ME!
-     *
-     * @return  DOCUMENT ME!
-     */
-    public String getCidsLogin() {
-        return cidsLogin;
-    }
-
-    /**
-     * DOCUMENT ME!
-     *
-     * @return  DOCUMENT ME!
-     */
-    public String getCidsPassword() {
-        return cidsPassword;
-    }
-
-    /**
-     * DOCUMENT ME!
-     *
-     * @return  DOCUMENT ME!
-     */
-    public String getAnhangPfad() {
-        return anhangPfad;
-    }
-
-    /**
-     * DOCUMENT ME!
-     *
-     * @return  DOCUMENT ME!
-     */
-    public String getCsmAnfrage() {
-        return csmAnfrage;
-    }
-
-    /**
-     * DOCUMENT ME!
-     *
-     * @return  DOCUMENT ME!
-     */
-    public String getCsmBearbeitung() {
-        return csmBearbeitung;
-    }
-
-    /**
-     * DOCUMENT ME!
-     *
-     * @return  DOCUMENT ME!
-     */
-    public String getCsmFreigabe() {
-        return csmFreigabe;
-    }
 
     /**
      * DOCUMENT ME!

@@ -139,6 +139,23 @@ public class BerechtigungspruefungFreigabeServerAction implements UserAwareServe
 
                 getMetaService().updateMetaObject(getUser(), pruefungBean.getMetaObject());
 
+                if (pruefungsAbschluss && !pruefstatus) {
+                    final CidsBean billingBean = BerechtigungspruefungHandler.getInstance()
+                                .loadBillingBean(user, (Integer)pruefungBean.getProperty("billingId"));
+                    final CidsBean billingStornogrundBean = BerechtigungspruefungHandler.getInstance()
+                                .loadBillingStornogrundBean(user);
+
+                    try {
+                        billingBean.setProperty("storniert", Boolean.TRUE);
+                        billingBean.setProperty("stornogrund", billingStornogrundBean);
+                        billingBean.setProperty("storniert_durch", getUser().toString());
+
+                        getMetaService().updateMetaObject(getUser(), billingBean.getMetaObject());
+                    } catch (Exception ex) {
+                        LOG.error("Error while setting 'storniert' of billing", ex);
+                    }
+                }
+
                 if (pruefungsAbschluss) {
                     BerechtigungspruefungHandler.getInstance()
                             .sendFreigabeMessage(userKey, Arrays.asList(pruefungBean));
