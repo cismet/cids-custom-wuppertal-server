@@ -276,7 +276,7 @@ public class BerechtigungspruefungHandler {
             final String userKey = (String)user.getKey();
             final String type;
             if (BerechtigungspruefungBescheinigungDownloadInfo.PRODUKT_TYP.equals(downloadInfo.getProduktTyp())) {
-                type = "BLaB";
+                type = "BlaB";
             } else if (BerechtigungspruefungAlkisDownloadInfo.PRODUKT_TYP.equals(downloadInfo.getProduktTyp())) {
                 type = "LB";
             } else {
