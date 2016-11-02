@@ -108,7 +108,7 @@ public final class AlkisConstants {
                     "VERMESSUNG_HOST_GRENZNIEDERSCHRIFTEN");
             APMAPS_ETRS_HOST = serviceProperties.getProperty("APMAPS_ETRS_HOST");
         } catch (final Exception ex) {
-            log.fatal("AlkisCommons Error!", ex);
+            log.error("AlkisCommons Error!", ex);
             throw new RuntimeException(ex);
         }
     }

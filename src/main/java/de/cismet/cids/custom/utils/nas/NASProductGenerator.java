@@ -345,7 +345,7 @@ public class NASProductGenerator {
                 templateFile = new FileInputStream(resPath + product.getTemplate());
             }
         } catch (FileNotFoundException ex) {
-            log.fatal("Could not read template template file for Template :" + product.toString(), ex);
+            log.error("Could not read template template file for Template :" + product.toString(), ex);
         }
         return templateFile;
     }

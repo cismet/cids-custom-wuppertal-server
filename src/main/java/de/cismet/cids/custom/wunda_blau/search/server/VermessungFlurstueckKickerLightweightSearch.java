@@ -268,7 +268,6 @@ public class VermessungFlurstueckKickerLightweightSearch extends AbstractCidsSer
                                 + " order by "
                                 + "f."
                                 + FLURSTUECK_GEMARKUNG;
-                    LOG.fatal("ALLE GEMARKUNGEN:" + query);
                 }
                 break;
                 case GEMARKUNG: {
