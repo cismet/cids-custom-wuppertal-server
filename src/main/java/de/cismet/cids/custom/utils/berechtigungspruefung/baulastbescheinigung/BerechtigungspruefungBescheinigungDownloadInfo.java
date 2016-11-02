@@ -40,9 +40,6 @@ public class BerechtigungspruefungBescheinigungDownloadInfo extends Berechtigung
 
     //~ Instance fields --------------------------------------------------------
 
-    @JsonProperty private final String jobname;
-    @JsonProperty private final String produktbezeichnung;
-    @JsonProperty private final String auftragsnummer;
     @JsonProperty private final String protokoll;
     @JsonProperty private final BerechtigungspruefungBescheinigungInfo bescheinigungsInfo;
 
@@ -51,45 +48,36 @@ public class BerechtigungspruefungBescheinigungDownloadInfo extends Berechtigung
     /**
      * Creates a new BerechtigungspruefungBescheinigungDownloadInfo object.
      *
-     * @param  jobname             DOCUMENT ME!
-     * @param  produktbezeichnung  DOCUMENT ME!
      * @param  auftragsnummer      DOCUMENT ME!
+     * @param  produktbezeichnung  DOCUMENT ME!
      * @param  protokoll           DOCUMENT ME!
      * @param  bescheinigungsInfo  DOCUMENT ME!
-     * @param  billingId           DOCUMENT ME!
      */
     public BerechtigungspruefungBescheinigungDownloadInfo(
-            final String jobname,
-            final String produktbezeichnung,
             final String auftragsnummer,
+            final String produktbezeichnung,
             final String protokoll,
-            final BerechtigungspruefungBescheinigungInfo bescheinigungsInfo,
-            final Integer billingId) {
-        this(PRODUKT_TYP, jobname, produktbezeichnung, auftragsnummer, protokoll, bescheinigungsInfo, billingId);
+            final BerechtigungspruefungBescheinigungInfo bescheinigungsInfo) {
+        this(PRODUKT_TYP, auftragsnummer, produktbezeichnung, null, protokoll, bescheinigungsInfo);
     }
 
     /**
      * Creates a new BescheinigungsDownloadInfo object.
      *
      * @param  produktTyp          DOCUMENT ME!
-     * @param  jobname             DOCUMENT ME!
-     * @param  produktbezeichnung  DOCUMENT ME!
      * @param  auftragsnummer      DOCUMENT ME!
+     * @param  produktbezeichnung  DOCUMENT ME!
+     * @param  billingId           DOCUMENT ME!
      * @param  protokoll           DOCUMENT ME!
      * @param  bescheinigungsInfo  DOCUMENT ME!
-     * @param  billingId           DOCUMENT ME!
      */
     public BerechtigungspruefungBescheinigungDownloadInfo(@JsonProperty("produktTyp") final String produktTyp,
-            @JsonProperty("jobname") final String jobname,
-            @JsonProperty("produktbezeichnung") final String produktbezeichnung,
             @JsonProperty("auftragsnummer") final String auftragsnummer,
+            @JsonProperty("produktbezeichnung") final String produktbezeichnung,
+            @JsonProperty("billingId") final Integer billingId,
             @JsonProperty("protokoll") final String protokoll,
-            @JsonProperty("bescheinigungsInfo") final BerechtigungspruefungBescheinigungInfo bescheinigungsInfo,
-            @JsonProperty("billingId") final Integer billingId) {
-        super(PRODUKT_TYP, billingId);
-        this.jobname = jobname;
-        this.produktbezeichnung = produktbezeichnung;
-        this.auftragsnummer = auftragsnummer;
+            @JsonProperty("bescheinigungsInfo") final BerechtigungspruefungBescheinigungInfo bescheinigungsInfo) {
+        super(produktTyp, auftragsnummer, produktbezeichnung, billingId);
         this.protokoll = protokoll;
         this.bescheinigungsInfo = bescheinigungsInfo;
     }

@@ -106,17 +106,12 @@ public class BerechtigungspruefungAnfrageServerAction implements UserAwareServer
                 BerechtigungspruefungHandler.getInstance().setMetaService(getMetaService());
 
                 final String schluessel = BerechtigungspruefungHandler.getInstance()
-                            .addNewAnfrage(
-                                getUser(),
-                                downloadInfo,
-                                berechtigungsgrund,
-                                begruendung,
-                                dateiname,
-                                data);
+                            .createNewSchluessel(getUser(), downloadInfo);
 
                 if (downloadInfo instanceof BerechtigungspruefungBillingDownloadInfo) {
                     final BerechtigungspruefungBillingDownloadInfo billingDownloadInfo =
                         (BerechtigungspruefungBillingDownloadInfo)downloadInfo;
+                    billingDownloadInfo.setAuftragsnummer(schluessel);
                     final Integer billingId = billingDownloadInfo.getBillingId();
 
                     final CidsBean billingBean = BerechtigungspruefungHandler.getInstance()
@@ -129,6 +124,16 @@ public class BerechtigungspruefungAnfrageServerAction implements UserAwareServer
                         LOG.error("Error while setting 'storniert' of billing", ex);
                     }
                 }
+
+                BerechtigungspruefungHandler.getInstance()
+                        .addNewAnfrage(
+                            getUser(),
+                            schluessel,
+                            downloadInfo,
+                            berechtigungsgrund,
+                            begruendung,
+                            dateiname,
+                            data);
 
                 return schluessel;
             }

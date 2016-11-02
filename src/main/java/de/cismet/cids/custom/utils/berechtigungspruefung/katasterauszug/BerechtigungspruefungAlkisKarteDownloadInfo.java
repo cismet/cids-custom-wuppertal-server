@@ -41,29 +41,38 @@ public class BerechtigungspruefungAlkisKarteDownloadInfo extends Berechtigungspr
      *
      * @param  alkisObjectTyp  produktbezeichnung DOCUMENT ME!
      * @param  alkisCodes      auftragsnummer DOCUMENT ME!
-     * @param  billingId       DOCUMENT ME!
      */
     public BerechtigungspruefungAlkisKarteDownloadInfo(
             final AlkisObjektTyp alkisObjectTyp,
-            final List<String> alkisCodes,
-            final Integer billingId) {
-        super(PRODUKT_TYP, alkisObjectTyp, AlkisDownloadTyp.KARTE, alkisCodes, billingId);
+            final List<String> alkisCodes) {
+        this(PRODUKT_TYP, null, null, null, alkisObjectTyp, AlkisDownloadTyp.KARTE, alkisCodes);
     }
 
     /**
      * Creates a new BerechtigungspruefungAlkisKarteDownloadInfo object.
      *
-     * @param  produktTyp        DOCUMENT ME!
-     * @param  alkisObjectTyp    DOCUMENT ME!
-     * @param  alkisDownloadTyp  DOCUMENT ME!
-     * @param  alkisCodes        DOCUMENT ME!
-     * @param  billingId         DOCUMENT ME!
+     * @param  produktTyp          DOCUMENT ME!
+     * @param  auftragsnummer      DOCUMENT ME!
+     * @param  produktbezeichnung  DOCUMENT ME!
+     * @param  billingId           DOCUMENT ME!
+     * @param  alkisObjectTyp      DOCUMENT ME!
+     * @param  alkisDownloadTyp    DOCUMENT ME!
+     * @param  alkisCodes          DOCUMENT ME!
      */
     public BerechtigungspruefungAlkisKarteDownloadInfo(@JsonProperty("produktTyp") final String produktTyp,
+            @JsonProperty("auftragsnummer") final String auftragsnummer,
+            @JsonProperty("produktbezeichnung") final String produktbezeichnung,
+            @JsonProperty("billingId") final Integer billingId,
             @JsonProperty("alkisObjectTyp") final AlkisObjektTyp alkisObjectTyp,
             @JsonProperty("alkisDownloadTyp") final AlkisDownloadTyp alkisDownloadTyp,
-            @JsonProperty("alkisCodes") final List<String> alkisCodes,
-            @JsonProperty("billingId") final Integer billingId) {
-        this(alkisObjectTyp, alkisCodes, billingId);
+            @JsonProperty("alkisCodes") final List<String> alkisCodes) {
+        super(
+            produktTyp,
+            auftragsnummer,
+            produktbezeichnung,
+            billingId,
+            alkisObjectTyp,
+            alkisDownloadTyp,
+            alkisCodes);
     }
 }

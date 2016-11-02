@@ -214,31 +214,6 @@ public class BerechtigungspruefungHandler {
     /**
      * DOCUMENT ME!
      *
-     * @param   user                DOCUMENT ME!
-     * @param   downloadInfo        produktbezeichnung DOCUMENT ME!
-     * @param   berechtigungsgrund  DOCUMENT ME!
-     * @param   begruendung         DOCUMENT ME!
-     *
-     * @return  DOCUMENT ME!
-     *
-     * @throws  Exception  DOCUMENT ME!
-     */
-    public String addNewAnfrage(final User user,
-            final BerechtigungspruefungDownloadInfo downloadInfo,
-            final String berechtigungsgrund,
-            final String begruendung) throws Exception {
-        return addNewAnfrage(
-                user,
-                downloadInfo,
-                berechtigungsgrund,
-                begruendung,
-                null,
-                null);
-    }
-
-    /**
-     * DOCUMENT ME!
-     *
      * @param   user        DOCUMENT ME!
      * @param   schluessel  DOCUMENT ME!
      *
@@ -255,25 +230,13 @@ public class BerechtigungspruefungHandler {
     /**
      * DOCUMENT ME!
      *
-     * @param   user                DOCUMENT ME!
-     * @param   downloadInfo        produktbezeichnung DOCUMENT ME!
-     * @param   berechtigungsgrund  DOCUMENT ME!
-     * @param   begruendung         DOCUMENT ME!
-     * @param   dateiname           DOCUMENT ME!
-     * @param   data                DOCUMENT ME!
+     * @param   user          DOCUMENT ME!
+     * @param   downloadInfo  DOCUMENT ME!
      *
      * @return  DOCUMENT ME!
-     *
-     * @throws  Exception  DOCUMENT ME!
      */
-    public String addNewAnfrage(final User user,
-            final BerechtigungspruefungDownloadInfo downloadInfo,
-            final String berechtigungsgrund,
-            final String begruendung,
-            final String dateiname,
-            final byte[] data) throws Exception {
+    public String createNewSchluessel(final User user, final BerechtigungspruefungDownloadInfo downloadInfo) {
         synchronized (this) {
-            final String userKey = (String)user.getKey();
             final String type;
             if (BerechtigungspruefungBescheinigungDownloadInfo.PRODUKT_TYP.equals(downloadInfo.getProduktTyp())) {
                 type = "BlaB";
@@ -308,37 +271,59 @@ public class BerechtigungspruefungHandler {
             format.setGroupingUsed(false);
 
             final String newAnfrageSchluessel = type + "-" + Integer.toString(year) + "-" + format.format(newNumber);
-
-            if ((data != null) && (dateiname != null)) {
-                final File file = new File(BerechtigungspruefungProperties.getInstance().getAnhangPfad() + "/"
-                                + newAnfrageSchluessel);
-                try {
-                    FileUtils.writeByteArrayToFile(file, data);
-                } catch (final IOException ex) {
-                    throw new Exception("Datei konnte nicht geschrieben werden.", ex);
-                }
-            }
-
-            final CidsBean newPruefungBean = CidsBean.createNewCidsBeanFromTableName(
-                    "WUNDA_BLAU",
-                    "berechtigungspruefung");
-            newPruefungBean.setProperty("dateiname", dateiname);
-            newPruefungBean.setProperty("schluessel", newAnfrageSchluessel);
-            newPruefungBean.setProperty("anfrage_timestamp", new Timestamp(new Date().getTime()));
-            newPruefungBean.setProperty("berechtigungsgrund", berechtigungsgrund);
-            newPruefungBean.setProperty("begruendung", begruendung);
-            newPruefungBean.setProperty("benutzer", userKey);
-            newPruefungBean.setProperty("abgeholt", false);
-            newPruefungBean.setProperty("pruefstatus", null);
-            newPruefungBean.setProperty("produkttyp", downloadInfo.getProduktTyp());
-            newPruefungBean.setProperty("downloadinfo_json", new ObjectMapper().writeValueAsString(downloadInfo));
-
-            DomainServerImpl.getServerInstance().insertMetaObject(user, newPruefungBean.getMetaObject());
-
-            sendAnfrageMessages(Arrays.asList(newPruefungBean));
-
             return newAnfrageSchluessel;
         }
+    }
+
+    /**
+     * DOCUMENT ME!
+     *
+     * @param   user                DOCUMENT ME!
+     * @param   schluessel          DOCUMENT ME!
+     * @param   downloadInfo        produktbezeichnung DOCUMENT ME!
+     * @param   berechtigungsgrund  DOCUMENT ME!
+     * @param   begruendung         DOCUMENT ME!
+     * @param   dateiname           DOCUMENT ME!
+     * @param   data                DOCUMENT ME!
+     *
+     * @throws  Exception  DOCUMENT ME!
+     */
+    public void addNewAnfrage(final User user,
+            final String schluessel,
+            final BerechtigungspruefungDownloadInfo downloadInfo,
+            final String berechtigungsgrund,
+            final String begruendung,
+            final String dateiname,
+            final byte[] data) throws Exception {
+        final String userKey = (String)user.getKey();
+
+        if ((data != null) && (dateiname != null)) {
+            final File file = new File(BerechtigungspruefungProperties.getInstance().getAnhangPfad() + "/"
+                            + schluessel);
+            try {
+                FileUtils.writeByteArrayToFile(file, data);
+            } catch (final IOException ex) {
+                throw new Exception("Datei konnte nicht geschrieben werden.", ex);
+            }
+        }
+
+        final CidsBean newPruefungBean = CidsBean.createNewCidsBeanFromTableName(
+                "WUNDA_BLAU",
+                "berechtigungspruefung");
+        newPruefungBean.setProperty("dateiname", dateiname);
+        newPruefungBean.setProperty("schluessel", schluessel);
+        newPruefungBean.setProperty("anfrage_timestamp", new Timestamp(new Date().getTime()));
+        newPruefungBean.setProperty("berechtigungsgrund", berechtigungsgrund);
+        newPruefungBean.setProperty("begruendung", begruendung);
+        newPruefungBean.setProperty("benutzer", userKey);
+        newPruefungBean.setProperty("abgeholt", false);
+        newPruefungBean.setProperty("pruefstatus", null);
+        newPruefungBean.setProperty("produkttyp", downloadInfo.getProduktTyp());
+        newPruefungBean.setProperty("downloadinfo_json", new ObjectMapper().writeValueAsString(downloadInfo));
+
+        DomainServerImpl.getServerInstance().insertMetaObject(user, newPruefungBean.getMetaObject());
+
+        sendAnfrageMessages(Arrays.asList(newPruefungBean));
     }
 
     /**
