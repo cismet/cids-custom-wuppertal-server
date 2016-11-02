@@ -107,12 +107,12 @@ public class VermessungsunterlagenHelper {
     private static final ObjectMapper JOB_MAPPER;
 
     public static final String CIDS_LOGIN = readProperty("CIDS_LOGIN", null);
-    public static final String PATH_TMP = readProperty("PATH_TMP", "/tmp");
+    public static final String ABS_PATH_TMP = readProperty("ABS_PATH_TMP", "/tmp");
     public static final String FTP_HOST = readProperty("FTP_HOST", null);
     public static final String FTP_LOGIN = readProperty("FTP_LOGIN", null);
     public static final String FTP_PASS = readProperty("FTP_PASS", null);
     public static final String FTP_PATH = readProperty("FTP_PATH", null);
-    public static final String PATH_TEST = readProperty("PATH_TEST", null);
+    public static final String ABS_PATH_TEST = readProperty("ABS_PATH_TEST", null);
 
     private static final String DIR_PREFIX = "VermUnterlagen";
 
@@ -670,9 +670,8 @@ public class VermessungsunterlagenHelper {
      */
     public void test() {
         try {
-            if ((PATH_TEST != null) && !PATH_TEST.isEmpty()) {
-                final File directory = new File(DomainServerImpl.getServerProperties().getServerResourcesBasePath()
-                                + "/" + PATH_TEST);
+            if ((ABS_PATH_TEST != null) && !ABS_PATH_TEST.isEmpty()) {
+                final File directory = new File(ABS_PATH_TEST);
                 if (directory.exists()) {
                     final File[] executeJobFiles = directory.listFiles(new FilenameFilter() {
 
@@ -723,7 +722,7 @@ public class VermessungsunterlagenHelper {
         try {
             configLog4J();
 
-            final File directory = new File(PATH_TEST);
+            final File directory = new File(ABS_PATH_TEST);
             final File[] executeJobFiles = directory.listFiles(new FilenameFilter() {
 
                         @Override
@@ -787,8 +786,7 @@ public class VermessungsunterlagenHelper {
      * @return  DOCUMENT ME!
      */
     public static String getPath(final String jobkey) {
-        return DomainServerImpl.getServerProperties().getServerResourcesBasePath() + "/" + PATH_TMP + "/" + DIR_PREFIX
-                    + "_" + jobkey;
+        return ABS_PATH_TMP + "/" + DIR_PREFIX + "_" + jobkey;
     }
 
     /**
