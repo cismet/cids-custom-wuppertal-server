@@ -233,7 +233,9 @@ public class BillingJahresberichtReportServerSearch extends BillingStatisticsRep
             final HashMap<String, ArrayList> results,
             final String query,
             final String key) throws RemoteException {
-        LOG.fatal(query.replace("${Jahr}$", Integer.toString(year)));
+        if (LOG.isDebugEnabled()) {
+            LOG.debug(query.replace("${Jahr}$", Integer.toString(year)));
+        }
         final ArrayList<ArrayList> lists = ms.performCustomSearch(query.replace("${Jahr}$", Integer.toString(year)));
         if ((lists != null)) {
             final AnzahlProVerwendungszweckBean bean = new AnzahlProVerwendungszweckBean();

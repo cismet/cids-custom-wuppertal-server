@@ -118,7 +118,6 @@ public class FullTextSearchStatement extends AbstractCidsServerSearch implements
                 LOG.debug("search started ");
             }
 
-            LOG.fatal(sql);
             final MetaService ms = (MetaService)getActiveLocalServers().get("WUNDA_BLAU");
 
             final ArrayList<ArrayList> result = ms.performCustomSearch(sql);

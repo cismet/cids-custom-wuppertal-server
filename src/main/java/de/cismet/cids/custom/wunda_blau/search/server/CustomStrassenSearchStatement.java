@@ -52,7 +52,9 @@ public class CustomStrassenSearchStatement extends AbstractCidsServerSearch impl
     @Override
     public Collection<MetaObjectNode> performServerSearch() {
         try {
-            LOG.fatal("search started");
+            if (LOG.isDebugEnabled()) {
+                LOG.debug("search started");
+            }
 
             final MetaService ms = (MetaService)getActiveLocalServers().get("WUNDA_BLAU");
 
@@ -73,7 +75,7 @@ public class CustomStrassenSearchStatement extends AbstractCidsServerSearch impl
             // Thread.sleep(5000);
             return aln;
         } catch (Exception e) {
-            LOG.fatal("Problem", e);
+            LOG.error("Problem", e);
             throw new RuntimeException(e);
         }
     }

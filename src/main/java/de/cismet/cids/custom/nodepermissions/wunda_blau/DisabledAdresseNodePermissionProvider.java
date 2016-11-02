@@ -39,7 +39,9 @@ public class DisabledAdresseNodePermissionProvider extends AbstractCustomNodePer
         final Geometry home = f.createPoint(new Coordinate(374476.41, 5681643.73));
         home.setSRID(25832);
         tester = home.buffer(100.0);
-        LOG.fatal("cs_cache AdresseNodePermissionProvider: tester angelegt");
+        if (LOG.isDebugEnabled()) {
+            LOG.debug("cs_cache AdresseNodePermissionProvider: tester angelegt");
+        }
     }
 
     //~ Methods ----------------------------------------------------------------
@@ -48,7 +50,6 @@ public class DisabledAdresseNodePermissionProvider extends AbstractCustomNodePer
     public boolean getCustomReadPermissionDecisionforUser(final User u) {
         if ((tester == null) || (getObjectNode() == null)
                     || (getObjectNode().getCashedGeometry() == null)) {
-            LOG.fatal("XXX");
             return false;
         } else {
             return tester.contains(getObjectNode().getCashedGeometry());
