@@ -53,6 +53,7 @@ public class FormSolutionsProperties {
     private final String ftpPass;
     private final boolean test;
     private final boolean testCismet00;
+    private final String specialLogAbsPath;
     private final String billingKundeLogin;
     private final String billingModus;
     private final String billingModusbezeichnung;
@@ -97,6 +98,7 @@ public class FormSolutionsProperties {
                     && "true".equals(properties.getProperty("TEST").trim().toLowerCase());
         testCismet00 = (properties.getProperty("TEST_CISMET00") != null)
                     && "true".equals(properties.getProperty("TEST_CISMET00").trim().toLowerCase());
+        specialLogAbsPath = properties.getProperty("SPECIAL_LOG_ABS_PATH");
         billingKundeLogin = properties.getProperty("BILLING_KUNDE_LOGIN");
         billingModus = properties.getProperty("BILLING_MODUS");
         billingModusbezeichnung = properties.getProperty("BILLING_MODUSBEZEICHNUNG");

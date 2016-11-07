@@ -41,6 +41,9 @@ import org.openide.util.Lookup;
 import java.io.BufferedReader;
 import java.io.ByteArrayInputStream;
 import java.io.ByteArrayOutputStream;
+import java.io.File;
+import java.io.FileWriter;
+import java.io.IOException;
 import java.io.InputStream;
 import java.io.InputStreamReader;
 import java.io.StringReader;
@@ -114,6 +117,7 @@ public class FormSolutionServerNewStuffAvailableAction implements UserAwareServe
 
     private static final transient org.apache.log4j.Logger LOG = org.apache.log4j.Logger.getLogger(
             FormSolutionServerNewStuffAvailableAction.class);
+
     public static final String TASK_NAME = "formSolutionServerNewStuffAvailable";
 
     private static final String TEST_CISMET00_PREFIX = "TEST_CISMET00-";
@@ -157,6 +161,7 @@ public class FormSolutionServerNewStuffAvailableAction implements UserAwareServe
     private final String testCismet00Xml;
     private final Set<String> ignoreTransids = new HashSet<String>();
     private final boolean testCismet00Enabled;
+    private final FileWriter specialLogWriter;
 
     //~ Constructors -----------------------------------------------------------
 
@@ -176,6 +181,7 @@ public class FormSolutionServerNewStuffAvailableAction implements UserAwareServe
         UsernamePasswordCredentials creds = null;
         boolean testCismet00Enabled = false;
         String testCismet00Xml = null;
+        FileWriter specialLogWriter = null;
 
         if ((DomainServerImpl.getServerProperties() != null)
                     && "WUNDA_BLAU".equals(DomainServerImpl.getServerProperties().getServerName())) {
@@ -215,7 +221,20 @@ public class FormSolutionServerNewStuffAvailableAction implements UserAwareServe
             } catch (final Exception ex) {
                 LOG.error("could not load " + WundaBlauServerResources.FS_IGNORE_TRANSID_TXT.getValue(), ex);
             }
+
+            final String specialLogAbsPath = FormSolutionsProperties.getInstance().getSpecialLogAbsPath();
+            try {
+                if ((specialLogAbsPath != null) && !specialLogAbsPath.isEmpty()) {
+                    final File specialLogFile = new File(specialLogAbsPath);
+                    if (!specialLogFile.exists() || (specialLogFile.isFile() && specialLogFile.canWrite())) {
+                        specialLogWriter = new FileWriter(specialLogFile, true);
+                    }
+                }
+            } catch (final IOException ex) {
+                LOG.error("special log file writer could not be created", ex);
+            }
         }
+        this.specialLogWriter = specialLogWriter;
         this.testCismet00Enabled = testCismet00Enabled;
         this.testCismet00Xml = testCismet00Xml;
         this.creds = creds;
@@ -278,6 +297,8 @@ public class FormSolutionServerNewStuffAvailableAction implements UserAwareServe
      * @throws  Exception  DOCUMENT ME!
      */
     private Collection<String> getOpenTransids() throws Exception {
+        logSpecial("fetching open transids from FS");
+
         final Collection<String> transIds = new ArrayList<String>();
         try {
             final StringBuilder stringBuilder = new StringBuilder();
@@ -294,6 +315,8 @@ public class FormSolutionServerNewStuffAvailableAction implements UserAwareServe
                 stringBuilder.append(line);
             }
             inputStream.close();
+
+            logSpecial("open transids fetched: " + stringBuilder.toString());
 
             final Map<String, Object> map = getObjectMapper().readValue("{ \"list\" : " + stringBuilder.toString()
                             + "}",
@@ -371,6 +394,7 @@ public class FormSolutionServerNewStuffAvailableAction implements UserAwareServe
      * @throws  Exception  DOCUMENT ME!
      */
     private String getAuftrag(final String auftrag) throws Exception {
+        logSpecial("getting auftrag from FS for: " + auftrag);
         if ((auftrag != null) && auftrag.startsWith(TEST_CISMET00_PREFIX)) {
             return (testCismet00Xml != null) ? testCismet00Xml.replace("${TRANSID}", auftrag) : null;
         } else {
@@ -408,6 +432,8 @@ public class FormSolutionServerNewStuffAvailableAction implements UserAwareServe
                 convertedXml = xml;
             }
 
+            logSpecial("auftrag returned from FS: " + convertedXml);
+
             return convertedXml;
         }
     }
@@ -415,18 +441,20 @@ public class FormSolutionServerNewStuffAvailableAction implements UserAwareServe
     /**
      * DOCUMENT ME!
      *
-     * @param   auftrag  DOCUMENT ME!
+     * @param   transid  DOCUMENT ME!
      *
      * @throws  Exception  DOCUMENT ME!
      */
-    private void closeTransid(final String auftrag) throws Exception {
-        final boolean noClose = (auftrag == null) || auftrag.startsWith(TEST_CISMET00_PREFIX)
+    private void closeTransid(final String transid) throws Exception {
+        logSpecial("closing transaction for: " + transid);
+
+        final boolean noClose = (transid == null) || transid.startsWith(TEST_CISMET00_PREFIX)
                     || DomainServerImpl.getServerInstance().hasConfigAttr(getUser(), "custom.formsolutions.noclose");
         if (noClose) {
             return;
         }
         getHttpAccessHandler().doRequest(new URL(
-                String.format(FormSolutionsProperties.getInstance().getUrlAuftragDeleteFs(), auftrag)),
+                String.format(FormSolutionsProperties.getInstance().getUrlAuftragDeleteFs(), transid)),
             new StringReader(""),
             AccessHandler.ACCESS_METHODS.POST_REQUEST,
             null,
@@ -440,6 +468,8 @@ public class FormSolutionServerNewStuffAvailableAction implements UserAwareServe
      */
     private void doStatusChangedRequest(final String transid) {
         try {
+            logSpecial("doing status changed request for: " + transid);
+
             getHttpAccessHandler().doRequest(new URL(
                     String.format(FormSolutionsProperties.getInstance().getUrlStatusUpdate(), transid)),
                 new StringReader(""),
@@ -881,12 +911,15 @@ public class FormSolutionServerNewStuffAvailableAction implements UserAwareServe
      * @return  DOCUMENT ME!
      */
     private Map<String, String> extractXmlParts(final Collection<String> transids) {
+        logSpecial("extracting xml parts for num of objects: " + transids.size());
+
         final Map<String, String> fsXmlMap = new HashMap<String, String>(transids.size());
 
         for (final String transid : transids) {
             try {
                 final String auftragXml = getAuftrag(transid);
                 fsXmlMap.put(transid, auftragXml);
+                logSpecial("updating mysql entry for: " + transid);
                 getMySqlHelper().updateStatus(transid, STATUS_FETCH);
                 doStatusChangedRequest(transid);
             } catch (final Exception ex) {
@@ -906,18 +939,28 @@ public class FormSolutionServerNewStuffAvailableAction implements UserAwareServe
     private Map<String, FormSolutionsBestellung> createBestellungMap(final Map<String, String> fsXmlMap) {
         final Collection<String> transids = new ArrayList<String>(fsXmlMap.keySet());
 
+        logSpecial("creating simple bestellung bean for num of objects: " + transids.size());
+
         final Map<String, FormSolutionsBestellung> fsBestellungMap = new HashMap<String, FormSolutionsBestellung>(
                 transids.size());
         for (final String transid : transids) {
             try {
                 final String auftragXml = fsXmlMap.get(transid);
                 final InputStream inputStream = IOUtils.toInputStream(auftragXml, "UTF-8");
+
+                logSpecial("creating simple bestellung bean for: " + transid);
+
                 final FormSolutionsBestellung formSolutionsBestellung = createFormSolutionsBestellung(inputStream);
                 fsBestellungMap.put(transid, formSolutionsBestellung);
+
+                logSpecial("simple bestellung bean created for: " + transids.size());
 
                 final boolean downloadOnly = !"Kartenausdruck".equals(formSolutionsBestellung.getBezugsweg());
                 final String email = downloadOnly ? trimedNotEmpty(formSolutionsBestellung.getEMailadresse())
                                                   : trimedNotEmpty(formSolutionsBestellung.getEMailadresse()); // 1
+
+                logSpecial("updating mysql email entry for: " + transid);
+
                 getMySqlHelper().updateEmail(
                     transid,
                     STATUS_PARSE,
@@ -947,10 +990,14 @@ public class FormSolutionServerNewStuffAvailableAction implements UserAwareServe
             final Map<String, FormSolutionsBestellung> fsBestellungMap,
             final Map<String, Exception> insertExceptionMap) {
         // nur die transids bearbeiten, bei denen das Parsen auch geklappt hat
-        final Collection<String> transidsNew = new ArrayList<String>(fsBestellungMap.keySet());
+        final Collection<String> transids = new ArrayList<String>(fsBestellungMap.keySet());
 
-        final Map<String, CidsBean> fsBeanMap = new HashMap<String, CidsBean>(transidsNew.size());
-        for (final String transid : transidsNew) {
+        logSpecial("creating cids entries for num of objects: " + transids.size());
+
+        final Map<String, CidsBean> fsBeanMap = new HashMap<String, CidsBean>(transids.size());
+        for (final String transid : transids) {
+            logSpecial("creating cids entry for: " + transid);
+
             final String auftragXml = fsXmlMap.get(transid);
             final FormSolutionsBestellung formSolutionBestellung = fsBestellungMap.get(transid);
 
@@ -997,12 +1044,16 @@ public class FormSolutionServerNewStuffAvailableAction implements UserAwareServe
                         false);
                 }
 
+                logSpecial("persisting cids entry for: " + transid);
+
                 final MetaObject persistedMo = getMetaService().insertMetaObject(
                         user,
                         bestellungBean.getMetaObject());
 
                 final CidsBean persistedBestellungBean = persistedMo.getBean();
                 fsBeanMap.put(transid, persistedBestellungBean);
+
+                logSpecial("updating mysql entry for: " + transid);
 
                 getMySqlHelper().updateStatus(transid, STATUS_SAVE);
                 doStatusChangedRequest(transid);
@@ -1022,6 +1073,8 @@ public class FormSolutionServerNewStuffAvailableAction implements UserAwareServe
      * @return  DOCUMENT ME!
      */
     public final Map<String, Exception> createMySqlEntries(final Collection<String> transids) {
+        logSpecial("creating mySQL entries for num of objects: " + transids.size());
+
         final Map<String, Exception> insertExceptionMap = new HashMap<String, Exception>(transids.size());
 
         for (final String transid : transids) {
@@ -1041,6 +1094,7 @@ public class FormSolutionServerNewStuffAvailableAction implements UserAwareServe
                 }
             }
 
+            logSpecial("updating or inserting mySQL entry for: " + transid);
             try {
                 if (mysqlEntryAlreadyExists) {
                     getMySqlHelper().updateStatus(transid, 100);
@@ -1064,12 +1118,15 @@ public class FormSolutionServerNewStuffAvailableAction implements UserAwareServe
      */
     private void closeTransactions(final Map<String, CidsBean> fsBeanMap) {
         final Collection<String> transids = new ArrayList<String>(fsBeanMap.keySet());
+        logSpecial("closing transactions for num of objects: " + transids.size());
+
         for (final String transid : transids) {
             final CidsBean bestellungBean = fsBeanMap.get(transid);
             if ((bestellungBean != null)) {
                 try {
                     closeTransid(transid);
 
+                    logSpecial("updating mysql entry for: " + transid);
                     getMySqlHelper().updateStatus(transid, STATUS_CLOSE);
                     doStatusChangedRequest(transid);
                 } catch (Exception ex) {
@@ -1522,6 +1579,8 @@ public class FormSolutionServerNewStuffAvailableAction implements UserAwareServe
 
     @Override
     public Object execute(final Object body, final ServerActionParameter... params) {
+        logSpecial("execute by: " + getUser().getName());
+
         boolean fetchFromFs = true;
         boolean singleStep = false;
         int startStep = STATUS_FETCH;
@@ -1559,6 +1618,7 @@ public class FormSolutionServerNewStuffAvailableAction implements UserAwareServe
 
             if (!fetchFromFs) {
                 if (mons != null) {
+                    logSpecial("start fetching from DB. Numof objects: " + mons.size());
                     for (final MetaObjectNode mon : mons) {
                         final CidsBean bestellungBean;
                         try {
@@ -1580,6 +1640,7 @@ public class FormSolutionServerNewStuffAvailableAction implements UserAwareServe
                             LOG.error(ex, ex);
                         }
                     }
+                    logSpecial("objects fetched from DB");
                 }
             }
 
@@ -1609,6 +1670,8 @@ public class FormSolutionServerNewStuffAvailableAction implements UserAwareServe
                                     fsXmlMap,
                                     fsBestellungMap,
                                     insertExceptionMap));
+
+                            logSpecial("fetched from FS");
                         } catch (Exception ex) {
                             LOG.error("Die Liste der FormSolutions-Bestellungen konnte nicht abgerufen werden", ex);
                         }
@@ -1672,5 +1735,21 @@ public class FormSolutionServerNewStuffAvailableAction implements UserAwareServe
     @Override
     public MetaService getMetaService() {
         return metaService;
+    }
+
+    /**
+     * DOCUMENT ME!
+     *
+     * @param  message  DOCUMENT ME!
+     */
+    private void logSpecial(final String message) {
+        if (specialLogWriter != null) {
+            try {
+                specialLogWriter.write(System.currentTimeMillis() + " - " + message + "\n");
+                specialLogWriter.flush();
+            } catch (final IOException ex) {
+                LOG.warn("could not write to logSpecial", ex);
+            }
+        }
     }
 }
