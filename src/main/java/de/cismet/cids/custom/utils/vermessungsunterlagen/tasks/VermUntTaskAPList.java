@@ -16,6 +16,7 @@ import java.io.File;
 import java.io.FileOutputStream;
 import java.io.InputStream;
 import java.io.OutputStream;
+import java.io.StringReader;
 
 import java.net.URL;
 
@@ -25,8 +26,6 @@ import de.cismet.cids.custom.utils.alkis.ServerAlkisProducts;
 import de.cismet.cids.custom.utils.vermessungsunterlagen.VermessungsunterlagenHelper;
 
 import de.cismet.cids.dynamics.CidsBean;
-
-import static de.cismet.cids.custom.utils.vermessungsunterlagen.VermessungsunterlagenHelper.doGetRequest;
 
 /**
  * DOCUMENT ME!
@@ -66,10 +65,26 @@ public class VermUntTaskAPList extends VermUntTaskAP {
             if ((code != null) && (code.length() > 0)) {
                 final String url = PRODUCTS.productListenNachweisUrl(punktListenString, code);
                 if ((url != null) && (url.trim().length() > 0)) {
+                    final int parameterPosition = url.indexOf('?');
+
+                    final String parameters;
+                    final URL getOrPostUrl;
+                    if (parameterPosition < 0) {
+                        parameters = null;
+                        getOrPostUrl = new URL(url);
+                    } else {
+                        parameters = url.substring(parameterPosition + 1);
+                        getOrPostUrl = new URL(url.substring(0, parameterPosition));
+                    }
+
                     InputStream in = null;
                     OutputStream out = null;
                     try {
-                        in = doGetRequest(new URL(url));
+                        if ((parameters == null) || (parameters.trim().length() <= 0)) {
+                            in = VermessungsunterlagenHelper.doGetRequest(getOrPostUrl);
+                        } else {
+                            in = VermessungsunterlagenHelper.doPostRequest(getOrPostUrl, new StringReader(parameters));
+                        }
                         out = new FileOutputStream(fileToSaveTo);
                         VermessungsunterlagenHelper.downloadStream(in, out);
                     } finally {
