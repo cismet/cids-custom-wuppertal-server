@@ -163,8 +163,10 @@ public class VermessungsunterlagenValidator {
         // BAD CODE WARNING
         int iSaum = -1;
         try {
-            // Saum muss eine Zahl sein
-            iSaum = Integer.parseInt(anfrageBean.getSaumAPSuche());
+            if (!anfrageBean.getSaumAPSuche().contains("e") && !anfrageBean.getSaumAPSuche().contains("E")) {
+                // Saum muss eine Zahl sein
+                iSaum = Integer.parseInt(anfrageBean.getSaumAPSuche());
+            }
         } catch (Exception e) {
         }
         // Saum muss ganze zahl zwischen 0 und MAX_SAUM sein
