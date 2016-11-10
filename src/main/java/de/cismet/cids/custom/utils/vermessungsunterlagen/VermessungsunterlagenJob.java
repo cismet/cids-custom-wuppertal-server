@@ -185,12 +185,11 @@ public class VermessungsunterlagenJob implements Runnable {
     /**
      * DOCUMENT ME!
      *
-     * @param   flurstueckBeans  DOCUMENT ME!
+     * @param   geometry  flurstueckBeans DOCUMENT ME!
      *
      * @return  DOCUMENT ME!
      */
-    private Collection<CidsBean> searchRisse(
-            final Collection<VermessungsunterlagenAnfrageBean.AntragsflurstueckBean> flurstueckBeans) {
+    private Collection<CidsBean> searchRisse(final Geometry geometry) {
         try {
             final Collection<String> schluesselCollection = Arrays.asList(
                     "503",
@@ -200,39 +199,14 @@ public class VermessungsunterlagenJob implements Runnable {
                     "507",
                     "508");
 
-            final Collection<Map<String, String>> flurstuecke = new LinkedList<Map<String, String>>();
-
-            for (final VermessungsunterlagenAnfrageBean.AntragsflurstueckBean flurstueckBean : flurstueckBeans) {
-                final String[] split = flurstueckBean.getFlurstuecksID().split("/");
-
-                final String gemarkung = flurstueckBean.getGemarkungsID().substring(2);
-                final String flur = flurstueckBean.getFlurID();
-                final String zaehler = split[0];
-                final String nenner = (split.length == 1) ? null : split[1];
-                final Map<String, String> flurstueckMap = new HashMap<String, String>();
-                flurstueckMap.put(
-                    CidsVermessungRissSearchStatement.FLURSTUECK_GEMARKUNG,
-                    gemarkung);
-                flurstueckMap.put(
-                    CidsVermessungRissSearchStatement.FLURSTUECK_FLUR,
-                    flur);
-                flurstueckMap.put(
-                    CidsVermessungRissSearchStatement.FLURSTUECK_ZAEHLER,
-                    zaehler);
-                flurstueckMap.put(
-                    CidsVermessungRissSearchStatement.FLURSTUECK_NENNER,
-                    nenner);
-                flurstuecke.add(flurstueckMap);
-            }
-
             final CidsServerSearch serverSearch = new CidsVermessungRissSearchStatement(
                     null,
                     null,
                     null,
                     null,
                     schluesselCollection,
-                    null,
-                    flurstuecke);
+                    geometry,
+                    null);
             final Collection<MetaObjectNode> mons = helper.performSearch(serverSearch);
             return helper.loadBeans(mons);
         } catch (final SearchException ex) {
@@ -357,18 +331,20 @@ public class VermessungsunterlagenJob implements Runnable {
                             final Collection<VermessungsunterlagenAnfrageBean.AntragsflurstueckBean> antragsFlurstueckBeans =
                                 Arrays.asList(anfrageBean.getAntragsflurstuecksArray());
 
-                            final Collection<CidsBean> risse = searchRisse(antragsFlurstueckBeans);
+                            final Collection<CidsBean> risse = searchRisse(geometryFlurstuecke);
                             if (!risse.isEmpty()) {
                                 submitTask(new VermUntTaskRisseBilder(
                                         getKey(),
                                         risse,
                                         anfrageBean.getGeschaeftsbuchnummer(),
                                         ""));
-                                submitTask(new VermUntTaskRisseGrenzniederschrift(
-                                        getKey(),
-                                        risse,
-                                        anfrageBean.getGeschaeftsbuchnummer(),
-                                        ""));
+                                if (Boolean.TRUE.equals(anfrageBean.getMitGrenzniederschriften())) {
+                                    submitTask(new VermUntTaskRisseGrenzniederschrift(
+                                            getKey(),
+                                            risse,
+                                            anfrageBean.getGeschaeftsbuchnummer(),
+                                            ""));
+                                }
                             }
                         }
                     }
