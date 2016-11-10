@@ -170,7 +170,6 @@ public class VermessungsunterlagenJob implements Runnable {
      * @return  DOCUMENT ME!
      */
     public boolean isTaskAllowed(final String type) {
-        ;
         return allowedTask.contains(type);
     }
 
@@ -312,9 +311,9 @@ public class VermessungsunterlagenJob implements Runnable {
                                         + anfrageBean.getGeschaeftsbuchnummer(),
                                 anfrageBean.getPunktnummernreservierungsArray()));
                     } else {
+                        final int saum = Integer.parseInt(anfrageBean.getSaumAPSuche());
                         if (isTaskAllowed(VermUntTaskAPMap.TYPE) || isTaskAllowed(VermUntTaskAPList.TYPE)) {
                             final Geometry geometry = anfrageBean.getAnfragepolygonArray()[0];
-                            final int saum = Integer.parseInt(anfrageBean.getSaumAPSuche());
                             final Geometry geometrySaum = geometry.buffer(saum);
                             geometrySaum.setSRID(geometry.getSRID());
 
@@ -326,6 +325,7 @@ public class VermessungsunterlagenJob implements Runnable {
                         }
 
                         final Geometry geometryFlurstuecke = createGeometryFrom(validator.getFlurstuecke());
+                        final Geometry geometryFlurstueckeSaum = geometryFlurstuecke.buffer(saum);
 
                         if (isTaskAllowed(VermUntTaskNasKomplett.TYPE) || isTaskAllowed(VermUntTaskNasPunkte.TYPE)) {
                             final String requestId = getKey(); // TODO requestId ?
@@ -338,7 +338,7 @@ public class VermessungsunterlagenJob implements Runnable {
                                     getKey(),
                                     helper.getUser(),
                                     requestId,
-                                    geometryFlurstuecke));
+                                    geometryFlurstueckeSaum));
                         }
 
                         if (isTaskAllowed(VermUntTaskAPUebersicht.TYPE)) {
