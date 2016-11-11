@@ -55,7 +55,6 @@ import java.io.IOException;
 import java.io.InputStream;
 import java.io.OutputStream;
 import java.io.Reader;
-import java.io.StringReader;
 
 import java.net.URL;
 
@@ -435,6 +434,7 @@ public class VermessungsunterlagenHelper {
         if (geometry != null) {
             geometry.setSRID(SRID);
             geomBean = CidsBean.createNewCidsBeanFromTableName("WUNDA_BLAU", mc_GEOM.getTableName());
+            geomBean.setProperty("geo_field", geometry);
         } else {
             geomBean = null;
         }
@@ -445,6 +445,9 @@ public class VermessungsunterlagenHelper {
         jobCidsBean.setProperty("executejob_json", executeJobContent);
         jobCidsBean.setProperty("schluessel", job.getKey());
         jobCidsBean.setProperty("geometrie", geomBean);
+        jobCidsBean.setProperty(
+            "geometrie_flurstuecke",
+            CidsBean.createNewCidsBeanFromTableName("WUNDA_BLAU", mc_GEOM.getTableName()));
         jobCidsBean.setProperty("aktenzeichen", anfrageBean.getAktenzeichenKatasteramt());
         for (final VermessungsunterlagenAnfrageBean.AntragsflurstueckBean flurstueckBean
                     : anfrageBean.getAntragsflurstuecksArray()) {
@@ -521,6 +524,41 @@ public class VermessungsunterlagenHelper {
 
         jobCidsBean.setProperty("zip_pfad", zipDateiname);
         jobCidsBean.setProperty("zip_timestamp", new Timestamp(new Date().getTime()));
+
+        getMetaService().updateMetaObject(getUser(), jobCidsBean.getMetaObject());
+    }
+
+    /**
+     * DOCUMENT ME!
+     *
+     * @param   job     DOCUMENT ME!
+     * @param   status  DOCUMENT ME!
+     *
+     * @throws  Exception  DOCUMENT ME!
+     */
+    public final void updateJobCidsBeanStatus(final VermessungsunterlagenJob job, final Boolean status)
+            throws Exception {
+        final CidsBean jobCidsBean = job.getCidsBean();
+
+        jobCidsBean.setProperty("status", status);
+        jobCidsBean.setProperty("status_timestamp", new Timestamp(new Date().getTime()));
+
+        getMetaService().updateMetaObject(getUser(), jobCidsBean.getMetaObject());
+    }
+
+    /**
+     * DOCUMENT ME!
+     *
+     * @param   job   DOCUMENT ME!
+     * @param   geom  DOCUMENT ME!
+     *
+     * @throws  Exception  DOCUMENT ME!
+     */
+    public final void updateJobCidsBeanFlurstueckGeom(final VermessungsunterlagenJob job, final Geometry geom)
+            throws Exception {
+        final CidsBean jobCidsBean = job.getCidsBean();
+
+        jobCidsBean.setProperty("geometrie_flurstuecke.geo_field", geom);
 
         getMetaService().updateMetaObject(getUser(), jobCidsBean.getMetaObject());
     }

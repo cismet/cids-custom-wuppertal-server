@@ -32,7 +32,6 @@ import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collection;
 import java.util.HashMap;
-import java.util.LinkedList;
 import java.util.Map;
 import java.util.concurrent.CompletionService;
 import java.util.concurrent.ExecutorCompletionService;
@@ -145,6 +144,25 @@ public class VermessungsunterlagenJob implements Runnable {
     public void setStatus(final Status status) {
         LOG.info("Job changed (" + getKey() + "): " + status.toString());
         this.status = status;
+
+        try {
+            switch (status) {
+                case OK: {
+                    helper.updateJobCidsBeanStatus(this, Boolean.TRUE);
+                }
+                break;
+                case ERROR: {
+                    helper.updateJobCidsBeanStatus(this, Boolean.FALSE);
+                }
+                break;
+                default: {
+                    helper.updateJobCidsBeanStatus(this, null);
+                }
+                break;
+            }
+        } catch (final Exception ex) {
+            LOG.warn("error Updating Status of cidsbean", ex);
+        }
     }
 
     /**
@@ -278,6 +296,15 @@ public class VermessungsunterlagenJob implements Runnable {
             if (validator.validateAndGetErrorMessage(anfrageBean)) {
                 try {
                     new File(getPath()).mkdirs();
+
+                    final int saum = Integer.parseInt(anfrageBean.getSaumAPSuche());
+                    final Geometry vermessungsGeometrie = getAnfrageBean().getAnfragepolygonArray()[0];
+                    final Geometry vermessungsGeometrieSaum = vermessungsGeometrie.buffer(saum);
+                    vermessungsGeometrieSaum.setSRID(vermessungsGeometrie.getSRID());
+                    final Geometry geometryFlurstuecke = createGeometryFrom(validator.getFlurstuecke());
+
+                    helper.updateJobCidsBeanFlurstueckGeom(this, geometryFlurstuecke);
+
                     if (anfrageBean.getNurPunktnummernreservierung()) {
                         submitTask(new VermUntTaskPNR(
                                 getKey(),
@@ -285,36 +312,13 @@ public class VermessungsunterlagenJob implements Runnable {
                                         + anfrageBean.getGeschaeftsbuchnummer(),
                                 anfrageBean.getPunktnummernreservierungsArray()));
                     } else {
-                        final int saum = Integer.parseInt(anfrageBean.getSaumAPSuche());
                         if (isTaskAllowed(VermUntTaskAPMap.TYPE) || isTaskAllowed(VermUntTaskAPList.TYPE)) {
-                            final Geometry geometry = anfrageBean.getAnfragepolygonArray()[0];
-                            final Geometry geometrySaum = geometry.buffer(saum);
-                            geometrySaum.setSRID(geometry.getSRID());
-
-                            final Collection<CidsBean> saumAps = searchAPs(geometrySaum);
+                            final Collection<CidsBean> saumAps = searchAPs(vermessungsGeometrieSaum);
                             if (!saumAps.isEmpty()) {
                                 submitTask(new VermUntTaskAPMap(getKey(), saumAps));
                                 submitTask(new VermUntTaskAPList(getKey(), saumAps));
                             }
                         }
-
-                        final Geometry geometryFlurstuecke = createGeometryFrom(validator.getFlurstuecke());
-                        final Geometry geometryFlurstueckeSaum = geometryFlurstuecke.buffer(saum);
-
-                        if (isTaskAllowed(VermUntTaskNasKomplett.TYPE) || isTaskAllowed(VermUntTaskNasPunkte.TYPE)) {
-                            final String requestId = getKey(); // TODO requestId ?
-                            submitTask(new VermUntTaskNasKomplett(
-                                    getKey(),
-                                    helper.getUser(),
-                                    requestId,
-                                    geometryFlurstuecke));
-                            submitTask(new VermUntTaskNasPunkte(
-                                    getKey(),
-                                    helper.getUser(),
-                                    requestId,
-                                    geometryFlurstueckeSaum));
-                        }
-
                         if (isTaskAllowed(VermUntTaskAPUebersicht.TYPE)) {
                             final Collection<CidsBean> fsAps = searchAPs(geometryFlurstuecke);
                             if (!fsAps.isEmpty()) {
@@ -326,11 +330,22 @@ public class VermessungsunterlagenJob implements Runnable {
                             }
                         }
 
+                        if (isTaskAllowed(VermUntTaskNasKomplett.TYPE) || isTaskAllowed(VermUntTaskNasPunkte.TYPE)) {
+                            final String requestId = getKey();
+                            submitTask(new VermUntTaskNasKomplett(
+                                    getKey(),
+                                    helper.getUser(),
+                                    requestId,
+                                    vermessungsGeometrie));
+                            submitTask(new VermUntTaskNasPunkte(
+                                    getKey(),
+                                    helper.getUser(),
+                                    requestId,
+                                    vermessungsGeometrie.buffer(saum)));
+                        }
+
                         if (isTaskAllowed(VermUntTaskRisseBilder.TYPE)
                                     || isTaskAllowed(VermUntTaskRisseGrenzniederschrift.TYPE)) {
-                            final Collection<VermessungsunterlagenAnfrageBean.AntragsflurstueckBean> antragsFlurstueckBeans =
-                                Arrays.asList(anfrageBean.getAntragsflurstuecksArray());
-
                             final Collection<CidsBean> risse = searchRisse(geometryFlurstuecke);
                             if (!risse.isEmpty()) {
                                 submitTask(new VermUntTaskRisseBilder(
