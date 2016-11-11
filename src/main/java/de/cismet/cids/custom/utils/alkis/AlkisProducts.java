@@ -59,6 +59,10 @@ public class AlkisProducts {
     public static final String MLESSNUMBER =
         "nmless=5061756C612030352E31322E32303035204A75737475732032352E30372E323030382054616E6A612030362E31302E31393734";
 
+    public static final String HEADER_CONTENTTYPE_KEY = "Content-Type";
+    public static final String HEADER_CONTENTTYPE_VALUE_POST = "application/x-www-form-urlencoded";
+    public static final HashMap<String, String> POST_HEADER = new HashMap<String, String>();
+
     //~ Instance fields --------------------------------------------------------
 
     // Flurstueck
@@ -110,6 +114,8 @@ public class AlkisProducts {
             final Properties formatProperties,
             final String produktbeschreibungXml) throws Exception {
         this.alkisConf = alkisConf;
+
+        POST_HEADER.put(HEADER_CONTENTTYPE_KEY, HEADER_CONTENTTYPE_VALUE_POST);
 
         final List<AlkisProductDescription> mapProducts = new ArrayList<AlkisProductDescription>();
         final Map<String, Point> formatMap = new HashMap<String, Point>();

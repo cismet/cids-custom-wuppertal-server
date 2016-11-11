@@ -74,6 +74,7 @@ import java.util.Map;
 import java.util.Properties;
 
 import de.cismet.cids.custom.utils.WundaBlauServerResources;
+import de.cismet.cids.custom.utils.alkis.AlkisProducts;
 import de.cismet.cids.custom.utils.nas.NasProduct;
 
 import de.cismet.cids.dynamics.CidsBean;
@@ -912,10 +913,12 @@ public class VermessungsunterlagenHelper {
      * @throws  Exception  DOCUMENT ME!
      */
     public static InputStream doPostRequest(final URL url, final Reader requestParameter) throws Exception {
-        return new SimpleHttpAccessHandler().doRequest(
+        return
+            new SimpleHttpAccessHandler().doRequest(
                 url,
                 requestParameter,
-                AccessHandler.ACCESS_METHODS.POST_REQUEST);
+                AccessHandler.ACCESS_METHODS.POST_REQUEST,
+                AlkisProducts.POST_HEADER);
     }
 
     /**
