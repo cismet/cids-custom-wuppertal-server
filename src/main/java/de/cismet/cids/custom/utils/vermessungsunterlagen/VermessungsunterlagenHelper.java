@@ -318,6 +318,21 @@ public class VermessungsunterlagenHelper {
     /**
      * DOCUMENT ME!
      *
+     * @param   out          DOCUMENT ME!
+     * @param   ftpFilePath  DOCUMENT ME!
+     *
+     * @throws  Exception  DOCUMENT ME!
+     */
+    public void downloadFromFTP(final OutputStream out, final String ftpFilePath) throws Exception {
+        final FTPClient connectedFtpClient = getConnectedFTPClient();
+        connectedFtpClient.enterLocalPassiveMode();
+        connectedFtpClient.setFileType(BINARY_FILE_TYPE);
+        connectedFtpClient.retrieveFile(FTP_HOST, out);
+    }
+
+    /**
+     * DOCUMENT ME!
+     *
      * @param   executeJobContent  DOCUMENT ME!
      *
      * @return  DOCUMENT ME!
