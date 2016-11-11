@@ -42,7 +42,7 @@ public class BerechtigungspruefungAnhangDownloadAction extends DownloadFileActio
         } else {
             final String dateiname = (String)body;
 
-            final String filePath = BerechtigungspruefungProperties.getInstance().getAnhangPfad() + "/"
+            final String filePath = BerechtigungspruefungProperties.getInstance().getAnhangAbsPath() + "/"
                         + dateiname.replaceAll("../", "");
             final Object ret = super.execute(filePath);
             if (ret == null) {

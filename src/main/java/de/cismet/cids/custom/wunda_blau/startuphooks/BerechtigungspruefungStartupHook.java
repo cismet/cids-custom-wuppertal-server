@@ -64,6 +64,7 @@ public class BerechtigungspruefungStartupHook implements DomainServerStartupHook
                         BerechtigungspruefungHandler.getInstance().setMetaService(metaService);
                         BerechtigungspruefungHandler.getInstance().sendMessagesForAllOpenFreigaben(user);
                         BerechtigungspruefungHandler.getInstance().sendMessagesForAllOpenAnfragen(user);
+                        BerechtigungspruefungHandler.getInstance().deleteOldDateianhangFiles(user);
                     } catch (final Exception ex) {
                         LOG.warn("Error while initializing the BerechtigungspruefungHandler !", ex);
                     }

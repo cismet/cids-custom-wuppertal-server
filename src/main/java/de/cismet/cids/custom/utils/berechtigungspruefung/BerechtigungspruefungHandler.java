@@ -22,8 +22,13 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 
 import org.apache.commons.io.FileUtils;
 
+import org.openide.util.Exceptions;
+
 import java.io.File;
 import java.io.IOException;
+
+import java.nio.file.Files;
+import java.nio.file.attribute.BasicFileAttributes;
 
 import java.sql.Timestamp;
 
@@ -90,6 +95,46 @@ public class BerechtigungspruefungHandler {
             INSTANCE = new BerechtigungspruefungHandler();
         }
         return INSTANCE;
+    }
+
+    /**
+     * DOCUMENT ME!
+     *
+     * @param  user  DOCUMENT ME!
+     */
+    public void deleteOldDateianhangFiles(final User user) {
+        final File directory = new File(BerechtigungspruefungProperties.getInstance().getAnhangAbsPath());
+        final Date thresholdDate = getThresholdAnhangDate();
+
+        // look for all anhang files
+        for (final File file : directory.listFiles()) {
+            if (file.isFile()) {
+                try {
+                    final String fileName = file.getName();
+                    final BasicFileAttributes attr = Files.readAttributes(file.toPath(), BasicFileAttributes.class);
+                    final Date creationDate = new Date(attr.creationTime().toMillis());
+
+                    // file older then threshold date (1 month) ?
+                    if (creationDate.before(thresholdDate)) {
+                        final CidsBean anfrageBean = loadAnfrageBean(user, fileName);
+                        // assuring, that the file corresponds to an existing bean This prevents accidental deletion of
+                        // non-anhang files (i.e. if AnhangAbsPath was set to a path that contains also other files)
+                        if (anfrageBean != null) {
+                            final Timestamp anfrageTs = (Timestamp)anfrageBean.getProperty("anfrage_timestamp");
+                            // timestamp filed in the bean agrees with the file creation date ?
+                            if (anfrageTs.before(thresholdDate)) {
+                                LOG.info("deleting old Anhang file: " + file.getName() + " (date: "
+                                            + creationDate.toString() + ")");
+                                // now we can delete (hopefully)
+                                file.delete();
+                            }
+                        }
+                    }
+                } catch (final IOException ex) {
+                    LOG.warn("could not delete Anhang file: " + file.getName(), ex);
+                }
+            }
+        }
     }
 
     /**
@@ -298,7 +343,7 @@ public class BerechtigungspruefungHandler {
         final String userKey = (String)user.getKey();
 
         if ((data != null) && (dateiname != null)) {
-            final File file = new File(BerechtigungspruefungProperties.getInstance().getAnhangPfad() + "/"
+            final File file = new File(BerechtigungspruefungProperties.getInstance().getAnhangAbsPath() + "/"
                             + schluessel);
             try {
                 FileUtils.writeByteArrayToFile(file, data);
@@ -578,5 +623,17 @@ public class BerechtigungspruefungHandler {
             return MAPPER.readValue(downloadinfoJson, BerechtigungspruefungAlkisEinzelnachweisDownloadInfo.class);
         }
         throw new Exception("unbekannter Download-Typ");
+    }
+
+    /**
+     * DOCUMENT ME!
+     *
+     * @return  DOCUMENT ME!
+     */
+    public static Date getThresholdAnhangDate() {
+        final Calendar calendar = Calendar.getInstance();
+        calendar.add(Calendar.MONTH, -1);
+        final Date threshold = new Date(calendar.getTimeInMillis());
+        return threshold;
     }
 }

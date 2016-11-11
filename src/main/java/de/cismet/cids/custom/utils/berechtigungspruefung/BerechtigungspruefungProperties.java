@@ -38,7 +38,7 @@ public class BerechtigungspruefungProperties {
 
     private final String cidsLogin;
     private final String cidsPassword;
-    private final String anhangPfad;
+    private final String anhangAbsPath;
     private final String csmAnfrage;
     private final String csmBearbeitung;
     private final String csmFreigabe;
@@ -54,7 +54,7 @@ public class BerechtigungspruefungProperties {
     public BerechtigungspruefungProperties(final Properties serviceProperties) {
         String cidsLogin = null;
         String cidsPassword = null;
-        String anhangPfad = "/tmp";
+        String anhangAbsPath = "/tmp";
         String csmAnfrage = "berechtigungspruefungAnfrage";
         String csmBearbeitung = "berechtigungspruefungBearbeitung";
         String csmFreigabe = "berechtigungspruefungFreigabe";
@@ -64,7 +64,7 @@ public class BerechtigungspruefungProperties {
             cidsLogin = serviceProperties.getProperty("CIDS_LOGIN");
             cidsPassword = serviceProperties.getProperty("CIDS_PASSWORD");
             if (serviceProperties.getProperty("ANHANG_PFAD") != null) {
-                anhangPfad = serviceProperties.getProperty("ANHANG_PFAD");
+                anhangAbsPath = serviceProperties.getProperty("ANHANG_ABS_PATH");
             }
             if (serviceProperties.getProperty("CSM_ANFRAGE") != null) {
                 csmAnfrage = serviceProperties.getProperty("CSM_ANFRAGE");
@@ -84,7 +84,7 @@ public class BerechtigungspruefungProperties {
 
         this.cidsLogin = cidsLogin;
         this.cidsPassword = cidsPassword;
-        this.anhangPfad = anhangPfad;
+        this.anhangAbsPath = anhangAbsPath;
         this.csmAnfrage = csmAnfrage;
         this.csmBearbeitung = csmBearbeitung;
         this.csmFreigabe = csmFreigabe;
