@@ -341,7 +341,7 @@ public class VermessungsunterlagenJob implements Runnable {
                                     getKey(),
                                     helper.getUser(),
                                     requestId,
-                                    vermessungsGeometrie.buffer(saum)));
+                                    vermessungsGeometrieSaum));
                         }
 
                         if (isTaskAllowed(VermUntTaskRisseBilder.TYPE)
