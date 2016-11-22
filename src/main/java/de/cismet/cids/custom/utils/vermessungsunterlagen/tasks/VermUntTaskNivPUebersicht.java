@@ -12,8 +12,6 @@
  */
 package de.cismet.cids.custom.utils.vermessungsunterlagen.tasks;
 
-import com.sun.javafx.geom.Vec2d;
-
 import com.vividsolutions.jts.geom.Coordinate;
 import com.vividsolutions.jts.geom.Envelope;
 import com.vividsolutions.jts.geom.Geometry;
