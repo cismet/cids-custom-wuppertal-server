@@ -118,7 +118,7 @@ public class VermessungsunterlagenHelper {
     public static final String FTP_PATH = readProperty("FTP_PATH", null);
     public static final String ABS_PATH_TEST = readProperty("ABS_PATH_TEST", null);
 
-    private static final String DIR_PREFIX = "VermUnterlagen";
+    public static final String DIR_PREFIX = "VermUnterlagen";
 
     public static final String ALLOWED_TASKS_CONFIG_ATTR = "vup.tasks_allowed";
     public static final int SRID = 25832;
@@ -321,16 +321,17 @@ public class VermessungsunterlagenHelper {
     /**
      * DOCUMENT ME!
      *
-     * @param   out          DOCUMENT ME!
      * @param   ftpFilePath  DOCUMENT ME!
+     *
+     * @return  DOCUMENT ME!
      *
      * @throws  Exception  DOCUMENT ME!
      */
-    public void downloadFromFTP(final OutputStream out, final String ftpFilePath) throws Exception {
+    public InputStream downloadFromFTP(final String ftpFilePath) throws Exception {
         final FTPClient connectedFtpClient = getConnectedFTPClient();
         connectedFtpClient.enterLocalPassiveMode();
         connectedFtpClient.setFileType(BINARY_FILE_TYPE);
-        connectedFtpClient.retrieveFile(FTP_HOST, out);
+        return connectedFtpClient.retrieveFileStream(ftpFilePath);
     }
 
     /**

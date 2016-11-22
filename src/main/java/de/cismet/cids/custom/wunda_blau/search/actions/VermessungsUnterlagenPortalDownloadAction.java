@@ -12,7 +12,9 @@
  */
 package de.cismet.cids.custom.wunda_blau.search.actions;
 
-import java.io.ByteArrayOutputStream;
+import org.apache.commons.io.IOUtils;
+
+import java.io.InputStream;
 
 import de.cismet.cids.custom.utils.vermessungsunterlagen.VermessungsunterlagenHelper;
 
@@ -39,13 +41,17 @@ public class VermessungsUnterlagenPortalDownloadAction implements ServerAction {
     @Override
     public Object execute(final Object body, final ServerActionParameter... params) {
         final String schluessel = (String)body;
+        final String ftpZipPath = (FTP_PATH.isEmpty() ? "" : ("/" + FTP_PATH)) + "/"
+                    + VermessungsunterlagenHelper.DIR_PREFIX + "_" + schluessel + ".zip";
+
+        InputStream inputStream = null;
         try {
-            final String ftpZipPath = (FTP_PATH.isEmpty() ? "" : ("/" + FTP_PATH)) + "/" + schluessel + ".zip";
-            final ByteArrayOutputStream baos = new ByteArrayOutputStream();
-            VermessungsunterlagenHelper.getInstance().downloadFromFTP(baos, ftpZipPath);
-            return baos.toByteArray();
+            inputStream = VermessungsunterlagenHelper.getInstance().downloadFromFTP(ftpZipPath);
+            return IOUtils.toByteArray(inputStream);
         } catch (final Exception ex) {
             return new Exception("Fehler beim Herunterladen der Zip-Datei.", ex);
+        } finally {
+            IOUtils.closeQuietly(inputStream);
         }
     }
 
