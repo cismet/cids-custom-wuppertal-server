@@ -38,7 +38,7 @@ public class VermessungsUnterlagenPortalDownloadAction implements ServerAction {
 
     @Override
     public Object execute(final Object body, final ServerActionParameter... params) {
-        final String schluessel = new String((byte[])body);
+        final String schluessel = (String)body;
         try {
             final String ftpZipPath = (FTP_PATH.isEmpty() ? "" : ("/" + FTP_PATH)) + "/" + schluessel + ".zip";
             final ByteArrayOutputStream baos = new ByteArrayOutputStream();
