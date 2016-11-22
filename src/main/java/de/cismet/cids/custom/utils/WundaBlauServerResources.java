@@ -35,6 +35,9 @@ public enum WundaBlauServerResources {
     APMAPS_JASPER(new JasperReportServerResource("/reports/apmaps.jasper")),
     APMAPS_DOCUMENT_JASPER(new JasperReportServerResource("/reports/apmaps_document.jasper")),
     APMAPS_OVERVIEW_JASPER(new JasperReportServerResource("/reports/apmaps_overview.jasper")),
+    NIVP_JASPER(new JasperReportServerResource("/reports/nivp.jasper")),
+    NIVP_DOCUMENT_JASPER(new JasperReportServerResource("/reports/nivp_document.jasper")),
+    NIVP_OVERVIEW_JASPER(new JasperReportServerResource("/reports/nivp_overview.jasper")),
     FS_RECHNUNG_JASPER(new JasperReportServerResource("/reports/bestellung_rechnung.jasper")),
     FS_RECHNUNG_RUECKSEITE_JASPER(new JasperReportServerResource("/reports/bestellung_rechnung_rueckseite.jasper")),
 

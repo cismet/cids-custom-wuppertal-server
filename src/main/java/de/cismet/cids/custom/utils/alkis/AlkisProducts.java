@@ -524,4 +524,67 @@ public class AlkisProducts {
         }
         return validURLs;
     }
+
+    /**
+     * DOCUMENT ME!
+     *
+     * @param   dgkBlattnummer  the value of dgkBlattnummer
+     * @param   laufendeNummer  the value of laufendeNummer
+     *
+     * @return  DOCUMENT ME!
+     */
+    public Collection<URL> getCorrespondingNivPURLs(final java.lang.String dgkBlattnummer,
+            final String laufendeNummer) {
+        final Collection<URL> validURLs = new LinkedList<URL>();
+        final StringBuilder urlBuilder = new StringBuilder(alkisConf.NIVP_HOST);
+        urlBuilder.append('/');
+        urlBuilder.append(dgkBlattnummer);
+        urlBuilder.append('/');
+        urlBuilder.append(alkisConf.NIVP_PREFIX);
+        urlBuilder.append(dgkBlattnummer);
+        urlBuilder.append(getFormattedLaufendeNummerNivP(laufendeNummer));
+        urlBuilder.append('.');
+        for (final String suffix : SUFFIXES) {
+            URL urlToTry = null;
+            try {
+                urlToTry = new URL(urlBuilder.toString() + suffix);
+            } catch (MalformedURLException ex) {
+                LOG.warn("The URL '" + urlBuilder.toString() + suffix
+                            + "' is malformed. Can't load the corresponding picture.",
+                    ex);
+            }
+
+            if (urlToTry != null) {
+                if (LOG.isDebugEnabled()) {
+                    LOG.debug("Valid URL: " + urlToTry.toExternalForm());
+                }
+
+                validURLs.add(urlToTry);
+            }
+        }
+        return validURLs;
+    }
+
+    /**
+     * DOCUMENT ME!
+     *
+     * @param   laufendeNummer  DOCUMENT ME!
+     *
+     * @return  DOCUMENT ME!
+     */
+    public static String getFormattedLaufendeNummerNivP(final String laufendeNummer) {
+        final StringBuilder result;
+
+        if (laufendeNummer == null) {
+            result = new StringBuilder("000");
+        } else {
+            result = new StringBuilder(laufendeNummer);
+        }
+
+        while (result.length() < 3) {
+            result.insert(0, "0");
+        }
+
+        return result.toString();
+    }
 }
