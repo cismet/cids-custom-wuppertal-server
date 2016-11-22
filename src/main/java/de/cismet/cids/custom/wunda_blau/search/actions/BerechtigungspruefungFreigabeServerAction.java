@@ -124,7 +124,8 @@ public class BerechtigungspruefungFreigabeServerAction implements UserAwareServe
                 final BerechtigungspruefungDownloadInfo downloadInfo = BerechtigungspruefungHandler.extractDownloadInfo(
                         (String)pruefungBean.getProperty("downloadinfo_json"));
 
-                if (pruefungBean.getProperty("pruefstatus") != null) {
+                if (!Boolean.TRUE.equals(pruefungBean.getProperty("abgeholt"))
+                            && (pruefungBean.getProperty("pruefstatus") != null)) {
                     return ReturnType.ALREADY;
                 } else if (pruefungsAbschluss && (pruefungBean.getProperty("pruefer") != null)
                             && !pruefer.equals(pruefungBean.getProperty("pruefer"))) {
@@ -133,6 +134,7 @@ public class BerechtigungspruefungFreigabeServerAction implements UserAwareServe
                 final String userKey = (String)pruefungBean.getProperty("benutzer");
 
                 final Timestamp now = new Timestamp(new Date().getTime());
+                pruefungBean.setProperty("abgeholt", null);
                 pruefungBean.setProperty("pruefer", pruefer);
                 pruefungBean.setProperty("pruefstatus", pruefstatus);
                 if (pruefungsAbschluss) {
