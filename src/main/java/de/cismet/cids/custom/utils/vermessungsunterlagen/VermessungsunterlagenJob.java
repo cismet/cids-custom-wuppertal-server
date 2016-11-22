@@ -328,36 +328,28 @@ public class VermessungsunterlagenJob implements Runnable {
                                         + anfrageBean.getGeschaeftsbuchnummer(),
                                 anfrageBean.getPunktnummernreservierungsArray()));
                     } else {
-                        if (isTaskAllowed(VermUntTaskAPMap.TYPE) || isTaskAllowed(VermUntTaskAPList.TYPE)) {
-                            final Collection<CidsBean> saumAPs = searchAPs(vermessungsGeometrieSaum);
-                            if (!saumAPs.isEmpty()) {
-                                submitTask(new VermUntTaskAPMap(getKey(), saumAPs));
-                                submitTask(new VermUntTaskAPList(getKey(), saumAPs));
-                            }
-                        }
-                        if (isTaskAllowed(VermUntTaskAPUebersicht.TYPE)) {
-                            final Collection<CidsBean> fsAPs = searchAPs(geometryFlurstuecke);
-                            if (!fsAPs.isEmpty()) {
+                        if (isTaskAllowed(VermUntTaskAPMap.TYPE) || isTaskAllowed(VermUntTaskAPList.TYPE)
+                                    || isTaskAllowed(VermUntTaskAPUebersicht.TYPE)) {
+                            final Collection<CidsBean> aPs = searchAPs(vermessungsGeometrieSaum);
+                            if (!aPs.isEmpty()) {
+                                submitTask(new VermUntTaskAPMap(getKey(), aPs));
+                                submitTask(new VermUntTaskAPList(getKey(), aPs));
                                 submitTask(new VermUntTaskAPUebersicht(
                                         getKey(),
-                                        fsAPs,
+                                        aPs,
                                         validator.getFlurstuecke(),
                                         anfrageBean.getGeschaeftsbuchnummer()));
                             }
                         }
 
-                        if (isTaskAllowed(VermUntTaskAPMap.TYPE) || isTaskAllowed(VermUntTaskAPList.TYPE)) {
-                            final Collection<CidsBean> saumNivPs = searchNivPs(vermessungsGeometrieSaum);
-                            if (!saumNivPs.isEmpty()) {
-                                submitTask(new VermUntTaskNivPBeschreibungen(getKey(), saumNivPs));
-                            }
-                        }
-                        if (isTaskAllowed(VermUntTaskAPUebersicht.TYPE)) {
-                            final Collection<CidsBean> fsNivPs = searchNivPs(geometryFlurstuecke);
-                            if (!fsNivPs.isEmpty()) {
+                        if (isTaskAllowed(VermUntTaskNivPBeschreibungen.TYPE)
+                                    || isTaskAllowed(VermUntTaskNivPUebersicht.TYPE)) {
+                            final Collection<CidsBean> nivPs = searchNivPs(vermessungsGeometrieSaum);
+                            if (!nivPs.isEmpty()) {
+                                submitTask(new VermUntTaskNivPBeschreibungen(getKey(), nivPs));
                                 submitTask(new VermUntTaskNivPUebersicht(
                                         getKey(),
-                                        fsNivPs,
+                                        nivPs,
                                         validator.getFlurstuecke(),
                                         anfrageBean.getGeschaeftsbuchnummer()));
                             }

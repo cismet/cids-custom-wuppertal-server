@@ -16,13 +16,8 @@ import Sirius.server.middleware.impls.domainserver.DomainServerImpl;
 
 import net.sf.jasperreports.engine.data.JRBeanCollectionDataSource;
 
-import java.io.File;
 import java.io.FileOutputStream;
-import java.io.InputStream;
 import java.io.OutputStream;
-import java.io.StringReader;
-
-import java.net.URL;
 
 import java.util.Arrays;
 import java.util.Collection;
@@ -30,8 +25,7 @@ import java.util.HashMap;
 import java.util.Map;
 
 import de.cismet.cids.custom.utils.WundaBlauServerResources;
-import de.cismet.cids.custom.utils.alkis.AlkisPointReportBean;
-import de.cismet.cids.custom.utils.alkis.ServerAlkisProducts;
+import de.cismet.cids.custom.utils.alkis.NivellementPunktReportBean;
 import de.cismet.cids.custom.utils.vermessungsunterlagen.VermessungsunterlagenHelper;
 
 import de.cismet.cids.dynamics.CidsBean;
@@ -49,7 +43,6 @@ public class VermUntTaskNivPBeschreibungen extends VermUntTaskNivP {
     //~ Static fields/initializers ---------------------------------------------
 
     public static final String TYPE = "NivP_Beschreibungen";
-    private static final ServerAlkisProducts PRODUCTS = ServerAlkisProducts.getInstance();
 
     //~ Constructors -----------------------------------------------------------
 
@@ -69,16 +62,16 @@ public class VermUntTaskNivPBeschreibungen extends VermUntTaskNivP {
     public void performTask() throws Exception {
         OutputStream out = null;
         try {
-            final String filename = getPath() + "/" + ServerAlkisProducts.getInstance().PUNKTLISTE_PDF + ".pdf";
+            final String filename = getPath() + "/nivp.pdf";
             out = new FileOutputStream(filename);
             final Map parameters = new HashMap();
             parameters.put("SUBREPORT_DIR", DomainServerImpl.getServerProperties().getServerResourcesBasePath() + "/");
 
             VermessungsunterlagenHelper.jasperReportDownload(
                 ServerResourcesLoader.getInstance().loadJasperReport(
-                    WundaBlauServerResources.APMAPS_JASPER.getValue()),
+                    WundaBlauServerResources.NIVP_JASPER.getValue()),
                 parameters,
-                new JRBeanCollectionDataSource(Arrays.asList(new AlkisPointReportBean(getNivPoints()))),
+                new JRBeanCollectionDataSource(Arrays.asList(new NivellementPunktReportBean(getNivPoints()))),
                 out);
         } finally {
             VermessungsunterlagenHelper.closeStream(out);
