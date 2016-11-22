@@ -45,6 +45,9 @@ import de.cismet.cids.custom.utils.vermessungsunterlagen.tasks.VermUntTaskAPMap;
 import de.cismet.cids.custom.utils.vermessungsunterlagen.tasks.VermUntTaskAPUebersicht;
 import de.cismet.cids.custom.utils.vermessungsunterlagen.tasks.VermUntTaskNasKomplett;
 import de.cismet.cids.custom.utils.vermessungsunterlagen.tasks.VermUntTaskNasPunkte;
+import de.cismet.cids.custom.utils.vermessungsunterlagen.tasks.VermUntTaskNivP;
+import de.cismet.cids.custom.utils.vermessungsunterlagen.tasks.VermUntTaskNivPBeschreibungen;
+import de.cismet.cids.custom.utils.vermessungsunterlagen.tasks.VermUntTaskNivPUebersicht;
 import de.cismet.cids.custom.utils.vermessungsunterlagen.tasks.VermUntTaskPNR;
 import de.cismet.cids.custom.utils.vermessungsunterlagen.tasks.VermUntTaskRisseBilder;
 import de.cismet.cids.custom.utils.vermessungsunterlagen.tasks.VermUntTaskRisseGrenzniederschrift;
@@ -242,19 +245,33 @@ public class VermessungsunterlagenJob implements Runnable {
      */
     private Collection<CidsBean> searchAPs(final Geometry geometry) {
         try {
-            final Collection<CidsMeasurementPointSearchStatement.Pointtype> pointtypes = Arrays.asList(
-                    CidsMeasurementPointSearchStatement.Pointtype.AUFNAHMEPUNKTE,
-                    CidsMeasurementPointSearchStatement.Pointtype.SONSTIGE_VERMESSUNGSPUNKTE
-                    // CidsMeasurementPointSearchStatement.Pointtype.GRENZPUNKTE,
-                    // CidsMeasurementPointSearchStatement.Pointtype.BESONDERE_GEBAEUDEPUNKTE,
-                    // CidsMeasurementPointSearchStatement.Pointtype.BESONDERE_BAUWERKSPUNKTE,
-                    // CidsMeasurementPointSearchStatement.Pointtype.BESONDERE_TOPOGRAPHISCHE_PUNKTE,
-                    // CidsMeasurementPointSearchStatement.Pointtype.NIVELLEMENT_PUNKTE
-                    );
-
             final CidsServerSearch serverSearch = new CidsMeasurementPointSearchStatement(
                     "",
-                    pointtypes,
+                    Arrays.asList(
+                        CidsMeasurementPointSearchStatement.Pointtype.AUFNAHMEPUNKTE,
+                        CidsMeasurementPointSearchStatement.Pointtype.SONSTIGE_VERMESSUNGSPUNKTE),
+                    null,
+                    geometry);
+            final Collection<MetaObjectNode> mons = helper.performSearch(serverSearch);
+            return helper.loadBeans(mons);
+        } catch (final SearchException ex) {
+            LOG.error("error while searching for APs", ex);
+            return null;
+        }
+    }
+
+    /**
+     * DOCUMENT ME!
+     *
+     * @param   geometry  DOCUMENT ME!
+     *
+     * @return  DOCUMENT ME!
+     */
+    private Collection<CidsBean> searchNivPs(final Geometry geometry) {
+        try {
+            final CidsServerSearch serverSearch = new CidsMeasurementPointSearchStatement(
+                    "",
+                    Arrays.asList(CidsMeasurementPointSearchStatement.Pointtype.NIVELLEMENT_PUNKTE),
                     null,
                     geometry);
             final Collection<MetaObjectNode> mons = helper.performSearch(serverSearch);
@@ -313,18 +330,35 @@ public class VermessungsunterlagenJob implements Runnable {
                                 anfrageBean.getPunktnummernreservierungsArray()));
                     } else {
                         if (isTaskAllowed(VermUntTaskAPMap.TYPE) || isTaskAllowed(VermUntTaskAPList.TYPE)) {
-                            final Collection<CidsBean> saumAps = searchAPs(vermessungsGeometrieSaum);
-                            if (!saumAps.isEmpty()) {
-                                submitTask(new VermUntTaskAPMap(getKey(), saumAps));
-                                submitTask(new VermUntTaskAPList(getKey(), saumAps));
+                            final Collection<CidsBean> saumAPs = searchAPs(vermessungsGeometrieSaum);
+                            if (!saumAPs.isEmpty()) {
+                                submitTask(new VermUntTaskAPMap(getKey(), saumAPs));
+                                submitTask(new VermUntTaskAPList(getKey(), saumAPs));
                             }
                         }
                         if (isTaskAllowed(VermUntTaskAPUebersicht.TYPE)) {
-                            final Collection<CidsBean> fsAps = searchAPs(geometryFlurstuecke);
-                            if (!fsAps.isEmpty()) {
+                            final Collection<CidsBean> fsAPs = searchAPs(geometryFlurstuecke);
+                            if (!fsAPs.isEmpty()) {
                                 submitTask(new VermUntTaskAPUebersicht(
                                         getKey(),
-                                        fsAps,
+                                        fsAPs,
+                                        validator.getFlurstuecke(),
+                                        anfrageBean.getGeschaeftsbuchnummer()));
+                            }
+                        }
+
+                        if (isTaskAllowed(VermUntTaskAPMap.TYPE) || isTaskAllowed(VermUntTaskAPList.TYPE)) {
+                            final Collection<CidsBean> saumNivPs = searchNivPs(vermessungsGeometrieSaum);
+                            if (!saumNivPs.isEmpty()) {
+                                submitTask(new VermUntTaskNivPBeschreibungen(getKey(), saumNivPs));
+                            }
+                        }
+                        if (isTaskAllowed(VermUntTaskAPUebersicht.TYPE)) {
+                            final Collection<CidsBean> fsNivPs = searchNivPs(geometryFlurstuecke);
+                            if (!fsNivPs.isEmpty()) {
+                                submitTask(new VermUntTaskNivPUebersicht(
+                                        getKey(),
+                                        fsNivPs,
                                         validator.getFlurstuecke(),
                                         anfrageBean.getGeschaeftsbuchnummer()));
                             }

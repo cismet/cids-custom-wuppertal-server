@@ -28,6 +28,7 @@ import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
 
 import com.vividsolutions.jts.geom.Coordinate;
+import com.vividsolutions.jts.geom.Envelope;
 import com.vividsolutions.jts.geom.Geometry;
 import com.vividsolutions.jts.geom.GeometryFactory;
 import com.vividsolutions.jts.geom.LinearRing;
@@ -73,7 +74,9 @@ import java.util.Map;
 import java.util.Properties;
 
 import de.cismet.cids.custom.utils.WundaBlauServerResources;
+import de.cismet.cids.custom.utils.alkis.AlkisProductDescription;
 import de.cismet.cids.custom.utils.alkis.AlkisProducts;
+import de.cismet.cids.custom.utils.alkis.ServerAlkisProducts;
 import de.cismet.cids.custom.utils.nas.NasProduct;
 
 import de.cismet.cids.dynamics.CidsBean;
@@ -1033,6 +1036,102 @@ public class VermessungsunterlagenHelper {
      */
     public static VermessungsunterlagenHelper getInstance() {
         return LazyInitialiser.INSTANCE;
+    }
+
+    /**
+     * DOCUMENT ME!
+     *
+     * @param   box     DOCUMENT ME!
+     * @param   width   DOCUMENT ME!
+     * @param   height  DOCUMENT ME!
+     * @param   scale   DOCUMENT ME!
+     *
+     * @return  DOCUMENT ME!
+     */
+    private static boolean doesBoundingBoxFitIntoLayout(final Envelope box,
+            final int width,
+            final int height,
+            final double scale) {
+        final double realWorldLayoutWidth = ((double)width) / 1000.0d * scale;
+        final double realWorldLayoutHeigth = ((double)height) / 1000.0d * scale;
+        return (realWorldLayoutWidth >= box.getWidth()) && (realWorldLayoutHeigth >= box.getHeight());
+    }
+    /**
+     * DOCUMENT ME!
+     *
+     * @param   clazz        DOCUMENT ME!
+     * @param   type         DOCUMENT ME!
+     * @param   boundingBox  DOCUMENT ME!
+     *
+     * @return  DOCUMENT ME!
+     */
+    public static AlkisProductDescription determineAlkisProduct(final String clazz,
+            final String type,
+            final Envelope boundingBox) {
+        AlkisProductDescription minimalWidthFittingProduct = null;
+        AlkisProductDescription minimalHeightFittingProduct = null;
+        AlkisProductDescription defaultProduct = null;
+        for (final AlkisProductDescription product : ServerAlkisProducts.getInstance().ALKIS_MAP_PRODUCTS) {
+            if (clazz.equals(product.getClazz()) && type.equals(product.getType())) {
+                if (product.isDefaultProduct()) {
+                    defaultProduct = product;
+                }
+                final boolean fitting = doesBoundingBoxFitIntoLayout(
+                        boundingBox,
+                        product.getWidth(),
+                        product.getHeight(),
+                        Integer.parseInt(String.valueOf(product.getMassstab())));
+                if (fitting) {
+                    if (minimalWidthFittingProduct == null) {
+                        // at least the first is the minimal
+                        minimalWidthFittingProduct = product;
+                    } else if (product.getWidth() <= minimalWidthFittingProduct.getWidth()) {
+                        // is smaller or equals
+                        if (product.getWidth() < minimalWidthFittingProduct.getWidth()) {
+                            // is smaller
+                            minimalWidthFittingProduct = product;
+                        } else if (Integer.parseInt(String.valueOf(product.getMassstab()))
+                                    < Integer.parseInt(String.valueOf(minimalHeightFittingProduct.getMassstab()))) {
+                            // not smaller (equals) in size but in scale
+                            minimalWidthFittingProduct = product;
+                        }
+                    }
+                    // same as for width but now with height
+                    if (minimalHeightFittingProduct == null) {
+                        minimalHeightFittingProduct = product;
+                    } else if (product.getHeight() <= minimalHeightFittingProduct.getHeight()) {
+                        if (product.getHeight() < minimalHeightFittingProduct.getHeight()) {
+                            minimalHeightFittingProduct = product;
+                        } else if (Integer.parseInt(String.valueOf(product.getMassstab()))
+                                    < Integer.parseInt(String.valueOf(minimalHeightFittingProduct.getMassstab()))) {
+                            minimalHeightFittingProduct = product;
+                        }
+                    }
+                }
+            }
+        }
+
+        if ((minimalWidthFittingProduct != null) && (minimalHeightFittingProduct != null)) {
+            final boolean isMinimalWidthHoch = minimalWidthFittingProduct.getWidth()
+                        < minimalWidthFittingProduct.getHeight();
+            final boolean isMinimalHeightHoch = minimalHeightFittingProduct.getWidth()
+                        < minimalHeightFittingProduct.getHeight();
+
+            // hochkannt priorisieren
+            if (isMinimalWidthHoch && isMinimalHeightHoch) {
+                return minimalWidthFittingProduct;
+            } else if (isMinimalWidthHoch) {
+                return minimalWidthFittingProduct;
+            } else {
+                return minimalHeightFittingProduct;
+            }
+        } else if (minimalWidthFittingProduct != null) {
+            return minimalWidthFittingProduct;
+        } else if (minimalHeightFittingProduct != null) {
+            return minimalHeightFittingProduct;
+        } else {
+            return defaultProduct;
+        }
     }
 
     //~ Inner Classes ----------------------------------------------------------

@@ -12,6 +12,8 @@
  */
 package de.cismet.cids.custom.utils.vermessungsunterlagen.tasks;
 
+import com.sun.javafx.geom.Vec2d;
+
 import com.vividsolutions.jts.geom.Coordinate;
 import com.vividsolutions.jts.geom.Envelope;
 import com.vividsolutions.jts.geom.Geometry;
@@ -40,11 +42,11 @@ import static de.cismet.cids.custom.utils.vermessungsunterlagen.Vermessungsunter
  * @author   jruiz
  * @version  $Revision$, $Date$
  */
-public class VermUntTaskAPUebersicht extends VermUntTaskAP {
+public class VermUntTaskNivPUebersicht extends VermUntTaskNivP {
 
     //~ Static fields/initializers ---------------------------------------------
 
-    public static final String TYPE = "AP_Uebersicht";
+    public static final String TYPE = "NivP_Uebersicht";
 
     //~ Instance fields --------------------------------------------------------
 
@@ -58,15 +60,15 @@ public class VermUntTaskAPUebersicht extends VermUntTaskAP {
      * Creates a new VermUntTaskAPList object.
      *
      * @param  jobkey          DOCUMENT ME!
-     * @param  alkisPoints     DOCUMENT ME!
+     * @param  nivPoints       DOCUMENT ME!
      * @param  flurstuecke     DOCUMENT ME!
      * @param  auftragsnummer  DOCUMENT ME!
      */
-    public VermUntTaskAPUebersicht(final String jobkey,
-            final Collection<CidsBean> alkisPoints,
+    public VermUntTaskNivPUebersicht(final String jobkey,
+            final Collection<CidsBean> nivPoints,
             final Collection<CidsBean> flurstuecke,
             final String auftragsnummer) {
-        super(TYPE, jobkey, alkisPoints);
+        super(TYPE, jobkey, nivPoints);
 
         this.flurstuecke = flurstuecke;
         this.auftragsnummer = auftragsnummer;
@@ -77,9 +79,9 @@ public class VermUntTaskAPUebersicht extends VermUntTaskAP {
     @Override
     public void performTask() throws Exception {
         final GeometryFactory geometryFactory = new GeometryFactory();
-        final Collection<Geometry> geometries = new ArrayList<Geometry>(getAlkisPoints().size());
-        for (final CidsBean alkisPoint : getAlkisPoints()) {
-            final Geometry geom = (Geometry)alkisPoint.getProperty("geom.geo_field");
+        final Collection<Geometry> geometries = new ArrayList<Geometry>(getNivPoints().size());
+        for (final CidsBean nivPoint : getNivPoints()) {
+            final Geometry geom = (Geometry)nivPoint.getProperty("geometrie.geo_field");
             geometries.add(geom);
         }
         final Envelope envelope = geometryFactory.createGeometryCollection(geometries.toArray(new Geometry[0]))
@@ -89,7 +91,7 @@ public class VermUntTaskAPUebersicht extends VermUntTaskAP {
         final String landparcelcode = (String)flurstuecke.iterator().next().getProperty("alkis_id");
         final AlkisProductDescription product = VermessungsunterlagenHelper.determineAlkisProduct(String.valueOf(
                     "WUP-Kommunal"),
-                String.valueOf("AP-Übersicht"),
+                String.valueOf("NivP-Übersicht"),
                 envelope);
 
         final URL url = ServerAlkisProducts.getInstance()
