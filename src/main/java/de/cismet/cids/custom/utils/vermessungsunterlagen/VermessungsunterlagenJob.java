@@ -45,7 +45,6 @@ import de.cismet.cids.custom.utils.vermessungsunterlagen.tasks.VermUntTaskAPMap;
 import de.cismet.cids.custom.utils.vermessungsunterlagen.tasks.VermUntTaskAPUebersicht;
 import de.cismet.cids.custom.utils.vermessungsunterlagen.tasks.VermUntTaskNasKomplett;
 import de.cismet.cids.custom.utils.vermessungsunterlagen.tasks.VermUntTaskNasPunkte;
-import de.cismet.cids.custom.utils.vermessungsunterlagen.tasks.VermUntTaskNivP;
 import de.cismet.cids.custom.utils.vermessungsunterlagen.tasks.VermUntTaskNivPBeschreibungen;
 import de.cismet.cids.custom.utils.vermessungsunterlagen.tasks.VermUntTaskNivPUebersicht;
 import de.cismet.cids.custom.utils.vermessungsunterlagen.tasks.VermUntTaskPNR;
@@ -402,7 +401,8 @@ public class VermessungsunterlagenJob implements Runnable {
                     while (received < taskMap.size()) {
                         final Future<VermessungsunterlagenTask> resultFuture = completionService.take();
                         final VermessungsunterlagenTask task = resultFuture.get();
-                        if (VermessungsunterlagenTask.Status.ERROR.equals(task.getStatus())) {
+                        if (!validator.ignoreError()
+                                    && VermessungsunterlagenTask.Status.ERROR.equals(task.getStatus())) {
                             throw new VermessungsunterlagenException(
                                 "Ein unerwarteter Fehler ist beim Ausführen des Tasks "
                                         + task.getType()

@@ -57,6 +57,8 @@ public class VermessungsunterlagenValidator {
 
     private final VermessungsunterlagenHelper helper;
 
+    private boolean ignoreError = false;
+
     //~ Constructors -----------------------------------------------------------
 
     /**
@@ -82,6 +84,15 @@ public class VermessungsunterlagenValidator {
     /**
      * DOCUMENT ME!
      *
+     * @return  DOCUMENT ME!
+     */
+    public boolean ignoreError() {
+        return ignoreError;
+    }
+
+    /**
+     * DOCUMENT ME!
+     *
      * @param   anfrageBean  DOCUMENT ME!
      *
      * @return  if validation passed returns {@link #ISVALID}. If validation failed returns error message for enduser in
@@ -102,6 +113,8 @@ public class VermessungsunterlagenValidator {
                     || "".equals(anfrageBean.getGeschaeftsbuchnummer().trim())) {
             throw getExceptionByErrorCode(Error.NO_GESCHAEFTSBUCHNUMMER);
         }
+
+        ignoreError = anfrageBean.getAktenzeichenKatasteramt().startsWith("[i_e]");
 
         // Validierung der Punktnummernreservierung
         if ((anfrageBean.getPunktnummernreservierungsArray() != null)
