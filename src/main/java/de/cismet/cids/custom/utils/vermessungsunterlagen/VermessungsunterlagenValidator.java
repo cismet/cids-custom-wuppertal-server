@@ -12,6 +12,7 @@
  */
 package de.cismet.cids.custom.utils.vermessungsunterlagen;
 
+import Sirius.server.middleware.types.LightweightMetaObject;
 import Sirius.server.middleware.types.MetaObjectNode;
 
 import java.util.ArrayList;
@@ -360,7 +361,7 @@ public class VermessungsunterlagenValidator {
                     + parts[3];
 
         try {
-            final Collection<MetaObjectNode> result = helper.performSearch(search);
+            final Collection<LightweightMetaObject> result = helper.performSearch(search);
             final boolean found = (result != null)
                         && !result.isEmpty();
             if (found) {

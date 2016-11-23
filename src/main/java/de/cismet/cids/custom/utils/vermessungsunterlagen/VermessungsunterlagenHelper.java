@@ -18,6 +18,7 @@ package de.cismet.cids.custom.utils.vermessungsunterlagen;
  */
 import Sirius.server.middleware.impls.domainserver.DomainServerImpl;
 import Sirius.server.middleware.interfaces.domainserver.MetaService;
+import Sirius.server.middleware.types.LightweightMetaObject;
 import Sirius.server.middleware.types.MetaClass;
 import Sirius.server.middleware.types.MetaObject;
 import Sirius.server.middleware.types.MetaObjectNode;
@@ -337,14 +338,14 @@ public class VermessungsunterlagenHelper {
     /**
      * DOCUMENT ME!
      *
-     * @param   mon  DOCUMENT ME!
+     * @param   lwmo  DOCUMENT ME!
      *
      * @return  DOCUMENT ME!
      *
      * @throws  Exception  DOCUMENT ME!
      */
-    public CidsBean loadCidsBean(final MetaObjectNode mon) throws Exception {
-        return getMetaService().getMetaObject(getUser(), mon.getObjectId(), mon.getClassId()).getBean();
+    public CidsBean loadCidsBean(final LightweightMetaObject lwmo) throws Exception {
+        return getMetaService().getMetaObject(getUser(), lwmo.getObjectID(), lwmo.getClassID()).getBean();
     }
 
     /**
