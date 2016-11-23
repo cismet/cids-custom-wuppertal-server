@@ -349,6 +349,7 @@ public class VermessungsunterlagenValidator {
         search.setFlur(parts[1]);
         search.setZaehler(parts[2]);
         search.setNenner(parts[3]);
+        search.setRepresentationFields(new String[] { "id", "gemarkung", "flur", "zaehler", "nenner" });
 
         final String name = parts[0]
                     + "-"
