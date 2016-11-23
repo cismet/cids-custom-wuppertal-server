@@ -127,9 +127,9 @@ public class BerechtigungspruefungFreigabeServerAction implements UserAwareServe
                 if (!Boolean.TRUE.equals(pruefungBean.getProperty("abgeholt"))
                             && (pruefungBean.getProperty("pruefstatus") != null)) {
                     return ReturnType.ALREADY;
-                } else if (pruefungsAbschluss && (pruefungBean.getProperty("pruefer") != null)
-                            && !pruefer.equals(pruefungBean.getProperty("pruefer"))) {
-                    return ReturnType.PENDING;
+//                } else if (pruefungsAbschluss && (pruefungBean.getProperty("pruefer") != null)
+//                            && !pruefer.equals(pruefungBean.getProperty("pruefer"))) {
+//                    return ReturnType.PENDING;
                 }
                 final String userKey = (String)pruefungBean.getProperty("benutzer");
 
