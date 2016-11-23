@@ -110,14 +110,6 @@ public class VermessungsunterlagenHelper {
     private static final ObjectMapper EXCEPTION_MAPPER = new ObjectMapper();
     private static final ObjectMapper JOB_MAPPER;
 
-    public static final String CIDS_LOGIN = readProperty("CIDS_LOGIN", null);
-    public static final String ABS_PATH_TMP = readProperty("ABS_PATH_TMP", "/tmp");
-    public static final String FTP_HOST = readProperty("FTP_HOST", null);
-    public static final String FTP_LOGIN = readProperty("FTP_LOGIN", null);
-    public static final String FTP_PASS = readProperty("FTP_PASS", null);
-    public static final String FTP_PATH = readProperty("FTP_PATH", null);
-    public static final String ABS_PATH_TEST = readProperty("ABS_PATH_TEST", null);
-
     public static final String DIR_PREFIX = "VermUnterlagen";
 
     public static final String ALLOWED_TASKS_CONFIG_ATTR = "vup.tasks_allowed";
@@ -159,8 +151,6 @@ public class VermessungsunterlagenHelper {
 
     //~ Instance fields --------------------------------------------------------
 
-    private final Properties properties;
-
     private MetaClass mc_VERMESSUNGSUNTERLAGENAUFTRAG;
     private MetaClass mc_VERMESSUNGSUNTERLAGENAUFTRAG_FLURSTUECK;
     private MetaClass mc_VERMESSUNGSUNTERLAGENAUFTRAG_PUNKTNUMMER;
@@ -171,6 +161,7 @@ public class VermessungsunterlagenHelper {
 
     private MetaService metaService;
     private User user;
+    private final VermessungsunterlagenProperties vermessungsunterlagenProperties;
 
     //~ Constructors -----------------------------------------------------------
 
@@ -185,7 +176,7 @@ public class VermessungsunterlagenHelper {
         } catch (final Exception ex) {
             LOG.error("VermessungsunterlagenHelper could not load the properties", ex);
         }
-        this.properties = properties;
+        this.vermessungsunterlagenProperties = new VermessungsunterlagenProperties(properties);
     }
 
     //~ Methods ----------------------------------------------------------------
@@ -195,29 +186,8 @@ public class VermessungsunterlagenHelper {
      *
      * @return  DOCUMENT ME!
      */
-    private Properties getProperties() {
-        return properties;
-    }
-
-    /**
-     * DOCUMENT ME!
-     *
-     * @param   property      DOCUMENT ME!
-     * @param   defaultValue  DOCUMENT ME!
-     *
-     * @return  DOCUMENT ME!
-     */
-    private static String readProperty(final String property, final String defaultValue) {
-        String value = defaultValue;
-        try {
-            value = getInstance().getProperties().getProperty(property);
-        } catch (final Exception ex) {
-            final String message = "could not read " + property + " from "
-                        + WundaBlauServerResources.VERMESSUNGSUNTERLAGENPORTAL_PROPERTIES.getValue()
-                        + ". setting to default value: " + defaultValue;
-            LOG.warn(message, ex);
-        }
-        return value;
+    public VermessungsunterlagenProperties getProperties() {
+        return vermessungsunterlagenProperties;
     }
 
     /**
@@ -292,14 +262,14 @@ public class VermessungsunterlagenHelper {
      */
     private FTPClient getConnectedFTPClient() throws Exception {
         final FTPClient ftpClient = new FTPClient();
-        ftpClient.connect(FTP_HOST);
+        ftpClient.connect(vermessungsunterlagenProperties.getFtpHost());
 
         final int reply = ftpClient.getReplyCode();
         if (!FTPReply.isPositiveCompletion(reply)) {
             ftpClient.disconnect();
             throw new Exception("Exception in connecting to FTP Server");
         }
-        ftpClient.login(FTP_LOGIN, FTP_PASS);
+        ftpClient.login(vermessungsunterlagenProperties.getFtpLogin(), vermessungsunterlagenProperties.getFtpPass());
         return ftpClient;
     }
 
@@ -729,8 +699,9 @@ public class VermessungsunterlagenHelper {
      */
     public void test() {
         try {
-            if ((ABS_PATH_TEST != null) && !ABS_PATH_TEST.isEmpty()) {
-                final File directory = new File(ABS_PATH_TEST);
+            if ((vermessungsunterlagenProperties.getAbsPathTest() != null)
+                        && !vermessungsunterlagenProperties.getAbsPathTest().isEmpty()) {
+                final File directory = new File(vermessungsunterlagenProperties.getAbsPathTest());
                 if (directory.exists()) {
                     final File[] executeJobFiles = directory.listFiles(new FilenameFilter() {
 
@@ -781,7 +752,8 @@ public class VermessungsunterlagenHelper {
         try {
             configLog4J();
 
-            final File directory = new File(ABS_PATH_TEST);
+            final File directory = new File(new VermessungsunterlagenHelper().vermessungsunterlagenProperties
+                            .getAbsPathTest());
             final File[] executeJobFiles = directory.listFiles(new FilenameFilter() {
 
                         @Override
@@ -844,8 +816,8 @@ public class VermessungsunterlagenHelper {
      *
      * @return  DOCUMENT ME!
      */
-    public static String getPath(final String jobkey) {
-        return ABS_PATH_TMP + "/" + DIR_PREFIX + "_" + jobkey;
+    public String getPath(final String jobkey) {
+        return vermessungsunterlagenProperties.getAbsPathTmp() + "/" + DIR_PREFIX + "_" + jobkey;
     }
 
     /**

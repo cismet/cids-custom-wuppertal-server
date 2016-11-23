@@ -17,6 +17,7 @@ import Sirius.server.middleware.types.MetaObjectNode;
 import java.util.ArrayList;
 import java.util.Collection;
 
+import de.cismet.cids.custom.wunda_blau.search.server.AlbFlurstueckKickerLightweightSearch;
 import de.cismet.cids.custom.wunda_blau.search.server.CidsAlkisSearchStatement;
 
 import de.cismet.cids.dynamics.CidsBean;
@@ -320,52 +321,57 @@ public class VermessungsunterlagenValidator {
         if (flurstueckBean == null) {
             return false;
         }
-        final String fsKey;
+        final String gemarkung = flurstueckBean.getGemarkungsID();
+        final String flur = flurstueckBean.getFlurID();
+        final String zaehlernenner = flurstueckBean.getFlurstuecksID();
+        final String zaehler;
+        final String nenner;
         try {
-            final String gemarkung = flurstueckBean.getGemarkungsID();
-            final String flur = flurstueckBean.getFlurID();
-            final String zaehlernenner = flurstueckBean.getFlurstuecksID();
-
-            final String formattedZN;
             if (zaehlernenner.contains("/")) {
                 final String[] split = zaehlernenner.split("/");
                 if (split.length != 2) {
                     return false;
                 }
-                final String zaehler = String.format("%05d", Integer.parseInt(split[0]));
-                final String nenner = String.format("%04d", Integer.parseInt(split[1]));
-                formattedZN = zaehler
-                            + "/"
-                            + nenner;
+                zaehler = split[0];
+                nenner = split[1];
             } else {
-                formattedZN = String.format("%05d", Integer.parseInt(zaehlernenner));
+                zaehler = zaehlernenner;
+                nenner = null;
             }
-            fsKey = gemarkung
-                        + "-"
-                        + flur
-                        + "-"
-                        + formattedZN;
         } catch (final Exception ex) {
             return false;
         }
 
-        final CidsServerSearch search = new CidsAlkisSearchStatement(
-                CidsAlkisSearchStatement.Resulttyp.FLURSTUECK,
-                CidsAlkisSearchStatement.SucheUeber.FLURSTUECKSNUMMER,
-                fsKey,
-                null);
+        final String[] parts = VermessungsunterlagenUtils.createFlurstueckParts(gemarkung, flur, zaehler, nenner);
+        final AlbFlurstueckKickerLightweightSearch search = new AlbFlurstueckKickerLightweightSearch();
+        search.setSearchFor(AlbFlurstueckKickerLightweightSearch.SearchFor.FLURSTUECK);
+        search.setGemarkungsnummer(parts[0]);
+        search.setFlur(parts[1]);
+        search.setZaehler(parts[2]);
+        search.setNenner(parts[3]);
+
+        final String name = parts[0]
+                    + "-"
+                    + parts[1]
+                    + "-"
+                    + parts[2]
+                    + "/"
+                    + parts[3];
+
         try {
             final Collection<MetaObjectNode> result = helper.performSearch(search);
-            // TODO recursive search if Flurstueck is historic
             final boolean found = (result != null)
                         && !result.isEmpty();
             if (found) {
                 final CidsBean cidsBean = helper.loadCidsBean(result.iterator().next());
-                flurstuecke.add(cidsBean);
+                final CidsBean fsCidsBean = (CidsBean)cidsBean.getProperty("fs_referenz");
+                if (fsCidsBean != null) {
+                    flurstuecke.add(fsCidsBean);
+                }
             }
             return found;
         } catch (final Exception ex) {
-            throw new VermessungsunterlagenException("Fehler beim laden des Flurstuecks: " + fsKey, ex);
+            throw new VermessungsunterlagenException("Fehler beim laden des Flurstuecks: " + name, ex);
         }
     }
 }

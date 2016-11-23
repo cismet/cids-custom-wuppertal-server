@@ -53,7 +53,9 @@ public class VermessungsunterlagenStartupHook implements DomainServerStartupHook
                             }
                         }
 
-                        final String login_name = VermessungsunterlagenHelper.CIDS_LOGIN;
+                        final String login_name = VermessungsunterlagenHelper.getInstance()
+                                    .getProperties()
+                                    .getCidsLogin();
 
                         final VermessungsunterlagenHelper helper = VermessungsunterlagenHelper.getInstance();
 

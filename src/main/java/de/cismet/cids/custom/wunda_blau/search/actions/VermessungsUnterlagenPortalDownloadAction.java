@@ -21,8 +21,6 @@ import de.cismet.cids.custom.utils.vermessungsunterlagen.VermessungsunterlagenHe
 import de.cismet.cids.server.actions.ServerAction;
 import de.cismet.cids.server.actions.ServerActionParameter;
 
-import static de.cismet.cids.custom.utils.vermessungsunterlagen.VermessungsunterlagenHelper.FTP_PATH;
-
 /**
  * DOCUMENT ME!
  *
@@ -41,7 +39,8 @@ public class VermessungsUnterlagenPortalDownloadAction implements ServerAction {
     @Override
     public Object execute(final Object body, final ServerActionParameter... params) {
         final String schluessel = (String)body;
-        final String ftpZipPath = (FTP_PATH.isEmpty() ? "" : ("/" + FTP_PATH)) + "/"
+        final String tmp = VermessungsunterlagenHelper.getInstance().getProperties().getFtpPath();
+        final String ftpZipPath = (tmp.isEmpty() ? "" : ("/" + tmp)) + "/"
                     + VermessungsunterlagenHelper.DIR_PREFIX + "_" + schluessel + ".zip";
 
         InputStream inputStream = null;

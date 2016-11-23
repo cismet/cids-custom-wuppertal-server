@@ -60,7 +60,6 @@ import de.cismet.cids.server.search.SearchException;
 
 import de.cismet.commons.concurrency.CismetExecutors;
 
-import static de.cismet.cids.custom.utils.vermessungsunterlagen.VermessungsunterlagenHelper.FTP_PATH;
 import static de.cismet.cids.custom.utils.vermessungsunterlagen.VermessungsunterlagenHelper.writeExceptionJson;
 
 /**
@@ -293,7 +292,7 @@ public class VermessungsunterlagenJob implements Runnable {
     private Geometry createGeometryFrom(final Collection<CidsBean> cidsBeans) throws Exception {
         final Collection<Polygon> polygons = new ArrayList<Polygon>(cidsBeans.size());
         for (final CidsBean cidsBean : cidsBeans) {
-            final Polygon polygon = (Polygon)cidsBean.getProperty("geometrie.geo_field");
+            final Polygon polygon = (Polygon)cidsBean.getProperty("umschreibendes_rechteck.geo_field");
             polygons.add(polygon);
         }
         final GeometryFactory geometryFactory = new GeometryFactory();
@@ -453,7 +452,8 @@ public class VermessungsunterlagenJob implements Runnable {
     public void uploadZip(final File file) throws VermessungsunterlagenException {
         this.ftpZipPath = null;
         try {
-            final String ftpZipPath = (FTP_PATH.isEmpty() ? "" : ("/" + FTP_PATH)) + file.getName();
+            final String tmp = helper.getProperties().getFtpPath();
+            final String ftpZipPath = (tmp.isEmpty() ? "" : ("/" + tmp)) + file.getName();
             VermessungsunterlagenHelper.getInstance().uploadToFTP(new FileInputStream(file), ftpZipPath);
             this.ftpZipPath = ftpZipPath;
         } catch (final Exception ex) {
@@ -546,6 +546,6 @@ public class VermessungsunterlagenJob implements Runnable {
      * @return  DOCUMENT ME!
      */
     public String getPath() {
-        return VermessungsunterlagenHelper.getPath(getKey());
+        return helper.getPath(getKey());
     }
 }

@@ -132,6 +132,6 @@ public abstract class VermessungsunterlagenTask implements Callable<Vermessungsu
      * @return  DOCUMENT ME!
      */
     public String getPath() {
-        return VermessungsunterlagenHelper.getPath(jobKey) + getSubPath();
+        return VermessungsunterlagenHelper.getInstance().getPath(jobKey) + getSubPath();
     }
 }
