@@ -1239,16 +1239,29 @@ public class FormSolutionServerNewStuffAvailableAction implements UserAwareServe
         parameters.put(
             "RECHNUNG_NAME",
             noNullAndTrimed((String)bestellungBean.getProperty("fk_adresse_rechnung.name")));
-        parameters.put(
-            "RECHNUNG_STRASSE",
-            noNullAndTrimed((String)bestellungBean.getProperty("fk_adresse_rechnung.strasse")));
-        parameters.put(
-            "RECHNUNG_HAUSNUMMER",
-            noNullAndTrimed((String)bestellungBean.getProperty("fk_adresse_rechnung.hausnummer")));
-        final String plzRechnung = (bestellungBean.getProperty("fk_adresse_rechnung.plz") != null)
-            ? Integer.toString((Integer)bestellungBean.getProperty("fk_adresse_rechnung.plz")) : "";
-        parameters.put("RECHNUNG_PLZ", plzRechnung);
-        parameters.put("RECHNUNG_ORT", noNullAndTrimed((String)bestellungBean.getProperty("fk_adresse_rechnung.ort")));
+
+        final String rechnungStrasse = noNullAndTrimed((String)bestellungBean.getProperty(
+                    "fk_adresse_rechnung.strasse"));
+        final String rechnungHausnummer = noNullAndTrimed((String)bestellungBean.getProperty(
+                    "fk_adresse_rechnung.hausnummer"));
+        final String rechnungPlz = noNullAndTrimed((bestellungBean.getProperty("fk_adresse_rechnung.plz") != null)
+                    ? Integer.toString((Integer)bestellungBean.getProperty("fk_adresse_rechnung.plz")) : null);
+        final String rechnungOrt = noNullAndTrimed((String)bestellungBean.getProperty("fk_adresse_rechnung.ort"));
+        final String rechnungStaat = noNullAndTrimed((String)bestellungBean.getProperty(
+                    "fk_adresse_rechnung.staat"));
+        final String rechnungAlternativ = noNullAndTrimed((String)bestellungBean.getProperty(
+                    "fk_adresse_rechnung.alternativ"));
+        final String rechnungAdresse = (rechnungAlternativ.isEmpty())
+            ? (rechnungStrasse + " " + rechnungHausnummer + "\n" + rechnungPlz + " " + rechnungOrt)
+            : (rechnungAlternativ + "\n" + rechnungStaat);
+
+        parameters.put("RECHNUNG_STRASSE", rechnungStrasse);
+        parameters.put("RECHNUNG_HAUSNUMMER", rechnungHausnummer);
+        parameters.put("RECHNUNG_PLZ", rechnungPlz);
+        parameters.put("RECHNUNG_ORT", rechnungOrt);
+        parameters.put("RECHNUNG_ALTERNATIV", rechnungAlternativ);
+        parameters.put("RECHNUNG_ADRESSE", rechnungAdresse);
+
         parameters.put(
             "RECHNUNG_FORMAT",
             noNullAndTrimed((String)bestellungBean.getProperty("fk_produkt.fk_format.format")));
