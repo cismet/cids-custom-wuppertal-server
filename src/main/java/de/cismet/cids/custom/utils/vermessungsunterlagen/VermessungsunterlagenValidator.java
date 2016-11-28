@@ -13,17 +13,13 @@
 package de.cismet.cids.custom.utils.vermessungsunterlagen;
 
 import Sirius.server.middleware.types.LightweightMetaObject;
-import Sirius.server.middleware.types.MetaObjectNode;
 
 import java.util.ArrayList;
 import java.util.Collection;
 
 import de.cismet.cids.custom.wunda_blau.search.server.AlbFlurstueckKickerLightweightSearch;
-import de.cismet.cids.custom.wunda_blau.search.server.CidsAlkisSearchStatement;
 
 import de.cismet.cids.dynamics.CidsBean;
-
-import de.cismet.cids.server.search.CidsServerSearch;
 
 /**
  * DOCUMENT ME!
@@ -116,7 +112,8 @@ public class VermessungsunterlagenValidator {
             throw getExceptionByErrorCode(Error.NO_GESCHAEFTSBUCHNUMMER);
         }
 
-        ignoreError = anfrageBean.getAktenzeichenKatasteramt().startsWith("[i_e]");
+        ignoreError = (anfrageBean.getAktenzeichenKatasteramt() != null)
+                    && anfrageBean.getAktenzeichenKatasteramt().startsWith("[i_e]");
 
         // Validierung der Punktnummernreservierung
         if ((anfrageBean.getPunktnummernreservierungsArray() != null)
@@ -217,7 +214,7 @@ public class VermessungsunterlagenValidator {
      *
      * @return  Error message plain text
      */
-    private VermessungsunterlagenException getExceptionByErrorCode(final Error code) {
+    private static VermessungsunterlagenException getExceptionByErrorCode(final Error code) {
         final String message;
         switch (code) {
             // Unbekannter ÖBVI

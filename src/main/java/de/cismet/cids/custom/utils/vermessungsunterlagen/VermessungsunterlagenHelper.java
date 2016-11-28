@@ -465,7 +465,13 @@ public class VermessungsunterlagenHelper {
         jobCidsBean.setProperty("katasteramtsid", anfrageBean.getKatasteramtsId());
         jobCidsBean.setProperty("vermessungsstelle", anfrageBean.getZulassungsnummerVermessungsstelle());
         jobCidsBean.setProperty("nur_punktnummernreservierung", anfrageBean.getNurPunktnummernreservierung());
-        jobCidsBean.setProperty("saumap", Integer.parseInt(anfrageBean.getSaumAPSuche()));
+        try {
+            jobCidsBean.setProperty("saumap", Integer.parseInt(anfrageBean.getSaumAPSuche()));
+        } catch (final Exception ex) {
+            // validation will fail. Need to be catched so that the object can be persisted.
+            // The validation exception will be stored in the exception_json field later on.
+            // That's why the exception can be ignored here.
+        }
         for (final String art : anfrageBean.getArtderVermessung()) {
             final CidsBean pnr = CidsBean.createNewCidsBeanFromTableName(
                     "WUNDA_BLAU",
