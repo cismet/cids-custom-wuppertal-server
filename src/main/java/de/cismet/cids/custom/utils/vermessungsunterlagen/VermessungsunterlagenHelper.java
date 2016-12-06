@@ -351,6 +351,19 @@ public class VermessungsunterlagenHelper {
     /**
      * DOCUMENT ME!
      *
+     * @param   mon  DOCUMENT ME!
+     *
+     * @return  DOCUMENT ME!
+     *
+     * @throws  Exception  DOCUMENT ME!
+     */
+    public CidsBean loadCidsBean(final MetaObjectNode mon) throws Exception {
+        return getMetaService().getMetaObject(getUser(), mon.getObjectId(), mon.getClassId()).getBean();
+    }
+
+    /**
+     * DOCUMENT ME!
+     *
      * @return  DOCUMENT ME!
      *
      * @throws  Exception  DOCUMENT ME!

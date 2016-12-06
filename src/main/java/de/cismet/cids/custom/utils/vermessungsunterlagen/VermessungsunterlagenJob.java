@@ -292,7 +292,7 @@ public class VermessungsunterlagenJob implements Runnable {
     private Geometry createGeometryFrom(final Collection<CidsBean> cidsBeans) throws Exception {
         final Collection<Polygon> polygons = new ArrayList<Polygon>(cidsBeans.size());
         for (final CidsBean cidsBean : cidsBeans) {
-            final Polygon polygon = (Polygon)cidsBean.getProperty("umschreibendes_rechteck.geo_field");
+            final Polygon polygon = (Polygon)cidsBean.getProperty("geometrie.geo_field");
             polygons.add(polygon);
         }
         final GeometryFactory geometryFactory = new GeometryFactory();

@@ -13,13 +13,22 @@
 package de.cismet.cids.custom.utils.vermessungsunterlagen;
 
 import Sirius.server.middleware.types.LightweightMetaObject;
+import Sirius.server.middleware.types.MetaObjectNode;
+import Sirius.server.middleware.types.Node;
+
+import com.vividsolutions.jts.geom.Geometry;
 
 import java.util.ArrayList;
 import java.util.Collection;
 
+import de.cismet.cids.custom.utils.alkis.ServerAlkisConf;
+import de.cismet.cids.custom.utils.alkis.ServerAlkisProducts;
 import de.cismet.cids.custom.wunda_blau.search.server.AlbFlurstueckKickerLightweightSearch;
+import de.cismet.cids.custom.wunda_blau.search.server.CidsAlkisSearchStatement;
 
 import de.cismet.cids.dynamics.CidsBean;
+
+import de.cismet.cids.server.search.CidsServerSearch;
 
 /**
  * DOCUMENT ME!
@@ -341,36 +350,86 @@ public class VermessungsunterlagenValidator {
         }
 
         final String[] parts = VermessungsunterlagenUtils.createFlurstueckParts(gemarkung, flur, zaehler, nenner);
+        try {
+            final CidsBean fsCidsBean = searchFlurstueck(parts[0], parts[1], parts[2], parts[3]);
+            if (fsCidsBean != null) {
+                if (fsCidsBean.getProperty("historisch") == null) {
+                    final CidsAlkisSearchStatement alkisSearch = new CidsAlkisSearchStatement(
+                            CidsAlkisSearchStatement.Resulttyp.FLURSTUECK,
+                            CidsAlkisSearchStatement.SucheUeber.FLURSTUECKSNUMMER,
+                            (String)fsCidsBean.getProperty("alkis_id"),
+                            null);
+
+                    final Collection<MetaObjectNode> mons = helper.performSearch(alkisSearch);
+                    for (final MetaObjectNode mon : mons) {
+                        final CidsBean alkisBean = helper.loadCidsBean(mon);
+                        flurstuecke.add(alkisBean);
+                    }
+                } else {
+                    final Geometry geom = (Geometry)fsCidsBean.getProperty("umschreibendes_rechteck.geo_field");
+                    final Geometry bufferGeom = geom.buffer(-0.25);
+                    bufferGeom.setSRID(geom.getSRID());
+                    final CidsAlkisSearchStatement alkisSearch = new CidsAlkisSearchStatement(
+                            CidsAlkisSearchStatement.Resulttyp.FLURSTUECK,
+                            CidsAlkisSearchStatement.SucheUeber.FLURSTUECKSNUMMER,
+                            "05"
+                                    + fsCidsBean.getProperty("gemarkungs_nr.gemarkungsnummer")
+                                    + "-%",
+                            bufferGeom);
+
+                    final Collection<MetaObjectNode> mons = helper.performSearch(alkisSearch);
+                    for (final MetaObjectNode mon : mons) {
+                        final CidsBean alkisBean = helper.loadCidsBean(mon);
+                        flurstuecke.add(alkisBean);
+                    }
+                }
+                return true;
+            } else {
+                return false;
+            }
+        } catch (final Exception ex) {
+            final String name = parts[0]
+                        + "-"
+                        + parts[1]
+                        + "-"
+                        + parts[2]
+                        + "/"
+                        + parts[3];
+
+            throw new VermessungsunterlagenException("Fehler beim laden des Flurstuecks: " + name, ex);
+        }
+    }
+
+    /**
+     * DOCUMENT ME!
+     *
+     * @param   gemarkung  DOCUMENT ME!
+     * @param   flur       DOCUMENT ME!
+     * @param   zaehler    DOCUMENT ME!
+     * @param   nenner     DOCUMENT ME!
+     *
+     * @return  DOCUMENT ME!
+     *
+     * @throws  Exception  DOCUMENT ME!
+     */
+    private CidsBean searchFlurstueck(final String gemarkung,
+            final String flur,
+            final String zaehler,
+            final String nenner) throws Exception {
         final AlbFlurstueckKickerLightweightSearch search = new AlbFlurstueckKickerLightweightSearch();
         search.setSearchFor(AlbFlurstueckKickerLightweightSearch.SearchFor.FLURSTUECK);
-        search.setGemarkungsnummer(parts[0]);
-        search.setFlur(parts[1]);
-        search.setZaehler(parts[2]);
-        search.setNenner(parts[3]);
+        search.setGemarkungsnummer(gemarkung);
+        search.setFlur(flur);
+        search.setZaehler(zaehler);
+        search.setNenner(nenner);
         search.setRepresentationFields(new String[] { "id", "gemarkung", "flur", "zaehler", "nenner" });
-
-        final String name = parts[0]
-                    + "-"
-                    + parts[1]
-                    + "-"
-                    + parts[2]
-                    + "/"
-                    + parts[3];
-
-        try {
-            final Collection<LightweightMetaObject> result = helper.performSearch(search);
-            final boolean found = (result != null)
-                        && !result.isEmpty();
-            if (found) {
-                final CidsBean cidsBean = helper.loadCidsBean(result.iterator().next());
-                final CidsBean fsCidsBean = (CidsBean)cidsBean.getProperty("fs_referenz");
-                if (fsCidsBean != null) {
-                    flurstuecke.add(fsCidsBean);
-                }
-            }
-            return found;
-        } catch (final Exception ex) {
-            throw new VermessungsunterlagenException("Fehler beim laden des Flurstuecks: " + name, ex);
+        final Collection<LightweightMetaObject> result = helper.performSearch(search);
+        if ((result != null) && !result.isEmpty()) {
+            final CidsBean cidsBean = helper.loadCidsBean(result.iterator().next());
+            final CidsBean fsCidsBean = (CidsBean)cidsBean.getProperty("fs_referenz");
+            return fsCidsBean;
+        } else {
+            return null;
         }
     }
 }
