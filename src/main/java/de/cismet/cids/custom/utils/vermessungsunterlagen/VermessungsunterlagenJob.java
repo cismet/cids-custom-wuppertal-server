@@ -320,13 +320,12 @@ public class VermessungsunterlagenJob implements Runnable {
 
                     helper.updateJobCidsBeanFlurstueckGeom(this, geometryFlurstuecke);
 
-                    if (anfrageBean.getNurPunktnummernreservierung()) {
-                        submitTask(new VermUntTaskPNR(
-                                getKey(),
-                                "PortalTest_"
-                                        + anfrageBean.getGeschaeftsbuchnummer(),
-                                anfrageBean.getPunktnummernreservierungsArray()));
-                    } else {
+                    submitTask(new VermUntTaskPNR(
+                            getKey(),
+                            "PortalTest_"
+                                    + anfrageBean.getGeschaeftsbuchnummer(),
+                            anfrageBean.getPunktnummernreservierungsArray()));
+                    if (!anfrageBean.getNurPunktnummernreservierung()) {
                         if (isTaskAllowed(VermUntTaskAPMap.TYPE) || isTaskAllowed(VermUntTaskAPList.TYPE)
                                     || isTaskAllowed(VermUntTaskAPUebersicht.TYPE)) {
                             final Collection<CidsBean> aPs = searchAPs(vermessungsGeometrieSaum);

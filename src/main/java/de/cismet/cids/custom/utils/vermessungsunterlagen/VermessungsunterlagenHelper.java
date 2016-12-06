@@ -647,11 +647,12 @@ public class VermessungsunterlagenHelper {
                     antragsflurstueckList.add(antragsflurstueckBean);
                 }
             } else {
+                final JsonNode objNode = antragsflurstuecksArrayNode;
                 final VermessungsunterlagenAnfrageBean.AntragsflurstueckBean antragsflurstueckBean =
                     new VermessungsunterlagenAnfrageBean.AntragsflurstueckBean();
-                antragsflurstueckBean.setFlurID(getString("flurID", antragsflurstuecksArrayNode));
-                antragsflurstueckBean.setFlurstuecksID(getString("flurstuecksID", antragsflurstuecksArrayNode));
-                antragsflurstueckBean.setGemarkungsID(getString("gemarkungsID", antragsflurstuecksArrayNode));
+                antragsflurstueckBean.setFlurID(getString("flurID", objNode));
+                antragsflurstueckBean.setFlurstuecksID(getString("flurstuecksID", objNode));
+                antragsflurstueckBean.setGemarkungsID(getString("gemarkungsID", objNode));
                 antragsflurstueckList.add(antragsflurstueckBean);
             }
         }
@@ -666,7 +667,8 @@ public class VermessungsunterlagenHelper {
                     artderVermessungList.add(getString("artderVermessung", objNode));
                 }
             } else {
-                artderVermessungList.add(getString("artderVermessung", artderVermessungNode));
+                final JsonNode objNode = artderVermessungNode;
+                artderVermessungList.add(getString("artderVermessung", objNode));
             }
         }
         anfrageBean.setArtderVermessung(artderVermessungList.toArray(new String[0]));
@@ -683,8 +685,18 @@ public class VermessungsunterlagenHelper {
             new ArrayList<VermessungsunterlagenAnfrageBean.PunktnummernreservierungBean>();
         final JsonNode punktnummernreservierungsArrayNode = in0.get("punktnummernreservierungsArray")
                     .get("punktnummernreservierungsArray");
-        if ((punktnummernreservierungsArrayNode != null) && punktnummernreservierungsArrayNode.isArray()) {
-            for (final JsonNode objNode : punktnummernreservierungsArrayNode) {
+        if ((punktnummernreservierungsArrayNode != null)) {
+            if (punktnummernreservierungsArrayNode.isArray()) {
+                for (final JsonNode objNode : punktnummernreservierungsArrayNode) {
+                    final VermessungsunterlagenAnfrageBean.PunktnummernreservierungBean punktnummernreservierungBean =
+                        new VermessungsunterlagenAnfrageBean.PunktnummernreservierungBean();
+                    punktnummernreservierungBean.setAnzahlPunktnummern(getInteger("anzahlPunktnummern", objNode));
+                    punktnummernreservierungBean.setKatasteramtsID(getString("katasteramtsID", objNode));
+                    punktnummernreservierungBean.setUtmKilometerQuadrat(getString("utmKilometerQuadrat", objNode));
+                    punktnummernreservierungList.add(punktnummernreservierungBean);
+                }
+            } else {
+                final JsonNode objNode = punktnummernreservierungsArrayNode;
                 final VermessungsunterlagenAnfrageBean.PunktnummernreservierungBean punktnummernreservierungBean =
                     new VermessungsunterlagenAnfrageBean.PunktnummernreservierungBean();
                 punktnummernreservierungBean.setAnzahlPunktnummern(getInteger("anzahlPunktnummern", objNode));

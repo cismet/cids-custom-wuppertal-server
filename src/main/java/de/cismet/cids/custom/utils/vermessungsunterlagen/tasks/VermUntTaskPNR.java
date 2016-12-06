@@ -66,10 +66,11 @@ public class VermUntTaskPNR extends VermessungsunterlagenTask {
     @Override
     protected void performTask() throws Exception {
         if (punktnummernreservierungBeans != null) {
+            boolean first = true;
             for (final VermessungsunterlagenAnfrageBean.PunktnummernreservierungBean bean
                         : punktnummernreservierungBeans) {
                 try {
-                    final String protokoll = doReservations(bean).getProtokoll();
+                    final String protokoll = doReservation(bean, !first).getProtokoll();
 
                     final String filename = getPath() + "/" + auftragsnummer + "_"
                                 + bean.getUtmKilometerQuadrat() + ".txt";
@@ -82,6 +83,7 @@ public class VermUntTaskPNR extends VermessungsunterlagenTask {
                                 + bean.getUtmKilometerQuadrat()
                                 + ".json");
                 }
+                first = false;
             }
         }
     }
@@ -94,16 +96,16 @@ public class VermUntTaskPNR extends VermessungsunterlagenTask {
     /**
      * DOCUMENT ME!
      *
-     * @param   bean  DOCUMENT ME!
+     * @param   bean         DOCUMENT ME!
+     * @param   verlaengern  DOCUMENT ME!
      *
      * @return  DOCUMENT ME!
      *
      * @throws  Exception  DOCUMENT ME!
      */
-    protected PointNumberReservationRequest doReservations(
-            final VermessungsunterlagenAnfrageBean.PunktnummernreservierungBean bean) throws Exception {
-        final boolean verlaengern = false; // TODO ?
-
+    protected PointNumberReservationRequest doReservation(
+            final VermessungsunterlagenAnfrageBean.PunktnummernreservierungBean bean,
+            final boolean verlaengern) throws Exception {
         final ServerActionParameter sapAction;
         if (verlaengern) {
             sapAction = new ServerActionParameter(
