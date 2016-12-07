@@ -64,6 +64,7 @@ public class PointNumberReservationService {
     private static final String FIRST_NUMBER = "FIRST_NUMBER";
     private static final String LAST_NUMBER = "LAST_NUMBER";
     private static final String VERMESSUNG_STELLE = "VERMESSUNG_STELLE";
+    private static final String PROFIL_KENNUNG = "WUNDA_RES";
 
     private static PointNumberReservationService instance;
 
@@ -472,6 +473,7 @@ public class PointNumberReservationService {
      * @param   nummerierungsbezirk  DOCUMENT ME!
      * @param   firstPointNumber     DOCUMENT ME!
      * @param   lastPointNumber      DOCUMENT ME!
+     * @param   profilkennung        DOCUMENT ME!
      *
      * @return  DOCUMENT ME!
      */
@@ -479,7 +481,8 @@ public class PointNumberReservationService {
             final String anr,
             final String nummerierungsbezirk,
             final int firstPointNumber,
-            final int lastPointNumber) {
+            final int lastPointNumber,
+            final String profilkennung) {
         if (initError) {
             LOG.info("PointNumberReservationService initialisation error");
             return null;
@@ -493,6 +496,7 @@ public class PointNumberReservationService {
         request = request.replaceAll(AUFTRAGS_NUMMER, anr);
         request = request.replaceAll(NUMMERIERUNGS_BEZIRK, nummerierungsbezirk);
         request = request.replaceAll(VERMESSUNG_STELLE, prefix);
+        request = request.replaceAll(PROFIL_KENNUNG, profilkennung);
         final DecimalFormat dcf = new DecimalFormat("000000");
 
         request = request.replaceAll(FIRST_NUMBER, dcf.format(firstPointNumber));
@@ -510,17 +514,19 @@ public class PointNumberReservationService {
     /**
      * DOCUMENT ME!
      *
-     * @param   prefix  DOCUMENT ME!
-     * @param   anr     DOCUMENT ME!
-     * @param   points  DOCUMENT ME!
-     * @param   date    DOCUMENT ME!
+     * @param   prefix         DOCUMENT ME!
+     * @param   anr            DOCUMENT ME!
+     * @param   points         DOCUMENT ME!
+     * @param   date           DOCUMENT ME!
+     * @param   profilKennung  DOCUMENT ME!
      *
      * @return  DOCUMENT ME!
      */
     public PointNumberReservationRequest prolongReservation(final String prefix,
             final String anr,
             final Collection<Integer> points,
-            final Date date) {
+            final Date date,
+            final String profilKennung) {
         if (initError) {
             LOG.info("PointNumberReservationService initialisation error");
             return null;
@@ -547,6 +553,7 @@ public class PointNumberReservationService {
 
             String request = TEMPLATE_PROLONG;
             request = request.replaceAll(AUFTRAGS_NUMMER, anr);
+            request = request.replaceAll(PROFIL_KENNUNG, profilKennung);
 
             final String requestSub = TEMPLATE_PROLONG_SUB;
             final StringBuffer subs = new StringBuffer();
@@ -595,6 +602,7 @@ public class PointNumberReservationService {
      * @param   nummerierungsbezirk  DOCUMENT ME!
      * @param   anzahl               DOCUMENT ME!
      * @param   startValue           DOCUMENT ME!
+     * @param   profilKennung        DOCUMENT ME!
      *
      * @return  DOCUMENT ME!
      */
@@ -602,7 +610,8 @@ public class PointNumberReservationService {
             final String requestId,
             final String nummerierungsbezirk,
             final int anzahl,
-            final int startValue) {
+            final int startValue,
+            final String profilKennung) {
         if (initError) {
             LOG.info("PointNumberReservationService initialisation error");
             return null;
@@ -623,6 +632,7 @@ public class PointNumberReservationService {
         request = request.replaceAll(STARTWERT, Integer.toString(startValue));
         request = request.replaceAll(ABLAUF_RESERVIERUNG, getAblaufDatum());
         request = request.replaceAll(VERMESSUNG_STELLE, prefix);
+        request = request.replaceAll(PROFIL_KENNUNG, profilKennung);
 
         final InputStream preparedQuery = new ByteArrayInputStream(request.getBytes());
 

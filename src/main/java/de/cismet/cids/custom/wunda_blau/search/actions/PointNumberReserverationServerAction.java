@@ -7,6 +7,17 @@
 ****************************************************/
 package de.cismet.cids.custom.wunda_blau.search.actions;
 
+import Sirius.server.middleware.impls.domainserver.DomainServerImpl;
+import Sirius.server.middleware.interfaces.domainserver.MetaService;
+import Sirius.server.middleware.interfaces.domainserver.MetaServiceStore;
+import Sirius.server.newuser.User;
+
+import com.sun.jmx.remote.security.JMXSubjectDomainCombiner;
+
+import org.openide.util.Exceptions;
+
+import java.rmi.RemoteException;
+
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.Date;
@@ -19,6 +30,7 @@ import de.cismet.cids.custom.utils.pointnumberreservation.PointNumberReservation
 
 import de.cismet.cids.server.actions.ServerAction;
 import de.cismet.cids.server.actions.ServerActionParameter;
+import de.cismet.cids.server.actions.UserAwareServerAction;
 
 /**
  * DOCUMENT ME!
@@ -27,7 +39,7 @@ import de.cismet.cids.server.actions.ServerActionParameter;
  * @version  $Revision$, $Date$
  */
 @org.openide.util.lookup.ServiceProvider(service = ServerAction.class)
-public class PointNumberReserverationServerAction implements ServerAction {
+public class PointNumberReserverationServerAction implements UserAwareServerAction, MetaServiceStore {
 
     //~ Static fields/initializers ---------------------------------------------
 
@@ -59,6 +71,11 @@ public class PointNumberReserverationServerAction implements ServerAction {
 
         ACTION, PREFIX, AUFTRAG_NUMMER, NBZ, ANZAHL, STARTWERT, ON1, ON2, POINT_NUMBER, PROLONG_DATE
     }
+
+    //~ Instance fields --------------------------------------------------------
+
+    private MetaService metaService;
+    private User user;
 
     //~ Methods ----------------------------------------------------------------
 
@@ -136,7 +153,8 @@ public class PointNumberReserverationServerAction implements ServerAction {
             return null;
         }
 
-        return PointNumberReservationService.instance().doReservation(aPrefix, anr, nbz, anzahl, startwert);
+        return PointNumberReservationService.instance()
+                    .doReservation(aPrefix, anr, nbz, anzahl, startwert, getProfilKennung());
     }
 
     /**
@@ -176,9 +194,29 @@ public class PointNumberReserverationServerAction implements ServerAction {
         if (!isAuftragsNummerValid(anr)) {
             return null;
         }
-        return PointNumberReservationService.instance().releaseReservation(aPrefix, anr, nbz, on1, on2);
+
+        return PointNumberReservationService.instance()
+                    .releaseReservation(aPrefix, anr, nbz, on1, on2, getProfilKennung());
     }
 
+    /**
+     * DOCUMENT ME!
+     *
+     * @return  DOCUMENT ME!
+     */
+    private String getProfilKennung() {
+        String profilKennung = "WUNDA_RES";
+        try {
+            final String conf = ((DomainServerImpl)getMetaService()).getConfigAttr(
+                    getUser(),
+                    "custom.punktnummernreservierung.profilkennung");
+            if (conf != null) {
+                profilKennung = conf;
+            }
+        } catch (RemoteException ex) {
+        }
+        return profilKennung;
+    }
     /**
      * DOCUMENT ME!
      *
@@ -197,7 +235,7 @@ public class PointNumberReserverationServerAction implements ServerAction {
         if (!isAuftragsNummerValid(anr)) {
             return null;
         }
-        return PointNumberReservationService.instance().prolongReservation(aPrefix, anr, ps, date);
+        return PointNumberReservationService.instance().prolongReservation(aPrefix, anr, ps, date, getProfilKennung());
     }
 
     /**
@@ -296,5 +334,25 @@ public class PointNumberReserverationServerAction implements ServerAction {
     @Override
     public String getTaskName() {
         return "pointNumberReservation";
+    }
+
+    @Override
+    public User getUser() {
+        return user;
+    }
+
+    @Override
+    public void setUser(final User user) {
+        this.user = user;
+    }
+
+    @Override
+    public void setMetaService(final MetaService metaSevice) {
+        this.metaService = metaSevice;
+    }
+
+    @Override
+    public MetaService getMetaService() {
+        return metaService;
     }
 }

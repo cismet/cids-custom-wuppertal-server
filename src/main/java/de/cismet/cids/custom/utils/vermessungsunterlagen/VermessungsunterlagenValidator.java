@@ -18,17 +18,22 @@ import Sirius.server.middleware.types.Node;
 
 import com.vividsolutions.jts.geom.Geometry;
 
+import org.openide.util.Exceptions;
+
 import java.util.ArrayList;
 import java.util.Collection;
 
 import de.cismet.cids.custom.utils.alkis.ServerAlkisConf;
 import de.cismet.cids.custom.utils.alkis.ServerAlkisProducts;
+import de.cismet.cids.custom.utils.pointnumberreservation.VermessungsStellenSearchResult;
 import de.cismet.cids.custom.wunda_blau.search.server.AlbFlurstueckKickerLightweightSearch;
 import de.cismet.cids.custom.wunda_blau.search.server.CidsAlkisSearchStatement;
+import de.cismet.cids.custom.wunda_blau.search.server.KundeByVermessungsStellenNummerSearch;
 
 import de.cismet.cids.dynamics.CidsBean;
 
 import de.cismet.cids.server.search.CidsServerSearch;
+import de.cismet.cids.server.search.SearchException;
 
 /**
  * DOCUMENT ME!
@@ -110,7 +115,7 @@ public class VermessungsunterlagenValidator {
     public boolean validateAndGetErrorMessage(final VermessungsunterlagenAnfrageBean anfrageBean)
             throws VermessungsunterlagenException {
         // Prüfung ob Benutzername des ÖBVIs in Wuppertal bekannt (registriert) ist
-        if (!isUserNameVermPortalKnown(anfrageBean.getNameVermessungsstelle())) {
+        if (!isVermessungsstelleKnown(anfrageBean.getZulassungsnummerVermessungsstelle())) {
             throw getExceptionByErrorCode(Error.UNKOWN_USER);
         }
 
@@ -304,13 +309,25 @@ public class VermessungsunterlagenValidator {
     /**
      * DOCUMENT ME!
      *
-     * @param   usernameVermPortal  DOCUMENT ME!
+     * @param   vermessungsstelle  usernameVermPortal DOCUMENT ME!
      *
      * @return  DOCUMENT ME!
+     *
+     * @throws  VermessungsunterlagenException  DOCUMENT ME!
      */
-    private boolean isUserNameVermPortalKnown(final String usernameVermPortal) {
-        // TODO
-        return true;
+    private boolean isVermessungsstelleKnown(final String vermessungsstelle) throws VermessungsunterlagenException {
+        if ("053290".equals(vermessungsstelle)) {
+            return true;
+        } else {
+            try {
+                final CidsServerSearch search = new KundeByVermessungsStellenNummerSearch(vermessungsstelle);
+                helper.performSearch(search);
+                final Collection res = search.performServerSearch();
+                return ((res != null) && !res.isEmpty());
+            } catch (final SearchException ex) {
+                return false;
+            }
+        }
     }
 
     /**
@@ -375,7 +392,7 @@ public class VermessungsunterlagenValidator {
                             "05"
                                     + fsCidsBean.getProperty("gemarkungs_nr.gemarkungsnummer")
                                     + "-%",
-                            bufferGeom);
+                            bufferGeom.isValid() ? bufferGeom : geom);
 
                     final Collection<MetaObjectNode> mons = helper.performSearch(alkisSearch);
                     for (final MetaObjectNode mon : mons) {

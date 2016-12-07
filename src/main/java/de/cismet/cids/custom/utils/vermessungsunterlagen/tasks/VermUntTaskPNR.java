@@ -83,6 +83,7 @@ public class VermUntTaskPNR extends VermessungsunterlagenTask {
                                         + bean.getUtmKilometerQuadrat() + ".txt";
                             FileUtils.writeStringToFile(new File(filename), protokoll);
                         }
+                        first = false;
                     } catch (final Exception exception) {
                         VermessungsunterlagenHelper.writeExceptionJson(
                             exception,
@@ -92,7 +93,6 @@ public class VermUntTaskPNR extends VermessungsunterlagenTask {
                                     + ".json");
                     }
                 }
-                first = false;
             }
         }
     }
@@ -142,6 +142,9 @@ public class VermUntTaskPNR extends VermessungsunterlagenTask {
                 0);
 
         final PointNumberReserverationServerAction action = new PointNumberReserverationServerAction();
+
+        action.setUser(VermessungsunterlagenHelper.getInstance().getUser());
+        action.setMetaService(VermessungsunterlagenHelper.getInstance().getMetaService());
         final PointNumberReservationRequest request = (PointNumberReservationRequest)action.execute(
                 null,
                 sapAction,
