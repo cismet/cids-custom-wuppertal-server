@@ -69,19 +69,24 @@ public class VermUntTaskPNR extends VermessungsunterlagenTask {
             boolean first = true;
             for (final VermessungsunterlagenAnfrageBean.PunktnummernreservierungBean bean
                         : punktnummernreservierungBeans) {
-                try {
-                    final String protokoll = doReservation(bean, !first).getProtokoll();
+                if (bean.getAnzahlPunktnummern() > 0) {
+                    try {
+                        final PointNumberReservationRequest request = doReservation(bean, !first);
+                        if (request != null) {
+                            final String protokoll = request.getProtokoll();
 
-                    final String filename = getPath() + "/" + auftragsnummer + "_"
-                                + bean.getUtmKilometerQuadrat() + ".txt";
-                    FileUtils.writeStringToFile(new File(filename), protokoll);
-                } catch (final Exception exception) {
-                    VermessungsunterlagenHelper.writeExceptionJson(
-                        exception,
-                        getPath()
-                                + "/fehlerprotokoll_"
-                                + bean.getUtmKilometerQuadrat()
-                                + ".json");
+                            final String filename = getPath() + "/" + auftragsnummer + "_"
+                                        + bean.getUtmKilometerQuadrat() + ".txt";
+                            FileUtils.writeStringToFile(new File(filename), protokoll);
+                        }
+                    } catch (final Exception exception) {
+                        VermessungsunterlagenHelper.writeExceptionJson(
+                            exception,
+                            getPath()
+                                    + "/fehlerprotokoll_"
+                                    + bean.getUtmKilometerQuadrat()
+                                    + ".json");
+                    }
                 }
                 first = false;
             }
