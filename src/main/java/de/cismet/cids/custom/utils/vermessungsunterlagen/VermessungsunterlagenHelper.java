@@ -218,6 +218,17 @@ public class VermessungsunterlagenHelper {
     /**
      * DOCUMENT ME!
      *
+     * @param   tmpNode  DOCUMENT ME!
+     *
+     * @return  DOCUMENT ME!
+     */
+    private static String getString(final JsonNode tmpNode) {
+        return ((tmpNode != null) && (tmpNode.get("$value") != null)) ? tmpNode.get("$value").asText() : null;
+    }
+
+    /**
+     * DOCUMENT ME!
+     *
      * @param   attribute   DOCUMENT ME!
      * @param   parentNode  DOCUMENT ME!
      *
@@ -673,15 +684,15 @@ public class VermessungsunterlagenHelper {
                 new VermessungsunterlagenAnfrageBean.AntragsflurstueckBean[0]));
 
         final Collection<String> artderVermessungList = new ArrayList<String>();
-        final JsonNode artderVermessungNode = in0.get("artderVermessung");
+        final JsonNode artderVermessungNode = in0.get("artderVermessung").get("artderVermessung");
         if ((artderVermessungNode != null)) {
             if (artderVermessungNode.isArray()) {
                 for (final JsonNode objNode : artderVermessungNode) {
-                    artderVermessungList.add(getString("artderVermessung", objNode));
+                    artderVermessungList.add(getString(objNode));
                 }
             } else {
                 final JsonNode objNode = artderVermessungNode;
-                artderVermessungList.add(getString("artderVermessung", objNode));
+                artderVermessungList.add(getString(objNode));
             }
         }
         anfrageBean.setArtderVermessung(artderVermessungList.toArray(new String[0]));
