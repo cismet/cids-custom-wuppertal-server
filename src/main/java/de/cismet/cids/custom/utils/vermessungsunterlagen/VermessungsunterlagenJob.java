@@ -322,8 +322,8 @@ public class VermessungsunterlagenJob implements Runnable {
 
                     submitTask(new VermUntTaskPNR(
                             getKey(),
-                            "PortalTest_"
-                                    + anfrageBean.getGeschaeftsbuchnummer(),
+                            anfrageBean.getZulassungsnummerVermessungsstelle(),
+                            anfrageBean.getGeschaeftsbuchnummer(),
                             anfrageBean.getPunktnummernreservierungsArray()));
                     if (!anfrageBean.getNurPunktnummernreservierung()) {
                         if (isTaskAllowed(VermUntTaskAPMap.TYPE) || isTaskAllowed(VermUntTaskAPList.TYPE)

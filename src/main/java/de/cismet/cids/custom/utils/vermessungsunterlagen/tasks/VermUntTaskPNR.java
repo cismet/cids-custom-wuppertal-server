@@ -39,6 +39,7 @@ public class VermUntTaskPNR extends VermessungsunterlagenTask {
     //~ Instance fields --------------------------------------------------------
 
     private final String auftragsnummer;
+    private final String vermessungsstelle;
     private final VermessungsunterlagenAnfrageBean.PunktnummernreservierungBean[] punktnummernreservierungBeans;
 
     //~ Constructors -----------------------------------------------------------
@@ -47,10 +48,12 @@ public class VermUntTaskPNR extends VermessungsunterlagenTask {
      * Creates a new VermUntTaskRisseBilder object.
      *
      * @param  jobKey                         DOCUMENT ME!
+     * @param  vermessungsstelle              DOCUMENT ME!
      * @param  auftragsnummer                 DOCUMENT ME!
      * @param  punktnummernreservierungBeans  DOCUMENT ME!
      */
     public VermUntTaskPNR(final String jobKey,
+            final String vermessungsstelle,
             final String auftragsnummer,
             final VermessungsunterlagenAnfrageBean.PunktnummernreservierungBean[] punktnummernreservierungBeans) {
         super(
@@ -58,6 +61,7 @@ public class VermUntTaskPNR extends VermessungsunterlagenTask {
             jobKey);
 
         this.auftragsnummer = auftragsnummer;
+        this.vermessungsstelle = vermessungsstelle;
         this.punktnummernreservierungBeans = punktnummernreservierungBeans;
     }
 
@@ -123,7 +127,7 @@ public class VermUntTaskPNR extends VermessungsunterlagenTask {
         }
         final ServerActionParameter sapZulNmr = new ServerActionParameter(
                 PointNumberReserverationServerAction.PARAMETER_TYPE.PREFIX.toString(),
-                bean.getKatasteramtsID().substring(2));
+                vermessungsstelle.substring(2));
         final ServerActionParameter sapAuftragsnummer = new ServerActionParameter(
                 PointNumberReserverationServerAction.PARAMETER_TYPE.AUFTRAG_NUMMER.toString(),
                 auftragsnummer);
