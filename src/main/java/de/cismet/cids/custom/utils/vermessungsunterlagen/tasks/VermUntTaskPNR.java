@@ -16,8 +16,15 @@ import org.apache.commons.io.FileUtils;
 
 import java.io.File;
 
+import java.text.ParseException;
+import java.text.SimpleDateFormat;
+
+import java.util.GregorianCalendar;
+
+import de.cismet.cids.custom.utils.pointnumberreservation.PointNumberReservation;
 import de.cismet.cids.custom.utils.pointnumberreservation.PointNumberReservationRequest;
 import de.cismet.cids.custom.utils.vermessungsunterlagen.VermessungsunterlagenAnfrageBean;
+import de.cismet.cids.custom.utils.vermessungsunterlagen.VermessungsunterlagenException;
 import de.cismet.cids.custom.utils.vermessungsunterlagen.VermessungsunterlagenHelper;
 import de.cismet.cids.custom.utils.vermessungsunterlagen.VermessungsunterlagenTask;
 import de.cismet.cids.custom.wunda_blau.search.actions.PointNumberReserverationServerAction;
@@ -75,9 +82,9 @@ public class VermUntTaskPNR extends VermessungsunterlagenTask {
                         : punktnummernreservierungBeans) {
                 if (bean.getAnzahlPunktnummern() > 0) {
                     try {
-                        final PointNumberReservationRequest request = doReservation(bean, !first);
-                        if (request != null) {
-                            final String protokoll = request.getProtokoll();
+                        final PointNumberReservationRequest result = doReservation(bean, !first);
+                        if (result != null) {
+                            final String protokoll = getProtokoll(result);
 
                             final String filename = getPath() + "/" + auftragsnummer + "_"
                                         + bean.getUtmKilometerQuadrat() + ".txt";
@@ -97,6 +104,95 @@ public class VermUntTaskPNR extends VermessungsunterlagenTask {
         }
     }
 
+    /**
+     * DOCUMENT ME!
+     *
+     * @param   content  DOCUMENT ME!
+     *
+     * @return  DOCUMENT ME!
+     *
+     * @throws  VermessungsunterlagenException  DOCUMENT ME!
+     */
+    private String getProtokoll(final PointNumberReservationRequest content) throws VermessungsunterlagenException {
+        boolean isFreigabeMode = false;
+        if ((content != null) && content.isSuccessfull() && (content.getPointNumbers() != null)) {
+            for (final PointNumberReservation pnr : content.getPointNumbers()) {
+                if ((pnr.getAblaufDatum() == null) || pnr.getAblaufDatum().isEmpty()) {
+                    isFreigabeMode = true;
+                    break;
+                }
+            }
+        }
+
+        final StringBuffer contentBuilder = new StringBuffer();
+        if ((content == null) || content.isSuccessfull()) {
+            if (!isPointNumberBeanValid(content)) {
+                throw new VermessungsunterlagenException("Ungültige Antwort des Punktnummernreservierungsdienstes.");
+            }
+            String header = "Antragsnummer: " + content.getAntragsnummer() + " erstellt am: ";
+            final GregorianCalendar cal = new GregorianCalendar();
+            header += new SimpleDateFormat("yyyy-MM-dd").format(cal.getTime());
+            header += " Anzahl ";
+            if (isFreigabeMode) {
+                header += "freigegebener";
+            } else {
+                header += "reservierter";
+            }
+
+            header += " Punktnummern: " + content.getPointNumbers().size();
+            contentBuilder.append(header);
+            contentBuilder.append(System.getProperty("line.separator"));
+            if (isFreigabeMode) {
+                contentBuilder.append("freigegebene Punktnummern");
+            } else {
+                contentBuilder.append("reservierte Punktnummern (gültig bis)");
+            }
+            contentBuilder.append(System.getProperty("line.separator"));
+            contentBuilder.append(System.getProperty("line.separator"));
+
+            for (final PointNumberReservation pnr : content.getPointNumbers()) {
+                contentBuilder.append(pnr.getPunktnummer());
+                if (!isFreigabeMode) {
+                    contentBuilder.append(" (");
+                    try {
+                        contentBuilder.append(
+                            new SimpleDateFormat("dd-MM-yyyy").format(
+                                new SimpleDateFormat("yyyy-MM-dd").parse(pnr.getAblaufDatum())));
+                    } catch (final ParseException ex) {
+                        LOG.info(
+                            "Could not parse the expiration date of a reservation. Using the string representation return by server");
+                        contentBuilder.append(pnr.getAblaufDatum());
+                    }
+                    contentBuilder.append(")");
+                }
+                contentBuilder.append(System.getProperty("line.separator"));
+            }
+
+            return contentBuilder.toString();
+        } else {
+            return content.getProtokoll();
+        }
+    }
+
+    /**
+     * DOCUMENT ME!
+     *
+     * @param   content  DOCUMENT ME!
+     *
+     * @return  DOCUMENT ME!
+     */
+    private boolean isPointNumberBeanValid(final PointNumberReservationRequest content) {
+        if (content == null) {
+            return false;
+        }
+        if ((content.getAntragsnummer() == null) || content.getAntragsnummer().isEmpty()) {
+            return false;
+        }
+        if ((content.getPointNumbers() == null) || content.getPointNumbers().isEmpty()) {
+            return false;
+        }
+        return true;
+    }
     @Override
     protected String getSubPath() {
         return "/PNR";
