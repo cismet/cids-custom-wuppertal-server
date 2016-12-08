@@ -12,20 +12,14 @@
  */
 package de.cismet.cids.custom.utils.vermessungsunterlagen;
 
+import Sirius.server.middleware.interfaces.domainserver.MetaService;
 import Sirius.server.middleware.types.LightweightMetaObject;
 import Sirius.server.middleware.types.MetaObjectNode;
-import Sirius.server.middleware.types.Node;
-
-import com.vividsolutions.jts.geom.Geometry;
-
-import org.openide.util.Exceptions;
 
 import java.util.ArrayList;
 import java.util.Collection;
+import java.util.List;
 
-import de.cismet.cids.custom.utils.alkis.ServerAlkisConf;
-import de.cismet.cids.custom.utils.alkis.ServerAlkisProducts;
-import de.cismet.cids.custom.utils.pointnumberreservation.VermessungsStellenSearchResult;
 import de.cismet.cids.custom.wunda_blau.search.server.AlbFlurstueckKickerLightweightSearch;
 import de.cismet.cids.custom.wunda_blau.search.server.CidsAlkisSearchStatement;
 import de.cismet.cids.custom.wunda_blau.search.server.KundeByVermessungsStellenNummerSearch;
@@ -65,7 +59,7 @@ public class VermessungsunterlagenValidator {
 
     //~ Instance fields --------------------------------------------------------
 
-    private Collection<CidsBean> flurstuecke = new ArrayList<CidsBean>();
+    private final Collection<CidsBean> flurstuecke = new ArrayList<CidsBean>();
 
     private final VermessungsunterlagenHelper helper;
 
@@ -345,12 +339,12 @@ public class VermessungsunterlagenValidator {
         if (flurstueckBean == null) {
             return false;
         }
-        final String gemarkung = flurstueckBean.getGemarkungsID();
-        final String flur = flurstueckBean.getFlurID();
-        final String zaehlernenner = flurstueckBean.getFlurstuecksID();
-        final String zaehler;
-        final String nenner;
+        final String alkisId;
+
         try {
+            final String zaehlernenner = flurstueckBean.getFlurstuecksID();
+            final String zaehler;
+            final String nenner;
             if (zaehlernenner.contains("/")) {
                 final String[] split = zaehlernenner.split("/");
                 if (split.length != 2) {
@@ -360,39 +354,25 @@ public class VermessungsunterlagenValidator {
                 nenner = split[1];
             } else {
                 zaehler = zaehlernenner;
-                nenner = null;
+                nenner = "0";
             }
+            alkisId = toAlkisId(
+                    flurstueckBean.getGemarkungsID(),
+                    Integer.valueOf(flurstueckBean.getFlurID()),
+                    Integer.valueOf(zaehler),
+                    Integer.valueOf(nenner));
         } catch (final Exception ex) {
             return false;
         }
-
-        final String[] parts = VermessungsunterlagenUtils.createFlurstueckParts(gemarkung, flur, zaehler, nenner);
         try {
-            final CidsBean fsCidsBean = searchFlurstueck(parts[0], parts[1], parts[2], parts[3]);
+            final CidsBean fsCidsBean = searchFlurstueck(alkisId);
             if (fsCidsBean != null) {
-                if (fsCidsBean.getProperty("historisch") == null) {
+                for (final CidsBean aktuell : getAktuelle(fsCidsBean)) {
                     final CidsAlkisSearchStatement alkisSearch = new CidsAlkisSearchStatement(
                             CidsAlkisSearchStatement.Resulttyp.FLURSTUECK,
                             CidsAlkisSearchStatement.SucheUeber.FLURSTUECKSNUMMER,
-                            (String)fsCidsBean.getProperty("alkis_id"),
+                            (String)aktuell.getProperty("alkis_id"),
                             null);
-
-                    final Collection<MetaObjectNode> mons = helper.performSearch(alkisSearch);
-                    for (final MetaObjectNode mon : mons) {
-                        final CidsBean alkisBean = helper.loadCidsBean(mon);
-                        flurstuecke.add(alkisBean);
-                    }
-                } else {
-                    final Geometry geom = (Geometry)fsCidsBean.getProperty("umschreibendes_rechteck.geo_field");
-                    final Geometry bufferGeom = geom.buffer(-0.25);
-                    bufferGeom.setSRID(geom.getSRID());
-                    final CidsAlkisSearchStatement alkisSearch = new CidsAlkisSearchStatement(
-                            CidsAlkisSearchStatement.Resulttyp.FLURSTUECK,
-                            CidsAlkisSearchStatement.SucheUeber.FLURSTUECKSNUMMER,
-                            "05"
-                                    + fsCidsBean.getProperty("gemarkungs_nr.gemarkungsnummer")
-                                    + "-%",
-                            bufferGeom.isValid() ? bufferGeom : geom);
 
                     final Collection<MetaObjectNode> mons = helper.performSearch(alkisSearch);
                     for (final MetaObjectNode mon : mons) {
@@ -405,16 +385,65 @@ public class VermessungsunterlagenValidator {
                 return false;
             }
         } catch (final Exception ex) {
-            final String name = parts[0]
-                        + "-"
-                        + parts[1]
-                        + "-"
-                        + parts[2]
-                        + "/"
-                        + parts[3];
-
-            throw new VermessungsunterlagenException("Fehler beim laden des Flurstuecks: " + name, ex);
+            throw new VermessungsunterlagenException("Fehler beim laden des Flurstuecks: " + alkisId, ex);
         }
+    }
+
+    /**
+     * DOCUMENT ME!
+     *
+     * @param   fsCidsBean  DOCUMENT ME!
+     *
+     * @return  DOCUMENT ME!
+     *
+     * @throws  Exception  DOCUMENT ME!
+     */
+    private Collection<CidsBean> getAktuelle(final CidsBean fsCidsBean) throws Exception {
+        final Collection<CidsBean> aktuelle = new ArrayList<CidsBean>();
+        if (fsCidsBean != null) {
+            if (fsCidsBean.getProperty("historisch") == null) {
+                aktuelle.add(fsCidsBean);
+            } else {
+                for (final CidsBean nachfolger : getNachfolger(fsCidsBean)) {
+                    aktuelle.addAll(getAktuelle(nachfolger));
+                }
+            }
+        }
+        return aktuelle;
+    }
+
+    /**
+     * DOCUMENT ME!
+     *
+     * @param   flurstueck  DOCUMENT ME!
+     *
+     * @return  DOCUMENT ME!
+     *
+     * @throws  Exception  DOCUMENT ME!
+     */
+    private Collection<CidsBean> getNachfolger(final CidsBean flurstueck) throws Exception {
+        final List<CidsBean> nachfolgerBeans = new ArrayList<CidsBean>();
+        final String query = "SELECT flurstueckskennzeichen_neu FROM lookup_alkis_ffn "
+                    + "WHERE ffn LIKE '"
+                    + (String)flurstueck.getProperty("fortfuehrungsnummer")
+                    + "' "
+                    + "AND flurstueckskennzeichen_alt LIKE '"
+                    + ((String)flurstueck.getProperty("alkis_id")).replace("-", "")
+                    + "_%';";
+
+        final MetaService metaService = helper.getMetaService();
+        for (final ArrayList fields : metaService.performCustomSearch(query)) {
+            final String kennzeichen = (String)fields.get(0);
+            final CidsBean nachfolgerBean = searchFlurstueck(toAlkisId(
+                        kennzeichen.substring(0, 6),
+                        Integer.valueOf(kennzeichen.substring(6, 9)),
+                        Integer.valueOf(kennzeichen.substring(9, 14)),
+                        Integer.valueOf(kennzeichen.substring(14).replaceAll("_", "0"))));
+            if (nachfolgerBean != null) {
+                nachfolgerBeans.add(nachfolgerBean);
+            }
+        }
+        return nachfolgerBeans;
     }
 
     /**
@@ -426,19 +455,50 @@ public class VermessungsunterlagenValidator {
      * @param   nenner     DOCUMENT ME!
      *
      * @return  DOCUMENT ME!
+     */
+    private String toAlkisId(final String gemarkung, final int flur, final int zaehler, final int nenner) {
+        final String nf = String.format("%04d", nenner);
+        return gemarkung
+                    + "-"
+                    + String.format("%03d", flur)
+                    + "-"
+                    + String.format("%05d", zaehler)
+                    + ((!nf.equals("0000")) ? ("/" + nf) : "");
+    }
+
+    /**
+     * DOCUMENT ME!
+     *
+     * @param   alkisId  gemarkung DOCUMENT ME!
+     *
+     * @return  DOCUMENT ME!
      *
      * @throws  Exception  DOCUMENT ME!
      */
-    private CidsBean searchFlurstueck(final String gemarkung,
-            final String flur,
-            final String zaehler,
-            final String nenner) throws Exception {
+    private CidsBean searchFlurstueck(final String alkisId) throws Exception {
+        final String zaehlernenner = alkisId.substring(11);
+        final String zaehler;
+        final String nenner;
+        if (zaehlernenner.contains("/")) {
+            final String[] split = zaehlernenner.split("/");
+            zaehler = split[0];
+            nenner = split[1];
+        } else {
+            zaehler = zaehlernenner;
+            nenner = null;
+        }
+
+        final String[] parts = VermessungsunterlagenUtils.createFlurstueckParts(alkisId.substring(0, 6),
+                alkisId.substring(7, 10),
+                zaehler,
+                nenner);
+
         final AlbFlurstueckKickerLightweightSearch search = new AlbFlurstueckKickerLightweightSearch();
         search.setSearchFor(AlbFlurstueckKickerLightweightSearch.SearchFor.FLURSTUECK);
-        search.setGemarkungsnummer(gemarkung);
-        search.setFlur(flur);
-        search.setZaehler(zaehler);
-        search.setNenner(nenner);
+        search.setGemarkungsnummer(parts[0]);
+        search.setFlur(parts[1]);
+        search.setZaehler(parts[2]);
+        search.setNenner(parts[3]);
         search.setRepresentationFields(new String[] { "id", "gemarkung", "flur", "zaehler", "nenner" });
         final Collection<LightweightMetaObject> result = helper.performSearch(search);
         if ((result != null) && !result.isEmpty()) {

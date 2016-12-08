@@ -38,8 +38,8 @@ public class VermessungsunterlagenUtils {
             final String nenner) {
         final String formattedGemarkung = gemarkung.startsWith("05") ? gemarkung.substring(2) : gemarkung;
         final String formattedFlur = String.format("%03d", Integer.parseInt(flur));
-        final String formattedZahler = zaehler;
-        final String formattedNenner = (nenner != null) ? nenner : "0";
+        final String formattedZahler = Integer.valueOf(zaehler).toString();
+        final String formattedNenner = (nenner != null) ? Integer.valueOf(nenner).toString() : "0";
         return new String[] { formattedGemarkung, formattedFlur, formattedZahler, formattedNenner };
     }
 }
