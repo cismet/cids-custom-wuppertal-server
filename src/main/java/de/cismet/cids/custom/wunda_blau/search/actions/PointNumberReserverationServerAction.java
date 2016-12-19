@@ -56,6 +56,7 @@ public class PointNumberReserverationServerAction implements UserAwareServerActi
 
         //~ Enum constants -----------------------------------------------------
 
+        // PROLONG_RESERVATION should be renamed to DO_COMPLETION, because it is what it realy does.
         GET_ALL_RESERVATIONS, IS_ANTRAG_EXISTING, DO_RESERVATION, PROLONG_RESERVATION, GET_POINT_NUMBERS, DO_STORNO,
         DO_PROLONG
     }

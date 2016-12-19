@@ -19,6 +19,7 @@ import java.io.File;
 import java.text.ParseException;
 import java.text.SimpleDateFormat;
 
+import java.util.Collection;
 import java.util.GregorianCalendar;
 
 import de.cismet.cids.custom.utils.pointnumberreservation.PointNumberReservation;
@@ -77,7 +78,8 @@ public class VermUntTaskPNR extends VermessungsunterlagenTask {
     @Override
     protected void performTask() throws Exception {
         if (punktnummernreservierungBeans != null) {
-            boolean first = true;
+            final Collection reservations = getReservations();
+            boolean first = (reservations == null) || reservations.isEmpty();
             for (final VermessungsunterlagenAnfrageBean.PunktnummernreservierungBean bean
                         : punktnummernreservierungBeans) {
                 if (bean.getAnzahlPunktnummern() > 0) {
@@ -98,6 +100,7 @@ public class VermUntTaskPNR extends VermessungsunterlagenTask {
                                     + "/fehlerprotokoll_"
                                     + bean.getUtmKilometerQuadrat()
                                     + ".json");
+                        throw exception;
                     }
                 }
             }
@@ -201,8 +204,34 @@ public class VermUntTaskPNR extends VermessungsunterlagenTask {
     /**
      * DOCUMENT ME!
      *
-     * @param   bean         DOCUMENT ME!
-     * @param   verlaengern  DOCUMENT ME!
+     * @return  DOCUMENT ME!
+     */
+    private Collection<PointNumberReservation> getReservations() {
+        final ServerActionParameter sapPrefix = new ServerActionParameter(
+                PointNumberReserverationServerAction.PARAMETER_TYPE.PREFIX.toString(),
+                vermessungsstelle.substring(2));
+        final ServerActionParameter sapAuftragsnummer = new ServerActionParameter(
+                PointNumberReserverationServerAction.PARAMETER_TYPE.AUFTRAG_NUMMER.toString(),
+                auftragsnummer);
+        final ServerActionParameter sapAction = new ServerActionParameter(
+                PointNumberReserverationServerAction.PARAMETER_TYPE.ACTION.toString(),
+                PointNumberReserverationServerAction.ACTION_TYPE.GET_POINT_NUMBERS);
+        final PointNumberReserverationServerAction action = new PointNumberReserverationServerAction();
+        action.setUser(VermessungsunterlagenHelper.getInstance().getUser());
+        action.setMetaService(VermessungsunterlagenHelper.getInstance().getMetaService());
+        final Collection<PointNumberReservation> request = (Collection)action.execute(
+                null,
+                sapAction,
+                sapPrefix,
+                sapAuftragsnummer);
+        return request;
+    }
+
+    /**
+     * DOCUMENT ME!
+     *
+     * @param   bean       DOCUMENT ME!
+     * @param   ergaenzen  DOCUMENT ME!
      *
      * @return  DOCUMENT ME!
      *
@@ -210,9 +239,9 @@ public class VermUntTaskPNR extends VermessungsunterlagenTask {
      */
     protected PointNumberReservationRequest doReservation(
             final VermessungsunterlagenAnfrageBean.PunktnummernreservierungBean bean,
-            final boolean verlaengern) throws Exception {
+            final boolean ergaenzen) throws Exception {
         final ServerActionParameter sapAction;
-        if (verlaengern) {
+        if (ergaenzen) {
             sapAction = new ServerActionParameter(
                     PointNumberReserverationServerAction.PARAMETER_TYPE.ACTION.toString(),
                     PointNumberReserverationServerAction.ACTION_TYPE.PROLONG_RESERVATION);
@@ -221,7 +250,7 @@ public class VermUntTaskPNR extends VermessungsunterlagenTask {
                     PointNumberReserverationServerAction.PARAMETER_TYPE.ACTION.toString(),
                     PointNumberReserverationServerAction.ACTION_TYPE.DO_RESERVATION);
         }
-        final ServerActionParameter sapZulNmr = new ServerActionParameter(
+        final ServerActionParameter sapPrefix = new ServerActionParameter(
                 PointNumberReserverationServerAction.PARAMETER_TYPE.PREFIX.toString(),
                 vermessungsstelle.substring(2));
         final ServerActionParameter sapAuftragsnummer = new ServerActionParameter(
@@ -238,13 +267,12 @@ public class VermUntTaskPNR extends VermessungsunterlagenTask {
                 0);
 
         final PointNumberReserverationServerAction action = new PointNumberReserverationServerAction();
-
         action.setUser(VermessungsunterlagenHelper.getInstance().getUser());
         action.setMetaService(VermessungsunterlagenHelper.getInstance().getMetaService());
         final PointNumberReservationRequest request = (PointNumberReservationRequest)action.execute(
                 null,
                 sapAction,
-                sapZulNmr,
+                sapPrefix,
                 sapAuftragsnummer,
                 sapNummerierungsbezirk,
                 sapAnzahl,
