@@ -40,7 +40,7 @@ public class VermessungsunterlagenValidator {
 
     public static final String CONTACT = " E-Mail: geodatenzentrum@stadt.wuppertal.de  Tel.: +49 202 563 5399 ";
     public static final int MAX_PNR_PRO_KM = 100;
-    public static final int MAX_SAUM = 150;
+    public static final int MAX_SAUM = 201;
 
     //~ Enums ------------------------------------------------------------------
 
@@ -314,7 +314,8 @@ public class VermessungsunterlagenValidator {
             return true;
         } else {
             try {
-                final CidsServerSearch search = new KundeByVermessungsStellenNummerSearch(vermessungsstelle);
+                final CidsServerSearch search = new KundeByVermessungsStellenNummerSearch(
+                        vermessungsstelle.startsWith("05") ? vermessungsstelle.substring(2) : vermessungsstelle);
                 helper.performSearch(search);
                 final Collection res = search.performServerSearch();
                 return ((res != null) && !res.isEmpty());
