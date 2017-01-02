@@ -42,8 +42,7 @@ public class KundeByVermessungsStellenNummerSearch extends AbstractCidsServerSea
 
     private final String vermessungsstellennummer;
     private final String QUERY =
-        "select k.vermessungsstellennummer, k.name from \"public\".billing_kunden_logins kl join billing_kunde k on k.id=kl.kunde "
-                + "where vermessungsstellennummer like '%1$s';";
+        "SELECT vermessungsstellennummer, name FROM billing_kunde WHERE vermessungsstellennummer LIKE '%1$s';";
 
     //~ Constructors -----------------------------------------------------------
 
