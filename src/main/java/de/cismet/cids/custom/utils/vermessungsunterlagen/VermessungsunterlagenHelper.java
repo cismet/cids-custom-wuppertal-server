@@ -316,14 +316,22 @@ public class VermessungsunterlagenHelper {
         return connectedFtpClient.retrieveFileStream(ftpFilePath);
     }
 
-    public String createJob(final String executeJobContent) {
-        return createJob(executeJobContent, false);
-    }
-    
     /**
      * DOCUMENT ME!
      *
      * @param   executeJobContent  DOCUMENT ME!
+     *
+     * @return  DOCUMENT ME!
+     */
+    public String createJob(final String executeJobContent) {
+        return createJob(executeJobContent, false);
+    }
+
+    /**
+     * DOCUMENT ME!
+     *
+     * @param   executeJobContent  DOCUMENT ME!
+     * @param   test               DOCUMENT ME!
      *
      * @return  DOCUMENT ME!
      */
@@ -332,7 +340,7 @@ public class VermessungsunterlagenHelper {
             final String jobKey = generateUniqueJobKey();
             final VermessungsunterlagenAnfrageBean anfrageBean = createAnfrageBean(executeJobContent);
             anfrageBean.setTest(test);
-            
+
             final VermessungsunterlagenJob job = new VermessungsunterlagenJob(jobKey, anfrageBean);
             try {
                 persistJobCidsBean(job, executeJobContent);
@@ -511,6 +519,7 @@ public class VermessungsunterlagenHelper {
         }
         jobCidsBean.setProperty("timestamp", new Timestamp(new Date().getTime()));
         jobCidsBean.setProperty("tasks", Arrays.toString(getAllowedTasks().toArray()));
+        jobCidsBean.setProperty("test", anfrageBean.getTest());
 
         job.setCidsBean(getMetaService().insertMetaObject(getUser(), jobCidsBean.getMetaObject()).getBean());
     }
