@@ -316,6 +316,10 @@ public class VermessungsunterlagenHelper {
         return connectedFtpClient.retrieveFileStream(ftpFilePath);
     }
 
+    public String createJob(final String executeJobContent) {
+        return createJob(executeJobContent, false);
+    }
+    
     /**
      * DOCUMENT ME!
      *
@@ -323,10 +327,12 @@ public class VermessungsunterlagenHelper {
      *
      * @return  DOCUMENT ME!
      */
-    public String createJob(final String executeJobContent) {
+    public String createJob(final String executeJobContent, final boolean test) {
         try {
             final String jobKey = generateUniqueJobKey();
             final VermessungsunterlagenAnfrageBean anfrageBean = createAnfrageBean(executeJobContent);
+            anfrageBean.setTest(test);
+            
             final VermessungsunterlagenJob job = new VermessungsunterlagenJob(jobKey, anfrageBean);
             try {
                 persistJobCidsBean(job, executeJobContent);
@@ -771,7 +777,7 @@ public class VermessungsunterlagenHelper {
                                             LOG.debug("Content: " + executeJobContent);
                                         }
 
-                                        final String jobkey = createJob(executeJobContent);
+                                        final String jobkey = createJob(executeJobContent, true);
                                         LOG.info("Job created: " + jobkey);
                                     } catch (final Exception ex) {
                                         LOG.error(ex, ex);

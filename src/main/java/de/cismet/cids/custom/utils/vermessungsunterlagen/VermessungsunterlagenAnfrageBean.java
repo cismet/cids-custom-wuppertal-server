@@ -42,6 +42,7 @@ public class VermessungsunterlagenAnfrageBean {
     private PunktnummernreservierungBean[] punktnummernreservierungsArray;
     private String saumAPSuche;
     private String zulassungsnummerVermessungsstelle;
+    private Boolean test;
 
     //~ Inner Classes ----------------------------------------------------------
 
