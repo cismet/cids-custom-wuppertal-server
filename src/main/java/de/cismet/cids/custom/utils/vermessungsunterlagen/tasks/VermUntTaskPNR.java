@@ -143,15 +143,13 @@ public class VermUntTaskPNR extends VermessungsunterlagenTask {
             }
 
             header += " Punktnummern: " + content.getPointNumbers().size();
-            contentBuilder.append(header);
-            contentBuilder.append(System.getProperty("line.separator"));
+            contentBuilder.append(header).append("\n");
             if (isFreigabeMode) {
-                contentBuilder.append("freigegebene Punktnummern");
+                contentBuilder.append("freigegebene Punktnummern").append("\n");
             } else {
-                contentBuilder.append("reservierte Punktnummern (gültig bis)");
+                contentBuilder.append("reservierte Punktnummern (gültig bis)").append("\n");
             }
-            contentBuilder.append(System.getProperty("line.separator"));
-            contentBuilder.append(System.getProperty("line.separator"));
+            contentBuilder.append("\n");
 
             for (final PointNumberReservation pnr : content.getPointNumbers()) {
                 contentBuilder.append(pnr.getPunktnummer());
@@ -168,7 +166,7 @@ public class VermUntTaskPNR extends VermessungsunterlagenTask {
                     }
                     contentBuilder.append(")");
                 }
-                contentBuilder.append(System.getProperty("line.separator"));
+                contentBuilder.append("\n");
             }
 
             return contentBuilder.toString();
