@@ -56,7 +56,7 @@ public class BillingJahresberichtReportServerSearch extends BillingStatisticsRep
                 + "join billing_kunde_kundengruppe_array as verbindung on kunde.id = verbindung.kunde "
                 + "join billing_kundengruppe as gruppe on verbindung.billing_kundengruppe_reference = gruppe.kunden_arr "
                 + "where gruppe.name ='Abrechnung_Wiederverkaeufer_jährlich'  "
-                + "and (vertragsende is null or vertragsende >= '${Jahr}$-01-01') "
+                + "and (vertragsende is null or extract(year from vertragsende) >= ${Jahr}) "
                 + "order by kunde.name;";
 
     private final String queryAnzahlKundenPerGruppe = "select gruppe.name, count(kunde.name)"
@@ -67,24 +67,23 @@ public class BillingJahresberichtReportServerSearch extends BillingStatisticsRep
                 + "group by gruppe.name order by gruppe.name asc;";
 
     private final String queryAnzahlGeschaeftsbuchnummernKostenpflichtig =
-        "select sub.verwendungskey, count(*) from (select distinct geschaeftsbuchnummer,username,verwendungskey from billing_billing  where abrechnungsdatum >='${Jahr}$-01-01' and abrechnungsdatum <='${Jahr}$-12-31' and storniert is null and username not like 'NICHT-ZAEHLEN%' and not (netto_summe =0 or netto_summe is null)) as sub group by sub.verwendungskey;";
+        "select sub.verwendungskey, count(*) from (select distinct geschaeftsbuchnummer,username,verwendungskey from billing_billing  where extract(year from abrechnungsdatum) = ${Jahr} and storniert is null and username not like 'NICHT-ZAEHLEN%' and not (netto_summe =0 or netto_summe is null)) as sub group by sub.verwendungskey;";
     private final String queryAnzahlGeschaeftsbuchnummernKostenfrei =
-        "select sub.verwendungskey, count(*) from (select distinct geschaeftsbuchnummer,username,verwendungskey from billing_billing where ts >='${Jahr}$-01-01' and ts <='${Jahr}$-12-31' and storniert is null and username not like 'NICHT-ZAEHLEN%' and (netto_summe =0 or netto_summe is null)) as sub group by sub.verwendungskey;";
+        "select sub.verwendungskey, count(*) from (select distinct geschaeftsbuchnummer,username,verwendungskey from billing_billing where extract(year from ts) = ${Jahr} and storniert is null and username not like 'NICHT-ZAEHLEN%' and (netto_summe =0 or netto_summe is null)) as sub group by sub.verwendungskey;";
     private final String queryAnzahlDownloadsKostenpflichtig =
-        "select verwendungskey, count(*) from billing_billing where abrechnungsdatum >='${Jahr}$-01-01' and abrechnungsdatum <='${Jahr}$-12-31' and storniert is null and username not like 'NICHT-ZAEHLEN%' and not (netto_summe =0 or netto_summe is null) group by verwendungskey;";
+        "select verwendungskey, count(*) from billing_billing where extract(year from abrechnungsdatum) = ${Jahr} and storniert is null and username not like 'NICHT-ZAEHLEN%' and not (netto_summe =0 or netto_summe is null) group by verwendungskey;";
     private final String queryAnzahlDownloadsKostenfrei =
-        "select verwendungskey, count(*) from billing_billing where ts >='${Jahr}$-01-01' and ts <='${Jahr}$-12-31' and storniert is null and username not like 'NICHT-ZAEHLEN%' and (netto_summe =0 or netto_summe is null) group by verwendungskey;";
+        "select verwendungskey, count(*) from billing_billing where extract(year from ts) = ${Jahr} and storniert is null and username not like 'NICHT-ZAEHLEN%' and (netto_summe =0 or netto_summe is null) group by verwendungskey;";
     private final String queryAnzahlProVerwendungszweck = "";
     private final String querySummeProVerwendungszweck =
-        "select verwendungskey, sum(netto_summe) from billing_billing where abrechnungsdatum >='${Jahr}$-01-01' and abrechnungsdatum <='${Jahr}$-12-31' and storniert is null and username not like 'NICHT-ZAEHLEN%' and not (netto_summe =0 or netto_summe is null) group by verwendungskey;";
+        "select verwendungskey, sum(netto_summe) from billing_billing where extract(year from abrechnungsdatum) = ${Jahr} and storniert is null and username not like 'NICHT-ZAEHLEN%' and not (netto_summe =0 or netto_summe is null) group by verwendungskey;";
     private final String queryAnzahlProdukteVermessungsunterlagenTs3 = "select produktbezeichnung,count(id) from ( "
                 + "select "
                 + "        produktbezeichnung, id "
                 + "from billing_billing "
                 + "where "
                 + "        verwendungszweck = 'Vermessungsunterlagen (amtlicher Lageplan TS 3)' "
-                + "        and ts >='${Jahr}$-01-01' "
-                + "        and ts <='${Jahr}$-12-31' "
+                + "        and extract(year from ts) = ${Jahr} "
                 + "        and storniert is null "
                 + "        and username not like 'NICHT-ZAEHLEN%' "
                 + "group by produktbezeichnung, id "
@@ -96,8 +95,7 @@ public class BillingJahresberichtReportServerSearch extends BillingStatisticsRep
                 + "from billing_billing "
                 + "where "
                 + "        verwendungszweck = 'Vermessungsunterlagen (hoheitliche Vermessung TS 4)' "
-                + "        and ts >='${Jahr}$-01-01' "
-                + "        and ts <='${Jahr}$-12-31' "
+                + "        and extract(year from ts) = ${Jahr} "
                 + "        and storniert is null "
                 + "        and username not like 'NICHT-ZAEHLEN%' "
                 + "group by produktbezeichnung, id "
