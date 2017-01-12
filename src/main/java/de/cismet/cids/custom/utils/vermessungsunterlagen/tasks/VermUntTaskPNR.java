@@ -16,8 +16,6 @@ import org.apache.commons.io.FileUtils;
 
 import java.io.File;
 
-import java.nio.charset.Charset;
-
 import java.text.ParseException;
 import java.text.SimpleDateFormat;
 
@@ -92,7 +90,7 @@ public class VermUntTaskPNR extends VermessungsunterlagenTask {
 
                             final String filename = getPath() + "/" + auftragsnummer + "_"
                                         + bean.getUtmKilometerQuadrat() + ".txt";
-                            FileUtils.writeStringToFile(new File(filename), protokoll, Charset.forName("UTF-8"));
+                            FileUtils.writeStringToFile(new File(filename), protokoll, "UTF-8");
                         }
                         first = false;
                     } catch (final Exception exception) {
