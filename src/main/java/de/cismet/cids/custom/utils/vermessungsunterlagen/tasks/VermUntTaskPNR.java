@@ -90,7 +90,7 @@ public class VermUntTaskPNR extends VermessungsunterlagenTask {
 
                             final String filename = getPath() + "/" + auftragsnummer + "_"
                                         + bean.getUtmKilometerQuadrat() + ".txt";
-                            FileUtils.writeStringToFile(new File(filename), protokoll, "UTF-8");
+                            FileUtils.writeStringToFile(new File(filename), protokoll, "ISO-8859-1");
                         }
                         first = false;
                     } catch (final Exception exception) {
@@ -143,13 +143,13 @@ public class VermUntTaskPNR extends VermessungsunterlagenTask {
             }
 
             header += " Punktnummern: " + content.getPointNumbers().size();
-            contentBuilder.append(header).append("\n");
+            contentBuilder.append(header).append("\r\n");
             if (isFreigabeMode) {
-                contentBuilder.append("freigegebene Punktnummern").append("\n");
+                contentBuilder.append("freigegebene Punktnummern").append("\r\n");
             } else {
-                contentBuilder.append("reservierte Punktnummern (gültig bis)").append("\n");
+                contentBuilder.append("reservierte Punktnummern (gültig bis)").append("\r\n");
             }
-            contentBuilder.append("\n");
+            contentBuilder.append("\r\n");
 
             for (final PointNumberReservation pnr : content.getPointNumbers()) {
                 contentBuilder.append(pnr.getPunktnummer());
@@ -166,7 +166,7 @@ public class VermUntTaskPNR extends VermessungsunterlagenTask {
                     }
                     contentBuilder.append(")");
                 }
-                contentBuilder.append("\n");
+                contentBuilder.append("\r\n");
             }
 
             return contentBuilder.toString();
