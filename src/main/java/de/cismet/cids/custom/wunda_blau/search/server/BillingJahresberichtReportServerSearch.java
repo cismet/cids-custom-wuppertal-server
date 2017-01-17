@@ -63,7 +63,7 @@ public class BillingJahresberichtReportServerSearch extends BillingStatisticsRep
                 + "from billing_kunde as kunde "
                 + "join billing_kunde_kundengruppe_array as verbindung on kunde.id = verbindung.kunde "
                 + "join billing_kundengruppe as gruppe on verbindung.billing_kundengruppe_reference = gruppe.kunden_arr "
-                + "where (vertragsende is null or vertragsende >= '${Jahr}$-12-31') "
+                + "where (vertragsende is null or vertragsende >= '${Jahr}-12-31') "
                 + "group by gruppe.name order by gruppe.name asc;";
 
     private final String queryAnzahlGeschaeftsbuchnummernKostenpflichtig =
@@ -198,7 +198,7 @@ public class BillingJahresberichtReportServerSearch extends BillingStatisticsRep
             final HashMap<String, ArrayList> results,
             final String query,
             final String key) throws RemoteException {
-        final ArrayList<ArrayList> lists = ms.performCustomSearch(query.replace("${Jahr}$", Integer.toString(year)));
+        final ArrayList<ArrayList> lists = ms.performCustomSearch(query.replace("${Jahr}", Integer.toString(year)));
         if ((lists != null) && !lists.isEmpty()) {
             final ArrayList<AmountBean> beans = new ArrayList<AmountBean>();
             for (final Iterator it = lists.iterator(); it.hasNext();) {
@@ -232,9 +232,9 @@ public class BillingJahresberichtReportServerSearch extends BillingStatisticsRep
             final String query,
             final String key) throws RemoteException {
         if (LOG.isDebugEnabled()) {
-            LOG.debug(query.replace("${Jahr}$", Integer.toString(year)));
+            LOG.debug(query.replace("${Jahr}", Integer.toString(year)));
         }
-        final ArrayList<ArrayList> lists = ms.performCustomSearch(query.replace("${Jahr}$", Integer.toString(year)));
+        final ArrayList<ArrayList> lists = ms.performCustomSearch(query.replace("${Jahr}", Integer.toString(year)));
         if ((lists != null)) {
             final AnzahlProVerwendungszweckBean bean = new AnzahlProVerwendungszweckBean();
             for (final Iterator it = lists.iterator(); it.hasNext();) {
