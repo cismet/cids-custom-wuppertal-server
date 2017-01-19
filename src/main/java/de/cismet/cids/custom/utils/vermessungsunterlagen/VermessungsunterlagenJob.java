@@ -322,7 +322,8 @@ public class VermessungsunterlagenJob implements Runnable {
 
                     submitTask(new VermUntTaskPNR(
                             getKey(),
-                            anfrageBean.getZulassungsnummerVermessungsstelle(),
+                            validator.isVermessungsstelleKnown() ? anfrageBean.getZulassungsnummerVermessungsstelle()
+                                                                 : null,
                             anfrageBean.getGeschaeftsbuchnummer(),
                             anfrageBean.getPunktnummernreservierungsArray()));
                     if (!anfrageBean.getNurPunktnummernreservierung()) {
@@ -396,7 +397,10 @@ public class VermessungsunterlagenJob implements Runnable {
                             throw new VermessungsunterlagenException(
                                 "Ein unerwarteter Fehler ist beim Ausführen des Tasks "
                                         + task.getType()
-                                        + " aufgetreten.",
+                                        + " aufgetreten.\n "
+                                        + "Bitte wenden Sie sich an das Geodatenzentrum der Stadt Wuppertal "
+                                        + VermessungsunterlagenValidator.CONTACT
+                                        + ".",
                                 task.getException());
                         }
                         received++;

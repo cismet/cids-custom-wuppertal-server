@@ -15,6 +15,7 @@ package de.cismet.cids.custom.utils.vermessungsunterlagen.tasks;
 import java.util.Collection;
 
 import de.cismet.cids.custom.utils.vermessungsunterlagen.VermessungsunterlagenTask;
+import de.cismet.cids.custom.utils.vermessungsunterlagen.VermessungsunterlagenTaskRetryable;
 
 import de.cismet.cids.dynamics.CidsBean;
 
@@ -24,7 +25,7 @@ import de.cismet.cids.dynamics.CidsBean;
  * @author   jruiz
  * @version  $Revision$, $Date$
  */
-public abstract class VermUntTaskNivP extends VermessungsunterlagenTask {
+public abstract class VermUntTaskNivP extends VermessungsunterlagenTask implements VermessungsunterlagenTaskRetryable {
 
     //~ Instance fields --------------------------------------------------------
 
@@ -59,5 +60,20 @@ public abstract class VermUntTaskNivP extends VermessungsunterlagenTask {
     @Override
     protected String getSubPath() {
         return "/NivP";
+    }
+
+    @Override
+    public long getMaxTotalWaitTimeMs() {
+        return DEFAULT_MAX_TOTAL_WAIT_TIME_MS;
+    }
+
+    @Override
+    public long getFirstWaitTimeMs() {
+        return DEFAULT_FIRST_WAIT_TIME_MS;
+    }
+
+    @Override
+    public double getWaitTimeMultiplicator() {
+        return DEFAULT_WAIT_TIME_MULTIPLICATOR;
     }
 }

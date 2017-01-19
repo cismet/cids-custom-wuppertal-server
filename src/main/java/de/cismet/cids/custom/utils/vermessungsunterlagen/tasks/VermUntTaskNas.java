@@ -25,8 +25,10 @@ import java.io.File;
 import java.io.FileOutputStream;
 
 import de.cismet.cids.custom.utils.nas.NasProduct;
+import de.cismet.cids.custom.utils.vermessungsunterlagen.VermessungsunterlagenException;
 import de.cismet.cids.custom.utils.vermessungsunterlagen.VermessungsunterlagenHelper;
 import de.cismet.cids.custom.utils.vermessungsunterlagen.VermessungsunterlagenTask;
+import de.cismet.cids.custom.utils.vermessungsunterlagen.VermessungsunterlagenTaskRetryable;
 import de.cismet.cids.custom.wunda_blau.search.actions.NasDataQueryAction;
 
 import de.cismet.cids.server.actions.ServerActionParameter;
@@ -37,7 +39,7 @@ import de.cismet.cids.server.actions.ServerActionParameter;
  * @author   jruiz
  * @version  $Revision$, $Date$
  */
-public abstract class VermUntTaskNas extends VermessungsunterlagenTask {
+public abstract class VermUntTaskNas extends VermessungsunterlagenTask implements VermessungsunterlagenTaskRetryable {
 
     //~ Static fields/initializers ---------------------------------------------
 
@@ -52,6 +54,8 @@ public abstract class VermUntTaskNas extends VermessungsunterlagenTask {
     private final NasProduct product;
     private final User user;
     private final String requestId;
+
+    private String orderId;
 
     //~ Constructors -----------------------------------------------------------
 
@@ -110,9 +114,15 @@ public abstract class VermUntTaskNas extends VermessungsunterlagenTask {
 
         final File fileToSaveTo = new File(getPath() + "/" + filename + extension);
 
-        final String orderId = sendNasRequest(product, geometryCollection, requestId);
+        /*
+         * Phase 1: sending the request to the server (only if it hasnt already be sent correctly)
+         */
         if (orderId == null) {
-            return;
+            orderId = sendNasRequest(product, geometryCollection, requestId);
+            if (orderId == null) {
+                throw new VermessungsunterlagenException(
+                    "nas server request returned no orderId, cannot continue with NAS download");
+            }
         }
 
         /*
@@ -252,5 +262,20 @@ public abstract class VermUntTaskNas extends VermessungsunterlagenTask {
     @Override
     protected String getSubPath() {
         return "/NAS";
+    }
+
+    @Override
+    public long getMaxTotalWaitTimeMs() {
+        return DEFAULT_MAX_TOTAL_WAIT_TIME_MS;
+    }
+
+    @Override
+    public long getFirstWaitTimeMs() {
+        return DEFAULT_FIRST_WAIT_TIME_MS;
+    }
+
+    @Override
+    public double getWaitTimeMultiplicator() {
+        return DEFAULT_WAIT_TIME_MULTIPLICATOR;
     }
 }

@@ -53,13 +53,14 @@ public class VermessungsunterlagenValidator {
 
         //~ Enum constants -----------------------------------------------------
 
-        UNKOWN_USER, NO_GESCHAEFTSBUCHNUMMER, NO_ANTRAGSFLURSTUECK, WRONG_ANTRAGSFLURSTUECK, UNKNOWN_ANTRAGSFLURSTUECK,
+        NO_GESCHAEFTSBUCHNUMMER, NO_ANTRAGSFLURSTUECK, WRONG_ANTRAGSFLURSTUECK, UNKNOWN_ANTRAGSFLURSTUECK,
         UNSUFFICENT_PNR, WRONG_PNR, NO_SAUM, WRONG_SAUM, NO_ART, WRONG_GEBIET
     }
 
     //~ Instance fields --------------------------------------------------------
 
     private final Collection<CidsBean> flurstuecke = new ArrayList<CidsBean>();
+    private boolean vermessungsstelleKnown = false;
 
     private final VermessungsunterlagenHelper helper;
 
@@ -92,6 +93,15 @@ public class VermessungsunterlagenValidator {
      *
      * @return  DOCUMENT ME!
      */
+    public boolean isVermessungsstelleKnown() {
+        return vermessungsstelleKnown;
+    }
+
+    /**
+     * DOCUMENT ME!
+     *
+     * @return  DOCUMENT ME!
+     */
     public boolean ignoreError() {
         return ignoreError;
     }
@@ -109,9 +119,7 @@ public class VermessungsunterlagenValidator {
     public boolean validateAndGetErrorMessage(final VermessungsunterlagenAnfrageBean anfrageBean)
             throws VermessungsunterlagenException {
         // Prüfung ob Benutzername des ÖBVIs in Wuppertal bekannt (registriert) ist
-        if (!isVermessungsstelleKnown(anfrageBean.getZulassungsnummerVermessungsstelle())) {
-            throw getExceptionByErrorCode(Error.UNKOWN_USER);
-        }
+        vermessungsstelleKnown = isVermessungsstelleKnown(anfrageBean.getZulassungsnummerVermessungsstelle());
 
         // Validierung der Geschäftsbuchnummer
         // Geschäftsbuchnummer darf nicht leer sein. Keine weitere Prüfung auf Länge oder Inhalt.
@@ -225,16 +233,6 @@ public class VermessungsunterlagenValidator {
     private static VermessungsunterlagenException getExceptionByErrorCode(final Error code) {
         final String message;
         switch (code) {
-            // Unbekannter ÖBVI
-            case UNKOWN_USER: {
-                message =
-                    "Unbekannter Benutzername. Eine Ausstellung von Vermessungsunterlagen kann aus Sicherheitsgründen leider erst nach einer Registrierung beim Ressort für Vermessung, Liegenschaftskataster und Geodaten der Stadt Wuppertal erfolgen."
-                            // Standard Postfix mit Kontaktdaten
-                            + "\n Bitte wenden Sie sich an das Geodatenzentrum der Stadt Wuppertal "
-                            + CONTACT
-                            + ".";
-            }
-            break;
             // leere Geschäftsbuchnummer
             case NO_GESCHAEFTSBUCHNUMMER: {
                 message =
@@ -255,7 +253,7 @@ public class VermessungsunterlagenValidator {
             // Mindestens ein unvollständiges
             case UNKNOWN_ANTRAGSFLURSTUECK: {
                 message =
-                    "Die Anfrage enthält mindestens ein unbekannte oder vor der ALKIS Einführung historisierte Flurstücksnummer.";
+                    "Die Anfrage enthält mindestens eine unbekannte oder vor der ALKIS Einführung historisierte Flurstücksnummer.";
             }
             break;
             // negative oder sehr große Anzahl an Punkten reserviert

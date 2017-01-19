@@ -77,30 +77,39 @@ public class VermUntTaskPNR extends VermessungsunterlagenTask {
 
     @Override
     protected void performTask() throws Exception {
-        if (punktnummernreservierungBeans != null) {
-            final Collection reservations = getReservations();
-            boolean first = (reservations == null) || reservations.isEmpty();
-            for (final VermessungsunterlagenAnfrageBean.PunktnummernreservierungBean bean
-                        : punktnummernreservierungBeans) {
-                if (bean.getAnzahlPunktnummern() > 0) {
-                    try {
-                        final PointNumberReservationRequest result = doReservation(bean, !first);
-                        if (result != null) {
-                            final String protokoll = getProtokoll(result);
+        if (vermessungsstelle == null) {
+            final File src = new File(VermessungsunterlagenHelper.getInstance().getProperties()
+                            .getAbsPathPdfPnrVermstelle());
+            final File dst = new File(getPath() + "/" + src.getName());
+            if (!dst.exists()) {
+                FileUtils.copyFile(src, dst);
+            }
+        } else {
+            if (punktnummernreservierungBeans != null) {
+                final Collection reservations = getReservations();
+                boolean first = (reservations == null) || reservations.isEmpty();
+                for (final VermessungsunterlagenAnfrageBean.PunktnummernreservierungBean bean
+                            : punktnummernreservierungBeans) {
+                    if (bean.getAnzahlPunktnummern() > 0) {
+                        try {
+                            final PointNumberReservationRequest result = doReservation(bean, !first);
+                            if (result != null) {
+                                final String protokoll = getProtokoll(result);
 
-                            final String filename = getPath() + "/" + auftragsnummer + "_"
-                                        + bean.getUtmKilometerQuadrat() + ".txt";
-                            FileUtils.writeStringToFile(new File(filename), protokoll, "ISO-8859-1");
+                                final String filename = getPath() + "/" + auftragsnummer + "_"
+                                            + bean.getUtmKilometerQuadrat() + ".txt";
+                                FileUtils.writeStringToFile(new File(filename), protokoll, "ISO-8859-1");
+                            }
+                            first = false;
+                        } catch (final Exception exception) {
+                            VermessungsunterlagenHelper.writeExceptionJson(
+                                exception,
+                                getPath()
+                                        + "/fehlerprotokoll_"
+                                        + bean.getUtmKilometerQuadrat()
+                                        + ".json");
+                            throw exception;
                         }
-                        first = false;
-                    } catch (final Exception exception) {
-                        VermessungsunterlagenHelper.writeExceptionJson(
-                            exception,
-                            getPath()
-                                    + "/fehlerprotokoll_"
-                                    + bean.getUtmKilometerQuadrat()
-                                    + ".json");
-                        throw exception;
                     }
                 }
             }

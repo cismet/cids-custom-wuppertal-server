@@ -34,6 +34,10 @@ public abstract class VermessungsunterlagenTask implements Callable<Vermessungsu
 
     protected static final transient Logger LOG = Logger.getLogger(VermessungsunterlagenTask.class);
 
+    protected static final long DEFAULT_FIRST_WAIT_TIME_MS = 1000;
+    protected static final long DEFAULT_MAX_TOTAL_WAIT_TIME_MS = 1023000; // 1000 * (2^10 - 1) => 1 try + 9 retries
+    protected static final double DEFAULT_WAIT_TIME_MULTIPLICATOR = 2;
+
     //~ Enums ------------------------------------------------------------------
 
     /**
@@ -101,7 +105,41 @@ public abstract class VermessungsunterlagenTask implements Callable<Vermessungsu
         setStatus(Status.RUNNING);
         try {
             new File(getPath()).mkdirs();
-            performTask();
+            if (this instanceof VermessungsunterlagenTaskRetryable) {
+                final VermessungsunterlagenTaskRetryable retryable = (VermessungsunterlagenTaskRetryable)this;
+
+                boolean success = false;
+                Exception lastException = null;
+                long totalWaitTime = 0;
+                long waitTime = retryable.getFirstWaitTimeMs();
+
+                // try until success or waited long enough
+                while (!success && (totalWaitTime < retryable.getMaxTotalWaitTimeMs())) {
+                    try {
+                        performTask();
+
+                        // success only if no exception occurs
+                        success = true;
+                    } catch (final Exception ex) {
+                        // overwrite exception and wait before next try
+                        LOG.warn("performTask failed. will wait " + waitTime + "ms and try again", ex);
+                        lastException = ex;
+                        Thread.sleep(waitTime);
+                    } finally {
+                        // calculate the new total wait time
+                        totalWaitTime += waitTime;
+
+                        // increase the next wait time by the old wait time * multiplicator.
+                        // the wait time goes exponential
+                        waitTime *= retryable.getWaitTimeMultiplicator();
+                    }
+                }
+                if (lastException != null) {
+                    throw lastException;
+                }
+            } else {
+                performTask();
+            }
             setStatus(Status.FINISHED);
         } catch (final Exception ex) {
             LOG.info("setting status to ERROR because of an exception", ex);

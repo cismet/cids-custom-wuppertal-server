@@ -14,6 +14,9 @@ package de.cismet.cids.custom.utils.vermessungsunterlagen.tasks;
 
 import net.sf.jasperreports.engine.data.JRBeanCollectionDataSource;
 
+import org.apache.commons.io.FileUtils;
+
+import java.io.File;
 import java.io.FileOutputStream;
 import java.io.InputStream;
 import java.io.OutputStream;
@@ -28,6 +31,7 @@ import de.cismet.cids.custom.utils.alkis.ServerAlkisConf;
 import de.cismet.cids.custom.utils.alkis.VermessungsRissReportHelper;
 import de.cismet.cids.custom.utils.vermessungsunterlagen.VermessungsunterlagenHelper;
 import de.cismet.cids.custom.utils.vermessungsunterlagen.VermessungsunterlagenTask;
+import de.cismet.cids.custom.utils.vermessungsunterlagen.VermessungsunterlagenTaskRetryable;
 
 import de.cismet.cids.dynamics.CidsBean;
 
@@ -48,7 +52,7 @@ import static de.cismet.cids.custom.utils.vermessungsunterlagen.Vermessungsunter
  * @author   jruiz
  * @version  $Revision$, $Date$
  */
-public abstract class VermUntTaskRisse extends VermessungsunterlagenTask {
+public abstract class VermUntTaskRisse extends VermessungsunterlagenTask implements VermessungsunterlagenTaskRetryable {
 
     //~ Instance fields --------------------------------------------------------
 
@@ -91,6 +95,12 @@ public abstract class VermUntTaskRisse extends VermessungsunterlagenTask {
                     + (ServerAlkisConf.getInstance().VERMESSUNG_HOST_BILDER.equalsIgnoreCase(host) ? "vermriss"
                                                                                                    : "ergdok")
                     + ".pdf";
+
+        final File src = new File(VermessungsunterlagenHelper.getInstance().getProperties().getAbsPathPdfRisse());
+        final File dst = new File(getPath() + "/" + src.getName());
+        if (!dst.exists()) {
+            FileUtils.copyFile(src, dst);
+        }
 
         final Object[] tmp = VermessungsRissReportHelper.getInstance()
                     .generateReportData(
@@ -151,5 +161,20 @@ public abstract class VermUntTaskRisse extends VermessungsunterlagenTask {
     @Override
     protected String getSubPath() {
         return "/Risse";
+    }
+
+    @Override
+    public long getMaxTotalWaitTimeMs() {
+        return DEFAULT_MAX_TOTAL_WAIT_TIME_MS;
+    }
+
+    @Override
+    public long getFirstWaitTimeMs() {
+        return DEFAULT_FIRST_WAIT_TIME_MS;
+    }
+
+    @Override
+    public double getWaitTimeMultiplicator() {
+        return DEFAULT_WAIT_TIME_MULTIPLICATOR;
     }
 }
