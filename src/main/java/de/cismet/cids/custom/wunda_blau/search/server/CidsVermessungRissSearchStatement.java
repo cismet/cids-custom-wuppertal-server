@@ -9,16 +9,22 @@ package de.cismet.cids.custom.wunda_blau.search.server;
 
 import Sirius.server.middleware.interfaces.domainserver.MetaService;
 import Sirius.server.middleware.types.MetaObjectNode;
-import Sirius.server.search.CidsServerSearch;
+
+import com.vividsolutions.jts.geom.Geometry;
+import com.vividsolutions.jts.geom.MultiPolygon;
+import com.vividsolutions.jts.geom.Polygon;
 
 import org.apache.log4j.Logger;
-
-import java.rmi.RemoteException;
 
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.Iterator;
 import java.util.Map;
+
+import de.cismet.cids.server.search.AbstractCidsServerSearch;
+import de.cismet.cids.server.search.MetaObjectNodeServerSearch;
+
+import de.cismet.cismap.commons.jtsgeometryfactories.PostGisGeometryFactory;
 
 /**
  * DOCUMENT ME!
@@ -26,7 +32,7 @@ import java.util.Map;
  * @author   jweintraut
  * @version  $Revision$, $Date$
  */
-public class CidsVermessungRissSearchStatement extends CidsServerSearch {
+public class CidsVermessungRissSearchStatement extends AbstractCidsServerSearch implements MetaObjectNodeServerSearch {
 
     //~ Static fields/initializers ---------------------------------------------
 
@@ -38,11 +44,11 @@ public class CidsVermessungRissSearchStatement extends CidsServerSearch {
     private static final String SQL = "SELECT"
                 + " DISTINCT (SELECT c.id FROM cs_class c WHERE table_name ilike '" + CIDSCLASS + "') as class_id,"
                 + " vr.id,"
-                + " vr.schluessel||'-'||vr.gemarkung||'-'||vr.flur||'/'||vr.blatt as name"
+                + " vr.schluessel||' - '||vg.name||' - '||vr.flur||' - '||vr.blatt as name"
                 + " FROM <fromClause>"
                 + " <whereClause>"
                 + " ORDER BY name";
-    private static final String FROM = CIDSCLASS + " vr";
+    private static final String FROM = CIDSCLASS + " vr JOIN vermessung_gemarkung vg ON vr.gemarkung = vg.id";
     private static final String JOIN_KICKER =
         " JOIN vermessung_riss_flurstuecksvermessung vrf ON vr.id = vrf.vermessung_riss_reference"
                 + " JOIN vermessung_flurstuecksvermessung vf ON vrf.flurstuecksvermessung = vf.id"
@@ -62,7 +68,7 @@ public class CidsVermessungRissSearchStatement extends CidsServerSearch {
     private String flur;
     private String blatt;
     private Collection<String> schluesselCollection;
-    private String geometry;
+    private Geometry geometry;
     private Collection<Map<String, String>> flurstuecke;
 
     //~ Constructors -----------------------------------------------------------
@@ -83,7 +89,7 @@ public class CidsVermessungRissSearchStatement extends CidsServerSearch {
             final String flur,
             final String blatt,
             final Collection<String> schluesselCollection,
-            final String geometry,
+            final Geometry geometry,
             final Collection<Map<String, String>> flurstuecke) {
         this.schluessel = schluessel;
         this.gemarkung = gemarkung;
@@ -97,54 +103,54 @@ public class CidsVermessungRissSearchStatement extends CidsServerSearch {
     //~ Methods ----------------------------------------------------------------
 
     @Override
-    public Collection performServerSearch() {
-        final ArrayList result = new ArrayList();
-
-        if (((schluessel == null) || (schluessel.trim().length() <= 0))
-                    && (gemarkung == null)
-                    && ((flur == null) || (flur.trim().length() <= 0))
-                    && ((blatt == null) || (blatt.trim().length() <= 0))
-                    && ((schluesselCollection == null) || schluesselCollection.isEmpty())
-                    && (geometry == null)
-                    && ((flurstuecke == null) || flurstuecke.isEmpty())) {
-            LOG.warn("No filters provided. Cancel search.");
-            return result;
-        }
-
-        final StringBuilder sqlBuilder = new StringBuilder();
-
-        final MetaService metaService = (MetaService)getActiveLoaclServers().get(DOMAIN);
-        if (metaService == null) {
-            getLog().error("Could not retrieve MetaService '" + DOMAIN + "'.");
-            return result;
-        }
-
-        sqlBuilder.append(SQL.replace("<fromClause>", generateFromClause()).replace(
-                "<whereClause>",
-                generateWhereClause()));
-
-        final ArrayList<ArrayList> resultset;
+    public Collection<MetaObjectNode> performServerSearch() {
         try {
-            if (getLog().isDebugEnabled()) {
-                getLog().debug("Executing SQL statement '" + sqlBuilder.toString() + "'.");
+            final ArrayList result = new ArrayList();
+
+            if (((schluessel == null) || (schluessel.trim().length() <= 0))
+                        && (gemarkung == null)
+                        && ((flur == null) || (flur.trim().length() <= 0))
+                        && ((blatt == null) || (blatt.trim().length() <= 0))
+                        && ((schluesselCollection == null) || schluesselCollection.isEmpty())
+                        && (geometry == null)
+                        && ((flurstuecke == null) || flurstuecke.isEmpty())) {
+                LOG.warn("No filters provided. Cancel search.");
+                return result;
+            }
+
+            final StringBuilder sqlBuilder = new StringBuilder();
+
+            final MetaService metaService = (MetaService)getActiveLocalServers().get(DOMAIN);
+            if (metaService == null) {
+                LOG.error("Could not retrieve MetaService '" + DOMAIN + "'.");
+                return result;
+            }
+
+            sqlBuilder.append(SQL.replace("<fromClause>", generateFromClause()).replace(
+                    "<whereClause>",
+                    generateWhereClause()));
+
+            final ArrayList<ArrayList> resultset;
+            if (LOG.isDebugEnabled()) {
+                LOG.debug("Executing SQL statement '" + sqlBuilder.toString() + "'.");
             }
             resultset = metaService.performCustomSearch(sqlBuilder.toString());
-        } catch (RemoteException ex) {
-            getLog().error("Error occurred while executing SQL statement '" + sqlBuilder.toString() + "'.", ex);
+
+            for (final ArrayList measurementPoint : resultset) {
+                final int classID = (Integer)measurementPoint.get(0);
+                final int objectID = (Integer)measurementPoint.get(1);
+                final String name = (String)measurementPoint.get(2);
+
+                final MetaObjectNode node = new MetaObjectNode(DOMAIN, objectID, classID, name, null, null); // TODO: Check4CashedGeomAndLightweightJson
+
+                result.add(node);
+            }
+
             return result;
+        } catch (final Exception e) {
+            LOG.error("Problem", e);
+            throw new RuntimeException(e);
         }
-
-        for (final ArrayList measurementPoint : resultset) {
-            final int classID = (Integer)measurementPoint.get(0);
-            final int objectID = (Integer)measurementPoint.get(1);
-            final String name = (String)measurementPoint.get(2);
-
-            final MetaObjectNode node = new MetaObjectNode(DOMAIN, objectID, classID, name);
-
-            result.add(node);
-        }
-
-        return result;
     }
 
     /**
@@ -155,7 +161,7 @@ public class CidsVermessungRissSearchStatement extends CidsServerSearch {
     private String generateFromClause() {
         final StringBuilder result = new StringBuilder(FROM);
 
-        if ((geometry != null) && (geometry.trim().length() > 0)) {
+        if ((geometry != null) && !geometry.isEmpty()) {
             result.append(JOIN_GEOM);
         }
 
@@ -235,18 +241,24 @@ public class CidsVermessungRissSearchStatement extends CidsServerSearch {
         }
 
         if (geometry != null) {
+            final String geomString = PostGisGeometryFactory.getPostGisCompliantDbString(geometry);
+
             result.append(conjunction);
             conjunction = " AND ";
 
-            result.append("g.geo_field && GeometryFromText('");
-            result.append(geometry);
-            result.append("')");
+            result.append("g.geo_field && GeometryFromText('").append(geomString).append("')");
 
             result.append(conjunction);
 
-            result.append("intersects(g.geo_field, GeometryFromText('");
-            result.append(geometry);
-            result.append("'))");
+            if ((geometry instanceof Polygon) || (geometry instanceof MultiPolygon)) { // with buffer for searchGeometry
+                result.append("intersects(st_buffer(g.geo_field, 0.000001), st_buffer(GeometryFromText('")
+                        .append(geomString)
+                        .append("'), 0.000001))");
+            } else {
+                result.append("intersects(st_buffer(g.geo_field, 0.000001), GeometryFromText('")
+                        .append(geomString)
+                        .append("'))");
+            }
         }
 
         if ((flurstuecke != null) && !flurstuecke.isEmpty()) {

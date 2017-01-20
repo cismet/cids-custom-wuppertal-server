@@ -40,56 +40,18 @@ public final class SOAPAccessProvider {
 
     /**
      * Creates a new SOAPAccessProvider object.
-     */
-    public SOAPAccessProvider() {
-        this(AlkisConstants.COMMONS.USER, AlkisConstants.COMMONS.PASSWORD, AlkisConstants.COMMONS.SERVICE);
-    }
-
-    /**
-     * Creates a new SOAPAccessProvider object.
      *
-     * @param  identityCard  DOCUMENT ME!
-     * @param  service       DOCUMENT ME!
-     */
-    public SOAPAccessProvider(final String identityCard, final String service) {
-        this(
-            identityCard,
-            service,
-            AlkisConstants.COMMONS.SERVER
-                    + AlkisConstants.COMMONS.CATALOG_SERVICE,
-            AlkisConstants.COMMONS.SERVER
-                    + AlkisConstants.COMMONS.INFO_SERVICE,
-            AlkisConstants.COMMONS.SERVER
-                    + AlkisConstants.COMMONS.SEARCH_SERVICE);
-    }
-
-    /**
-     * Creates a new SOAPAccessProvider object.
-     *
-     * @param  user      DOCUMENT ME!
-     * @param  password  DOCUMENT ME!
-     * @param  service   DOCUMENT ME!
-     */
-    public SOAPAccessProvider(final String user, final String password, final String service) {
-        this(user + "," + password, service);
-    }
-
-    /**
-     * Creates a new SOAPAccessProvider object.
-     *
-     * @param   identityCard    DOCUMENT ME!
-     * @param   service         DOCUMENT ME!
-     * @param   catalogService  DOCUMENT ME!
-     * @param   infoService     DOCUMENT ME!
-     * @param   searchService   DOCUMENT ME!
+     * @param   alkisConf  identityCard DOCUMENT ME!
      *
      * @throws  IllegalStateException  DOCUMENT ME!
      */
-    public SOAPAccessProvider(final String identityCard,
-            final String service,
-            final String catalogService,
-            final String infoService,
-            final String searchService) {
+    public SOAPAccessProvider(final AlkisConf alkisConf) {
+        final String identityCard = alkisConf.USER + "," + alkisConf.PASSWORD;
+        final String service = alkisConf.SERVICE;
+        final String catalogService = alkisConf.SERVER + alkisConf.CATALOG_SERVICE;
+        final String infoService = alkisConf.SERVER + alkisConf.INFO_SERVICE;
+        final String searchService = alkisConf.SERVER + alkisConf.SEARCH_SERVICE;
+
         this.identityCard = identityCard;
         this.service = service;
         try {
@@ -99,33 +61,15 @@ public final class SOAPAccessProvider {
             this.alkisSearchService = new ALKISSearchServicesServiceLocator().getALKISSearchServices(new URL(
                         searchService));
         } catch (Exception ex) {
-            throw new IllegalStateException("Can not create SOAPAccessProvider" + AlkisConstants.COMMONS.SERVER + "|"
-                        + AlkisConstants.COMMONS.CATALOG_SERVICE + "|"
-                        + AlkisConstants.COMMONS.SERVER + "|"
-                        + AlkisConstants.COMMONS.INFO_SERVICE + "|"
-                        + AlkisConstants.COMMONS.SERVER + "|"
-                        + AlkisConstants.COMMONS.SEARCH_SERVICE,
+            throw new IllegalStateException("Can not create SOAPAccessProvider" + alkisConf.SERVER
+                        + "|"
+                        + alkisConf.CATALOG_SERVICE + "|"
+                        + alkisConf.SERVER + "|"
+                        + alkisConf.INFO_SERVICE + "|"
+                        + alkisConf.SERVER + "|"
+                        + alkisConf.SEARCH_SERVICE,
                 ex);
         }
-    }
-
-    /**
-     * Creates a new SOAPAccessProvider object.
-     *
-     * @param  user            DOCUMENT ME!
-     * @param  password        DOCUMENT ME!
-     * @param  service         DOCUMENT ME!
-     * @param  catalogService  DOCUMENT ME!
-     * @param  infoService     DOCUMENT ME!
-     * @param  searchService   DOCUMENT ME!
-     */
-    public SOAPAccessProvider(final String user,
-            final String password,
-            final String service,
-            final String catalogService,
-            final String infoService,
-            final String searchService) {
-        this(user + "," + password, service, catalogService, infoService, searchService);
     }
 
     //~ Methods ----------------------------------------------------------------

@@ -1,2 +1,26 @@
-cids-custom-wuppertal-server
+cids-custom-wuppertal-server [![Build Status](http://ci.cismet.de/buildStatus/icon?job=cids-custom-wuppertal-server)](https://ci.cismet.de/job/cids-custom-wuppertal-server/)
 ============================
+
+Serverside customizations of the cids system for the city of Wuppertal.
+
+![WuNDA Screener](http://www.cismet.de/images/projects/screener/wunda.png)
+
+WuNDa
+-----
+THe WunDa software consists of a service-orientiented infrastructure on basis of the open source toolkits cids. WuNDa serves as an information hub that provides access to geospatial information to city managers across topics and organisational units.
+
+More information
+-----
+http://www.wuppertal.de
+
+Client
+-----
+The city of Wuppertal. Ressort 102 - Geodesy, Cadastres and Geodata. (Contact: Mr. Stefan Sander)
+
+
+Don't hesitate to contact us if you have any questions.
+
+License
+=======
+
+cids-custom-wuppertal-server is distributed under [LGPLv3](https://github.com/cismet/cids-custom-wuppertal-server/blob/dev/LICENSE)

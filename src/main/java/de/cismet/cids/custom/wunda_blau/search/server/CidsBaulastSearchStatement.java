@@ -9,40 +9,35 @@ package de.cismet.cids.custom.wunda_blau.search.server;
 
 import Sirius.server.middleware.interfaces.domainserver.MetaService;
 import Sirius.server.middleware.types.MetaObjectNode;
-import Sirius.server.search.CidsServerSearch;
+
+import com.vividsolutions.jts.geom.Geometry;
+import com.vividsolutions.jts.geom.MultiPolygon;
+import com.vividsolutions.jts.geom.Polygon;
 
 import org.apache.commons.lang.StringEscapeUtils;
+import org.apache.log4j.Logger;
 
 import java.util.ArrayList;
 import java.util.Collection;
-import java.util.Collections;
 import java.util.List;
 
-//select distinct 666 as class_id, l.id, l.blattnummer, l.laufende_nummer as object_id from alb_baulast l
-//, alb_baulast_baulastarten la, alb_baulast_art a
-//, (
-//select * from alb_baulast_flurstuecke_beguenstigt
-//UNION
-//select * from alb_baulast_flurstuecke_belastet) as fsj
-//, alb_flurstueck_kicker k, flurstueck f
-//, geom g
-//where
-//l.blattnummer ~ '^[0]*1234$'
-//and loeschungsdatum is null
-//and loeschungsdatum is not null
-//and (
-//l.id = fsj.baulast_reference and fsj.flurstueck = k.id
-//and k.fs_referenz = f.id and f.umschreibendes_rechteck = g.id and g.geo_field && GeometryFromText('') and intersects(g.geo_field,GeometryFromText(''))
-//and k.gemarkung = '123' and k.flur = '123' and k.zaehler = '123' and k.nenner = '123')
-//and l.id = la.baulast_reference and la.baulast_art = a.id and a.baulast_art in ('art1', 'art2')
-//order by blattnummer, laufende_nummer
+import de.cismet.cids.server.search.AbstractCidsServerSearch;
+import de.cismet.cids.server.search.MetaObjectNodeServerSearch;
+
+import de.cismet.cismap.commons.jtsgeometryfactories.PostGisGeometryFactory;
+
 /**
  * DOCUMENT ME!
  *
  * @author   stefan
  * @version  $Revision$, $Date$
  */
-public class CidsBaulastSearchStatement extends CidsServerSearch {
+public class CidsBaulastSearchStatement extends AbstractCidsServerSearch implements MetaObjectNodeServerSearch {
+
+    //~ Static fields/initializers ---------------------------------------------
+
+    /** LOGGER. */
+    private static final transient Logger LOG = Logger.getLogger(CidsBaulastSearchStatement.class);
 
     //~ Enums ------------------------------------------------------------------
 
@@ -71,7 +66,7 @@ public class CidsBaulastSearchStatement extends CidsServerSearch {
     private boolean belastet;
     private boolean beguenstigt;
     //
-    private String bounds;
+    private Geometry geometry;
     //
     private List<FlurstueckInfo> flurstuecke;
     //
@@ -112,10 +107,7 @@ public class CidsBaulastSearchStatement extends CidsServerSearch {
         if (art != null) {
             art = StringEscapeUtils.escapeSql(art);
         }
-        this.bounds = searchInfo.getBounds();
-        if (bounds != null) {
-            bounds = StringEscapeUtils.escapeSql(bounds);
-        }
+        this.geometry = searchInfo.getGeometry();
         this.flurstuecke = searchInfo.getFlurstuecke();
 
         if ((blattnummer != null) && (blattnummer.length() > 0)) {
@@ -138,9 +130,18 @@ public class CidsBaulastSearchStatement extends CidsServerSearch {
             }
         }
 
-        if (bounds != null) {
-            geoquerypart = " and g.geo_field && GeometryFromText('" + bounds
-                        + "',25832) and intersects(g.geo_field,GeometryFromText('" + bounds + "',25832))";
+        if ((geometry != null) && !geometry.isEmpty()) {
+            final String geomString = PostGisGeometryFactory.getPostGisCompliantDbString(geometry);
+            if ((geometry instanceof Polygon) || (geometry instanceof MultiPolygon)) { // with buffer for geostring
+                geoquerypart = " and g.geo_field && GeometryFromText('" + geomString
+                            + "',25832) and intersects(st_buffer(g.geo_field, 0.000001),st_buffer(GeometryFromText('"
+                            + geomString
+                            + "',25832), 0.000001))";
+            } else {
+                geoquerypart = " and g.geo_field && GeometryFromText('" + geomString
+                            + "',25832) and intersects(st_buffer(g.geo_field, 0.000001),GeometryFromText('" + geomString
+                            + "',25832))";
+            }
         }
 
         if ((art != null) && (art.length() > 0)) {
@@ -154,20 +155,19 @@ public class CidsBaulastSearchStatement extends CidsServerSearch {
     //~ Methods ----------------------------------------------------------------
 
     @Override
-    public Collection performServerSearch() {
+    public Collection<MetaObjectNode> performServerSearch() {
         try {
             final String primary = getPrimaryQuery();
             final String secondary = getSecondaryQuery();
-            final MetaService ms = (MetaService)getActiveLoaclServers().get("WUNDA_BLAU");
+            final MetaService ms = (MetaService)getActiveLocalServers().get("WUNDA_BLAU");
             final List<ArrayList> primaryResultList = ms.performCustomSearch(primary);
 
             final List<MetaObjectNode> aln = new ArrayList<MetaObjectNode>();
             for (final ArrayList al : primaryResultList) {
                 final int cid = (Integer)al.get(0);
                 final int oid = (Integer)al.get(1);
-//                final String name = "<html><p><!--sorter:000 -->" + (String)al.get(2) + "</p></html>";
-                final MetaObjectNode mon = new MetaObjectNode("WUNDA_BLAU", oid, cid, (String)al.get(2));
-//                mon.setIconString("/res/16/bewoelkt.png");
+                final MetaObjectNode mon = new MetaObjectNode("WUNDA_BLAU", oid, cid, (String)al.get(2), null, null); // TODO: Check4CashedGeomAndLightweightJson
+
                 aln.add(mon);
             }
 
@@ -176,22 +176,22 @@ public class CidsBaulastSearchStatement extends CidsServerSearch {
                 for (final ArrayList al : secondaryResultList) {
                     final int cid = (Integer)al.get(0);
                     final int oid = (Integer)al.get(1);
-//                    final String name = "<html><p><!--sorter:001 -->" + (String)al.get(2) + " (indirekt)"
-//                                + "</p></html>";
                     final MetaObjectNode mon = new MetaObjectNode(
                             "WUNDA_BLAU",
                             oid,
                             cid,
                             "indirekt: "
-                                    + (String)al.get(2));
-//                    mon.setIconString("/res/16/bewoelkt.png");
+                                    + (String)al.get(2),
+                            null,
+                            null); // TODO: Check4CashedGeomAndLightweightJson
+
                     aln.add(mon);
                 }
             }
             return aln;
         } catch (Exception e) {
-            getLog().error("Problem der Baulastensuche", e);
-            return Collections.EMPTY_LIST;
+            LOG.error("Problem der Baulastensuche", e);
+            throw new RuntimeException("Problem der Baulastensuche", e);
         }
     }
 
@@ -257,7 +257,12 @@ public class CidsBaulastSearchStatement extends CidsServerSearch {
     }
 
     /**
-     * DOCUMENT ME!
+     * Creates the primary query. A join is made over several tables. To make this join two cases have to be
+     * distinguished.<br>
+     * 1) Filter for a geometry. In this case more tables have to be joined as the geometry of a landparcel has to be
+     * fetched.<br>
+     * 2) No geometry involved. In this case fewer tables have to be joined because there are buchungsblaetter without a
+     * landparcel. Thus a join with the table flurstueck and geom leads to a wrong result as the join fails.
      *
      * @return  DOCUMENT ME!
      */
@@ -272,7 +277,7 @@ public class CidsBaulastSearchStatement extends CidsServerSearch {
                     + "\nWHERE  b.blattnummer IN (SELECT blattnummer "
                     + "\n                         FROM "
                     + "\n       (";
-        final String queryMid = ""
+        String queryMid = ""
                     + "\nSELECT " + baulastClassID + "  AS class_id, "
                     + "\n               l.id AS object_id, "
                     + "\n               l.blattnummer|| '/' || case when l.laufende_nummer is not null then l.laufende_nummer else 'keine laufende Nummer' end, "
@@ -283,21 +288,36 @@ public class CidsBaulastSearchStatement extends CidsServerSearch {
                     + "\n               left outer join alb_baulast_art a on (la.baulast_art = a.id),"
                     + "\n" + getBelastetBeguenstigtSubselect()
                     + "\n               , "
-                    + "\n               alb_flurstueck_kicker k, "
-                    + "\n               flurstueck f, "
-                    + "\n               geom g "
+                    + "\n               alb_flurstueck_kicker k";
+        if ((geometry != null) && !geometry.isEmpty()) {
+            queryMid += ", "
+                        + "\n               flurstueck f, "
+                        + "\n               geom g ";
+        }
+        queryMid += ""
                     + "\n        WHERE  1 = 1 "
                     + "\n               AND l.id = fsj.baulast_reference "
-                    + "\n               AND fsj.flurstueck = k.id "
-                    + "\n               AND k.fs_referenz = f.id "
-                    + "\n               AND f.umschreibendes_rechteck = g.id "
+                    + "\n               AND fsj.flurstueck = k.id ";
+        if ((geometry != null) && !geometry.isEmpty()) {
+            queryMid += ""
+                        + "\n               AND k.fs_referenz = f.id "
+                        + "\n               AND f.umschreibendes_rechteck = g.id ";
+        }
+        queryMid += ""
                     + "\n               "
-                    + blattnummerquerypart               // --  AND l.blattnummer LIKE '^[0]*4711[[:alpha:]]?$'  "
-                    + "\n               " + geoquerypart
-                    + "\n               " + artquerypart // -- AND a.baulast_art = 'Wertsteigerungsverzicht' "
-                    + "\n               " + ungueltigquerypart
-                    + "\n               " + gueltigquerypart
-                    + "\n               " + fsquerypart;
+                    + blattnummerquerypart; // --  AND l.blattnummer LIKE '^[0]*4711[[:alpha:]]?$'  "
+        if ((geometry != null) && !geometry.isEmpty()) {
+            queryMid += "\n               "
+                        + geoquerypart;
+        }
+        queryMid += "\n               "
+                    + artquerypart          // -- AND a.baulast_art = 'Wertsteigerungsverzicht' "
+                    + "\n               "
+                    + ungueltigquerypart
+                    + "\n               "
+                    + gueltigquerypart
+                    + "\n               "
+                    + fsquerypart;
         final String queryBlattPostfix = ""
                     + "\n) AS x "
                     + "\n                        ) "
@@ -310,9 +330,12 @@ public class CidsBaulastSearchStatement extends CidsServerSearch {
                     + "\n order by blattnummer, laufende_nummer";
 
         if (result == Result.BAULASTBLATT) {
-            query = queryBlattPrefix + queryMid + queryBlattPostfix;
+            query = queryBlattPrefix
+                        + queryMid
+                        + queryBlattPostfix;
         } else {
-            query = queryMid + queryBaulastPostfix;
+            query = queryMid
+                        + queryBaulastPostfix;
         }
         return query;
     }
@@ -374,13 +397,10 @@ public class CidsBaulastSearchStatement extends CidsServerSearch {
                     + "\n                                                     ) AS y "
                     + "\n               WHERE  k.fs_referenz = f.id "
                     + "\n                      AND f.umschreibendes_rechteck = g.id "
-                    + "\n                      AND y.geo_field && g.geo_field "
-                    + "\n                      AND Intersects(y.geo_field, g.geo_field) "
+                    + "\n                      AND CASE WHEN NOT st_isEmpty(y.geo_field) AND NOT st_isEmpty(g.geo_field) THEN y.geo_field && g.geo_field ELSE FALSE END "
+                    + "\n                      AND CASE WHEN NOT st_isEmpty(y.geo_field) AND NOT st_isEmpty(g.geo_field) AND NOT st_isEmpty(St_buffer(y.geo_field, 0.000001)) AND NOT st_isEmpty(St_buffer(g.geo_field, 0.000001)) THEN Intersects(St_buffer(y.geo_field, 0.000001), St_buffer(g.geo_field, 0.000001)) ELSE FALSE END "
                     + "\n                      AND NOT y.fid = f.id "
-                    + "\n                      AND Intersects(Buffer(y.geo_field, -0.05), g.geo_field)"
-                    + "\n                      " + geoquerypart
-                    + "\n                ) "
-                    + "\n              AS indirekt "
+                    + "\n                      AND CASE WHEN NOT st_isEmpty(y.geo_field) AND NOT st_isEmpty(g.geo_field) AND NOT st_isEmpty(st_Buffer(y.geo_field, -0.005)) AND NOT st_isEmpty(St_buffer(g.geo_field, 0.000001)) THEN Intersects(st_Buffer(y.geo_field, -0.005), St_buffer(g.geo_field, 0.000001)) ELSE FALSE END) AS indirekt "
                     + "\n                                 WHERE  1 = 1 "
                     + "\n                                        AND l.id = fsj.baulast_reference "
                     + "\n                                        AND fsj.flurstueck = k.id "

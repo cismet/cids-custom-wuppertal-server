@@ -50,7 +50,7 @@ public class AlkisSOAPSearch {
      * @throws  RemoteException  DOCUMENT ME!
      */
     public static void main(final String[] args) throws RemoteException {
-        final SOAPAccessProvider access = new SOAPAccessProvider();
+        final SOAPAccessProvider access = new SOAPAccessProvider(ServerAlkisConf.getInstance());
         final ALKISSearchServices search = access.getAlkisSearchService();
         final ALKISCatalogServices catalog = access.getAlkisCatalogServices();
         final ALKISInfoServices info = access.getAlkisInfoService();
