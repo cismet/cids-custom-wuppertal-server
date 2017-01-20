@@ -28,9 +28,9 @@
     </prerequisites>
 
     <scm>
-        <connection>https://github.com/cismet/cids-custom-server-wuppertal.git</connection>
-        <developerConnection>scm:git:git@github.com:cismet/cids-custom-server-wuppertal.git</developerConnection>
-        <url>https://github.com/cismet/cids-custom-server-wuppertal</url>
+        <connection>https://github.com/cismet/cids-custom-wuppertal-server.git</connection>
+        <developerConnection>scm:git:git@github.com:cismet/cids-custom-wuppertal-server.git</developerConnection>
+        <url>https://github.com/cismet/cids-custom-wuppertal-server</url>
     </scm>
 
     <repositories>
