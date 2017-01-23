@@ -40,7 +40,7 @@ public class VermessungsunterlagenValidator {
 
     public static final String CONTACT = " E-Mail: geodatenzentrum@stadt.wuppertal.de  Tel.: +49 202 563 5399 ";
     public static final int MAX_PNR_PRO_KM = 100;
-    public static final int MAX_SAUM = 201;
+    public static final int MAX_SAUM = 999;
 
     //~ Enums ------------------------------------------------------------------
 
@@ -271,7 +271,7 @@ public class VermessungsunterlagenValidator {
             break;
             // ungueltiger Saum angegeben
             case WRONG_SAUM: {
-                message = "Der angegebene Saum ist ungültig. Nur ganzzahlig Eingaben zwischen 0 und "
+                message = "Der angegebene Saum ist ungültig. Nur ganzzahlige Eingaben zwischen 0 und "
                             + MAX_SAUM
                             + " sind gültig.";
             }
