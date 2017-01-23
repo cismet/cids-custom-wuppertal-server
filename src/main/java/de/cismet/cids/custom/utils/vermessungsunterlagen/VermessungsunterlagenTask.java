@@ -134,7 +134,7 @@ public abstract class VermessungsunterlagenTask implements Callable<Vermessungsu
                         waitTime *= retryable.getWaitTimeMultiplicator();
                     }
                 }
-                if (!success && lastException != null) {
+                if (!success && (lastException != null)) {
                     throw lastException;
                 }
             } else {

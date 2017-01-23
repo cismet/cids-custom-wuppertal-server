@@ -65,6 +65,7 @@ public class VermessungsunterlagenValidator {
     private final VermessungsunterlagenHelper helper;
 
     private boolean ignoreError = false;
+    private boolean pnrNotZero = false;
 
     //~ Constructors -----------------------------------------------------------
 
@@ -109,6 +110,15 @@ public class VermessungsunterlagenValidator {
     /**
      * DOCUMENT ME!
      *
+     * @return  DOCUMENT ME!
+     */
+    public boolean isPnrNotZero() {
+        return pnrNotZero;
+    }
+
+    /**
+     * DOCUMENT ME!
+     *
      * @param   anfrageBean  DOCUMENT ME!
      *
      * @return  if validation passed returns {@link #ISVALID}. If validation failed returns error message for enduser in
@@ -144,6 +154,9 @@ public class VermessungsunterlagenValidator {
                     // Die Anzahl der zu reservierenden Punkte muss größer, gleich 0 und kleiner einer maximalen
                     // Anzahl pro Kilometerquadrat sein
                     throw getExceptionByErrorCode(Error.WRONG_PNR);
+                }
+                if ((pnrOvject.getAnzahlPunktnummern() != null) && (pnrOvject.getAnzahlPunktnummern() > 0)) {
+                    pnrNotZero = true;
                 }
             }
         }
