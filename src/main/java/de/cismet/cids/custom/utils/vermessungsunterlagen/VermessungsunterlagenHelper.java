@@ -111,7 +111,7 @@ public class VermessungsunterlagenHelper {
     private static final ObjectMapper EXCEPTION_MAPPER = new ObjectMapper();
     private static final ObjectMapper JOB_MAPPER;
 
-    public static final String DIR_PREFIX = "05124_";
+    public static final String DIR_PREFIX = "05124";
 
     public static final String ALLOWED_TASKS_CONFIG_ATTR = "vup.tasks_allowed";
     public static final int SRID = 25832;
