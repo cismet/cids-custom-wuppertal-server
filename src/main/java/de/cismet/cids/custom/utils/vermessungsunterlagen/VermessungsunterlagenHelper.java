@@ -111,7 +111,7 @@ public class VermessungsunterlagenHelper {
     private static final ObjectMapper EXCEPTION_MAPPER = new ObjectMapper();
     private static final ObjectMapper JOB_MAPPER;
 
-    public static final String DIR_PREFIX = "VermUnterlagen";
+    public static final String DIR_PREFIX = "05124";
 
     public static final String ALLOWED_TASKS_CONFIG_ATTR = "vup.tasks_allowed";
     public static final int SRID = 25832;
@@ -337,9 +337,10 @@ public class VermessungsunterlagenHelper {
      */
     public String createJob(final String executeJobContent, final boolean test) {
         try {
-            final String jobKey = generateUniqueJobKey();
             final VermessungsunterlagenAnfrageBean anfrageBean = createAnfrageBean(executeJobContent);
             anfrageBean.setTest(test);
+            final String jobKey = anfrageBean.getZulassungsnummerVermessungsstelle() + "_"
+                        + anfrageBean.getGeschaeftsbuchnummer() + "_" + generateUniqueJobKey();
 
             final VermessungsunterlagenJob job = new VermessungsunterlagenJob(jobKey, anfrageBean);
             try {
@@ -876,6 +877,17 @@ public class VermessungsunterlagenHelper {
      */
     public String getPath(final String jobkey) {
         return vermessungsunterlagenProperties.getAbsPathTmp() + "/" + DIR_PREFIX + "_" + jobkey;
+    }
+
+    /**
+     * DOCUMENT ME!
+     *
+     * @param   cidsBean  DOCUMENT ME!
+     *
+     * @return  DOCUMENT ME!
+     */
+    public static String getZipName(final CidsBean cidsBean) {
+        return null;
     }
 
     /**

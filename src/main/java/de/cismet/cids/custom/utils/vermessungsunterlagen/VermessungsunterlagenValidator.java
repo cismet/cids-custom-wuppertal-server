@@ -40,7 +40,7 @@ public class VermessungsunterlagenValidator {
 
     public static final String CONTACT = " E-Mail: geodatenzentrum@stadt.wuppertal.de  Tel.: +49 202 563 5399 ";
     public static final int MAX_PNR_PRO_KM = 100;
-    public static final int MAX_SAUM = 201;
+    public static final int MAX_SAUM = 999;
 
     //~ Enums ------------------------------------------------------------------
 
@@ -65,6 +65,7 @@ public class VermessungsunterlagenValidator {
     private final VermessungsunterlagenHelper helper;
 
     private boolean ignoreError = false;
+    private boolean pnrNotZero = false;
 
     //~ Constructors -----------------------------------------------------------
 
@@ -109,6 +110,15 @@ public class VermessungsunterlagenValidator {
     /**
      * DOCUMENT ME!
      *
+     * @return  DOCUMENT ME!
+     */
+    public boolean isPnrNotZero() {
+        return pnrNotZero;
+    }
+
+    /**
+     * DOCUMENT ME!
+     *
      * @param   anfrageBean  DOCUMENT ME!
      *
      * @return  if validation passed returns {@link #ISVALID}. If validation failed returns error message for enduser in
@@ -144,6 +154,9 @@ public class VermessungsunterlagenValidator {
                     // Die Anzahl der zu reservierenden Punkte muss größer, gleich 0 und kleiner einer maximalen
                     // Anzahl pro Kilometerquadrat sein
                     throw getExceptionByErrorCode(Error.WRONG_PNR);
+                }
+                if ((pnrOvject.getAnzahlPunktnummern() != null) && (pnrOvject.getAnzahlPunktnummern() > 0)) {
+                    pnrNotZero = true;
                 }
             }
         }
@@ -271,7 +284,7 @@ public class VermessungsunterlagenValidator {
             break;
             // ungueltiger Saum angegeben
             case WRONG_SAUM: {
-                message = "Der angegebene Saum ist ungültig. Nur ganzzahlig Eingaben zwischen 0 und "
+                message = "Der angegebene Saum ist ungültig. Nur ganzzahlige Eingaben zwischen 0 und "
                             + MAX_SAUM
                             + " sind gültig.";
             }
