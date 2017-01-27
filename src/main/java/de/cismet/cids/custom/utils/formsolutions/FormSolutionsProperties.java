@@ -44,15 +44,15 @@ public class FormSolutionsProperties {
     private final String rechnungBasepath;
     private final String cidsLogin;
     private final String cidsPassword;
-    private final String urlAuftragslisteFs;
+    private final String urlAuftragslisteSgkFs;
+    private final String urlAuftragslisteAbkFs;
     private final String urlAuftragFs;
     private final String urlAuftragDeleteFs;
     private final String urlStatusUpdate;
     private final String ftpHost;
     private final String ftpLogin;
     private final String ftpPass;
-    private final boolean test;
-    private final boolean testCismet00;
+    private final String testCismet00;
     private final String specialLogAbsPath;
     private final String billingKundeLogin;
     private final String billingModus;
@@ -61,16 +61,7 @@ public class FormSolutionsProperties {
     private final String billingVerwendungszweckPostweg;
     private final String billingVerwendungskeyDownload;
     private final String billingVerwendungskeyPostweg;
-    private final String billingProduktKeyDina4;
-    private final String billingProduktKeyDina3;
-    private final String billingProduktKeyDina2;
-    private final String billingProduktKeyDina1;
-    private final String billingProduktKeyDina0;
-    private final String billingProduktBezeichnungDina4;
-    private final String billingProduktBezeichnungDina3;
-    private final String billingProduktBezeichnungDina2;
-    private final String billingProduktBezeichnungDina1;
-    private final String billingProduktBezeichnungDina0;
+    private final boolean mysqlDisabled;
 
     //~ Constructors -----------------------------------------------------------
 
@@ -87,17 +78,15 @@ public class FormSolutionsProperties {
         rechnungBasepath = properties.getProperty("RECHNUNG_BASEPATH");
         cidsLogin = properties.getProperty("CIDS_LOGIN");
         cidsPassword = properties.getProperty("CIDS_PASSWORD");
-        urlAuftragslisteFs = properties.getProperty("URL_AUFTRAGSLISTE_FS");
+        urlAuftragslisteSgkFs = properties.getProperty("URL_AUFTRAGSLISTE_SGK_FS");
+        urlAuftragslisteAbkFs = properties.getProperty("URL_AUFTRAGSLISTE_ABK_FS");
         urlAuftragFs = properties.getProperty("URL_AUFTRAG_FS");
         urlAuftragDeleteFs = properties.getProperty("URL_AUFTRAG_DELETE_FS");
         urlStatusUpdate = properties.getProperty("URL_STATUS_UPDATE");
         ftpHost = properties.getProperty("FTP_HOST");
         ftpLogin = properties.getProperty("FTP_LOGIN");
         ftpPass = properties.getProperty("FTP_PASS");
-        test = (properties.getProperty("TEST") != null)
-                    && "true".equals(properties.getProperty("TEST").trim().toLowerCase());
-        testCismet00 = (properties.getProperty("TEST_CISMET00") != null)
-                    && "true".equals(properties.getProperty("TEST_CISMET00").trim().toLowerCase());
+        testCismet00 = properties.getProperty("TEST_CISMET00");
         specialLogAbsPath = properties.getProperty("SPECIAL_LOG_ABS_PATH");
         billingKundeLogin = properties.getProperty("BILLING_KUNDE_LOGIN");
         billingModus = properties.getProperty("BILLING_MODUS");
@@ -106,16 +95,8 @@ public class FormSolutionsProperties {
         billingVerwendungszweckPostweg = properties.getProperty("BILLING_VERWENDUNGSZWECK_POSTWEG");
         billingVerwendungskeyDownload = properties.getProperty("BILLING_VERWENDUNGSKEY_DOWNLOAD");
         billingVerwendungskeyPostweg = properties.getProperty("BILLING_VERWENDUNGSKEY_POSTWEG");
-        billingProduktKeyDina4 = properties.getProperty("BILLING_PRODUKTKEY_DINA4");
-        billingProduktKeyDina3 = properties.getProperty("BILLING_PRODUKTKEY_DINA3");
-        billingProduktKeyDina2 = properties.getProperty("BILLING_PRODUKTKEY_DINA2");
-        billingProduktKeyDina1 = properties.getProperty("BILLING_PRODUKTKEY_DINA1");
-        billingProduktKeyDina0 = properties.getProperty("BILLING_PRODUKTKEY_DINA0");
-        billingProduktBezeichnungDina4 = properties.getProperty("BILLING_PRODUKTBEZEICHNUNG_DINA4");
-        billingProduktBezeichnungDina3 = properties.getProperty("BILLING_PRODUKTBEZEICHNUNG_DINA3");
-        billingProduktBezeichnungDina2 = properties.getProperty("BILLING_PRODUKTBEZEICHNUNG_DINA2");
-        billingProduktBezeichnungDina1 = properties.getProperty("BILLING_PRODUKTBEZEICHNUNG_DINA1");
-        billingProduktBezeichnungDina0 = properties.getProperty("BILLING_PRODUKTBEZEICHNUNG_DINA0");
+        mysqlDisabled = (properties.getProperty("MYSQL_DISABLED") != null)
+                    && "true".equals(properties.getProperty("MYSQL_DISABLED").trim().toLowerCase());
     }
 
     //~ Methods ----------------------------------------------------------------
