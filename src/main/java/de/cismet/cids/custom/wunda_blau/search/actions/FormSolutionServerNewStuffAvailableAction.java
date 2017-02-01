@@ -150,6 +150,18 @@ public class FormSolutionServerNewStuffAvailableAction implements UserAwareServe
         STEP_TO_EXECUTE, SINGLE_STEP, METAOBJECTNODES
     }
 
+    /**
+     * DOCUMENT ME!
+     *
+     * @version  $Revision$, $Date$
+     */
+    public enum ProductType {
+
+        //~ Enum constants -----------------------------------------------------
+
+        SGK, ABK
+    }
+
     //~ Instance fields --------------------------------------------------------
 
     private final SimpleHttpAccessHandler HTTP_HANDLER = new SimpleHttpAccessHandler();
@@ -160,7 +172,7 @@ public class FormSolutionServerNewStuffAvailableAction implements UserAwareServe
     private MetaService metaService;
     private final String testCismet00Xml;
     private final Set<String> ignoreTransids = new HashSet<String>();
-    private final boolean testCismet00Enabled;
+    private final ProductType testCismet00Type;
     private final FileWriter specialLogWriter;
 
     //~ Constructors -----------------------------------------------------------
@@ -179,7 +191,7 @@ public class FormSolutionServerNewStuffAvailableAction implements UserAwareServe
      */
     public FormSolutionServerNewStuffAvailableAction(final boolean fromStartupHook) {
         UsernamePasswordCredentials creds = null;
-        boolean testCismet00Enabled = false;
+        ProductType testCismet00Type = null;
         String testCismet00Xml = null;
         FileWriter specialLogWriter = null;
 
@@ -195,12 +207,14 @@ public class FormSolutionServerNewStuffAvailableAction implements UserAwareServe
             }
 
             try {
-                testCismet00Enabled = fromStartupHook && FormSolutionsProperties.getInstance().isTestCismet00();
+                if (fromStartupHook) {
+                    testCismet00Type = parseProductType(FormSolutionsProperties.getInstance().getTestCismet00());
+                }
             } catch (final Exception ex) {
                 LOG.error("could not read FormSolutionsConstants.TEST_CISMET00. TEST_CISMET00 stays disabled", ex);
             }
 
-            if (testCismet00Enabled) {
+            if (testCismet00Type != null) {
                 try {
                     testCismet00Xml = ServerResourcesLoader.getInstance()
                                 .loadText(WundaBlauServerResources.FS_TEST_XML.getValue());
@@ -235,7 +249,7 @@ public class FormSolutionServerNewStuffAvailableAction implements UserAwareServe
             }
         }
         this.specialLogWriter = specialLogWriter;
-        this.testCismet00Enabled = testCismet00Enabled;
+        this.testCismet00Type = testCismet00Type;
         this.testCismet00Xml = testCismet00Xml;
         this.creds = creds;
     }
@@ -292,18 +306,37 @@ public class FormSolutionServerNewStuffAvailableAction implements UserAwareServe
     /**
      * DOCUMENT ME!
      *
+     * @param   productType  DOCUMENT ME!
+     * @param   typeMap      DOCUMENT ME!
+     *
      * @return  DOCUMENT ME!
      *
      * @throws  Exception  DOCUMENT ME!
      */
-    private Collection<String> getOpenTransids() throws Exception {
+    private Collection<String> getOpenExtendedTransids(final ProductType productType,
+            final Map<String, ProductType> typeMap) throws Exception {
         logSpecial("fetching open transids from FS");
 
         final Collection<String> transIds = new ArrayList<String>();
         try {
             final StringBuilder stringBuilder = new StringBuilder();
-            final InputStream inputStream = getHttpAccessHandler().doRequest(new URL(
-                        FormSolutionsProperties.getInstance().getUrlAuftragslisteFs()),
+            final URL auftragsListeUrl;
+            switch (productType) {
+                case SGK: {
+                    auftragsListeUrl = new URL(FormSolutionsProperties.getInstance().getUrlAuftragslisteSgkFs());
+                }
+                break;
+                case ABK: {
+                    auftragsListeUrl = new URL(FormSolutionsProperties.getInstance().getUrlAuftragslisteAbkFs());
+                }
+                break;
+                default: {
+                    throw new Exception("unknown product type");
+                }
+            }
+
+            final InputStream inputStream = getHttpAccessHandler().doRequest(
+                    auftragsListeUrl,
                     new StringReader(""),
                     AccessHandler.ACCESS_METHODS.GET_REQUEST,
                     null,
@@ -322,10 +355,14 @@ public class FormSolutionServerNewStuffAvailableAction implements UserAwareServe
                             + "}",
                     new TypeReference<HashMap<String, Object>>() {
                     });
-            transIds.addAll((Collection<String>)map.get("list"));
+            for (final String transId : (Collection<String>)map.get("list")) {
+                transIds.add(transId);
+                typeMap.put(transId, productType);
+            }
         } catch (final Exception ex) {
             LOG.error("error while retrieving open transids", ex);
         }
+
         return transIds;
     }
 
@@ -377,7 +414,9 @@ public class FormSolutionServerNewStuffAvailableAction implements UserAwareServe
             }
         }
         try {
-            getMySqlHelper().updateStatus(transid, -status);
+            if (!FormSolutionsProperties.getInstance().isMysqlDisabled()) {
+                getMySqlHelper().updateStatus(transid, -status);
+            }
             doStatusChangedRequest(transid);
         } catch (final Exception ex2) {
             LOG.error("Fehler beim Aktualisieren des MySQL-Datensatzes", ex2);
@@ -511,18 +550,41 @@ public class FormSolutionServerNewStuffAvailableAction implements UserAwareServe
      * DOCUMENT ME!
      *
      * @param   formSolutionsBestellung  DOCUMENT ME!
+     * @param   type                     DOCUMENT ME!
      *
      * @return  DOCUMENT ME!
      */
-    private static String extractProdukt(final FormSolutionsBestellung formSolutionsBestellung) {
+    private static String extractProdukt(final FormSolutionsBestellung formSolutionsBestellung,
+            final ProductType type) {
+        if (type == null) {
+            return null;
+        }
+
         final String farbauspraegung = formSolutionsBestellung.getFarbauspraegung();
+        final boolean farbig;
+        if ("farbig".equals(farbauspraegung)) {
+            farbig = true;
+        } else if ("Graustufen".equals(farbauspraegung)) {
+            farbig = false;
+        } else {
+            return null;
+        }
+
         final String massstab = formSolutionsBestellung.getMassstab();
 
-        final StringBuffer produktSB = new StringBuffer("Stadtgrundkarte mit kom. Erg.");
-        if ("farbig".equals(farbauspraegung)) {
-            produktSB.append(" (farbig)");
-        } else {
-            produktSB.append(" (sw)");
+        final StringBuffer produktSB;
+        switch (type) {
+            case SGK: {
+                produktSB = new StringBuffer("Stadtgrundkarte mit kom. Erg.").append(farbig ? " (farbig)" : " (sw)");
+            }
+            break;
+            case ABK: {
+                produktSB = new StringBuffer("Amtliche Basiskarte").append(farbig ? " (farbig)" : " (sw)");
+            }
+            break;
+            default: {
+                return null;
+            }
         }
         produktSB.append(", ").append(extractFormat(formSolutionsBestellung)).append(" ").append(massstab);
         return produktSB.toString();
@@ -532,21 +594,37 @@ public class FormSolutionServerNewStuffAvailableAction implements UserAwareServe
      * DOCUMENT ME!
      *
      * @param   formSolutionsBestellung  DOCUMENT ME!
+     * @param   type                     DOCUMENT ME!
      *
      * @return  DOCUMENT ME!
      */
-    private static String extractProduktKey(final FormSolutionsBestellung formSolutionsBestellung) {
-        final String farbauspraegung = formSolutionsBestellung.getFarbauspraegung();
-
-        final String produktKey;
-        if ("farbig".equals(farbauspraegung)) {
-            produktKey = "LK.NRW.K.BF";
-        } else if ("Graustufen".equals(farbauspraegung)) {
-            produktKey = "LK.NRW.K.BSW";
-        } else {
-            produktKey = null;
+    private static String extractProduktKey(final FormSolutionsBestellung formSolutionsBestellung,
+            final ProductType type) {
+        if (type == null) {
+            return null;
         }
-        return produktKey;
+
+        final String farbauspraegung = formSolutionsBestellung.getFarbauspraegung();
+        final boolean farbig;
+        if ("farbig".equals(farbauspraegung)) {
+            farbig = true;
+        } else if ("Graustufen".equals(farbauspraegung)) {
+            farbig = false;
+        } else {
+            return null;
+        }
+
+        switch (type) {
+            case SGK: {
+                return farbig ? "LK.NRW.K.BF" : "LK.NRW.K.BSW";
+            }
+            case ABK: {
+                return farbig ? "LK.GDBNRW.A.ABKF" : "LK.GDBNRW.A.ABKSW";
+            }
+            default: {
+                return null;
+            }
+        }
     }
 
     /**
@@ -601,13 +679,15 @@ public class FormSolutionServerNewStuffAvailableAction implements UserAwareServe
      * DOCUMENT ME!
      *
      * @param   formSolutionsBestellung  farbauspraegung DOCUMENT ME!
+     * @param   productType              DOCUMENT ME!
      *
      * @return  DOCUMENT ME!
      *
      * @throws  RemoteException  DOCUMENT ME!
      */
-    private CidsBean getProduktBean(final FormSolutionsBestellung formSolutionsBestellung) throws RemoteException {
-        final String produktKey = extractProduktKey(formSolutionsBestellung);
+    private CidsBean getProduktBean(final FormSolutionsBestellung formSolutionsBestellung,
+            final ProductType productType) throws RemoteException {
+        final String produktKey = extractProduktKey(formSolutionsBestellung, productType);
         final String formatKey = extractFormatKey(formSolutionsBestellung);
 
         final MetaClass produktTypMc = getMetaClass("fs_bestellung_produkt_typ");
@@ -666,12 +746,14 @@ public class FormSolutionServerNewStuffAvailableAction implements UserAwareServe
      * DOCUMENT ME!
      *
      * @param   formSolutionsBestellung  DOCUMENT ME!
+     * @param   productType              DOCUMENT ME!
      *
      * @return  DOCUMENT ME!
      *
      * @throws  Exception  DOCUMENT ME!
      */
-    private CidsBean createBestellungBean(final FormSolutionsBestellung formSolutionsBestellung) throws Exception {
+    private CidsBean createBestellungBean(final FormSolutionsBestellung formSolutionsBestellung,
+            final ProductType productType) throws Exception {
         final MetaClass bestellungMc = getMetaClass("fs_bestellung");
         final MetaClass adresseMc = getMetaClass("fs_bestellung_adresse");
 
@@ -685,7 +767,7 @@ public class FormSolutionServerNewStuffAvailableAction implements UserAwareServe
 
         final String landparcelcode = extractLandparcelcode(formSolutionsBestellung);
 
-        final CidsBean produktBean = getProduktBean(formSolutionsBestellung);
+        final CidsBean produktBean = getProduktBean(formSolutionsBestellung, productType);
 
         adresseRechnungBean.setProperty("firma", trimedNotEmpty(formSolutionsBestellung.getFirma()));
         adresseRechnungBean.setProperty("name", trimedNotEmpty(formSolutionsBestellung.getAsName()));
@@ -750,8 +832,7 @@ public class FormSolutionServerNewStuffAvailableAction implements UserAwareServe
         bestellungBean.setProperty("gebuehr", gebuehr);
         bestellungBean.setProperty(
             "test",
-            FormSolutionsProperties.getInstance().isTest()
-                    || ((transid != null) && transid.startsWith(TEST_CISMET00_PREFIX)));
+            ((transid != null) && transid.startsWith(TEST_CISMET00_PREFIX)));
 
         return bestellungBean;
     }
@@ -920,7 +1001,9 @@ public class FormSolutionServerNewStuffAvailableAction implements UserAwareServe
                 final String auftragXml = getAuftrag(transid);
                 fsXmlMap.put(transid, auftragXml);
                 logSpecial("updating mysql entry for: " + transid);
-                getMySqlHelper().updateStatus(transid, STATUS_FETCH);
+                if (!FormSolutionsProperties.getInstance().isMysqlDisabled()) {
+                    getMySqlHelper().updateStatus(transid, STATUS_FETCH);
+                }
                 doStatusChangedRequest(transid);
             } catch (final Exception ex) {
                 setErrorStatus(transid, STATUS_FETCH, null, "Fehler beim Abholen FormSolution", ex);
@@ -933,10 +1016,12 @@ public class FormSolutionServerNewStuffAvailableAction implements UserAwareServe
      * DOCUMENT ME!
      *
      * @param   fsXmlMap  DOCUMENT ME!
+     * @param   typeMap   DOCUMENT ME!
      *
      * @return  DOCUMENT ME!
      */
-    private Map<String, FormSolutionsBestellung> createBestellungMap(final Map<String, String> fsXmlMap) {
+    private Map<String, FormSolutionsBestellung> createBestellungMap(final Map<String, String> fsXmlMap,
+            final Map<String, ProductType> typeMap) {
         final Collection<String> transids = new ArrayList<String>(fsXmlMap.keySet());
 
         logSpecial("creating simple bestellung bean for num of objects: " + transids.size());
@@ -961,13 +1046,15 @@ public class FormSolutionServerNewStuffAvailableAction implements UserAwareServe
 
                 logSpecial("updating mysql email entry for: " + transid);
 
-                getMySqlHelper().updateEmail(
-                    transid,
-                    STATUS_PARSE,
-                    extractLandparcelcode(formSolutionsBestellung),
-                    extractProdukt(formSolutionsBestellung),
-                    downloadOnly,
-                    email);
+                if (!FormSolutionsProperties.getInstance().isMysqlDisabled()) {
+                    getMySqlHelper().updateEmail(
+                        transid,
+                        STATUS_PARSE,
+                        extractLandparcelcode(formSolutionsBestellung),
+                        extractProdukt(formSolutionsBestellung, typeMap.get(transid)),
+                        downloadOnly,
+                        email);
+                }
                 doStatusChangedRequest(transid);
             } catch (final Exception ex) {
                 setErrorStatus(transid, STATUS_PARSE, null, "Fehler beim Parsen FormSolution", ex);
@@ -982,12 +1069,14 @@ public class FormSolutionServerNewStuffAvailableAction implements UserAwareServe
      *
      * @param   fsXmlMap            transids DOCUMENT ME!
      * @param   fsBestellungMap     DOCUMENT ME!
+     * @param   typeMap             DOCUMENT ME!
      * @param   insertExceptionMap  DOCUMENT ME!
      *
      * @return  DOCUMENT ME!
      */
     private Map<String, CidsBean> createCidsEntries(final Map<String, String> fsXmlMap,
             final Map<String, FormSolutionsBestellung> fsBestellungMap,
+            final Map<String, ProductType> typeMap,
             final Map<String, Exception> insertExceptionMap) {
         // nur die transids bearbeiten, bei denen das Parsen auch geklappt hat
         final Collection<String> transids = new ArrayList<String>(fsBestellungMap.keySet());
@@ -1004,7 +1093,7 @@ public class FormSolutionServerNewStuffAvailableAction implements UserAwareServe
             try {
                 final Exception insertException = insertExceptionMap.get(transid);
 
-                final CidsBean bestellungBean = createBestellungBean(formSolutionBestellung);
+                final CidsBean bestellungBean = createBestellungBean(formSolutionBestellung, typeMap.get(transid));
                 bestellungBean.setProperty("form_xml_orig", auftragXml);
                 if (insertException != null) {
                     bestellungBean.setProperty("fehler", "Fehler beim Erzeugen des MySQL-Datensatzes");
@@ -1055,7 +1144,9 @@ public class FormSolutionServerNewStuffAvailableAction implements UserAwareServe
 
                 logSpecial("updating mysql entry for: " + transid);
 
-                getMySqlHelper().updateStatus(transid, STATUS_SAVE);
+                if (!FormSolutionsProperties.getInstance().isMysqlDisabled()) {
+                    getMySqlHelper().updateStatus(transid, STATUS_SAVE);
+                }
                 doStatusChangedRequest(transid);
             } catch (final Exception ex) {
                 setErrorStatus(transid, STATUS_SAVE, null, "Fehler beim Erstellen des Bestellungs-Objektes", ex);
@@ -1063,6 +1154,23 @@ public class FormSolutionServerNewStuffAvailableAction implements UserAwareServe
         }
 
         return fsBeanMap;
+    }
+
+    /**
+     * DOCUMENT ME!
+     *
+     * @param   string  DOCUMENT ME!
+     *
+     * @return  DOCUMENT ME!
+     */
+    private static ProductType parseProductType(final String string) {
+        if (ProductType.SGK.toString().equals(string)) {
+            return ProductType.SGK;
+        } else if (ProductType.ABK.toString().equals(string)) {
+            return ProductType.ABK;
+        } else {
+            return null;
+        }
     }
 
     /**
@@ -1077,34 +1185,36 @@ public class FormSolutionServerNewStuffAvailableAction implements UserAwareServe
 
         final Map<String, Exception> insertExceptionMap = new HashMap<String, Exception>(transids.size());
 
-        for (final String transid : transids) {
-            boolean mysqlEntryAlreadyExists = false;
-            ResultSet resultSet = null;
-            try {
-                resultSet = getMySqlHelper().select(transid);
-                mysqlEntryAlreadyExists = (resultSet != null) && resultSet.next();
-            } catch (final SQLException ex) {
-                LOG.error("check nach bereits vorhandenen transids fehlgeschlagen.", ex);
-            } finally {
-                if (resultSet != null) {
-                    try {
-                        resultSet.close();
-                    } catch (SQLException ex) {
+        if (!FormSolutionsProperties.getInstance().isMysqlDisabled()) {
+            for (final String transid : transids) {
+                boolean mysqlEntryAlreadyExists = false;
+                ResultSet resultSet = null;
+                try {
+                    resultSet = getMySqlHelper().select(transid);
+                    mysqlEntryAlreadyExists = (resultSet != null) && resultSet.next();
+                } catch (final SQLException ex) {
+                    LOG.error("check nach bereits vorhandenen transids fehlgeschlagen.", ex);
+                } finally {
+                    if (resultSet != null) {
+                        try {
+                            resultSet.close();
+                        } catch (SQLException ex) {
+                        }
                     }
                 }
-            }
 
-            logSpecial("updating or inserting mySQL entry for: " + transid);
-            try {
-                if (mysqlEntryAlreadyExists) {
-                    getMySqlHelper().updateStatus(transid, 100);
-                } else {
-                    getMySqlHelper().insertMySql(transid, 100);
+                logSpecial("updating or inserting mySQL entry for: " + transid);
+                try {
+                    if (mysqlEntryAlreadyExists) {
+                        getMySqlHelper().updateStatus(transid, 100);
+                    } else {
+                        getMySqlHelper().insertMySql(transid, 100);
+                    }
+                    doStatusChangedRequest(transid);
+                } catch (final Exception ex) {
+                    LOG.error("Fehler beim Erzeugen/Aktualisieren des MySQL-Datensatzes.", ex);
+                    insertExceptionMap.put(transid, ex);
                 }
-                doStatusChangedRequest(transid);
-            } catch (final Exception ex) {
-                LOG.error("Fehler beim Erzeugen/Aktualisieren des MySQL-Datensatzes.", ex);
-                insertExceptionMap.put(transid, ex);
             }
         }
 
@@ -1127,9 +1237,11 @@ public class FormSolutionServerNewStuffAvailableAction implements UserAwareServe
                     closeTransid(transid);
 
                     logSpecial("updating mysql entry for: " + transid);
-                    getMySqlHelper().updateStatus(transid, STATUS_CLOSE);
+                    if (!FormSolutionsProperties.getInstance().isMysqlDisabled()) {
+                        getMySqlHelper().updateStatus(transid, STATUS_CLOSE);
+                    }
                     doStatusChangedRequest(transid);
-                } catch (Exception ex) {
+                } catch (final Exception ex) {
                     setErrorStatus(transid, STATUS_CLOSE, bestellungBean, "Fehler beim Schließen der Transaktion.", ex);
                     break;
                 }
@@ -1155,7 +1267,9 @@ public class FormSolutionServerNewStuffAvailableAction implements UserAwareServe
                 try {
                     final URL productUrl = createProductUrl(bestellungBean);
                     fsUrlMap.put(transid, productUrl);
-                    getMySqlHelper().updateStatus(transid, STATUS_CREATEURL);
+                    if (!FormSolutionsProperties.getInstance().isMysqlDisabled()) {
+                        getMySqlHelper().updateStatus(transid, STATUS_CREATEURL);
+                    }
                     doStatusChangedRequest(transid);
                 } catch (final Exception ex) {
                     setErrorStatus(
@@ -1374,11 +1488,13 @@ public class FormSolutionServerNewStuffAvailableAction implements UserAwareServe
 
                     createRechnung(fileNameRechnung, bestellungBean);
 
-                    getMySqlHelper().updateProdukt(
-                        transid,
-                        STATUS_DOWNLOAD,
-                        (String)bestellungBean.getProperty("produkt_dateipfad"),
-                        (String)bestellungBean.getProperty("produkt_dateiname_orig"));
+                    if (!FormSolutionsProperties.getInstance().isMysqlDisabled()) {
+                        getMySqlHelper().updateProdukt(
+                            transid,
+                            STATUS_DOWNLOAD,
+                            (String)bestellungBean.getProperty("produkt_dateipfad"),
+                            (String)bestellungBean.getProperty("produkt_dateiname_orig"));
+                    }
                     doStatusChangedRequest(transid);
                 } catch (final Exception ex) {
                     setErrorStatus(transid, STATUS_DOWNLOAD, bestellungBean, "Fehler beim Erzeugen des Produktes", ex);
@@ -1396,7 +1512,7 @@ public class FormSolutionServerNewStuffAvailableAction implements UserAwareServe
     private void doPureBilling(final CidsBean bestellungBean, final String transid) {
         try {
             if (bestellungBean.getProperty("fk_billing") == null) {
-                final CidsBean billingBean = doBilling(bestellungBean);
+                final CidsBean billingBean = doBilling(bestellungBean, transid);
                 if (billingBean != null) {
                     bestellungBean.setProperty("fk_billing", billingBean);
                     getMetaService().updateMetaObject(user, bestellungBean.getMetaObject());
@@ -1469,16 +1585,15 @@ public class FormSolutionServerNewStuffAvailableAction implements UserAwareServe
      * DOCUMENT ME!
      *
      * @param   bestellungBean  DOCUMENT ME!
+     * @param   transid         DOCUMENT ME!
      *
      * @return  DOCUMENT ME!
      */
-    private CidsBean doBilling(final CidsBean bestellungBean) {
+    private CidsBean doBilling(final CidsBean bestellungBean, final String transid) {
         try {
             final CidsBean billingBean = CidsBean.createNewCidsBeanFromTableName("WUNDA_BLAU", "Billing_Billing");
 
-            final String transid = (String)bestellungBean.getProperty("transid");
             final boolean isPostweg = Boolean.TRUE.equals(bestellungBean.getProperty("postweg"));
-            final String din = (String)bestellungBean.getProperty("fk_produkt.fk_format.din");
             final Timestamp abrechnungsdatum = (Timestamp)bestellungBean.getProperty("eingang_ts");
             final Double gebuehr = (Double)bestellungBean.getProperty("gebuehr");
             final String projektBezeichnung = ((bestellungBean.getProperty("fk_adresse_rechnung.firma") != null)
@@ -1496,27 +1611,8 @@ public class FormSolutionServerNewStuffAvailableAction implements UserAwareServe
             final String verwendungskey = isPostweg
                 ? FormSolutionsProperties.getInstance().getBillingVerwendungskeyPostweg()
                 : FormSolutionsProperties.getInstance().getBillingVerwendungskeyDownload();
-            final String produktkey;
-            final String produktbezeichnung;
-            if ("A4".equals(din)) {
-                produktkey = FormSolutionsProperties.getInstance().getBillingProduktKeyDina4();
-                produktbezeichnung = FormSolutionsProperties.getInstance().getBillingProduktBezeichnungDina4();
-            } else if ("A3".equals(din)) {
-                produktkey = FormSolutionsProperties.getInstance().getBillingProduktKeyDina3();
-                produktbezeichnung = FormSolutionsProperties.getInstance().getBillingProduktBezeichnungDina3();
-            } else if ("A2".equals(din)) {
-                produktkey = FormSolutionsProperties.getInstance().getBillingProduktKeyDina2();
-                produktbezeichnung = FormSolutionsProperties.getInstance().getBillingProduktBezeichnungDina2();
-            } else if ("A1".equals(din)) {
-                produktkey = FormSolutionsProperties.getInstance().getBillingProduktKeyDina1();
-                produktbezeichnung = FormSolutionsProperties.getInstance().getBillingProduktBezeichnungDina1();
-            } else if ("A0".equals(din)) {
-                produktkey = FormSolutionsProperties.getInstance().getBillingProduktKeyDina0();
-                produktbezeichnung = FormSolutionsProperties.getInstance().getBillingProduktBezeichnungDina0();
-            } else {
-                produktkey = null;
-                produktbezeichnung = null;
-            }
+            final String produktkey = (String)bestellungBean.getProperty("fk_produkt.billing_key");
+            final String produktbezeichnung = (String)bestellungBean.getProperty("fk_produkt.billing_desc");
 
             billingBean.setProperty("request", request_url);
             billingBean.setProperty(
@@ -1540,8 +1636,7 @@ public class FormSolutionServerNewStuffAvailableAction implements UserAwareServe
             billingBean.setProperty("mwst_satz", 0d);
             billingBean.setProperty("angeschaeftsbuch", Boolean.FALSE);
             billingBean.setProperty("abgerechnet", Boolean.TRUE);
-            if (FormSolutionsProperties.getInstance().isTest()
-                        || ((transid != null) && transid.startsWith(TEST_CISMET00_PREFIX))) {
+            if ((transid != null) && transid.startsWith(TEST_CISMET00_PREFIX)) {
                 LOG.info("Test-Object would have created this Billing-Entry: " + billingBean.getMOString());
                 return null;
             } else {
@@ -1571,7 +1666,9 @@ public class FormSolutionServerNewStuffAvailableAction implements UserAwareServe
                     okStatus = STATUS_DONE;
                 }
                 try {
-                    getMySqlHelper().updateStatus(transid, okStatus);
+                    if (!FormSolutionsProperties.getInstance().isMysqlDisabled()) {
+                        getMySqlHelper().updateStatus(transid, okStatus);
+                    }
                     doStatusChangedRequest(transid);
                 } catch (final Exception ex) {
                     setErrorStatus(transid, 10, bestellungBean, "Fehler beim Abschließen des MYSQL-Datensatzes", ex);
@@ -1663,12 +1760,19 @@ public class FormSolutionServerNewStuffAvailableAction implements UserAwareServe
                 case STATUS_SAVE: {
                     if (fetchFromFs) {
                         try {
-                            final Collection<String> transIds = getOpenTransids();
+                            final Map<String, ProductType> typeMap = new HashMap<String, ProductType>();
+
+                            final Collection<String> transIds = new ArrayList<String>();
+                            transIds.addAll(getOpenExtendedTransids(ProductType.SGK, typeMap));
+                            transIds.addAll(getOpenExtendedTransids(ProductType.ABK, typeMap));
 
                             // TEST OBJECTS
                             try {
-                                if (testCismet00Enabled) {
-                                    transIds.add(TEST_CISMET00_PREFIX + RandomStringUtils.randomAlphanumeric(8));
+                                if (testCismet00Type != null) {
+                                    final String transId = TEST_CISMET00_PREFIX
+                                                + RandomStringUtils.randomAlphanumeric(8);
+                                    transIds.add(transId);
+                                    typeMap.put(transId, testCismet00Type);
                                 }
                             } catch (final Exception ex) {
                                 LOG.error("error while generating TEST_CISMET00 transid", ex);
@@ -1678,10 +1782,13 @@ public class FormSolutionServerNewStuffAvailableAction implements UserAwareServe
 
                             final Map<String, Exception> insertExceptionMap = createMySqlEntries(transIds);
                             final Map<String, String> fsXmlMap = extractXmlParts(transIds);
-                            final Map<String, FormSolutionsBestellung> fsBestellungMap = createBestellungMap(fsXmlMap);
+                            final Map<String, FormSolutionsBestellung> fsBestellungMap = createBestellungMap(
+                                    fsXmlMap,
+                                    typeMap);
                             fsBeanMap.putAll(createCidsEntries(
                                     fsXmlMap,
                                     fsBestellungMap,
+                                    typeMap,
                                     insertExceptionMap));
 
                             logSpecial("fetched from FS");
