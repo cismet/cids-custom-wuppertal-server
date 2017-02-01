@@ -1585,6 +1585,7 @@ public class FormSolutionServerNewStuffAvailableAction implements UserAwareServe
      * DOCUMENT ME!
      *
      * @param   bestellungBean  DOCUMENT ME!
+     * @param   transid         DOCUMENT ME!
      *
      * @return  DOCUMENT ME!
      */
