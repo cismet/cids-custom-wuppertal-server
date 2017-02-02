@@ -1092,8 +1092,9 @@ public class FormSolutionServerNewStuffAvailableAction implements UserAwareServe
 
             try {
                 final Exception insertException = insertExceptionMap.get(transid);
+                final ProductType type = typeMap.get(transid);
 
-                final CidsBean bestellungBean = createBestellungBean(formSolutionBestellung, typeMap.get(transid));
+                final CidsBean bestellungBean = createBestellungBean(formSolutionBestellung, type);
                 bestellungBean.setProperty("form_xml_orig", auftragXml);
                 if (insertException != null) {
                     bestellungBean.setProperty("fehler", "Fehler beim Erzeugen des MySQL-Datensatzes");
@@ -1131,6 +1132,10 @@ public class FormSolutionServerNewStuffAvailableAction implements UserAwareServe
                         "Fehler beim Laden des Flurstücks",
                         getObjectMapper().readValue((String)bestellungBean.getProperty("exception"), Exception.class),
                         false);
+                }
+
+                if (!ProductType.SGK.equals(type)) {
+                    bestellungBean.setProperty("test", Boolean.TRUE);
                 }
 
                 logSpecial("persisting cids entry for: " + transid);
