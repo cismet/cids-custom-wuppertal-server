@@ -61,6 +61,7 @@ public class FormSolutionsProperties {
     private final String billingVerwendungszweckPostweg;
     private final String billingVerwendungskeyDownload;
     private final String billingVerwendungskeyPostweg;
+    private final String rechnungBerechnugsgGrundlage;
     private final boolean mysqlDisabled;
 
     //~ Constructors -----------------------------------------------------------
@@ -97,6 +98,7 @@ public class FormSolutionsProperties {
         billingVerwendungskeyPostweg = properties.getProperty("BILLING_VERWENDUNGSKEY_POSTWEG");
         mysqlDisabled = (properties.getProperty("MYSQL_DISABLED") != null)
                     && "true".equals(properties.getProperty("MYSQL_DISABLED").trim().toLowerCase());
+        rechnungBerechnugsgGrundlage = properties.getProperty("RECHNUNG_BERECHNUNGSGRUNDLAGE");
     }
 
     //~ Methods ----------------------------------------------------------------
