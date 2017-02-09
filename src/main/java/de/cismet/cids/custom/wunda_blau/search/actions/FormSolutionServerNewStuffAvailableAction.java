@@ -1396,7 +1396,9 @@ public class FormSolutionServerNewStuffAvailableAction implements UserAwareServe
         parameters.put("RECHNUNG_GES_BETRAG", gebuehr);
         parameters.put("RECHNUNG_EINZELPREIS", gebuehr);
         parameters.put("RECHNUNG_GESAMMTPREIS", gebuehr);
-        parameters.put("RECHNUNG_BERECH_GRUNDLAGE", "VermWertGebT 2.1.1");
+        parameters.put(
+            "RECHNUNG_BERECH_GRUNDLAGE",
+            FormSolutionsProperties.getInstance().getRechnungBerechnugsgGrundlage());
         parameters.put("RECHNUNG_ANZAHL", "1");
         parameters.put("RECHNUNG_RABATT", "");
         parameters.put("RECHNUNG_UST", "");
