@@ -121,6 +121,7 @@ public class FormSolutionServerNewStuffAvailableAction implements UserAwareServe
     public static final String TASK_NAME = "formSolutionServerNewStuffAvailable";
 
     private static final String TEST_CISMET00_PREFIX = "TEST_CISMET00-";
+    private static final String GUTSCHEIN_FERTIGUNGSVERMERK = "TESTAUSZUG - nur zur Demonstration (%s)";
 
     private static final Map<String, MetaClass> METACLASS_CACHE = new HashMap();
     private static final ObjectMapper MAPPER = new ObjectMapper();
@@ -135,6 +136,9 @@ public class FormSolutionServerNewStuffAvailableAction implements UserAwareServe
     public static final int STATUS_BILLING = 15;
     public static final int STATUS_PENDING = 10;
     public static final int STATUS_DONE = 0;
+
+    public static final int GUTSCHEIN_YES = 1;
+    public static final int GUTSCHEIN_NO = 2;
 
     //~ Enums ------------------------------------------------------------------
 
@@ -831,6 +835,11 @@ public class FormSolutionServerNewStuffAvailableAction implements UserAwareServe
         }
         bestellungBean.setProperty("gebuehr", gebuehr);
         bestellungBean.setProperty(
+            "gutschein_code",
+            ((formSolutionsBestellung.getGutschein() != null)
+                        && (GUTSCHEIN_YES == Integer.parseInt(formSolutionsBestellung.getGutschein())))
+                ? formSolutionsBestellung.getGutscheinCode() : null);
+        bestellungBean.setProperty(
             "test",
             ((transid != null) && transid.startsWith(TEST_CISMET00_PREFIX)));
 
@@ -942,6 +951,9 @@ public class FormSolutionServerNewStuffAvailableAction implements UserAwareServe
         final Geometry geom = (Geometry)bestellungBean.getProperty("geometrie.geo_field");
         final Point center = geom.getEnvelope().getCentroid();
 
+        final String fertigungsVermerk = (bestellungBean.getProperty("gutscheincode") != null)
+            ? String.format(GUTSCHEIN_FERTIGUNGSVERMERK, bestellungBean.getProperty("gutscheincode")) : null;
+
         final URL url = ServerAlkisProducts.getInstance()
                     .productKarteUrl(
                         flurstueckKennzeichen,
@@ -952,7 +964,7 @@ public class FormSolutionServerNewStuffAvailableAction implements UserAwareServe
                         null,
                         transid,
                         false,
-                        null);
+                        fertigungsVermerk);
 
         return url;
     }
@@ -1373,6 +1385,7 @@ public class FormSolutionServerNewStuffAvailableAction implements UserAwareServe
         final String rechnungAdresse = (rechnungAlternativ.isEmpty())
             ? (rechnungStrasse + " " + rechnungHausnummer + "\n" + rechnungPlz + " " + rechnungOrt)
             : (rechnungAlternativ + "\n" + rechnungStaat);
+        final String gutcheinCode = (String)bestellungBean.getProperty("gutscheinCode");
 
         parameters.put("RECHNUNG_STRASSE", rechnungStrasse);
         parameters.put("RECHNUNG_HAUSNUMMER", rechnungHausnummer);
@@ -1400,6 +1413,7 @@ public class FormSolutionServerNewStuffAvailableAction implements UserAwareServe
         parameters.put("RECHNUNG_ANZAHL", "1");
         parameters.put("RECHNUNG_RABATT", "");
         parameters.put("RECHNUNG_UST", "");
+        parameters.put("RECHNUNG_GUTSCHEINCODE", "");
         parameters.put("SUBREPORT_DIR", DomainServerImpl.getServerProperties().getServerResourcesBasePath() + "/");
         final JRDataSource dataSource = new JRBeanCollectionDataSource(Arrays.asList(bestellungBean));
 
@@ -1822,7 +1836,9 @@ public class FormSolutionServerNewStuffAvailableAction implements UserAwareServe
                 case STATUS_BILLING: {
                     for (final String transid : new ArrayList<String>(fsBeanMap.keySet())) {
                         final CidsBean bestellungBean = fsBeanMap.get(transid);
-                        doPureBilling(bestellungBean, transid);
+                        if (bestellungBean.getProperty("gutschein_code") == null) {
+                            doPureBilling(bestellungBean, transid);
+                        }
                     }
                     if (singleStep) {
                         break;
