@@ -1413,7 +1413,7 @@ public class FormSolutionServerNewStuffAvailableAction implements UserAwareServe
         parameters.put("RECHNUNG_ANZAHL", "1");
         parameters.put("RECHNUNG_RABATT", "");
         parameters.put("RECHNUNG_UST", "");
-        parameters.put("RECHNUNG_GUTSCHEINCODE", "");
+        parameters.put("RECHNUNG_GUTSCHEINCODE", gutcheinCode);
         parameters.put("SUBREPORT_DIR", DomainServerImpl.getServerProperties().getServerResourcesBasePath() + "/");
         final JRDataSource dataSource = new JRBeanCollectionDataSource(Arrays.asList(bestellungBean));
 
