@@ -121,6 +121,7 @@ public class FormSolutionServerNewStuffAvailableAction implements UserAwareServe
     public static final String TASK_NAME = "formSolutionServerNewStuffAvailable";
 
     private static final String TEST_CISMET00_PREFIX = "TEST_CISMET00-";
+    private static final String GUTSCHEIN_ADDITIONAL_TEXT = "TESTAUSZUG - nur zur Demonstration (%s)";
 
     private static final Map<String, MetaClass> METACLASS_CACHE = new HashMap();
     private static final ObjectMapper MAPPER = new ObjectMapper();
@@ -135,6 +136,9 @@ public class FormSolutionServerNewStuffAvailableAction implements UserAwareServe
     public static final int STATUS_BILLING = 15;
     public static final int STATUS_PENDING = 10;
     public static final int STATUS_DONE = 0;
+
+    public static final int GUTSCHEIN_YES = 1;
+    public static final int GUTSCHEIN_NO = 2;
 
     //~ Enums ------------------------------------------------------------------
 
@@ -831,6 +835,11 @@ public class FormSolutionServerNewStuffAvailableAction implements UserAwareServe
         }
         bestellungBean.setProperty("gebuehr", gebuehr);
         bestellungBean.setProperty(
+            "gutschein_code",
+            ((formSolutionsBestellung.getGutschein() != null)
+                        && (GUTSCHEIN_YES == Integer.parseInt(formSolutionsBestellung.getGutschein())))
+                ? formSolutionsBestellung.getGutscheinCode() : null);
+        bestellungBean.setProperty(
             "test",
             ((transid != null) && transid.startsWith(TEST_CISMET00_PREFIX)));
 
@@ -942,6 +951,9 @@ public class FormSolutionServerNewStuffAvailableAction implements UserAwareServe
         final Geometry geom = (Geometry)bestellungBean.getProperty("geometrie.geo_field");
         final Point center = geom.getEnvelope().getCentroid();
 
+        final String gutscheincodeAdditionalText = (bestellungBean.getProperty("gutschein_code") != null)
+            ? String.format(GUTSCHEIN_ADDITIONAL_TEXT, bestellungBean.getProperty("gutschein_code")) : null;
+
         final URL url = ServerAlkisProducts.getInstance()
                     .productKarteUrl(
                         flurstueckKennzeichen,
@@ -949,7 +961,7 @@ public class FormSolutionServerNewStuffAvailableAction implements UserAwareServe
                         0,
                         (int)center.getX(),
                         (int)center.getY(),
-                        null,
+                        gutscheincodeAdditionalText,
                         transid,
                         false,
                         null);
@@ -1373,6 +1385,7 @@ public class FormSolutionServerNewStuffAvailableAction implements UserAwareServe
         final String rechnungAdresse = (rechnungAlternativ.isEmpty())
             ? (rechnungStrasse + " " + rechnungHausnummer + "\n" + rechnungPlz + " " + rechnungOrt)
             : (rechnungAlternativ + "\n" + rechnungStaat);
+        final String gutscheinCode = (String)bestellungBean.getProperty("gutschein_code");
 
         parameters.put("RECHNUNG_STRASSE", rechnungStrasse);
         parameters.put("RECHNUNG_HAUSNUMMER", rechnungHausnummer);
@@ -1390,18 +1403,18 @@ public class FormSolutionServerNewStuffAvailableAction implements UserAwareServe
                     + "\n"
                     + bestellungBean.getProperty("transid"));
 
-        final DecimalFormat df = new DecimalFormat("#.00");
-        final String gebuehr = (bestellungBean.getProperty("gebuehr") != null)
-            ? df.format((Double)bestellungBean.getProperty("gebuehr")) : "";
+        final float gebuehr = (bestellungBean.getProperty("gebuehr") != null)
+            ? ((Double)bestellungBean.getProperty("gebuehr")).floatValue() : 0f;
         parameters.put("RECHNUNG_GES_BETRAG", gebuehr);
         parameters.put("RECHNUNG_EINZELPREIS", gebuehr);
         parameters.put("RECHNUNG_GESAMMTPREIS", gebuehr);
         parameters.put(
             "RECHNUNG_BERECH_GRUNDLAGE",
             FormSolutionsProperties.getInstance().getRechnungBerechnugsgGrundlage());
-        parameters.put("RECHNUNG_ANZAHL", "1");
-        parameters.put("RECHNUNG_RABATT", "");
-        parameters.put("RECHNUNG_UST", "");
+        parameters.put("RECHNUNG_ANZAHL", 1);
+        parameters.put("RECHNUNG_RABATT", 0.0f);
+        parameters.put("RECHNUNG_UST", 0.0f);
+        parameters.put("RECHNUNG_GUTSCHEINCODE", gutscheinCode);
         parameters.put("SUBREPORT_DIR", DomainServerImpl.getServerProperties().getServerResourcesBasePath() + "/");
         final JRDataSource dataSource = new JRBeanCollectionDataSource(Arrays.asList(bestellungBean));
 
@@ -1824,7 +1837,9 @@ public class FormSolutionServerNewStuffAvailableAction implements UserAwareServe
                 case STATUS_BILLING: {
                     for (final String transid : new ArrayList<String>(fsBeanMap.keySet())) {
                         final CidsBean bestellungBean = fsBeanMap.get(transid);
-                        doPureBilling(bestellungBean, transid);
+                        if (bestellungBean.getProperty("gutschein_code") == null) {
+                            doPureBilling(bestellungBean, transid);
+                        }
                     }
                     if (singleStep) {
                         break;
