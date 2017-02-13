@@ -185,6 +185,12 @@ public class FormSolutionsBestellung {
     @XmlElement(name = "E-Mailadresse")
     private String eMailadresse;
 
+    @XmlElement(name = "Gutschein")
+    private String gutschein;
+
+    @XmlElement(name = "Gutscheincode")
+    private String gutscheinCode;
+
 //    @XmlElement(name = "E-Mailadresse.1")
 //    private String eMailadresse1;
 }
