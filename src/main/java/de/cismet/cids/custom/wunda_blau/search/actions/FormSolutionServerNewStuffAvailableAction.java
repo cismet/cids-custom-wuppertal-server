@@ -1409,9 +1409,9 @@ public class FormSolutionServerNewStuffAvailableAction implements UserAwareServe
         parameters.put("RECHNUNG_EINZELPREIS", gebuehr);
         parameters.put("RECHNUNG_GESAMMTPREIS", gebuehr);
         parameters.put("RECHNUNG_BERECH_GRUNDLAGE", "VermWertGebT 2.1.1");
-        parameters.put("RECHNUNG_ANZAHL", "1");
-        parameters.put("RECHNUNG_RABATT", "");
-        parameters.put("RECHNUNG_UST", "");
+        parameters.put("RECHNUNG_ANZAHL", 1);
+        parameters.put("RECHNUNG_RABATT", 0.0f);
+        parameters.put("RECHNUNG_UST", 0.0f);
         parameters.put("RECHNUNG_GUTSCHEINCODE", gutscheinCode);
         parameters.put("SUBREPORT_DIR", DomainServerImpl.getServerProperties().getServerResourcesBasePath() + "/");
         final JRDataSource dataSource = new JRBeanCollectionDataSource(Arrays.asList(bestellungBean));
