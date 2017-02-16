@@ -5,66 +5,174 @@
     <parent>
         <groupId>de.cismet.cids</groupId>
         <artifactId>cids-parent</artifactId>
-        <version>2.4</version>
+        <version>5.0-SNAPSHOT</version>
     </parent>
 
     <groupId>de.cismet.cids.custom.wupp.server</groupId>
     <artifactId>cids-custom-server-wuppertal</artifactId>
-    <version>4.3-SNAPSHOT</version>
+    <version>5.0-SNAPSHOT</version>
     <packaging>jar</packaging>
+    
     <name>${names.cids.custom-wuppertal-server}</name>
     <description>!!! description pending !!!</description>
-    <licenses>
-        <license>
-            <name>GNU Lesser General Public License</name>
-            <distribution>repo</distribution>
-            <url>http://www.gnu.org/licenses/lgpl-3.0.html</url>
-        </license>
-    </licenses>
-
-    <prerequisites>
-        <maven>3</maven>
-    </prerequisites>
 
     <scm>
         <connection>https://github.com/cismet/cids-custom-wuppertal-server.git</connection>
         <developerConnection>scm:git:git@github.com:cismet/cids-custom-wuppertal-server.git</developerConnection>
         <url>https://github.com/cismet/cids-custom-wuppertal-server</url>
-      <tag>HEAD</tag>
-  </scm>
-
-    <repositories>
-        <repository>
-            <id>cismet-repo</id>
-            <url>https://repo.cismet.de/repo</url>
-            <releases>
-                <enabled>true</enabled>
-                <checksumPolicy>warn</checksumPolicy>
-                <updatePolicy>daily</updatePolicy>
-            </releases>
-            <snapshots>
-                <enabled>true</enabled>
-                <checksumPolicy>warn</checksumPolicy>
-                <updatePolicy>interval:60</updatePolicy>
-            </snapshots>
-        </repository>
-    </repositories>
+        <tag>HEAD</tag>
+    </scm>
 
     <properties>
-        <!--
-            ToDo make constants for the single values to ease the configuration
-            of the child POMs.
-        -->
         <names.cids.custom-wuppertal-server>cids Custom Wuppertal ServerStuff</names.cids.custom-wuppertal-server>
         <de.cismet.libDir>lib/localWuNDa</de.cismet.libDir>
     </properties>
+    
+    <issueManagement>
+        <system>GitHub</system>
+        <url>https://github.com/switchonproject/cids-custom-wuppertal-server/issues</url>
+    </issueManagement>
+    
+    <ciManagement>
+        <system>jenkins</system>
+        <url>https://ci.cismet.de/job/cids-custom-wuppertal-server/</url>
+    </ciManagement>
+    
+    <dependencyManagement>  
+        <!-- IMPORT of cismet-ext-bom -->
+        <dependencies>
+            <dependency>
+                <groupId>de.cismet</groupId>
+                <artifactId>cismet-ext-bom</artifactId>
+                <version>5.0-SNAPSHOT</version>
+                <type>pom</type>
+                <scope>import</scope>
+            </dependency>
+        
+            <!-- BEGIN: managed cids-dependencies -->
+            <dependency>
+                <groupId>de.cismet.commons</groupId>
+                <artifactId>cismet-commons</artifactId>
+                <version>5.0-SNAPSHOT</version>
+                <type>jar</type>
+                <scope>compile</scope>
+            </dependency>
+            <dependency>
+                <groupId>de.cismet.commons</groupId>
+                <artifactId>cismet-commons</artifactId>
+                <version>5.0-SNAPSHOT</version>
+                <type>test-jar</type>
+                <scope>test</scope>
+            </dependency>
+            
+            <dependency>
+                <groupId>de.cismet.cids</groupId>
+                <artifactId>cids-server</artifactId>
+                <version>5.0-SNAPSHOT</version>
+                <type>jar</type>
+                <scope>compile</scope>
+            </dependency>
+            <dependency>
+                <groupId>de.cismet.cids</groupId>
+                <artifactId>cids-server</artifactId>
+                <version>5.0-SNAPSHOT</version>
+                <type>test-jar</type>
+                <scope>test</scope>
+            </dependency>
+
+            <dependency>
+                <groupId>de.cismet.cids</groupId>
+                <artifactId>cids-server-rest-types</artifactId>
+                <version>5.0-SNAPSHOT</version>
+                <scope>compile</scope>
+                <type>jar</type>
+            </dependency>
+
+            <dependency>
+                <groupId>de.cismet.custom</groupId>
+                <artifactId>beansbinding</artifactId>
+                <version>5.0-SNAPSHOT</version>
+                <scope>compile</scope>
+                <type>jar</type>
+            </dependency>
+
+            <!-- END: managed cids-dependencies -->    
+        </dependencies>
+    </dependencyManagement>
 
     <dependencies>
+        <!-- BEGIN: cids-dependencies -->
+        <dependency>
+            <groupId>de.cismet.commons</groupId>
+            <artifactId>cismet-commons</artifactId>
+        </dependency>
+        <dependency>
+            <groupId>de.cismet.cids</groupId>
+            <artifactId>cids-server-rest-types</artifactId>
+        </dependency>
         <dependency>
             <groupId>de.cismet.cids</groupId>
             <artifactId>cids-server</artifactId>
-            <version>4.0</version>
+            <!--
+                Wrong jfreechart dependency in jasper!
+            -->
+            <!--<exclusions>
+                <exclusion>
+                    <groupId>jfree</groupId>
+                    <artifactId>jfreechart</artifactId>
+                </exclusion>
+                <exclusion>
+                    <groupId>jfree</groupId>
+                    <artifactId>jcommon</artifactId>
+                </exclusion>
+            </exclusions>-->
         </dependency>
+        <!-- END: cids-dependencies -->
+
+        <!-- BEGIN: managed dependencies -->
+        <dependency>
+            <groupId>com.sun.jersey.contribs</groupId>
+            <artifactId>jersey-multipart</artifactId>
+            <type>jar</type>
+        </dependency>
+        <dependency>
+            <groupId>com.sun.jersey</groupId>
+            <artifactId>jersey-json</artifactId>
+        </dependency>
+        <dependency>
+            <groupId>commons-io</groupId>
+            <artifactId>commons-io</artifactId>
+        </dependency>
+        <dependency>
+            <groupId>org.slf4j</groupId>
+            <artifactId>jcl-over-slf4j</artifactId>
+        </dependency>
+        <dependency>
+            <groupId>xerces</groupId>
+            <artifactId>xercesImpl</artifactId>
+        </dependency>
+        <dependency>
+            <groupId>net.sf.jasperreports</groupId>
+            <artifactId>jasperreports</artifactId>
+        </dependency>
+        <!-- END: managed dependencies -->
+        
+        <!-- BEGIN: runtime dependencies -->
+        <dependency>
+            <groupId>org.slf4j</groupId>
+            <artifactId>slf4j-log4j12</artifactId>
+            <scope>runtime</scope>
+        </dependency>
+        <!-- END: runtime dependencies -->
+        
+        <!-- BEGIN: Provided dependencies -->
+        <dependency>
+            <groupId>org.projectlombok</groupId>
+            <artifactId>lombok</artifactId>
+            <scope>provided</scope>
+        </dependency>
+        <!-- END: Provided dependencies -->
+        
         <dependency>
             <groupId>de.aedsicad</groupId>
             <artifactId>aaawebclient</artifactId>
@@ -86,54 +194,6 @@
             <version>6.3.16.1</version>
         </dependency>        
         <dependency>
-            <groupId>javax.media</groupId>
-            <artifactId>jai_imageio</artifactId>
-            <version>1.1</version>
-        </dependency>
-        <dependency>
-            <groupId>de.cismet.cids</groupId>
-            <artifactId>cids-server-rest-types</artifactId>
-            <version>4.0</version>
-        </dependency>
-        <dependency>
-            <groupId>com.sun.jersey</groupId>
-            <artifactId>jersey-bundle</artifactId>
-            <version>1.17.1</version>
-            <type>jar</type>
-        </dependency>
-        <dependency>
-            <groupId>com.sun.jersey.contribs</groupId>
-            <artifactId>jersey-multipart</artifactId>
-            <version>1.17.1</version>
-            <type>jar</type>
-        </dependency>
-        <dependency>
-            <groupId>commons-io</groupId>
-            <artifactId>commons-io</artifactId>
-            <version>1.4</version>
-        </dependency>
-        <dependency>
-            <groupId>org.slf4j</groupId>
-            <artifactId>slf4j-log4j12</artifactId>
-            <version>1.7.7</version>
-        </dependency>
-        <dependency>
-            <groupId>org.slf4j</groupId>
-            <artifactId>jcl-over-slf4j</artifactId>
-            <version>1.7.7</version>
-        </dependency>
-        <dependency>
-                <groupId>xerces</groupId>
-                <artifactId>xercesImpl</artifactId>
-                <version>2.11.0</version>
-        </dependency>
-        <dependency>
-            <groupId>mysql</groupId>
-            <artifactId>mysql-connector-java</artifactId>
-            <version>5.1.38</version>
-            <scope>test</scope>
-        </dependency>
-        <dependency>
             <groupId>commons-net</groupId>
             <artifactId>commons-net</artifactId>
             <version>3.3</version>
@@ -144,34 +204,37 @@
             <artifactId>jsoup</artifactId>
             <version>1.8.3</version>
         </dependency>
+        
+        <!-- BEGIN: Test dependencies -->
         <dependency>
-            <groupId>net.sf.jasperreports</groupId>
-            <artifactId>jasperreports</artifactId>
-            <version>6.0.4</version>
+            <groupId>mysql</groupId>
+            <artifactId>mysql-connector-java</artifactId>
+            <version>5.1.38</version>
+            <scope>test</scope>
         </dependency>
+        <!-- END: Test dependencies -->
     </dependencies>
 
     <build>
-        <plugins>
-            <!-- overwritten because the artifact has to be renamed du to
-            compatibility reasons to the cidsDistribution -->
-            <plugin>
-                <groupId>org.apache.maven.plugins</groupId>
-                <artifactId>maven-dependency-plugin</artifactId>
-                <executions>
-                    <execution>
-                        <id>copy-installed</id>
-                        <configuration>
-                            <artifactItems>
-                                <artifactItem>
-                                    <destFileName>cidsCustomServerStuff.jar</destFileName>
-                                </artifactItem>
-                            </artifactItems>
-                        </configuration>
-                    </execution>
-                </executions>
-            </plugin>
-        </plugins>
+        <pluginManagement>
+            <plugins>
+                <plugin>
+                    <groupId>org.apache.maven.plugins</groupId>
+                    <artifactId>maven-jar-plugin</artifactId>
+                    <configuration>
+                        <archive>
+                            <manifest>
+                                <mainClass>Sirius.server.middleware.impls.domainserver.DomainServerImpl</mainClass>
+                            </manifest>
+                        </archive>
+                    </configuration>
+                </plugin>             
+            </plugins>
+        </pluginManagement>
+        <!-- 
+            the artifact has to be renamed du to compatibility reasons to the cidsDistribution 
+        -->
+        <finalName>cidsCustomServerStuff</finalName>
     </build>
 </project>
 
