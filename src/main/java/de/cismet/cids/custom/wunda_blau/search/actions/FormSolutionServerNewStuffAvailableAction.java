@@ -769,7 +769,42 @@ public class FormSolutionServerNewStuffAvailableAction implements UserAwareServe
         final Integer massstab = (formSolutionsBestellung.getMassstab() != null)
             ? Integer.parseInt(formSolutionsBestellung.getMassstab().split(":")[1]) : null;
 
+        final Double gebuehr;
+        {
+            Double tmpGebuehr = null;
+            try {
+                tmpGebuehr = Double.parseDouble(formSolutionsBestellung.getBetrag());
+            } catch (final Exception ex) {
+                LOG.warn("Exception while parsing Gebuehr", ex);
+            }
+            gebuehr = tmpGebuehr;
+        }
+        final boolean isGutschein = ((formSolutionsBestellung.getGutschein() != null)
+                        && (GUTSCHEIN_YES == Integer.parseInt(formSolutionsBestellung.getGutschein())));
+        final String gutscheinCode = isGutschein ? formSolutionsBestellung.getGutscheinCode() : null;
+
+        final boolean isTest = ((gutscheinCode != null) && gutscheinCode.startsWith("T"))
+                    || ((transid != null) && transid.startsWith(TEST_CISMET00_PREFIX));
+
         final String landparcelcode = extractLandparcelcode(formSolutionsBestellung);
+
+        final boolean isLieferEqualsRechnungAnschrift = "ja".equalsIgnoreCase(
+                formSolutionsBestellung.getRechnungsanschriftLieferanschrift());
+
+        final Integer plz1;
+        {
+            Integer tmpPlz1 = null;
+            if (!isLieferEqualsRechnungAnschrift) {
+                try {
+                    tmpPlz1 = Integer.parseInt(formSolutionsBestellung.getAsPlz1());
+                } catch (final Exception ex) {
+                    LOG.warn("Exception while parsing PLZ1", ex);
+                }
+            }
+            plz1 = tmpPlz1;
+        }
+
+        // setting Bean properties
 
         final CidsBean produktBean = getProduktBean(formSolutionsBestellung, productType);
 
@@ -790,7 +825,7 @@ public class FormSolutionServerNewStuffAvailableAction implements UserAwareServe
         adresseRechnungBean.setProperty("staat", trimedNotEmpty(formSolutionsBestellung.getStaat()));
         adresseRechnungBean.setProperty("alternativ", trimedNotEmpty(formSolutionsBestellung.getAltAdresse()));
 
-        if ("ja".equalsIgnoreCase(formSolutionsBestellung.getRechnungsanschriftLieferanschrift())) {
+        if (isLieferEqualsRechnungAnschrift) {
             adresseVersandBean = adresseRechnungBean;
         } else {
             adresseVersandBean = adresseMc.getEmptyInstance().getBean();
@@ -799,13 +834,7 @@ public class FormSolutionServerNewStuffAvailableAction implements UserAwareServe
             adresseVersandBean.setProperty("vorname", trimedNotEmpty(formSolutionsBestellung.getAsVorname1()));
             adresseVersandBean.setProperty("strasse", trimedNotEmpty(formSolutionsBestellung.getAsStrasse1()));
             adresseVersandBean.setProperty("hausnummer", trimedNotEmpty(formSolutionsBestellung.getAsHausnummer1()));
-            Integer plz1;
-            try {
-                plz1 = Integer.parseInt(formSolutionsBestellung.getAsPlz1());
-            } catch (final Exception ex) {
-                LOG.warn("Exception while parsing PLZ1", ex);
-                plz1 = null;
-            }
+
             adresseVersandBean.setProperty("plz", plz1);
             adresseVersandBean.setProperty("ort", trimedNotEmpty(formSolutionsBestellung.getAsOrt1()));
             adresseVersandBean.setProperty("staat", trimedNotEmpty(formSolutionsBestellung.getStaat1()));
@@ -819,29 +848,12 @@ public class FormSolutionServerNewStuffAvailableAction implements UserAwareServe
         bestellungBean.setProperty("massstab", massstab);
         bestellungBean.setProperty("fk_adresse_versand", adresseVersandBean);
         bestellungBean.setProperty("fk_adresse_rechnung", adresseRechnungBean);
-        bestellungBean.setProperty(
-            "email",
-            "Kartenausdruck".equals(formSolutionsBestellung.getBezugsweg())
-                ? trimedNotEmpty(formSolutionsBestellung.getEMailadresse()) // 1
-                : trimedNotEmpty(formSolutionsBestellung.getEMailadresse()));
+        bestellungBean.setProperty("email", trimedNotEmpty(formSolutionsBestellung.getEMailadresse()));
         bestellungBean.setProperty("erledigt", false);
         bestellungBean.setProperty("eingang_ts", new Timestamp(new Date().getTime()));
-        Double gebuehr;
-        try {
-            gebuehr = Double.parseDouble(formSolutionsBestellung.getBetrag());
-        } catch (final Exception ex) {
-            LOG.warn("Exception while parsing Gebuehr", ex);
-            gebuehr = null;
-        }
         bestellungBean.setProperty("gebuehr", gebuehr);
-        bestellungBean.setProperty(
-            "gutschein_code",
-            ((formSolutionsBestellung.getGutschein() != null)
-                        && (GUTSCHEIN_YES == Integer.parseInt(formSolutionsBestellung.getGutschein())))
-                ? formSolutionsBestellung.getGutscheinCode() : null);
-        bestellungBean.setProperty(
-            "test",
-            ((transid != null) && transid.startsWith(TEST_CISMET00_PREFIX)));
+        bestellungBean.setProperty("gutschein_code", gutscheinCode);
+        bestellungBean.setProperty("test", isTest);
 
         return bestellungBean;
     }
