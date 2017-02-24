@@ -53,6 +53,8 @@ public enum WundaBlauServerResources {
     FS_IGNORE_TRANSID_TXT(new TextServerResource("/formsolutions/ignoreTransids.txt")),
     FORMSOLUTIONS_PROPERTIES(new TextServerResource("/formsolutions/fs_conf.properties")),
 
+    VCM_PROPERTIES(new TextServerResource("/virtualcitymap/vcm.properties")),
+
     TIFFER_ACTION_CFG(new TextServerResource("/tiffer/tifferAction.cfg")),
     IMAGE_ANNOTATOR_FONT(new BinaryServerResource("/tiffer/Calibri_Bold.ttf")),
 
