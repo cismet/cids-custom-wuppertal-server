@@ -2,6 +2,9 @@
 <project xmlns="http://maven.apache.org/POM/4.0.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/maven-v4_0_0.xsd">
     <modelVersion>4.0.0</modelVersion>
 
+    <!-- 
+        FIXME: Replace deprecated cids-parent by cismet-parent
+    -->
     <parent>
         <groupId>de.cismet.cids</groupId>
         <artifactId>cids-parent</artifactId>
@@ -25,6 +28,10 @@
 
     <properties>
         <names.cids.custom-wuppertal-server>cids Custom Wuppertal ServerStuff</names.cids.custom-wuppertal-server>
+        <!--
+            LEGACY cidsDistribution: Artifacts are renamed to finalName and copied to this 
+            legacy cidsDistribution directory (see cids-parent.pom)
+        -->
         <de.cismet.libDir>lib/localWuNDa</de.cismet.libDir>
     </properties>
     
