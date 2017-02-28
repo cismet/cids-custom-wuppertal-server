@@ -62,7 +62,9 @@ public class VermUntTaskNivPBeschreibungen extends VermUntTaskNivP {
     public void performTask() throws Exception {
         OutputStream out = null;
         try {
-            final String filename = getPath() + "/nivp.pdf";
+            final String prefix = "nivp";
+            final String suffix = getJobKey().substring(getJobKey().indexOf("_"), getJobKey().length());
+            final String filename = getPath() + "/" + prefix + "_" + suffix + ".pdf";
             out = new FileOutputStream(filename);
             final Map parameters = new HashMap();
             parameters.put("SUBREPORT_DIR", DomainServerImpl.getServerProperties().getServerResourcesBasePath() + "/");
