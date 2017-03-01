@@ -1158,10 +1158,6 @@ public class FormSolutionServerNewStuffAvailableAction implements UserAwareServe
                         false);
                 }
 
-                if (!ProductType.SGK.equals(type)) {
-                    bestellungBean.setProperty("test", Boolean.TRUE);
-                }
-
                 logSpecial("persisting cids entry for: " + transid);
 
                 final MetaObject persistedMo = getMetaService().insertMetaObject(
