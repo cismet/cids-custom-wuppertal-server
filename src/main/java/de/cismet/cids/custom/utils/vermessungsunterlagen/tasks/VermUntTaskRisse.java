@@ -91,9 +91,9 @@ public abstract class VermUntTaskRisse extends VermessungsunterlagenTask impleme
 
     @Override
     public void performTask() throws Exception {
-        final String prefix = (ServerAlkisConf.getInstance().VERMESSUNG_HOST_BILDER.equalsIgnoreCase(host) ? "vermriss"
-                                                                                                           : "ergdok");
-        final String suffix = getJobKey().substring(getJobKey().indexOf("_"), getJobKey().length());
+        final String prefix = (ServerAlkisConf.getInstance().VERMESSUNG_HOST_BILDER.equalsIgnoreCase(host) ? "Vermessungsrisse-Bericht"
+                                                                                                           : "Ergänzende-Dokumente-Bericht");
+        final String suffix = getJobKey().substring(getJobKey().indexOf("_") + 1, getJobKey().length());
         final String filename = getPath() + "/" + prefix + "_" + suffix + ".pdf";
 
         final File src = new File(VermessungsunterlagenHelper.getInstance().getProperties().getAbsPathPdfRisse());
