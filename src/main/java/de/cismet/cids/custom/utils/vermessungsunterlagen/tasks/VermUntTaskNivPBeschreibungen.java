@@ -63,7 +63,7 @@ public class VermUntTaskNivPBeschreibungen extends VermUntTaskNivP {
         OutputStream out = null;
         try {
             final String prefix = "nivp";
-            final String suffix = getJobKey().substring(getJobKey().indexOf("_"), getJobKey().length());
+            final String suffix = getJobKey().substring(getJobKey().indexOf("_") + 1, getJobKey().length());
             final String filename = getPath() + "/" + prefix + "_" + suffix + ".pdf";
             out = new FileOutputStream(filename);
             final Map parameters = new HashMap();
