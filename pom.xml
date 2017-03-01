@@ -226,13 +226,26 @@
             <groupId>com.sun.jersey</groupId>
             <artifactId>jersey-json</artifactId>
         </dependency>
+        <dependency>
+            <groupId>org.netbeans.api</groupId>
+            <artifactId>org-openide-util-lookup</artifactId>
+            <scope>compile</scope>
+            <type>jar</type>
+        </dependency>
+        <dependency>
+            <groupId>org.netbeans.api</groupId>
+            <artifactId>org-openide-util</artifactId>
+            <scope>compile</scope>
+            <type>jar</type>
+        </dependency>
         <!-- END: managed dependencies -->
         
-        <!-- BEGIN: runtime dependencies -->
+        <!-- BEGIN: Runtime dependencies -->
         <dependency>
             <groupId>org.slf4j</groupId>
             <artifactId>slf4j-log4j12</artifactId>
             <scope>runtime</scope>
+            <optional>true</optional>
         </dependency>
         <dependency>
             <groupId>org.jvnet.ogc</groupId>
@@ -308,20 +321,6 @@
                     <artifactId>stax-api</artifactId>
                 </exclusion>
             </exclusions>
-        </dependency>
-        <dependency>
-            <groupId>org.netbeans.api</groupId>
-            <artifactId>org-openide-util-lookup</artifactId>
-            <version>RELEASE701</version>
-            <scope>compile</scope>
-            <type>jar</type>
-        </dependency>
-        <dependency>
-            <groupId>org.netbeans.api</groupId>
-            <artifactId>org-openide-util</artifactId>
-            <version>RELEASE701</version>
-            <scope>compile</scope>
-            <type>jar</type>
         </dependency>
         <dependency>
             <groupId>commons-lang</groupId>
