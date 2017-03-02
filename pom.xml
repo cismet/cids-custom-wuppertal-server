@@ -387,8 +387,12 @@
                 </plugin>           
             </plugins>
         </pluginManagement>
+        
         <!-- 
+            DANGER DANGER DANGER DANGER DANGER DANGER DANGER DANGER DANGER DANGER
             the artifact has to be renamed du to compatibility reasons to the cidsDistribution 
+            
+            See https://cismet.slack.com/files/jruiz/F3ZC7HX7V/Snapshot_als_finalName_in_pom_xml
         -->
         <finalName>cidsCustomServerStuff</finalName>
     </build>
