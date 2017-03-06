@@ -119,7 +119,7 @@ public class NASProductGenerator {
     private HashMap<String, HashMap<String, NasProductInfo>> undeliveredOrderMap =
         new HashMap<String, HashMap<String, NasProductInfo>>();
     private HashMap<String, NasProductDownloader> downloaderMap = new HashMap<String, NasProductDownloader>();
-    private boolean initError = false;
+    private boolean initSucces = false;
     private DXFConverterAction dxfConverter;
 
     //~ Constructors -----------------------------------------------------------
@@ -128,76 +128,84 @@ public class NASProductGenerator {
      * Creates a new NASProductGenerator object.
      */
     private NASProductGenerator() {
-        final Properties serviceProperties = new Properties();
-        try {
-            serviceProperties.load(ServerResourcesLoader.getInstance().loadStringReader(
-                    WundaBlauServerResources.NAS_SERVER_PROPERTIES.getValue()));
-            SERVICE_URL = serviceProperties.getProperty("service");
-            USER = serviceProperties.getProperty("user");
-            PW = serviceProperties.getProperty("pw");
-            OUTPUT_DIR = serviceProperties.getProperty("outputDir");
-            ACTION_DOMAIN = serviceProperties.getProperty("actionDomain");
-            ACTION_SERVICE = serviceProperties.getProperty("actionServiceURL");
-            ACTION_USER = serviceProperties.getProperty("actionServiceUser");
-            ACTION_PASSWORD = serviceProperties.getProperty("actionServicePassword");
-
-            if ((OUTPUT_DIR == null) || OUTPUT_DIR.isEmpty()) {
-                log.info("Could not read nas nas output dir property. using server working dir as fallback");
-                OUTPUT_DIR = ".";
-            }
-            if (((SERVICE_URL == null) || SERVICE_URL.isEmpty()) || ((USER == null) || USER.isEmpty())
-                        || ((PW == null) || PW.isEmpty())) {
-                log.warn(
-                    "NAS Datenabgabe initialisation Error. Could not read all properties for connecting 3A Server. NAS support is disabled");
-                initError = true;
-                return;
-            }
-            final File outputDir = new File(OUTPUT_DIR);
-            if (!outputDir.exists()) {
-                outputDir.mkdirs();
-            }
-            if (!outputDir.isDirectory() || !outputDir.canWrite()) {
-                log.warn("NAS Datenabgabe initialisation Error. Could not write to the given nas output directory: "
-                            + outputDir);
-                initError = true;
-                return;
-            }
-            if ((ACTION_DOMAIN == null) || (ACTION_SERVICE == null) || (ACTION_SERVICE == null)
-                        || (ACTION_PASSWORD == null)) {
-                log.warn(
-                    "NAS Datenabgabe initialisation Error. Can not read properties for connecting to DXF converter Action");
-                initError = true;
-                return;
-            }
-            dxfConverter = new DXFConverterAction(ACTION_DOMAIN, ACTION_SERVICE);
-            dxfConverter.setBasicAuthentication(ACTION_USER, ACTION_PASSWORD);
-            final StringBuilder fileNameBuilder = new StringBuilder(OUTPUT_DIR);
-            fileNameBuilder.append(System.getProperty("file.separator"));
-            openOrdersLogFile = new File(fileNameBuilder.toString() + "openOrdersMap.json");
-            undeliveredOrdersLogFile = new File(fileNameBuilder.toString() + "undeliveredOrdersMap.json");
-            if (!openOrdersLogFile.exists()) {
-                openOrdersLogFile.createNewFile();
-            }
-            if (!undeliveredOrdersLogFile.exists()) {
-                undeliveredOrdersLogFile.createNewFile();
-                // serialiaze en empty map to the file to avoid parsing exception
-                updateJsonLogFiles();
-            }
-            if (!(openOrdersLogFile.isFile() && openOrdersLogFile.canWrite())
-                        || !(undeliveredOrdersLogFile.isFile() && undeliveredOrdersLogFile.canWrite())) {
-                log.warn(
-                    "NAS Datenabgabe initialisation Error. Could not write to NAS order log files. NAS support is disabled");
-                initError = true;
-                return;
-            }
-            initFromOrderLogFiles();
-        } catch (Exception ex) {
-            log.warn("NAS Datenabgabe initialisation Error! NAS support is disabled", ex);
-            initError = true;
-        }
+        initSucces = init();
     }
 
     //~ Methods ----------------------------------------------------------------
+
+    /**
+     * DOCUMENT ME!
+     *
+     * @return  DOCUMENT ME!
+     */
+    public final boolean init() {
+        if (!initSucces) {
+            final Properties serviceProperties = new Properties();
+            try {
+                serviceProperties.load(ServerResourcesLoader.getInstance().loadStringReader(
+                        WundaBlauServerResources.NAS_SERVER_PROPERTIES.getValue()));
+                SERVICE_URL = serviceProperties.getProperty("service");
+                USER = serviceProperties.getProperty("user");
+                PW = serviceProperties.getProperty("pw");
+                OUTPUT_DIR = serviceProperties.getProperty("outputDir");
+                ACTION_DOMAIN = serviceProperties.getProperty("actionDomain");
+                ACTION_SERVICE = serviceProperties.getProperty("actionServiceURL");
+                ACTION_USER = serviceProperties.getProperty("actionServiceUser");
+                ACTION_PASSWORD = serviceProperties.getProperty("actionServicePassword");
+
+                if ((OUTPUT_DIR == null) || OUTPUT_DIR.isEmpty()) {
+                    log.info("Could not read nas nas output dir property. using server working dir as fallback");
+                    OUTPUT_DIR = ".";
+                }
+                if (((SERVICE_URL == null) || SERVICE_URL.isEmpty()) || ((USER == null) || USER.isEmpty())
+                            || ((PW == null) || PW.isEmpty())) {
+                    log.warn(
+                        "NAS Datenabgabe initialisation Error. Could not read all properties for connecting 3A Server. NAS support is disabled");
+                    return false;
+                }
+                final File outputDir = new File(OUTPUT_DIR);
+                if (!outputDir.exists()) {
+                    outputDir.mkdirs();
+                }
+                if (!outputDir.isDirectory() || !outputDir.canWrite()) {
+                    log.warn("NAS Datenabgabe initialisation Error. Could not write to the given nas output directory: "
+                                + outputDir);
+                    return false;
+                }
+                if ((ACTION_DOMAIN == null) || (ACTION_SERVICE == null) || (ACTION_SERVICE == null)
+                            || (ACTION_PASSWORD == null)) {
+                    log.warn(
+                        "NAS Datenabgabe initialisation Error. Can not read properties for connecting to DXF converter Action");
+                    return false;
+                }
+                dxfConverter = new DXFConverterAction(ACTION_DOMAIN, ACTION_SERVICE);
+                dxfConverter.setBasicAuthentication(ACTION_USER, ACTION_PASSWORD);
+                final StringBuilder fileNameBuilder = new StringBuilder(OUTPUT_DIR);
+                fileNameBuilder.append(System.getProperty("file.separator"));
+                openOrdersLogFile = new File(fileNameBuilder.toString() + "openOrdersMap.json");
+                undeliveredOrdersLogFile = new File(fileNameBuilder.toString() + "undeliveredOrdersMap.json");
+                if (!openOrdersLogFile.exists()) {
+                    openOrdersLogFile.createNewFile();
+                }
+                if (!undeliveredOrdersLogFile.exists()) {
+                    undeliveredOrdersLogFile.createNewFile();
+                    // serialiaze en empty map to the file to avoid parsing exception
+                    updateJsonLogFiles();
+                }
+                if (!(openOrdersLogFile.isFile() && openOrdersLogFile.canWrite())
+                            || !(undeliveredOrdersLogFile.isFile() && undeliveredOrdersLogFile.canWrite())) {
+                    log.warn(
+                        "NAS Datenabgabe initialisation Error. Could not write to NAS order log files. NAS support is disabled");
+                    return false;
+                }
+                initFromOrderLogFiles();
+            } catch (Exception ex) {
+                log.warn("NAS Datenabgabe initialisation Error! NAS support is disabled", ex);
+                return false;
+            }
+        }
+        return true;
+    }
 
     /**
      * DOCUMENT ME!
@@ -364,7 +372,7 @@ public class NASProductGenerator {
             final GeometryCollection geoms,
             final User user,
             final String requestName) {
-        if (initError) {
+        if (!init()) {
             if (log.isDebugEnabled()) {
                 log.debug("NASProductGenerator doesnt work hence there was an error during the initialisation.");
             }
@@ -418,7 +426,7 @@ public class NASProductGenerator {
      */
     public void writeResultToFileforRequest(final InputStream query, final File file) {
         try {
-            if (initError) {
+            if (!init()) {
                 if (log.isDebugEnabled()) {
                     log.debug("NASProductGenerator doesnt work hence there was an error during the initialisation.");
                 }
@@ -548,10 +556,8 @@ public class NASProductGenerator {
      * @return  DOCUMcd ENT ME!
      */
     public byte[] getResultForOrder(final String orderId, final User user) {
-        if (initError) {
-            if (log.isDebugEnabled()) {
-                log.debug("NASProductGenerator doesnt work hence there was an error during the initialisation.");
-            }
+        if (!init()) {
+            log.error("NASProductGenerator doesnt work hence there was an error during the initialisation.");
             return null;
         }
         final HashMap<String, NasProductInfo> openUserOrders = openOrderMap.get(determineUserPrefix(user));
@@ -593,7 +599,7 @@ public class NASProductGenerator {
      * @return  DOCUMENT ME!
      */
     public File getNasFileForOrder(final String orderId, final String userId, final boolean isZipped) {
-        if (initError) {
+        if (!init()) {
             if (log.isDebugEnabled()) {
                 log.debug("NASProductGenerator doesnt work hence there was an error during the initialisation.");
             }
@@ -611,7 +617,7 @@ public class NASProductGenerator {
      */
     public HashMap<String, NasProductInfo> getUndeliveredOrders(final User user) {
         final HashMap<String, NasProductInfo> result = new HashMap<String, NasProductInfo>();
-        if (initError) {
+        if (!init()) {
             if (log.isDebugEnabled()) {
                 log.debug("NASProductGenerator doesnt work hence there was an error during the initialisation.");
             }
@@ -636,7 +642,7 @@ public class NASProductGenerator {
      * @param  user     DOCUMENT ME!
      */
     public void cancelOrder(final String orderId, final User user) {
-        if (initError) {
+        if (!init()) {
             if (log.isDebugEnabled()) {
                 log.debug("NASProductGenerator doesnt work hence there was an error during the initialisation.");
             }
