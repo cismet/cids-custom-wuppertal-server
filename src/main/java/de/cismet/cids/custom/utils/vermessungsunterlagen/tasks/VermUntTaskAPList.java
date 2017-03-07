@@ -24,6 +24,7 @@ import java.util.Collection;
 
 import de.cismet.cids.custom.utils.alkis.ServerAlkisProducts;
 import de.cismet.cids.custom.utils.vermessungsunterlagen.VermessungsunterlagenHelper;
+import de.cismet.cids.custom.utils.vermessungsunterlagen.exceptions.VermessungsunterlagenTaskException;
 
 import de.cismet.cids.dynamics.CidsBean;
 
@@ -55,7 +56,7 @@ public class VermUntTaskAPList extends VermUntTaskAP {
     //~ Methods ----------------------------------------------------------------
 
     @Override
-    public void performTask() throws Exception {
+    public void performTask() throws VermessungsunterlagenTaskException {
         final String punktListenString = getPunktlistenStringForChosenPoints(getAlkisPoints());
         final String code = PRODUCTS.PUNKTLISTE_TXT;
         final String filename = getPath() + "/" + ServerAlkisProducts.getInstance().PUNKTLISTE_TXT + ".plst";
@@ -69,27 +70,41 @@ public class VermUntTaskAPList extends VermUntTaskAP {
 
                     final String parameters;
                     final URL getOrPostUrl;
-                    if (parameterPosition < 0) {
-                        parameters = null;
-                        getOrPostUrl = new URL(url);
-                    } else {
-                        parameters = url.substring(parameterPosition + 1);
-                        getOrPostUrl = new URL(url.substring(0, parameterPosition));
+                    try {
+                        if (parameterPosition < 0) {
+                            parameters = null;
+                            getOrPostUrl = new URL(url);
+                        } else {
+                            parameters = url.substring(parameterPosition + 1);
+                            getOrPostUrl = new URL(url.substring(0, parameterPosition));
+                        }
+                    } catch (final Exception ex) {
+                        final String message = "Beim Erstellen der AP-Listen URL '" + url
+                                    + "' kam es zu einem unerwarteten Fehler.";
+                        throw new VermessungsunterlagenTaskException(getType(), message, ex);
                     }
 
-                    InputStream in = null;
-                    OutputStream out = null;
                     try {
-                        if ((parameters == null) || (parameters.trim().length() <= 0)) {
-                            in = VermessungsunterlagenHelper.doGetRequest(getOrPostUrl);
-                        } else {
-                            in = VermessungsunterlagenHelper.doPostRequest(getOrPostUrl, new StringReader(parameters));
+                        InputStream in = null;
+                        OutputStream out = null;
+                        try {
+                            if ((parameters == null) || (parameters.trim().length() <= 0)) {
+                                in = VermessungsunterlagenHelper.doGetRequest(getOrPostUrl);
+                            } else {
+                                in = VermessungsunterlagenHelper.doPostRequest(
+                                        getOrPostUrl,
+                                        new StringReader(parameters));
+                            }
+                            out = new FileOutputStream(fileToSaveTo);
+                            VermessungsunterlagenHelper.downloadStream(in, out);
+                        } finally {
+                            VermessungsunterlagenHelper.closeStream(in);
+                            VermessungsunterlagenHelper.closeStream(out);
                         }
-                        out = new FileOutputStream(fileToSaveTo);
-                        VermessungsunterlagenHelper.downloadStream(in, out);
-                    } finally {
-                        VermessungsunterlagenHelper.closeStream(in);
-                        VermessungsunterlagenHelper.closeStream(out);
+                    } catch (final Exception ex) {
+                        final String message = "Beim Herunterladen des Produktes unter der URL '" + url
+                                    + "' kam es zu einem unerwarteten Fehler.";
+                        throw new VermessungsunterlagenTaskException(getType(), message, ex);
                     }
                 }
             }

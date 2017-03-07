@@ -25,10 +25,11 @@ import java.io.File;
 import java.io.FileOutputStream;
 
 import de.cismet.cids.custom.utils.nas.NasProduct;
-import de.cismet.cids.custom.utils.vermessungsunterlagen.VermessungsunterlagenException;
 import de.cismet.cids.custom.utils.vermessungsunterlagen.VermessungsunterlagenHelper;
 import de.cismet.cids.custom.utils.vermessungsunterlagen.VermessungsunterlagenTask;
 import de.cismet.cids.custom.utils.vermessungsunterlagen.VermessungsunterlagenTaskRetryable;
+import de.cismet.cids.custom.utils.vermessungsunterlagen.exceptions.VermessungsunterlagenException;
+import de.cismet.cids.custom.utils.vermessungsunterlagen.exceptions.VermessungsunterlagenTaskException;
 import de.cismet.cids.custom.wunda_blau.search.actions.NasDataQueryAction;
 
 import de.cismet.cids.server.actions.ServerActionParameter;
@@ -95,7 +96,7 @@ public abstract class VermUntTaskNas extends VermessungsunterlagenTask implement
     }
 
     @Override
-    public void performTask() throws Exception {
+    public void performTask() throws VermessungsunterlagenTaskException {
         final GeometryCollection geometryCollection = generateSearchGeomCollection(geometry);
 
         final String extension;
@@ -120,8 +121,10 @@ public abstract class VermUntTaskNas extends VermessungsunterlagenTask implement
         if (orderId == null) {
             orderId = sendNasRequest(product, geometryCollection, requestId);
             if (orderId == null) {
-                throw new VermessungsunterlagenException(
-                    "nas server request returned no orderId, cannot continue with NAS download");
+                final String message =
+                    "Der NAS-Server hat keine OrderID zurückgeliefert. Der Download kann nicht gestartet werden.";
+                LOG.error(message, new Exception());
+                throw new VermessungsunterlagenTaskException(getType(), message);
             }
         }
 
@@ -149,7 +152,9 @@ public abstract class VermUntTaskNas extends VermessungsunterlagenTask implement
             }
             content = (byte[])action.execute(null, paramOrderId, paramMethod);
             if (content == null) {
-                throw new Exception("error during pulling nas result from server");
+                final String message = "Beim Abfragen der NAS-Ergebnisse kam es zu einem unerwarteten Fehler.";
+                LOG.error(message, new Exception());
+                throw new VermessungsunterlagenTaskException(getType(), message);
             } else if (content.length == 0) {
                 try {
                     Thread.sleep(NAS_POLLING_FREQUENCY_MS);
@@ -173,8 +178,10 @@ public abstract class VermUntTaskNas extends VermessungsunterlagenTask implement
                 out = new FileOutputStream(fileToSaveTo);
                 out.write(content);
             } catch (final Exception ex) {
-                LOG.error("Couldn't write downloaded content to file '" + fileToSaveTo + "'.", ex);
-                throw ex;
+                final String message = "Beim Schreiben der NAS-Order in die Datei '" + fileToSaveTo
+                            + "' kam es zu einem unerwarteten Fehler.";
+                LOG.error(message, ex);
+                throw new VermessungsunterlagenTaskException(getType(), message, ex);
             } finally {
                 VermessungsunterlagenHelper.closeStream(out);
             }
@@ -190,11 +197,11 @@ public abstract class VermUntTaskNas extends VermessungsunterlagenTask implement
      *
      * @return  DOCUMENT ME!
      *
-     * @throws  Exception  DOCUMENT ME!
+     * @throws  VermessungsunterlagenTaskException  DOCUMENT ME!
      */
     private String sendNasRequest(final NasProduct product,
             final GeometryCollection geometrieCollection,
-            final String requestId) throws Exception {
+            final String requestId) throws VermessungsunterlagenTaskException {
         final NasDataQueryAction action = new NasDataQueryAction();
         action.setUser(getUser());
         final String result = (String)action.execute(
@@ -208,7 +215,9 @@ public abstract class VermUntTaskNas extends VermessungsunterlagenTask implement
                     NasDataQueryAction.METHOD_TYPE.ADD),
                 new ServerActionParameter(NasDataQueryAction.PARAMETER_TYPE.REQUEST_ID.toString(), requestId));
         if (result == null) {
-            throw new Exception("error during enqueuing nas server request");
+            final String message = "Beim Absetzen des Requests an den NAS-Server kam es zu einem unerwarteten Fehler.";
+            LOG.error(message, new Exception());
+            throw new VermessungsunterlagenTaskException(getType(), message);
         }
         return result;
     }

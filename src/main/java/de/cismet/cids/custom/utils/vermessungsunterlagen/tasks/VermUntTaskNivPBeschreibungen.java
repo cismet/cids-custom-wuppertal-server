@@ -27,6 +27,7 @@ import java.util.Map;
 import de.cismet.cids.custom.utils.WundaBlauServerResources;
 import de.cismet.cids.custom.utils.alkis.NivellementPunktReportBean;
 import de.cismet.cids.custom.utils.vermessungsunterlagen.VermessungsunterlagenHelper;
+import de.cismet.cids.custom.utils.vermessungsunterlagen.exceptions.VermessungsunterlagenTaskException;
 
 import de.cismet.cids.dynamics.CidsBean;
 
@@ -59,7 +60,7 @@ public class VermUntTaskNivPBeschreibungen extends VermUntTaskNivP {
     //~ Methods ----------------------------------------------------------------
 
     @Override
-    public void performTask() throws Exception {
+    public void performTask() throws VermessungsunterlagenTaskException {
         OutputStream out = null;
         try {
             final String prefix = "NivP-Bericht";
@@ -75,6 +76,9 @@ public class VermUntTaskNivPBeschreibungen extends VermUntTaskNivP {
                 parameters,
                 new JRBeanCollectionDataSource(Arrays.asList(new NivellementPunktReportBean(getNivPoints()))),
                 out);
+        } catch (final Exception ex) {
+            final String message = "Beim Erstellen des NIVP-Berichtes kam es zu einem unerwarteten Fehler.";
+            throw new VermessungsunterlagenTaskException(getType(), message, ex);
         } finally {
             VermessungsunterlagenHelper.closeStream(out);
         }

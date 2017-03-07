@@ -13,7 +13,6 @@
 package de.cismet.cids.custom.wunda_blau.search.actions;
 
 import de.cismet.cids.custom.utils.vermessungsunterlagen.VermessungsunterlagenHelper;
-import de.cismet.cids.custom.utils.vermessungsunterlagen.VermessungsunterlagenJob;
 
 import de.cismet.cids.server.actions.ServerAction;
 import de.cismet.cids.server.actions.ServerActionParameter;

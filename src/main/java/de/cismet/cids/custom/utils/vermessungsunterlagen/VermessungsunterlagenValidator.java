@@ -20,6 +20,8 @@ import java.util.ArrayList;
 import java.util.Collection;
 import java.util.List;
 
+import de.cismet.cids.custom.utils.vermessungsunterlagen.exceptions.VermessungsunterlagenException;
+import de.cismet.cids.custom.utils.vermessungsunterlagen.exceptions.VermessungsunterlagenValidatorException;
 import de.cismet.cids.custom.wunda_blau.search.server.AlbFlurstueckKickerLightweightSearch;
 import de.cismet.cids.custom.wunda_blau.search.server.CidsAlkisSearchStatement;
 import de.cismet.cids.custom.wunda_blau.search.server.KundeByVermessungsStellenNummerSearch;
@@ -166,6 +168,18 @@ public class VermessungsunterlagenValidator {
             throw getExceptionByErrorCode(Error.NO_ART);
         }
 
+        // jedes einzelne Flurstück Überprüfen
+        for (final VermessungsunterlagenAnfrageBean.AntragsflurstueckBean fs : anfrageBean.getAntragsflurstuecksArray()) {
+            // gemarkung flur flurstueck darf nicht leer sein
+            if (!isFlurstueckValide(fs)) {
+                throw getExceptionByErrorCode(Error.WRONG_ANTRAGSFLURSTUECK);
+            }
+            // Jedes Flurstück muss auffindbar sein
+            if (!existFlurstueck(fs)) {
+                throw getExceptionByErrorCode(Error.UNKNOWN_ANTRAGSFLURSTUECK);
+            }
+        }
+
         // Wenn ausschließlich neue Punktnummern reserviert werden sollen, ist keine weitere Überprüfung notwendig.
         if (anfrageBean.getNurPunktnummernreservierung()) {
             return true;
@@ -183,18 +197,6 @@ public class VermessungsunterlagenValidator {
                     || (anfrageBean.getAntragsflurstuecksArray().length <= 0)) {
             // es wurde kein Flurstück übergeben
             throw getExceptionByErrorCode(Error.NO_ANTRAGSFLURSTUECK);
-        }
-
-        // jedes einzelne Flurstück Überprüfen
-        for (final VermessungsunterlagenAnfrageBean.AntragsflurstueckBean fs : anfrageBean.getAntragsflurstuecksArray()) {
-            // gemarkung flur flurstueck darf nicht leer sein
-            if (!isFlurstueckValide(fs)) {
-                throw getExceptionByErrorCode(Error.WRONG_ANTRAGSFLURSTUECK);
-            }
-            // Jedes Flurstück muss auffindbar sein
-            if (!existFlurstueck(fs)) {
-                throw getExceptionByErrorCode(Error.UNKNOWN_ANTRAGSFLURSTUECK);
-            }
         }
 
         // Validierung des Saums
@@ -308,7 +310,7 @@ public class VermessungsunterlagenValidator {
                 message = "";
             }
         }
-        return new VermessungsunterlagenException(message);
+        return new VermessungsunterlagenValidatorException(message);
     }
 
     /**
@@ -344,7 +346,8 @@ public class VermessungsunterlagenValidator {
      * @return  true if WuNDa contains a flurstueck defined by gemarkung, flur, flurstuecksnummer. Also true if the
      *          containing flurstueck ist historic!
      *
-     * @throws  VermessungsunterlagenException  Exception DOCUMENT ME!
+     * @throws  VermessungsunterlagenException           Exception DOCUMENT ME!
+     * @throws  VermessungsunterlagenValidatorException  DOCUMENT ME!
      */
     private boolean existFlurstueck(final VermessungsunterlagenAnfrageBean.AntragsflurstueckBean flurstueckBean)
             throws VermessungsunterlagenException {
@@ -397,7 +400,7 @@ public class VermessungsunterlagenValidator {
                 return false;
             }
         } catch (final Exception ex) {
-            throw new VermessungsunterlagenException("Fehler beim laden des Flurstuecks: " + alkisId, ex);
+            throw new VermessungsunterlagenValidatorException("Fehler beim laden des Flurstuecks: " + alkisId, ex);
         }
     }
 
