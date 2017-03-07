@@ -40,6 +40,8 @@ import java.util.concurrent.ThreadPoolExecutor;
 import java.util.zip.ZipEntry;
 import java.util.zip.ZipOutputStream;
 
+import de.cismet.cids.custom.utils.vermessungsunterlagen.exceptions.VermessungsunterlagenException;
+import de.cismet.cids.custom.utils.vermessungsunterlagen.exceptions.VermessungsunterlagenJobException;
 import de.cismet.cids.custom.utils.vermessungsunterlagen.tasks.VermUntTaskAPList;
 import de.cismet.cids.custom.utils.vermessungsunterlagen.tasks.VermUntTaskAPMap;
 import de.cismet.cids.custom.utils.vermessungsunterlagen.tasks.VermUntTaskAPUebersicht;
@@ -396,7 +398,7 @@ public class VermessungsunterlagenJob implements Runnable {
                         final VermessungsunterlagenTask task = resultFuture.get();
                         if (!validator.ignoreError()
                                     && VermessungsunterlagenTask.Status.ERROR.equals(task.getStatus())) {
-                            throw new VermessungsunterlagenException(
+                            throw new VermessungsunterlagenJobException(
                                 "Ein unerwarteter Fehler ist beim Ausführen des Tasks "
                                         + task.getType()
                                         + " aufgetreten.\n "

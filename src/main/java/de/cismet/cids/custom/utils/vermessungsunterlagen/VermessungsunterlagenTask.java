@@ -16,11 +16,18 @@ import lombok.Getter;
 
 import org.apache.log4j.Logger;
 
+import org.openide.util.Exceptions;
+
 import java.io.File;
 
 import java.util.ArrayList;
 import java.util.Collection;
+import java.util.List;
 import java.util.concurrent.Callable;
+
+import de.cismet.cids.custom.utils.vermessungsunterlagen.exceptions.VermessungsunterlagenException;
+import de.cismet.cids.custom.utils.vermessungsunterlagen.exceptions.VermessungsunterlagenTaskException;
+import de.cismet.cids.custom.utils.vermessungsunterlagen.exceptions.VermessungsunterlagenTaskRetryException;
 
 /**
  * DOCUMENT ME!
@@ -62,7 +69,7 @@ public abstract class VermessungsunterlagenTask implements Callable<Vermessungsu
 
     @Getter private final Collection<String> files = new ArrayList<String>();
 
-    @Getter private Exception exception;
+    @Getter private VermessungsunterlagenTaskException exception;
 
     //~ Constructors -----------------------------------------------------------
 
@@ -101,7 +108,7 @@ public abstract class VermessungsunterlagenTask implements Callable<Vermessungsu
     }
 
     @Override
-    public VermessungsunterlagenTask call() throws Exception {
+    public VermessungsunterlagenTask call() throws VermessungsunterlagenTaskException {
         setStatus(Status.RUNNING);
         try {
             new File(getPath()).mkdirs();
@@ -109,22 +116,26 @@ public abstract class VermessungsunterlagenTask implements Callable<Vermessungsu
                 final VermessungsunterlagenTaskRetryable retryable = (VermessungsunterlagenTaskRetryable)this;
 
                 boolean success = false;
-                Exception lastException = null;
                 long totalWaitTime = 0;
                 long waitTime = retryable.getFirstWaitTimeMs();
 
                 // try until success or waited long enough
+                final List<VermessungsunterlagenException> exceptions = new ArrayList();
                 while (!success && (totalWaitTime < retryable.getMaxTotalWaitTimeMs())) {
                     try {
                         performTask();
 
                         // success only if no exception occurs
                         success = true;
-                    } catch (final Exception ex) {
+                    } catch (final VermessungsunterlagenException ex) {
                         // overwrite exception and wait before next try
                         LOG.warn("performTask failed. will wait " + waitTime + "ms and try again", ex);
-                        lastException = ex;
-                        Thread.sleep(waitTime);
+                        exceptions.add(ex);
+                        try {
+                            Thread.sleep(waitTime);
+                        } catch (final InterruptedException ex1) {
+                            throw new VermessungsunterlagenTaskException(getType(), ex1.getMessage(), ex1);
+                        }
                     } finally {
                         // calculate the new total wait time
                         totalWaitTime += waitTime;
@@ -134,14 +145,19 @@ public abstract class VermessungsunterlagenTask implements Callable<Vermessungsu
                         waitTime *= retryable.getWaitTimeMultiplicator();
                     }
                 }
-                if (!success && (lastException != null)) {
-                    throw lastException;
+                if (!success && (!exceptions.isEmpty())) {
+                    throw new VermessungsunterlagenTaskRetryException(
+                        getType(),
+                        "Abbruch nach "
+                                + exceptions.size()
+                                + " Versuchen.",
+                        exceptions);
                 }
             } else {
                 performTask();
             }
             setStatus(Status.FINISHED);
-        } catch (final Exception ex) {
+        } catch (final VermessungsunterlagenTaskException ex) {
             LOG.info("setting status to ERROR because of an exception", ex);
             this.exception = ex;
             setStatus(Status.ERROR);
@@ -153,9 +169,9 @@ public abstract class VermessungsunterlagenTask implements Callable<Vermessungsu
     /**
      * DOCUMENT ME!
      *
-     * @throws  Exception  DOCUMENT ME!
+     * @throws  VermessungsunterlagenTaskException  de.cismet.cids.custom.utils.vermessungsunterlagen.exceptions.VermessungsunterlagenTaskException
      */
-    protected abstract void performTask() throws Exception;
+    protected abstract void performTask() throws VermessungsunterlagenTaskException;
 
     /**
      * DOCUMENT ME!

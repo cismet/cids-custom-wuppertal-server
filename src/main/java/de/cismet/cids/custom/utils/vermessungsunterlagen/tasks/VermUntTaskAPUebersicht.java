@@ -29,6 +29,7 @@ import java.util.Collection;
 import de.cismet.cids.custom.utils.alkis.AlkisProductDescription;
 import de.cismet.cids.custom.utils.alkis.ServerAlkisProducts;
 import de.cismet.cids.custom.utils.vermessungsunterlagen.VermessungsunterlagenHelper;
+import de.cismet.cids.custom.utils.vermessungsunterlagen.exceptions.VermessungsunterlagenTaskException;
 
 import de.cismet.cids.dynamics.CidsBean;
 
@@ -75,7 +76,7 @@ public class VermUntTaskAPUebersicht extends VermUntTaskAP {
     //~ Methods ----------------------------------------------------------------
 
     @Override
-    public void performTask() throws Exception {
+    public void performTask() throws VermessungsunterlagenTaskException {
         final GeometryFactory geometryFactory = new GeometryFactory();
         final Collection<Geometry> geometries = new ArrayList<Geometry>(getAlkisPoints().size());
         for (final CidsBean alkisPoint : getAlkisPoints()) {
@@ -92,27 +93,30 @@ public class VermUntTaskAPUebersicht extends VermUntTaskAP {
                 String.valueOf("AP-Übersicht"),
                 envelope);
 
-        final URL url = ServerAlkisProducts.getInstance()
-                    .productKarteUrl(
-                        landparcelcode,
-                        product,
-                        Double.valueOf(0).intValue(),
-                        Double.valueOf(center.x).intValue(),
-                        Double.valueOf(center.y).intValue(),
-                        "",
-                        auftragsnummer,
-                        false,
-                        null);
-
-        final String filename = product.getCode() + "." + landparcelcode.replace("/", "--")
-                    + ((flurstuecke.size() > 1) ? ".ua" : "") + ".pdf";
-
         InputStream in = null;
         OutputStream out = null;
         try {
+            final URL url = ServerAlkisProducts.getInstance()
+                        .productKarteUrl(
+                            landparcelcode,
+                            product,
+                            Double.valueOf(0).intValue(),
+                            Double.valueOf(center.x).intValue(),
+                            Double.valueOf(center.y).intValue(),
+                            "",
+                            auftragsnummer,
+                            false,
+                            null);
+
+            final String filename = product.getCode() + "." + landparcelcode.replace("/", "--")
+                        + ((flurstuecke.size() > 1) ? ".ua" : "") + ".pdf";
+
             in = doGetRequest(url);
             out = new FileOutputStream(getPath() + "/" + filename);
             VermessungsunterlagenHelper.downloadStream(in, out);
+        } catch (final Exception ex) {
+            final String message = "Beim Herunterladen der AP-Karten-Übersicht kam es zu einem unerwarteten Fehler.";
+            throw new VermessungsunterlagenTaskException(getType(), message, ex);
         } finally {
             VermessungsunterlagenHelper.closeStream(in);
             VermessungsunterlagenHelper.closeStream(out);

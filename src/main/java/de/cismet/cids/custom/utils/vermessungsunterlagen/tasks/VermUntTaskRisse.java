@@ -32,6 +32,7 @@ import de.cismet.cids.custom.utils.alkis.VermessungsRissReportHelper;
 import de.cismet.cids.custom.utils.vermessungsunterlagen.VermessungsunterlagenHelper;
 import de.cismet.cids.custom.utils.vermessungsunterlagen.VermessungsunterlagenTask;
 import de.cismet.cids.custom.utils.vermessungsunterlagen.VermessungsunterlagenTaskRetryable;
+import de.cismet.cids.custom.utils.vermessungsunterlagen.exceptions.VermessungsunterlagenTaskException;
 
 import de.cismet.cids.dynamics.CidsBean;
 
@@ -90,7 +91,7 @@ public abstract class VermUntTaskRisse extends VermessungsunterlagenTask impleme
     //~ Methods ----------------------------------------------------------------
 
     @Override
-    public void performTask() throws Exception {
+    public void performTask() throws VermessungsunterlagenTaskException {
         final String prefix = (ServerAlkisConf.getInstance().VERMESSUNG_HOST_BILDER.equalsIgnoreCase(host)
                 ? "Vermessungsrisse-Bericht" : "Ergänzende-Dokumente-Bericht");
         final String suffix = getJobKey().substring(getJobKey().indexOf("_") + 1, getJobKey().length());
@@ -99,7 +100,12 @@ public abstract class VermUntTaskRisse extends VermessungsunterlagenTask impleme
         final File src = new File(VermessungsunterlagenHelper.getInstance().getProperties().getAbsPathPdfRisse());
         final File dst = new File(getPath() + "/" + src.getName());
         if (!dst.exists()) {
-            FileUtils.copyFile(src, dst);
+            try {
+                FileUtils.copyFile(src, dst);
+            } catch (final Exception ex) {
+                final String message = "Beim Kopieren des Risse-Informations-PDFs kam es zu einem unerwarteten Fehler.";
+                throw new VermessungsunterlagenTaskException(getType(), message, ex);
+            }
         }
 
         final Object[] tmp = VermessungsRissReportHelper.getInstance()
@@ -125,6 +131,10 @@ public abstract class VermUntTaskRisse extends VermessungsunterlagenTask impleme
                     parameters,
                     dataSource,
                     out);
+            } catch (final Exception ex) {
+                final String message =
+                    "Beim Erzeugen des Vermessungsrisse-Berichtes kam es zu einem unerwarteten Fehler.";
+                throw new VermessungsunterlagenTaskException(getType(), message, ex);
             } finally {
                 closeStream(out);
             }

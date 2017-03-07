@@ -28,6 +28,7 @@ import de.cismet.cids.custom.utils.WundaBlauServerResources;
 import de.cismet.cids.custom.utils.alkis.AlkisPointReportBean;
 import de.cismet.cids.custom.utils.alkis.ServerAlkisProducts;
 import de.cismet.cids.custom.utils.vermessungsunterlagen.VermessungsunterlagenHelper;
+import de.cismet.cids.custom.utils.vermessungsunterlagen.exceptions.VermessungsunterlagenTaskException;
 
 import de.cismet.cids.dynamics.CidsBean;
 
@@ -60,7 +61,7 @@ public class VermUntTaskAPMap extends VermUntTaskAP {
     //~ Methods ----------------------------------------------------------------
 
     @Override
-    public void performTask() throws Exception {
+    public void performTask() throws VermessungsunterlagenTaskException {
         OutputStream out = null;
         try {
             final String filename = getPath() + "/" + ServerAlkisProducts.getInstance().PUNKTLISTE_PDF + ".pdf";
@@ -74,6 +75,9 @@ public class VermUntTaskAPMap extends VermUntTaskAP {
                 parameters,
                 new JRBeanCollectionDataSource(Arrays.asList(new AlkisPointReportBean(getAlkisPoints()))),
                 out);
+        } catch (final Exception ex) {
+            final String message = "Beim Erstellen des Punktlisten-Berichtes kam es zu einem unerwarteten Fehler.";
+            throw new VermessungsunterlagenTaskException(getType(), message, ex);
         } finally {
             VermessungsunterlagenHelper.closeStream(out);
         }
