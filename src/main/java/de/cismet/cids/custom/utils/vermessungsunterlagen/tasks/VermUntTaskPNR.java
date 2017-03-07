@@ -25,9 +25,10 @@ import java.util.GregorianCalendar;
 import de.cismet.cids.custom.utils.pointnumberreservation.PointNumberReservation;
 import de.cismet.cids.custom.utils.pointnumberreservation.PointNumberReservationRequest;
 import de.cismet.cids.custom.utils.vermessungsunterlagen.VermessungsunterlagenAnfrageBean;
-import de.cismet.cids.custom.utils.vermessungsunterlagen.VermessungsunterlagenException;
 import de.cismet.cids.custom.utils.vermessungsunterlagen.VermessungsunterlagenHelper;
 import de.cismet.cids.custom.utils.vermessungsunterlagen.VermessungsunterlagenTask;
+import de.cismet.cids.custom.utils.vermessungsunterlagen.exceptions.VermessungsunterlagenException;
+import de.cismet.cids.custom.utils.vermessungsunterlagen.exceptions.VermessungsunterlagenTaskException;
 import de.cismet.cids.custom.wunda_blau.search.actions.PointNumberReserverationServerAction;
 
 import de.cismet.cids.server.actions.ServerActionParameter;
@@ -76,13 +77,19 @@ public class VermUntTaskPNR extends VermessungsunterlagenTask {
     //~ Methods ----------------------------------------------------------------
 
     @Override
-    protected void performTask() throws Exception {
+    protected void performTask() throws VermessungsunterlagenTaskException {
         if (vermessungsstelle == null) {
             final File src = new File(VermessungsunterlagenHelper.getInstance().getProperties()
                             .getAbsPathPdfPnrVermstelle());
             final File dst = new File(getPath() + "/" + src.getName());
             if (!dst.exists()) {
-                FileUtils.copyFile(src, dst);
+                try {
+                    FileUtils.copyFile(src, dst);
+                } catch (final Exception ex) {
+                    final String message =
+                        "Beim Kopieren des PNR-Informations-PDFs kam es zu einem unerwarteten Fehler.";
+                    throw new VermessungsunterlagenTaskException(getType(), message, ex);
+                }
             }
         } else {
             if (punktnummernreservierungBeans != null) {
@@ -101,14 +108,10 @@ public class VermUntTaskPNR extends VermessungsunterlagenTask {
                                 FileUtils.writeStringToFile(new File(filename), protokoll, "ISO-8859-1");
                             }
                             first = false;
-                        } catch (final Exception exception) {
-                            VermessungsunterlagenHelper.writeExceptionJson(
-                                exception,
-                                getPath()
-                                        + "/fehlerprotokoll_"
-                                        + bean.getUtmKilometerQuadrat()
-                                        + ".json");
-                            throw exception;
+                        } catch (final Exception ex) {
+                            final String message =
+                                "Beim Herunterladen des Punktnummernreservierungsprotokolls kam es zu einem unerwarteten Fehler.";
+                            throw new VermessungsunterlagenTaskException(getType(), message, ex);
                         }
                     }
                 }
@@ -123,7 +126,8 @@ public class VermUntTaskPNR extends VermessungsunterlagenTask {
      *
      * @return  DOCUMENT ME!
      *
-     * @throws  VermessungsunterlagenException  DOCUMENT ME!
+     * @throws  VermessungsunterlagenException      DOCUMENT ME!
+     * @throws  VermessungsunterlagenTaskException  DOCUMENT ME!
      */
     private String getProtokoll(final PointNumberReservationRequest content) throws VermessungsunterlagenException {
         boolean isFreigabeMode = false;
@@ -139,7 +143,9 @@ public class VermUntTaskPNR extends VermessungsunterlagenTask {
         final StringBuffer contentBuilder = new StringBuffer();
         if ((content == null) || content.isSuccessfull()) {
             if (!isPointNumberBeanValid(content)) {
-                throw new VermessungsunterlagenException("Ungültige Antwort des Punktnummernreservierungsdienstes.");
+                throw new VermessungsunterlagenTaskException(
+                    getType(),
+                    "Ungültige Antwort des Punktnummernreservierungsdienstes.");
             }
             String header = "Antragsnummer: " + content.getAntragsnummer() + " erstellt am: ";
             final GregorianCalendar cal = new GregorianCalendar();
@@ -241,12 +247,10 @@ public class VermUntTaskPNR extends VermessungsunterlagenTask {
      * @param   ergaenzen  DOCUMENT ME!
      *
      * @return  DOCUMENT ME!
-     *
-     * @throws  Exception  DOCUMENT ME!
      */
     protected PointNumberReservationRequest doReservation(
             final VermessungsunterlagenAnfrageBean.PunktnummernreservierungBean bean,
-            final boolean ergaenzen) throws Exception {
+            final boolean ergaenzen) {
         final ServerActionParameter sapAction;
         if (ergaenzen) {
             sapAction = new ServerActionParameter(
