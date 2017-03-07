@@ -179,7 +179,7 @@ public class VermessungsunterlagenValidator {
                 throw getExceptionByErrorCode(Error.UNKNOWN_ANTRAGSFLURSTUECK);
             }
         }
-        
+
         // Wenn ausschließlich neue Punktnummern reserviert werden sollen, ist keine weitere Überprüfung notwendig.
         if (anfrageBean.getNurPunktnummernreservierung()) {
             return true;
