@@ -166,6 +166,18 @@ public class VermessungsunterlagenValidator {
             throw getExceptionByErrorCode(Error.NO_ART);
         }
 
+        // jedes einzelne Flurstück Überprüfen
+        for (final VermessungsunterlagenAnfrageBean.AntragsflurstueckBean fs : anfrageBean.getAntragsflurstuecksArray()) {
+            // gemarkung flur flurstueck darf nicht leer sein
+            if (!isFlurstueckValide(fs)) {
+                throw getExceptionByErrorCode(Error.WRONG_ANTRAGSFLURSTUECK);
+            }
+            // Jedes Flurstück muss auffindbar sein
+            if (!existFlurstueck(fs)) {
+                throw getExceptionByErrorCode(Error.UNKNOWN_ANTRAGSFLURSTUECK);
+            }
+        }
+        
         // Wenn ausschließlich neue Punktnummern reserviert werden sollen, ist keine weitere Überprüfung notwendig.
         if (anfrageBean.getNurPunktnummernreservierung()) {
             return true;
@@ -183,18 +195,6 @@ public class VermessungsunterlagenValidator {
                     || (anfrageBean.getAntragsflurstuecksArray().length <= 0)) {
             // es wurde kein Flurstück übergeben
             throw getExceptionByErrorCode(Error.NO_ANTRAGSFLURSTUECK);
-        }
-
-        // jedes einzelne Flurstück Überprüfen
-        for (final VermessungsunterlagenAnfrageBean.AntragsflurstueckBean fs : anfrageBean.getAntragsflurstuecksArray()) {
-            // gemarkung flur flurstueck darf nicht leer sein
-            if (!isFlurstueckValide(fs)) {
-                throw getExceptionByErrorCode(Error.WRONG_ANTRAGSFLURSTUECK);
-            }
-            // Jedes Flurstück muss auffindbar sein
-            if (!existFlurstueck(fs)) {
-                throw getExceptionByErrorCode(Error.UNKNOWN_ANTRAGSFLURSTUECK);
-            }
         }
 
         // Validierung des Saums
