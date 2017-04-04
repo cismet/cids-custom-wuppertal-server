@@ -58,7 +58,7 @@ public class FormSolutionsMySqlHelper {
         this.preparedSelectStatement = connect.prepareStatement(
                 "SELECT id FROM bestellung WHERE transid = ?;");
         this.preparedInsertStatement = connect.prepareStatement(
-                "INSERT INTO bestellung (id, transid, status, flurstueck, produkt, nur_download, email, dokument_dateipfad, dokument_dateiname, last_update) VALUES (default, ?, ?, null, null, null, null, null, null, ?);");                                                            
+                "INSERT INTO bestellung (id, transid, status, flurstueck, produkt, nur_download, email, dokument_dateipfad, dokument_dateiname, last_update) VALUES (default, ?, ?, null, null, null, null, null, null, ?);");
         this.preparedUpdateProduktStatement = connect.prepareStatement(
                 "UPDATE bestellung SET status = ?, last_update = ?, dokument_dateipfad = ?, dokument_dateiname = ? WHERE transid = ?;");
         this.preparedUpdateInfoStatement = connect.prepareStatement(
@@ -180,10 +180,5 @@ public class FormSolutionsMySqlHelper {
         preparedSelectStatement.setString(1, transid);
         final ResultSet resultSet = preparedSelectStatement.executeQuery();
         return resultSet;
-    }
-    
-    public static void main(String[] args) {
-        FormSolutionsMySqlHelper helper = getInstance();
-        helper.
     }
 }
