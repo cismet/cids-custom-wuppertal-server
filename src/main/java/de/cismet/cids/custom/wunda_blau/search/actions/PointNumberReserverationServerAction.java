@@ -12,17 +12,11 @@ import Sirius.server.middleware.interfaces.domainserver.MetaService;
 import Sirius.server.middleware.interfaces.domainserver.MetaServiceStore;
 import Sirius.server.newuser.User;
 
-import com.sun.jmx.remote.security.JMXSubjectDomainCombiner;
-
-import org.openide.util.Exceptions;
-
 import java.rmi.RemoteException;
 
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.Date;
-import java.util.HashMap;
-import java.util.Map;
 
 import de.cismet.cids.custom.utils.pointnumberreservation.PointNumberReservation;
 import de.cismet.cids.custom.utils.pointnumberreservation.PointNumberReservationRequest;
@@ -87,7 +81,7 @@ public class PointNumberReserverationServerAction implements UserAwareServerActi
      */
     private Collection<String> getAllAntragsNummern() {
         final Collection<PointNumberReservationRequest> requests = PointNumberReservationService.instance()
-                    .getAllBenAuftr();
+                    .getAllBenAuftr(getProfilKennung());
         final ArrayList<String> antragsNummern = new ArrayList<String>();
         if (requests != null) {
             for (final PointNumberReservationRequest r : requests) {
@@ -107,7 +101,7 @@ public class PointNumberReserverationServerAction implements UserAwareServerActi
     private Collection<String> getAllAntragsNummern(final String aPrefix) {
         final String anr = aPrefix + "*";
         final Collection<PointNumberReservationRequest> requests = PointNumberReservationService.instance()
-                    .getAllBenAuftrWithWildCard(anr);
+                    .getAllBenAuftrWithWildCard(anr, getProfilKennung());
         final ArrayList<String> antragsNummern = new ArrayList<String>();
         if (requests != null) {
             for (final PointNumberReservationRequest r : requests) {
@@ -130,7 +124,7 @@ public class PointNumberReserverationServerAction implements UserAwareServerActi
         if (!isAuftragsNummerValid(anr)) {
             return false;
         }
-        return PointNumberReservationService.instance().isAntragsNummerExisting(anr);
+        return PointNumberReservationService.instance().isAntragsNummerExisting(anr, getProfilKennung());
     }
 
     /**
@@ -168,7 +162,8 @@ public class PointNumberReserverationServerAction implements UserAwareServerActi
      */
     private Collection<PointNumberReservation> getReserviertePunkte(final String aPrefix, final String aNummer) {
         final String anr = aPrefix + ANR_SEPERATOR + aNummer;
-        final PointNumberReservationRequest result = PointNumberReservationService.instance().getAllBenAuftr(anr);
+        final PointNumberReservationRequest result = PointNumberReservationService.instance()
+                    .getAllBenAuftr(anr, getProfilKennung());
         if (result != null) {
             return result.getPointNumbers();
         }
