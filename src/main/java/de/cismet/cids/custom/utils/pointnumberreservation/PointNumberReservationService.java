@@ -318,14 +318,17 @@ public class PointNumberReservationService {
     /**
      * DOCUMENT ME!
      *
+     * @param   profilKennung  DOCUMENT ME!
+     *
      * @return  DOCUMENT ME!
      */
-    public Collection<PointNumberReservationRequest> getAllBenAuftr() {
+    public Collection<PointNumberReservationRequest> getAllBenAuftr(final String profilKennung) {
         if (initError) {
             LOG.info("PointNumberReservationService initialisation error");
             return null;
         }
-        final String request = TEMPLATE_BEN_AUFTR_ALL;
+        String request = TEMPLATE_BEN_AUFTR_ALL;
+        request = request.replaceAll(PROFIL_KENNUNG, profilKennung);
         final InputStream preparedQuery = new ByteArrayInputStream(request.getBytes());
 
         final String result = sendRequestAndAwaitResult(preparedQuery);
@@ -339,11 +342,12 @@ public class PointNumberReservationService {
     /**
      * DOCUMENT ME!
      *
-     * @param   anr  DOCUMENT ME!
+     * @param   anr            DOCUMENT ME!
+     * @param   profilKennung  DOCUMENT ME!
      *
      * @return  DOCUMENT ME!
      */
-    public PointNumberReservationRequest getAllBenAuftr(final String anr) {
+    public PointNumberReservationRequest getAllBenAuftr(final String anr, final String profilKennung) {
         if (initError) {
             LOG.info("PointNumberReservationService initialisation error");
             return null;
@@ -353,10 +357,11 @@ public class PointNumberReservationService {
             return null;
         }
 
-        final String request = TEMPLATE_BEN_AUFTR_ONE_ANR;
-        final String preparedRequest = request.replaceAll(AUFTRAGS_NUMMER, anr);
+        String request = TEMPLATE_BEN_AUFTR_ONE_ANR;
+        request = request.replaceAll(AUFTRAGS_NUMMER, anr);
+        request = request.replaceAll(PROFIL_KENNUNG, profilKennung);
 
-        final InputStream preparedQuery = new ByteArrayInputStream(preparedRequest.getBytes());
+        final InputStream preparedQuery = new ByteArrayInputStream(request.getBytes());
 
         final String result = sendRequestAndAwaitResult(preparedQuery);
         if (result == null) {
@@ -370,7 +375,7 @@ public class PointNumberReservationService {
             LOG.info("Could not find a result for Auftragsnummer " + anr);
             return null;
         }
-        if (request.length() > 1) {
+        if (requests.size() > 1) {
             LOG.warn(
                 "There should be exact one Auftragsnummer but the result contains multiple one. Returning only the first one");
         }
@@ -382,11 +387,13 @@ public class PointNumberReservationService {
     /**
      * DOCUMENT ME!
      *
-     * @param   anr  DOCUMENT ME!
+     * @param   anr            DOCUMENT ME!
+     * @param   profilKennung  DOCUMENT ME!
      *
      * @return  DOCUMENT ME!
      */
-    public Collection<PointNumberReservationRequest> getAllBenAuftrWithWildCard(final String anr) {
+    public Collection<PointNumberReservationRequest> getAllBenAuftrWithWildCard(final String anr,
+            final String profilKennung) {
         if (initError) {
             LOG.info("PointNumberReservationService initialisation error");
             return null;
@@ -395,11 +402,11 @@ public class PointNumberReservationService {
             return null;
         }
 
-        final String request = TEMPLATE_BEN_AUFTR_WILDCARD;
-        // ToDo: Replace the ANR number
-        final String preparedRequest = request.replaceAll(AUFTRAGS_NUMMER, anr);
+        String request = TEMPLATE_BEN_AUFTR_WILDCARD;
+        request = request.replaceAll(AUFTRAGS_NUMMER, anr);
+        request = request.replaceAll(PROFIL_KENNUNG, profilKennung);
 
-        final InputStream preparedQuery = new ByteArrayInputStream(preparedRequest.getBytes());
+        final InputStream preparedQuery = new ByteArrayInputStream(request.getBytes());
 
         final String result = sendRequestAndAwaitResult(preparedQuery);
         if (result == null) {
@@ -430,16 +437,17 @@ public class PointNumberReservationService {
     /**
      * DOCUMENT ME!
      *
-     * @param   anr  DOCUMENT ME!
+     * @param   anr            DOCUMENT ME!
+     * @param   profilKennung  DOCUMENT ME!
      *
      * @return  DOCUMENT ME!
      */
-    public boolean isAntragsNummerExisting(final String anr) {
+    public boolean isAntragsNummerExisting(final String anr, final String profilKennung) {
         if (initError) {
             LOG.info("PointNumberReservationService initialisation error");
             return false;
         }
-        final PointNumberReservationRequest auftrag = getAllBenAuftr(anr);
+        final PointNumberReservationRequest auftrag = getAllBenAuftr(anr, profilKennung);
         if ((auftrag == null) || (auftrag.getAntragsnummer() == null)) {
             return false;
         }
@@ -449,16 +457,17 @@ public class PointNumberReservationService {
     /**
      * DOCUMENT ME!
      *
-     * @param   requestId  DOCUMENT ME!
+     * @param   requestId      DOCUMENT ME!
+     * @param   profilKennung  DOCUMENT ME!
      *
      * @return  DOCUMENT ME!
      */
-    public Collection<PointNumberReservation> getReserviertePunkte(final String requestId) {
+    public Collection<PointNumberReservation> getReserviertePunkte(final String requestId, final String profilKennung) {
         if (initError) {
             LOG.info("PointNumberReservationService initialisation error");
             return null;
         }
-        final PointNumberReservationRequest request = getAllBenAuftr(requestId);
+        final PointNumberReservationRequest request = getAllBenAuftr(requestId, profilKennung);
         if (request != null) {
             return request.getPointNumbers();
         }
@@ -473,7 +482,7 @@ public class PointNumberReservationService {
      * @param   nummerierungsbezirk  DOCUMENT ME!
      * @param   firstPointNumber     DOCUMENT ME!
      * @param   lastPointNumber      DOCUMENT ME!
-     * @param   profilkennung        DOCUMENT ME!
+     * @param   profilKennung        DOCUMENT ME!
      *
      * @return  DOCUMENT ME!
      */
@@ -482,7 +491,7 @@ public class PointNumberReservationService {
             final String nummerierungsbezirk,
             final int firstPointNumber,
             final int lastPointNumber,
-            final String profilkennung) {
+            final String profilKennung) {
         if (initError) {
             LOG.info("PointNumberReservationService initialisation error");
             return null;
@@ -496,7 +505,7 @@ public class PointNumberReservationService {
         request = request.replaceAll(AUFTRAGS_NUMMER, anr);
         request = request.replaceAll(NUMMERIERUNGS_BEZIRK, nummerierungsbezirk);
         request = request.replaceAll(VERMESSUNG_STELLE, prefix);
-        request = request.replaceAll(PROFIL_KENNUNG, profilkennung);
+        request = request.replaceAll(PROFIL_KENNUNG, profilKennung);
         final DecimalFormat dcf = new DecimalFormat("000000");
 
         request = request.replaceAll(FIRST_NUMBER, dcf.format(firstPointNumber));
@@ -536,7 +545,8 @@ public class PointNumberReservationService {
             return null;
         }
 
-        final PointNumberReservationRequest result = PointNumberReservationService.instance().getAllBenAuftr(anr);
+        final PointNumberReservationRequest result = PointNumberReservationService.instance()
+                    .getAllBenAuftr(anr, profilKennung);
         if (result != null) {
             // for having the pnrs in the right sort order, first push them in HM
             // then getting them from the HM in the right points order.
@@ -643,7 +653,7 @@ public class PointNumberReservationService {
         final PointNumberReservationRequest tmpResult = PointNumberReservationBeanParser.parseReservierungsErgebnis(
                 result);
         if (tmpResult.isSuccessfull()) {
-            fillWithAblaufDatum(requestId, tmpResult);
+            fillWithAblaufDatum(requestId, tmpResult, profilKennung);
         }
         return tmpResult;
     }
@@ -653,9 +663,12 @@ public class PointNumberReservationService {
      *
      * @param  requestId          DOCUMENT ME!
      * @param  resultWithoutDate  DOCUMENT ME!
+     * @param  profilKennung      DOCUMENT ME!
      */
-    private void fillWithAblaufDatum(final String requestId, final PointNumberReservationRequest resultWithoutDate) {
-        final List<PointNumberReservation> tmp = getAllBenAuftr(requestId).getPointNumbers();
+    private void fillWithAblaufDatum(final String requestId,
+            final PointNumberReservationRequest resultWithoutDate,
+            final String profilKennung) {
+        final List<PointNumberReservation> tmp = getAllBenAuftr(requestId, profilKennung).getPointNumbers();
         final List<PointNumberReservation> pnrWithoutDate = resultWithoutDate.getPointNumbers();
         tmp.retainAll(resultWithoutDate.getPointNumbers());
         Collections.sort(tmp);
