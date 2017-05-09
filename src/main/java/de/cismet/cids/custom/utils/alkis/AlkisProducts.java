@@ -12,6 +12,8 @@
  */
 package de.cismet.cids.custom.utils.alkis;
 
+import Sirius.server.newuser.User;
+
 import org.jdom.Attribute;
 import org.jdom.Document;
 import org.jdom.Element;
@@ -287,18 +289,33 @@ public class AlkisProducts {
      *
      * @param   objectID           DOCUMENT ME!
      * @param   productCode        DOCUMENT ME!
+     * @param   user               DOCUMENT ME!
      * @param   fertigungsVermerk  DOCUMENT ME!
      *
      * @return  DOCUMENT ME!
      *
      * @throws  MalformedURLException  DOCUMENT ME!
      */
-    public URL productEinzelNachweisUrl(final String objectID, final String productCode, final String fertigungsVermerk)
-            throws MalformedURLException {
+    public URL productEinzelNachweisUrl(final String objectID,
+            final String productCode,
+            final User user,
+            final String fertigungsVermerk) throws MalformedURLException {
         final String fabricationNotice = generateFabricationNotice(fertigungsVermerk);
-        return new URL(alkisConf.EINZEL_NACHWEIS_SERVICE + "?" + MLESSNUMBER + "&product="
-                        + productCode + "&id=" + objectID + "&" + IDENTIFICATIONANDMORE
-                        + ((fabricationNotice != null) ? ("&" + fabricationNotice) : ""));
+        final StringBuilder urlBuilder = new StringBuilder(alkisConf.EINZEL_NACHWEIS_SERVICE).append("?")
+                    .append(MLESSNUMBER)
+                    .append("&product=")
+                    .append(productCode)
+                    .append("&id=")
+                    .append(objectID)
+                    .append("&")
+                    .append(IDENTIFICATIONANDMORE);
+        if (user != null) {
+            urlBuilder.append("&ordernumber=").append(user.getName());
+        }
+        if (fabricationNotice != null) {
+            urlBuilder.append("&fabricationNotice=").append(fabricationNotice);
+        }
+        return new URL(urlBuilder.toString());
     }
 
     /**
@@ -307,6 +324,7 @@ public class AlkisProducts {
      * @param   objectID     DOCUMENT ME!
      * @param   productCode  DOCUMENT ME!
      * @param   stichtag     DOCUMENT ME!
+     * @param   user         DOCUMENT ME!
      *
      * @return  DOCUMENT ME!
      *
@@ -314,10 +332,22 @@ public class AlkisProducts {
      */
     public URL productEinzelnachweisStichtagsbezogenUrl(final String objectID,
             final String productCode,
-            final Date stichtag) throws MalformedURLException {
-        return new URL(alkisConf.EINZEL_NACHWEIS_SERVICE + "?" + MLESSNUMBER
-                        + "&reportingDate=" + stichtagDateFormat.format(stichtag)
-                        + "&product=" + productCode + "&id=" + objectID + "&" + IDENTIFICATIONANDMORE);
+            final Date stichtag,
+            final User user) throws MalformedURLException {
+        final StringBuilder urlBuilder = new StringBuilder(alkisConf.EINZEL_NACHWEIS_SERVICE).append("?")
+                    .append(MLESSNUMBER)
+                    .append("&reportingDate=")
+                    .append(stichtagDateFormat.format(stichtag))
+                    .append("&product=")
+                    .append(productCode)
+                    .append("&id=")
+                    .append(objectID)
+                    .append("&")
+                    .append(IDENTIFICATIONANDMORE);
+        if (user != null) {
+            urlBuilder.append("&ordernumber=").append(user.getName());
+        }
+        return new URL(urlBuilder.toString());
     }
 
     /**
@@ -372,13 +402,13 @@ public class AlkisProducts {
                         "Gefertigt im Auftrag der Stadt Wuppertal durch: Öffentlich bestellter Vermessungsingenieur "
                                 + fertigungsVermerk,
                         "UTF-8");
-                return "fabricationNotice=" + note;
+                return note;
             } catch (final UnsupportedEncodingException ex) {
                 LOG.error("error while encoding fabricationnotice", ex);
                 return null;
             }
         } else {
-            return "";
+            return null;
         }
     }
 
