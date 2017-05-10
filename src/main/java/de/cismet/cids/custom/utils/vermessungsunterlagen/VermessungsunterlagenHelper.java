@@ -877,7 +877,7 @@ public class VermessungsunterlagenHelper {
      * @return  DOCUMENT ME!
      */
     public String getPath(final String jobkey) {
-        return vermessungsunterlagenProperties.getAbsPathTmp() + "/" + DIR_PREFIX + "_" + jobkey;
+        return vermessungsunterlagenProperties.getAbsPathTmp() + "/" + DIR_PREFIX + "_" + jobkey.replace("/", "--");
     }
 
     /**
