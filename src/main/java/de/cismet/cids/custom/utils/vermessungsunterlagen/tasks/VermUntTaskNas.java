@@ -28,7 +28,6 @@ import de.cismet.cids.custom.utils.nas.NasProduct;
 import de.cismet.cids.custom.utils.vermessungsunterlagen.VermessungsunterlagenHelper;
 import de.cismet.cids.custom.utils.vermessungsunterlagen.VermessungsunterlagenTask;
 import de.cismet.cids.custom.utils.vermessungsunterlagen.VermessungsunterlagenTaskRetryable;
-import de.cismet.cids.custom.utils.vermessungsunterlagen.exceptions.VermessungsunterlagenException;
 import de.cismet.cids.custom.utils.vermessungsunterlagen.exceptions.VermessungsunterlagenTaskException;
 import de.cismet.cids.custom.wunda_blau.search.actions.NasDataQueryAction;
 
@@ -113,7 +112,7 @@ public abstract class VermUntTaskNas extends VermessungsunterlagenTask implement
             filename = getJobKey();
         }
 
-        final File fileToSaveTo = new File(getPath() + "/" + filename + extension);
+        final File fileToSaveTo = new File(getPath() + "/" + filename.replace("/", "--") + extension);
 
         /*
          * Phase 1: sending the request to the server (only if it hasnt already be sent correctly)
