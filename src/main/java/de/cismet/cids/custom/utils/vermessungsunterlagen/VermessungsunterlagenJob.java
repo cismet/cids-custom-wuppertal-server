@@ -553,6 +553,6 @@ public class VermessungsunterlagenJob implements Runnable {
      * @return  DOCUMENT ME!
      */
     public String getPath() {
-        return helper.getPath(getKey());
+        return helper.getPath(getKey().replace("/", "--"));
     }
 }

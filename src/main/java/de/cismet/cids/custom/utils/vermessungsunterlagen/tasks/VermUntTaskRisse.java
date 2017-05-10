@@ -157,7 +157,7 @@ public abstract class VermUntTaskRisse extends VermessungsunterlagenTask impleme
                 LOG.warn("could not download additional File", ex);
                 VermessungsunterlagenHelper.writeExceptionJson(
                     ex,
-                    VermessungsunterlagenHelper.getInstance().getPath(getJobKey())
+                    VermessungsunterlagenHelper.getInstance().getPath(getJobKey().replace("/", "--"))
                             + "/fehlerprotokoll_"
                             + pureAdditionalFilename
                             + ".json");
