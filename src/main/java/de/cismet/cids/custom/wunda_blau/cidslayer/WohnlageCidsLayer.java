@@ -15,6 +15,8 @@ package de.cismet.cids.custom.wunda_blau.cidslayer;
 import Sirius.server.middleware.types.MetaClass;
 import Sirius.server.newuser.User;
 
+import de.cismet.cids.server.cidslayer.DefaultCidsLayer;
+
 /**
  * DOCUMENT ME!
  *
