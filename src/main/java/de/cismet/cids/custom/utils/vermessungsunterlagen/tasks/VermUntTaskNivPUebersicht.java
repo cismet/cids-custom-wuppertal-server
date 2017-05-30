@@ -17,6 +17,9 @@ import com.vividsolutions.jts.geom.Envelope;
 import com.vividsolutions.jts.geom.Geometry;
 import com.vividsolutions.jts.geom.GeometryFactory;
 
+import org.apache.commons.io.FileUtils;
+
+import java.io.File;
 import java.io.FileOutputStream;
 import java.io.InputStream;
 import java.io.OutputStream;
@@ -77,6 +80,17 @@ public class VermUntTaskNivPUebersicht extends VermUntTaskNivP {
 
     @Override
     public void performTask() throws VermessungsunterlagenTaskException {
+        final File src = new File(VermessungsunterlagenHelper.getInstance().getProperties().getAbsPathPdfNivP());
+        final File dst = new File(getPath() + "/" + src.getName());
+        if (!dst.exists()) {
+            try {
+                FileUtils.copyFile(src, dst);
+            } catch (final Exception ex) {
+                final String message = "Beim Kopieren des NivP-Informations-PDFs kam es zu einem unerwarteten Fehler.";
+                throw new VermessungsunterlagenTaskException(getType(), message, ex);
+            }
+        }
+
         final GeometryFactory geometryFactory = new GeometryFactory();
         final Collection<Geometry> geometries = new ArrayList<Geometry>(getNivPoints().size());
         for (final CidsBean nivPoint : getNivPoints()) {

@@ -44,6 +44,7 @@ public class VermessungsunterlagenProperties {
     private final String ftpPath;
     private final String absPathTest;
     private final String absPathPdfRisse;
+    private final String absPathPdfNivP;
     private final String absPathPdfPnrVermstelle;
 
     //~ Constructors -----------------------------------------------------------
@@ -64,6 +65,7 @@ public class VermessungsunterlagenProperties {
         ftpPath = readProperty("FTP_PATH", null);
         absPathTest = readProperty("ABS_PATH_TEST", null);
         absPathPdfRisse = readProperty("ABS_PATH_PDF_RISSE", null);
+        absPathPdfNivP = readProperty("ABS_PATH_PDF_NIVP", null);
         absPathPdfPnrVermstelle = readProperty("ABS_PATH_PDF_PNR_VERMSTELLE", null);
     }
 

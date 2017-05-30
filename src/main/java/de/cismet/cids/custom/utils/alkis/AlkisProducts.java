@@ -19,6 +19,8 @@ import org.jdom.Document;
 import org.jdom.Element;
 import org.jdom.input.SAXBuilder;
 
+import org.openide.util.Exceptions;
+
 import java.awt.Point;
 
 import java.io.StringReader;
@@ -45,7 +47,6 @@ import de.cismet.cids.dynamics.CidsBean;
 import de.cismet.tools.StaticHtmlTools;
 
 import static de.cismet.cids.custom.utils.alkis.AlkisPunktReportScriptlet.SUFFIXES;
-import org.openide.util.Exceptions;
 
 /**
  * DOCUMENT ME!
