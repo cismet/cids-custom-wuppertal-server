@@ -45,6 +45,7 @@ import de.cismet.cids.dynamics.CidsBean;
 import de.cismet.tools.StaticHtmlTools;
 
 import static de.cismet.cids.custom.utils.alkis.AlkisPunktReportScriptlet.SUFFIXES;
+import org.openide.util.Exceptions;
 
 /**
  * DOCUMENT ME!
@@ -310,7 +311,11 @@ public class AlkisProducts {
                     .append("&")
                     .append(IDENTIFICATIONANDMORE);
         if (user != null) {
-            urlBuilder.append("&ordernumber=").append(user.getName());
+            try {
+                urlBuilder.append("&ordernumber=").append(URLEncoder.encode(user.getName(), "UTF-8"));
+            } catch (final UnsupportedEncodingException ex) {
+                throw new MalformedURLException("error while encoding: " + user.getName());
+            }
         }
         if (fabricationNotice != null) {
             urlBuilder.append("&fabricationNotice=").append(fabricationNotice);
@@ -345,7 +350,11 @@ public class AlkisProducts {
                     .append("&")
                     .append(IDENTIFICATIONANDMORE);
         if (user != null) {
-            urlBuilder.append("&ordernumber=").append(user.getName());
+            try {
+                urlBuilder.append("&ordernumber=").append(URLEncoder.encode(user.getName(), "UTF-8"));
+            } catch (final UnsupportedEncodingException ex) {
+                throw new MalformedURLException("error while encoding: " + user.getName());
+            }
         }
         return new URL(urlBuilder.toString());
     }
