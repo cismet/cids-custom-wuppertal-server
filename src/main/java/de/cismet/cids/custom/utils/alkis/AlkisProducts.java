@@ -19,6 +19,8 @@ import org.jdom.Document;
 import org.jdom.Element;
 import org.jdom.input.SAXBuilder;
 
+import org.openide.util.Exceptions;
+
 import java.awt.Point;
 
 import java.io.StringReader;
@@ -310,7 +312,11 @@ public class AlkisProducts {
                     .append("&")
                     .append(IDENTIFICATIONANDMORE);
         if (user != null) {
-            urlBuilder.append("&ordernumber=").append(user.getName());
+            try {
+                urlBuilder.append("&ordernumber=").append(URLEncoder.encode(user.getName(), "UTF-8"));
+            } catch (final UnsupportedEncodingException ex) {
+                throw new MalformedURLException("error while encoding: " + user.getName());
+            }
         }
         if (fabricationNotice != null) {
             urlBuilder.append("&fabricationNotice=").append(fabricationNotice);
@@ -345,7 +351,11 @@ public class AlkisProducts {
                     .append("&")
                     .append(IDENTIFICATIONANDMORE);
         if (user != null) {
-            urlBuilder.append("&ordernumber=").append(user.getName());
+            try {
+                urlBuilder.append("&ordernumber=").append(URLEncoder.encode(user.getName(), "UTF-8"));
+            } catch (final UnsupportedEncodingException ex) {
+                throw new MalformedURLException("error while encoding: " + user.getName());
+            }
         }
         return new URL(urlBuilder.toString());
     }
