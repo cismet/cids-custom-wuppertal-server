@@ -25,7 +25,6 @@ import java.io.Serializable;
 import java.sql.Types;
 
 import java.util.ArrayList;
-import java.util.Arrays;
 import java.util.Collection;
 import java.util.LinkedList;
 import java.util.List;
@@ -115,8 +114,6 @@ public class BPlanAPISearch extends AbstractCidsServerSearch implements RestApiC
                 // "select * from bplanapisearch('" + wktString + "','" + status + "')";
                 QUERY.setObjects(wktString, status);
                 final ArrayList<ArrayList> results = metaService.performCustomSearch(QUERY);
-                LOG.fatal("Ergebnisse in BPLANAPISEARCH: " + results.size() + "\n" + results);
-
                 return results;
             } else {
                 LOG.error("active local server not found"); // NOI18N
@@ -202,6 +199,6 @@ class Chaos implements Serializable {
 //    $$
 //LANGUAGE SQL STABLE;
 //
-
+//
 // -- Example
 //select * from bplanapisearch('POLYGON((373868.48515255994 5681973.08598268,374972.0447490652 5681973.08598268,374972.0447490652 5681363.978413516,373868.48515255994 5681363.978413516,373868.48515255994 5681973.08598268))')
