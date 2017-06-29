@@ -191,13 +191,13 @@ class GazzResult implements Serializable {
 //                where
 //                    adresse.strasse=strasse.strassenschluessel
 //                    and geom.id=adresse.umschreibendes_rechteck
-//                
+//
 //                union
 //                select
-//                    CASE WHEN count(bplan_plan.verfahren)=(select count(*) from bplan_plan innerplan where innerplan.verfahren=bplan_plan.verfahren) 
+//                    CASE WHEN count(bplan_plan.verfahren)=(select count(*) from bplan_plan innerplan where innerplan.verfahren=bplan_plan.verfahren)
 //                        THEN '#'||bplan_plan.verfahren
 //                        ELSE  '#'||bplan_plan.verfahren || ' ('||string_agg(distinct bplan_plan.status,',')||')'
-//                    END,                 
+//                    END,
 //                    'file' as glyph,
 //                    round(st_x(ST_PointOnSurface(geo_field))::numeric, 2) as x,
 //                    round(st_y(ST_PointOnSurface(geo_field))::numeric, 2) as x,
@@ -212,16 +212,16 @@ class GazzResult implements Serializable {
 //                group by bplan_plan.verfahren, geom.geo_field
 //
 //                union
-//                select 
-//                    geographicidentifier, 
+//                select
+//                    geographicidentifier,
 //                    'tag' as glyph,
 //                    round(st_x(st_centroid(geo_field))::numeric, 2) as x,
 //                    round(st_y(st_centroid(geo_field))::numeric, 2) as y,
 //                    geographicidentifier,
 //                    null,
 //                    null
-//                from poi_locationinstance, geom where 
-//                    poi_locationinstance.pos=geom.id 
+//                from poi_locationinstance, geom where
+//                    poi_locationinstance.pos=geom.id
 //                union
 //                select
 //                    poi_alternativegeographicidentifier.alternativegeographicidentifier ,
@@ -237,12 +237,12 @@ class GazzResult implements Serializable {
 //                    poi_locationinstance,
 //                    geom  ,
 //                    poi_alternativegeographicidentifier,
-//                    poi_alt_geo_identifier_arrray 
+//                    poi_alt_geo_identifier_arrray
 //                where
-//                    poi_locationinstance.pos=geom.id 
-//                    and poi_locationinstance.alternativegeographicidentifier=poi_alt_geo_identifier_arrray.number_li 
-//                    and poi_alt_geo_identifier_arrray.alt_geo_id=poi_alternativegeographicidentifier.id 
-//                    and not (poi_locationinstance.geographicidentifier = poi_alternativegeographicidentifier.alternativegeographicidentifier)   
+//                    poi_locationinstance.pos=geom.id
+//                    and poi_locationinstance.alternativegeographicidentifier=poi_alt_geo_identifier_arrray.number_li
+//                    and poi_alt_geo_identifier_arrray.alt_geo_id=poi_alternativegeographicidentifier.id
+//                    and not (poi_locationinstance.geographicidentifier = poi_alternativegeographicidentifier.alternativegeographicidentifier)
 //                        ) as gaz
 //                        where string ilike $1||'%'
 //            order by primary_sorter, secondary_sorter, tertiary_sorter
