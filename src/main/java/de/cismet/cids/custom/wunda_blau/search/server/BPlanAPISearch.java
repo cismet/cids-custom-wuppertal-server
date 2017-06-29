@@ -25,7 +25,6 @@ import java.io.Serializable;
 import java.sql.Types;
 
 import java.util.ArrayList;
-import java.util.Arrays;
 import java.util.Collection;
 import java.util.LinkedList;
 import java.util.List;
@@ -55,8 +54,10 @@ public class BPlanAPISearch extends AbstractCidsServerSearch implements RestApiC
     private static final Logger LOG = Logger.getLogger(BPlanAPISearch.class);
 
     private static final PreparableStatement QUERY = new PreparableStatement(
-            "select * from bplanapisearch(?,?)",
+            "select * from bplanapisearch(?,?,?,?)",
             Types.VARCHAR,
+            Types.VARCHAR,
+            Types.INTEGER,
             Types.VARCHAR);
     private static final String DOMAIN = "WUNDA_BLAU";
 
@@ -65,6 +66,8 @@ public class BPlanAPISearch extends AbstractCidsServerSearch implements RestApiC
     @Getter private final SearchInfo searchInfo;
     @Getter @Setter private String wktString;
     @Getter @Setter private String status;
+    @Getter @Setter private Integer srs;
+    @Getter @Setter private String urlprefix;
 
     //~ Constructors -----------------------------------------------------------
 
@@ -92,13 +95,24 @@ public class BPlanAPISearch extends AbstractCidsServerSearch implements RestApiC
         statusParameterInfo.setType(Type.STRING);
         parameterDescription.add(statusParameterInfo);
 
+        final SearchParameterInfo srsParameterInfo;
+        srsParameterInfo = new SearchParameterInfo();
+        srsParameterInfo.setKey("srs");
+        srsParameterInfo.setType(Type.INTEGER);
+        parameterDescription.add(srsParameterInfo);
+
+        final SearchParameterInfo urlPrefixParameterInfo;
+        urlPrefixParameterInfo = new SearchParameterInfo();
+        urlPrefixParameterInfo.setKey("urlprefix");
+        urlPrefixParameterInfo.setType(Type.STRING);
+        parameterDescription.add(urlPrefixParameterInfo);
+
         searchInfo.setParameterDescription(parameterDescription);
 
         final SearchParameterInfo resultParameterInfo = new SearchParameterInfo();
         resultParameterInfo.setKey("return");
         resultParameterInfo.setArray(true);
         resultParameterInfo.setType(Type.JAVA_CLASS);
-        resultParameterInfo.setAdditionalTypeInfo(" java.util.ArrayList<" + Chaos.class.getCanonicalName() + ">");
         searchInfo.setResultDescription(resultParameterInfo);
     }
 
@@ -113,10 +127,8 @@ public class BPlanAPISearch extends AbstractCidsServerSearch implements RestApiC
             }
             if (metaService != null) {
                 // "select * from bplanapisearch('" + wktString + "','" + status + "')";
-                QUERY.setObjects(wktString, status);
+                QUERY.setObjects(wktString, status, srs, urlprefix);
                 final ArrayList<ArrayList> results = metaService.performCustomSearch(QUERY);
-                LOG.fatal("Ergebnisse in BPLANAPISEARCH: " + results.size() + "\n" + results);
-
                 return results;
             } else {
                 LOG.error("active local server not found"); // NOI18N
@@ -126,48 +138,6 @@ public class BPlanAPISearch extends AbstractCidsServerSearch implements RestApiC
         } catch (final Exception ex) {
             throw new SearchException("error while loading verfahren objects", ex);
         }
-    }
-
-    /**
-     * DOCUMENT ME!
-     *
-     * @param   args  DOCUMENT ME!
-     *
-     * @throws  Exception  DOCUMENT ME!
-     */
-    public static void main(final String[] args) throws Exception {
-        System.out.println(BPlanAPISearch.class.getSimpleName());
-        final ObjectMapper objectMapper = new ObjectMapper();
-        final Chaos c = new Chaos(4711, "EIJO");
-        objectMapper.configure(SerializationFeature.INDENT_OUTPUT, true);
-        System.out.println(objectMapper.writeValueAsString(c));
-    }
-}
-
-/**
- * DOCUMENT ME!
- *
- * @version  $Revision$, $Date$
- */
-@XmlRootElement
-class Chaos implements Serializable {
-
-    //~ Instance fields --------------------------------------------------------
-
-    @Getter @Setter private int id;
-    @Getter @Setter private String result;
-
-    //~ Constructors -----------------------------------------------------------
-
-    /**
-     * Creates a new Chaos object.
-     *
-     * @param  id      DOCUMENT ME!
-     * @param  result  DOCUMENT ME!
-     */
-    public Chaos(final int id, final String result) {
-        this.id = id;
-        this.result = result;
     }
 }
 
@@ -183,15 +153,15 @@ class Chaos implements Serializable {
 //    geojson text);
 //
 //
-//CREATE or REPLACE FUNCTION bplanAPISearch(in wkt_string text, in status text DEFAULT '',in srid int DEFAULT 25832) RETURNS SETOF bplanAPISearchResult
+//CREATE or REPLACE FUNCTION bplanAPISearch(in wkt_string text, in status text DEFAULT '',in srid int DEFAULT 25832, in urlPfx text DEFAULT 'https://www.wuppertal.de/geoportal' ) RETURNS SETOF bplanAPISearchResult
 //    AS $$
 //        select
 //            outerBPP.verfahren as nummer,
 //            (select name from bplan_verfahren where nummer=verfahren) as name,
 //            (select array_to_string(array_agg(distinct innerBPP.status),',') from bplan_plan innerBPP, geom where geom.id=innerBPP.geometrie and innerBPP.verfahren=outerBPP.verfahren and geom.geo_field=outerGeom.geo_field) as status,
-//            (select '['||array_to_string(array_agg('{ "file": "B'||nummer||'.pdf", "url":"http://www.wuppertal.de/geoportal/bplaene/rechtswirksam/B'||nummer||'.pdf"}'), ',')||']' from bplan_plan, geom where geom.id=bplan_plan.geometrie and bplan_plan.verfahren=outerBPP.verfahren and geom.geo_field=outerGeom.geo_field and bplan_plan.status like 'r%') as plaene_rk,
-//            (select '['||array_to_string(array_agg('{ "file": "B'||regexp_replace(nummer, E'\\*$', '')||'.pdf", "url":"http://www.wuppertal.de/geoportal/bplaene/verfahren/B'||regexp_replace(nummer, E'\\*$', '')||'.pdf"}'), ',')||']' from bplan_plan, geom where geom.id=bplan_plan.geometrie and bplan_plan.verfahren=outerBPP.verfahren and geom.geo_field=outerGeom.geo_field and bplan_plan.status like 'n%') as plaene_nrk,
-//            (select '['||array_to_string(array_agg('{ "file": "'||dateiname||'.pdf", "url":"'||pfad||'"}'), ',')||']' from bpl_dokumente where bpl_dokumente.plannummer=outerBPP.verfahren) as docs,
+//            (select '['||array_to_string(array_agg('{ "file": "B'||nummer||'.pdf", "url":"'||$4||'/bplaene/rechtswirksam/B'||nummer||'.pdf"}'), ',')||']' from bplan_plan, geom where geom.id=bplan_plan.geometrie and bplan_plan.verfahren=outerBPP.verfahren and geom.geo_field=outerGeom.geo_field and bplan_plan.status like 'r%') as plaene_rk,
+//            (select '['||array_to_string(array_agg('{ "file": "B'||regexp_replace(nummer, E'\\*$', '')||'.pdf", "url":"'||$4||'/bplaene/verfahren/B'||regexp_replace(nummer, E'\\*$', '')||'.pdf"}'), ',')||']' from bplan_plan, geom where geom.id=bplan_plan.geometrie and bplan_plan.verfahren=outerBPP.verfahren and geom.geo_field=outerGeom.geo_field and bplan_plan.status like 'n%') as plaene_nrk,
+//            (select '['||array_to_string(array_agg('{ "file": "'||dateiname||'.pdf", "url":"'||replace(pfad, 'https://www.wuppertal.de/geoportal', $4)||'"}'), ',')||']' from bpl_dokumente where bpl_dokumente.plannummer=outerBPP.verfahren) as docs,
 //            st_asgeojson(geo_field)
 //        from bplan_plan outerBPP, geom outerGeom where outerGeom.id=outerBPP.geometrie
 //
@@ -202,6 +172,7 @@ class Chaos implements Serializable {
 //    $$
 //LANGUAGE SQL STABLE;
 //
-
-// -- Example
 //select * from bplanapisearch('POLYGON((373868.48515255994 5681973.08598268,374972.0447490652 5681973.08598268,374972.0447490652 5681363.978413516,373868.48515255994 5681363.978413516,373868.48515255994 5681973.08598268))')
+//
+//
+//select * from bplanapisearch('POLYGON((373868.48515255994 5681973.08598268,374972.0447490652 5681973.08598268,374972.0447490652 5681363.978413516,373868.48515255994 5681363.978413516,373868.48515255994 5681973.08598268))','',25832, 'https://aaa.cismet.de')

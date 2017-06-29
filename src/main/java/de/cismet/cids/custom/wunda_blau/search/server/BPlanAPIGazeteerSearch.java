@@ -106,7 +106,6 @@ public class BPlanAPIGazeteerSearch extends AbstractCidsServerSearch implements 
                 QUERY.setObjects(input);
                 final ArrayList<ArrayList> results = metaService.performCustomSearch(QUERY);
                 final ArrayList<GazzResult> ret = new ArrayList<GazzResult>(results.size());
-                LOG.fatal(results);
                 for (final ArrayList row : results) {
                     final String s = (String)row.get(0);
                     final String glyph = (String)row.get(1);
@@ -165,12 +164,15 @@ class GazzResult implements Serializable {
 //    string text,
 //    glyph text,
 //    x numeric,
-//    y numeric);
+//    y numeric,
+//    primary_sorter text,
+//    secondary_sorter numeric,
+//    tertiary_sorter text);
 //
 //CREATE or REPLACE FUNCTION bplanGazeteerAPISearch(in query text) RETURNS SETOF bplanGazeteerAPISearchResult
 //    AS $$
 //       --select '{"string":"'||string||'","x":'||x||',"y":'||y||'}'
-//        select string,glyph,x,y
+//        select string,glyph,x,y, primary_sorter, secondary_sorter, tertiary_sorter
 //            from (
 //                select
 //                    strasse.name || ' ' || adresse.hausnummer as string,
@@ -178,7 +180,10 @@ class GazzResult implements Serializable {
 //                    round(st_x(geo_field)::numeric,
 //                    2) as x,
 //                    round(st_y(geo_field)::numeric,
-//                    2) as y
+//                    2) as y,
+//                    strasse.name as primary_sorter,
+//                    adresse.sort_hausnummer::numeric as secondary_sorter,
+//                    adresse.sort_hausnummerzusatz as tertiary_sorter
 //                from
 //                    adresse,
 //                    strasse,
@@ -186,20 +191,61 @@ class GazzResult implements Serializable {
 //                where
 //                    adresse.strasse=strasse.strassenschluessel
 //                    and geom.id=adresse.umschreibendes_rechteck
+//
 //                union
 //                select
-//                    distinct '#'||bplan_plan.verfahren,
+//                    CASE WHEN count(bplan_plan.verfahren)=(select count(*) from bplan_plan innerplan where innerplan.verfahren=bplan_plan.verfahren)
+//                        THEN '#'||bplan_plan.verfahren
+//                        ELSE  '#'||bplan_plan.verfahren || ' ('||string_agg(distinct bplan_plan.status,',')||')'
+//                    END,
 //                    'file' as glyph,
-//                    round(st_x(st_centroid(geo_field))::numeric, 2) as x,
-//                    round(st_y(st_centroid(geo_field))::numeric, 2) as x
+//                    round(st_x(ST_PointOnSurface(geo_field))::numeric, 2) as x,
+//                    round(st_y(ST_PointOnSurface(geo_field))::numeric, 2) as x,
+//                    '#'||bplan_plan.verfahren,
+//                    null::numeric,
+//                    null
 //                from
 //                    bplan_plan,
 //                    geom
 //                where
 //                    geom.id=bplan_plan.geometrie
-//            ) as gaz
-//            where string ilike $1||'%'
-//            order by string
+//                group by bplan_plan.verfahren, geom.geo_field
+//
+//                union
+//                select
+//                    geographicidentifier,
+//                    'tag' as glyph,
+//                    round(st_x(st_centroid(geo_field))::numeric, 2) as x,
+//                    round(st_y(st_centroid(geo_field))::numeric, 2) as y,
+//                    geographicidentifier,
+//                    null,
+//                    null
+//                from poi_locationinstance, geom where
+//                    poi_locationinstance.pos=geom.id
+//                union
+//                select
+//                    poi_alternativegeographicidentifier.alternativegeographicidentifier ,
+//                    'tags' as glyph,
+//                    round(st_x(st_centroid(geo_field))::numeric,
+//                    2) as x,
+//                    round(st_y(st_centroid(geo_field))::numeric,
+//                    2) as y,
+//                    poi_alternativegeographicidentifier.alternativegeographicidentifier,
+//                    null,
+//                    null
+//                from
+//                    poi_locationinstance,
+//                    geom  ,
+//                    poi_alternativegeographicidentifier,
+//                    poi_alt_geo_identifier_arrray
+//                where
+//                    poi_locationinstance.pos=geom.id
+//                    and poi_locationinstance.alternativegeographicidentifier=poi_alt_geo_identifier_arrray.number_li
+//                    and poi_alt_geo_identifier_arrray.alt_geo_id=poi_alternativegeographicidentifier.id
+//                    and not (poi_locationinstance.geographicidentifier = poi_alternativegeographicidentifier.alternativegeographicidentifier)
+//                        ) as gaz
+//                        where string ilike $1||'%'
+//            order by primary_sorter, secondary_sorter, tertiary_sorter
 //    $$
 //LANGUAGE SQL STABLE;
 //
