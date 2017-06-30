@@ -111,7 +111,8 @@ public class BPlanAPIGazeteerSearch extends AbstractCidsServerSearch implements 
                     final String glyph = (String)row.get(1);
                     final double x = ((BigDecimal)row.get(2)).doubleValue();
                     final double y = ((BigDecimal)row.get(3)).doubleValue();
-                    ret.add(new GazzResult(s, glyph, x, y));
+                    final String more = (String)row.get(7);
+                    ret.add(new GazzResult(s, glyph, x, y, more));
                 }
                 return ret;
             } else {
@@ -138,6 +139,7 @@ class GazzResult implements Serializable {
     @Getter @Setter private String glyphkey;
     @Getter @Setter private double x;
     @Getter @Setter private double y;
+    @Getter @Setter private String more;
 
     //~ Constructors -----------------------------------------------------------
 
@@ -148,12 +150,14 @@ class GazzResult implements Serializable {
      * @param  glyphkey  DOCUMENT ME!
      * @param  x         DOCUMENT ME!
      * @param  y         DOCUMENT ME!
+     * @param  more      DOCUMENT ME!
      */
-    public GazzResult(final String string, final String glyphkey, final double x, final double y) {
+    public GazzResult(final String string, final String glyphkey, final double x, final double y, final String more) {
         this.string = string;
         this.glyphkey = glyphkey;
         this.x = x;
         this.y = y;
+        this.more = more;
     }
 }
 
