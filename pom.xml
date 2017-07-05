@@ -13,7 +13,7 @@
 
     <groupId>de.cismet.cids.custom.wupp.server</groupId>
     <artifactId>cids-custom-server-wuppertal</artifactId>
-    <version>5.1.2</version>
+    <version>5.2</version>
     <packaging>jar</packaging>
     
     <name>${names.cids.custom-wuppertal-server}</name>
@@ -23,7 +23,7 @@
         <connection>https://github.com/cismet/cids-custom-wuppertal-server.git</connection>
         <developerConnection>scm:git:git@github.com:cismet/cids-custom-wuppertal-server.git</developerConnection>
         <url>https://github.com/cismet/cids-custom-wuppertal-server</url>
-        <tag>v5.1.2</tag>
+        <tag>v5.2</tag>
     </scm>
 
     <properties>
@@ -33,7 +33,10 @@
             legacy cidsDistribution directory (see cids-parent.pom)
         -->
         <de.cismet.libDir>lib/localWuNDa</de.cismet.libDir>
+        <enforcer.skip>false</enforcer.skip>
+        <jalopy.skip>true</jalopy.skip>
     </properties>
+    
     
     <issueManagement>
         <system>GitHub</system>
@@ -286,12 +289,7 @@
         </dependency>
         <dependency>
             <groupId>de.aedsicad</groupId>
-            <artifactId>aaawebclient</artifactId>
-            <version>6.3.16.1</version>
-        </dependency>
-        <dependency>
-            <groupId>de.aedsicad</groupId>
-            <artifactId>aaaserver</artifactId>
+            <artifactId>aaaweb-soap-connector</artifactId>
             <version>6.3.16.1</version>
         </dependency>        
         <dependency>

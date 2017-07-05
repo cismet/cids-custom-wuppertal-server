@@ -7,9 +7,9 @@
 ****************************************************/
 package de.cismet.cids.custom.utils.pointnumberreservation;
 
-import de.aed_sicad.namespaces.svr.AuftragsManager;
-import de.aed_sicad.namespaces.svr.AuftragsManagerLocator;
-import de.aed_sicad.namespaces.svr.AuftragsManagerSoap;
+import de.aed_sicad.www.namespaces.svr.AuftragsManager;
+import de.aed_sicad.www.namespaces.svr.AuftragsManagerLocator;
+import de.aed_sicad.www.namespaces.svr.AuftragsManagerSoap;
 
 import java.io.BufferedReader;
 import java.io.ByteArrayInputStream;
