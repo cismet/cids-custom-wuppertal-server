@@ -23,10 +23,10 @@ import com.sun.org.apache.xml.internal.serialize.XMLSerializer;
 import com.vividsolutions.jts.geom.Envelope;
 import com.vividsolutions.jts.geom.GeometryCollection;
 
-import de.aed_sicad.namespaces.svr.AM_AuftragServer;
-import de.aed_sicad.namespaces.svr.AuftragsManager;
-import de.aed_sicad.namespaces.svr.AuftragsManagerLocator;
-import de.aed_sicad.namespaces.svr.AuftragsManagerSoap;
+import de.aed_sicad.www.namespaces.svr.AM_AuftragServer;
+import de.aed_sicad.www.namespaces.svr.AuftragsManager;
+import de.aed_sicad.www.namespaces.svr.AuftragsManagerLocator;
+import de.aed_sicad.www.namespaces.svr.AuftragsManagerSoap;
 
 import org.apache.commons.io.IOUtils;
 
@@ -436,7 +436,6 @@ public class NASProductGenerator {
             final int sessionID = manager.login(USER, PW);
             final String orderId = manager.registerGZip(sessionID, gZipFile(query));
             final AM_AuftragServer amServer = manager.listAuftrag(sessionID, orderId);
-
             while ((manager.getResultCount(sessionID, orderId) < 1)
                         && (manager.getProtocolGZip(sessionID, orderId) == null)) {
                 try {

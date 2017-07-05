@@ -33,7 +33,10 @@
             legacy cidsDistribution directory (see cids-parent.pom)
         -->
         <de.cismet.libDir>lib/localWuNDa</de.cismet.libDir>
+        <enforcer.skip>false</enforcer.skip>
+        <jalopy.skip>true</jalopy.skip>
     </properties>
+    
     
     <issueManagement>
         <system>GitHub</system>
@@ -286,12 +289,7 @@
         </dependency>
         <dependency>
             <groupId>de.aedsicad</groupId>
-            <artifactId>aaawebclient</artifactId>
-            <version>6.3.16.1</version>
-        </dependency>
-        <dependency>
-            <groupId>de.aedsicad</groupId>
-            <artifactId>aaaserver</artifactId>
+            <artifactId>aaaweb-soap-connector</artifactId>
             <version>6.3.16.1</version>
         </dependency>        
         <dependency>
