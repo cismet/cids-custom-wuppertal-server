@@ -17,6 +17,8 @@ import de.aedsicad.aaaweb.service.alkis.info.ALKISInfoServices;
 import de.aedsicad.aaaweb.service.alkis.info.ALKISInfoServicesServiceLocator;
 import de.aedsicad.aaaweb.service.alkis.search.ALKISSearchServices;
 import de.aedsicad.aaaweb.service.alkis.search.ALKISSearchServicesServiceLocator;
+import de.aedsicad.gisportal.webservices.token.TokenServices;
+import de.aedsicad.gisportal.webservices.token.TokenServicesServiceLocator;
 
 import java.net.URL;
 
@@ -28,14 +30,18 @@ import java.net.URL;
  */
 public final class SOAPAccessProvider {
 
+    private static final org.apache.log4j.Logger LOG = org.apache.log4j.Logger.getLogger(SOAPAccessProvider.class);
+    
     //~ Instance fields --------------------------------------------------------
 
-    private final String identityCard;
+    private final AlkisConf alkisConf;
     private final String service;
     private final ALKISCatalogServices alkisCatalogServices;
     private final ALKISInfoServices alkisInfoService;
     private final ALKISSearchServices alkisSearchService;
-
+    private final TokenServices tokenService;
+    private String aToken;
+    
     //~ Constructors -----------------------------------------------------------
 
     /**
@@ -46,20 +52,23 @@ public final class SOAPAccessProvider {
      * @throws  IllegalStateException  DOCUMENT ME!
      */
     public SOAPAccessProvider(final AlkisConf alkisConf) {
-        final String identityCard = alkisConf.USER + "," + alkisConf.PASSWORD;
-        final String service = alkisConf.SERVICE;
-        final String catalogService = alkisConf.SERVER + alkisConf.CATALOG_SERVICE;
-        final String infoService = alkisConf.SERVER + alkisConf.INFO_SERVICE;
-        final String searchService = alkisConf.SERVER + alkisConf.SEARCH_SERVICE;
+        this.alkisConf = alkisConf;
 
-        this.identityCard = identityCard;
-        this.service = service;
-        try {
+//        final String identityCard = alkisConf.USER + "," + alkisConf.PASSWORD;
+        final String serviceUrl = alkisConf.SERVICE;
+        final String tokenServiceUrl = alkisConf.SERVER + alkisConf.TOKEN_SERVICE;
+        final String catalogServiceUrl = alkisConf.SERVER + alkisConf.CATALOG_SERVICE;
+        final String infoServiceUrl = alkisConf.SERVER + alkisConf.INFO_SERVICE;
+        final String searchServiceUrl = alkisConf.SERVER + alkisConf.SEARCH_SERVICE;
+
+        this.service = serviceUrl;                
+        try {           
+            this.tokenService = new TokenServicesServiceLocator().getTokenServices(new URL(tokenServiceUrl));            
             this.alkisCatalogServices = new ALKISCatalogServicesServiceLocator().getALKISCatalogServices(new URL(
-                        catalogService));
-            this.alkisInfoService = new ALKISInfoServicesServiceLocator().getALKISInfoServices(new URL(infoService));
+                        catalogServiceUrl));
+            this.alkisInfoService = new ALKISInfoServicesServiceLocator().getALKISInfoServices(new URL(infoServiceUrl));
             this.alkisSearchService = new ALKISSearchServicesServiceLocator().getALKISSearchServices(new URL(
-                        searchService));
+                        searchServiceUrl));
         } catch (Exception ex) {
             throw new IllegalStateException("Can not create SOAPAccessProvider" + alkisConf.SERVER
                         + "|"
@@ -79,8 +88,24 @@ public final class SOAPAccessProvider {
      *
      * @return  the identityCard
      */
-    public String getIdentityCard() {
-        return identityCard;
+    public String login() {
+        try {
+            if (aToken == null || !getTokenService().isTokenValid(aToken)) {
+                aToken = getTokenService().login(alkisConf.USER, alkisConf.PASSWORD);
+            }
+        } catch (final Exception ex) {
+            LOG.fatal("login failed", ex);
+            aToken = null;
+        }        
+        return aToken;
+    }
+    
+    public void logout() {
+        try {
+            getTokenService().logout(aToken);
+        } catch (final Exception ex) {            
+        }
+        aToken = null;
     }
 
     /**
@@ -92,6 +117,10 @@ public final class SOAPAccessProvider {
         return service;
     }
 
+    public TokenServices getTokenService() {
+        return tokenService;
+    }
+    
     /**
      * DOCUMENT ME!
      *
@@ -106,7 +135,7 @@ public final class SOAPAccessProvider {
      *
      * @return  the alkisInfoService
      */
-    public ALKISInfoServices getAlkisInfoService() {
+    public ALKISInfoServices getAlkisInfoService() {        
         return alkisInfoService;
     }
 

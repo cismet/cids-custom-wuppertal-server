@@ -29,6 +29,7 @@ public class AlkisConf {
     public final String USER;
     public final String PASSWORD;
 
+    public final String TOKEN_SERVICE;
     public final String CATALOG_SERVICE;
     public final String INFO_SERVICE;
     public final String SEARCH_SERVICE;
@@ -66,9 +67,10 @@ public class AlkisConf {
 
         DEMOSERVICEURL = serviceProperties.getProperty("DEMOSERVICEURL");
 
+        TOKEN_SERVICE = serviceProperties.getProperty("TOKEN_SERVICE");
         CATALOG_SERVICE = serviceProperties.getProperty("CATALOG_SERVICE");
         INFO_SERVICE = serviceProperties.getProperty("INFO_SERVICE");
-        SEARCH_SERVICE = serviceProperties.getProperty("SEARCH_SERVICE");
+        SEARCH_SERVICE = serviceProperties.getProperty("SEARCH_SERVICE");        
 
         EINZEL_NACHWEIS_SERVICE = SERVER + serviceProperties.getProperty("BUCH_NACHWEIS_SERVICE");
         LISTEN_NACHWEIS_SERVICE = SERVER + serviceProperties.getProperty("LISTEN_NACHWEIS_SERVICE");
