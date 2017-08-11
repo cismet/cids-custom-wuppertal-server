@@ -61,37 +61,39 @@ public class ServerAlkisSoapAction implements ServerAction {
             throw new IllegalArgumentException("Body has to be either POINT or BUCHUNGSBLATT");
         }
 
-        if (body.toString().equals(RETURN_VALUE.POINT.toString())) {
-            // POINT
-            try {
-                final String pointCode = params[0].getValue().toString();
-                final Point point = getALKISInfoServices().getPoint(getSOAPAccessProvider().getIdentityCard(),
-                        getSOAPAccessProvider().getService(),
-                        pointCode);
-                return point;
-            } catch (RemoteException remoteException) {
-                LOG.error("Error in ServerAlkisSoapAction", remoteException);
-                throw new RuntimeException("Error in ServerAlkisSoapAction", remoteException);
+        try {
+            final String aToken = getSOAPAccessProvider().login();
+            if (body.toString().equals(RETURN_VALUE.POINT.toString())) {
+                // POINT
+                try {
+                    final String pointCode = params[0].getValue().toString();
+                    final Point point = getALKISInfoServices().getPoint(aToken, getSOAPAccessProvider().getService(), pointCode);
+                    return point;
+                } catch (RemoteException remoteException) {
+                    LOG.error("Error in ServerAlkisSoapAction", remoteException);
+                    throw new RuntimeException("Error in ServerAlkisSoapAction", remoteException);
+                }
+            } else {
+                // BUCHUNGSBLATT
+                try {
+                    final String buchungsblattCode = params[0].getValue().toString();
+                    final String[] uuids = getALKISInfoServices().translateBuchungsblattCodeIntoUUIds(
+                            aToken,
+                            getSOAPAccessProvider().getService(),
+                            buchungsblattCode);
+                    final Buchungsblatt[] buchungsblaetter = getALKISInfoServices().getBuchungsblaetter(
+                            aToken,
+                            getSOAPAccessProvider().getService(),
+                            uuids,
+                            true);
+                    return buchungsblaetter[0];
+                } catch (RemoteException remoteException) {
+                    LOG.error("Error in ServerAlkisSoapAction", remoteException);
+                    throw new RuntimeException("Error in ServerAlkisSoapAction", remoteException);
+                }
             }
-        } else {
-            // BUCHUNGSBLATT
-            try {
-                final String buchungsblattCode = params[0].getValue().toString();
-                final String[] uuids = getALKISInfoServices().translateBuchungsblattCodeIntoUUIds(
-                        getSOAPAccessProvider().getIdentityCard(),
-                        getSOAPAccessProvider().getService(),
-                        buchungsblattCode);
-                final Buchungsblatt[] buchungsblaetter = getALKISInfoServices().getBuchungsblaetter(
-                        getSOAPAccessProvider().getIdentityCard(),
-                        getSOAPAccessProvider().getService(),
-                        uuids,
-                        true);
-                final Buchungsblatt buchungsblatt = buchungsblaetter[0];                
-                return buchungsblatt;
-            } catch (RemoteException remoteException) {
-                LOG.error("Error in ServerAlkisSoapAction", remoteException);
-                throw new RuntimeException("Error in ServerAlkisSoapAction", remoteException);
-            }
+        } finally {
+            getSOAPAccessProvider().logout();                    
         }
     }
 
