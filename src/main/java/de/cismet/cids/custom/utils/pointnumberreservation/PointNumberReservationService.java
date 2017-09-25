@@ -39,6 +39,7 @@ import java.util.zip.GZIPOutputStream;
 import de.cismet.cids.custom.utils.WundaBlauServerResources;
 
 import de.cismet.cids.utils.serverresources.ServerResourcesLoader;
+import java.io.FileInputStream;
 
 /**
  * DOCUMENT ME!
@@ -327,8 +328,8 @@ public class PointNumberReservationService {
             LOG.info("PointNumberReservationService initialisation error");
             return null;
         }
-        String request = TEMPLATE_BEN_AUFTR_ALL;
-        request = request.replaceAll(PROFIL_KENNUNG, profilKennung);
+        final String request = TEMPLATE_BEN_AUFTR_ALL
+                .replaceAll(PROFIL_KENNUNG, profilKennung);
         final InputStream preparedQuery = new ByteArrayInputStream(request.getBytes());
 
         final String result = sendRequestAndAwaitResult(preparedQuery);
@@ -357,9 +358,9 @@ public class PointNumberReservationService {
             return null;
         }
 
-        String request = TEMPLATE_BEN_AUFTR_ONE_ANR;
-        request = request.replaceAll(AUFTRAGS_NUMMER, anr);
-        request = request.replaceAll(PROFIL_KENNUNG, profilKennung);
+        final String request = TEMPLATE_BEN_AUFTR_ONE_ANR
+                .replaceAll(AUFTRAGS_NUMMER, anr)
+                .replaceAll(PROFIL_KENNUNG, profilKennung);
 
         final InputStream preparedQuery = new ByteArrayInputStream(request.getBytes());
 
@@ -402,9 +403,9 @@ public class PointNumberReservationService {
             return null;
         }
 
-        String request = TEMPLATE_BEN_AUFTR_WILDCARD;
-        request = request.replaceAll(AUFTRAGS_NUMMER, anr);
-        request = request.replaceAll(PROFIL_KENNUNG, profilKennung);
+        final String request = TEMPLATE_BEN_AUFTR_WILDCARD
+                .replaceAll(AUFTRAGS_NUMMER, anr)
+                .replaceAll(PROFIL_KENNUNG, profilKennung);
 
         final InputStream preparedQuery = new ByteArrayInputStream(request.getBytes());
 
@@ -501,15 +502,15 @@ public class PointNumberReservationService {
             return null;
         }
 
-        String request = TEMPLATE_FREIGABE;
-        request = request.replaceAll(AUFTRAGS_NUMMER, anr);
-        request = request.replaceAll(NUMMERIERUNGS_BEZIRK, nummerierungsbezirk);
-        request = request.replaceAll(VERMESSUNG_STELLE, prefix);
-        request = request.replaceAll(PROFIL_KENNUNG, profilKennung);
         final DecimalFormat dcf = new DecimalFormat("000000");
 
-        request = request.replaceAll(FIRST_NUMBER, dcf.format(firstPointNumber));
-        request = request.replaceAll(LAST_NUMBER, dcf.format(lastPointNumber));
+        final String request = TEMPLATE_FREIGABE
+                .replaceAll(AUFTRAGS_NUMMER, anr)
+                .replaceAll(NUMMERIERUNGS_BEZIRK, nummerierungsbezirk)
+                .replaceAll(VERMESSUNG_STELLE, prefix)
+                .replaceAll(PROFIL_KENNUNG, profilKennung)
+                .replaceAll(FIRST_NUMBER, dcf.format(firstPointNumber))
+                .replaceAll(LAST_NUMBER, dcf.format(lastPointNumber));
 
         final InputStream preparedQuery = new ByteArrayInputStream(request.getBytes());
 
@@ -561,9 +562,6 @@ public class PointNumberReservationService {
                 }
             }
 
-            String request = TEMPLATE_PROLONG;
-            request = request.replaceAll(AUFTRAGS_NUMMER, anr);
-            request = request.replaceAll(PROFIL_KENNUNG, profilKennung);
 
             final String requestSub = TEMPLATE_PROLONG_SUB;
             final StringBuffer subs = new StringBuffer();
@@ -572,25 +570,22 @@ public class PointNumberReservationService {
                 final PointNumberReservation pointNumberReserveration = pnrMap.get(point);
                 final SimpleDateFormat sdf = new SimpleDateFormat("yyyy-MM-dd");
 
-                String requestSubTmp = requestSub;
-                requestSubTmp = requestSubTmp.replaceAll(PUNKT_UUIDLBZ, pointNumberReserveration.getFeatureId());
-                requestSubTmp = requestSubTmp.replaceAll(PUNKT_UUID, pointNumberReserveration.getUuid());
-                requestSubTmp = requestSubTmp.replaceAll(
-                        LEBENSZEIT_BEGINN,
-                        pointNumberReserveration.getIntervallbeginn());
-                requestSubTmp = requestSubTmp.replaceAll(PUNKT_NUMMER, pointNumberReserveration.getPunktnummer());
-                requestSubTmp = requestSubTmp.replaceAll(
-                        ABLAUF_RESERVIERUNG,
-                        sdf.format(date));
-                requestSubTmp = requestSubTmp.replaceAll(
-                        VERMESSUNG_STELLE,
-                        pointNumberReserveration.getVermessungsstelle());
-                requestSubTmp = requestSubTmp.replaceAll(AUFTRAGS_NUMMER, anr);
+                final String requestSubTmp = requestSub
+                        .replaceAll(PUNKT_UUIDLBZ, pointNumberReserveration.getFeatureId())
+                        .replaceAll(PUNKT_UUID, pointNumberReserveration.getUuid())
+                        .replaceAll(LEBENSZEIT_BEGINN, pointNumberReserveration.getIntervallbeginn())
+                        .replaceAll(PUNKT_NUMMER, pointNumberReserveration.getPunktnummer())
+                        .replaceAll(ABLAUF_RESERVIERUNG, sdf.format(date))
+                        .replaceAll(VERMESSUNG_STELLE, pointNumberReserveration.getVermessungsstelle())
+                        .replaceAll(AUFTRAGS_NUMMER, anr);
 
                 subs.append(requestSubTmp);
             }
 
-            request = request.replaceAll("SUBTEMPLATE", subs.toString());
+            final String request = TEMPLATE_PROLONG
+                    .replaceAll(AUFTRAGS_NUMMER, anr)
+                    .replaceAll(PROFIL_KENNUNG, profilKennung)
+                    .replaceAll("SUBTEMPLATE", subs.toString());
 
             final InputStream preparedQuery = new ByteArrayInputStream(request.getBytes());
 
@@ -604,6 +599,7 @@ public class PointNumberReservationService {
             return null;
         }
     }
+    
     /**
      * DOCUMENT ME!
      *
@@ -634,15 +630,14 @@ public class PointNumberReservationService {
             return null;
         }
 
-        String request = TEMPLATE_RESERVIERUNG;
-        // Insert values in the template file,
-        request = request.replaceAll(AUFTRAGS_NUMMER, requestId);
-        request = request.replaceAll(NUMMERIERUNGS_BEZIRK, nummerierungsbezirk);
-        request = request.replaceAll(ANZAHL, Integer.toString(anzahl));
-        request = request.replaceAll(STARTWERT, Integer.toString(startValue));
-        request = request.replaceAll(ABLAUF_RESERVIERUNG, getAblaufDatum());
-        request = request.replaceAll(VERMESSUNG_STELLE, prefix);
-        request = request.replaceAll(PROFIL_KENNUNG, profilKennung);
+        final String request = ((startValue == 0) ? TEMPLATE_RESERVIERUNG : TEMPLATE_RESERVIERUNG_SW)
+                .replaceAll(AUFTRAGS_NUMMER, requestId)
+                .replaceAll(NUMMERIERUNGS_BEZIRK, nummerierungsbezirk)
+                .replaceAll(ANZAHL, Integer.toString(anzahl))
+                .replaceAll(STARTWERT, Integer.toString(startValue))
+                .replaceAll(ABLAUF_RESERVIERUNG, getAblaufDatum())
+                .replaceAll(VERMESSUNG_STELLE, prefix)
+                .replaceAll(PROFIL_KENNUNG, profilKennung);
 
         final InputStream preparedQuery = new ByteArrayInputStream(request.getBytes());
 
