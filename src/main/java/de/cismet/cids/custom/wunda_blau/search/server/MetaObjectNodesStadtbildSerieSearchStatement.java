@@ -14,8 +14,7 @@ import Sirius.server.newuser.User;
 import com.vividsolutions.jts.geom.Geometry;
 import com.vividsolutions.jts.geom.MultiPolygon;
 import com.vividsolutions.jts.geom.Polygon;
-import de.cismet.cids.server.connectioncontext.ConnectionContext;
-import de.cismet.cids.server.connectioncontext.ConnectionContextProvider;
+import de.cismet.cids.server.connectioncontext.ServerConnectionContext;
 
 import org.apache.commons.lang.StringUtils;
 import org.apache.log4j.Logger;
@@ -35,6 +34,7 @@ import de.cismet.cids.server.search.MetaObjectNodeServerSearch;
 import de.cismet.cids.server.search.SearchException;
 
 import de.cismet.cismap.commons.jtsgeometryfactories.PostGisGeometryFactory;
+import de.cismet.cids.server.connectioncontext.ServerConnectionContextProvider;
 
 /**
  * DOCUMENT ME!
@@ -43,7 +43,7 @@ import de.cismet.cismap.commons.jtsgeometryfactories.PostGisGeometryFactory;
  * @version  $Revision$, $Date$
  */
 public class MetaObjectNodesStadtbildSerieSearchStatement extends AbstractCidsServerSearch
-        implements MetaObjectNodeServerSearch, ConnectionContextProvider {
+        implements MetaObjectNodeServerSearch, ServerConnectionContextProvider {
 
     //~ Static fields/initializers ---------------------------------------------
 
@@ -136,7 +136,7 @@ public class MetaObjectNodesStadtbildSerieSearchStatement extends AbstractCidsSe
                 if (LOG.isDebugEnabled()) {
                     LOG.debug("The used query is: " + query.toString());
                 }
-                resultset = metaService.performCustomSearch(query.toString(), getConnectionContext());
+                resultset = metaService.performCustomSearch(query.toString(), getServerConnectionContext());
 
                 result.add(resultset.size());
                 return result;
@@ -168,7 +168,7 @@ public class MetaObjectNodesStadtbildSerieSearchStatement extends AbstractCidsSe
                 }
 
                 if (resultset == null) {
-                    resultset = metaService.performCustomSearch(query.toString(), getConnectionContext());
+                    resultset = metaService.performCustomSearch(query.toString(), getServerConnectionContext());
                 }
 
                 final ArrayList result = new ArrayList();
@@ -793,8 +793,8 @@ public class MetaObjectNodesStadtbildSerieSearchStatement extends AbstractCidsSe
     }
     
     @Override
-    public ConnectionContext getConnectionContext() {
-        return ConnectionContext.create(MetaObjectNodesStadtbildSerieSearchStatement.class.getSimpleName());
+    public ServerConnectionContext getServerConnectionContext() {
+        return ServerConnectionContext.create(MetaObjectNodesStadtbildSerieSearchStatement.class.getSimpleName());
     }                    
     
 }

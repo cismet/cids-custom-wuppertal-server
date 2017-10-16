@@ -332,6 +332,12 @@
             <version>5.0</version>
             <scope>runtime</scope>
         </dependency>
+        <dependency>
+            <groupId>de.cismet.verdis</groupId>
+            <artifactId>verdis-server</artifactId>
+            <version>5.2-SNAPSHOT</version>
+            <scope>runtime</scope>
+        </dependency>
     </dependencies>
 
     <build>

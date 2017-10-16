@@ -14,8 +14,7 @@ package de.cismet.cids.custom.wunda_blau.search.server;
 import Sirius.server.middleware.interfaces.domainserver.MetaService;
 import Sirius.server.middleware.types.MetaObject;
 import Sirius.server.newuser.User;
-import de.cismet.cids.server.connectioncontext.ConnectionContext;
-import de.cismet.cids.server.connectioncontext.ConnectionContextProvider;
+import de.cismet.cids.server.connectioncontext.ServerConnectionContext;
 
 import org.apache.log4j.Logger;
 
@@ -30,6 +29,7 @@ import java.util.Date;
 
 import de.cismet.cids.server.search.AbstractCidsServerSearch;
 import de.cismet.cids.server.search.SearchException;
+import de.cismet.cids.server.connectioncontext.ServerConnectionContextProvider;
 
 /**
  * DOCUMENT ME!
@@ -37,7 +37,7 @@ import de.cismet.cids.server.search.SearchException;
  * @author   Gilles Baatz
  * @version  $Revision$, $Date$
  */
-public class CidsBillingSearchStatement extends AbstractCidsServerSearch implements ConnectionContextProvider {
+public class CidsBillingSearchStatement extends AbstractCidsServerSearch implements ServerConnectionContextProvider {
 
     //~ Static fields/initializers ---------------------------------------------
 
@@ -144,7 +144,7 @@ public class CidsBillingSearchStatement extends AbstractCidsServerSearch impleme
                     LOG.debug("The used query is: " + query.toString());
                 }
 
-                final MetaObject[] billingMetaObjects = ms.getMetaObject(user, query.toString(), getConnectionContext());
+                final MetaObject[] billingMetaObjects = ms.getMetaObject(user, query.toString(), getServerConnectionContext());
                 final ArrayList<MetaObject> billingCollection = new ArrayList<MetaObject>(Arrays.asList(
                             billingMetaObjects));
                 return billingCollection;
@@ -597,8 +597,8 @@ public class CidsBillingSearchStatement extends AbstractCidsServerSearch impleme
     }
 
     @Override
-    public ConnectionContext getConnectionContext() {
-        return ConnectionContext.create(CidsBillingSearchStatement.class.getSimpleName());
+    public ServerConnectionContext getServerConnectionContext() {
+        return ServerConnectionContext.create(CidsBillingSearchStatement.class.getSimpleName());
     }                    
 
 }

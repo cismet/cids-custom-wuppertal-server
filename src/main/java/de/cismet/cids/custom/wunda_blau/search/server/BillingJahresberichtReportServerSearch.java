@@ -8,7 +8,7 @@
 package de.cismet.cids.custom.wunda_blau.search.server;
 
 import Sirius.server.middleware.interfaces.domainserver.MetaService;
-import de.cismet.cids.server.connectioncontext.ConnectionContext;
+import de.cismet.cids.server.connectioncontext.ServerConnectionContext;
 
 import lombok.Getter;
 import lombok.Setter;
@@ -199,7 +199,7 @@ public class BillingJahresberichtReportServerSearch extends BillingStatisticsRep
             final HashMap<String, ArrayList> results,
             final String query,
             final String key) throws RemoteException {
-        final ArrayList<ArrayList> lists = ms.performCustomSearch(query.replace("${Jahr}", Integer.toString(year)), getConnectionContext());
+        final ArrayList<ArrayList> lists = ms.performCustomSearch(query.replace("${Jahr}", Integer.toString(year)), getServerConnectionContext());
         if ((lists != null) && !lists.isEmpty()) {
             final ArrayList<AmountBean> beans = new ArrayList<AmountBean>();
             for (final Iterator it = lists.iterator(); it.hasNext();) {
@@ -235,7 +235,7 @@ public class BillingJahresberichtReportServerSearch extends BillingStatisticsRep
         if (LOG.isDebugEnabled()) {
             LOG.debug(query.replace("${Jahr}", Integer.toString(year)));
         }
-        final ArrayList<ArrayList> lists = ms.performCustomSearch(query.replace("${Jahr}", Integer.toString(year)), getConnectionContext());
+        final ArrayList<ArrayList> lists = ms.performCustomSearch(query.replace("${Jahr}", Integer.toString(year)), getServerConnectionContext());
         if ((lists != null)) {
             final AnzahlProVerwendungszweckBean bean = new AnzahlProVerwendungszweckBean();
             for (final Iterator it = lists.iterator(); it.hasNext();) {
@@ -264,8 +264,8 @@ public class BillingJahresberichtReportServerSearch extends BillingStatisticsRep
     }
 
     @Override
-    public ConnectionContext getConnectionContext() {
-        return ConnectionContext.create(BillingJahresberichtReportServerSearch.class.getSimpleName());
+    public ServerConnectionContext getServerConnectionContext() {
+        return ServerConnectionContext.create(BillingJahresberichtReportServerSearch.class.getSimpleName());
     }                    
     
     //~ Inner Classes ----------------------------------------------------------

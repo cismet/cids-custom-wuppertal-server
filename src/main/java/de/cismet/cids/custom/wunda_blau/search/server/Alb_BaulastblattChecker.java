@@ -24,8 +24,7 @@
 package de.cismet.cids.custom.wunda_blau.search.server;
 
 import Sirius.server.middleware.interfaces.domainserver.MetaService;
-import de.cismet.cids.server.connectioncontext.ConnectionContext;
-import de.cismet.cids.server.connectioncontext.ConnectionContextProvider;
+import de.cismet.cids.server.connectioncontext.ServerConnectionContext;
 
 import java.rmi.RemoteException;
 
@@ -33,6 +32,7 @@ import java.util.ArrayList;
 import java.util.Collection;
 
 import de.cismet.cids.server.search.AbstractCidsServerSearch;
+import de.cismet.cids.server.connectioncontext.ServerConnectionContextProvider;
 
 /**
  * DOCUMENT ME!
@@ -40,7 +40,7 @@ import de.cismet.cids.server.search.AbstractCidsServerSearch;
  * @author   stefan
  * @version  $Revision$, $Date$
  */
-public class Alb_BaulastblattChecker extends AbstractCidsServerSearch implements ConnectionContextProvider {
+public class Alb_BaulastblattChecker extends AbstractCidsServerSearch implements ServerConnectionContextProvider {
     
     //~ Instance fields --------------------------------------------------------
 
@@ -67,7 +67,7 @@ public class Alb_BaulastblattChecker extends AbstractCidsServerSearch implements
         final MetaService ms = (MetaService)getActiveLocalServers().get("WUNDA_BLAU");
         if (ms != null) {
             try {
-                final ArrayList<ArrayList> lists = ms.performCustomSearch(searchQuery, getConnectionContext());
+                final ArrayList<ArrayList> lists = ms.performCustomSearch(searchQuery, getServerConnectionContext());
                 return lists;
             } catch (RemoteException ex) {
             }
@@ -82,7 +82,7 @@ public class Alb_BaulastblattChecker extends AbstractCidsServerSearch implements
     }
     
     @Override
-    public ConnectionContext getConnectionContext() {
-        return ConnectionContext.create(Alb_BaulastblattChecker.class.getSimpleName());
+    public ServerConnectionContext getServerConnectionContext() {
+        return ServerConnectionContext.create(Alb_BaulastblattChecker.class.getSimpleName());
     }            
 }

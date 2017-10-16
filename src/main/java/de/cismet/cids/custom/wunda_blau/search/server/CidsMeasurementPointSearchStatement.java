@@ -13,8 +13,7 @@ import Sirius.server.middleware.types.MetaObjectNode;
 import com.vividsolutions.jts.geom.Geometry;
 import com.vividsolutions.jts.geom.MultiPolygon;
 import com.vividsolutions.jts.geom.Polygon;
-import de.cismet.cids.server.connectioncontext.ConnectionContext;
-import de.cismet.cids.server.connectioncontext.ConnectionContextProvider;
+import de.cismet.cids.server.connectioncontext.ServerConnectionContext;
 
 import org.apache.commons.lang.StringEscapeUtils;
 import org.apache.log4j.Logger;
@@ -27,6 +26,7 @@ import de.cismet.cids.server.search.AbstractCidsServerSearch;
 import de.cismet.cids.server.search.MetaObjectNodeServerSearch;
 
 import de.cismet.cismap.commons.jtsgeometryfactories.PostGisGeometryFactory;
+import de.cismet.cids.server.connectioncontext.ServerConnectionContextProvider;
 
 /**
  * DOCUMENT ME!
@@ -35,7 +35,7 @@ import de.cismet.cismap.commons.jtsgeometryfactories.PostGisGeometryFactory;
  * @version  $Revision$, $Date$
  */
 public class CidsMeasurementPointSearchStatement extends AbstractCidsServerSearch
-        implements MetaObjectNodeServerSearch, ConnectionContextProvider {
+        implements MetaObjectNodeServerSearch, ServerConnectionContextProvider {
 
     //~ Static fields/initializers ---------------------------------------------
 
@@ -226,7 +226,7 @@ public class CidsMeasurementPointSearchStatement extends AbstractCidsServerSearc
             if (LOG.isDebugEnabled()) {
                 LOG.debug("Executing SQL statement '" + sqlBuilder.toString() + "'.");
             }
-            resultset = metaService.performCustomSearch(sqlBuilder.toString(), getConnectionContext());
+            resultset = metaService.performCustomSearch(sqlBuilder.toString(), getServerConnectionContext());
 
             for (final ArrayList measurementPoint : resultset) {
                 final int classID = (Integer)measurementPoint.get(0);
@@ -410,8 +410,8 @@ public class CidsMeasurementPointSearchStatement extends AbstractCidsServerSearc
     }
     
     @Override
-    public ConnectionContext getConnectionContext() {
-        return ConnectionContext.create(CidsMeasurementPointSearchStatement.class.getSimpleName());
+    public ServerConnectionContext getServerConnectionContext() {
+        return ServerConnectionContext.create(CidsMeasurementPointSearchStatement.class.getSimpleName());
     }                    
     
 }

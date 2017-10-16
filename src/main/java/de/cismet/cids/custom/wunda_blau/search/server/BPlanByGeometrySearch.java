@@ -8,8 +8,7 @@
 package de.cismet.cids.custom.wunda_blau.search.server;
 
 import Sirius.server.middleware.interfaces.domainserver.MetaService;
-import de.cismet.cids.server.connectioncontext.ConnectionContext;
-import de.cismet.cids.server.connectioncontext.ConnectionContextProvider;
+import de.cismet.cids.server.connectioncontext.ServerConnectionContext;
 
 import org.apache.log4j.Logger;
 
@@ -19,6 +18,7 @@ import java.util.Collection;
 
 import de.cismet.cids.server.search.AbstractCidsServerSearch;
 import de.cismet.cids.server.search.SearchException;
+import de.cismet.cids.server.connectioncontext.ServerConnectionContextProvider;
 
 /**
  * Search the BPlan of a given geometry.
@@ -26,7 +26,7 @@ import de.cismet.cids.server.search.SearchException;
  * @author   Thorsten Herter
  * @version  $Revision$, $Date$
  */
-public class BPlanByGeometrySearch extends AbstractCidsServerSearch implements ConnectionContextProvider {
+public class BPlanByGeometrySearch extends AbstractCidsServerSearch implements ServerConnectionContextProvider {
 
     //~ Static fields/initializers ---------------------------------------------
 
@@ -62,7 +62,7 @@ public class BPlanByGeometrySearch extends AbstractCidsServerSearch implements C
                 final ArrayList<ArrayList> bPlanList = metaService.performCustomSearch(String.format(
                             QUERY_BPLAN,
                             geom),
-                        getConnectionContext());
+                        getServerConnectionContext());
 
                 String bPlanCs = null;
 
@@ -89,8 +89,8 @@ public class BPlanByGeometrySearch extends AbstractCidsServerSearch implements C
     }
     
     @Override
-    public ConnectionContext getConnectionContext() {
-        return ConnectionContext.create(BPlanByGeometrySearch.class.getSimpleName());
+    public ServerConnectionContext getServerConnectionContext() {
+        return ServerConnectionContext.create(BPlanByGeometrySearch.class.getSimpleName());
     }                    
     
 }

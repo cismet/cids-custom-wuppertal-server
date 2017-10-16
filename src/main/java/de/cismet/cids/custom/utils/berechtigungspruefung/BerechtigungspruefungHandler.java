@@ -52,10 +52,10 @@ import de.cismet.cids.custom.utils.berechtigungspruefung.katasterauszug.Berechti
 import de.cismet.cids.custom.utils.berechtigungspruefung.katasterauszug.BerechtigungspruefungAlkisKarteDownloadInfo;
 
 import de.cismet.cids.dynamics.CidsBean;
-import de.cismet.cids.server.connectioncontext.ConnectionContext;
-import de.cismet.cids.server.connectioncontext.ConnectionContextProvider;
+import de.cismet.cids.server.connectioncontext.ServerConnectionContext;
 
 import de.cismet.cids.server.messages.CidsServerMessageManagerImpl;
+import de.cismet.cids.server.connectioncontext.ServerConnectionContextProvider;
 
 /**
  * DOCUMENT ME!
@@ -63,7 +63,7 @@ import de.cismet.cids.server.messages.CidsServerMessageManagerImpl;
  * @author   jruiz
  * @version  $Revision$, $Date$
  */
-public class BerechtigungspruefungHandler implements ConnectionContextProvider {
+public class BerechtigungspruefungHandler implements ServerConnectionContextProvider {
 
     //~ Static fields/initializers ---------------------------------------------
 
@@ -271,7 +271,7 @@ public class BerechtigungspruefungHandler implements ConnectionContextProvider {
         pruefungBean.setProperty("abholung_timestamp", new Timestamp(new Date().getTime()));
         pruefungBean.setProperty("abgeholt", true);
 
-        DomainServerImpl.getServerInstance().updateMetaObject(user, pruefungBean.getMetaObject(), getConnectionContext());
+        DomainServerImpl.getServerInstance().updateMetaObject(user, pruefungBean.getMetaObject(), getServerConnectionContext());
     }
 
     /**
@@ -368,7 +368,7 @@ public class BerechtigungspruefungHandler implements ConnectionContextProvider {
         newPruefungBean.setProperty("produkttyp", downloadInfo.getProduktTyp());
         newPruefungBean.setProperty("downloadinfo_json", new ObjectMapper().writeValueAsString(downloadInfo));
 
-        DomainServerImpl.getServerInstance().insertMetaObject(user, newPruefungBean.getMetaObject(), getConnectionContext());
+        DomainServerImpl.getServerInstance().insertMetaObject(user, newPruefungBean.getMetaObject(), getServerConnectionContext());
 
         sendAnfrageMessages(Arrays.asList(newPruefungBean));
     }
@@ -393,7 +393,7 @@ public class BerechtigungspruefungHandler implements ConnectionContextProvider {
                         + "FROM " + mcBerechtigungspruefung.getTableName() + " "
                         + "WHERE " + mcBerechtigungspruefung.getTableName() + ".pruefstatus IS NULL;";
 
-            mos = metaService.getMetaObject(user, pruefungQuery, getConnectionContext());
+            mos = metaService.getMetaObject(user, pruefungQuery, getServerConnectionContext());
             if ((mos != null) && (mos.length > 0)) {
                 for (final MetaObject mo : mos) {
                     beans.add(mo.getBean());
@@ -430,7 +430,7 @@ public class BerechtigungspruefungHandler implements ConnectionContextProvider {
                         + "AND (" + mcBerechtigungspruefung.getTableName() + ".abgeholt IS NULL "
                         + "OR " + mcBerechtigungspruefung.getTableName() + ".abgeholt IS FALSE);";
 
-            mos = metaService.getMetaObject(user, pruefungQuery, getConnectionContext());
+            mos = metaService.getMetaObject(user, pruefungQuery, getServerConnectionContext());
             if ((mos != null) && (mos.length > 0)) {
                 for (final MetaObject mo : mos) {
                     beans.add(mo.getBean());
@@ -465,7 +465,7 @@ public class BerechtigungspruefungHandler implements ConnectionContextProvider {
                         + "AND (" + mcBerechtigungspruefung.getTableName() + ".abgeholt IS NULL "
                         + "OR " + mcBerechtigungspruefung.getTableName() + ".abgeholt IS FALSE);";
 
-            mos = metaService.getMetaObject(user, pruefungQuery, getConnectionContext());
+            mos = metaService.getMetaObject(user, pruefungQuery, getServerConnectionContext());
             if ((mos != null) && (mos.length > 0)) {
                 for (final MetaObject mo : mos) {
                     beans.add(mo.getBean());
@@ -498,7 +498,7 @@ public class BerechtigungspruefungHandler implements ConnectionContextProvider {
                         + "WHERE " + mcBerechtigungspruefung.getTableName() + ".schluessel LIKE '" + schluessel + "' "
                         + "LIMIT 1;";
 
-            final MetaObject[] mos = metaService.getMetaObject(user, pruefungQuery, getConnectionContext());
+            final MetaObject[] mos = metaService.getMetaObject(user, pruefungQuery, getServerConnectionContext());
             if ((mos != null) && (mos.length > 0)) {
                 return mos[0].getBean();
             }
@@ -522,7 +522,7 @@ public class BerechtigungspruefungHandler implements ConnectionContextProvider {
                     "WUNDA_BLAU",
                     "billing_billing");
 
-            final MetaObject mo = metaService.getMetaObject(user, id, mcBillingBilling.getID(), getConnectionContext());
+            final MetaObject mo = metaService.getMetaObject(user, id, mcBillingBilling.getID(), getServerConnectionContext());
             return mo.getBean();
         } catch (final Exception ex) {
             LOG.error("error while loading billing_billing bean", ex);
@@ -546,7 +546,7 @@ public class BerechtigungspruefungHandler implements ConnectionContextProvider {
             final MetaObject mo = metaService.getMetaObject(
                     user,
                     BerechtigungspruefungProperties.getInstance().getBillingStornogrundId(),
-                    mcBillingStornogrund.getID(), getConnectionContext());
+                    mcBillingStornogrund.getID(), getServerConnectionContext());
             return mo.getBean();
         } catch (final Exception ex) {
             LOG.error("error while loading billing_billing bean", ex);
@@ -577,7 +577,7 @@ public class BerechtigungspruefungHandler implements ConnectionContextProvider {
                         + "ORDER BY schluessel DESC "
                         + "LIMIT 1;";
 
-            final MetaObject[] mos = metaService.getMetaObject(user, pruefungQuery, getConnectionContext());
+            final MetaObject[] mos = metaService.getMetaObject(user, pruefungQuery, getServerConnectionContext());
             if ((mos != null) && (mos.length > 0)) {
                 return mos[0].getBean();
             }
@@ -640,7 +640,7 @@ public class BerechtigungspruefungHandler implements ConnectionContextProvider {
     }
 
     @Override
-    public ConnectionContext getConnectionContext() {
-        return ConnectionContext.create(BerechtigungspruefungHandler.class.getSimpleName());
+    public ServerConnectionContext getServerConnectionContext() {
+        return ServerConnectionContext.create(BerechtigungspruefungHandler.class.getSimpleName());
     }
 }

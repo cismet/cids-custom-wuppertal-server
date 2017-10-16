@@ -24,8 +24,8 @@ import de.cismet.cids.dynamics.CidsBean;
 import de.cismet.cids.server.actions.ServerAction;
 import de.cismet.cids.server.actions.ServerActionParameter;
 import de.cismet.cids.server.actions.UserAwareServerAction;
-import de.cismet.cids.server.connectioncontext.ConnectionContext;
-import de.cismet.cids.server.connectioncontext.ConnectionContextProvider;
+import de.cismet.cids.server.connectioncontext.ServerConnectionContext;
+import de.cismet.cids.server.connectioncontext.ServerConnectionContextProvider;
 
 /**
  * DOCUMENT ME!
@@ -34,7 +34,7 @@ import de.cismet.cids.server.connectioncontext.ConnectionContextProvider;
  * @version  $Revision$, $Date$
  */
 @org.openide.util.lookup.ServiceProvider(service = ServerAction.class)
-public class FormSolutionDownloadBestellungAction implements ServerAction, UserAwareServerAction, ConnectionContextProvider {
+public class FormSolutionDownloadBestellungAction implements ServerAction, UserAwareServerAction, ServerConnectionContextProvider {
 
     //~ Static fields/initializers ---------------------------------------------
 
@@ -100,7 +100,7 @@ public class FormSolutionDownloadBestellungAction implements ServerAction, UserA
                 final MetaObjectNode mon = (MetaObjectNode)body;
 
                 final CidsBean bestellungBean = DomainServerImpl.getServerInstance()
-                            .getMetaObject(getUser(), mon.getObjectId(), mon.getClassId(), getConnectionContext())
+                            .getMetaObject(getUser(), mon.getObjectId(), mon.getClassId(), getServerConnectionContext())
                             .getBean();
                 final String filePath = rechung ? (String)bestellungBean.getProperty("rechnung_dateipfad")
                                                 : (String)bestellungBean.getProperty("produkt_dateipfad");
@@ -138,8 +138,8 @@ public class FormSolutionDownloadBestellungAction implements ServerAction, UserA
     }
     
     @Override
-    public ConnectionContext getConnectionContext() {
-        return ConnectionContext.create(FormSolutionDownloadBestellungAction.class.getSimpleName());
+    public ServerConnectionContext getServerConnectionContext() {
+        return ServerConnectionContext.create(FormSolutionDownloadBestellungAction.class.getSimpleName());
     }
     
 }

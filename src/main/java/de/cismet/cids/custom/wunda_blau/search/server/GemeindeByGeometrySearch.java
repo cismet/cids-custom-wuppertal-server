@@ -8,8 +8,7 @@
 package de.cismet.cids.custom.wunda_blau.search.server;
 
 import Sirius.server.middleware.interfaces.domainserver.MetaService;
-import de.cismet.cids.server.connectioncontext.ConnectionContext;
-import de.cismet.cids.server.connectioncontext.ConnectionContextProvider;
+import de.cismet.cids.server.connectioncontext.ServerConnectionContext;
 
 import org.apache.log4j.Logger;
 
@@ -19,6 +18,7 @@ import java.util.Collection;
 
 import de.cismet.cids.server.search.AbstractCidsServerSearch;
 import de.cismet.cids.server.search.SearchException;
+import de.cismet.cids.server.connectioncontext.ServerConnectionContextProvider;
 
 /**
  * Search the Gemeinde of a given geometry.
@@ -26,7 +26,7 @@ import de.cismet.cids.server.search.SearchException;
  * @author   Thorsten Herter
  * @version  $Revision$, $Date$
  */
-public class GemeindeByGeometrySearch extends AbstractCidsServerSearch implements ConnectionContextProvider {
+public class GemeindeByGeometrySearch extends AbstractCidsServerSearch implements ServerConnectionContextProvider {
 
     //~ Static fields/initializers ---------------------------------------------
 
@@ -62,7 +62,7 @@ public class GemeindeByGeometrySearch extends AbstractCidsServerSearch implement
                 final ArrayList<ArrayList> gemeindeList = metaService.performCustomSearch(String.format(
                             QUERY_GEMEINDE,
                             geom),
-                        getConnectionContext());
+                        getServerConnectionContext());
 
                 String gemeindeCs = null;
 
@@ -89,7 +89,7 @@ public class GemeindeByGeometrySearch extends AbstractCidsServerSearch implement
     }
 
     @Override
-    public ConnectionContext getConnectionContext() {
-        return ConnectionContext.create(GemeindeByGeometrySearch.class.getSimpleName());
+    public ServerConnectionContext getServerConnectionContext() {
+        return ServerConnectionContext.create(GemeindeByGeometrySearch.class.getSimpleName());
     }                    
 }

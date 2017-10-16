@@ -14,11 +14,11 @@ import org.apache.log4j.Logger;
 import java.util.ArrayList;
 import java.util.Collection;
 
-import de.cismet.cids.server.connectioncontext.ConnectionContext;
-import de.cismet.cids.server.connectioncontext.ConnectionContextProvider;
+import de.cismet.cids.server.connectioncontext.ServerConnectionContext;
 
 import de.cismet.cids.server.search.AbstractCidsServerSearch;
 import de.cismet.cids.server.search.SearchException;
+import de.cismet.cids.server.connectioncontext.ServerConnectionContextProvider;
 
 /**
  * Search next value for the schluessel property of a new kk_kompensation object.
@@ -26,7 +26,7 @@ import de.cismet.cids.server.search.SearchException;
  * @author   Thorsten Herter
  * @version  $Revision$, $Date$
  */
-public class KkKompensationNextSchluesselSearch extends AbstractCidsServerSearch implements ConnectionContextProvider {
+public class KkKompensationNextSchluesselSearch extends AbstractCidsServerSearch implements ServerConnectionContextProvider {
 
     //~ Static fields/initializers ---------------------------------------------
 
@@ -50,7 +50,7 @@ public class KkKompensationNextSchluesselSearch extends AbstractCidsServerSearch
             final MetaService metaService = (MetaService)this.getActiveLocalServers().get(DOMAIN);
 
             if (metaService != null) {
-                final ArrayList<ArrayList> list = metaService.performCustomSearch(QUERY, getConnectionContext());
+                final ArrayList<ArrayList> list = metaService.performCustomSearch(QUERY, getServerConnectionContext());
 
                 if ((list.size() > 0) && (list.get(0).size() > 0)) {
                     return list.get(0);
@@ -66,8 +66,8 @@ public class KkKompensationNextSchluesselSearch extends AbstractCidsServerSearch
     }
     
     @Override
-    public ConnectionContext getConnectionContext() {
-        return ConnectionContext.create(KkKompensationNextSchluesselSearch.class.getSimpleName());
+    public ServerConnectionContext getServerConnectionContext() {
+        return ServerConnectionContext.create(KkKompensationNextSchluesselSearch.class.getSimpleName());
     }                    
     
 }

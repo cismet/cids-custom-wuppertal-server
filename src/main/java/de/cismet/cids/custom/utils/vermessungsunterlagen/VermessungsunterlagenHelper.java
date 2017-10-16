@@ -82,8 +82,7 @@ import de.cismet.cids.custom.utils.nas.NasProduct;
 import de.cismet.cids.custom.utils.vermessungsunterlagen.exceptions.VermessungsunterlagenException;
 
 import de.cismet.cids.dynamics.CidsBean;
-import de.cismet.cids.server.connectioncontext.ConnectionContext;
-import de.cismet.cids.server.connectioncontext.ConnectionContextProvider;
+import de.cismet.cids.server.connectioncontext.ServerConnectionContext;
 
 import de.cismet.cids.server.search.CidsServerSearch;
 import de.cismet.cids.server.search.SearchException;
@@ -97,6 +96,7 @@ import de.cismet.commons.security.AccessHandler;
 import de.cismet.commons.security.handler.SimpleHttpAccessHandler;
 
 import static org.apache.commons.net.ftp.FTP.BINARY_FILE_TYPE;
+import de.cismet.cids.server.connectioncontext.ServerConnectionContextProvider;
 
 /**
  * DOCUMENT ME!
@@ -104,7 +104,7 @@ import static org.apache.commons.net.ftp.FTP.BINARY_FILE_TYPE;
  * @author   jruiz
  * @version  $Revision$, $Date$
  */
-public class VermessungsunterlagenHelper implements ConnectionContextProvider {
+public class VermessungsunterlagenHelper implements ServerConnectionContextProvider {
 
     //~ Static fields/initializers ---------------------------------------------
 
@@ -206,16 +206,16 @@ public class VermessungsunterlagenHelper implements ConnectionContextProvider {
         this.metaService = metaService;
         this.user = user;
 
-        this.mc_GEOM = getMetaService().getClassByTableName(getUser(), "geom", getConnectionContext());
+        this.mc_GEOM = getMetaService().getClassByTableName(getUser(), "geom", getServerConnectionContext());
         this.mc_VERMESSUNGSUNTERLAGENAUFTRAG_PUNKTNUMMER = getMetaService()
-                    .getClassByTableName(getUser(), "vermessungsunterlagenauftrag_punktnummer", getConnectionContext());
+                    .getClassByTableName(getUser(), "vermessungsunterlagenauftrag_punktnummer", getServerConnectionContext());
         this.mc_VERMESSUNGSUNTERLAGENAUFTRAG = getMetaService().getClassByTableName(
                 getUser(),
-                "vermessungsunterlagenauftrag", getConnectionContext());
+                "vermessungsunterlagenauftrag", getServerConnectionContext());
         this.mc_VERMESSUNGSUNTERLAGENAUFTRAG_VERMESSUNGSART = getMetaService()
-                    .getClassByTableName(getUser(), "vermessungsunterlagenauftrag_vermessungsart", getConnectionContext());
+                    .getClassByTableName(getUser(), "vermessungsunterlagenauftrag_vermessungsart", getServerConnectionContext());
         this.mc_VERMESSUNGSUNTERLAGENAUFTRAG_FLURSTUECK = getMetaService()
-                    .getClassByTableName(getUser(), "vermessungsunterlagenauftrag_flurstueck", getConnectionContext());
+                    .getClassByTableName(getUser(), "vermessungsunterlagenauftrag_flurstueck", getServerConnectionContext());
     }
 
     /**
@@ -374,7 +374,7 @@ public class VermessungsunterlagenHelper implements ConnectionContextProvider {
      * @throws  Exception  DOCUMENT ME!
      */
     public CidsBean loadCidsBean(final LightweightMetaObject lwmo) throws Exception {
-        return getMetaService().getMetaObject(getUser(), lwmo.getObjectID(), lwmo.getClassID(), getConnectionContext()).getBean();
+        return getMetaService().getMetaObject(getUser(), lwmo.getObjectID(), lwmo.getClassID(), getServerConnectionContext()).getBean();
     }
 
     /**
@@ -387,7 +387,7 @@ public class VermessungsunterlagenHelper implements ConnectionContextProvider {
      * @throws  Exception  DOCUMENT ME!
      */
     public CidsBean loadCidsBean(final MetaObjectNode mon) throws Exception {
-        return getMetaService().getMetaObject(getUser(), mon.getObjectId(), mon.getClassId(), getConnectionContext()).getBean();
+        return getMetaService().getMetaObject(getUser(), mon.getObjectId(), mon.getClassId(), getServerConnectionContext()).getBean();
     }
 
     /**
@@ -419,7 +419,7 @@ public class VermessungsunterlagenHelper implements ConnectionContextProvider {
             return true;
         } else {                          // exists in database ?
             final List result = getMetaService().performCustomSearch("SELECT schluessel FROM "
-                            + mc_VERMESSUNGSUNTERLAGENAUFTRAG + " WHERE schluessel LIKE '" + jobKey + "'", getConnectionContext());
+                            + mc_VERMESSUNGSUNTERLAGENAUFTRAG + " WHERE schluessel LIKE '" + jobKey + "'", getServerConnectionContext());
             return !result.isEmpty();
         }
     }
@@ -525,7 +525,7 @@ public class VermessungsunterlagenHelper implements ConnectionContextProvider {
         jobCidsBean.setProperty("tasks", Arrays.toString(getAllowedTasks().toArray()));
         jobCidsBean.setProperty("test", anfrageBean.getTest());
 
-        job.setCidsBean(getMetaService().insertMetaObject(getUser(), jobCidsBean.getMetaObject(), getConnectionContext()).getBean());
+        job.setCidsBean(getMetaService().insertMetaObject(getUser(), jobCidsBean.getMetaObject(), getServerConnectionContext()).getBean());
     }
 
     /**
@@ -537,7 +537,7 @@ public class VermessungsunterlagenHelper implements ConnectionContextProvider {
      */
     public Collection<String> getAllowedTasks() throws Exception {
         final String rawAllowedTasks = DomainServerImpl.getServerInstance()
-                    .getConfigAttr(getUser(), ALLOWED_TASKS_CONFIG_ATTR, getConnectionContext());
+                    .getConfigAttr(getUser(), ALLOWED_TASKS_CONFIG_ATTR, getServerConnectionContext());
         final Collection<String> allowedTasks = new ArrayList<String>();
         if (rawAllowedTasks != null) {
             for (final String allowedTask : Arrays.asList(rawAllowedTasks.split("\n"))) {
@@ -564,7 +564,7 @@ public class VermessungsunterlagenHelper implements ConnectionContextProvider {
         jobCidsBean.setProperty("zip_pfad", zipDateiname);
         jobCidsBean.setProperty("zip_timestamp", new Timestamp(new Date().getTime()));
 
-        getMetaService().updateMetaObject(getUser(), jobCidsBean.getMetaObject(), getConnectionContext());
+        getMetaService().updateMetaObject(getUser(), jobCidsBean.getMetaObject(), getServerConnectionContext());
     }
 
     /**
@@ -582,7 +582,7 @@ public class VermessungsunterlagenHelper implements ConnectionContextProvider {
         jobCidsBean.setProperty("status", status);
         jobCidsBean.setProperty("status_timestamp", new Timestamp(new Date().getTime()));
 
-        getMetaService().updateMetaObject(getUser(), jobCidsBean.getMetaObject(), getConnectionContext());
+        getMetaService().updateMetaObject(getUser(), jobCidsBean.getMetaObject(), getServerConnectionContext());
     }
 
     /**
@@ -599,7 +599,7 @@ public class VermessungsunterlagenHelper implements ConnectionContextProvider {
 
         jobCidsBean.setProperty("geometrie_flurstuecke.geo_field", geom);
 
-        getMetaService().updateMetaObject(getUser(), jobCidsBean.getMetaObject(), getConnectionContext());
+        getMetaService().updateMetaObject(getUser(), jobCidsBean.getMetaObject(), getServerConnectionContext());
     }
 
     /**
@@ -617,7 +617,7 @@ public class VermessungsunterlagenHelper implements ConnectionContextProvider {
         jobCidsBean.setProperty("exception_json", EXCEPTION_MAPPER.writeValueAsString(ex));
         jobCidsBean.setProperty("exception_timestamp", new Timestamp(new Date().getTime()));
 
-        getMetaService().updateMetaObject(getUser(), jobCidsBean.getMetaObject(), getConnectionContext());
+        getMetaService().updateMetaObject(getUser(), jobCidsBean.getMetaObject(), getServerConnectionContext());
     }
 
     /**
@@ -633,7 +633,7 @@ public class VermessungsunterlagenHelper implements ConnectionContextProvider {
         final CidsBean bean = CidsBean.createNewCidsBeanFromTableName(
                 "WUNDA_BLAU",
                 mc_VERMESSUNGSUNTERLAGENAUFTRAG_VERMESSUNGSART.getTableName());
-        getMetaService().getMetaObject(getUser(), "SELECT FROM ", getConnectionContext());
+        getMetaService().getMetaObject(getUser(), "SELECT FROM ", getServerConnectionContext());
         return null;
     }
 
@@ -970,7 +970,7 @@ public class VermessungsunterlagenHelper implements ConnectionContextProvider {
                         final MetaObject mo = getMetaService().getMetaObject(
                                 getUser(),
                                 mon.getObjectId(),
-                                mon.getClassId(), getConnectionContext());
+                                mon.getClassId(), getServerConnectionContext());
                         mo.setAllClasses(
                             ((MetaClassCacheService)Lookup.getDefault().lookup(MetaClassCacheService.class))
                                         .getAllClasses(mo.getDomain()));
@@ -1181,8 +1181,8 @@ public class VermessungsunterlagenHelper implements ConnectionContextProvider {
     }
 
     @Override
-    public ConnectionContext getConnectionContext() {
-        return ConnectionContext.create(VermessungsunterlagenHelper.class.getSimpleName());
+    public ServerConnectionContext getServerConnectionContext() {
+        return ServerConnectionContext.create(VermessungsunterlagenHelper.class.getSimpleName());
     }
 
     //~ Inner Classes ----------------------------------------------------------

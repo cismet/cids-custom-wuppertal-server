@@ -31,10 +31,10 @@ import de.cismet.cids.dynamics.CidsBean;
 import de.cismet.cids.server.actions.JasperReportServerAction;
 import de.cismet.cids.server.actions.ServerAction;
 import de.cismet.cids.server.actions.ServerActionParameter;
-import de.cismet.cids.server.connectioncontext.ConnectionContext;
-import de.cismet.cids.server.connectioncontext.ConnectionContextProvider;
+import de.cismet.cids.server.connectioncontext.ServerConnectionContext;
 
 import de.cismet.cids.utils.serverresources.ServerResourcesLoader;
+import de.cismet.cids.server.connectioncontext.ServerConnectionContextProvider;
 
 /**
  * DOCUMENT ME!
@@ -43,7 +43,7 @@ import de.cismet.cids.utils.serverresources.ServerResourcesLoader;
  * @version  $Revision$, $Date$
  */
 @org.openide.util.lookup.ServiceProvider(service = ServerAction.class)
-public class NivPReportServerAction extends JasperReportServerAction implements ConnectionContextProvider {
+public class NivPReportServerAction extends JasperReportServerAction implements ServerConnectionContextProvider {
 
     //~ Static fields/initializers ---------------------------------------------
 
@@ -91,7 +91,7 @@ public class NivPReportServerAction extends JasperReportServerAction implements 
                                 getUser(),
                                 reportMon.getObjectId(),
                                 reportMon.getClassId(),
-                                getConnectionContext())
+                                getServerConnectionContext())
                                 .getBean();
                     cidsBeans.add(cidsBean);
                 }
@@ -129,8 +129,8 @@ public class NivPReportServerAction extends JasperReportServerAction implements 
     }
 
     @Override
-    public ConnectionContext getConnectionContext() {
-        return ConnectionContext.create(NivPReportServerAction.class.getSimpleName());
+    public ServerConnectionContext getServerConnectionContext() {
+        return ServerConnectionContext.create(NivPReportServerAction.class.getSimpleName());
     }
 
 }

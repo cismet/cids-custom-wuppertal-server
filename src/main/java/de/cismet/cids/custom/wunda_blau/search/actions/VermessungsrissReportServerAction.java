@@ -30,12 +30,12 @@ import de.cismet.cids.dynamics.CidsBean;
 import de.cismet.cids.server.actions.JasperReportServerAction;
 import de.cismet.cids.server.actions.ServerAction;
 import de.cismet.cids.server.actions.ServerActionParameter;
-import de.cismet.cids.server.connectioncontext.ConnectionContext;
-import de.cismet.cids.server.connectioncontext.ConnectionContextProvider;
+import de.cismet.cids.server.connectioncontext.ServerConnectionContext;
 
 import de.cismet.cids.utils.serverresources.ServerResourcesLoader;
 
 import de.cismet.commons.utils.MultiPagePictureReader;
+import de.cismet.cids.server.connectioncontext.ServerConnectionContextProvider;
 
 /**
  * DOCUMENT ME!
@@ -44,7 +44,7 @@ import de.cismet.commons.utils.MultiPagePictureReader;
  * @version  $Revision$, $Date$
  */
 @org.openide.util.lookup.ServiceProvider(service = ServerAction.class)
-public class VermessungsrissReportServerAction extends JasperReportServerAction implements ConnectionContextProvider {
+public class VermessungsrissReportServerAction extends JasperReportServerAction implements ServerConnectionContextProvider {
 
     //~ Static fields/initializers ---------------------------------------------
 
@@ -94,7 +94,7 @@ public class VermessungsrissReportServerAction extends JasperReportServerAction 
                                 getUser(),
                                 reportMon.getObjectId(),
                                 reportMon.getClassId(),
-                                getConnectionContext())
+                                getServerConnectionContext())
                                 .getBean();
                     selectedVermessungsrisse.add(bean);
                 }
@@ -133,8 +133,8 @@ public class VermessungsrissReportServerAction extends JasperReportServerAction 
     }
     
     @Override
-    public ConnectionContext getConnectionContext() {
-        return ConnectionContext.create(VermessungsrissReportServerAction.class.getSimpleName());
+    public ServerConnectionContext getServerConnectionContext() {
+        return ServerConnectionContext.create(VermessungsrissReportServerAction.class.getSimpleName());
     }
     
 }

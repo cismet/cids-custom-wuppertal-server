@@ -39,13 +39,13 @@ import de.cismet.cids.custom.wunda_blau.search.server.CidsMauernSearchStatement;
 
 import de.cismet.cids.server.actions.ServerAction;
 import de.cismet.cids.server.actions.ServerActionParameter;
-import de.cismet.cids.server.connectioncontext.ConnectionContext;
-import de.cismet.cids.server.connectioncontext.ConnectionContextProvider;
+import de.cismet.cids.server.connectioncontext.ServerConnectionContext;
 import de.cismet.cids.server.search.SearchException;
 
 import de.cismet.cids.utils.serverresources.ServerResourcesLoader;
 
 import de.cismet.cismap.commons.jtsgeometryfactories.PostGisGeometryFactory;
+import de.cismet.cids.server.connectioncontext.ServerConnectionContextProvider;
 
 /**
  * DOCUMENT ME!
@@ -54,7 +54,7 @@ import de.cismet.cismap.commons.jtsgeometryfactories.PostGisGeometryFactory;
  * @version  $Revision$, $Date$
  */
 @org.openide.util.lookup.ServiceProvider(service = ServerAction.class)
-public class NasZaehlObjekteServerAction implements ServerAction, MetaServiceStore, ConnectionContextProvider {
+public class NasZaehlObjekteServerAction implements ServerAction, MetaServiceStore, ServerConnectionContextProvider {
 
     //~ Static fields/initializers ---------------------------------------------
 
@@ -350,7 +350,7 @@ public class NasZaehlObjekteServerAction implements ServerAction, MetaServiceSto
                 if (LOG.isDebugEnabled()) {
                     LOG.debug("query: " + sb.toString());                                  // NOI18N
                 }
-                final ArrayList<ArrayList> lists = ms.performCustomSearch(sb.toString(), getConnectionContext());
+                final ArrayList<ArrayList> lists = ms.performCustomSearch(sb.toString(), getServerConnectionContext());
 
                 return lists.size();
             } catch (RemoteException ex) {
@@ -378,8 +378,8 @@ public class NasZaehlObjekteServerAction implements ServerAction, MetaServiceSto
     }
     
     @Override
-    public ConnectionContext getConnectionContext() {
-        return ConnectionContext.create(NasZaehlObjekteServerAction.class.getSimpleName());
+    public ServerConnectionContext getServerConnectionContext() {
+        return ServerConnectionContext.create(NasZaehlObjekteServerAction.class.getSimpleName());
     }
     
 }

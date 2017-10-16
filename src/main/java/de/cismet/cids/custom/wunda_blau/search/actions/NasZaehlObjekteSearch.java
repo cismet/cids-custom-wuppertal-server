@@ -35,8 +35,7 @@ import java.util.Properties;
 
 import de.cismet.cids.custom.utils.WundaBlauServerResources;
 import de.cismet.cids.custom.wunda_blau.search.server.CidsMauernSearchStatement;
-import de.cismet.cids.server.connectioncontext.ConnectionContext;
-import de.cismet.cids.server.connectioncontext.ConnectionContextProvider;
+import de.cismet.cids.server.connectioncontext.ServerConnectionContext;
 
 import de.cismet.cids.server.search.AbstractCidsServerSearch;
 import de.cismet.cids.server.search.SearchException;
@@ -44,6 +43,7 @@ import de.cismet.cids.server.search.SearchException;
 import de.cismet.cids.utils.serverresources.ServerResourcesLoader;
 
 import de.cismet.cismap.commons.jtsgeometryfactories.PostGisGeometryFactory;
+import de.cismet.cids.server.connectioncontext.ServerConnectionContextProvider;
 
 /**
  * DOCUMENT ME!
@@ -52,7 +52,7 @@ import de.cismet.cismap.commons.jtsgeometryfactories.PostGisGeometryFactory;
  * @version  $Revision$, $Date$
  */
 @Deprecated
-public class NasZaehlObjekteSearch extends AbstractCidsServerSearch implements ConnectionContextProvider {
+public class NasZaehlObjekteSearch extends AbstractCidsServerSearch implements ServerConnectionContextProvider {
 
     //~ Static fields/initializers ---------------------------------------------
 
@@ -249,7 +249,7 @@ public class NasZaehlObjekteSearch extends AbstractCidsServerSearch implements C
                 if (LOG.isDebugEnabled()) {
                     LOG.debug("query: " + sb.toString());                                  // NOI18N
                 }
-                final ArrayList<ArrayList> lists = ms.performCustomSearch(sb.toString(), getConnectionContext());
+                final ArrayList<ArrayList> lists = ms.performCustomSearch(sb.toString(), getServerConnectionContext());
 
                 return lists.size();
             } catch (RemoteException ex) {
@@ -316,8 +316,8 @@ public class NasZaehlObjekteSearch extends AbstractCidsServerSearch implements C
     }
     
     @Override
-    public ConnectionContext getConnectionContext() {
-        return ConnectionContext.create(NasZaehlObjekteSearch.class.getSimpleName());
+    public ServerConnectionContext getServerConnectionContext() {
+        return ServerConnectionContext.create(NasZaehlObjekteSearch.class.getSimpleName());
     }
     
 }

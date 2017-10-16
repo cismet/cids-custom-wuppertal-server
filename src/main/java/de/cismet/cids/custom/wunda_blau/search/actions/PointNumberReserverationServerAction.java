@@ -25,8 +25,8 @@ import de.cismet.cids.custom.utils.pointnumberreservation.PointNumberReservation
 import de.cismet.cids.server.actions.ServerAction;
 import de.cismet.cids.server.actions.ServerActionParameter;
 import de.cismet.cids.server.actions.UserAwareServerAction;
-import de.cismet.cids.server.connectioncontext.ConnectionContext;
-import de.cismet.cids.server.connectioncontext.ConnectionContextProvider;
+import de.cismet.cids.server.connectioncontext.ServerConnectionContext;
+import de.cismet.cids.server.connectioncontext.ServerConnectionContextProvider;
 
 /**
  * DOCUMENT ME!
@@ -35,7 +35,7 @@ import de.cismet.cids.server.connectioncontext.ConnectionContextProvider;
  * @version  $Revision$, $Date$
  */
 @org.openide.util.lookup.ServiceProvider(service = ServerAction.class)
-public class PointNumberReserverationServerAction implements UserAwareServerAction, MetaServiceStore, ConnectionContextProvider {
+public class PointNumberReserverationServerAction implements UserAwareServerAction, MetaServiceStore, ServerConnectionContextProvider {
 
     //~ Static fields/initializers ---------------------------------------------
 
@@ -208,7 +208,7 @@ public class PointNumberReserverationServerAction implements UserAwareServerActi
             final String conf = ((DomainServerImpl)getMetaService()).getConfigAttr(
                     getUser(),
                     "custom.punktnummernreservierung.profilkennung",
-                    getConnectionContext());
+                    getServerConnectionContext());
             if (conf != null) {
                 profilKennung = conf;
             }
@@ -356,8 +356,8 @@ public class PointNumberReserverationServerAction implements UserAwareServerActi
     }
     
     @Override
-    public ConnectionContext getConnectionContext() {
-        return ConnectionContext.create(PointNumberReserverationServerAction.class.getSimpleName());
+    public ServerConnectionContext getServerConnectionContext() {
+        return ServerConnectionContext.create(PointNumberReserverationServerAction.class.getSimpleName());
     }
     
 }

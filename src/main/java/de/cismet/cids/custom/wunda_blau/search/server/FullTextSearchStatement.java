@@ -25,8 +25,7 @@ package de.cismet.cids.custom.wunda_blau.search.server;
 
 import Sirius.server.middleware.interfaces.domainserver.MetaService;
 import Sirius.server.middleware.types.MetaObjectNode;
-import de.cismet.cids.server.connectioncontext.ConnectionContext;
-import de.cismet.cids.server.connectioncontext.ConnectionContextProvider;
+import de.cismet.cids.server.connectioncontext.ServerConnectionContext;
 
 import org.apache.log4j.Logger;
 
@@ -35,6 +34,7 @@ import java.util.Collection;
 
 import de.cismet.cids.server.search.AbstractCidsServerSearch;
 import de.cismet.cids.server.search.MetaObjectNodeServerSearch;
+import de.cismet.cids.server.connectioncontext.ServerConnectionContextProvider;
 
 /**
  * DOCUMENT ME!
@@ -42,7 +42,7 @@ import de.cismet.cids.server.search.MetaObjectNodeServerSearch;
  * @author   thorsten
  * @version  $Revision$, $Date$
  */
-public class FullTextSearchStatement extends AbstractCidsServerSearch implements MetaObjectNodeServerSearch, ConnectionContextProvider {
+public class FullTextSearchStatement extends AbstractCidsServerSearch implements MetaObjectNodeServerSearch, ServerConnectionContextProvider {
 
     //~ Static fields/initializers ---------------------------------------------
 
@@ -122,7 +122,7 @@ public class FullTextSearchStatement extends AbstractCidsServerSearch implements
 
             final MetaService ms = (MetaService)getActiveLocalServers().get("WUNDA_BLAU");
 
-            final ArrayList<ArrayList> result = ms.performCustomSearch(sql, getConnectionContext());
+            final ArrayList<ArrayList> result = ms.performCustomSearch(sql, getServerConnectionContext());
 
             final ArrayList<MetaObjectNode> aln = new ArrayList<MetaObjectNode>();
             for (final ArrayList al : result) {
@@ -141,8 +141,8 @@ public class FullTextSearchStatement extends AbstractCidsServerSearch implements
     }
     
     @Override
-    public ConnectionContext getConnectionContext() {
-        return ConnectionContext.create(FullTextSearchStatement.class.getSimpleName());
+    public ServerConnectionContext getServerConnectionContext() {
+        return ServerConnectionContext.create(FullTextSearchStatement.class.getSimpleName());
     }                    
     
 }

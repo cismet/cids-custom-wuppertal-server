@@ -13,8 +13,7 @@ import Sirius.server.middleware.types.MetaObjectNode;
 import com.vividsolutions.jts.geom.Geometry;
 import com.vividsolutions.jts.geom.MultiPolygon;
 import com.vividsolutions.jts.geom.Polygon;
-import de.cismet.cids.server.connectioncontext.ConnectionContext;
-import de.cismet.cids.server.connectioncontext.ConnectionContextProvider;
+import de.cismet.cids.server.connectioncontext.ServerConnectionContext;
 
 import org.apache.commons.lang.StringEscapeUtils;
 import org.apache.log4j.Logger;
@@ -27,6 +26,7 @@ import de.cismet.cids.server.search.AbstractCidsServerSearch;
 import de.cismet.cids.server.search.MetaObjectNodeServerSearch;
 
 import de.cismet.cismap.commons.jtsgeometryfactories.PostGisGeometryFactory;
+import de.cismet.cids.server.connectioncontext.ServerConnectionContextProvider;
 
 /**
  * DOCUMENT ME!
@@ -34,7 +34,7 @@ import de.cismet.cismap.commons.jtsgeometryfactories.PostGisGeometryFactory;
  * @author   stefan
  * @version  $Revision$, $Date$
  */
-public class CidsBaulastSearchStatement extends AbstractCidsServerSearch implements MetaObjectNodeServerSearch, ConnectionContextProvider {
+public class CidsBaulastSearchStatement extends AbstractCidsServerSearch implements MetaObjectNodeServerSearch, ServerConnectionContextProvider {
 
     //~ Static fields/initializers ---------------------------------------------
 
@@ -162,7 +162,7 @@ public class CidsBaulastSearchStatement extends AbstractCidsServerSearch impleme
             final String primary = getPrimaryQuery();
             final String secondary = getSecondaryQuery();
             final MetaService ms = (MetaService)getActiveLocalServers().get("WUNDA_BLAU");
-            final List<ArrayList> primaryResultList = ms.performCustomSearch(primary, getConnectionContext());
+            final List<ArrayList> primaryResultList = ms.performCustomSearch(primary, getServerConnectionContext());
 
             final List<MetaObjectNode> aln = new ArrayList<MetaObjectNode>();
             for (final ArrayList al : primaryResultList) {
@@ -174,7 +174,7 @@ public class CidsBaulastSearchStatement extends AbstractCidsServerSearch impleme
             }
 
             if ((flurstuecke != null) && (flurstuecke.size() > 0)) {
-                final List<ArrayList> secondaryResultList = ms.performCustomSearch(secondary, getConnectionContext());
+                final List<ArrayList> secondaryResultList = ms.performCustomSearch(secondary, getServerConnectionContext());
                 for (final ArrayList al : secondaryResultList) {
                     final int cid = (Integer)al.get(0);
                     final int oid = (Integer)al.get(1);
@@ -452,8 +452,8 @@ public class CidsBaulastSearchStatement extends AbstractCidsServerSearch impleme
     }
     
     @Override
-    public ConnectionContext getConnectionContext() {
-        return ConnectionContext.create(CidsBaulastSearchStatement.class.getSimpleName());
+    public ServerConnectionContext getServerConnectionContext() {
+        return ServerConnectionContext.create(CidsBaulastSearchStatement.class.getSimpleName());
     }                    
     
 }

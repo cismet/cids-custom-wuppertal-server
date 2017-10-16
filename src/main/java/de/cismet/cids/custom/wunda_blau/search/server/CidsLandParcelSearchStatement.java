@@ -17,8 +17,7 @@ import Sirius.server.middleware.types.MetaObjectNode;
 import com.vividsolutions.jts.geom.Geometry;
 import com.vividsolutions.jts.geom.MultiPolygon;
 import com.vividsolutions.jts.geom.Polygon;
-import de.cismet.cids.server.connectioncontext.ConnectionContext;
-import de.cismet.cids.server.connectioncontext.ConnectionContextProvider;
+import de.cismet.cids.server.connectioncontext.ServerConnectionContext;
 
 import org.apache.log4j.Logger;
 
@@ -34,6 +33,7 @@ import de.cismet.cids.server.search.AbstractCidsServerSearch;
 import de.cismet.cids.server.search.MetaObjectNodeServerSearch;
 
 import de.cismet.cismap.commons.jtsgeometryfactories.PostGisGeometryFactory;
+import de.cismet.cids.server.connectioncontext.ServerConnectionContextProvider;
 
 /**
  * DOCUMENT ME!
@@ -41,7 +41,7 @@ import de.cismet.cismap.commons.jtsgeometryfactories.PostGisGeometryFactory;
  * @author   mroncoroni
  * @version  $Revision$, $Date$
  */
-public class CidsLandParcelSearchStatement extends AbstractCidsServerSearch implements MetaObjectNodeServerSearch, ConnectionContextProvider {
+public class CidsLandParcelSearchStatement extends AbstractCidsServerSearch implements MetaObjectNodeServerSearch, ServerConnectionContextProvider {
 
     //~ Static fields/initializers ---------------------------------------------
 
@@ -138,7 +138,7 @@ public class CidsLandParcelSearchStatement extends AbstractCidsServerSearch impl
 
             final List<MetaObjectNode> result = new ArrayList<MetaObjectNode>();
             final MetaService ms = (MetaService)getActiveLocalServers().get("WUNDA_BLAU");
-            final ArrayList<ArrayList> searchResult = ms.performCustomSearch(query, getConnectionContext());
+            final ArrayList<ArrayList> searchResult = ms.performCustomSearch(query, getServerConnectionContext());
             for (final ArrayList al : searchResult) {
                 final int cid = (Integer)al.get(0);
                 final int oid = (Integer)al.get(1);
@@ -155,8 +155,8 @@ public class CidsLandParcelSearchStatement extends AbstractCidsServerSearch impl
     }
     
     @Override
-    public ConnectionContext getConnectionContext() {
-        return ConnectionContext.create(CidsLandParcelSearchStatement.class.getSimpleName());
+    public ServerConnectionContext getServerConnectionContext() {
+        return ServerConnectionContext.create(CidsLandParcelSearchStatement.class.getSimpleName());
     }                    
     
 }

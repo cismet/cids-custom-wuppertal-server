@@ -22,11 +22,11 @@ import java.util.ArrayList;
 import java.util.Collection;
 
 import de.cismet.cids.custom.utils.pointnumberreservation.VermessungsStellenSearchResult;
-import de.cismet.cids.server.connectioncontext.ConnectionContext;
-import de.cismet.cids.server.connectioncontext.ConnectionContextProvider;
+import de.cismet.cids.server.connectioncontext.ServerConnectionContext;
 
 import de.cismet.cids.server.search.AbstractCidsServerSearch;
 import de.cismet.cids.server.search.SearchException;
+import de.cismet.cids.server.connectioncontext.ServerConnectionContextProvider;
 
 /**
  * DOCUMENT ME!
@@ -34,7 +34,7 @@ import de.cismet.cids.server.search.SearchException;
  * @author   daniel
  * @version  $Revision$, $Date$
  */
-public class KundeByVermessungsStellenNummerSearch extends AbstractCidsServerSearch implements ConnectionContextProvider {
+public class KundeByVermessungsStellenNummerSearch extends AbstractCidsServerSearch implements ServerConnectionContextProvider {
 
     //~ Static fields/initializers ---------------------------------------------
 
@@ -69,7 +69,7 @@ public class KundeByVermessungsStellenNummerSearch extends AbstractCidsServerSea
                 if (LOG.isDebugEnabled()) {
                     LOG.debug("query: " + query); // NOI18N
                 }
-                final ArrayList<ArrayList> lists = ms.performCustomSearch(query, getConnectionContext());
+                final ArrayList<ArrayList> lists = ms.performCustomSearch(query, getServerConnectionContext());
                 final ArrayList<VermessungsStellenSearchResult> result =
                     new ArrayList<VermessungsStellenSearchResult>();
                 for (final ArrayList l : lists) {
@@ -89,8 +89,8 @@ public class KundeByVermessungsStellenNummerSearch extends AbstractCidsServerSea
     }
     
     @Override
-    public ConnectionContext getConnectionContext() {
-        return ConnectionContext.create(KundeByVermessungsStellenNummerSearch.class.getSimpleName());
+    public ServerConnectionContext getServerConnectionContext() {
+        return ServerConnectionContext.create(KundeByVermessungsStellenNummerSearch.class.getSimpleName());
     }                    
     
 }
