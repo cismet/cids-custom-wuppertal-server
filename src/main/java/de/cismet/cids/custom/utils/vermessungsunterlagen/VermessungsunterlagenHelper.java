@@ -82,6 +82,8 @@ import de.cismet.cids.custom.utils.nas.NasProduct;
 import de.cismet.cids.custom.utils.vermessungsunterlagen.exceptions.VermessungsunterlagenException;
 
 import de.cismet.cids.dynamics.CidsBean;
+import de.cismet.cids.server.connectioncontext.ConnectionContext;
+import de.cismet.cids.server.connectioncontext.ConnectionContextProvider;
 
 import de.cismet.cids.server.search.CidsServerSearch;
 import de.cismet.cids.server.search.SearchException;
@@ -102,7 +104,7 @@ import static org.apache.commons.net.ftp.FTP.BINARY_FILE_TYPE;
  * @author   jruiz
  * @version  $Revision$, $Date$
  */
-public class VermessungsunterlagenHelper {
+public class VermessungsunterlagenHelper implements ConnectionContextProvider {
 
     //~ Static fields/initializers ---------------------------------------------
 
@@ -204,16 +206,16 @@ public class VermessungsunterlagenHelper {
         this.metaService = metaService;
         this.user = user;
 
-        this.mc_GEOM = getMetaService().getClassByTableName(getUser(), "geom");
+        this.mc_GEOM = getMetaService().getClassByTableName(getUser(), "geom", getConnectionContext());
         this.mc_VERMESSUNGSUNTERLAGENAUFTRAG_PUNKTNUMMER = getMetaService()
-                    .getClassByTableName(getUser(), "vermessungsunterlagenauftrag_punktnummer");
+                    .getClassByTableName(getUser(), "vermessungsunterlagenauftrag_punktnummer", getConnectionContext());
         this.mc_VERMESSUNGSUNTERLAGENAUFTRAG = getMetaService().getClassByTableName(
                 getUser(),
-                "vermessungsunterlagenauftrag");
+                "vermessungsunterlagenauftrag", getConnectionContext());
         this.mc_VERMESSUNGSUNTERLAGENAUFTRAG_VERMESSUNGSART = getMetaService()
-                    .getClassByTableName(getUser(), "vermessungsunterlagenauftrag_vermessungsart");
+                    .getClassByTableName(getUser(), "vermessungsunterlagenauftrag_vermessungsart", getConnectionContext());
         this.mc_VERMESSUNGSUNTERLAGENAUFTRAG_FLURSTUECK = getMetaService()
-                    .getClassByTableName(getUser(), "vermessungsunterlagenauftrag_flurstueck");
+                    .getClassByTableName(getUser(), "vermessungsunterlagenauftrag_flurstueck", getConnectionContext());
     }
 
     /**
@@ -372,7 +374,7 @@ public class VermessungsunterlagenHelper {
      * @throws  Exception  DOCUMENT ME!
      */
     public CidsBean loadCidsBean(final LightweightMetaObject lwmo) throws Exception {
-        return getMetaService().getMetaObject(getUser(), lwmo.getObjectID(), lwmo.getClassID()).getBean();
+        return getMetaService().getMetaObject(getUser(), lwmo.getObjectID(), lwmo.getClassID(), getConnectionContext()).getBean();
     }
 
     /**
@@ -385,7 +387,7 @@ public class VermessungsunterlagenHelper {
      * @throws  Exception  DOCUMENT ME!
      */
     public CidsBean loadCidsBean(final MetaObjectNode mon) throws Exception {
-        return getMetaService().getMetaObject(getUser(), mon.getObjectId(), mon.getClassId()).getBean();
+        return getMetaService().getMetaObject(getUser(), mon.getObjectId(), mon.getClassId(), getConnectionContext()).getBean();
     }
 
     /**
@@ -417,7 +419,7 @@ public class VermessungsunterlagenHelper {
             return true;
         } else {                          // exists in database ?
             final List result = getMetaService().performCustomSearch("SELECT schluessel FROM "
-                            + mc_VERMESSUNGSUNTERLAGENAUFTRAG + " WHERE schluessel LIKE '" + jobKey + "'");
+                            + mc_VERMESSUNGSUNTERLAGENAUFTRAG + " WHERE schluessel LIKE '" + jobKey + "'", getConnectionContext());
             return !result.isEmpty();
         }
     }
@@ -523,7 +525,7 @@ public class VermessungsunterlagenHelper {
         jobCidsBean.setProperty("tasks", Arrays.toString(getAllowedTasks().toArray()));
         jobCidsBean.setProperty("test", anfrageBean.getTest());
 
-        job.setCidsBean(getMetaService().insertMetaObject(getUser(), jobCidsBean.getMetaObject()).getBean());
+        job.setCidsBean(getMetaService().insertMetaObject(getUser(), jobCidsBean.getMetaObject(), getConnectionContext()).getBean());
     }
 
     /**
@@ -535,7 +537,7 @@ public class VermessungsunterlagenHelper {
      */
     public Collection<String> getAllowedTasks() throws Exception {
         final String rawAllowedTasks = DomainServerImpl.getServerInstance()
-                    .getConfigAttr(getUser(), ALLOWED_TASKS_CONFIG_ATTR);
+                    .getConfigAttr(getUser(), ALLOWED_TASKS_CONFIG_ATTR, getConnectionContext());
         final Collection<String> allowedTasks = new ArrayList<String>();
         if (rawAllowedTasks != null) {
             for (final String allowedTask : Arrays.asList(rawAllowedTasks.split("\n"))) {
@@ -562,7 +564,7 @@ public class VermessungsunterlagenHelper {
         jobCidsBean.setProperty("zip_pfad", zipDateiname);
         jobCidsBean.setProperty("zip_timestamp", new Timestamp(new Date().getTime()));
 
-        getMetaService().updateMetaObject(getUser(), jobCidsBean.getMetaObject());
+        getMetaService().updateMetaObject(getUser(), jobCidsBean.getMetaObject(), getConnectionContext());
     }
 
     /**
@@ -580,7 +582,7 @@ public class VermessungsunterlagenHelper {
         jobCidsBean.setProperty("status", status);
         jobCidsBean.setProperty("status_timestamp", new Timestamp(new Date().getTime()));
 
-        getMetaService().updateMetaObject(getUser(), jobCidsBean.getMetaObject());
+        getMetaService().updateMetaObject(getUser(), jobCidsBean.getMetaObject(), getConnectionContext());
     }
 
     /**
@@ -597,7 +599,7 @@ public class VermessungsunterlagenHelper {
 
         jobCidsBean.setProperty("geometrie_flurstuecke.geo_field", geom);
 
-        getMetaService().updateMetaObject(getUser(), jobCidsBean.getMetaObject());
+        getMetaService().updateMetaObject(getUser(), jobCidsBean.getMetaObject(), getConnectionContext());
     }
 
     /**
@@ -615,7 +617,7 @@ public class VermessungsunterlagenHelper {
         jobCidsBean.setProperty("exception_json", EXCEPTION_MAPPER.writeValueAsString(ex));
         jobCidsBean.setProperty("exception_timestamp", new Timestamp(new Date().getTime()));
 
-        getMetaService().updateMetaObject(getUser(), jobCidsBean.getMetaObject());
+        getMetaService().updateMetaObject(getUser(), jobCidsBean.getMetaObject(), getConnectionContext());
     }
 
     /**
@@ -631,7 +633,7 @@ public class VermessungsunterlagenHelper {
         final CidsBean bean = CidsBean.createNewCidsBeanFromTableName(
                 "WUNDA_BLAU",
                 mc_VERMESSUNGSUNTERLAGENAUFTRAG_VERMESSUNGSART.getTableName());
-        getMetaService().getMetaObject(getUser(), "SELECT FROM ");
+        getMetaService().getMetaObject(getUser(), "SELECT FROM ", getConnectionContext());
         return null;
     }
 
@@ -968,7 +970,7 @@ public class VermessungsunterlagenHelper {
                         final MetaObject mo = getMetaService().getMetaObject(
                                 getUser(),
                                 mon.getObjectId(),
-                                mon.getClassId());
+                                mon.getClassId(), getConnectionContext());
                         mo.setAllClasses(
                             ((MetaClassCacheService)Lookup.getDefault().lookup(MetaClassCacheService.class))
                                         .getAllClasses(mo.getDomain()));
@@ -1176,6 +1178,11 @@ public class VermessungsunterlagenHelper {
         } else {
             return defaultProduct;
         }
+    }
+
+    @Override
+    public ConnectionContext getConnectionContext() {
+        return ConnectionContext.create(VermessungsunterlagenHelper.class.getSimpleName());
     }
 
     //~ Inner Classes ----------------------------------------------------------

@@ -14,6 +14,8 @@ package de.cismet.cids.custom.wunda_blau.search.server;
 import Sirius.server.middleware.interfaces.domainserver.MetaService;
 import Sirius.server.middleware.types.MetaObject;
 import Sirius.server.newuser.User;
+import de.cismet.cids.server.connectioncontext.ConnectionContext;
+import de.cismet.cids.server.connectioncontext.ConnectionContextProvider;
 
 import org.apache.log4j.Logger;
 
@@ -35,7 +37,7 @@ import de.cismet.cids.server.search.SearchException;
  * @author   Gilles Baatz
  * @version  $Revision$, $Date$
  */
-public class CidsBillingSearchStatement extends AbstractCidsServerSearch {
+public class CidsBillingSearchStatement extends AbstractCidsServerSearch implements ConnectionContextProvider {
 
     //~ Static fields/initializers ---------------------------------------------
 
@@ -142,7 +144,7 @@ public class CidsBillingSearchStatement extends AbstractCidsServerSearch {
                     LOG.debug("The used query is: " + query.toString());
                 }
 
-                final MetaObject[] billingMetaObjects = ms.getMetaObject(user, query.toString());
+                final MetaObject[] billingMetaObjects = ms.getMetaObject(user, query.toString(), getConnectionContext());
                 final ArrayList<MetaObject> billingCollection = new ArrayList<MetaObject>(Arrays.asList(
                             billingMetaObjects));
                 return billingCollection;
@@ -593,4 +595,10 @@ public class CidsBillingSearchStatement extends AbstractCidsServerSearch {
     public void setShowAbgerechneteBillings(final Boolean showAbgerechneteBillings) {
         this.showAbgerechneteBillings = showAbgerechneteBillings;
     }
+
+    @Override
+    public ConnectionContext getConnectionContext() {
+        return ConnectionContext.create(CidsBillingSearchStatement.class.getSimpleName());
+    }                    
+
 }

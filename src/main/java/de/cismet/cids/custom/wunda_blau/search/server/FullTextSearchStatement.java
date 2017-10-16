@@ -25,6 +25,8 @@ package de.cismet.cids.custom.wunda_blau.search.server;
 
 import Sirius.server.middleware.interfaces.domainserver.MetaService;
 import Sirius.server.middleware.types.MetaObjectNode;
+import de.cismet.cids.server.connectioncontext.ConnectionContext;
+import de.cismet.cids.server.connectioncontext.ConnectionContextProvider;
 
 import org.apache.log4j.Logger;
 
@@ -40,7 +42,7 @@ import de.cismet.cids.server.search.MetaObjectNodeServerSearch;
  * @author   thorsten
  * @version  $Revision$, $Date$
  */
-public class FullTextSearchStatement extends AbstractCidsServerSearch implements MetaObjectNodeServerSearch {
+public class FullTextSearchStatement extends AbstractCidsServerSearch implements MetaObjectNodeServerSearch, ConnectionContextProvider {
 
     //~ Static fields/initializers ---------------------------------------------
 
@@ -120,7 +122,7 @@ public class FullTextSearchStatement extends AbstractCidsServerSearch implements
 
             final MetaService ms = (MetaService)getActiveLocalServers().get("WUNDA_BLAU");
 
-            final ArrayList<ArrayList> result = ms.performCustomSearch(sql);
+            final ArrayList<ArrayList> result = ms.performCustomSearch(sql, getConnectionContext());
 
             final ArrayList<MetaObjectNode> aln = new ArrayList<MetaObjectNode>();
             for (final ArrayList al : result) {
@@ -137,4 +139,10 @@ public class FullTextSearchStatement extends AbstractCidsServerSearch implements
             return null;
         }
     }
+    
+    @Override
+    public ConnectionContext getConnectionContext() {
+        return ConnectionContext.create(FullTextSearchStatement.class.getSimpleName());
+    }                    
+    
 }

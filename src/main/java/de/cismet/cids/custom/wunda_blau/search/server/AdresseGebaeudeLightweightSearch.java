@@ -23,6 +23,8 @@ import java.util.LinkedList;
 import java.util.List;
 
 import de.cismet.cids.dynamics.CidsBean;
+import de.cismet.cids.server.connectioncontext.ConnectionContext;
+import de.cismet.cids.server.connectioncontext.ConnectionContextProvider;
 
 import de.cismet.cids.server.search.AbstractCidsServerSearch;
 import de.cismet.cids.server.search.SearchException;
@@ -42,7 +44,7 @@ import de.cismet.cidsx.server.search.builtin.legacy.LightweightMetaObjectsSearch
  */
 @ServiceProvider(service = RestApiCidsServerSearch.class)
 public class AdresseGebaeudeLightweightSearch extends AbstractCidsServerSearch implements RestApiCidsServerSearch,
-    LightweightMetaObjectsSearch {
+    LightweightMetaObjectsSearch, ConnectionContextProvider {
 
     //~ Static fields/initializers ---------------------------------------------
 
@@ -54,6 +56,7 @@ public class AdresseGebaeudeLightweightSearch extends AbstractCidsServerSearch i
     @Getter @Setter private String[] representationFields;
     @Getter @Setter private String representationPattern;
     @Getter @Setter private Integer gebaudeId;
+    
 
     //~ Constructors -----------------------------------------------------------
 
@@ -121,16 +124,23 @@ public class AdresseGebaeudeLightweightSearch extends AbstractCidsServerSearch i
                             getUser(),
                             query,
                             getRepresentationFields(),
-                            getRepresentationPattern()));
+                            getRepresentationPattern(),
+                            getConnectionContext()));
             } else {
                 return Arrays.asList(metaService.getLightweightMetaObjectsByQuery(
                             mc.getID(),
                             getUser(),
                             query,
-                            getRepresentationFields()));
+                            getRepresentationFields(),
+                            getConnectionContext()));
             }
         } catch (final Exception ex) {
             throw new SearchException("error while loading lwmos", ex);
         }
+    }
+
+    @Override
+    public ConnectionContext getConnectionContext() {
+        return ConnectionContext.create(AdresseGebaeudeLightweightSearch.class.getSimpleName());
     }
 }

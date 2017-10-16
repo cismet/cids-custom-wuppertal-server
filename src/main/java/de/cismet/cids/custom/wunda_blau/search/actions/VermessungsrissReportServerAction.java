@@ -30,6 +30,8 @@ import de.cismet.cids.dynamics.CidsBean;
 import de.cismet.cids.server.actions.JasperReportServerAction;
 import de.cismet.cids.server.actions.ServerAction;
 import de.cismet.cids.server.actions.ServerActionParameter;
+import de.cismet.cids.server.connectioncontext.ConnectionContext;
+import de.cismet.cids.server.connectioncontext.ConnectionContextProvider;
 
 import de.cismet.cids.utils.serverresources.ServerResourcesLoader;
 
@@ -42,7 +44,7 @@ import de.cismet.commons.utils.MultiPagePictureReader;
  * @version  $Revision$, $Date$
  */
 @org.openide.util.lookup.ServiceProvider(service = ServerAction.class)
-public class VermessungsrissReportServerAction extends JasperReportServerAction {
+public class VermessungsrissReportServerAction extends JasperReportServerAction implements ConnectionContextProvider {
 
     //~ Static fields/initializers ---------------------------------------------
 
@@ -91,7 +93,8 @@ public class VermessungsrissReportServerAction extends JasperReportServerAction 
                     final CidsBean bean = getMetaService().getMetaObject(
                                 getUser(),
                                 reportMon.getObjectId(),
-                                reportMon.getClassId())
+                                reportMon.getClassId(),
+                                getConnectionContext())
                                 .getBean();
                     selectedVermessungsrisse.add(bean);
                 }
@@ -128,4 +131,10 @@ public class VermessungsrissReportServerAction extends JasperReportServerAction 
         return ServerResourcesLoader.getInstance()
                     .loadJasperReport(WundaBlauServerResources.VERMESSUNGSRISSE_JASPER.getValue());
     }
+    
+    @Override
+    public ConnectionContext getConnectionContext() {
+        return ConnectionContext.create(VermessungsrissReportServerAction.class.getSimpleName());
+    }
+    
 }

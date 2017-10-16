@@ -17,8 +17,9 @@ import Sirius.server.middleware.types.MetaObjectNode;
 import com.vividsolutions.jts.geom.Geometry;
 import com.vividsolutions.jts.geom.MultiPolygon;
 import com.vividsolutions.jts.geom.Polygon;
+import de.cismet.cids.server.connectioncontext.ConnectionContext;
+import de.cismet.cids.server.connectioncontext.ConnectionContextProvider;
 
-import org.apache.commons.logging.Log;
 import org.apache.log4j.Logger;
 
 import java.rmi.RemoteException;
@@ -40,7 +41,7 @@ import de.cismet.cismap.commons.jtsgeometryfactories.PostGisGeometryFactory;
  * @author   mroncoroni
  * @version  $Revision$, $Date$
  */
-public class CidsLandParcelSearchStatement extends AbstractCidsServerSearch implements MetaObjectNodeServerSearch {
+public class CidsLandParcelSearchStatement extends AbstractCidsServerSearch implements MetaObjectNodeServerSearch, ConnectionContextProvider {
 
     //~ Static fields/initializers ---------------------------------------------
 
@@ -137,7 +138,7 @@ public class CidsLandParcelSearchStatement extends AbstractCidsServerSearch impl
 
             final List<MetaObjectNode> result = new ArrayList<MetaObjectNode>();
             final MetaService ms = (MetaService)getActiveLocalServers().get("WUNDA_BLAU");
-            final ArrayList<ArrayList> searchResult = ms.performCustomSearch(query);
+            final ArrayList<ArrayList> searchResult = ms.performCustomSearch(query, getConnectionContext());
             for (final ArrayList al : searchResult) {
                 final int cid = (Integer)al.get(0);
                 final int oid = (Integer)al.get(1);
@@ -152,4 +153,10 @@ public class CidsLandParcelSearchStatement extends AbstractCidsServerSearch impl
             throw new RuntimeException(ex);
         }
     }
+    
+    @Override
+    public ConnectionContext getConnectionContext() {
+        return ConnectionContext.create(CidsLandParcelSearchStatement.class.getSimpleName());
+    }                    
+    
 }

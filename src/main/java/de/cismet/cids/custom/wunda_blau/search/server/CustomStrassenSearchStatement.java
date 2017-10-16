@@ -10,6 +10,8 @@ package de.cismet.cids.custom.wunda_blau.search.server;
 import Sirius.server.middleware.interfaces.domainserver.MetaService;
 import Sirius.server.middleware.types.MetaClass;
 import Sirius.server.middleware.types.MetaObjectNode;
+import de.cismet.cids.server.connectioncontext.ConnectionContext;
+import de.cismet.cids.server.connectioncontext.ConnectionContextProvider;
 
 import org.apache.log4j.Logger;
 
@@ -25,7 +27,7 @@ import de.cismet.cids.server.search.MetaObjectNodeServerSearch;
  * @author   thorsten
  * @version  $Revision$, $Date$
  */
-public class CustomStrassenSearchStatement extends AbstractCidsServerSearch implements MetaObjectNodeServerSearch {
+public class CustomStrassenSearchStatement extends AbstractCidsServerSearch implements MetaObjectNodeServerSearch, ConnectionContextProvider {
 
     //~ Static fields/initializers ---------------------------------------------
 
@@ -58,12 +60,12 @@ public class CustomStrassenSearchStatement extends AbstractCidsServerSearch impl
 
             final MetaService ms = (MetaService)getActiveLocalServers().get("WUNDA_BLAU");
 
-            final MetaClass c = ms.getClassByTableName(getUser(), "strasse");
+            final MetaClass c = ms.getClassByTableName(getUser(), "strasse", getConnectionContext());
 
             final String sql = "select strassenschluessel,name from strasse where name like '%" + searchString
                         + "%' order by name desc";
 
-            final ArrayList<ArrayList> result = ms.performCustomSearch(sql);
+            final ArrayList<ArrayList> result = ms.performCustomSearch(sql, getConnectionContext());
 
             final ArrayList<MetaObjectNode> aln = new ArrayList<MetaObjectNode>();
             for (final ArrayList al : result) {
@@ -79,4 +81,10 @@ public class CustomStrassenSearchStatement extends AbstractCidsServerSearch impl
             throw new RuntimeException(e);
         }
     }
+    
+    @Override
+    public ConnectionContext getConnectionContext() {
+        return ConnectionContext.create(CustomStrassenSearchStatement.class.getSimpleName());
+    }                    
+    
 }

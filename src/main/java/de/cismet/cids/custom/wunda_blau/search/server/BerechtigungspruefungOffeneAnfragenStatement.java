@@ -8,6 +8,8 @@
 package de.cismet.cids.custom.wunda_blau.search.server;
 
 import Sirius.server.middleware.interfaces.domainserver.MetaService;
+import de.cismet.cids.server.connectioncontext.ConnectionContext;
+import de.cismet.cids.server.connectioncontext.ConnectionContextProvider;
 
 import java.rmi.RemoteException;
 
@@ -23,7 +25,7 @@ import de.cismet.cids.server.search.SearchException;
  *
  * @version  $Revision$, $Date$
  */
-public class BerechtigungspruefungOffeneAnfragenStatement extends AbstractCidsServerSearch {
+public class BerechtigungspruefungOffeneAnfragenStatement extends AbstractCidsServerSearch implements ConnectionContextProvider {
 
     //~ Static fields/initializers ---------------------------------------------
 
@@ -80,7 +82,7 @@ public class BerechtigungspruefungOffeneAnfragenStatement extends AbstractCidsSe
                 final String in = sb.toString();
                 final String query = (checkPruefer ? String.format(QUERY_PRUEFER_TEMPLATE, in, getUser().getName())
                                                    : String.format(QUERY_TEMPLATE, in));
-                final ArrayList<ArrayList> lists = ms.performCustomSearch(query);
+                final ArrayList<ArrayList> lists = ms.performCustomSearch(query, getConnectionContext());
                 final List<String> schluesselListe = new ArrayList();
                 if ((lists != null) && !lists.isEmpty()) {
                     for (final List list : lists) {
@@ -94,4 +96,10 @@ public class BerechtigungspruefungOffeneAnfragenStatement extends AbstractCidsSe
         }
         return null;
     }
+    
+    @Override
+    public ConnectionContext getConnectionContext() {
+        return ConnectionContext.create(BerechtigungspruefungOffeneAnfragenStatement.class.getSimpleName());
+    }                    
+    
 }

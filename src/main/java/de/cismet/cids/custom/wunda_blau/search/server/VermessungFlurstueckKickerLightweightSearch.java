@@ -25,6 +25,8 @@ import java.util.LinkedList;
 import java.util.List;
 
 import de.cismet.cids.dynamics.CidsBean;
+import de.cismet.cids.server.connectioncontext.ConnectionContext;
+import de.cismet.cids.server.connectioncontext.ConnectionContextProvider;
 
 import de.cismet.cids.server.search.AbstractCidsServerSearch;
 import de.cismet.cids.server.search.SearchException;
@@ -45,7 +47,7 @@ import de.cismet.cidsx.server.search.builtin.legacy.LightweightMetaObjectsSearch
 @ServiceProvider(service = RestApiCidsServerSearch.class)
 public class VermessungFlurstueckKickerLightweightSearch extends AbstractCidsServerSearch
         implements RestApiCidsServerSearch,
-            LightweightMetaObjectsSearch {
+            LightweightMetaObjectsSearch, ConnectionContextProvider {
 
     //~ Static fields/initializers ---------------------------------------------
 
@@ -353,13 +355,15 @@ public class VermessungFlurstueckKickerLightweightSearch extends AbstractCidsSer
                                 getUser(),
                                 query,
                                 getRepresentationFields(),
-                                getRepresentationPattern()));
+                                getRepresentationPattern(),
+                                getConnectionContext()));
                 } else {
                     return Arrays.asList(metaService.getLightweightMetaObjectsByQuery(
                                 metaClassToUse.getID(),
                                 getUser(),
                                 query,
-                                getRepresentationFields()));
+                                getRepresentationFields(),
+                                getConnectionContext()));
                 }
             } catch (final RemoteException ex) {
                 throw new SearchException("error while loading lwmos (MetaClass:+" + metaClassToUse.getID() + ", Query:"
@@ -370,4 +374,10 @@ public class VermessungFlurstueckKickerLightweightSearch extends AbstractCidsSer
             throw new SearchException("searchFor has to be set");
         }
     }
+    
+    @Override
+    public ConnectionContext getConnectionContext() {
+        return ConnectionContext.create(VermessungFlurstueckKickerLightweightSearch.class.getSimpleName());
+    }                    
+    
 }

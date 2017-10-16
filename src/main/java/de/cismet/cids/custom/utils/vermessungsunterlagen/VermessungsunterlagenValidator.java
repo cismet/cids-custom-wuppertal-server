@@ -27,6 +27,8 @@ import de.cismet.cids.custom.wunda_blau.search.server.CidsAlkisSearchStatement;
 import de.cismet.cids.custom.wunda_blau.search.server.KundeByVermessungsStellenNummerSearch;
 
 import de.cismet.cids.dynamics.CidsBean;
+import de.cismet.cids.server.connectioncontext.ConnectionContext;
+import de.cismet.cids.server.connectioncontext.ConnectionContextProvider;
 
 import de.cismet.cids.server.search.CidsServerSearch;
 import de.cismet.cids.server.search.SearchException;
@@ -36,7 +38,7 @@ import de.cismet.cids.server.search.SearchException;
  *
  * @version  $Revision$, $Date$
  */
-public class VermessungsunterlagenValidator {
+public class VermessungsunterlagenValidator implements ConnectionContextProvider {
 
     //~ Static fields/initializers ---------------------------------------------
 
@@ -447,7 +449,7 @@ public class VermessungsunterlagenValidator {
                     + "_%';";
 
         final MetaService metaService = helper.getMetaService();
-        for (final ArrayList fields : metaService.performCustomSearch(query)) {
+        for (final ArrayList fields : metaService.performCustomSearch(query, getConnectionContext())) {
             final String kennzeichen = (String)fields.get(0);
             final CidsBean nachfolgerBean = searchFlurstueck(toAlkisId(
                         kennzeichen.substring(0, 6),
@@ -524,4 +526,10 @@ public class VermessungsunterlagenValidator {
             return null;
         }
     }
+    
+    @Override
+    public ConnectionContext getConnectionContext() {
+        return ConnectionContext.create(VermessungsunterlagenValidator.class.getSimpleName());
+    }
+    
 }

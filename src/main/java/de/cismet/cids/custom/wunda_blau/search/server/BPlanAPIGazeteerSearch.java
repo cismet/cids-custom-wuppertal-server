@@ -14,6 +14,8 @@ package de.cismet.cids.custom.wunda_blau.search.server;
 
 import Sirius.server.middleware.interfaces.domainserver.MetaService;
 import Sirius.server.sql.PreparableStatement;
+import de.cismet.cids.server.connectioncontext.ConnectionContext;
+import de.cismet.cids.server.connectioncontext.ConnectionContextProvider;
 
 import lombok.Getter;
 import lombok.Setter;
@@ -49,7 +51,7 @@ import de.cismet.cidsx.server.search.RestApiCidsServerSearch;
  * @version  $Revision$, $Date$
  */
 @ServiceProvider(service = RestApiCidsServerSearch.class)
-public class BPlanAPIGazeteerSearch extends AbstractCidsServerSearch implements RestApiCidsServerSearch {
+public class BPlanAPIGazeteerSearch extends AbstractCidsServerSearch implements RestApiCidsServerSearch, ConnectionContextProvider {
 
     //~ Static fields/initializers ---------------------------------------------
 
@@ -104,7 +106,7 @@ public class BPlanAPIGazeteerSearch extends AbstractCidsServerSearch implements 
             if (metaService != null) {
                 // "select * from bplanapisearch('" + wktString + "','" + status + "')";
                 QUERY.setObjects(input);
-                final ArrayList<ArrayList> results = metaService.performCustomSearch(QUERY);
+                final ArrayList<ArrayList> results = metaService.performCustomSearch(QUERY, getConnectionContext());
                 final ArrayList<GazzResult> ret = new ArrayList<GazzResult>(results.size());
                 for (final ArrayList row : results) {
                     final String s = (String)row.get(0);
@@ -124,6 +126,11 @@ public class BPlanAPIGazeteerSearch extends AbstractCidsServerSearch implements 
             throw new SearchException("error while loading gazetteer result objects", ex);
         }
     }
+    
+    @Override
+    public ConnectionContext getConnectionContext() {
+        return ConnectionContext.create(BPlanAPIGazeteerSearch.class.getSimpleName());
+    }                    
 }
 
 /**
@@ -158,7 +165,7 @@ class GazzResult implements Serializable {
         this.x = x;
         this.y = y;
         this.more = more;
-    }
+    }    
 }
 
 //

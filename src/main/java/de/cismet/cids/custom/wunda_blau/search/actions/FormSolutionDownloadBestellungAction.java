@@ -24,6 +24,8 @@ import de.cismet.cids.dynamics.CidsBean;
 import de.cismet.cids.server.actions.ServerAction;
 import de.cismet.cids.server.actions.ServerActionParameter;
 import de.cismet.cids.server.actions.UserAwareServerAction;
+import de.cismet.cids.server.connectioncontext.ConnectionContext;
+import de.cismet.cids.server.connectioncontext.ConnectionContextProvider;
 
 /**
  * DOCUMENT ME!
@@ -32,7 +34,7 @@ import de.cismet.cids.server.actions.UserAwareServerAction;
  * @version  $Revision$, $Date$
  */
 @org.openide.util.lookup.ServiceProvider(service = ServerAction.class)
-public class FormSolutionDownloadBestellungAction implements ServerAction, UserAwareServerAction {
+public class FormSolutionDownloadBestellungAction implements ServerAction, UserAwareServerAction, ConnectionContextProvider {
 
     //~ Static fields/initializers ---------------------------------------------
 
@@ -98,7 +100,7 @@ public class FormSolutionDownloadBestellungAction implements ServerAction, UserA
                 final MetaObjectNode mon = (MetaObjectNode)body;
 
                 final CidsBean bestellungBean = DomainServerImpl.getServerInstance()
-                            .getMetaObject(getUser(), mon.getObjectId(), mon.getClassId())
+                            .getMetaObject(getUser(), mon.getObjectId(), mon.getClassId(), getConnectionContext())
                             .getBean();
                 final String filePath = rechung ? (String)bestellungBean.getProperty("rechnung_dateipfad")
                                                 : (String)bestellungBean.getProperty("produkt_dateipfad");
@@ -134,4 +136,10 @@ public class FormSolutionDownloadBestellungAction implements ServerAction, UserA
     public void setUser(final User user) {
         this.user = user;
     }
+    
+    @Override
+    public ConnectionContext getConnectionContext() {
+        return ConnectionContext.create(FormSolutionDownloadBestellungAction.class.getSimpleName());
+    }
+    
 }

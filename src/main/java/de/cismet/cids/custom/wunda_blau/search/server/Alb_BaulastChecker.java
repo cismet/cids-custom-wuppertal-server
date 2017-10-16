@@ -8,6 +8,8 @@
 package de.cismet.cids.custom.wunda_blau.search.server;
 
 import Sirius.server.middleware.interfaces.domainserver.MetaService;
+import de.cismet.cids.server.connectioncontext.ConnectionContext;
+import de.cismet.cids.server.connectioncontext.ConnectionContextProvider;
 
 import java.rmi.RemoteException;
 
@@ -22,11 +24,11 @@ import de.cismet.cids.server.search.AbstractCidsServerSearch;
  * @author   stefan
  * @version  $Revision$, $Date$
  */
-public class Alb_BaulastChecker extends AbstractCidsServerSearch {
+public class Alb_BaulastChecker extends AbstractCidsServerSearch implements ConnectionContextProvider {
 
     //~ Instance fields --------------------------------------------------------
 
-    private String searchQuery;
+    private final String searchQuery;
 
     //~ Constructors -----------------------------------------------------------
 
@@ -51,7 +53,7 @@ public class Alb_BaulastChecker extends AbstractCidsServerSearch {
         final MetaService ms = (MetaService)getActiveLocalServers().get("WUNDA_BLAU");
         if (ms != null) {
             try {
-                final ArrayList<ArrayList> lists = ms.performCustomSearch(searchQuery);
+                final ArrayList<ArrayList> lists = ms.performCustomSearch(searchQuery, getConnectionContext());
                 return lists;
             } catch (RemoteException ex) {
             }
@@ -64,4 +66,9 @@ public class Alb_BaulastChecker extends AbstractCidsServerSearch {
     public String toString() {
         return searchQuery;
     }
+    
+    @Override
+    public ConnectionContext getConnectionContext() {
+        return ConnectionContext.create(Alb_BaulastChecker.class.getSimpleName());
+    }        
 }

@@ -35,6 +35,8 @@ import java.util.Properties;
 
 import de.cismet.cids.custom.utils.WundaBlauServerResources;
 import de.cismet.cids.custom.wunda_blau.search.server.CidsMauernSearchStatement;
+import de.cismet.cids.server.connectioncontext.ConnectionContext;
+import de.cismet.cids.server.connectioncontext.ConnectionContextProvider;
 
 import de.cismet.cids.server.search.AbstractCidsServerSearch;
 import de.cismet.cids.server.search.SearchException;
@@ -50,7 +52,7 @@ import de.cismet.cismap.commons.jtsgeometryfactories.PostGisGeometryFactory;
  * @version  $Revision$, $Date$
  */
 @Deprecated
-public class NasZaehlObjekteSearch extends AbstractCidsServerSearch {
+public class NasZaehlObjekteSearch extends AbstractCidsServerSearch implements ConnectionContextProvider {
 
     //~ Static fields/initializers ---------------------------------------------
 
@@ -247,7 +249,7 @@ public class NasZaehlObjekteSearch extends AbstractCidsServerSearch {
                 if (LOG.isDebugEnabled()) {
                     LOG.debug("query: " + sb.toString());                                  // NOI18N
                 }
-                final ArrayList<ArrayList> lists = ms.performCustomSearch(sb.toString());
+                final ArrayList<ArrayList> lists = ms.performCustomSearch(sb.toString(), getConnectionContext());
 
                 return lists.size();
             } catch (RemoteException ex) {
@@ -312,4 +314,10 @@ public class NasZaehlObjekteSearch extends AbstractCidsServerSearch {
 //            Exceptions.printStackTrace(ex);
 //        }
     }
+    
+    @Override
+    public ConnectionContext getConnectionContext() {
+        return ConnectionContext.create(NasZaehlObjekteSearch.class.getSimpleName());
+    }
+    
 }

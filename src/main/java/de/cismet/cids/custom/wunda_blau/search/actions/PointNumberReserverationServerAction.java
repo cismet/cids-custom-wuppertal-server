@@ -25,6 +25,8 @@ import de.cismet.cids.custom.utils.pointnumberreservation.PointNumberReservation
 import de.cismet.cids.server.actions.ServerAction;
 import de.cismet.cids.server.actions.ServerActionParameter;
 import de.cismet.cids.server.actions.UserAwareServerAction;
+import de.cismet.cids.server.connectioncontext.ConnectionContext;
+import de.cismet.cids.server.connectioncontext.ConnectionContextProvider;
 
 /**
  * DOCUMENT ME!
@@ -33,7 +35,7 @@ import de.cismet.cids.server.actions.UserAwareServerAction;
  * @version  $Revision$, $Date$
  */
 @org.openide.util.lookup.ServiceProvider(service = ServerAction.class)
-public class PointNumberReserverationServerAction implements UserAwareServerAction, MetaServiceStore {
+public class PointNumberReserverationServerAction implements UserAwareServerAction, MetaServiceStore, ConnectionContextProvider {
 
     //~ Static fields/initializers ---------------------------------------------
 
@@ -205,7 +207,8 @@ public class PointNumberReserverationServerAction implements UserAwareServerActi
         try {
             final String conf = ((DomainServerImpl)getMetaService()).getConfigAttr(
                     getUser(),
-                    "custom.punktnummernreservierung.profilkennung");
+                    "custom.punktnummernreservierung.profilkennung",
+                    getConnectionContext());
             if (conf != null) {
                 profilKennung = conf;
             }
@@ -351,4 +354,10 @@ public class PointNumberReserverationServerAction implements UserAwareServerActi
     public MetaService getMetaService() {
         return metaService;
     }
+    
+    @Override
+    public ConnectionContext getConnectionContext() {
+        return ConnectionContext.create(PointNumberReserverationServerAction.class.getSimpleName());
+    }
+    
 }

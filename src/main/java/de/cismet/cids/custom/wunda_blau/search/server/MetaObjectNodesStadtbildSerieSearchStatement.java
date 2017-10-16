@@ -14,6 +14,8 @@ import Sirius.server.newuser.User;
 import com.vividsolutions.jts.geom.Geometry;
 import com.vividsolutions.jts.geom.MultiPolygon;
 import com.vividsolutions.jts.geom.Polygon;
+import de.cismet.cids.server.connectioncontext.ConnectionContext;
+import de.cismet.cids.server.connectioncontext.ConnectionContextProvider;
 
 import org.apache.commons.lang.StringUtils;
 import org.apache.log4j.Logger;
@@ -41,7 +43,7 @@ import de.cismet.cismap.commons.jtsgeometryfactories.PostGisGeometryFactory;
  * @version  $Revision$, $Date$
  */
 public class MetaObjectNodesStadtbildSerieSearchStatement extends AbstractCidsServerSearch
-        implements MetaObjectNodeServerSearch {
+        implements MetaObjectNodeServerSearch, ConnectionContextProvider {
 
     //~ Static fields/initializers ---------------------------------------------
 
@@ -134,7 +136,7 @@ public class MetaObjectNodesStadtbildSerieSearchStatement extends AbstractCidsSe
                 if (LOG.isDebugEnabled()) {
                     LOG.debug("The used query is: " + query.toString());
                 }
-                resultset = metaService.performCustomSearch(query.toString());
+                resultset = metaService.performCustomSearch(query.toString(), getConnectionContext());
 
                 result.add(resultset.size());
                 return result;
@@ -166,7 +168,7 @@ public class MetaObjectNodesStadtbildSerieSearchStatement extends AbstractCidsSe
                 }
 
                 if (resultset == null) {
-                    resultset = metaService.performCustomSearch(query.toString());
+                    resultset = metaService.performCustomSearch(query.toString(), getConnectionContext());
                 }
 
                 final ArrayList result = new ArrayList();
@@ -789,4 +791,10 @@ public class MetaObjectNodesStadtbildSerieSearchStatement extends AbstractCidsSe
             return true;
         }
     }
+    
+    @Override
+    public ConnectionContext getConnectionContext() {
+        return ConnectionContext.create(MetaObjectNodesStadtbildSerieSearchStatement.class.getSimpleName());
+    }                    
+    
 }

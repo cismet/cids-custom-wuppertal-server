@@ -12,10 +12,10 @@ import Sirius.server.middleware.interfaces.domainserver.MetaService;
 import org.apache.log4j.Logger;
 
 import java.util.ArrayList;
-import java.util.Arrays;
 import java.util.Collection;
 
-import de.cismet.cids.dynamics.CidsBean;
+import de.cismet.cids.server.connectioncontext.ConnectionContext;
+import de.cismet.cids.server.connectioncontext.ConnectionContextProvider;
 
 import de.cismet.cids.server.search.AbstractCidsServerSearch;
 import de.cismet.cids.server.search.SearchException;
@@ -26,7 +26,7 @@ import de.cismet.cids.server.search.SearchException;
  * @author   Thorsten Herter
  * @version  $Revision$, $Date$
  */
-public class KkKompensationNextSchluesselSearch extends AbstractCidsServerSearch {
+public class KkKompensationNextSchluesselSearch extends AbstractCidsServerSearch implements ConnectionContextProvider {
 
     //~ Static fields/initializers ---------------------------------------------
 
@@ -50,7 +50,7 @@ public class KkKompensationNextSchluesselSearch extends AbstractCidsServerSearch
             final MetaService metaService = (MetaService)this.getActiveLocalServers().get(DOMAIN);
 
             if (metaService != null) {
-                final ArrayList<ArrayList> list = metaService.performCustomSearch(QUERY);
+                final ArrayList<ArrayList> list = metaService.performCustomSearch(QUERY, getConnectionContext());
 
                 if ((list.size() > 0) && (list.get(0).size() > 0)) {
                     return list.get(0);
@@ -64,4 +64,10 @@ public class KkKompensationNextSchluesselSearch extends AbstractCidsServerSearch
             throw new SearchException("error while loading verfahren objects", ex);
         }
     }
+    
+    @Override
+    public ConnectionContext getConnectionContext() {
+        return ConnectionContext.create(KkKompensationNextSchluesselSearch.class.getSimpleName());
+    }                    
+    
 }

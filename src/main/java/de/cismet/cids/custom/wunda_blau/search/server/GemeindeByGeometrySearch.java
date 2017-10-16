@@ -8,6 +8,8 @@
 package de.cismet.cids.custom.wunda_blau.search.server;
 
 import Sirius.server.middleware.interfaces.domainserver.MetaService;
+import de.cismet.cids.server.connectioncontext.ConnectionContext;
+import de.cismet.cids.server.connectioncontext.ConnectionContextProvider;
 
 import org.apache.log4j.Logger;
 
@@ -24,7 +26,7 @@ import de.cismet.cids.server.search.SearchException;
  * @author   Thorsten Herter
  * @version  $Revision$, $Date$
  */
-public class GemeindeByGeometrySearch extends AbstractCidsServerSearch {
+public class GemeindeByGeometrySearch extends AbstractCidsServerSearch implements ConnectionContextProvider {
 
     //~ Static fields/initializers ---------------------------------------------
 
@@ -59,7 +61,8 @@ public class GemeindeByGeometrySearch extends AbstractCidsServerSearch {
             if (metaService != null) {
                 final ArrayList<ArrayList> gemeindeList = metaService.performCustomSearch(String.format(
                             QUERY_GEMEINDE,
-                            geom));
+                            geom),
+                        getConnectionContext());
 
                 String gemeindeCs = null;
 
@@ -84,4 +87,9 @@ public class GemeindeByGeometrySearch extends AbstractCidsServerSearch {
             throw new SearchException("error while loading verfahren objects", ex);
         }
     }
+
+    @Override
+    public ConnectionContext getConnectionContext() {
+        return ConnectionContext.create(GemeindeByGeometrySearch.class.getSimpleName());
+    }                    
 }

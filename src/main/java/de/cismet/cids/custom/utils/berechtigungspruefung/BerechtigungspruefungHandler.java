@@ -52,6 +52,8 @@ import de.cismet.cids.custom.utils.berechtigungspruefung.katasterauszug.Berechti
 import de.cismet.cids.custom.utils.berechtigungspruefung.katasterauszug.BerechtigungspruefungAlkisKarteDownloadInfo;
 
 import de.cismet.cids.dynamics.CidsBean;
+import de.cismet.cids.server.connectioncontext.ConnectionContext;
+import de.cismet.cids.server.connectioncontext.ConnectionContextProvider;
 
 import de.cismet.cids.server.messages.CidsServerMessageManagerImpl;
 
@@ -61,7 +63,7 @@ import de.cismet.cids.server.messages.CidsServerMessageManagerImpl;
  * @author   jruiz
  * @version  $Revision$, $Date$
  */
-public class BerechtigungspruefungHandler {
+public class BerechtigungspruefungHandler implements ConnectionContextProvider {
 
     //~ Static fields/initializers ---------------------------------------------
 
@@ -269,7 +271,7 @@ public class BerechtigungspruefungHandler {
         pruefungBean.setProperty("abholung_timestamp", new Timestamp(new Date().getTime()));
         pruefungBean.setProperty("abgeholt", true);
 
-        DomainServerImpl.getServerInstance().updateMetaObject(user, pruefungBean.getMetaObject());
+        DomainServerImpl.getServerInstance().updateMetaObject(user, pruefungBean.getMetaObject(), getConnectionContext());
     }
 
     /**
@@ -366,7 +368,7 @@ public class BerechtigungspruefungHandler {
         newPruefungBean.setProperty("produkttyp", downloadInfo.getProduktTyp());
         newPruefungBean.setProperty("downloadinfo_json", new ObjectMapper().writeValueAsString(downloadInfo));
 
-        DomainServerImpl.getServerInstance().insertMetaObject(user, newPruefungBean.getMetaObject());
+        DomainServerImpl.getServerInstance().insertMetaObject(user, newPruefungBean.getMetaObject(), getConnectionContext());
 
         sendAnfrageMessages(Arrays.asList(newPruefungBean));
     }
@@ -391,7 +393,7 @@ public class BerechtigungspruefungHandler {
                         + "FROM " + mcBerechtigungspruefung.getTableName() + " "
                         + "WHERE " + mcBerechtigungspruefung.getTableName() + ".pruefstatus IS NULL;";
 
-            mos = metaService.getMetaObject(user, pruefungQuery);
+            mos = metaService.getMetaObject(user, pruefungQuery, getConnectionContext());
             if ((mos != null) && (mos.length > 0)) {
                 for (final MetaObject mo : mos) {
                     beans.add(mo.getBean());
@@ -428,7 +430,7 @@ public class BerechtigungspruefungHandler {
                         + "AND (" + mcBerechtigungspruefung.getTableName() + ".abgeholt IS NULL "
                         + "OR " + mcBerechtigungspruefung.getTableName() + ".abgeholt IS FALSE);";
 
-            mos = metaService.getMetaObject(user, pruefungQuery);
+            mos = metaService.getMetaObject(user, pruefungQuery, getConnectionContext());
             if ((mos != null) && (mos.length > 0)) {
                 for (final MetaObject mo : mos) {
                     beans.add(mo.getBean());
@@ -463,7 +465,7 @@ public class BerechtigungspruefungHandler {
                         + "AND (" + mcBerechtigungspruefung.getTableName() + ".abgeholt IS NULL "
                         + "OR " + mcBerechtigungspruefung.getTableName() + ".abgeholt IS FALSE);";
 
-            mos = metaService.getMetaObject(user, pruefungQuery);
+            mos = metaService.getMetaObject(user, pruefungQuery, getConnectionContext());
             if ((mos != null) && (mos.length > 0)) {
                 for (final MetaObject mo : mos) {
                     beans.add(mo.getBean());
@@ -496,7 +498,7 @@ public class BerechtigungspruefungHandler {
                         + "WHERE " + mcBerechtigungspruefung.getTableName() + ".schluessel LIKE '" + schluessel + "' "
                         + "LIMIT 1;";
 
-            final MetaObject[] mos = metaService.getMetaObject(user, pruefungQuery);
+            final MetaObject[] mos = metaService.getMetaObject(user, pruefungQuery, getConnectionContext());
             if ((mos != null) && (mos.length > 0)) {
                 return mos[0].getBean();
             }
@@ -520,7 +522,7 @@ public class BerechtigungspruefungHandler {
                     "WUNDA_BLAU",
                     "billing_billing");
 
-            final MetaObject mo = metaService.getMetaObject(user, id, mcBillingBilling.getID());
+            final MetaObject mo = metaService.getMetaObject(user, id, mcBillingBilling.getID(), getConnectionContext());
             return mo.getBean();
         } catch (final Exception ex) {
             LOG.error("error while loading billing_billing bean", ex);
@@ -544,7 +546,7 @@ public class BerechtigungspruefungHandler {
             final MetaObject mo = metaService.getMetaObject(
                     user,
                     BerechtigungspruefungProperties.getInstance().getBillingStornogrundId(),
-                    mcBillingStornogrund.getID());
+                    mcBillingStornogrund.getID(), getConnectionContext());
             return mo.getBean();
         } catch (final Exception ex) {
             LOG.error("error while loading billing_billing bean", ex);
@@ -575,7 +577,7 @@ public class BerechtigungspruefungHandler {
                         + "ORDER BY schluessel DESC "
                         + "LIMIT 1;";
 
-            final MetaObject[] mos = metaService.getMetaObject(user, pruefungQuery);
+            final MetaObject[] mos = metaService.getMetaObject(user, pruefungQuery, getConnectionContext());
             if ((mos != null) && (mos.length > 0)) {
                 return mos[0].getBean();
             }
@@ -635,5 +637,10 @@ public class BerechtigungspruefungHandler {
         calendar.add(Calendar.MONTH, -1);
         final Date threshold = new Date(calendar.getTimeInMillis());
         return threshold;
+    }
+
+    @Override
+    public ConnectionContext getConnectionContext() {
+        return ConnectionContext.create(BerechtigungspruefungHandler.class.getSimpleName());
     }
 }

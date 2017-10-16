@@ -9,6 +9,8 @@ package de.cismet.cids.custom.wunda_blau.search.server;
 
 import Sirius.server.middleware.interfaces.domainserver.MetaService;
 import Sirius.server.newuser.User;
+import de.cismet.cids.server.connectioncontext.ConnectionContext;
+import de.cismet.cids.server.connectioncontext.ConnectionContextProvider;
 
 import org.apache.log4j.Logger;
 
@@ -24,7 +26,7 @@ import de.cismet.cids.server.search.AbstractCidsServerSearch;
  * @author   jweintraut
  * @version  $Revision$, $Date$
  */
-public class CidsVermessungRissArtSearchStatement extends AbstractCidsServerSearch {
+public class CidsVermessungRissArtSearchStatement extends AbstractCidsServerSearch implements ConnectionContextProvider {
 
     //~ Static fields/initializers ---------------------------------------------
 
@@ -79,14 +81,14 @@ public class CidsVermessungRissArtSearchStatement extends AbstractCidsServerSear
                 LOG.debug("Executing SQL statement '" + SQL + "'.");
             }
 
-            resultset = metaService.performCustomSearch(SQL);
+            resultset = metaService.performCustomSearch(SQL, getConnectionContext());
 
             for (final ArrayList veraenderungsart : resultset) {
                 final int classID = (Integer)veraenderungsart.get(0);
                 final int objectID = (Integer)veraenderungsart.get(1);
 
                 try {
-                    result.add(metaService.getMetaObject(user, objectID, classID));
+                    result.add(metaService.getMetaObject(user, objectID, classID, getConnectionContext()));
                 } catch (final Exception ex) {
                     LOG.warn("Couldn't get CidsBean for class '" + classID + "', object '" + objectID + "', user '"
                                 + user + "'.",
@@ -100,4 +102,10 @@ public class CidsVermessungRissArtSearchStatement extends AbstractCidsServerSear
             throw new RuntimeException(e);
         }
     }
+    
+    @Override
+    public ConnectionContext getConnectionContext() {
+        return ConnectionContext.create(CidsVermessungRissArtSearchStatement.class.getSimpleName());
+    }                    
+    
 }

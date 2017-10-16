@@ -31,6 +31,8 @@ import de.cismet.cids.dynamics.CidsBean;
 import de.cismet.cids.server.actions.JasperReportServerAction;
 import de.cismet.cids.server.actions.ServerAction;
 import de.cismet.cids.server.actions.ServerActionParameter;
+import de.cismet.cids.server.connectioncontext.ConnectionContext;
+import de.cismet.cids.server.connectioncontext.ConnectionContextProvider;
 
 import de.cismet.cids.utils.serverresources.ServerResourcesLoader;
 
@@ -41,11 +43,11 @@ import de.cismet.cids.utils.serverresources.ServerResourcesLoader;
  * @version  $Revision$, $Date$
  */
 @org.openide.util.lookup.ServiceProvider(service = ServerAction.class)
-public class AlkisPointReportServerAction extends JasperReportServerAction {
+public class AlkisPointReportServerAction extends JasperReportServerAction implements ConnectionContextProvider {
 
     //~ Static fields/initializers ---------------------------------------------
 
-    public static final String TASK_NAME = "alkisPointReport";
+public static final String TASK_NAME = "alkisPointReport";
 
     //~ Enums ------------------------------------------------------------------
 
@@ -81,7 +83,8 @@ public class AlkisPointReportServerAction extends JasperReportServerAction {
                     final CidsBean cidsBean = getMetaService().getMetaObject(
                                 getUser(),
                                 reportMon.getObjectId(),
-                                reportMon.getClassId())
+                                reportMon.getClassId(),
+                                getConnectionContext())
                                 .getBean();
                     cidsBeans.add(cidsBean);
                 }
@@ -115,4 +118,10 @@ public class AlkisPointReportServerAction extends JasperReportServerAction {
     protected JasperReport getJasperReport() throws Exception {
         return ServerResourcesLoader.getInstance().loadJasperReport(WundaBlauServerResources.APMAPS_JASPER.getValue());
     }
+    
+    @Override
+    public ConnectionContext getConnectionContext() {
+        return ConnectionContext.create(AlkisPointReportServerAction.class.getSimpleName());
+    }
+    
 }

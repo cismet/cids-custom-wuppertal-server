@@ -13,6 +13,8 @@ import Sirius.server.middleware.types.MetaObjectNode;
 import com.vividsolutions.jts.geom.Geometry;
 import com.vividsolutions.jts.geom.MultiPolygon;
 import com.vividsolutions.jts.geom.Polygon;
+import de.cismet.cids.server.connectioncontext.ConnectionContext;
+import de.cismet.cids.server.connectioncontext.ConnectionContextProvider;
 
 import org.apache.log4j.Logger;
 
@@ -32,7 +34,7 @@ import de.cismet.cismap.commons.jtsgeometryfactories.PostGisGeometryFactory;
  * @author   jweintraut
  * @version  $Revision$, $Date$
  */
-public class CidsVermessungRissSearchStatement extends AbstractCidsServerSearch implements MetaObjectNodeServerSearch {
+public class CidsVermessungRissSearchStatement extends AbstractCidsServerSearch implements MetaObjectNodeServerSearch, ConnectionContextProvider {
 
     //~ Static fields/initializers ---------------------------------------------
 
@@ -134,7 +136,7 @@ public class CidsVermessungRissSearchStatement extends AbstractCidsServerSearch 
             if (LOG.isDebugEnabled()) {
                 LOG.debug("Executing SQL statement '" + sqlBuilder.toString() + "'.");
             }
-            resultset = metaService.performCustomSearch(sqlBuilder.toString());
+            resultset = metaService.performCustomSearch(sqlBuilder.toString(), getConnectionContext());
 
             for (final ArrayList measurementPoint : resultset) {
                 final int classID = (Integer)measurementPoint.get(0);
@@ -343,4 +345,10 @@ public class CidsVermessungRissSearchStatement extends AbstractCidsServerSearch 
 
         return result.toString();
     }
+    
+    @Override
+    public ConnectionContext getConnectionContext() {
+        return ConnectionContext.create(CidsVermessungRissSearchStatement.class.getSimpleName());
+    }                    
+    
 }

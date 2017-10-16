@@ -12,6 +12,8 @@
 package de.cismet.cids.custom.wunda_blau.search.server;
 
 import Sirius.server.middleware.interfaces.domainserver.MetaService;
+import de.cismet.cids.server.connectioncontext.ConnectionContext;
+import de.cismet.cids.server.connectioncontext.ConnectionContextProvider;
 
 import org.apache.log4j.Logger;
 
@@ -29,7 +31,7 @@ import de.cismet.cids.server.search.SearchException;
  * @author   daniel
  * @version  $Revision$, $Date$
  */
-public class MauerNummerSearch extends AbstractCidsServerSearch {
+public class MauerNummerSearch extends AbstractCidsServerSearch implements ConnectionContextProvider {
 
     //~ Static fields/initializers ---------------------------------------------
 
@@ -37,7 +39,7 @@ public class MauerNummerSearch extends AbstractCidsServerSearch {
 
     //~ Instance fields --------------------------------------------------------
 
-    private String mauerNummer;
+    private final String mauerNummer;
     private final String QUERY = "SELECT id, mauer_nummer FROM mauer WHERE mauer_nummer = '%1$s'";
 
     //~ Constructors -----------------------------------------------------------
@@ -63,7 +65,7 @@ public class MauerNummerSearch extends AbstractCidsServerSearch {
                 if (LOG.isDebugEnabled()) {
                     LOG.debug("query: " + query); // NOI18N
                 }
-                final ArrayList<ArrayList> lists = ms.performCustomSearch(query);
+                final ArrayList<ArrayList> lists = ms.performCustomSearch(query, getConnectionContext());
                 return lists;
             } catch (RemoteException ex) {
                 LOG.error(ex.getMessage(), ex);
@@ -74,4 +76,10 @@ public class MauerNummerSearch extends AbstractCidsServerSearch {
 
         return null;
     }
+    
+    @Override
+    public ConnectionContext getConnectionContext() {
+        return ConnectionContext.create(MauerNummerSearch.class.getSimpleName());
+    }                    
+    
 }
