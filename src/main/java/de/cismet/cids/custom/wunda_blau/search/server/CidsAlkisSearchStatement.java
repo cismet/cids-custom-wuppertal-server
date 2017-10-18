@@ -30,7 +30,6 @@ import java.util.Properties;
 import de.cismet.cids.custom.utils.WundaBlauServerResources;
 import de.cismet.cids.custom.utils.alkis.AlkisConf;
 import de.cismet.cids.custom.utils.alkis.SOAPAccessProvider;
-import de.cismet.cids.custom.utils.alkis.ServerAlkisConf;
 
 import de.cismet.cids.server.actions.GetServerResourceServerAction;
 import de.cismet.cids.server.search.AbstractCidsServerSearch;
@@ -50,7 +49,7 @@ public class CidsAlkisSearchStatement extends AbstractCidsServerSearch implement
 
     /** LOGGER. */
     private static final transient Logger LOG = Logger.getLogger(CidsAlkisSearchStatement.class);
-
+    private static final String INTERSECTS_BUFFER = SearchProperties.getInstance().getIntersectsBuffer();
     public static String WILDCARD = "%";
     private static final int TIMEOUT = 100000;
 
@@ -271,14 +270,20 @@ public class CidsAlkisSearchStatement extends AbstractCidsServerSearch implement
                 final String geostring = PostGisGeometryFactory.getPostGisCompliantDbString(geometry);
                 if ((geometry instanceof Polygon) || (geometry instanceof MultiPolygon)) { // with buffer for geostring
                     query += " and intersects("
-                                + "st_buffer(geo_field, 0.000001),"
+                                + "st_buffer(geo_field, "
+                                + INTERSECTS_BUFFER
+                                + "),"
                                 + "st_buffer(GeometryFromText('"
                                 + geostring
-                                + "'), 0.000001))";
+                                + "'), "
+                                + INTERSECTS_BUFFER
+                                + "))";
                 } else {                                                                   // without buffer for
                                                                                            // geostring
                     query += " and intersects("
-                                + "st_buffer(geo_field, 0.000001),"
+                                + "st_buffer(geo_field, "
+                                + INTERSECTS_BUFFER
+                                + "),"
                                 + "GeometryFromText('"
                                 + geostring
                                 + "'))";

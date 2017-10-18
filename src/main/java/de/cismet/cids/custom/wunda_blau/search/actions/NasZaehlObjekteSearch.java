@@ -35,6 +35,7 @@ import java.util.Properties;
 
 import de.cismet.cids.custom.utils.WundaBlauServerResources;
 import de.cismet.cids.custom.wunda_blau.search.server.CidsMauernSearchStatement;
+import de.cismet.cids.custom.wunda_blau.search.server.SearchProperties;
 
 import de.cismet.cids.server.search.AbstractCidsServerSearch;
 import de.cismet.cids.server.search.SearchException;
@@ -54,6 +55,7 @@ public class NasZaehlObjekteSearch extends AbstractCidsServerSearch {
 
     //~ Static fields/initializers ---------------------------------------------
 
+    private static final String INTERSECTS_BUFFER = SearchProperties.getInstance().getIntersectsBuffer();
     private static final Logger LOG = Logger.getLogger(CidsMauernSearchStatement.class);
     private static final String FLURSTUECK_STMT =
         "select count(*) as Anzahl from ax_flurstueck where st_intersects(wkb_geometry,<geom>)";
@@ -69,7 +71,8 @@ public class NasZaehlObjekteSearch extends AbstractCidsServerSearch {
                 + " AND i.attr_object_id = g.id"
                 + " AND i.class_id IN (6)"
                 + " AND geo_field && GeometryFromText('<geom>')"
-                + " AND intersects(st_buffer(geo_field, 0.000001),st_buffer(GeometryFromText('<geom>'), 0.000001)) ORDER BY 1,2,3";
+                + " AND intersects(st_buffer(geo_field, " + INTERSECTS_BUFFER
+                + "),st_buffer(GeometryFromText('<geom>'), " + INTERSECTS_BUFFER + ")) ORDER BY 1,2,3";
     private static Connection fmeConn = null;
     private static String url;
     private static String user;
