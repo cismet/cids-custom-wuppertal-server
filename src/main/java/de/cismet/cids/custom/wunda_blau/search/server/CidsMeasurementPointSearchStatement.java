@@ -55,6 +55,7 @@ public class CidsMeasurementPointSearchStatement extends AbstractCidsServerSearc
     private static final String SQL_ORDERBY_NIVELLEMENT =
         " ORDER BY np.dgk_blattnummer || lpad(np.laufende_nummer, 3, '0') DESC";
     private static final String SQL_ORDERBY_BOTH = " ORDER BY name DESC";
+    private static final String INTERSECTS_BUFFER = SearchProperties.getInstance().getIntersectsBuffer();
 
     //~ Enums ------------------------------------------------------------------
 
@@ -328,11 +329,13 @@ public class CidsMeasurementPointSearchStatement extends AbstractCidsServerSearc
             whereClauseBuilder.append(conjunction);
 
             if ((geometry instanceof Polygon) || (geometry instanceof MultiPolygon)) { // with buffer for geostring
-                whereClauseBuilder.append("intersects(st_buffer(g.geo_field, 0.000001), st_buffer(GeometryFromText('")
+                whereClauseBuilder.append("intersects(st_buffer(g.geo_field, " + INTERSECTS_BUFFER
+                                + "), st_buffer(GeometryFromText('")
                         .append(geomString)
-                        .append("'), 0.000001))");
+                        .append("'), " + INTERSECTS_BUFFER + "))");
             } else {
-                whereClauseBuilder.append("intersects(st_buffer(g.geo_field, 0.000001), GeometryFromText('")
+                whereClauseBuilder.append("intersects(st_buffer(g.geo_field, " + INTERSECTS_BUFFER
+                                + "), GeometryFromText('")
                         .append(geomString)
                         .append("'))");
             }
@@ -394,11 +397,13 @@ public class CidsMeasurementPointSearchStatement extends AbstractCidsServerSearc
             whereClauseBuilder.append(conjunction);
 
             if ((geometry instanceof Polygon) || (geometry instanceof MultiPolygon)) { // with buffer for geostring
-                whereClauseBuilder.append("intersects(st_buffer(g.geo_field, 0.000001), st_buffer(GeometryFromText('")
+                whereClauseBuilder.append("intersects(st_buffer(g.geo_field, " + INTERSECTS_BUFFER
+                                + "), st_buffer(GeometryFromText('")
                         .append(geomString)
-                        .append("'), 0.000001))");
+                        .append("'), " + INTERSECTS_BUFFER + "))");
             } else {
-                whereClauseBuilder.append("intersects(st_buffer(g.geo_field, 0.000001), GeometryFromText('")
+                whereClauseBuilder.append("intersects(st_buffer(g.geo_field, " + INTERSECTS_BUFFER
+                                + "), GeometryFromText('")
                         .append(geomString)
                         .append("'))");
             }

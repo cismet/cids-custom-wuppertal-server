@@ -11,14 +11,16 @@
  */
 package de.cismet.cids.custom.wunda_blau.search.server;
 
+import Sirius.server.middleware.interfaces.domainserver.ActionService;
 import Sirius.server.middleware.interfaces.domainserver.MetaService;
 import Sirius.server.middleware.types.MetaObjectNode;
 
 import com.vividsolutions.jts.geom.Geometry;
 import com.vividsolutions.jts.geom.MultiPolygon;
 import com.vividsolutions.jts.geom.Polygon;
+import de.cismet.cids.custom.utils.WundaBlauServerResources;
+import de.cismet.cids.server.actions.GetServerResourceServerAction;
 
-import org.apache.commons.logging.Log;
 import org.apache.log4j.Logger;
 
 import java.rmi.RemoteException;
@@ -33,6 +35,7 @@ import de.cismet.cids.server.search.AbstractCidsServerSearch;
 import de.cismet.cids.server.search.MetaObjectNodeServerSearch;
 
 import de.cismet.cismap.commons.jtsgeometryfactories.PostGisGeometryFactory;
+import java.io.StringReader;
 
 /**
  * DOCUMENT ME!
@@ -46,7 +49,9 @@ public class CidsLandParcelSearchStatement extends AbstractCidsServerSearch impl
 
     /** LOGGER. */
     private static final transient Logger LOG = Logger.getLogger(CidsLandParcelSearchStatement.class);
-
+    
+    private static final String INTERSECTS_BUFFER = SearchProperties.getInstance().getIntersectsBuffer();
+    
     //~ Instance fields --------------------------------------------------------
 
     private boolean searchActualParcel;
@@ -85,7 +90,7 @@ public class CidsLandParcelSearchStatement extends AbstractCidsServerSearch impl
         searchHistoricalParcel = historicalParcel;
         this.historicalFrom = historicalFrom;
         this.historicalTo = historicalTo;
-        this.geometry = geometry;
+        this.geometry = geometry;               
     }
 
     //~ Methods ----------------------------------------------------------------
@@ -123,14 +128,14 @@ public class CidsLandParcelSearchStatement extends AbstractCidsServerSearch impl
                     query += " and geo_field &&\n"
                                 + "st_buffer(\n"
                                 + "GeometryFromText('" + geostring + "')\n"
-                                + ", 0.000001)\n"
+                                + ", " + INTERSECTS_BUFFER + ")\n"
                                 + "and intersects(geo_field,st_buffer(GeometryFromText('" + geostring
-                                + "'), 0.000001))";
+                                + "'), " + INTERSECTS_BUFFER + "))";
                 } else {
                     query += " and geo_field &&\n"
                                 + "st_buffer(\n"
                                 + "GeometryFromText('" + geostring + "')\n"
-                                + ", 0.000001)\n"
+                                + ", " + INTERSECTS_BUFFER + ")\n"
                                 + "and intersects(geo_field, GeometryFromText('" + geostring + "'))";
                 }
             }

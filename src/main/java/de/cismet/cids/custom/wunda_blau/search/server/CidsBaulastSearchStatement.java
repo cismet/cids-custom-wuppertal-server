@@ -38,6 +38,7 @@ public class CidsBaulastSearchStatement extends AbstractCidsServerSearch impleme
 
     /** LOGGER. */
     private static final transient Logger LOG = Logger.getLogger(CidsBaulastSearchStatement.class);
+    private static final String INTERSECTS_BUFFER = SearchProperties.getInstance().getIntersectsBuffer();
 
     //~ Enums ------------------------------------------------------------------
 
@@ -134,12 +135,14 @@ public class CidsBaulastSearchStatement extends AbstractCidsServerSearch impleme
             final String geomString = PostGisGeometryFactory.getPostGisCompliantDbString(geometry);
             if ((geometry instanceof Polygon) || (geometry instanceof MultiPolygon)) { // with buffer for geostring
                 geoquerypart = " and g.geo_field && GeometryFromText('" + geomString
-                            + "',25832) and intersects(st_buffer(g.geo_field, 0.000001),st_buffer(GeometryFromText('"
+                            + "',25832) and intersects(st_buffer(g.geo_field, " + INTERSECTS_BUFFER
+                            + "),st_buffer(GeometryFromText('"
                             + geomString
-                            + "',25832), 0.000001))";
+                            + "',25832), " + INTERSECTS_BUFFER + "))";
             } else {
                 geoquerypart = " and g.geo_field && GeometryFromText('" + geomString
-                            + "',25832) and intersects(st_buffer(g.geo_field, 0.000001),GeometryFromText('" + geomString
+                            + "',25832) and intersects(st_buffer(g.geo_field, " + INTERSECTS_BUFFER
+                            + "),GeometryFromText('" + geomString
                             + "',25832))";
             }
         }
@@ -398,9 +401,14 @@ public class CidsBaulastSearchStatement extends AbstractCidsServerSearch impleme
                     + "\n               WHERE  k.fs_referenz = f.id "
                     + "\n                      AND f.umschreibendes_rechteck = g.id "
                     + "\n                      AND CASE WHEN NOT st_isEmpty(y.geo_field) AND NOT st_isEmpty(g.geo_field) THEN y.geo_field && g.geo_field ELSE FALSE END "
-                    + "\n                      AND CASE WHEN NOT st_isEmpty(y.geo_field) AND NOT st_isEmpty(g.geo_field) AND NOT st_isEmpty(St_buffer(y.geo_field, 0.000001)) AND NOT st_isEmpty(St_buffer(g.geo_field, 0.000001)) THEN Intersects(St_buffer(y.geo_field, 0.000001), St_buffer(g.geo_field, 0.000001)) ELSE FALSE END "
+                    + "\n                      AND CASE WHEN NOT st_isEmpty(y.geo_field) AND NOT st_isEmpty(g.geo_field) AND NOT st_isEmpty(St_buffer(y.geo_field,"
+                    + INTERSECTS_BUFFER + ")) AND NOT st_isEmpty(St_buffer(g.geo_field, " + INTERSECTS_BUFFER
+                    + ")) THEN Intersects(St_buffer(y.geo_field, " + INTERSECTS_BUFFER + "), St_buffer(g.geo_field, "
+                    + INTERSECTS_BUFFER + ")) ELSE FALSE END "
                     + "\n                      AND NOT y.fid = f.id "
-                    + "\n                      AND CASE WHEN NOT st_isEmpty(y.geo_field) AND NOT st_isEmpty(g.geo_field) AND NOT st_isEmpty(st_Buffer(y.geo_field, -0.005)) AND NOT st_isEmpty(St_buffer(g.geo_field, 0.000001)) THEN Intersects(st_Buffer(y.geo_field, -0.005), St_buffer(g.geo_field, 0.000001)) ELSE FALSE END) AS indirekt "
+                    + "\n                      AND CASE WHEN NOT st_isEmpty(y.geo_field) AND NOT st_isEmpty(g.geo_field) AND NOT st_isEmpty(st_Buffer(y.geo_field, -0.005)) AND NOT st_isEmpty(St_buffer(g.geo_field, "
+                    + INTERSECTS_BUFFER + ")) THEN Intersects(st_Buffer(y.geo_field, -0.005), St_buffer(g.geo_field, "
+                    + INTERSECTS_BUFFER + ")) ELSE FALSE END) AS indirekt "
                     + "\n                                 WHERE  1 = 1 "
                     + "\n                                        AND l.id = fsj.baulast_reference "
                     + "\n                                        AND fsj.flurstueck = k.id "
