@@ -36,6 +36,7 @@ public final class BufferingGeosearch extends DefaultGeoSearch {
 
     /** LOGGER. */
     private static final transient Logger LOG = Logger.getLogger(BufferingGeosearch.class);
+    private static final String INTERSECTS_BUFFER = SearchProperties.getInstance().getIntersectsBuffer();
 
     //~ Methods ----------------------------------------------------------------
 
@@ -67,14 +68,15 @@ public final class BufferingGeosearch extends DefaultGeoSearch {
         final String intersectsStatement;
         if (searchGeometry.getSRID() == 4326) {
             intersectsStatement =
-                "st_intersects(geo_field,st_geomfromtext('SRID=<cidsSearchGeometrySRID>;<cidsSearchGeometryWKT>'))";                                               // NOI18N
+                "st_intersects(geo_field,st_geomfromtext('SRID=<cidsSearchGeometrySRID>;<cidsSearchGeometryWKT>'))"; // NOI18N
         } else {
-            if ((searchGeometry instanceof Polygon) || (searchGeometry instanceof MultiPolygon)) {                                                                 // with buffer for searchGeometry
-                intersectsStatement =
-                    "st_intersects(st_buffer(geo_field, 0.000001),st_buffer(st_geomfromtext('SRID=<cidsSearchGeometrySRID>;<cidsSearchGeometryWKT>'), 0.000001))"; // NOI18N
-            } else {                                                                                                                                               // without buffer for searchGeometry
-                intersectsStatement =
-                    "st_intersects(st_buffer(geo_field, 0.000001),st_geomfromtext('SRID=<cidsSearchGeometrySRID>;<cidsSearchGeometryWKT>'))";                      // NOI18N
+            if ((searchGeometry instanceof Polygon) || (searchGeometry instanceof MultiPolygon)) {                   // with buffer for searchGeometry
+                intersectsStatement = "st_intersects(st_buffer(geo_field, " + INTERSECTS_BUFFER
+                            + "),st_buffer(st_geomfromtext('SRID=<cidsSearchGeometrySRID>;<cidsSearchGeometryWKT>'), "
+                            + INTERSECTS_BUFFER + "))";                                                              // NOI18N
+            } else {                                                                                                 // without buffer for searchGeometry
+                intersectsStatement = "st_intersects(st_buffer(geo_field, " + INTERSECTS_BUFFER
+                            + "),st_geomfromtext('SRID=<cidsSearchGeometrySRID>;<cidsSearchGeometryWKT>'))";         // NOI18N
             }
         }
         final String cidsSearchGeometryWKT = searchGeometry.toText();

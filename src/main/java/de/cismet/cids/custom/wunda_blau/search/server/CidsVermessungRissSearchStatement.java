@@ -41,6 +41,8 @@ public class CidsVermessungRissSearchStatement extends AbstractCidsServerSearch 
     private static final String DOMAIN = "WUNDA_BLAU";
     private static final String CIDSCLASS = "vermessung_riss";
 
+    private static final String INTERSECTS_BUFFER = SearchProperties.getInstance().getIntersectsBuffer();
+
     private static final String SQL = "SELECT"
                 + " DISTINCT (SELECT c.id FROM cs_class c WHERE table_name ilike '" + CIDSCLASS + "') as class_id,"
                 + " vr.id,"
@@ -251,11 +253,17 @@ public class CidsVermessungRissSearchStatement extends AbstractCidsServerSearch 
             result.append(conjunction);
 
             if ((geometry instanceof Polygon) || (geometry instanceof MultiPolygon)) { // with buffer for searchGeometry
-                result.append("intersects(st_buffer(g.geo_field, 0.000001), st_buffer(GeometryFromText('")
+                result.append("intersects(st_buffer(g.geo_field, ")
+                        .append(INTERSECTS_BUFFER)
+                        .append("), st_buffer(GeometryFromText('")
                         .append(geomString)
-                        .append("'), 0.000001))");
+                        .append("'), ")
+                        .append(INTERSECTS_BUFFER)
+                        .append("))");
             } else {
-                result.append("intersects(st_buffer(g.geo_field, 0.000001), GeometryFromText('")
+                result.append("intersects(st_buffer(g.geo_field, ")
+                        .append(INTERSECTS_BUFFER)
+                        .append("), GeometryFromText('")
                         .append(geomString)
                         .append("'))");
             }
