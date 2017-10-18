@@ -12,10 +12,9 @@
  */
 package de.cismet.cids.custom.wunda_blau.search.server;
 
-import Sirius.server.middleware.impls.domainserver.DomainServerImpl;
 import java.util.Properties;
 
-import de.cismet.cids.custom.utils.WundaBlauServerResources;
+import de.cismet.cids.custom.utils.WuppProxyServerResources;
 
 import de.cismet.cids.utils.serverresources.ServerResourcesLoader;
 import org.apache.log4j.Logger;
@@ -74,7 +73,8 @@ public class SearchProperties extends Properties {
      * @return  DOCUMENT ME!
      */
     public String getIntersectsBuffer() {        
-        return (String)get(Property.INTERSECTS_BUFFER.name());
+        final Object value = get(Property.INTERSECTS_BUFFER.name());
+        return (value != null)?(String)value: "0.001";
     }
 
     //~ Inner Classes ----------------------------------------------------------
@@ -93,7 +93,7 @@ public class SearchProperties extends Properties {
         static {
             try {
                 INSTANCE.load(ServerResourcesLoader.getInstance().loadStringReader(
-                        WundaBlauServerResources.SEARCH_PROPERTIES.getValue()));
+                        WuppProxyServerResources.SEARCH_PROPERTIES.getValue()));
             } catch (final Exception ex) {
                 LOG.warn("loading server resources failed. the searchproperties should only be used on the server", ex);
             }

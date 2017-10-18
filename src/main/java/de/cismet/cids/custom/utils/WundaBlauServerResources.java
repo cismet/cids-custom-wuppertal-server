@@ -41,8 +41,6 @@ public enum WundaBlauServerResources {
     FS_RECHNUNG_JASPER(new JasperReportServerResource("/reports/bestellung_rechnung.jasper")),
     FS_RECHNUNG_RUECKSEITE_JASPER(new JasperReportServerResource("/reports/bestellung_rechnung_rueckseite.jasper")),
 
-    SEARCH_PROPERTIES(new TextServerResource("/search.properties")),
-
     BUTLER_PROPERTIES(new TextServerResource("/butler/butler.properties")),
 
     NAS_SERVER_PROPERTIES(new TextServerResource("/nas/nasServer_conf.properties")),
