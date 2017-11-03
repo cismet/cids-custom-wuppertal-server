@@ -18,10 +18,10 @@ import Sirius.server.middleware.types.MetaObjectNode;
 import com.vividsolutions.jts.geom.Geometry;
 import com.vividsolutions.jts.geom.MultiPolygon;
 import com.vividsolutions.jts.geom.Polygon;
-import de.cismet.cids.custom.utils.WundaBlauServerResources;
-import de.cismet.cids.server.actions.GetServerResourceServerAction;
 
 import org.apache.log4j.Logger;
+
+import java.io.StringReader;
 
 import java.rmi.RemoteException;
 
@@ -31,11 +31,13 @@ import java.util.ArrayList;
 import java.util.Collection;
 import java.util.List;
 
+import de.cismet.cids.custom.utils.WundaBlauServerResources;
+
+import de.cismet.cids.server.actions.GetServerResourceServerAction;
 import de.cismet.cids.server.search.AbstractCidsServerSearch;
 import de.cismet.cids.server.search.MetaObjectNodeServerSearch;
 
 import de.cismet.cismap.commons.jtsgeometryfactories.PostGisGeometryFactory;
-import java.io.StringReader;
 
 /**
  * DOCUMENT ME!
@@ -49,9 +51,9 @@ public class CidsLandParcelSearchStatement extends AbstractCidsServerSearch impl
 
     /** LOGGER. */
     private static final transient Logger LOG = Logger.getLogger(CidsLandParcelSearchStatement.class);
-    
+
     private static final String INTERSECTS_BUFFER = SearchProperties.getInstance().getIntersectsBuffer();
-    
+
     //~ Instance fields --------------------------------------------------------
 
     private boolean searchActualParcel;
@@ -90,7 +92,7 @@ public class CidsLandParcelSearchStatement extends AbstractCidsServerSearch impl
         searchHistoricalParcel = historicalParcel;
         this.historicalFrom = historicalFrom;
         this.historicalTo = historicalTo;
-        this.geometry = geometry;               
+        this.geometry = geometry;
     }
 
     //~ Methods ----------------------------------------------------------------
