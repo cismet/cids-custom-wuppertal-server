@@ -13,9 +13,12 @@
 package de.cismet.cids.custom.proxy.startuphooks;
 
 import Sirius.server.middleware.impls.proxy.ProxyStartupHook;
-import de.cismet.cids.custom.utils.WuppProxyServerResources;
-import de.cismet.cids.utils.serverresources.ServerResourcesLoader;
+
 import org.apache.log4j.Logger;
+
+import de.cismet.cids.custom.utils.WuppProxyServerResources;
+
+import de.cismet.cids.utils.serverresources.ServerResourcesLoader;
 
 /**
  * DOCUMENT ME!
@@ -26,16 +29,20 @@ import org.apache.log4j.Logger;
 @org.openide.util.lookup.ServiceProvider(service = ProxyStartupHook.class)
 public class WuppProxyStartupHook implements ProxyStartupHook {
 
+    //~ Static fields/initializers ---------------------------------------------
+
     private static final Logger LOG = Logger.getLogger(WuppProxyStartupHook.class.getName());
 
-    
     //~ Methods ----------------------------------------------------------------
 
     @Override
     public void proxyStarted() {
         loadAllServerResources();
     }
-    
+
+    /**
+     * DOCUMENT ME!
+     */
     public void loadAllServerResources() {
         boolean error = false;
         for (final WuppProxyServerResources wuppServerResources : WuppProxyServerResources.values()) {
@@ -50,6 +57,5 @@ public class WuppProxyStartupHook implements ProxyStartupHook {
         if (error) {
             LOG.error("!!! CAUTION !!! Not all server resources could be loaded !");
         }
-    }        
-    
+    }
 }
