@@ -38,10 +38,16 @@ public class VermessungsunterlagenProperties {
     private final Properties properties;
     private final String cidsLogin;
     private final String absPathTmp;
+    private final boolean ftpEnabled;
     private final String ftpHost;
     private final String ftpLogin;
     private final String ftpPass;
     private final String ftpPath;
+    private final boolean webDavEnabled;
+    private final String webDavHost;
+    private final String webDavLogin;
+    private final String webDavPass;
+    private final String webDavPath;
     private final String absPathTest;
     private final String absPathPdfRisse;
     private final String absPathPdfNivP;
@@ -59,10 +65,16 @@ public class VermessungsunterlagenProperties {
 
         cidsLogin = readProperty("CIDS_LOGIN", null);
         absPathTmp = readProperty("ABS_PATH_TMP", "/tmp");
+        ftpEnabled = Boolean.parseBoolean(readProperty("FTP_ENABLED", "true"));
         ftpHost = readProperty("FTP_HOST", null);
         ftpLogin = readProperty("FTP_LOGIN", null);
         ftpPass = readProperty("FTP_PASS", null);
         ftpPath = readProperty("FTP_PATH", null);
+        webDavEnabled = Boolean.parseBoolean(readProperty("WEBDAV_ENABLED", "false"));
+        webDavHost = readProperty("WEBDAV_HOST", null);
+        webDavLogin = readProperty("WEBDAV_LOGIN", null);
+        webDavPass = readProperty("WEBDAV_PASS", null);
+        webDavPath = readProperty("WEBDAV_PATH", null);
         absPathTest = readProperty("ABS_PATH_TEST", null);
         absPathPdfRisse = readProperty("ABS_PATH_PDF_RISSE", null);
         absPathPdfNivP = readProperty("ABS_PATH_PDF_NIVP", null);
@@ -82,7 +94,7 @@ public class VermessungsunterlagenProperties {
     private String readProperty(final String property, final String defaultValue) {
         String value = defaultValue;
         try {
-            value = getProperties().getProperty(property);
+            value = getProperties().getProperty(property, defaultValue);
         } catch (final Exception ex) {
             final String message = "could not read " + property + " from "
                         + WundaBlauServerResources.VERMESSUNGSUNTERLAGENPORTAL_PROPERTIES.getValue()

@@ -28,7 +28,7 @@ public enum WuppProxyServerResources {
     //~ Enum constants ---------------------------------------------------------
 
     SEARCH_PROPERTIES(new TextServerResource("/search.properties"));
-    
+
     //~ Instance fields --------------------------------------------------------
 
     @Getter private final ServerResource value;

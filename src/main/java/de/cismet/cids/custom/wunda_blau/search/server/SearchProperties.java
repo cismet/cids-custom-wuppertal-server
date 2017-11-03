@@ -12,12 +12,13 @@
  */
 package de.cismet.cids.custom.wunda_blau.search.server;
 
+import org.apache.log4j.Logger;
+
 import java.util.Properties;
 
 import de.cismet.cids.custom.utils.WuppProxyServerResources;
 
 import de.cismet.cids.utils.serverresources.ServerResourcesLoader;
-import org.apache.log4j.Logger;
 
 /**
  * DOCUMENT ME!
@@ -26,7 +27,11 @@ import org.apache.log4j.Logger;
  * @version  $Revision$, $Date$
  */
 public class SearchProperties extends Properties {
+
+    //~ Static fields/initializers ---------------------------------------------
+
     private static final transient Logger LOG = Logger.getLogger(SearchProperties.class);
+
     //~ Enums ------------------------------------------------------------------
 
     /**
@@ -72,9 +77,9 @@ public class SearchProperties extends Properties {
      *
      * @return  DOCUMENT ME!
      */
-    public String getIntersectsBuffer() {        
+    public String getIntersectsBuffer() {
         final Object value = get(Property.INTERSECTS_BUFFER.name());
-        return (value != null)?(String)value: "0.001";
+        return (value != null) ? (String)value : "0.001";
     }
 
     //~ Inner Classes ----------------------------------------------------------
