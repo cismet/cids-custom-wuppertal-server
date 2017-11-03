@@ -24,15 +24,19 @@ import lombok.Setter;
 
 import org.apache.log4j.Logger;
 
+import org.openide.util.Exceptions;
+
 import java.io.File;
 import java.io.FileInputStream;
 import java.io.FileOutputStream;
+import java.io.InputStream;
 
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collection;
 import java.util.HashMap;
 import java.util.Map;
+import java.util.Properties;
 import java.util.concurrent.CompletionService;
 import java.util.concurrent.ExecutorCompletionService;
 import java.util.concurrent.Future;
@@ -59,6 +63,8 @@ import de.cismet.cids.dynamics.CidsBean;
 
 import de.cismet.cids.server.search.CidsServerSearch;
 import de.cismet.cids.server.search.SearchException;
+
+import de.cismet.cids.utils.serverresources.ServerResourcesLoader;
 
 import de.cismet.commons.concurrency.CismetExecutors;
 
@@ -104,6 +110,7 @@ public class VermessungsunterlagenJob implements Runnable {
         new HashMap<VermessungsunterlagenTask, Future>();
 
     @Getter private String ftpZipPath;
+    @Getter private String webDAVPath;
 
     private final transient ThreadPoolExecutor taskExecutor = (ThreadPoolExecutor)CismetExecutors.newFixedThreadPool(
             Runtime.getRuntime().availableProcessors());
@@ -452,20 +459,85 @@ public class VermessungsunterlagenJob implements Runnable {
     /**
      * DOCUMENT ME!
      *
+     * @param  host   DOCUMENT ME!
+     * @param  port   DOCUMENT ME!
+     * @param  level  DOCUMENT ME!
+     */
+    public static void configure4LumbermillOn(final String host, final int port, final String level) {
+        final Properties p = new Properties();
+        p.put("log4j.appender.Remote", "org.apache.log4j.net.SocketAppender");
+        p.put("log4j.appender.Remote.remoteHost", host);
+        p.put("log4j.appender.Remote.port", Integer.toString(port));
+        p.put("log4j.appender.Remote.locationInfo", "true");
+        p.put("log4j.rootLogger", level + ",Remote");
+        org.apache.log4j.PropertyConfigurator.configure(p);
+    }
+
+    /**
+     * DOCUMENT ME!
+     *
      * @param   file  DOCUMENT ME!
      *
      * @throws  VermessungsunterlagenException  DOCUMENT ME!
      */
     public void uploadZip(final File file) throws VermessungsunterlagenException {
-        this.ftpZipPath = null;
-        try {
-            final String tmp = helper.getProperties().getFtpPath();
-            final String ftpZipPath = (tmp.isEmpty() ? "" : ("/" + tmp)) + file.getName();
-            VermessungsunterlagenHelper.getInstance().uploadToFTP(new FileInputStream(file), ftpZipPath);
-            this.ftpZipPath = ftpZipPath;
-        } catch (final Exception ex) {
-            throw new VermessungsunterlagenException("Fehler beim Hochladen der Zip-Datei.", ex);
+        if (helper.getProperties().isFtpEnabled()) {
+            try {
+                this.ftpZipPath = uploadZipToFTP(file);
+            } catch (final Exception ex) {
+                this.ftpZipPath = null;
+                throw new VermessungsunterlagenException("Fehler beim Hochladen der Zip-Datei auf den FTP-Server.", ex);
+            }
         }
+
+        if (helper.getProperties().isWebDavEnabled()) {
+            try {
+                this.webDAVPath = uploadZipToWebDAV(file);
+            } catch (final Exception ex) {
+                this.webDAVPath = null;
+                throw new VermessungsunterlagenException(
+                    "Fehler beim Hochladen der Zip-Datei auf den WebDAV-Server.",
+                    ex);
+            }
+        }
+    }
+
+    /**
+     * DOCUMENT ME!
+     *
+     * @param   file  DOCUMENT ME!
+     *
+     * @return  DOCUMENT ME!
+     *
+     * @throws  Exception  DOCUMENT ME!
+     */
+    private static String uploadZipToFTP(final File file) throws Exception {
+        final String fileName = file.getName();
+        final InputStream inputStream = new FileInputStream(file);
+
+        final String ftpPath = VermessungsunterlagenHelper.getInstance().getProperties().getFtpPath();
+        final String ftpZipPath = (ftpPath.isEmpty() ? "" : ("/" + ftpPath)) + fileName;
+        VermessungsunterlagenHelper.getInstance().uploadToFTP(inputStream, ftpZipPath);
+        return ftpZipPath;
+    }
+
+    /**
+     * DOCUMENT ME!
+     *
+     * @param   file  DOCUMENT ME!
+     *
+     * @return  DOCUMENT ME!
+     *
+     * @throws  Exception  DOCUMENT ME!
+     */
+    private static String uploadZipToWebDAV(final File file) throws Exception {
+        final String fileName = file.getName();
+        final InputStream inputStream = new FileInputStream(file);
+
+        final String webDAVPath = VermessungsunterlagenHelper.getInstance().getProperties().getWebDavPath();
+        final String webDAVZipPath = ((webDAVPath.isEmpty() ? "" : ("/" + webDAVPath)) + fileName);
+        VermessungsunterlagenHelper.getInstance().uploadToWebDAV(inputStream, webDAVZipPath);
+        return webDAVZipPath;
     }
 
     /**
