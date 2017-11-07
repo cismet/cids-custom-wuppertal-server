@@ -160,7 +160,7 @@ public class VermessungsunterlagenHelper {
     private MetaClass mc_VERMESSUNGSUNTERLAGENAUFTRAG_VERMESSUNGSART;
     private MetaClass mc_GEOM;
 
-    private final Map<String, VermessungsunterlagenJob> jobMap = new HashMap<String, VermessungsunterlagenJob>();
+    private final Map<String, VermessungsunterlagenJobInfoWrapper> jobMap = new HashMap<>();
 
     private MetaService metaService;
     private User user;
@@ -377,7 +377,7 @@ public class VermessungsunterlagenHelper {
                         "Der Datensatz konnte nicht abgespeichert werden.",
                         ex));
             }
-            jobMap.put(jobKey, job);
+            jobMap.put(jobKey, new VermessungsunterlagenJobInfoWrapper(job));
             return jobKey;
         } catch (final Exception ex) {
             LOG.error("Unexpected error while creating job !", ex);
@@ -450,8 +450,11 @@ public class VermessungsunterlagenHelper {
      *
      * @param  jobKey  DOCUMENT ME!
      */
-    public void cleanUp(final String jobKey) {
-        jobMap.remove(jobKey);
+    public void cleanup(final String jobKey) {
+        final VermessungsunterlagenJobInfoWrapper infoWrapper = jobMap.get(jobKey);
+        if (infoWrapper != null) {
+            infoWrapper.cleanup();
+        }
     }
 
     /**
@@ -461,7 +464,7 @@ public class VermessungsunterlagenHelper {
      *
      * @return  DOCUMENT ME!
      */
-    public VermessungsunterlagenJob getJob(final String jobkey) {
+    public VermessungsunterlagenJobInfoWrapper getJobInfo(final String jobkey) {
         if (jobMap.containsKey(jobkey)) {
             return jobMap.get(jobkey);
         } else {

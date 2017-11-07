@@ -13,7 +13,7 @@
 package de.cismet.cids.custom.wunda_blau.search.actions;
 
 import de.cismet.cids.custom.utils.vermessungsunterlagen.VermessungsunterlagenHelper;
-import de.cismet.cids.custom.utils.vermessungsunterlagen.VermessungsunterlagenJob;
+import de.cismet.cids.custom.utils.vermessungsunterlagen.VermessungsunterlagenJobInfoWrapper;
 
 import de.cismet.cids.server.actions.ServerAction;
 import de.cismet.cids.server.actions.ServerActionParameter;
@@ -38,14 +38,13 @@ public class VermessungsUnterlagenPortalGetJobResultAction extends AbstractVerme
     @Override
     public Object execute(final Object body, final ServerActionParameter... params) {
         final String jobKey = exctractJobKey(params);
-        final VermessungsunterlagenJob job = VermessungsunterlagenHelper.getInstance().getJob(jobKey);
-
-        final String ftpZipPath = job.getFtpZipPath();
-
-        VermessungsunterlagenHelper.getInstance().cleanUp(jobKey);
-
-        super.executeLog(jobKey, ftpZipPath, "");
-        return String.format(RETURN, ftpZipPath);
+        final VermessungsunterlagenJobInfoWrapper info = VermessungsunterlagenHelper.getInstance().getJobInfo(jobKey);
+        if (info == null) {
+            throw new RuntimeException("unknown jobKey: " + jobKey);
+        }
+        final String jobResult = info.getJobResult();
+        super.executeLog(jobKey, jobResult, "");
+        return String.format(RETURN, jobResult);
     }
 
     @Override

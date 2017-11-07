@@ -14,6 +14,7 @@ package de.cismet.cids.custom.wunda_blau.search.actions;
 
 import de.cismet.cids.custom.utils.vermessungsunterlagen.VermessungsunterlagenHelper;
 import de.cismet.cids.custom.utils.vermessungsunterlagen.VermessungsunterlagenJob;
+import de.cismet.cids.custom.utils.vermessungsunterlagen.VermessungsunterlagenJobInfoWrapper;
 
 import de.cismet.cids.server.actions.ServerAction;
 import de.cismet.cids.server.actions.ServerActionParameter;
@@ -41,12 +42,13 @@ public class VermessungsUnterlagenPortalGetJobStatusAction extends AbstractVerme
     @Override
     public Object execute(final Object body, final ServerActionParameter... params) {
         final String jobKey = exctractJobKey(params);
-        final VermessungsunterlagenJob job = VermessungsunterlagenHelper.getInstance().getJob(jobKey);
-
-        final VermessungsunterlagenJob.Status status = job.getStatus();
-
-        super.executeLog(jobKey, "[" + status + "," + jobKey + "]", "");
-        return String.format(RETURN, status, jobKey);
+        final VermessungsunterlagenJobInfoWrapper info = VermessungsunterlagenHelper.getInstance().getJobInfo(jobKey);
+        if (info == null) {
+            throw new RuntimeException("unknown jobKey: " + jobKey);
+        }
+        final VermessungsunterlagenJob.Status jobStatus = info.getJobStatus();
+        super.executeLog(jobKey, "[" + jobStatus + "," + jobKey + "]", "");
+        return String.format(RETURN, jobStatus, jobKey);
     }
 
     @Override
