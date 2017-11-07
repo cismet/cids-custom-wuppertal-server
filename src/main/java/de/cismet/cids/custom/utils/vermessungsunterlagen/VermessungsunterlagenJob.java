@@ -24,8 +24,6 @@ import lombok.Setter;
 
 import org.apache.log4j.Logger;
 
-import org.openide.util.Exceptions;
-
 import java.io.File;
 import java.io.FileInputStream;
 import java.io.FileOutputStream;
@@ -63,8 +61,6 @@ import de.cismet.cids.dynamics.CidsBean;
 
 import de.cismet.cids.server.search.CidsServerSearch;
 import de.cismet.cids.server.search.SearchException;
-
-import de.cismet.cids.utils.serverresources.ServerResourcesLoader;
 
 import de.cismet.commons.concurrency.CismetExecutors;
 
@@ -453,6 +449,8 @@ public class VermessungsunterlagenJob implements Runnable {
             } catch (final Exception ex2) {
                 LOG.error("Error while updating cids bean for " + getKey(), ex2);
             }
+        } finally {
+            helper.cleanup(getKey());
         }
     }
 
