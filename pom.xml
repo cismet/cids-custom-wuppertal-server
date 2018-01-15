@@ -8,7 +8,7 @@
     <parent>
         <groupId>de.cismet.cids</groupId>
         <artifactId>cids-parent</artifactId>
-        <version>5.0</version>
+        <version>6.0</version>
     </parent>
 
     <groupId>de.cismet.cids.custom.wupp.server</groupId>
@@ -54,7 +54,7 @@
             <dependency>
                 <groupId>de.cismet</groupId>
                 <artifactId>cismet-ext-bom</artifactId>
-                <version>5.1</version>
+                <version>6.0</version>
                 <type>pom</type>
                 <scope>import</scope>
             </dependency>
@@ -63,7 +63,7 @@
             <dependency>
                 <groupId>de.cismet.commons</groupId>
                 <artifactId>cismet-commons</artifactId>
-                <version>5.1.4</version>
+                <version>6.0</version>
                 <type>jar</type>
                 <scope>compile</scope>
             </dependency>
@@ -71,7 +71,7 @@
             <dependency>
                 <groupId>de.cismet.cids</groupId>
                 <artifactId>cids-server</artifactId>
-                <version>5.4.2</version>
+                <version>6.0</version>
                 <type>jar</type>
                 <scope>compile</scope>
             </dependency>
@@ -79,7 +79,7 @@
             <dependency>
                 <groupId>de.cismet.cids</groupId>
                 <artifactId>cids-server-rest-types</artifactId>
-                <version>5.0</version>
+                <version>6.0</version>
                 <scope>compile</scope>
                 <type>jar</type>
             </dependency>
@@ -87,7 +87,7 @@
             <dependency>
                 <groupId>de.cismet.custom</groupId>
                 <artifactId>beansbinding</artifactId>
-                <version>5.0</version>
+                <version>6.0</version>
                 <scope>compile</scope>
                 <type>jar</type>
             </dependency>
@@ -325,12 +325,6 @@
             <artifactId>commons-lang</artifactId>
             <scope>compile</scope>
             <type>jar</type>
-        </dependency>
-        <dependency>
-            <groupId>de.cismet.belis</groupId>
-            <artifactId>belis-server</artifactId>
-            <version>5.0</version>
-            <scope>runtime</scope>
         </dependency>
     </dependencies>
 
