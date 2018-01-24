@@ -14,7 +14,6 @@ package de.cismet.cids.custom.wunda_blau.search.server;
 import Sirius.server.middleware.interfaces.domainserver.MetaService;
 import Sirius.server.middleware.types.MetaObject;
 import Sirius.server.middleware.types.MetaObjectNode;
-import de.cismet.cids.custom.tostringconverter.wunda_blau.BillingBillingToStringConverter;
 
 import org.apache.log4j.Logger;
 
@@ -26,6 +25,8 @@ import java.util.ArrayList;
 import java.util.Collection;
 import java.util.Date;
 import java.util.List;
+
+import de.cismet.cids.custom.tostringconverter.wunda_blau.BillingBillingToStringConverter;
 
 import de.cismet.cids.server.search.AbstractCidsServerSearch;
 import de.cismet.cids.server.search.MetaObjectNodeServerSearch;
@@ -144,7 +145,11 @@ public class CidsBillingSearchStatement extends AbstractCidsServerSearch impleme
                     final String kundenname = (String)al.get(3);
                     final String username = (String)al.get(4);
                     final Date angelegt = (Date)al.get(5);
-                    final String name = BillingBillingToStringConverter.createString(geschaeftsbuchnummer, kundenname, username, angelegt);
+                    final String name = BillingBillingToStringConverter.createString(
+                            geschaeftsbuchnummer,
+                            kundenname,
+                            username,
+                            angelegt);
                     final MetaObjectNode mon = new MetaObjectNode(DOMAIN, oid, cid, name, null, null);
                     result.add(mon);
                 }
