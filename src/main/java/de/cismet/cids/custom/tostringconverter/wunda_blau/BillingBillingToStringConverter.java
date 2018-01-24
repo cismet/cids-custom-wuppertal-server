@@ -31,10 +31,23 @@ public class BillingBillingToStringConverter extends CustomToStringConverter {
     private static final DateFormat DATE_FORMAT = new SimpleDateFormat("dd.MM.yyyy");
 
     //~ Methods ----------------------------------------------------------------
-    
-    public static String createString(final String geschaeftsbuchnummer, final String kundenname, final String username, final Date angelegt) {
+
+    /**
+     * DOCUMENT ME!
+     *
+     * @param   geschaeftsbuchnummer  DOCUMENT ME!
+     * @param   kundenname            DOCUMENT ME!
+     * @param   username              DOCUMENT ME!
+     * @param   angelegt              DOCUMENT ME!
+     *
+     * @return  DOCUMENT ME!
+     */
+    public static String createString(final String geschaeftsbuchnummer,
+            final String kundenname,
+            final String username,
+            final Date angelegt) {
         final StringBuilder sb = new StringBuilder();
-        if (kundenname == null || kundenname.isEmpty()) {
+        if ((kundenname == null) || kundenname.isEmpty()) {
             sb.append((username == null) ? "kein Benutzername" : username);
         } else {
             sb.append(kundenname);
