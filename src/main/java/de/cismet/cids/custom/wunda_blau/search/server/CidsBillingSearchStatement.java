@@ -33,6 +33,7 @@ import de.cismet.cids.custom.tostringconverter.wunda_blau.BillingBillingToString
 import de.cismet.cids.server.search.AbstractCidsServerSearch;
 import de.cismet.cids.server.search.SearchException;
 import de.cismet.cids.server.connectioncontext.ServerConnectionContextProvider;
+import de.cismet.cids.server.search.MetaObjectNodeServerSearch;
 
 /**
  * DOCUMENT ME!
@@ -40,7 +41,7 @@ import de.cismet.cids.server.connectioncontext.ServerConnectionContextProvider;
  * @author   Gilles Baatz
  * @version  $Revision$, $Date$
  */
-public class CidsBillingSearchStatement extends AbstractCidsServerSearch implements ServerConnectionContextProvider {
+public class CidsBillingSearchStatement extends AbstractCidsServerSearch implements ServerConnectionContextProvider, MetaObjectNodeServerSearch {
 
     //~ Static fields/initializers ---------------------------------------------
 
