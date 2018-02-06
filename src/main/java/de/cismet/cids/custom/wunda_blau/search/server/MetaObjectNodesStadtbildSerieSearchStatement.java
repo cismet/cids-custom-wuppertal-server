@@ -49,6 +49,7 @@ public class MetaObjectNodesStadtbildSerieSearchStatement extends AbstractCidsSe
 
     private static final Logger LOG = Logger.getLogger(MetaObjectNodesStadtbildSerieSearchStatement.class);
     private static final String DOMAIN = "WUNDA_BLAU";
+    private static final String INTERSECTS_BUFFER = SearchProperties.getInstance().getIntersectsBuffer();
 
     //~ Enums ------------------------------------------------------------------
 
@@ -440,12 +441,14 @@ public class MetaObjectNodesStadtbildSerieSearchStatement extends AbstractCidsSe
             query.append("and g.geo_field && GeometryFromText('").append(geostring).append("')");
 
             if ((geometryToSearchFor instanceof Polygon) || (geometryToSearchFor instanceof MultiPolygon)) { // with buffer for geostring
-                query.append(" and intersects(" + "st_buffer(geo_field, 0.000001)," + "st_buffer(GeometryFromText('")
+                query.append(" and intersects(" + "st_buffer(geo_field, " + INTERSECTS_BUFFER + "),"
+                                + "st_buffer(GeometryFromText('")
                         .append(geostring)
-                        .append("'), 0.000001))");
+                        .append("'), " + INTERSECTS_BUFFER + "))");
             } else {                                                                                         // without buffer for
                 // geostring
-                query.append(" and intersects(" + "st_buffer(geo_field, 0.000001)," + "GeometryFromText('")
+                query.append(" and intersects(" + "st_buffer(geo_field, " + INTERSECTS_BUFFER + "),"
+                                + "GeometryFromText('")
                         .append(geostring)
                         .append("'))");
             }

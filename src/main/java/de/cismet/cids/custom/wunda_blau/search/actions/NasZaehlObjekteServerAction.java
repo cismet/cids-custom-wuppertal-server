@@ -36,6 +36,7 @@ import java.util.Properties;
 
 import de.cismet.cids.custom.utils.WundaBlauServerResources;
 import de.cismet.cids.custom.wunda_blau.search.server.CidsMauernSearchStatement;
+import de.cismet.cids.custom.wunda_blau.search.server.SearchProperties;
 
 import de.cismet.cids.server.actions.ServerAction;
 import de.cismet.cids.server.actions.ServerActionParameter;
@@ -61,6 +62,7 @@ public class NasZaehlObjekteServerAction implements ServerAction, MetaServiceSto
     private static final Logger LOG = Logger.getLogger(CidsMauernSearchStatement.class);
     public static final String TASK_NAME = "nasZaehlObjekte";
 
+    private static final String INTERSECTS_BUFFER = SearchProperties.getInstance().getIntersectsBuffer();
     private static final String FLURSTUECK_STMT =
         "select count(*) as Anzahl from ax_flurstueck where st_intersects(wkb_geometry,<geom>)";
     private static final String GEAEUDE_STMT =
@@ -75,7 +77,8 @@ public class NasZaehlObjekteServerAction implements ServerAction, MetaServiceSto
                 + " AND i.attr_object_id = g.id"
                 + " AND i.class_id IN (6)"
                 + " AND geo_field && GeometryFromText('<geom>')"
-                + " AND intersects(st_buffer(geo_field, 0.000001),st_buffer(GeometryFromText('<geom>'), 0.000001)) ORDER BY 1,2,3";
+                + " AND intersects(st_buffer(geo_field, " + INTERSECTS_BUFFER
+                + "),st_buffer(GeometryFromText('<geom>'), " + INTERSECTS_BUFFER + ")) ORDER BY 1,2,3";
 
     //~ Enums ------------------------------------------------------------------
 

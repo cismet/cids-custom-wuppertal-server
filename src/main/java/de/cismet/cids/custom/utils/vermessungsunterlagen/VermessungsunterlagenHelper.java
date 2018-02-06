@@ -93,6 +93,7 @@ import de.cismet.cids.utils.serverresources.ServerResourcesLoader;
 import de.cismet.commons.concurrency.CismetExecutors;
 
 import de.cismet.commons.security.AccessHandler;
+import de.cismet.commons.security.WebDavClient;
 import de.cismet.commons.security.handler.SimpleHttpAccessHandler;
 
 import static org.apache.commons.net.ftp.FTP.BINARY_FILE_TYPE;
@@ -161,7 +162,7 @@ public class VermessungsunterlagenHelper implements ServerConnectionContextProvi
     private MetaClass mc_VERMESSUNGSUNTERLAGENAUFTRAG_VERMESSUNGSART;
     private MetaClass mc_GEOM;
 
-    private final Map<String, VermessungsunterlagenJob> jobMap = new HashMap<String, VermessungsunterlagenJob>();
+    private final Map<String, VermessungsunterlagenJobInfoWrapper> jobMap = new HashMap<>();
 
     private MetaService metaService;
     private User user;
@@ -291,16 +292,38 @@ public class VermessungsunterlagenHelper implements ServerConnectionContextProvi
     /**
      * DOCUMENT ME!
      *
-     * @param   in           DOCUMENT ME!
-     * @param   ftpFilePath  DOCUMENT ME!
+     * @param   in          DOCUMENT ME!
+     * @param   ftpZipPath  DOCUMENT ME!
      *
      * @throws  Exception  DOCUMENT ME!
      */
-    public void uploadToFTP(final InputStream in, final String ftpFilePath) throws Exception {
+    public void uploadToFTP(final InputStream in, final String ftpZipPath) throws Exception {
         final FTPClient connectedFtpClient = getConnectedFTPClient();
         connectedFtpClient.enterLocalPassiveMode();
         connectedFtpClient.setFileType(BINARY_FILE_TYPE);
-        connectedFtpClient.storeFile(ftpFilePath, in);
+        connectedFtpClient.storeFile(ftpZipPath, in);
+    }
+
+    /**
+     * DOCUMENT ME!
+     *
+     * @param   in             DOCUMENT ME!
+     * @param   webDAVZipPath  DOCUMENT ME!
+     *
+     * @throws  Exception  DOCUMENT ME!
+     */
+    public void uploadToWebDAV(final InputStream in, final String webDAVZipPath) throws Exception {
+        final String url = vermessungsunterlagenProperties.getWebDavHost() + "/" + webDAVZipPath;
+
+        final WebDavClient webdavclient = new WebDavClient(
+                null,
+                vermessungsunterlagenProperties.getWebDavLogin(),
+                vermessungsunterlagenProperties.getWebDavPass(),
+                false);
+        final int statusCode = webdavclient.put(url, in);
+        if (statusCode >= 400) {
+            throw new Exception("webdav put failed wit status code " + statusCode);
+        }
     }
 
     /**
@@ -356,7 +379,7 @@ public class VermessungsunterlagenHelper implements ServerConnectionContextProvi
                         "Der Datensatz konnte nicht abgespeichert werden.",
                         ex));
             }
-            jobMap.put(jobKey, job);
+            jobMap.put(jobKey, new VermessungsunterlagenJobInfoWrapper(job));
             return jobKey;
         } catch (final Exception ex) {
             LOG.error("Unexpected error while creating job !", ex);
@@ -429,8 +452,11 @@ public class VermessungsunterlagenHelper implements ServerConnectionContextProvi
      *
      * @param  jobKey  DOCUMENT ME!
      */
-    public void cleanUp(final String jobKey) {
-        jobMap.remove(jobKey);
+    public void cleanup(final String jobKey) {
+        final VermessungsunterlagenJobInfoWrapper infoWrapper = jobMap.get(jobKey);
+        if (infoWrapper != null) {
+            infoWrapper.cleanup();
+        }
     }
 
     /**
@@ -440,7 +466,7 @@ public class VermessungsunterlagenHelper implements ServerConnectionContextProvi
      *
      * @return  DOCUMENT ME!
      */
-    public VermessungsunterlagenJob getJob(final String jobkey) {
+    public VermessungsunterlagenJobInfoWrapper getJobInfo(final String jobkey) {
         if (jobMap.containsKey(jobkey)) {
             return jobMap.get(jobkey);
         } else {

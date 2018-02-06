@@ -13,8 +13,7 @@
 package de.cismet.cids.custom.wunda_blau.search.actions;
 
 import de.cismet.cids.custom.utils.vermessungsunterlagen.VermessungsunterlagenHelper;
-import de.cismet.cids.custom.utils.vermessungsunterlagen.VermessungsunterlagenJob;
-import de.cismet.cids.custom.utils.vermessungsunterlagen.exceptions.VermessungsunterlagenException;
+import de.cismet.cids.custom.utils.vermessungsunterlagen.VermessungsunterlagenJobInfoWrapper;
 
 import de.cismet.cids.server.actions.ServerAction;
 import de.cismet.cids.server.actions.ServerActionParameter;
@@ -39,15 +38,13 @@ public class VermessungsUnterlagenPortalGetJobErrorAction extends AbstractVermes
     @Override
     public Object execute(final Object body, final ServerActionParameter... params) {
         final String jobKey = exctractJobKey(params);
-        final VermessungsunterlagenJob job = VermessungsunterlagenHelper.getInstance().getJob(jobKey);
-
-        final VermessungsunterlagenException exception = job.getException();
-        final String fehlermeldung = (exception != null) ? exception.getMessage() : null;
-
-        VermessungsunterlagenHelper.getInstance().cleanUp(jobKey);
-
-        super.executeLog(jobKey, fehlermeldung, "");
-        return String.format(RETURN, fehlermeldung);
+        final VermessungsunterlagenJobInfoWrapper info = VermessungsunterlagenHelper.getInstance().getJobInfo(jobKey);
+        if (info == null) {
+            throw new RuntimeException("unknown jobKey: " + jobKey);
+        }
+        final String jobError = info.getJobError();
+        super.executeLog(jobKey, jobError, "");
+        return String.format(RETURN, jobError);
     }
 
     @Override

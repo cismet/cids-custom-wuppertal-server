@@ -55,6 +55,7 @@ public class CidsMauernSearchStatement extends AbstractCidsServerSearch implemen
     private static final String JOIN_LASTKLASSE = " LEFT OUTER JOIN mauer_lastklasse l ON l.id=m.lastklasse";
     private static final String JOIN_EIGENTUEMER = " LEFT OUTER JOIN mauer_eigentuemer e ON e.id=m.eigentuemer";
     private static final String DOMAIN = "WUNDA_BLAU";
+    private static final String INTERSECTS_BUFFER = SearchProperties.getInstance().getIntersectsBuffer();
 
     //~ Enums ------------------------------------------------------------------
 
@@ -298,14 +299,14 @@ public class CidsMauernSearchStatement extends AbstractCidsServerSearch implemen
 
             if ((geom instanceof Polygon) || (geom instanceof MultiPolygon)) { // with buffer for geostring
                 whereBuilder.append(" intersects("
-                            + "st_buffer(geo_field, 0.000001),"
+                            + "st_buffer(geo_field, " + INTERSECTS_BUFFER + "),"
                             + "st_buffer(GeometryFromText('"
                             + geostring
-                            + "'), 0.000001))");
+                            + "'), " + INTERSECTS_BUFFER + "))");
             } else {                                                           // without buffer for
                 // geostring
                 whereBuilder.append(" and intersects("
-                            + "st_buffer(geo_field, 0.000001),"
+                            + "st_buffer(geo_field, " + INTERSECTS_BUFFER + "),"
                             + "GeometryFromText('"
                             + geostring
                             + "'))");
