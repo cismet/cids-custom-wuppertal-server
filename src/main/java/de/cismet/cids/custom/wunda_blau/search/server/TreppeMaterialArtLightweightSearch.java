@@ -17,6 +17,7 @@ import org.apache.log4j.Logger;
 
 import org.openide.util.lookup.ServiceProvider;
 
+import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collection;
 
@@ -31,7 +32,6 @@ import de.cismet.cidsx.server.api.types.SearchInfo;
 import de.cismet.cidsx.server.api.types.SearchParameterInfo;
 import de.cismet.cidsx.server.search.RestApiCidsServerSearch;
 import de.cismet.cidsx.server.search.builtin.legacy.LightweightMetaObjectsSearch;
-import java.util.ArrayList;
 
 /**
  * Builtin Legacy Search to delegate the operation getLightweightMetaObjectsByQuery to the cids Pure REST Search API.
@@ -72,7 +72,7 @@ public class TreppeMaterialArtLightweightSearch extends AbstractCidsServerSearch
     @Getter @Setter private Integer typId;
     @Getter @Setter private String representationPattern;
     @Getter @Setter private String[] representationFields;
-    
+
     //~ Constructors -----------------------------------------------------------
 
     /**
@@ -80,21 +80,30 @@ public class TreppeMaterialArtLightweightSearch extends AbstractCidsServerSearch
      */
     public TreppeMaterialArtLightweightSearch() {
         this.searchInfo = new SearchInfo(
-            this.getClass().getName(), 
-            this.getClass().getSimpleName(),
-            "Builtin Legacy Search to delegate the operation getLightweightMetaObjectsByQuery to the cids Pure REST Search API.",
-            Arrays.asList(new SearchParameterInfo[] {
-                new MySearchParameterInfo("materialId", Type.INTEGER),
-                new MySearchParameterInfo("typId", Type.INTEGER),
-                new MySearchParameterInfo("searchFor", Type.UNDEFINED),
-                new MySearchParameterInfo("representationPattern", Type.STRING, true),
-                new MySearchParameterInfo("representationFields", Type.STRING, true)
-            }),
-            new MySearchParameterInfo("return", Type.ENTITY_REFERENCE, true)
-        );
+                this.getClass().getName(),
+                this.getClass().getSimpleName(),
+                "Builtin Legacy Search to delegate the operation getLightweightMetaObjectsByQuery to the cids Pure REST Search API.",
+                Arrays.asList(
+                    new SearchParameterInfo[] {
+                        new MySearchParameterInfo("materialId", Type.INTEGER),
+                        new MySearchParameterInfo("typId", Type.INTEGER),
+                        new MySearchParameterInfo("searchFor", Type.UNDEFINED),
+                        new MySearchParameterInfo("representationPattern", Type.STRING, true),
+                        new MySearchParameterInfo("representationFields", Type.STRING, true)
+                    }),
+                new MySearchParameterInfo("return", Type.ENTITY_REFERENCE, true));
     }
-    
-    public TreppeMaterialArtLightweightSearch(final SearchFor searchFor, final String representationPattern, final String[] representationFields) {
+
+    /**
+     * Creates a new TreppeMaterialArtLightweightSearch object.
+     *
+     * @param  searchFor              DOCUMENT ME!
+     * @param  representationPattern  DOCUMENT ME!
+     * @param  representationFields   DOCUMENT ME!
+     */
+    public TreppeMaterialArtLightweightSearch(final SearchFor searchFor,
+            final String representationPattern,
+            final String[] representationFields) {
         this();
         setSearchFor(searchFor);
         setRepresentationPattern(representationPattern);
@@ -108,11 +117,11 @@ public class TreppeMaterialArtLightweightSearch extends AbstractCidsServerSearch
         final SearchFor searchFor = getSearchFor();
         final Integer materialId = getMaterialId();
         final Integer typId = getTypId();
-        
+
         if (searchFor == null) {
             throw new SearchException("searchFor has to be set");
-        }        
-        
+        }
+
         final MetaService metaService = (MetaService)this.getActiveLocalServers().get("WUNDA_BLAU");
         if (metaService == null) {
             final String message = "Lightweight Meta Objects By Query Search "
@@ -121,19 +130,20 @@ public class TreppeMaterialArtLightweightSearch extends AbstractCidsServerSearch
             throw new SearchException(message);
         }
 
-        final Collection<String> conditions = new ArrayList<>();        
+        final Collection<String> conditions = new ArrayList<>();
         if (materialId != null) {
             conditions.add(String.format("material = %d", materialId));
         }
         if (typId != null) {
             conditions.add(String.format("typ = %d", typId));
         }
-        
+
         final String table;
         switch (searchFor) {
             case TREPPENLAUF: {
                 table = TABLE__TREPPE_TREPPENLAUF_MATERIAL_ART;
-            } break;
+            }
+            break;
             case PODEST: {
                 table = TABLE__TREPPE_PODEST_MATERIAL_ART;
             }
@@ -143,8 +153,9 @@ public class TreppeMaterialArtLightweightSearch extends AbstractCidsServerSearch
                 throw new SearchException("searchFor has to be set");
             }
         }
-        
-        final String query = "SELECT id, name FROM " + table + (conditions.isEmpty()? "" : " wHERE " + String.join(" AND ", conditions));        
+
+        final String query = "SELECT id, name FROM " + table
+                    + (conditions.isEmpty() ? "" : (" wHERE " + String.join(" AND ", conditions)));
         try {
             final MetaClass mc = CidsBean.getMetaClassFromTableName("WUNDA_BLAU", table);
             if (getRepresentationPattern() != null) {
@@ -165,18 +176,40 @@ public class TreppeMaterialArtLightweightSearch extends AbstractCidsServerSearch
             throw new SearchException("error while loading lwmos", ex);
         }
     }
-    
+
+    //~ Inner Classes ----------------------------------------------------------
+
+    /**
+     * DOCUMENT ME!
+     *
+     * @version  $Revision$, $Date$
+     */
     private class MySearchParameterInfo extends SearchParameterInfo {
-        private MySearchParameterInfo(final String key, final Type type, final Boolean array) {            
+
+        //~ Constructors -------------------------------------------------------
+
+        /**
+         * Creates a new MySearchParameterInfo object.
+         *
+         * @param  key   DOCUMENT ME!
+         * @param  type  DOCUMENT ME!
+         */
+        private MySearchParameterInfo(final String key, final Type type) {
+            this(key, type, null);
+        }
+        /**
+         * Creates a new MySearchParameterInfo object.
+         *
+         * @param  key    DOCUMENT ME!
+         * @param  type   DOCUMENT ME!
+         * @param  array  DOCUMENT ME!
+         */
+        private MySearchParameterInfo(final String key, final Type type, final Boolean array) {
             super.setKey(key);
             super.setType(type);
             if (array != null) {
                 super.setArray(array);
             }
-        }
-
-        private MySearchParameterInfo(final String key, final Type type) {            
-        this(key, type, null);
         }
     }
 }

@@ -33,8 +33,6 @@
             legacy cidsDistribution directory (see cids-parent.pom)
         -->
         <de.cismet.libDir>lib/localWuNDa</de.cismet.libDir>
-        <enforcer.skip>false</enforcer.skip>
-        <jalopy.skip>true</jalopy.skip>
     </properties>
     
     
