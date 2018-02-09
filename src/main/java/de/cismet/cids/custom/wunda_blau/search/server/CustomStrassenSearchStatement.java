@@ -34,7 +34,8 @@ public class CustomStrassenSearchStatement extends AbstractCidsServerSearch impl
 
     //~ Instance fields --------------------------------------------------------
 
-    private String searchString;
+    private final String searchString;
+    private final boolean searchForStrassenschluessel;
 
     //~ Constructors -----------------------------------------------------------
 
@@ -44,7 +45,18 @@ public class CustomStrassenSearchStatement extends AbstractCidsServerSearch impl
      * @param  searchString  DOCUMENT ME!
      */
     public CustomStrassenSearchStatement(final String searchString) {
+        this(searchString, false);
+    }
+
+    /**
+     * Creates a new CustomStrassenSearchStatement object.
+     *
+     * @param  searchString                 DOCUMENT ME!
+     * @param  searchForStrassenschluessel  DOCUMENT ME!
+     */
+    public CustomStrassenSearchStatement(final String searchString, final boolean searchForStrassenschluessel) {
         this.searchString = searchString;
+        this.searchForStrassenschluessel = searchForStrassenschluessel;
     }
 
     //~ Methods ----------------------------------------------------------------
@@ -60,23 +72,25 @@ public class CustomStrassenSearchStatement extends AbstractCidsServerSearch impl
 
             final MetaClass c = ms.getClassByTableName(getUser(), "strasse");
 
-            final String sql = "select strassenschluessel,name from strasse where name like '%" + searchString
-                        + "%' order by name desc";
+            final String sql = ""
+                        + "SELECT strassenschluessel, name "
+                        + "FROM strasse "
+                        + "WHERE "
+                        + (searchForStrassenschluessel ? ("strassenschluessel = " + searchString + "")
+                                                       : ("name LIKE '%" + searchString + "%'")) + " "
+                        + "ORDER BY name desc";
 
             final ArrayList<ArrayList> result = ms.performCustomSearch(sql);
 
-            final ArrayList<MetaObjectNode> aln = new ArrayList<MetaObjectNode>();
+            final ArrayList<MetaObjectNode> aln = new ArrayList<>();
             for (final ArrayList al : result) {
                 final int id = (Integer)al.get(0);
-                final MetaObjectNode mon = new MetaObjectNode(c.getDomain(), id, c.getId());
-
-                aln.add(mon);
+                aln.add(new MetaObjectNode(c.getDomain(), id, c.getId()));
             }
-            // Thread.sleep(5000);
             return aln;
-        } catch (Exception e) {
-            LOG.error("Problem", e);
-            throw new RuntimeException(e);
+        } catch (final Exception ex) {
+            LOG.error("Problem", ex);
+            throw new RuntimeException(ex);
         }
     }
 }
