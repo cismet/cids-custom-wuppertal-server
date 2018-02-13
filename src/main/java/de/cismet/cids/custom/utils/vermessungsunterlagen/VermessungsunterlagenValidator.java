@@ -14,17 +14,24 @@ package de.cismet.cids.custom.utils.vermessungsunterlagen;
 
 import Sirius.server.middleware.interfaces.domainserver.MetaService;
 import Sirius.server.middleware.types.LightweightMetaObject;
+import Sirius.server.middleware.types.MetaClass;
 import Sirius.server.middleware.types.MetaObjectNode;
 
+import com.vividsolutions.jts.geom.Geometry;
+import com.vividsolutions.jts.geom.Polygon;
+
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.Collection;
 import java.util.List;
 
 import de.cismet.cids.custom.utils.vermessungsunterlagen.exceptions.VermessungsunterlagenException;
 import de.cismet.cids.custom.utils.vermessungsunterlagen.exceptions.VermessungsunterlagenValidatorException;
 import de.cismet.cids.custom.wunda_blau.search.server.AlbFlurstueckKickerLightweightSearch;
+import de.cismet.cids.custom.wunda_blau.search.server.BufferingGeosearch;
 import de.cismet.cids.custom.wunda_blau.search.server.CidsAlkisSearchStatement;
 import de.cismet.cids.custom.wunda_blau.search.server.KundeByVermessungsStellenNummerSearch;
+import de.cismet.cids.custom.wunda_blau.search.server.VermessungFlurstueckKickerLightweightSearch;
 
 import de.cismet.cids.dynamics.CidsBean;
 
@@ -61,7 +68,7 @@ public class VermessungsunterlagenValidator {
 
     //~ Instance fields --------------------------------------------------------
 
-    private final Collection<CidsBean> flurstuecke = new ArrayList<CidsBean>();
+    private final Collection<CidsBean> flurstuecke = new ArrayList<>();
     private boolean vermessungsstelleKnown = false;
 
     private final VermessungsunterlagenHelper helper;
@@ -126,7 +133,8 @@ public class VermessungsunterlagenValidator {
      * @return  if validation passed returns {@link #ISVALID}. If validation failed returns error message for enduser in
      *          plain text
      *
-     * @throws  VermessungsunterlagenException  DOCUMENT ME!
+     * @throws  VermessungsunterlagenException           DOCUMENT ME!
+     * @throws  VermessungsunterlagenValidatorException  DOCUMENT ME!
      */
     public boolean validateAndGetErrorMessage(final VermessungsunterlagenAnfrageBean anfrageBean)
             throws VermessungsunterlagenException {
@@ -168,28 +176,9 @@ public class VermessungsunterlagenValidator {
             throw getExceptionByErrorCode(Error.NO_ART);
         }
 
-        // jedes einzelne Flurstück Überprüfen
-        for (final VermessungsunterlagenAnfrageBean.AntragsflurstueckBean fs : anfrageBean.getAntragsflurstuecksArray()) {
-            // gemarkung flur flurstueck darf nicht leer sein
-            if (!isFlurstueckValide(fs)) {
-                throw getExceptionByErrorCode(Error.WRONG_ANTRAGSFLURSTUECK);
-            }
-            // Jedes Flurstück muss auffindbar sein
-            if (!existFlurstueck(fs)) {
-                throw getExceptionByErrorCode(Error.UNKNOWN_ANTRAGSFLURSTUECK);
-            }
-        }
-
         // Wenn ausschließlich neue Punktnummern reserviert werden sollen, ist keine weitere Überprüfung notwendig.
         if (anfrageBean.getNurPunktnummernreservierung()) {
             return true;
-        }
-
-        // Validierung des Vermessungsgebiets
-        if ((anfrageBean.getAnfragepolygonArray() == null) || (anfrageBean.getAnfragepolygonArray().length <= 0)
-                    || (anfrageBean.getAnfragepolygonArray()[0] == null)) {
-            // es wurde kein Flurstück übergeben
-            throw getExceptionByErrorCode(Error.WRONG_GEBIET);
         }
 
         // Validierung der übergebenen Flurstücke
@@ -197,6 +186,72 @@ public class VermessungsunterlagenValidator {
                     || (anfrageBean.getAntragsflurstuecksArray().length <= 0)) {
             // es wurde kein Flurstück übergeben
             throw getExceptionByErrorCode(Error.NO_ANTRAGSFLURSTUECK);
+        }
+
+        final Collection<VermessungsunterlagenAnfrageBean.AntragsflurstueckBean> valideFlurstuecke = new ArrayList<>();
+        final Collection<VermessungsunterlagenAnfrageBean.AntragsflurstueckBean> wuppFlurstuecke = new ArrayList<>();
+
+        for (final VermessungsunterlagenAnfrageBean.AntragsflurstueckBean antragsFlurstueck
+                    : anfrageBean.getAntragsflurstuecksArray()) {
+            if (isFlurstueckValide(antragsFlurstueck)) {
+                valideFlurstuecke.add(antragsFlurstueck);
+            }
+            if (isWuppGemarkung(antragsFlurstueck)) {
+                wuppFlurstuecke.add(antragsFlurstueck);
+            }
+        }
+
+        if (valideFlurstuecke.isEmpty()) {
+            throw getExceptionByErrorCode(Error.NO_ANTRAGSFLURSTUECK);
+        }
+
+        // keine wuppertale Flurstücke
+        if (wuppFlurstuecke.isEmpty()) {
+            final Polygon[] polygonArray = anfrageBean.getAnfragepolygonArray();
+            // Validierung des Vermessungsgebiets
+            if ((polygonArray == null) || (polygonArray.length <= 0) || (polygonArray[0] == null)) {
+                // es wurde kein Flurstück übergeben
+                throw getExceptionByErrorCode(Error.WRONG_GEBIET);
+            }
+            final Polygon polygon = polygonArray[0];
+
+            try {
+                final Geometry geom = polygon.getGeometryN(0);
+                geom.setSRID(VermessungsunterlagenHelper.SRID);
+                // TODO geom verschneiden zum suchen von flurstücken
+                final Collection<CidsBean> flurstuecke = searchFlurstuecke(geom);
+                for (final CidsBean flurstueck : flurstuecke) {
+                    final String[] alkisParts = ((String)flurstueck.getProperty("alkis_id")).split("-");
+                    final VermessungsunterlagenAnfrageBean.AntragsflurstueckBean wuppFlurstueck =
+                        new VermessungsunterlagenAnfrageBean.AntragsflurstueckBean();
+                    wuppFlurstueck.setGemarkungsID(alkisParts[0]);
+                    wuppFlurstueck.setFlurID(alkisParts[1]);
+                    wuppFlurstueck.setFlurstuecksID(alkisParts[2]);
+                    wuppFlurstuecke.add(wuppFlurstueck);
+                }
+            } catch (Exception ex) {
+                throw new VermessungsunterlagenValidatorException(
+                    "Fehler beim laden der Flurstücke für das Vermessungsgebiet.",
+                    ex);
+            }
+        }
+        // jedes einzelne Flurstück Überprüfen
+        for (final VermessungsunterlagenAnfrageBean.AntragsflurstueckBean wuppFlurstueck : wuppFlurstuecke) {
+            // gemarkung flur flurstueck darf nicht leer sein
+            if (!isFlurstueckValide(wuppFlurstueck)) {
+                throw getExceptionByErrorCode(Error.WRONG_ANTRAGSFLURSTUECK);
+            }
+
+            final String alkisId = getAlkisId(wuppFlurstueck);
+            final Collection<CidsBean> flurstuecke = getWuppFlurstuecke(alkisId);
+            final boolean isWuppFlurstueckExisting = (flurstuecke != null) && !flurstuecke.isEmpty();
+
+            if (!isWuppFlurstueckExisting) {
+                // Jedes Flurstück muss auffindbar sein
+                throw getExceptionByErrorCode(Error.UNKNOWN_ANTRAGSFLURSTUECK);
+            }
+
+            this.flurstuecke.addAll(flurstuecke);
         }
 
         // Validierung des Saums
@@ -210,7 +265,7 @@ public class VermessungsunterlagenValidator {
                 // Saum muss eine Zahl sein
                 iSaum = Integer.parseInt(anfrageBean.getSaumAPSuche());
             }
-        } catch (Exception e) {
+        } catch (final Exception e) {
         }
         // Saum muss ganze zahl zwischen 0 und MAX_SAUM sein
         if ((iSaum < 0) || (iSaum > MAX_SAUM)) {
@@ -256,7 +311,8 @@ public class VermessungsunterlagenValidator {
             break;
             // gar kein Flurstück
             case NO_ANTRAGSFLURSTUECK: {
-                message = "Es wurde kein Antragsflurstück übergeben. Geben Sie mindestens ein gültiges Flurstück an.";
+                message =
+                    "Es wurde kein gültiges Antragsflurstück übergeben. Geben Sie mindestens ein gültiges Flurstück an.";
             }
             break;
             // Mindestens ein unvollständiges
@@ -343,16 +399,41 @@ public class VermessungsunterlagenValidator {
      *
      * @param   flurstueckBean  DOCUMENT ME!
      *
-     * @return  true if WuNDa contains a flurstueck defined by gemarkung, flur, flurstuecksnummer. Also true if the
-     *          containing flurstueck ist historic!
-     *
-     * @throws  VermessungsunterlagenException           Exception DOCUMENT ME!
-     * @throws  VermessungsunterlagenValidatorException  DOCUMENT ME!
+     * @return  DOCUMENT ME!
      */
-    private boolean existFlurstueck(final VermessungsunterlagenAnfrageBean.AntragsflurstueckBean flurstueckBean)
-            throws VermessungsunterlagenException {
-        if (flurstueckBean == null) {
+    private boolean isWuppGemarkung(final VermessungsunterlagenAnfrageBean.AntragsflurstueckBean flurstueckBean) {
+        if ((flurstueckBean == null) || (flurstueckBean.getGemarkungsID() == null)) {
             return false;
+        }
+
+        try {
+            final int gemarkungId = Integer.parseInt(flurstueckBean.getGemarkungsID().trim().substring(2));
+            if (gemarkungId == 0) {
+                return false;
+            }
+
+            final VermessungFlurstueckKickerLightweightSearch search =
+                new VermessungFlurstueckKickerLightweightSearch();
+            search.setSearchFor(VermessungFlurstueckKickerLightweightSearch.SearchFor.GEMARKUNG);
+            search.setGemarkungsnummer(Integer.toString(gemarkungId));
+            search.setRepresentationFields(new String[] {});
+            final Collection<LightweightMetaObject> lwmos = helper.performSearch(search);
+            return !lwmos.isEmpty();
+        } catch (final Exception ex) {
+            return false;
+        }
+    }
+
+    /**
+     * DOCUMENT ME!
+     *
+     * @param   flurstueckBean  DOCUMENT ME!
+     *
+     * @return  DOCUMENT ME!
+     */
+    private String getAlkisId(final VermessungsunterlagenAnfrageBean.AntragsflurstueckBean flurstueckBean) {
+        if (flurstueckBean == null) {
+            return null;
         }
         final String alkisId;
 
@@ -363,7 +444,7 @@ public class VermessungsunterlagenValidator {
             if (zaehlernenner.contains("/")) {
                 final String[] split = zaehlernenner.split("/");
                 if (split.length != 2) {
-                    return false;
+                    return null;
                 }
                 zaehler = split[0];
                 nenner = split[1];
@@ -377,9 +458,28 @@ public class VermessungsunterlagenValidator {
                     Integer.valueOf(zaehler),
                     Integer.valueOf(nenner));
         } catch (final Exception ex) {
-            return false;
+            return null;
+        }
+        return alkisId;
+    }
+
+    /**
+     * DOCUMENT ME!
+     *
+     * @param   alkisId  flurstueckBean DOCUMENT ME!
+     *
+     * @return  true if WuNDa contains a flurstueck defined by gemarkung, flur, flurstuecksnummer. Also true if the
+     *          containing flurstueck ist historic!
+     *
+     * @throws  VermessungsunterlagenException           Exception DOCUMENT ME!
+     * @throws  VermessungsunterlagenValidatorException  DOCUMENT ME!
+     */
+    private Collection<CidsBean> getWuppFlurstuecke(final String alkisId) throws VermessungsunterlagenException {
+        if (alkisId == null) {
+            return null;
         }
         try {
+            final Collection<CidsBean> flurstuecke = new ArrayList<>();
             final CidsBean fsCidsBean = searchFlurstueck(alkisId);
             if (fsCidsBean != null) {
                 for (final CidsBean aktuell : getAktuelle(fsCidsBean)) {
@@ -395,10 +495,8 @@ public class VermessungsunterlagenValidator {
                         flurstuecke.add(alkisBean);
                     }
                 }
-                return true;
-            } else {
-                return false;
             }
+            return flurstuecke;
         } catch (final Exception ex) {
             throw new VermessungsunterlagenValidatorException("Fehler beim laden des Flurstuecks: " + alkisId, ex);
         }
@@ -484,6 +582,29 @@ public class VermessungsunterlagenValidator {
     /**
      * DOCUMENT ME!
      *
+     * @param   geom  DOCUMENT ME!
+     *
+     * @return  DOCUMENT ME!
+     *
+     * @throws  Exception  DOCUMENT ME!
+     */
+    private Collection<CidsBean> searchFlurstuecke(final Geometry geom) throws Exception {
+        final BufferingGeosearch search = new BufferingGeosearch();
+        search.setGeometry(geom);
+        final MetaClass mc = CidsBean.getMetaClassFromTableName("WUNDA_BLAU", "alkis_landparcel");
+        search.setValidClasses(Arrays.asList(mc));
+        final Collection<MetaObjectNode> mons = helper.performSearch(search);
+
+        final Collection<CidsBean> flurstuecke = new ArrayList<>();
+        for (final MetaObjectNode mon : mons) {
+            flurstuecke.add(helper.loadCidsBean(mon));
+        }
+        return flurstuecke;
+    }
+
+    /**
+     * DOCUMENT ME!
+     *
      * @param   alkisId  gemarkung DOCUMENT ME!
      *
      * @return  DOCUMENT ME!
@@ -507,6 +628,9 @@ public class VermessungsunterlagenValidator {
                 alkisId.substring(7, 10),
                 zaehler,
                 nenner);
+        if (parts == null) {
+            return null;
+        }
 
         final AlbFlurstueckKickerLightweightSearch search = new AlbFlurstueckKickerLightweightSearch();
         search.setSearchFor(AlbFlurstueckKickerLightweightSearch.SearchFor.FLURSTUECK);
