@@ -283,14 +283,19 @@ public class VermessungsunterlagenJob implements Runnable {
      *
      * @throws  Exception  DOCUMENT ME!
      */
-    private Geometry createGeometryFrom(final Collection<CidsBean> cidsBeans) throws Exception {
+    private Geometry createGeometryFrom(final Collection<CidsBean> cidsBeans, final Geometry intersectionGeometry) throws Exception {
         final Collection<Polygon> polygons = new ArrayList<>(cidsBeans.size());
         for (final CidsBean cidsBean : cidsBeans) {
             final Polygon polygon = (Polygon)cidsBean.getProperty("geometrie.geo_field");
             polygons.add(polygon);
         }
         final GeometryCollection gc = new GeometryFactory().createGeometryCollection(polygons.toArray(new Polygon[0]));
-        final Geometry geometry = gc.union();
+        Geometry geometry = gc.union();
+        
+        if (intersectionGeometry != null) {
+            geometry = geometry.intersection(intersectionGeometry);
+        }
+        
         geometry.setSRID(VermessungsunterlagenHelper.SRID);
         return geometry;
     }
@@ -311,8 +316,7 @@ public class VermessungsunterlagenJob implements Runnable {
                     final Geometry vermessungsGeometrieSaum = vermessungsGeometrie.buffer(saum);
                     vermessungsGeometrieSaum.setSRID(vermessungsGeometrie.getSRID());
 
-                    final Geometry geometryFlurstuecke = validator.isGeometryFromFlurstuecke()
-                        ? createGeometryFrom(validator.getFlurstuecke()) : vermessungsGeometrie;
+                    final Geometry geometryFlurstuecke = createGeometryFrom(validator.getFlurstuecke(), validator.isGeometryFromFlurstuecke() ? null : vermessungsGeometrie);
 
                     helper.updateJobCidsBeanFlurstueckGeom(this, geometryFlurstuecke);
 
