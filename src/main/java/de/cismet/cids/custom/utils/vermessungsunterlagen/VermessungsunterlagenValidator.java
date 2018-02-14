@@ -20,6 +20,8 @@ import Sirius.server.middleware.types.MetaObjectNode;
 import com.vividsolutions.jts.geom.Geometry;
 import com.vividsolutions.jts.geom.Polygon;
 
+import lombok.Getter;
+
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collection;
@@ -68,13 +70,12 @@ public class VermessungsunterlagenValidator {
 
     //~ Instance fields --------------------------------------------------------
 
-    private final Collection<CidsBean> flurstuecke = new ArrayList<>();
-    private boolean vermessungsstelleKnown = false;
-
-    private final VermessungsunterlagenHelper helper;
-
-    private boolean ignoreError = false;
-    private boolean pnrNotZero = false;
+    @Getter private final Collection<CidsBean> flurstuecke = new ArrayList<>();
+    @Getter private boolean vermessungsstelleKnown = false;
+    @Getter private final VermessungsunterlagenHelper helper;
+    @Getter private boolean ignoreError = false;
+    @Getter private boolean pnrNotZero = false;
+    @Getter private boolean geometryFromFlurstuecke = true;
 
     //~ Constructors -----------------------------------------------------------
 
@@ -88,42 +89,6 @@ public class VermessungsunterlagenValidator {
     }
 
     //~ Methods ----------------------------------------------------------------
-
-    /**
-     * DOCUMENT ME!
-     *
-     * @return  DOCUMENT ME!
-     */
-    public Collection<CidsBean> getFlurstuecke() {
-        return flurstuecke;
-    }
-
-    /**
-     * DOCUMENT ME!
-     *
-     * @return  DOCUMENT ME!
-     */
-    public boolean isVermessungsstelleKnown() {
-        return vermessungsstelleKnown;
-    }
-
-    /**
-     * DOCUMENT ME!
-     *
-     * @return  DOCUMENT ME!
-     */
-    public boolean ignoreError() {
-        return ignoreError;
-    }
-
-    /**
-     * DOCUMENT ME!
-     *
-     * @return  DOCUMENT ME!
-     */
-    public boolean isPnrNotZero() {
-        return pnrNotZero;
-    }
 
     /**
      * DOCUMENT ME!
@@ -235,6 +200,8 @@ public class VermessungsunterlagenValidator {
                     ex);
             }
         }
+        geometryFromFlurstuecke = !wuppFlurstuecke.isEmpty();
+
         // jedes einzelne Flurstück Überprüfen
         for (final VermessungsunterlagenAnfrageBean.AntragsflurstueckBean wuppFlurstueck : wuppFlurstuecke) {
             // gemarkung flur flurstueck darf nicht leer sein
