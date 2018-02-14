@@ -170,6 +170,8 @@ public class VermessungsunterlagenValidator {
             throw getExceptionByErrorCode(Error.NO_ANTRAGSFLURSTUECK);
         }
 
+        geometryFromFlurstuecke = !wuppFlurstuecke.isEmpty();
+        
         // keine wuppertale Flurstücke
         if (wuppFlurstuecke.isEmpty()) {
             final Polygon[] polygonArray = anfrageBean.getAnfragepolygonArray();
@@ -200,7 +202,6 @@ public class VermessungsunterlagenValidator {
                     ex);
             }
         }
-        geometryFromFlurstuecke = !wuppFlurstuecke.isEmpty();
 
         // jedes einzelne Flurstück Überprüfen
         for (final VermessungsunterlagenAnfrageBean.AntragsflurstueckBean wuppFlurstueck : wuppFlurstuecke) {
