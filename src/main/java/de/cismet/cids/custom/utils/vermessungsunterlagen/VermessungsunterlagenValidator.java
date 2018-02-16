@@ -171,7 +171,7 @@ public class VermessungsunterlagenValidator {
         }
 
         geometryFromFlurstuecke = !wuppFlurstuecke.isEmpty();
-        
+
         // keine wuppertale Flurstücke
         if (wuppFlurstuecke.isEmpty()) {
             final Polygon[] polygonArray = anfrageBean.getAnfragepolygonArray();
