@@ -277,13 +277,15 @@ public class VermessungsunterlagenJob implements Runnable {
     /**
      * DOCUMENT ME!
      *
-     * @param   cidsBeans  DOCUMENT ME!
+     * @param   cidsBeans             DOCUMENT ME!
+     * @param   intersectionGeometry  DOCUMENT ME!
      *
      * @return  DOCUMENT ME!
      *
      * @throws  Exception  DOCUMENT ME!
      */
-    private Geometry createGeometryFrom(final Collection<CidsBean> cidsBeans, final Geometry intersectionGeometry) throws Exception {
+    private Geometry createGeometryFrom(final Collection<CidsBean> cidsBeans, final Geometry intersectionGeometry)
+            throws Exception {
         final Collection<Polygon> polygons = new ArrayList<>(cidsBeans.size());
         for (final CidsBean cidsBean : cidsBeans) {
             final Polygon polygon = (Polygon)cidsBean.getProperty("geometrie.geo_field");
@@ -291,11 +293,11 @@ public class VermessungsunterlagenJob implements Runnable {
         }
         final GeometryCollection gc = new GeometryFactory().createGeometryCollection(polygons.toArray(new Polygon[0]));
         Geometry geometry = gc.union();
-        
+
         if (intersectionGeometry != null) {
             geometry = geometry.intersection(intersectionGeometry);
         }
-        
+
         geometry.setSRID(VermessungsunterlagenHelper.SRID);
         return geometry;
     }
@@ -316,15 +318,15 @@ public class VermessungsunterlagenJob implements Runnable {
                     final Geometry vermessungsGeometrieSaum = vermessungsGeometrie.buffer(saum);
                     vermessungsGeometrieSaum.setSRID(vermessungsGeometrie.getSRID());
 
-                    final Geometry geometryFlurstuecke = createGeometryFrom(validator.getFlurstuecke(), validator.isGeometryFromFlurstuecke() ? null : vermessungsGeometrie);
+                    final Geometry geometryFlurstuecke = createGeometryFrom(validator.getFlurstuecke(),
+                            validator.isGeometryFromFlurstuecke() ? null : vermessungsGeometrie);
 
                     helper.updateJobCidsBeanFlurstueckGeom(this, geometryFlurstuecke);
 
                     if (!validator.isVermessungsstelleKnown() || validator.isPnrNotZero()) {
                         submitTask(new VermUntTaskPNR(
                                 getKey(),
-                                validator.isVermessungsstelleKnown()
-                                    ? anfrageBean.getZulassungsnummerVermessungsstelle() : null,
+                                anfrageBean.getZulassungsnummerVermessungsstelle(),
                                 anfrageBean.getGeschaeftsbuchnummer(),
                                 anfrageBean.getPunktnummernreservierungsArray()));
                     }
