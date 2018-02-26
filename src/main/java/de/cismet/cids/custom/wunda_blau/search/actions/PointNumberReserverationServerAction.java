@@ -35,7 +35,9 @@ import de.cismet.cids.server.connectioncontext.ServerConnectionContextProvider;
  * @version  $Revision$, $Date$
  */
 @org.openide.util.lookup.ServiceProvider(service = ServerAction.class)
-public class PointNumberReserverationServerAction implements UserAwareServerAction, MetaServiceStore, ServerConnectionContextProvider {
+public class PointNumberReserverationServerAction implements UserAwareServerAction,
+    MetaServiceStore,
+    ServerConnectionContextProvider {
 
     //~ Static fields/initializers ---------------------------------------------
 
@@ -354,10 +356,9 @@ public class PointNumberReserverationServerAction implements UserAwareServerActi
     public MetaService getMetaService() {
         return metaService;
     }
-    
+
     @Override
     public ServerConnectionContext getServerConnectionContext() {
         return ServerConnectionContext.create(PointNumberReserverationServerAction.class.getSimpleName());
     }
-    
 }

@@ -32,9 +32,9 @@ import de.cismet.cids.server.actions.JasperReportServerAction;
 import de.cismet.cids.server.actions.ServerAction;
 import de.cismet.cids.server.actions.ServerActionParameter;
 import de.cismet.cids.server.connectioncontext.ServerConnectionContext;
+import de.cismet.cids.server.connectioncontext.ServerConnectionContextProvider;
 
 import de.cismet.cids.utils.serverresources.ServerResourcesLoader;
-import de.cismet.cids.server.connectioncontext.ServerConnectionContextProvider;
 
 /**
  * DOCUMENT ME!
@@ -132,5 +132,4 @@ public class NivPReportServerAction extends JasperReportServerAction implements 
     public ServerConnectionContext getServerConnectionContext() {
         return ServerConnectionContext.create(NivPReportServerAction.class.getSimpleName());
     }
-
 }

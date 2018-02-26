@@ -40,7 +40,9 @@ import de.cismet.cids.server.connectioncontext.ServerConnectionContextProvider;
  * @version  $Revision$, $Date$
  */
 @org.openide.util.lookup.ServiceProvider(service = ServerAction.class)
-public class BerechtigungspruefungFreigabeServerAction implements UserAwareServerAction, MetaServiceStore, ServerConnectionContextProvider {
+public class BerechtigungspruefungFreigabeServerAction implements UserAwareServerAction,
+    MetaServiceStore,
+    ServerConnectionContextProvider {
 
     //~ Static fields/initializers ---------------------------------------------
 
@@ -146,7 +148,10 @@ public class BerechtigungspruefungFreigabeServerAction implements UserAwareServe
                     pruefungBean.setProperty("pruefung_timestamp", now);
                 }
 
-                getMetaService().updateMetaObject(getUser(), pruefungBean.getMetaObject(), getServerConnectionContext());
+                getMetaService().updateMetaObject(
+                    getUser(),
+                    pruefungBean.getMetaObject(),
+                    getServerConnectionContext());
 
                 if (pruefungsAbschluss) {
                     if (!pruefstatus && (downloadInfo instanceof BerechtigungspruefungBillingDownloadInfo)) { // storno
@@ -164,7 +169,10 @@ public class BerechtigungspruefungFreigabeServerAction implements UserAwareServe
                                 billingBean.setProperty("stornogrund", billingStornogrundBean);
                                 billingBean.setProperty("storniert_durch", getUser().toString());
 
-                                getMetaService().updateMetaObject(getUser(), billingBean.getMetaObject(), getServerConnectionContext());
+                                getMetaService().updateMetaObject(
+                                    getUser(),
+                                    billingBean.getMetaObject(),
+                                    getServerConnectionContext());
                             } catch (Exception ex) {
                                 LOG.error("Error while setting 'storniert' of billing", ex);
                             }

@@ -8,7 +8,6 @@
 package de.cismet.cids.custom.wunda_blau.search.server;
 
 import Sirius.server.middleware.interfaces.domainserver.MetaService;
-import de.cismet.cids.server.connectioncontext.ServerConnectionContext;
 
 import java.rmi.RemoteException;
 
@@ -16,16 +15,18 @@ import java.util.ArrayList;
 import java.util.Collection;
 import java.util.List;
 
+import de.cismet.cids.server.connectioncontext.ServerConnectionContext;
+import de.cismet.cids.server.connectioncontext.ServerConnectionContextProvider;
 import de.cismet.cids.server.search.AbstractCidsServerSearch;
 import de.cismet.cids.server.search.SearchException;
-import de.cismet.cids.server.connectioncontext.ServerConnectionContextProvider;
 
 /**
  * DOCUMENT ME!
  *
  * @version  $Revision$, $Date$
  */
-public class BerechtigungspruefungOffeneAnfragenStatement extends AbstractCidsServerSearch implements ServerConnectionContextProvider {
+public class BerechtigungspruefungOffeneAnfragenStatement extends AbstractCidsServerSearch
+        implements ServerConnectionContextProvider {
 
     //~ Static fields/initializers ---------------------------------------------
 
@@ -96,10 +97,9 @@ public class BerechtigungspruefungOffeneAnfragenStatement extends AbstractCidsSe
         }
         return null;
     }
-    
+
     @Override
     public ServerConnectionContext getServerConnectionContext() {
         return ServerConnectionContext.create(BerechtigungspruefungOffeneAnfragenStatement.class.getSimpleName());
-    }                    
-    
+    }
 }

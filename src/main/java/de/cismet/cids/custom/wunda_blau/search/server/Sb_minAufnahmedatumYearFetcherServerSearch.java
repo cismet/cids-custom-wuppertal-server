@@ -8,16 +8,16 @@
 package de.cismet.cids.custom.wunda_blau.search.server;
 
 import Sirius.server.middleware.interfaces.domainserver.MetaService;
-import de.cismet.cids.server.connectioncontext.ServerConnectionContext;
 
 import java.rmi.RemoteException;
 
 import java.util.ArrayList;
 import java.util.Collection;
 
+import de.cismet.cids.server.connectioncontext.ServerConnectionContext;
+import de.cismet.cids.server.connectioncontext.ServerConnectionContextProvider;
 import de.cismet.cids.server.search.AbstractCidsServerSearch;
 import de.cismet.cids.server.search.SearchException;
-import de.cismet.cids.server.connectioncontext.ServerConnectionContextProvider;
 
 /**
  * DOCUMENT ME!
@@ -25,7 +25,8 @@ import de.cismet.cids.server.connectioncontext.ServerConnectionContextProvider;
  * @author   Gilles Baatz
  * @version  $Revision$, $Date$
  */
-public class Sb_minAufnahmedatumYearFetcherServerSearch extends AbstractCidsServerSearch implements ServerConnectionContextProvider {
+public class Sb_minAufnahmedatumYearFetcherServerSearch extends AbstractCidsServerSearch
+        implements ServerConnectionContextProvider {
 
     //~ Static fields/initializers ---------------------------------------------
 
@@ -46,10 +47,9 @@ public class Sb_minAufnahmedatumYearFetcherServerSearch extends AbstractCidsServ
         }
         return null;
     }
-    
+
     @Override
     public ServerConnectionContext getServerConnectionContext() {
         return ServerConnectionContext.create(Sb_minAufnahmedatumYearFetcherServerSearch.class.getSimpleName());
-    }                    
-    
+    }
 }

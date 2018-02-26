@@ -31,11 +31,11 @@ import de.cismet.cids.server.actions.JasperReportServerAction;
 import de.cismet.cids.server.actions.ServerAction;
 import de.cismet.cids.server.actions.ServerActionParameter;
 import de.cismet.cids.server.connectioncontext.ServerConnectionContext;
+import de.cismet.cids.server.connectioncontext.ServerConnectionContextProvider;
 
 import de.cismet.cids.utils.serverresources.ServerResourcesLoader;
 
 import de.cismet.commons.utils.MultiPagePictureReader;
-import de.cismet.cids.server.connectioncontext.ServerConnectionContextProvider;
 
 /**
  * DOCUMENT ME!
@@ -44,7 +44,8 @@ import de.cismet.cids.server.connectioncontext.ServerConnectionContextProvider;
  * @version  $Revision$, $Date$
  */
 @org.openide.util.lookup.ServiceProvider(service = ServerAction.class)
-public class VermessungsrissReportServerAction extends JasperReportServerAction implements ServerConnectionContextProvider {
+public class VermessungsrissReportServerAction extends JasperReportServerAction
+        implements ServerConnectionContextProvider {
 
     //~ Static fields/initializers ---------------------------------------------
 
@@ -131,10 +132,9 @@ public class VermessungsrissReportServerAction extends JasperReportServerAction 
         return ServerResourcesLoader.getInstance()
                     .loadJasperReport(WundaBlauServerResources.VERMESSUNGSRISSE_JASPER.getValue());
     }
-    
+
     @Override
     public ServerConnectionContext getServerConnectionContext() {
         return ServerConnectionContext.create(VermessungsrissReportServerAction.class.getSimpleName());
     }
-    
 }

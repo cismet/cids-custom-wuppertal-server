@@ -32,9 +32,9 @@ import de.cismet.cids.server.actions.JasperReportServerAction;
 import de.cismet.cids.server.actions.ServerAction;
 import de.cismet.cids.server.actions.ServerActionParameter;
 import de.cismet.cids.server.connectioncontext.ServerConnectionContext;
+import de.cismet.cids.server.connectioncontext.ServerConnectionContextProvider;
 
 import de.cismet.cids.utils.serverresources.ServerResourcesLoader;
-import de.cismet.cids.server.connectioncontext.ServerConnectionContextProvider;
 
 /**
  * DOCUMENT ME!
@@ -47,7 +47,7 @@ public class AlkisPointReportServerAction extends JasperReportServerAction imple
 
     //~ Static fields/initializers ---------------------------------------------
 
-public static final String TASK_NAME = "alkisPointReport";
+    public static final String TASK_NAME = "alkisPointReport";
 
     //~ Enums ------------------------------------------------------------------
 
@@ -118,10 +118,9 @@ public static final String TASK_NAME = "alkisPointReport";
     protected JasperReport getJasperReport() throws Exception {
         return ServerResourcesLoader.getInstance().loadJasperReport(WundaBlauServerResources.APMAPS_JASPER.getValue());
     }
-    
+
     @Override
     public ServerConnectionContext getServerConnectionContext() {
         return ServerConnectionContext.create(AlkisPointReportServerAction.class.getSimpleName());
     }
-    
 }

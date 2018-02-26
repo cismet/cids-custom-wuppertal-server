@@ -22,11 +22,11 @@ import java.util.ArrayList;
 import java.util.Collection;
 
 import de.cismet.cids.custom.utils.pointnumberreservation.VermessungsStellenSearchResult;
-import de.cismet.cids.server.connectioncontext.ServerConnectionContext;
 
+import de.cismet.cids.server.connectioncontext.ServerConnectionContext;
+import de.cismet.cids.server.connectioncontext.ServerConnectionContextProvider;
 import de.cismet.cids.server.search.AbstractCidsServerSearch;
 import de.cismet.cids.server.search.SearchException;
-import de.cismet.cids.server.connectioncontext.ServerConnectionContextProvider;
 
 /**
  * DOCUMENT ME!
@@ -34,7 +34,8 @@ import de.cismet.cids.server.connectioncontext.ServerConnectionContextProvider;
  * @author   daniel
  * @version  $Revision$, $Date$
  */
-public class VermessungsStellenNummerSearch extends AbstractCidsServerSearch implements ServerConnectionContextProvider{
+public class VermessungsStellenNummerSearch extends AbstractCidsServerSearch
+        implements ServerConnectionContextProvider {
 
     //~ Static fields/initializers ---------------------------------------------
 
@@ -88,10 +89,9 @@ public class VermessungsStellenNummerSearch extends AbstractCidsServerSearch imp
 
         return null;
     }
-    
+
     @Override
     public ServerConnectionContext getServerConnectionContext() {
         return ServerConnectionContext.create(VermessungsStellenNummerSearch.class.getSimpleName());
-    }                    
-    
+    }
 }

@@ -10,15 +10,12 @@ package de.cismet.cids.custom.wunda_blau.search.server;
 import Sirius.server.middleware.interfaces.domainserver.MetaService;
 import Sirius.server.sql.PreparableStatement;
 
-import de.cismet.cids.server.connectioncontext.ServerConnectionContext;
-
 import lombok.Getter;
 import lombok.Setter;
 
 import org.apache.log4j.Logger;
 
 import org.openide.util.lookup.ServiceProvider;
-
 
 import java.sql.Types;
 
@@ -27,7 +24,8 @@ import java.util.Collection;
 import java.util.LinkedList;
 import java.util.List;
 
-
+import de.cismet.cids.server.connectioncontext.ServerConnectionContext;
+import de.cismet.cids.server.connectioncontext.ServerConnectionContextProvider;
 import de.cismet.cids.server.search.AbstractCidsServerSearch;
 import de.cismet.cids.server.search.SearchException;
 
@@ -36,7 +34,6 @@ import de.cismet.cidsx.base.types.Type;
 import de.cismet.cidsx.server.api.types.SearchInfo;
 import de.cismet.cidsx.server.api.types.SearchParameterInfo;
 import de.cismet.cidsx.server.search.RestApiCidsServerSearch;
-import de.cismet.cids.server.connectioncontext.ServerConnectionContextProvider;
 
 /**
  * Search to Retrieve the BPlan-Objects to the cids Pure REST Search API.
@@ -45,7 +42,8 @@ import de.cismet.cids.server.connectioncontext.ServerConnectionContextProvider;
  * @version  $Revision$, $Date$
  */
 @ServiceProvider(service = RestApiCidsServerSearch.class)
-public class BPlanAPISearch extends AbstractCidsServerSearch implements RestApiCidsServerSearch, ServerConnectionContextProvider {
+public class BPlanAPISearch extends AbstractCidsServerSearch implements RestApiCidsServerSearch,
+    ServerConnectionContextProvider {
 
     //~ Static fields/initializers ---------------------------------------------
 
@@ -126,7 +124,9 @@ public class BPlanAPISearch extends AbstractCidsServerSearch implements RestApiC
             if (metaService != null) {
                 // "select * from bplanapisearch('" + wktString + "','" + status + "')";
                 QUERY.setObjects(wktString, status, srs, urlprefix);
-                final ArrayList<ArrayList> results = metaService.performCustomSearch(QUERY, getServerConnectionContext());
+                final ArrayList<ArrayList> results = metaService.performCustomSearch(
+                        QUERY,
+                        getServerConnectionContext());
                 return results;
             } else {
                 LOG.error("active local server not found"); // NOI18N
@@ -137,12 +137,11 @@ public class BPlanAPISearch extends AbstractCidsServerSearch implements RestApiC
             throw new SearchException("error while loading verfahren objects", ex);
         }
     }
-    
+
     @Override
     public ServerConnectionContext getServerConnectionContext() {
         return ServerConnectionContext.create(BPlanAPISearch.class.getSimpleName());
-    }                    
-    
+    }
 }
 
 //DROP TYPE bplanAPISearchResult CASCADE;

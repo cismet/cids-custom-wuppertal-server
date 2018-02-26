@@ -35,7 +35,9 @@ import de.cismet.cids.server.connectioncontext.ServerConnectionContextProvider;
  * @version  $Revision$, $Date$
  */
 @org.openide.util.lookup.ServiceProvider(service = ServerAction.class)
-public class FormSolutionBestellungChangeStatusServerAction implements UserAwareServerAction, MetaServiceStore, ServerConnectionContextProvider {
+public class FormSolutionBestellungChangeStatusServerAction implements UserAwareServerAction,
+    MetaServiceStore,
+    ServerConnectionContextProvider {
 
     //~ Static fields/initializers ---------------------------------------------
 
@@ -121,7 +123,8 @@ public class FormSolutionBestellungChangeStatusServerAction implements UserAware
                 getMySqlHelper().updateStatus(transid, status);
                 bestellungBean.setProperty("erledigt", erledigt);
                 bestellungBean.setProperty("fehler", null);
-                DomainServerImpl.getServerInstance().updateMetaObject(getUser(), bestellungBean.getMetaObject(), getServerConnectionContext());
+                DomainServerImpl.getServerInstance()
+                        .updateMetaObject(getUser(), bestellungBean.getMetaObject(), getServerConnectionContext());
                 return true;
             }
             return false;
@@ -155,10 +158,9 @@ public class FormSolutionBestellungChangeStatusServerAction implements UserAware
     public MetaService getMetaService() {
         return this.metaService;
     }
-    
+
     @Override
     public ServerConnectionContext getServerConnectionContext() {
         return ServerConnectionContext.create(FormSolutionBestellungChangeStatusServerAction.class.getSimpleName());
     }
-    
 }

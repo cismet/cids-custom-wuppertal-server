@@ -24,15 +24,15 @@
 package de.cismet.cids.custom.wunda_blau.search.server;
 
 import Sirius.server.middleware.interfaces.domainserver.MetaService;
-import de.cismet.cids.server.connectioncontext.ServerConnectionContext;
 
 import java.rmi.RemoteException;
 
 import java.util.ArrayList;
 import java.util.Collection;
 
-import de.cismet.cids.server.search.AbstractCidsServerSearch;
+import de.cismet.cids.server.connectioncontext.ServerConnectionContext;
 import de.cismet.cids.server.connectioncontext.ServerConnectionContextProvider;
+import de.cismet.cids.server.search.AbstractCidsServerSearch;
 
 /**
  * DOCUMENT ME!
@@ -41,7 +41,7 @@ import de.cismet.cids.server.connectioncontext.ServerConnectionContextProvider;
  * @version  $Revision$, $Date$
  */
 public class Alb_BaulastblattChecker extends AbstractCidsServerSearch implements ServerConnectionContextProvider {
-    
+
     //~ Instance fields --------------------------------------------------------
 
     private final String searchQuery;
@@ -80,9 +80,9 @@ public class Alb_BaulastblattChecker extends AbstractCidsServerSearch implements
     public String toString() {
         return searchQuery;
     }
-    
+
     @Override
     public ServerConnectionContext getServerConnectionContext() {
         return ServerConnectionContext.create(Alb_BaulastblattChecker.class.getSimpleName());
-    }            
+    }
 }

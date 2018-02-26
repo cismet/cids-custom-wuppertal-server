@@ -9,7 +9,6 @@ package de.cismet.cids.custom.wunda_blau.search.server;
 
 import Sirius.server.middleware.interfaces.domainserver.MetaService;
 import Sirius.server.newuser.User;
-import de.cismet.cids.server.connectioncontext.ServerConnectionContext;
 
 import org.apache.log4j.Logger;
 
@@ -17,8 +16,9 @@ import java.util.ArrayList;
 import java.util.Collection;
 import java.util.LinkedList;
 
-import de.cismet.cids.server.search.AbstractCidsServerSearch;
+import de.cismet.cids.server.connectioncontext.ServerConnectionContext;
 import de.cismet.cids.server.connectioncontext.ServerConnectionContextProvider;
+import de.cismet.cids.server.search.AbstractCidsServerSearch;
 
 /**
  * DOCUMENT ME!
@@ -26,7 +26,8 @@ import de.cismet.cids.server.connectioncontext.ServerConnectionContextProvider;
  * @author   jweintraut
  * @version  $Revision$, $Date$
  */
-public class CidsVermessungRissArtSearchStatement extends AbstractCidsServerSearch implements ServerConnectionContextProvider {
+public class CidsVermessungRissArtSearchStatement extends AbstractCidsServerSearch
+        implements ServerConnectionContextProvider {
 
     //~ Static fields/initializers ---------------------------------------------
 
@@ -102,10 +103,9 @@ public class CidsVermessungRissArtSearchStatement extends AbstractCidsServerSear
             throw new RuntimeException(e);
         }
     }
-    
+
     @Override
     public ServerConnectionContext getServerConnectionContext() {
         return ServerConnectionContext.create(CidsVermessungRissArtSearchStatement.class.getSimpleName());
-    }                    
-    
+    }
 }

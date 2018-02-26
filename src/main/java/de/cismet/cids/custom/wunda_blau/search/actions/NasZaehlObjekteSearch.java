@@ -35,16 +35,16 @@ import java.util.Properties;
 
 import de.cismet.cids.custom.utils.WundaBlauServerResources;
 import de.cismet.cids.custom.wunda_blau.search.server.CidsMauernSearchStatement;
-import de.cismet.cids.server.connectioncontext.ServerConnectionContext;
 import de.cismet.cids.custom.wunda_blau.search.server.SearchProperties;
 
+import de.cismet.cids.server.connectioncontext.ServerConnectionContext;
+import de.cismet.cids.server.connectioncontext.ServerConnectionContextProvider;
 import de.cismet.cids.server.search.AbstractCidsServerSearch;
 import de.cismet.cids.server.search.SearchException;
 
 import de.cismet.cids.utils.serverresources.ServerResourcesLoader;
 
 import de.cismet.cismap.commons.jtsgeometryfactories.PostGisGeometryFactory;
-import de.cismet.cids.server.connectioncontext.ServerConnectionContextProvider;
 
 /**
  * DOCUMENT ME!
@@ -317,10 +317,9 @@ public class NasZaehlObjekteSearch extends AbstractCidsServerSearch implements S
 //            Exceptions.printStackTrace(ex);
 //        }
     }
-    
+
     @Override
     public ServerConnectionContext getServerConnectionContext() {
         return ServerConnectionContext.create(NasZaehlObjekteSearch.class.getSimpleName());
     }
-    
 }

@@ -15,7 +15,6 @@ import Sirius.server.middleware.interfaces.domainserver.MetaService;
 import Sirius.server.middleware.types.MetaObject;
 import Sirius.server.middleware.types.MetaObjectNode;
 import Sirius.server.newuser.User;
-import de.cismet.cids.server.connectioncontext.ServerConnectionContext;
 
 import org.apache.log4j.Logger;
 
@@ -30,10 +29,11 @@ import java.util.List;
 
 import de.cismet.cids.custom.tostringconverter.wunda_blau.BillingBillingToStringConverter;
 
-import de.cismet.cids.server.search.AbstractCidsServerSearch;
-import de.cismet.cids.server.search.SearchException;
+import de.cismet.cids.server.connectioncontext.ServerConnectionContext;
 import de.cismet.cids.server.connectioncontext.ServerConnectionContextProvider;
+import de.cismet.cids.server.search.AbstractCidsServerSearch;
 import de.cismet.cids.server.search.MetaObjectNodeServerSearch;
+import de.cismet.cids.server.search.SearchException;
 
 /**
  * DOCUMENT ME!
@@ -41,7 +41,8 @@ import de.cismet.cids.server.search.MetaObjectNodeServerSearch;
  * @author   Gilles Baatz
  * @version  $Revision$, $Date$
  */
-public class CidsBillingSearchStatement extends AbstractCidsServerSearch implements ServerConnectionContextProvider, MetaObjectNodeServerSearch {
+public class CidsBillingSearchStatement extends AbstractCidsServerSearch implements ServerConnectionContextProvider,
+    MetaObjectNodeServerSearch {
 
     //~ Static fields/initializers ---------------------------------------------
 
@@ -140,7 +141,8 @@ public class CidsBillingSearchStatement extends AbstractCidsServerSearch impleme
                     LOG.debug("The used query is: " + query.toString());
                 }
 
-                final ArrayList<ArrayList> searchResult = ms.performCustomSearch(query.toString(), getServerConnectionContext());
+                final ArrayList<ArrayList> searchResult = ms.performCustomSearch(query.toString(),
+                        getServerConnectionContext());
                 for (final ArrayList al : searchResult) {
                     final int cid = (Integer)al.get(0);
                     final int oid = (Integer)al.get(1);
@@ -609,6 +611,5 @@ public class CidsBillingSearchStatement extends AbstractCidsServerSearch impleme
     @Override
     public ServerConnectionContext getServerConnectionContext() {
         return ServerConnectionContext.create(CidsBillingSearchStatement.class.getSimpleName());
-    }                    
-
+    }
 }

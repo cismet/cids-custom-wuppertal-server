@@ -35,7 +35,9 @@ import de.cismet.cids.server.connectioncontext.ServerConnectionContextProvider;
  * @version  $Revision$, $Date$
  */
 @org.openide.util.lookup.ServiceProvider(service = ServerAction.class)
-public class BerechtigungspruefungAnfrageServerAction implements UserAwareServerAction, MetaServiceStore, ServerConnectionContextProvider {
+public class BerechtigungspruefungAnfrageServerAction implements UserAwareServerAction,
+    MetaServiceStore,
+    ServerConnectionContextProvider {
 
     //~ Static fields/initializers ---------------------------------------------
 
@@ -121,7 +123,10 @@ public class BerechtigungspruefungAnfrageServerAction implements UserAwareServer
 
                     try {
                         billingBean.setProperty("geschaeftsbuchnummer", schluessel);
-                        getMetaService().updateMetaObject(getUser(), billingBean.getMetaObject(), getServerConnectionContext());
+                        getMetaService().updateMetaObject(
+                            getUser(),
+                            billingBean.getMetaObject(),
+                            getServerConnectionContext());
                     } catch (Exception ex) {
                         LOG.error("Error while setting 'storniert' of billing", ex);
                     }
@@ -169,10 +174,9 @@ public class BerechtigungspruefungAnfrageServerAction implements UserAwareServer
     public MetaService getMetaService() {
         return metaService;
     }
-    
+
     @Override
     public ServerConnectionContext getServerConnectionContext() {
         return ServerConnectionContext.create(BerechtigungspruefungAnfrageServerAction.class.getSimpleName());
     }
-    
 }

@@ -23,8 +23,9 @@ import java.util.LinkedList;
 import java.util.List;
 
 import de.cismet.cids.dynamics.CidsBean;
-import de.cismet.cids.server.connectioncontext.ServerConnectionContext;
 
+import de.cismet.cids.server.connectioncontext.ServerConnectionContext;
+import de.cismet.cids.server.connectioncontext.ServerConnectionContextProvider;
 import de.cismet.cids.server.search.AbstractCidsServerSearch;
 import de.cismet.cids.server.search.SearchException;
 
@@ -34,7 +35,6 @@ import de.cismet.cidsx.server.api.types.SearchInfo;
 import de.cismet.cidsx.server.api.types.SearchParameterInfo;
 import de.cismet.cidsx.server.search.RestApiCidsServerSearch;
 import de.cismet.cidsx.server.search.builtin.legacy.LightweightMetaObjectsSearch;
-import de.cismet.cids.server.connectioncontext.ServerConnectionContextProvider;
 
 /**
  * Builtin Legacy Search to delegate the operation getLightweightMetaObjectsByQuery to the cids Pure REST Search API.
@@ -44,7 +44,8 @@ import de.cismet.cids.server.connectioncontext.ServerConnectionContextProvider;
  */
 @ServiceProvider(service = RestApiCidsServerSearch.class)
 public class AdresseGebaeudeLightweightSearch extends AbstractCidsServerSearch implements RestApiCidsServerSearch,
-    LightweightMetaObjectsSearch, ServerConnectionContextProvider {
+    LightweightMetaObjectsSearch,
+    ServerConnectionContextProvider {
 
     //~ Static fields/initializers ---------------------------------------------
 
@@ -56,7 +57,6 @@ public class AdresseGebaeudeLightweightSearch extends AbstractCidsServerSearch i
     @Getter @Setter private String[] representationFields;
     @Getter @Setter private String representationPattern;
     @Getter @Setter private Integer gebaudeId;
-    
 
     //~ Constructors -----------------------------------------------------------
 

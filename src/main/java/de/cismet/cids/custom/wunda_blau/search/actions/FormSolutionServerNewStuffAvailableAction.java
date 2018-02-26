@@ -98,13 +98,13 @@ import de.cismet.cids.server.actions.ServerAction;
 import de.cismet.cids.server.actions.ServerActionParameter;
 import de.cismet.cids.server.actions.UserAwareServerAction;
 import de.cismet.cids.server.connectioncontext.ServerConnectionContext;
+import de.cismet.cids.server.connectioncontext.ServerConnectionContextProvider;
 
 import de.cismet.cids.utils.MetaClassCacheService;
 import de.cismet.cids.utils.serverresources.ServerResourcesLoader;
 
 import de.cismet.commons.security.AccessHandler;
 import de.cismet.commons.security.handler.SimpleHttpAccessHandler;
-import de.cismet.cids.server.connectioncontext.ServerConnectionContextProvider;
 
 /**
  * DOCUMENT ME!
@@ -113,7 +113,9 @@ import de.cismet.cids.server.connectioncontext.ServerConnectionContextProvider;
  * @version  $Revision$, $Date$
  */
 @org.openide.util.lookup.ServiceProvider(service = ServerAction.class)
-public class FormSolutionServerNewStuffAvailableAction implements UserAwareServerAction, MetaServiceStore, ServerConnectionContextProvider {
+public class FormSolutionServerNewStuffAvailableAction implements UserAwareServerAction,
+    MetaServiceStore,
+    ServerConnectionContextProvider {
 
     //~ Static fields/initializers ---------------------------------------------
 
@@ -413,7 +415,10 @@ public class FormSolutionServerNewStuffAvailableAction implements UserAwareServe
                 bestellungBean.setProperty("fehler_ts", new Timestamp(new Date().getTime()));
                 bestellungBean.setProperty("exception", getObjectMapper().writeValueAsString(exception));
                 if (persist) {
-                    getMetaService().updateMetaObject(user, bestellungBean.getMetaObject(), getServerConnectionContext());
+                    getMetaService().updateMetaObject(
+                        user,
+                        bestellungBean.getMetaObject(),
+                        getServerConnectionContext());
                 }
             } catch (final Exception ex) {
                 LOG.error("Fehler beim Persistieren der Bean", ex);
@@ -494,7 +499,8 @@ public class FormSolutionServerNewStuffAvailableAction implements UserAwareServe
         logSpecial("closing transaction for: " + transid);
 
         final boolean noClose = (transid == null) || transid.startsWith(TEST_CISMET00_PREFIX)
-                    || DomainServerImpl.getServerInstance().hasConfigAttr(getUser(), "custom.formsolutions.noclose", getServerConnectionContext());
+                    || DomainServerImpl.getServerInstance()
+                    .hasConfigAttr(getUser(), "custom.formsolutions.noclose", getServerConnectionContext());
         if (noClose) {
             return;
         }
@@ -708,7 +714,10 @@ public class FormSolutionServerNewStuffAvailableAction implements UserAwareServe
                     + "AND " + produktTypMc.getTableName() + ".key = '" + produktKey + "' "
                     + "AND " + formatMc.getTableName() + ".key = '" + formatKey + "' "
                     + "LIMIT 1;";
-        final MetaObject[] produktMos = getMetaService().getMetaObject(getUser(), produktQuery, getServerConnectionContext());
+        final MetaObject[] produktMos = getMetaService().getMetaObject(
+                getUser(),
+                produktQuery,
+                getServerConnectionContext());
         produktMos[0].setAllClasses(((MetaClassCacheService)Lookup.getDefault().lookup(MetaClassCacheService.class))
                     .getAllClasses(produktMos[0].getDomain()));
         return produktMos[0].getBean();
@@ -935,7 +944,11 @@ public class FormSolutionServerNewStuffAvailableAction implements UserAwareServe
         final Collection<MetaObjectNode> mons = search.performServerSearch();
         if ((mons != null) && !mons.isEmpty()) {
             final MetaObjectNode mon = new ArrayList<MetaObjectNode>(mons).get(0);
-            final CidsBean flurstueck = getMetaService().getMetaObject(getUser(), mon.getObjectId(), mon.getClassId(), getServerConnectionContext())
+            final CidsBean flurstueck = getMetaService().getMetaObject(
+                        getUser(),
+                        mon.getObjectId(),
+                        mon.getClassId(),
+                        getServerConnectionContext())
                         .getBean();
             return flurstueck;
         } else {
@@ -1164,7 +1177,8 @@ public class FormSolutionServerNewStuffAvailableAction implements UserAwareServe
 
                 final MetaObject persistedMo = getMetaService().insertMetaObject(
                         user,
-                        bestellungBean.getMetaObject(), getServerConnectionContext());
+                        bestellungBean.getMetaObject(),
+                        getServerConnectionContext());
 
                 final CidsBean persistedBestellungBean = persistedMo.getBean();
                 fsBeanMap.put(transid, persistedBestellungBean);
@@ -1514,7 +1528,10 @@ public class FormSolutionServerNewStuffAvailableAction implements UserAwareServe
                                 + ".pdf");
                     bestellungBean.setProperty("produkt_ts", new Timestamp(new Date().getTime()));
 
-                    getMetaService().updateMetaObject(user, bestellungBean.getMetaObject(), getServerConnectionContext());
+                    getMetaService().updateMetaObject(
+                        user,
+                        bestellungBean.getMetaObject(),
+                        getServerConnectionContext());
 
                     createRechnung(fileNameRechnung, bestellungBean);
 
@@ -1545,7 +1562,10 @@ public class FormSolutionServerNewStuffAvailableAction implements UserAwareServe
                 final CidsBean billingBean = doBilling(bestellungBean, transid);
                 if (billingBean != null) {
                     bestellungBean.setProperty("fk_billing", billingBean);
-                    getMetaService().updateMetaObject(user, bestellungBean.getMetaObject(), getServerConnectionContext());
+                    getMetaService().updateMetaObject(
+                        user,
+                        bestellungBean.getMetaObject(),
+                        getServerConnectionContext());
                 }
             }
         } catch (final Exception ex) {
@@ -1573,7 +1593,10 @@ public class FormSolutionServerNewStuffAvailableAction implements UserAwareServe
                     if (!Boolean.TRUE.equals(propPostweg)) {
                         bestellungBean.setProperty("erledigt", true);
                     }
-                    getMetaService().updateMetaObject(user, bestellungBean.getMetaObject(), getServerConnectionContext());
+                    getMetaService().updateMetaObject(
+                        user,
+                        bestellungBean.getMetaObject(),
+                        getServerConnectionContext());
                 } catch (final Exception ex) {
                     LOG.error("Fehler beim Persistieren der Bestellung", ex);
                 }
@@ -1670,7 +1693,11 @@ public class FormSolutionServerNewStuffAvailableAction implements UserAwareServe
                 LOG.info("Test-Object would have created this Billing-Entry: " + billingBean.getMOString());
                 return null;
             } else {
-                return getMetaService().insertMetaObject(user, billingBean.getMetaObject(), getServerConnectionContext()).getBean();
+                return getMetaService().insertMetaObject(
+                            user,
+                            billingBean.getMetaObject(),
+                            getServerConnectionContext())
+                            .getBean();
             }
         } catch (Exception e) {
             LOG.error("Error during the persitence of the billing log.", e);
@@ -1763,7 +1790,11 @@ public class FormSolutionServerNewStuffAvailableAction implements UserAwareServe
                         final CidsBean bestellungBean;
                         try {
                             bestellungBean = DomainServerImpl.getServerInstance()
-                                        .getMetaObject(getUser(), mon.getObjectId(), mon.getClassId(), getServerConnectionContext())
+                                        .getMetaObject(
+                                                getUser(),
+                                                mon.getObjectId(),
+                                                mon.getClassId(),
+                                                getServerConnectionContext())
                                         .getBean();
                             final String transid = (String)bestellungBean.getProperty("transid");
                             fsBeanMap.put(transid, bestellungBean);
@@ -1774,7 +1805,10 @@ public class FormSolutionServerNewStuffAvailableAction implements UserAwareServe
                                 bestellungBean.setProperty("exception", null);
                                 bestellungBean.setProperty("produkt_dateipfad", null);
                                 bestellungBean.setProperty("produkt_dateiname_orig", null);
-                                metaService.updateMetaObject(getUser(), bestellungBean.getMetaObject(), getServerConnectionContext());
+                                metaService.updateMetaObject(
+                                    getUser(),
+                                    bestellungBean.getMetaObject(),
+                                    getServerConnectionContext());
                             }
                         } catch (final Exception ex) {
                             LOG.error(ex, ex);
@@ -1904,10 +1938,9 @@ public class FormSolutionServerNewStuffAvailableAction implements UserAwareServe
             }
         }
     }
-    
+
     @Override
     public ServerConnectionContext getServerConnectionContext() {
         return ServerConnectionContext.create(FormSolutionServerNewStuffAvailableAction.class.getSimpleName());
     }
-    
 }

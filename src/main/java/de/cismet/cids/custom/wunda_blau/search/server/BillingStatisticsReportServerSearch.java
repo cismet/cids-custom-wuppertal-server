@@ -9,7 +9,6 @@ package de.cismet.cids.custom.wunda_blau.search.server;
 
 import Sirius.server.middleware.interfaces.domainserver.MetaService;
 import Sirius.server.newuser.User;
-import de.cismet.cids.server.connectioncontext.ServerConnectionContext;
 
 import lombok.Getter;
 import lombok.Setter;
@@ -23,9 +22,10 @@ import java.util.Collection;
 import java.util.HashMap;
 import java.util.Iterator;
 
+import de.cismet.cids.server.connectioncontext.ServerConnectionContext;
+import de.cismet.cids.server.connectioncontext.ServerConnectionContextProvider;
 import de.cismet.cids.server.search.AbstractCidsServerSearch;
 import de.cismet.cids.server.search.SearchException;
-import de.cismet.cids.server.connectioncontext.ServerConnectionContextProvider;
 
 /**
  * A server search which fetches the needed information for the charts in the billing statistics report. To fetch the
@@ -35,7 +35,8 @@ import de.cismet.cids.server.connectioncontext.ServerConnectionContextProvider;
  * @author   Gilles Baatz
  * @version  $Revision$, $Date$
  */
-public class BillingStatisticsReportServerSearch extends AbstractCidsServerSearch implements ServerConnectionContextProvider {
+public class BillingStatisticsReportServerSearch extends AbstractCidsServerSearch
+        implements ServerConnectionContextProvider {
 
     //~ Static fields/initializers ---------------------------------------------
 
@@ -192,7 +193,8 @@ public class BillingStatisticsReportServerSearch extends AbstractCidsServerSearc
             final HashMap<String, ArrayList> results,
             final String query,
             final String key) throws RemoteException {
-        final ArrayList<ArrayList> lists = ms.performCustomSearch(query.replace("$bean_ids$", billingBeanIds), getServerConnectionContext());
+        final ArrayList<ArrayList> lists = ms.performCustomSearch(query.replace("$bean_ids$", billingBeanIds),
+                getServerConnectionContext());
         if ((lists != null) && !lists.isEmpty()) {
             final ArrayList<BrancheAmountBean> beans = new ArrayList<BrancheAmountBean>();
             for (final Iterator it = lists.iterator(); it.hasNext();) {
@@ -222,7 +224,8 @@ public class BillingStatisticsReportServerSearch extends AbstractCidsServerSearc
      */
     private void excuteEinnahmenQuery(final MetaService ms,
             final HashMap<String, ArrayList> results) throws RemoteException {
-        final ArrayList<ArrayList> lists = ms.performCustomSearch(queryEinnahmen.replace("$bean_ids$", billingBeanIds), getServerConnectionContext());
+        final ArrayList<ArrayList> lists = ms.performCustomSearch(queryEinnahmen.replace("$bean_ids$", billingBeanIds),
+                getServerConnectionContext());
         if ((lists != null) && !lists.isEmpty()) {
             final ArrayList<EinnahmenBean> beans = new ArrayList<EinnahmenBean>();
             for (final Iterator it = lists.iterator(); it.hasNext();) {
@@ -239,6 +242,11 @@ public class BillingStatisticsReportServerSearch extends AbstractCidsServerSearc
             }
             results.put(EINNAHMEN, beans);
         }
+    }
+
+    @Override
+    public ServerConnectionContext getServerConnectionContext() {
+        return ServerConnectionContext.create(BillingStatisticsReportServerSearch.class.getSimpleName());
     }
 
     //~ Inner Classes ----------------------------------------------------------
@@ -278,10 +286,4 @@ public class BillingStatisticsReportServerSearch extends AbstractCidsServerSearc
         private String name = "";
         private Object info = "";
     }
-    
-    @Override
-    public ServerConnectionContext getServerConnectionContext() {
-        return ServerConnectionContext.create(BillingStatisticsReportServerSearch.class.getSimpleName());
-    }                    
-        
 }

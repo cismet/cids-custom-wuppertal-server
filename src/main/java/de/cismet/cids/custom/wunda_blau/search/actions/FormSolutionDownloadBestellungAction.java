@@ -34,7 +34,9 @@ import de.cismet.cids.server.connectioncontext.ServerConnectionContextProvider;
  * @version  $Revision$, $Date$
  */
 @org.openide.util.lookup.ServiceProvider(service = ServerAction.class)
-public class FormSolutionDownloadBestellungAction implements ServerAction, UserAwareServerAction, ServerConnectionContextProvider {
+public class FormSolutionDownloadBestellungAction implements ServerAction,
+    UserAwareServerAction,
+    ServerConnectionContextProvider {
 
     //~ Static fields/initializers ---------------------------------------------
 
@@ -136,10 +138,9 @@ public class FormSolutionDownloadBestellungAction implements ServerAction, UserA
     public void setUser(final User user) {
         this.user = user;
     }
-    
+
     @Override
     public ServerConnectionContext getServerConnectionContext() {
         return ServerConnectionContext.create(FormSolutionDownloadBestellungAction.class.getSimpleName());
     }
-    
 }

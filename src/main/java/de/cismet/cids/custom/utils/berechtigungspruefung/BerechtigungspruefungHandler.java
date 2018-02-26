@@ -52,10 +52,10 @@ import de.cismet.cids.custom.utils.berechtigungspruefung.katasterauszug.Berechti
 import de.cismet.cids.custom.utils.berechtigungspruefung.katasterauszug.BerechtigungspruefungAlkisKarteDownloadInfo;
 
 import de.cismet.cids.dynamics.CidsBean;
-import de.cismet.cids.server.connectioncontext.ServerConnectionContext;
 
-import de.cismet.cids.server.messages.CidsServerMessageManagerImpl;
+import de.cismet.cids.server.connectioncontext.ServerConnectionContext;
 import de.cismet.cids.server.connectioncontext.ServerConnectionContextProvider;
+import de.cismet.cids.server.messages.CidsServerMessageManagerImpl;
 
 /**
  * DOCUMENT ME!
@@ -271,7 +271,8 @@ public class BerechtigungspruefungHandler implements ServerConnectionContextProv
         pruefungBean.setProperty("abholung_timestamp", new Timestamp(new Date().getTime()));
         pruefungBean.setProperty("abgeholt", true);
 
-        DomainServerImpl.getServerInstance().updateMetaObject(user, pruefungBean.getMetaObject(), getServerConnectionContext());
+        DomainServerImpl.getServerInstance()
+                .updateMetaObject(user, pruefungBean.getMetaObject(), getServerConnectionContext());
     }
 
     /**
@@ -368,7 +369,8 @@ public class BerechtigungspruefungHandler implements ServerConnectionContextProv
         newPruefungBean.setProperty("produkttyp", downloadInfo.getProduktTyp());
         newPruefungBean.setProperty("downloadinfo_json", new ObjectMapper().writeValueAsString(downloadInfo));
 
-        DomainServerImpl.getServerInstance().insertMetaObject(user, newPruefungBean.getMetaObject(), getServerConnectionContext());
+        DomainServerImpl.getServerInstance()
+                .insertMetaObject(user, newPruefungBean.getMetaObject(), getServerConnectionContext());
 
         sendAnfrageMessages(Arrays.asList(newPruefungBean));
     }
@@ -522,7 +524,11 @@ public class BerechtigungspruefungHandler implements ServerConnectionContextProv
                     "WUNDA_BLAU",
                     "billing_billing");
 
-            final MetaObject mo = metaService.getMetaObject(user, id, mcBillingBilling.getID(), getServerConnectionContext());
+            final MetaObject mo = metaService.getMetaObject(
+                    user,
+                    id,
+                    mcBillingBilling.getID(),
+                    getServerConnectionContext());
             return mo.getBean();
         } catch (final Exception ex) {
             LOG.error("error while loading billing_billing bean", ex);
@@ -546,7 +552,8 @@ public class BerechtigungspruefungHandler implements ServerConnectionContextProv
             final MetaObject mo = metaService.getMetaObject(
                     user,
                     BerechtigungspruefungProperties.getInstance().getBillingStornogrundId(),
-                    mcBillingStornogrund.getID(), getServerConnectionContext());
+                    mcBillingStornogrund.getID(),
+                    getServerConnectionContext());
             return mo.getBean();
         } catch (final Exception ex) {
             LOG.error("error while loading billing_billing bean", ex);

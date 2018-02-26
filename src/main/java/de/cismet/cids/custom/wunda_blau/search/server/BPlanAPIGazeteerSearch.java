@@ -14,7 +14,6 @@ package de.cismet.cids.custom.wunda_blau.search.server;
 
 import Sirius.server.middleware.interfaces.domainserver.MetaService;
 import Sirius.server.sql.PreparableStatement;
-import de.cismet.cids.server.connectioncontext.ServerConnectionContext;
 
 import lombok.Getter;
 import lombok.Setter;
@@ -34,6 +33,8 @@ import java.util.Collection;
 import java.util.LinkedList;
 import java.util.List;
 
+import de.cismet.cids.server.connectioncontext.ServerConnectionContext;
+import de.cismet.cids.server.connectioncontext.ServerConnectionContextProvider;
 import de.cismet.cids.server.search.AbstractCidsServerSearch;
 import de.cismet.cids.server.search.SearchException;
 
@@ -42,7 +43,6 @@ import de.cismet.cidsx.base.types.Type;
 import de.cismet.cidsx.server.api.types.SearchInfo;
 import de.cismet.cidsx.server.api.types.SearchParameterInfo;
 import de.cismet.cidsx.server.search.RestApiCidsServerSearch;
-import de.cismet.cids.server.connectioncontext.ServerConnectionContextProvider;
 
 /**
  * DOCUMENT ME!
@@ -51,7 +51,8 @@ import de.cismet.cids.server.connectioncontext.ServerConnectionContextProvider;
  * @version  $Revision$, $Date$
  */
 @ServiceProvider(service = RestApiCidsServerSearch.class)
-public class BPlanAPIGazeteerSearch extends AbstractCidsServerSearch implements RestApiCidsServerSearch, ServerConnectionContextProvider {
+public class BPlanAPIGazeteerSearch extends AbstractCidsServerSearch implements RestApiCidsServerSearch,
+    ServerConnectionContextProvider {
 
     //~ Static fields/initializers ---------------------------------------------
 
@@ -106,7 +107,9 @@ public class BPlanAPIGazeteerSearch extends AbstractCidsServerSearch implements 
             if (metaService != null) {
                 // "select * from bplanapisearch('" + wktString + "','" + status + "')";
                 QUERY.setObjects(input);
-                final ArrayList<ArrayList> results = metaService.performCustomSearch(QUERY, getServerConnectionContext());
+                final ArrayList<ArrayList> results = metaService.performCustomSearch(
+                        QUERY,
+                        getServerConnectionContext());
                 final ArrayList<GazzResult> ret = new ArrayList<GazzResult>(results.size());
                 for (final ArrayList row : results) {
                     final String s = (String)row.get(0);
@@ -126,11 +129,11 @@ public class BPlanAPIGazeteerSearch extends AbstractCidsServerSearch implements 
             throw new SearchException("error while loading gazetteer result objects", ex);
         }
     }
-    
+
     @Override
     public ServerConnectionContext getServerConnectionContext() {
         return ServerConnectionContext.create(BPlanAPIGazeteerSearch.class.getSimpleName());
-    }                    
+    }
 }
 
 /**
@@ -165,7 +168,7 @@ class GazzResult implements Serializable {
         this.x = x;
         this.y = y;
         this.more = more;
-    }    
+    }
 }
 
 //

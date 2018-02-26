@@ -15,10 +15,9 @@ import java.util.ArrayList;
 import java.util.Collection;
 
 import de.cismet.cids.server.connectioncontext.ServerConnectionContext;
-
+import de.cismet.cids.server.connectioncontext.ServerConnectionContextProvider;
 import de.cismet.cids.server.search.AbstractCidsServerSearch;
 import de.cismet.cids.server.search.SearchException;
-import de.cismet.cids.server.connectioncontext.ServerConnectionContextProvider;
 
 /**
  * Search next value for the schluessel property of a new kk_kompensation object.
@@ -26,7 +25,8 @@ import de.cismet.cids.server.connectioncontext.ServerConnectionContextProvider;
  * @author   Thorsten Herter
  * @version  $Revision$, $Date$
  */
-public class KkKompensationNextSchluesselSearch extends AbstractCidsServerSearch implements ServerConnectionContextProvider {
+public class KkKompensationNextSchluesselSearch extends AbstractCidsServerSearch
+        implements ServerConnectionContextProvider {
 
     //~ Static fields/initializers ---------------------------------------------
 
@@ -64,10 +64,9 @@ public class KkKompensationNextSchluesselSearch extends AbstractCidsServerSearch
             throw new SearchException("error while loading verfahren objects", ex);
         }
     }
-    
+
     @Override
     public ServerConnectionContext getServerConnectionContext() {
         return ServerConnectionContext.create(KkKompensationNextSchluesselSearch.class.getSimpleName());
-    }                    
-    
+    }
 }

@@ -14,7 +14,6 @@ import Sirius.server.newuser.User;
 import com.vividsolutions.jts.geom.Geometry;
 import com.vividsolutions.jts.geom.MultiPolygon;
 import com.vividsolutions.jts.geom.Polygon;
-import de.cismet.cids.server.connectioncontext.ServerConnectionContext;
 
 import org.apache.commons.lang.StringUtils;
 import org.apache.log4j.Logger;
@@ -29,12 +28,13 @@ import java.util.ArrayList;
 import java.util.Collection;
 import java.util.Date;
 
+import de.cismet.cids.server.connectioncontext.ServerConnectionContext;
+import de.cismet.cids.server.connectioncontext.ServerConnectionContextProvider;
 import de.cismet.cids.server.search.AbstractCidsServerSearch;
 import de.cismet.cids.server.search.MetaObjectNodeServerSearch;
 import de.cismet.cids.server.search.SearchException;
 
 import de.cismet.cismap.commons.jtsgeometryfactories.PostGisGeometryFactory;
-import de.cismet.cids.server.connectioncontext.ServerConnectionContextProvider;
 
 /**
  * DOCUMENT ME!
@@ -43,7 +43,8 @@ import de.cismet.cids.server.connectioncontext.ServerConnectionContextProvider;
  * @version  $Revision$, $Date$
  */
 public class MetaObjectNodesStadtbildSerieSearchStatement extends AbstractCidsServerSearch
-        implements MetaObjectNodeServerSearch, ServerConnectionContextProvider {
+        implements MetaObjectNodeServerSearch,
+            ServerConnectionContextProvider {
 
     //~ Static fields/initializers ---------------------------------------------
 
@@ -684,6 +685,11 @@ public class MetaObjectNodesStadtbildSerieSearchStatement extends AbstractCidsSe
         return nutzungseinschraenkungIDs;
     }
 
+    @Override
+    public ServerConnectionContext getServerConnectionContext() {
+        return ServerConnectionContext.create(MetaObjectNodesStadtbildSerieSearchStatement.class.getSimpleName());
+    }
+
     //~ Inner Classes ----------------------------------------------------------
 
     /**
@@ -794,10 +800,4 @@ public class MetaObjectNodesStadtbildSerieSearchStatement extends AbstractCidsSe
             return true;
         }
     }
-    
-    @Override
-    public ServerConnectionContext getServerConnectionContext() {
-        return ServerConnectionContext.create(MetaObjectNodesStadtbildSerieSearchStatement.class.getSimpleName());
-    }                    
-    
 }

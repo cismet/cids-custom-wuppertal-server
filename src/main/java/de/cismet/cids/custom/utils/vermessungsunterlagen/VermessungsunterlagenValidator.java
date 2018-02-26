@@ -36,11 +36,11 @@ import de.cismet.cids.custom.wunda_blau.search.server.KundeByVermessungsStellenN
 import de.cismet.cids.custom.wunda_blau.search.server.VermessungFlurstueckKickerLightweightSearch;
 
 import de.cismet.cids.dynamics.CidsBean;
-import de.cismet.cids.server.connectioncontext.ServerConnectionContext;
 
+import de.cismet.cids.server.connectioncontext.ServerConnectionContext;
+import de.cismet.cids.server.connectioncontext.ServerConnectionContextProvider;
 import de.cismet.cids.server.search.CidsServerSearch;
 import de.cismet.cids.server.search.SearchException;
-import de.cismet.cids.server.connectioncontext.ServerConnectionContextProvider;
 
 /**
  * DOCUMENT ME!
@@ -618,10 +618,9 @@ public class VermessungsunterlagenValidator implements ServerConnectionContextPr
             return null;
         }
     }
-    
+
     @Override
     public ServerConnectionContext getServerConnectionContext() {
         return ServerConnectionContext.create(VermessungsunterlagenValidator.class.getSimpleName());
     }
-    
 }
