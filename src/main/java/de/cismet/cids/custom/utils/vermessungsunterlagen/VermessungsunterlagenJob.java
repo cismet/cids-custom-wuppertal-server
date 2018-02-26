@@ -15,8 +15,8 @@ package de.cismet.cids.custom.utils.vermessungsunterlagen;
 import Sirius.server.middleware.types.MetaObjectNode;
 
 import com.vividsolutions.jts.geom.Geometry;
+import com.vividsolutions.jts.geom.GeometryCollection;
 import com.vividsolutions.jts.geom.GeometryFactory;
-import com.vividsolutions.jts.geom.MultiPolygon;
 import com.vividsolutions.jts.geom.Polygon;
 
 import lombok.Getter;
@@ -95,32 +95,21 @@ public class VermessungsunterlagenJob implements Runnable {
     //~ Instance fields --------------------------------------------------------
 
     @Getter private final String key;
-
     @Getter private final VermessungsunterlagenAnfrageBean anfrageBean;
-
     @Getter private Status status = Status.WAITING;
-
     @Getter private VermessungsunterlagenException exception;
-
     @Getter private final Map<VermessungsunterlagenTask, Future> taskMap =
         new HashMap<VermessungsunterlagenTask, Future>();
-
     @Getter private String ftpZipPath;
     @Getter private String webDAVPath;
-
     private final transient ThreadPoolExecutor taskExecutor = (ThreadPoolExecutor)CismetExecutors.newFixedThreadPool(
             Runtime.getRuntime().availableProcessors());
-
     private final transient CompletionService<VermessungsunterlagenTask> completionService =
         new ExecutorCompletionService<VermessungsunterlagenTask>(taskExecutor);
-
     private final transient VermessungsunterlagenHelper helper = VermessungsunterlagenHelper.getInstance();
-
     private final transient VermessungsunterlagenValidator validator = new VermessungsunterlagenValidator(helper);
-
     @Getter @Setter private transient CidsBean cidsBean;
-
-    @Getter private transient Collection<String> allowedTask;
+    @Getter private final transient Collection<String> allowedTask;
 
     //~ Constructors -----------------------------------------------------------
 
@@ -288,20 +277,27 @@ public class VermessungsunterlagenJob implements Runnable {
     /**
      * DOCUMENT ME!
      *
-     * @param   cidsBeans  DOCUMENT ME!
+     * @param   cidsBeans             DOCUMENT ME!
+     * @param   intersectionGeometry  DOCUMENT ME!
      *
      * @return  DOCUMENT ME!
      *
      * @throws  Exception  DOCUMENT ME!
      */
-    private Geometry createGeometryFrom(final Collection<CidsBean> cidsBeans) throws Exception {
-        final Collection<Polygon> polygons = new ArrayList<Polygon>(cidsBeans.size());
+    private Geometry createGeometryFrom(final Collection<CidsBean> cidsBeans, final Geometry intersectionGeometry)
+            throws Exception {
+        final Collection<Polygon> polygons = new ArrayList<>(cidsBeans.size());
         for (final CidsBean cidsBean : cidsBeans) {
             final Polygon polygon = (Polygon)cidsBean.getProperty("geometrie.geo_field");
             polygons.add(polygon);
         }
-        final GeometryFactory geometryFactory = new GeometryFactory();
-        final MultiPolygon geometry = geometryFactory.createMultiPolygon(polygons.toArray(new Polygon[0]));
+        final GeometryCollection gc = new GeometryFactory().createGeometryCollection(polygons.toArray(new Polygon[0]));
+        Geometry geometry = gc.union();
+
+        if (intersectionGeometry != null) {
+            geometry = geometry.intersection(intersectionGeometry);
+        }
+
         geometry.setSRID(VermessungsunterlagenHelper.SRID);
         return geometry;
     }
@@ -321,15 +317,16 @@ public class VermessungsunterlagenJob implements Runnable {
                     final Geometry vermessungsGeometrie = getAnfrageBean().getAnfragepolygonArray()[0];
                     final Geometry vermessungsGeometrieSaum = vermessungsGeometrie.buffer(saum);
                     vermessungsGeometrieSaum.setSRID(vermessungsGeometrie.getSRID());
-                    final Geometry geometryFlurstuecke = createGeometryFrom(validator.getFlurstuecke());
+
+                    final Geometry geometryFlurstuecke = createGeometryFrom(validator.getFlurstuecke(),
+                            validator.isGeometryFromFlurstuecke() ? null : vermessungsGeometrie);
 
                     helper.updateJobCidsBeanFlurstueckGeom(this, geometryFlurstuecke);
 
                     if (!validator.isVermessungsstelleKnown() || validator.isPnrNotZero()) {
                         submitTask(new VermUntTaskPNR(
                                 getKey(),
-                                validator.isVermessungsstelleKnown()
-                                    ? anfrageBean.getZulassungsnummerVermessungsstelle() : null,
+                                anfrageBean.getZulassungsnummerVermessungsstelle(),
                                 anfrageBean.getGeschaeftsbuchnummer(),
                                 anfrageBean.getPunktnummernreservierungsArray()));
                     }
@@ -399,7 +396,7 @@ public class VermessungsunterlagenJob implements Runnable {
                     while (received < taskMap.size()) {
                         final Future<VermessungsunterlagenTask> resultFuture = completionService.take();
                         final VermessungsunterlagenTask task = resultFuture.get();
-                        if (!validator.ignoreError()
+                        if (!validator.isIgnoreError()
                                     && VermessungsunterlagenTask.Status.ERROR.equals(task.getStatus())) {
                             throw new VermessungsunterlagenJobException(
                                 "Ein unerwarteter Fehler ist beim Ausführen des Tasks "

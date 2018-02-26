@@ -13,7 +13,7 @@
 
     <groupId>de.cismet.cids.custom.wupp.server</groupId>
     <artifactId>cids-custom-server-wuppertal</artifactId>
-    <version>6.2-SNAPSHOT</version>
+    <version>6.3-SNAPSHOT</version>
     <packaging>jar</packaging>
     
     <name>${names.cids.custom-wuppertal-server} [${project.version}]</name>
@@ -33,8 +33,6 @@
             legacy cidsDistribution directory (see cids-parent.pom)
         -->
         <de.cismet.libDir>lib/localWuNDa</de.cismet.libDir>
-        <enforcer.skip>false</enforcer.skip>
-        <jalopy.skip>true</jalopy.skip>
     </properties>
     
     
