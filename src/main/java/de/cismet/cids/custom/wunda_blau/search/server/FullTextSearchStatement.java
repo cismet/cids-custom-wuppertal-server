@@ -143,6 +143,6 @@ public class FullTextSearchStatement extends AbstractCidsServerSearch implements
 
     @Override
     public ServerConnectionContext getServerConnectionContext() {
-        return ServerConnectionContext.create(FullTextSearchStatement.class.getSimpleName());
+        return ServerConnectionContext.create(getClass().getSimpleName());
     }
 }

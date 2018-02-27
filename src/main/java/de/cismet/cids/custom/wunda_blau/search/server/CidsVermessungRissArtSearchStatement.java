@@ -106,6 +106,6 @@ public class CidsVermessungRissArtSearchStatement extends AbstractCidsServerSear
 
     @Override
     public ServerConnectionContext getServerConnectionContext() {
-        return ServerConnectionContext.create(CidsVermessungRissArtSearchStatement.class.getSimpleName());
+        return ServerConnectionContext.create(getClass().getSimpleName());
     }
 }

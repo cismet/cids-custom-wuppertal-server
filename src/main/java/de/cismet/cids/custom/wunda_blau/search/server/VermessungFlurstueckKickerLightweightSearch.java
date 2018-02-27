@@ -378,6 +378,6 @@ public class VermessungFlurstueckKickerLightweightSearch extends AbstractCidsSer
 
     @Override
     public ServerConnectionContext getServerConnectionContext() {
-        return ServerConnectionContext.create(VermessungFlurstueckKickerLightweightSearch.class.getSimpleName());
+        return ServerConnectionContext.create(getClass().getSimpleName());
     }
 }

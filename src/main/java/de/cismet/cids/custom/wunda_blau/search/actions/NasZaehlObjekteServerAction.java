@@ -382,6 +382,6 @@ public class NasZaehlObjekteServerAction implements ServerAction, MetaServiceSto
 
     @Override
     public ServerConnectionContext getServerConnectionContext() {
-        return ServerConnectionContext.create(NasZaehlObjekteServerAction.class.getSimpleName());
+        return ServerConnectionContext.create(getClass().getSimpleName());
     }
 }

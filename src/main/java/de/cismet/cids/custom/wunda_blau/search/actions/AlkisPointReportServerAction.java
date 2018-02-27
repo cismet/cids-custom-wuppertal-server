@@ -121,6 +121,6 @@ public class AlkisPointReportServerAction extends JasperReportServerAction imple
 
     @Override
     public ServerConnectionContext getServerConnectionContext() {
-        return ServerConnectionContext.create(AlkisPointReportServerAction.class.getSimpleName());
+        return ServerConnectionContext.create(getClass().getSimpleName());
     }
 }

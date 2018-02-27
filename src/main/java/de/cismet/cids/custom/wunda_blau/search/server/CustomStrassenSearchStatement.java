@@ -99,6 +99,6 @@ public class CustomStrassenSearchStatement extends AbstractCidsServerSearch impl
 
     @Override
     public ServerConnectionContext getServerConnectionContext() {
-        return ServerConnectionContext.create(CustomStrassenSearchStatement.class.getSimpleName());
+        return ServerConnectionContext.create(getClass().getSimpleName());
     }
 }

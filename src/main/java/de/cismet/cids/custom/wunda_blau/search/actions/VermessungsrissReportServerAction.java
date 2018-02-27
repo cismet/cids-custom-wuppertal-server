@@ -135,6 +135,6 @@ public class VermessungsrissReportServerAction extends JasperReportServerAction
 
     @Override
     public ServerConnectionContext getServerConnectionContext() {
-        return ServerConnectionContext.create(VermessungsrissReportServerAction.class.getSimpleName());
+        return ServerConnectionContext.create(getClass().getSimpleName());
     }
 }

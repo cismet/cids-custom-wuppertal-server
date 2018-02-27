@@ -359,6 +359,6 @@ public class PointNumberReserverationServerAction implements UserAwareServerActi
 
     @Override
     public ServerConnectionContext getServerConnectionContext() {
-        return ServerConnectionContext.create(PointNumberReserverationServerAction.class.getSimpleName());
+        return ServerConnectionContext.create(getClass().getSimpleName());
     }
 }

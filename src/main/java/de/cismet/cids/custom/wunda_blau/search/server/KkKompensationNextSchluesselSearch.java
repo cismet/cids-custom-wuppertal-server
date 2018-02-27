@@ -67,6 +67,6 @@ public class KkKompensationNextSchluesselSearch extends AbstractCidsServerSearch
 
     @Override
     public ServerConnectionContext getServerConnectionContext() {
-        return ServerConnectionContext.create(KkKompensationNextSchluesselSearch.class.getSimpleName());
+        return ServerConnectionContext.create(getClass().getSimpleName());
     }
 }

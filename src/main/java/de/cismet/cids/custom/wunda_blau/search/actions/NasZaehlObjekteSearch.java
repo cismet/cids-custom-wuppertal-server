@@ -320,6 +320,6 @@ public class NasZaehlObjekteSearch extends AbstractCidsServerSearch implements S
 
     @Override
     public ServerConnectionContext getServerConnectionContext() {
-        return ServerConnectionContext.create(NasZaehlObjekteSearch.class.getSimpleName());
+        return ServerConnectionContext.create(getClass().getSimpleName());
     }
 }

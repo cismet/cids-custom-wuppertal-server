@@ -1233,7 +1233,7 @@ public class VermessungsunterlagenHelper implements ServerConnectionContextProvi
 
     @Override
     public ServerConnectionContext getServerConnectionContext() {
-        return ServerConnectionContext.create(VermessungsunterlagenHelper.class.getSimpleName());
+        return ServerConnectionContext.create(getClass().getSimpleName());
     }
 
     //~ Inner Classes ----------------------------------------------------------

@@ -79,6 +79,6 @@ public class MauerNummerSearch extends AbstractCidsServerSearch implements Serve
 
     @Override
     public ServerConnectionContext getServerConnectionContext() {
-        return ServerConnectionContext.create(MauerNummerSearch.class.getSimpleName());
+        return ServerConnectionContext.create(getClass().getSimpleName());
     }
 }

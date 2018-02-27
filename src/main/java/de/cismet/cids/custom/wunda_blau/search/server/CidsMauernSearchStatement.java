@@ -603,6 +603,6 @@ public class CidsMauernSearchStatement extends AbstractCidsServerSearch implemen
 
     @Override
     public ServerConnectionContext getServerConnectionContext() {
-        return ServerConnectionContext.create(CidsMauernSearchStatement.class.getSimpleName());
+        return ServerConnectionContext.create(getClass().getSimpleName());
     }
 }

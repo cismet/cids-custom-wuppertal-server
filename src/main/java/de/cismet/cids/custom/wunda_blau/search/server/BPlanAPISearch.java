@@ -140,7 +140,7 @@ public class BPlanAPISearch extends AbstractCidsServerSearch implements RestApiC
 
     @Override
     public ServerConnectionContext getServerConnectionContext() {
-        return ServerConnectionContext.create(BPlanAPISearch.class.getSimpleName());
+        return ServerConnectionContext.create(getClass().getSimpleName());
     }
 }
 

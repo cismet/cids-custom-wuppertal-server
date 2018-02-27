@@ -320,6 +320,6 @@ public class CidsAlkisSearchStatement extends AbstractCidsServerSearch implement
 
     @Override
     public ServerConnectionContext getServerConnectionContext() {
-        return ServerConnectionContext.create(CidsAlkisSearchStatement.class.getSimpleName());
+        return ServerConnectionContext.create(getClass().getSimpleName());
     }
 }

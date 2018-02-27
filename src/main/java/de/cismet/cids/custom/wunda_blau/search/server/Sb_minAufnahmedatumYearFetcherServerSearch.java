@@ -50,6 +50,6 @@ public class Sb_minAufnahmedatumYearFetcherServerSearch extends AbstractCidsServ
 
     @Override
     public ServerConnectionContext getServerConnectionContext() {
-        return ServerConnectionContext.create(Sb_minAufnahmedatumYearFetcherServerSearch.class.getSimpleName());
+        return ServerConnectionContext.create(getClass().getSimpleName());
     }
 }

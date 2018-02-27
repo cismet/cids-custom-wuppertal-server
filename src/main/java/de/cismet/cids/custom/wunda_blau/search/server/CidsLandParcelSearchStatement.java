@@ -165,6 +165,6 @@ public class CidsLandParcelSearchStatement extends AbstractCidsServerSearch impl
 
     @Override
     public ServerConnectionContext getServerConnectionContext() {
-        return ServerConnectionContext.create(CidsLandParcelSearchStatement.class.getSimpleName());
+        return ServerConnectionContext.create(getClass().getSimpleName());
     }
 }

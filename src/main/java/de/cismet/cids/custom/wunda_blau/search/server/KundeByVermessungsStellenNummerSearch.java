@@ -91,6 +91,6 @@ public class KundeByVermessungsStellenNummerSearch extends AbstractCidsServerSea
 
     @Override
     public ServerConnectionContext getServerConnectionContext() {
-        return ServerConnectionContext.create(KundeByVermessungsStellenNummerSearch.class.getSimpleName());
+        return ServerConnectionContext.create(getClass().getSimpleName());
     }
 }

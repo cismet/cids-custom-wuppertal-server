@@ -83,6 +83,6 @@ public class KkVerfahrenSearch extends AbstractCidsServerSearch implements Serve
 
     @Override
     public ServerConnectionContext getServerConnectionContext() {
-        return ServerConnectionContext.create(KkVerfahrenSearch.class.getSimpleName());
+        return ServerConnectionContext.create(getClass().getSimpleName());
     }
 }

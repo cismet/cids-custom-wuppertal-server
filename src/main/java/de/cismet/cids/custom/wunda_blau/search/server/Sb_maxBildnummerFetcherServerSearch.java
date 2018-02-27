@@ -50,6 +50,6 @@ public class Sb_maxBildnummerFetcherServerSearch extends AbstractCidsServerSearc
 
     @Override
     public ServerConnectionContext getServerConnectionContext() {
-        return ServerConnectionContext.create(Sb_maxBildnummerFetcherServerSearch.class.getSimpleName());
+        return ServerConnectionContext.create(getClass().getSimpleName());
     }
 }

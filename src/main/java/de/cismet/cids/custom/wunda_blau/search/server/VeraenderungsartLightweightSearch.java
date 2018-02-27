@@ -148,6 +148,6 @@ public class VeraenderungsartLightweightSearch extends AbstractCidsServerSearch 
 
     @Override
     public ServerConnectionContext getServerConnectionContext() {
-        return ServerConnectionContext.create(VeraenderungsartLightweightSearch.class.getSimpleName());
+        return ServerConnectionContext.create(getClass().getSimpleName());
     }
 }

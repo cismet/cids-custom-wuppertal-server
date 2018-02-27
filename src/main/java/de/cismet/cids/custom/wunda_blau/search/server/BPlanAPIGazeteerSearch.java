@@ -132,7 +132,7 @@ public class BPlanAPIGazeteerSearch extends AbstractCidsServerSearch implements 
 
     @Override
     public ServerConnectionContext getServerConnectionContext() {
-        return ServerConnectionContext.create(BPlanAPIGazeteerSearch.class.getSimpleName());
+        return ServerConnectionContext.create(getClass().getSimpleName());
     }
 }
 

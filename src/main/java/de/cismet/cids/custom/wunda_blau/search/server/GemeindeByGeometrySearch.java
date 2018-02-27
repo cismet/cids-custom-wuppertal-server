@@ -90,6 +90,6 @@ public class GemeindeByGeometrySearch extends AbstractCidsServerSearch implement
 
     @Override
     public ServerConnectionContext getServerConnectionContext() {
-        return ServerConnectionContext.create(GemeindeByGeometrySearch.class.getSimpleName());
+        return ServerConnectionContext.create(getClass().getSimpleName());
     }
 }

@@ -267,7 +267,7 @@ public class BillingJahresberichtReportServerSearch extends BillingStatisticsRep
 
     @Override
     public ServerConnectionContext getServerConnectionContext() {
-        return ServerConnectionContext.create(BillingJahresberichtReportServerSearch.class.getSimpleName());
+        return ServerConnectionContext.create(getClass().getSimpleName());
     }
 
     //~ Inner Classes ----------------------------------------------------------

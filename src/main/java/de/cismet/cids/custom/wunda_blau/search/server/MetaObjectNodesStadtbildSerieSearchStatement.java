@@ -687,7 +687,7 @@ public class MetaObjectNodesStadtbildSerieSearchStatement extends AbstractCidsSe
 
     @Override
     public ServerConnectionContext getServerConnectionContext() {
-        return ServerConnectionContext.create(MetaObjectNodesStadtbildSerieSearchStatement.class.getSimpleName());
+        return ServerConnectionContext.create(getClass().getSimpleName());
     }
 
     //~ Inner Classes ----------------------------------------------------------

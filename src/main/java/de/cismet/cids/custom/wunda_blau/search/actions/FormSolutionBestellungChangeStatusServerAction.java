@@ -161,6 +161,6 @@ public class FormSolutionBestellungChangeStatusServerAction implements UserAware
 
     @Override
     public ServerConnectionContext getServerConnectionContext() {
-        return ServerConnectionContext.create(FormSolutionBestellungChangeStatusServerAction.class.getSimpleName());
+        return ServerConnectionContext.create(getClass().getSimpleName());
     }
 }

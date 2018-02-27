@@ -141,6 +141,6 @@ public class FormSolutionDownloadBestellungAction implements ServerAction,
 
     @Override
     public ServerConnectionContext getServerConnectionContext() {
-        return ServerConnectionContext.create(FormSolutionDownloadBestellungAction.class.getSimpleName());
+        return ServerConnectionContext.create(getClass().getSimpleName());
     }
 }

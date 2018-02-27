@@ -177,6 +177,6 @@ public class BerechtigungspruefungAnfrageServerAction implements UserAwareServer
 
     @Override
     public ServerConnectionContext getServerConnectionContext() {
-        return ServerConnectionContext.create(BerechtigungspruefungAnfrageServerAction.class.getSimpleName());
+        return ServerConnectionContext.create(getClass().getSimpleName());
     }
 }

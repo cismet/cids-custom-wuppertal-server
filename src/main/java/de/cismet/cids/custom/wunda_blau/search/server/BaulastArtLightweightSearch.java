@@ -135,6 +135,6 @@ public class BaulastArtLightweightSearch extends AbstractCidsServerSearch implem
 
     @Override
     public ServerConnectionContext getServerConnectionContext() {
-        return ServerConnectionContext.create(BaulastArtLightweightSearch.class.getSimpleName());
+        return ServerConnectionContext.create(getClass().getSimpleName());
     }
 }

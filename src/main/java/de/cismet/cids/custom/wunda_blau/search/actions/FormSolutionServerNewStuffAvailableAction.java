@@ -1941,6 +1941,6 @@ public class FormSolutionServerNewStuffAvailableAction implements UserAwareServe
 
     @Override
     public ServerConnectionContext getServerConnectionContext() {
-        return ServerConnectionContext.create(FormSolutionServerNewStuffAvailableAction.class.getSimpleName());
+        return ServerConnectionContext.create(getClass().getSimpleName());
     }
 }

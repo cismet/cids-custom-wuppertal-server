@@ -621,6 +621,6 @@ public class VermessungsunterlagenValidator implements ServerConnectionContextPr
 
     @Override
     public ServerConnectionContext getServerConnectionContext() {
-        return ServerConnectionContext.create(VermessungsunterlagenValidator.class.getSimpleName());
+        return ServerConnectionContext.create(getClass().getSimpleName());
     }
 }

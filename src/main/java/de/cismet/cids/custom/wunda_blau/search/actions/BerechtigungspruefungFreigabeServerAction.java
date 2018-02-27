@@ -218,6 +218,6 @@ public class BerechtigungspruefungFreigabeServerAction implements UserAwareServe
 
     @Override
     public ServerConnectionContext getServerConnectionContext() {
-        return ServerConnectionContext.create(BerechtigungspruefungFreigabeServerAction.class.getSimpleName());
+        return ServerConnectionContext.create(getClass().getSimpleName());
     }
 }

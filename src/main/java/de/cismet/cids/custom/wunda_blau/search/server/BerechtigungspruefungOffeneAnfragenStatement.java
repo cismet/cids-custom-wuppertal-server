@@ -100,6 +100,6 @@ public class BerechtigungspruefungOffeneAnfragenStatement extends AbstractCidsSe
 
     @Override
     public ServerConnectionContext getServerConnectionContext() {
-        return ServerConnectionContext.create(BerechtigungspruefungOffeneAnfragenStatement.class.getSimpleName());
+        return ServerConnectionContext.create(getClass().getSimpleName());
     }
 }

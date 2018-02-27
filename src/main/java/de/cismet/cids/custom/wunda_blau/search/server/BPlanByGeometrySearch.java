@@ -90,6 +90,6 @@ public class BPlanByGeometrySearch extends AbstractCidsServerSearch implements S
 
     @Override
     public ServerConnectionContext getServerConnectionContext() {
-        return ServerConnectionContext.create(BPlanByGeometrySearch.class.getSimpleName());
+        return ServerConnectionContext.create(getClass().getSimpleName());
     }
 }

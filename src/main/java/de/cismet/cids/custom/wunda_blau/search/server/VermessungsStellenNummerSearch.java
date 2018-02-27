@@ -92,6 +92,6 @@ public class VermessungsStellenNummerSearch extends AbstractCidsServerSearch
 
     @Override
     public ServerConnectionContext getServerConnectionContext() {
-        return ServerConnectionContext.create(VermessungsStellenNummerSearch.class.getSimpleName());
+        return ServerConnectionContext.create(getClass().getSimpleName());
     }
 }

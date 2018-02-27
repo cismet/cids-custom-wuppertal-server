@@ -246,7 +246,7 @@ public class BillingStatisticsReportServerSearch extends AbstractCidsServerSearc
 
     @Override
     public ServerConnectionContext getServerConnectionContext() {
-        return ServerConnectionContext.create(BillingStatisticsReportServerSearch.class.getSimpleName());
+        return ServerConnectionContext.create(getClass().getSimpleName());
     }
 
     //~ Inner Classes ----------------------------------------------------------

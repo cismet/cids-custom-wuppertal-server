@@ -141,6 +141,6 @@ public class AdresseGebaeudeLightweightSearch extends AbstractCidsServerSearch i
 
     @Override
     public ServerConnectionContext getServerConnectionContext() {
-        return ServerConnectionContext.create(AdresseGebaeudeLightweightSearch.class.getSimpleName());
+        return ServerConnectionContext.create(getClass().getSimpleName());
     }
 }

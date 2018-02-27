@@ -416,6 +416,6 @@ public class CidsMeasurementPointSearchStatement extends AbstractCidsServerSearc
 
     @Override
     public ServerConnectionContext getServerConnectionContext() {
-        return ServerConnectionContext.create(CidsMeasurementPointSearchStatement.class.getSimpleName());
+        return ServerConnectionContext.create(getClass().getSimpleName());
     }
 }

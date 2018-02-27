@@ -130,6 +130,6 @@ public class NivPReportServerAction extends JasperReportServerAction implements 
 
     @Override
     public ServerConnectionContext getServerConnectionContext() {
-        return ServerConnectionContext.create(NivPReportServerAction.class.getSimpleName());
+        return ServerConnectionContext.create(getClass().getSimpleName());
     }
 }

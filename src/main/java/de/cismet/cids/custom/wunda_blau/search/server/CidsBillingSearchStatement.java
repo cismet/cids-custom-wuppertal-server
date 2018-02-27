@@ -610,6 +610,6 @@ public class CidsBillingSearchStatement extends AbstractCidsServerSearch impleme
 
     @Override
     public ServerConnectionContext getServerConnectionContext() {
-        return ServerConnectionContext.create(CidsBillingSearchStatement.class.getSimpleName());
+        return ServerConnectionContext.create(getClass().getSimpleName());
     }
 }

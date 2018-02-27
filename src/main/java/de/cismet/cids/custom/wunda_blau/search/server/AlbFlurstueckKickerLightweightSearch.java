@@ -372,6 +372,6 @@ public class AlbFlurstueckKickerLightweightSearch extends AbstractCidsServerSear
 
     @Override
     public ServerConnectionContext getServerConnectionContext() {
-        return ServerConnectionContext.create(AlbFlurstueckKickerLightweightSearch.class.getSimpleName());
+        return ServerConnectionContext.create(getClass().getSimpleName());
     }
 }

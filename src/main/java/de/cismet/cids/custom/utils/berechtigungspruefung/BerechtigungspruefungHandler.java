@@ -648,6 +648,6 @@ public class BerechtigungspruefungHandler implements ServerConnectionContextProv
 
     @Override
     public ServerConnectionContext getServerConnectionContext() {
-        return ServerConnectionContext.create(BerechtigungspruefungHandler.class.getSimpleName());
+        return ServerConnectionContext.create(getClass().getSimpleName());
     }
 }

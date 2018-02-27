@@ -83,6 +83,6 @@ public class Alb_BaulastblattChecker extends AbstractCidsServerSearch implements
 
     @Override
     public ServerConnectionContext getServerConnectionContext() {
-        return ServerConnectionContext.create(Alb_BaulastblattChecker.class.getSimpleName());
+        return ServerConnectionContext.create(getClass().getSimpleName());
     }
 }
