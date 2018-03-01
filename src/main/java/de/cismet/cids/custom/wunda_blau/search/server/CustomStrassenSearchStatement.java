@@ -40,6 +40,9 @@ public class CustomStrassenSearchStatement extends AbstractCidsServerSearch impl
     private final String searchString;
     private final boolean searchForStrassenschluessel;
 
+    private ServerConnectionContext serverConnectionContext = ServerConnectionContext.create(getClass()
+                    .getSimpleName());
+
     //~ Constructors -----------------------------------------------------------
 
     /**
@@ -99,6 +102,11 @@ public class CustomStrassenSearchStatement extends AbstractCidsServerSearch impl
 
     @Override
     public ServerConnectionContext getServerConnectionContext() {
-        return ServerConnectionContext.create(getClass().getSimpleName());
+        return serverConnectionContext;
+    }
+
+    @Override
+    public void setServerConnectionContext(final ServerConnectionContext serverConnectionContext) {
+        this.serverConnectionContext = serverConnectionContext;
     }
 }

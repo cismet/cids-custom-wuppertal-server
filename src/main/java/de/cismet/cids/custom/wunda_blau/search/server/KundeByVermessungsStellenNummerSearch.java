@@ -47,6 +47,9 @@ public class KundeByVermessungsStellenNummerSearch extends AbstractCidsServerSea
     private final String QUERY =
         "SELECT vermessungsstellennummer, name FROM billing_kunde WHERE vermessungsstellennummer LIKE '%1$s';";
 
+    private ServerConnectionContext serverConnectionContext = ServerConnectionContext.create(getClass()
+                    .getSimpleName());
+
     //~ Constructors -----------------------------------------------------------
 
     /**
@@ -91,6 +94,11 @@ public class KundeByVermessungsStellenNummerSearch extends AbstractCidsServerSea
 
     @Override
     public ServerConnectionContext getServerConnectionContext() {
-        return ServerConnectionContext.create(getClass().getSimpleName());
+        return serverConnectionContext;
+    }
+
+    @Override
+    public void setServerConnectionContext(final ServerConnectionContext serverConnectionContext) {
+        this.serverConnectionContext = serverConnectionContext;
     }
 }

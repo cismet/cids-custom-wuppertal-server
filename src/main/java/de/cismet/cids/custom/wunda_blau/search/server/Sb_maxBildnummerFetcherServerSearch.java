@@ -33,6 +33,11 @@ public class Sb_maxBildnummerFetcherServerSearch extends AbstractCidsServerSearc
     private static final String searchQuery =
         "select max(bildnummer::int) from sb_stadtbild where bildnummer ~ '^\\\\d{6}$'";
 
+    //~ Instance fields --------------------------------------------------------
+
+    private ServerConnectionContext serverConnectionContext = ServerConnectionContext.create(getClass()
+                    .getSimpleName());
+
     //~ Methods ----------------------------------------------------------------
 
     @Override
@@ -50,6 +55,11 @@ public class Sb_maxBildnummerFetcherServerSearch extends AbstractCidsServerSearc
 
     @Override
     public ServerConnectionContext getServerConnectionContext() {
-        return ServerConnectionContext.create(getClass().getSimpleName());
+        return serverConnectionContext;
+    }
+
+    @Override
+    public void setServerConnectionContext(final ServerConnectionContext serverConnectionContext) {
+        this.serverConnectionContext = serverConnectionContext;
     }
 }

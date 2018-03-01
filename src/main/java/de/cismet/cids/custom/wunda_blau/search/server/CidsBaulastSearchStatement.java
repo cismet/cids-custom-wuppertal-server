@@ -84,6 +84,9 @@ public class CidsBaulastSearchStatement extends AbstractCidsServerSearch impleme
     private String fsquerypart = "";
     private String artquerypart = "";
 
+    private ServerConnectionContext serverConnectionContext = ServerConnectionContext.create(getClass()
+                    .getSimpleName());
+
     //~ Constructors -----------------------------------------------------------
 
     /**
@@ -464,6 +467,11 @@ public class CidsBaulastSearchStatement extends AbstractCidsServerSearch impleme
 
     @Override
     public ServerConnectionContext getServerConnectionContext() {
-        return ServerConnectionContext.create(getClass().getSimpleName());
+        return serverConnectionContext;
+    }
+
+    @Override
+    public void setServerConnectionContext(final ServerConnectionContext serverConnectionContext) {
+        this.serverConnectionContext = serverConnectionContext;
     }
 }

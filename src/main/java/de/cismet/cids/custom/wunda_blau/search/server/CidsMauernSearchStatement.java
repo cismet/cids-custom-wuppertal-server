@@ -110,6 +110,9 @@ public class CidsMauernSearchStatement extends AbstractCidsServerSearch implemen
     private final StringBuilder fromBuilder = new StringBuilder(FROM);
     private final StringBuilder whereBuilder = new StringBuilder();
 
+    private ServerConnectionContext serverConnectionContext = ServerConnectionContext.create(getClass()
+                    .getSimpleName());
+
     //~ Constructors -----------------------------------------------------------
 
     /**
@@ -603,6 +606,11 @@ public class CidsMauernSearchStatement extends AbstractCidsServerSearch implemen
 
     @Override
     public ServerConnectionContext getServerConnectionContext() {
-        return ServerConnectionContext.create(getClass().getSimpleName());
+        return serverConnectionContext;
+    }
+
+    @Override
+    public void setServerConnectionContext(final ServerConnectionContext serverConnectionContext) {
+        this.serverConnectionContext = serverConnectionContext;
     }
 }

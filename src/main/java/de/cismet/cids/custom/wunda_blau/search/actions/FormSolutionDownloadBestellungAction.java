@@ -73,6 +73,9 @@ public class FormSolutionDownloadBestellungAction implements ServerAction,
 
     private User user;
 
+    private ServerConnectionContext serverConnectionContext = ServerConnectionContext.create(getClass()
+                    .getSimpleName());
+
     //~ Methods ----------------------------------------------------------------
 
     @Override
@@ -141,6 +144,11 @@ public class FormSolutionDownloadBestellungAction implements ServerAction,
 
     @Override
     public ServerConnectionContext getServerConnectionContext() {
-        return ServerConnectionContext.create(getClass().getSimpleName());
+        return serverConnectionContext;
+    }
+
+    @Override
+    public void setServerConnectionContext(final ServerConnectionContext serverConnectionContext) {
+        this.serverConnectionContext = serverConnectionContext;
     }
 }

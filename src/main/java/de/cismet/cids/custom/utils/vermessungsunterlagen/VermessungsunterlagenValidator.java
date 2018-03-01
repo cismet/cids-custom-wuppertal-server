@@ -79,6 +79,9 @@ public class VermessungsunterlagenValidator implements ServerConnectionContextPr
     @Getter private boolean pnrNotZero = false;
     @Getter private boolean geometryFromFlurstuecke = true;
 
+    private ServerConnectionContext serverConnectionContext = ServerConnectionContext.create(getClass()
+                    .getSimpleName());
+
     //~ Constructors -----------------------------------------------------------
 
     /**
@@ -621,6 +624,11 @@ public class VermessungsunterlagenValidator implements ServerConnectionContextPr
 
     @Override
     public ServerConnectionContext getServerConnectionContext() {
-        return ServerConnectionContext.create(getClass().getSimpleName());
+        return serverConnectionContext;
+    }
+
+    @Override
+    public void setServerConnectionContext(final ServerConnectionContext serverConnectionContext) {
+        this.serverConnectionContext = serverConnectionContext;
     }
 }

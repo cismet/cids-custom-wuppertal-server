@@ -34,6 +34,11 @@ public class KkKompensationNextSchluesselSearch extends AbstractCidsServerSearch
     private static final String DOMAIN = "WUNDA_BLAU";
     private static final String QUERY = "select nextval('kk_kompensation_schluessel_seq')";
 
+    //~ Instance fields --------------------------------------------------------
+
+    private ServerConnectionContext serverConnectionContext = ServerConnectionContext.create(getClass()
+                    .getSimpleName());
+
     //~ Constructors -----------------------------------------------------------
 
     /**
@@ -67,6 +72,11 @@ public class KkKompensationNextSchluesselSearch extends AbstractCidsServerSearch
 
     @Override
     public ServerConnectionContext getServerConnectionContext() {
-        return ServerConnectionContext.create(getClass().getSimpleName());
+        return serverConnectionContext;
+    }
+
+    @Override
+    public void setServerConnectionContext(final ServerConnectionContext serverConnectionContext) {
+        this.serverConnectionContext = serverConnectionContext;
     }
 }

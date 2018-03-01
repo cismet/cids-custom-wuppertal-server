@@ -65,6 +65,9 @@ public class BPlanAPISearch extends AbstractCidsServerSearch implements RestApiC
     @Getter @Setter private Integer srs;
     @Getter @Setter private String urlprefix;
 
+    private ServerConnectionContext serverConnectionContext = ServerConnectionContext.create(getClass()
+                    .getSimpleName());
+
     //~ Constructors -----------------------------------------------------------
 
     /**
@@ -140,7 +143,12 @@ public class BPlanAPISearch extends AbstractCidsServerSearch implements RestApiC
 
     @Override
     public ServerConnectionContext getServerConnectionContext() {
-        return ServerConnectionContext.create(getClass().getSimpleName());
+        return serverConnectionContext;
+    }
+
+    @Override
+    public void setServerConnectionContext(final ServerConnectionContext serverConnectionContext) {
+        this.serverConnectionContext = serverConnectionContext;
     }
 }
 

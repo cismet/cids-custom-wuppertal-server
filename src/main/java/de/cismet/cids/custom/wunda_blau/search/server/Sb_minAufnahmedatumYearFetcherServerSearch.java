@@ -33,6 +33,11 @@ public class Sb_minAufnahmedatumYearFetcherServerSearch extends AbstractCidsServ
     private static final String searchQuery =
         "select min(extract(year from aufnahmedatum)::int) from sb_stadtbildserie";
 
+    //~ Instance fields --------------------------------------------------------
+
+    private ServerConnectionContext serverConnectionContext = ServerConnectionContext.create(getClass()
+                    .getSimpleName());
+
     //~ Methods ----------------------------------------------------------------
 
     @Override
@@ -50,6 +55,11 @@ public class Sb_minAufnahmedatumYearFetcherServerSearch extends AbstractCidsServ
 
     @Override
     public ServerConnectionContext getServerConnectionContext() {
-        return ServerConnectionContext.create(getClass().getSimpleName());
+        return serverConnectionContext;
+    }
+
+    @Override
+    public void setServerConnectionContext(final ServerConnectionContext serverConnectionContext) {
+        this.serverConnectionContext = serverConnectionContext;
     }
 }

@@ -147,6 +147,9 @@ public class CidsMeasurementPointSearchStatement extends AbstractCidsServerSearc
     private GST gst;
     private Geometry geometry;
 
+    private ServerConnectionContext serverConnectionContext = ServerConnectionContext.create(getClass()
+                    .getSimpleName());
+
     //~ Constructors -----------------------------------------------------------
 
     /**
@@ -416,6 +419,11 @@ public class CidsMeasurementPointSearchStatement extends AbstractCidsServerSearc
 
     @Override
     public ServerConnectionContext getServerConnectionContext() {
-        return ServerConnectionContext.create(getClass().getSimpleName());
+        return serverConnectionContext;
+    }
+
+    @Override
+    public void setServerConnectionContext(final ServerConnectionContext serverConnectionContext) {
+        this.serverConnectionContext = serverConnectionContext;
     }
 }

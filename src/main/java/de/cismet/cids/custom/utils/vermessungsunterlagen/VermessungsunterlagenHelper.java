@@ -168,6 +168,9 @@ public class VermessungsunterlagenHelper implements ServerConnectionContextProvi
     private User user;
     private final VermessungsunterlagenProperties vermessungsunterlagenProperties;
 
+    private ServerConnectionContext serverConnectionContext = ServerConnectionContext.create(getClass()
+                    .getSimpleName());
+
     //~ Constructors -----------------------------------------------------------
 
     /**
@@ -1233,7 +1236,12 @@ public class VermessungsunterlagenHelper implements ServerConnectionContextProvi
 
     @Override
     public ServerConnectionContext getServerConnectionContext() {
-        return ServerConnectionContext.create(getClass().getSimpleName());
+        return serverConnectionContext;
+    }
+
+    @Override
+    public void setServerConnectionContext(final ServerConnectionContext serverConnectionContext) {
+        this.serverConnectionContext = serverConnectionContext;
     }
 
     //~ Inner Classes ----------------------------------------------------------

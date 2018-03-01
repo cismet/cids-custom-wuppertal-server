@@ -64,6 +64,9 @@ public class FormSolutionBestellungChangeStatusServerAction implements UserAware
     private User user;
     private MetaService metaService;
 
+    private ServerConnectionContext serverConnectionContext = ServerConnectionContext.create(getClass()
+                    .getSimpleName());
+
     //~ Constructors -----------------------------------------------------------
 
     /**
@@ -161,6 +164,11 @@ public class FormSolutionBestellungChangeStatusServerAction implements UserAware
 
     @Override
     public ServerConnectionContext getServerConnectionContext() {
-        return ServerConnectionContext.create(getClass().getSimpleName());
+        return serverConnectionContext;
+    }
+
+    @Override
+    public void setServerConnectionContext(final ServerConnectionContext serverConnectionContext) {
+        this.serverConnectionContext = serverConnectionContext;
     }
 }

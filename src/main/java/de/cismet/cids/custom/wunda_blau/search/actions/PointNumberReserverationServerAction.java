@@ -76,6 +76,9 @@ public class PointNumberReserverationServerAction implements UserAwareServerActi
     private MetaService metaService;
     private User user;
 
+    private ServerConnectionContext serverConnectionContext = ServerConnectionContext.create(getClass()
+                    .getSimpleName());
+
     //~ Methods ----------------------------------------------------------------
 
     /**
@@ -359,6 +362,11 @@ public class PointNumberReserverationServerAction implements UserAwareServerActi
 
     @Override
     public ServerConnectionContext getServerConnectionContext() {
-        return ServerConnectionContext.create(getClass().getSimpleName());
+        return serverConnectionContext;
+    }
+
+    @Override
+    public void setServerConnectionContext(final ServerConnectionContext serverConnectionContext) {
+        this.serverConnectionContext = serverConnectionContext;
     }
 }

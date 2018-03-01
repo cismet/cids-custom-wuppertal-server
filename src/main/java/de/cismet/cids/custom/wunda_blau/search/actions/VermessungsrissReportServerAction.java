@@ -65,6 +65,11 @@ public class VermessungsrissReportServerAction extends JasperReportServerAction
         JOB_NUMBER, PROJECT_NAME, RISSE_MONS, HOST
     }
 
+    //~ Instance fields --------------------------------------------------------
+
+    private ServerConnectionContext serverConnectionContext = ServerConnectionContext.create(getClass()
+                    .getSimpleName());
+
     //~ Methods ----------------------------------------------------------------
 
     @Override
@@ -135,6 +140,11 @@ public class VermessungsrissReportServerAction extends JasperReportServerAction
 
     @Override
     public ServerConnectionContext getServerConnectionContext() {
-        return ServerConnectionContext.create(getClass().getSimpleName());
+        return serverConnectionContext;
+    }
+
+    @Override
+    public void setServerConnectionContext(final ServerConnectionContext serverConnectionContext) {
+        this.serverConnectionContext = serverConnectionContext;
     }
 }

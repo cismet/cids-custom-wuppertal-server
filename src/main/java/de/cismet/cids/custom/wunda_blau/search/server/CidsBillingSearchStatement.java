@@ -92,6 +92,9 @@ public class CidsBillingSearchStatement extends AbstractCidsServerSearch impleme
      */
     private Boolean showAbgerechneteBillings = false;
 
+    private ServerConnectionContext serverConnectionContext = ServerConnectionContext.create(getClass()
+                    .getSimpleName());
+
     //~ Constructors -----------------------------------------------------------
 
     /**
@@ -610,6 +613,11 @@ public class CidsBillingSearchStatement extends AbstractCidsServerSearch impleme
 
     @Override
     public ServerConnectionContext getServerConnectionContext() {
-        return ServerConnectionContext.create(getClass().getSimpleName());
+        return serverConnectionContext;
+    }
+
+    @Override
+    public void setServerConnectionContext(final ServerConnectionContext serverConnectionContext) {
+        this.serverConnectionContext = serverConnectionContext;
     }
 }

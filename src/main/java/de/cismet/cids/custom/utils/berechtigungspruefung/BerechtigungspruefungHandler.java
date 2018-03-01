@@ -22,8 +22,6 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 
 import org.apache.commons.io.FileUtils;
 
-import org.openide.util.Exceptions;
-
 import java.io.File;
 import java.io.IOException;
 
@@ -76,6 +74,9 @@ public class BerechtigungspruefungHandler implements ServerConnectionContextProv
     //~ Instance fields --------------------------------------------------------
 
     private MetaService metaService;
+
+    private ServerConnectionContext serverConnectionContext = ServerConnectionContext.create(getClass()
+                    .getSimpleName());
 
     //~ Constructors -----------------------------------------------------------
 
@@ -648,6 +649,11 @@ public class BerechtigungspruefungHandler implements ServerConnectionContextProv
 
     @Override
     public ServerConnectionContext getServerConnectionContext() {
-        return ServerConnectionContext.create(getClass().getSimpleName());
+        return serverConnectionContext;
+    }
+
+    @Override
+    public void setServerConnectionContext(final ServerConnectionContext serverConnectionContext) {
+        this.serverConnectionContext = serverConnectionContext;
     }
 }

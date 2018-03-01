@@ -63,6 +63,11 @@ public class AlkisPointReportServerAction extends JasperReportServerAction imple
         POINT_MONS
     }
 
+    //~ Instance fields --------------------------------------------------------
+
+    private ServerConnectionContext serverConnectionContext = ServerConnectionContext.create(getClass()
+                    .getSimpleName());
+
     //~ Methods ----------------------------------------------------------------
 
     @Override
@@ -121,6 +126,11 @@ public class AlkisPointReportServerAction extends JasperReportServerAction imple
 
     @Override
     public ServerConnectionContext getServerConnectionContext() {
-        return ServerConnectionContext.create(getClass().getSimpleName());
+        return serverConnectionContext;
+    }
+
+    @Override
+    public void setServerConnectionContext(final ServerConnectionContext serverConnectionContext) {
+        this.serverConnectionContext = serverConnectionContext;
     }
 }

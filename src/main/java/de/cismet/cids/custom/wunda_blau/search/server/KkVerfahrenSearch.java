@@ -41,6 +41,9 @@ public class KkVerfahrenSearch extends AbstractCidsServerSearch implements Serve
 
     private final int kompensationId;
 
+    private ServerConnectionContext serverConnectionContext = ServerConnectionContext.create(getClass()
+                    .getSimpleName());
+
     //~ Constructors -----------------------------------------------------------
 
     /**
@@ -83,6 +86,11 @@ public class KkVerfahrenSearch extends AbstractCidsServerSearch implements Serve
 
     @Override
     public ServerConnectionContext getServerConnectionContext() {
-        return ServerConnectionContext.create(getClass().getSimpleName());
+        return serverConnectionContext;
+    }
+
+    @Override
+    public void setServerConnectionContext(final ServerConnectionContext serverConnectionContext) {
+        this.serverConnectionContext = serverConnectionContext;
     }
 }

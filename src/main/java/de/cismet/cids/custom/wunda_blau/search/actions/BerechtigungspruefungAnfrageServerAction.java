@@ -65,6 +65,9 @@ public class BerechtigungspruefungAnfrageServerAction implements UserAwareServer
     private User user = null;
     private MetaService metaService = null;
 
+    private ServerConnectionContext serverConnectionContext = ServerConnectionContext.create(getClass()
+                    .getSimpleName());
+
     //~ Methods ----------------------------------------------------------------
 
     @Override
@@ -177,6 +180,11 @@ public class BerechtigungspruefungAnfrageServerAction implements UserAwareServer
 
     @Override
     public ServerConnectionContext getServerConnectionContext() {
-        return ServerConnectionContext.create(getClass().getSimpleName());
+        return serverConnectionContext;
+    }
+
+    @Override
+    public void setServerConnectionContext(final ServerConnectionContext serverConnectionContext) {
+        this.serverConnectionContext = serverConnectionContext;
     }
 }

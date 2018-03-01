@@ -116,6 +116,9 @@ public class NasZaehlObjekteServerAction implements ServerAction, MetaServiceSto
 
     private MetaService metaService;
 
+    private ServerConnectionContext serverConnectionContext = ServerConnectionContext.create(getClass()
+                    .getSimpleName());
+
     //~ Constructors -----------------------------------------------------------
 
     /**
@@ -382,6 +385,11 @@ public class NasZaehlObjekteServerAction implements ServerAction, MetaServiceSto
 
     @Override
     public ServerConnectionContext getServerConnectionContext() {
-        return ServerConnectionContext.create(getClass().getSimpleName());
+        return serverConnectionContext;
+    }
+
+    @Override
+    public void setServerConnectionContext(final ServerConnectionContext serverConnectionContext) {
+        this.serverConnectionContext = serverConnectionContext;
     }
 }

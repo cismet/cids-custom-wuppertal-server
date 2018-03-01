@@ -128,6 +128,9 @@ public class BillingStatisticsReportServerSearch extends AbstractCidsServerSearc
 
     private final String billingBeanIds;
 
+    private ServerConnectionContext serverConnectionContext = ServerConnectionContext.create(getClass()
+                    .getSimpleName());
+
     //~ Constructors -----------------------------------------------------------
 
     /**
@@ -246,7 +249,12 @@ public class BillingStatisticsReportServerSearch extends AbstractCidsServerSearc
 
     @Override
     public ServerConnectionContext getServerConnectionContext() {
-        return ServerConnectionContext.create(getClass().getSimpleName());
+        return serverConnectionContext;
+    }
+
+    @Override
+    public void setServerConnectionContext(final ServerConnectionContext serverConnectionContext) {
+        this.serverConnectionContext = serverConnectionContext;
     }
 
     //~ Inner Classes ----------------------------------------------------------

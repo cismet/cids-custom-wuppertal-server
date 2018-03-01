@@ -58,6 +58,9 @@ public class AdresseGebaeudeLightweightSearch extends AbstractCidsServerSearch i
     @Getter @Setter private String representationPattern;
     @Getter @Setter private Integer gebaudeId;
 
+    private ServerConnectionContext serverConnectionContext = ServerConnectionContext.create(getClass()
+                    .getSimpleName());
+
     //~ Constructors -----------------------------------------------------------
 
     /**
@@ -141,6 +144,11 @@ public class AdresseGebaeudeLightweightSearch extends AbstractCidsServerSearch i
 
     @Override
     public ServerConnectionContext getServerConnectionContext() {
-        return ServerConnectionContext.create(getClass().getSimpleName());
+        return serverConnectionContext;
+    }
+
+    @Override
+    public void setServerConnectionContext(final ServerConnectionContext serverConnectionContext) {
+        this.serverConnectionContext = serverConnectionContext;
     }
 }

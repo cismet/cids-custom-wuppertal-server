@@ -76,6 +76,9 @@ public class CidsVermessungRissSearchStatement extends AbstractCidsServerSearch 
     private Geometry geometry;
     private Collection<Map<String, String>> flurstuecke;
 
+    private ServerConnectionContext serverConnectionContext = ServerConnectionContext.create(getClass()
+                    .getSimpleName());
+
     //~ Constructors -----------------------------------------------------------
 
     /**
@@ -357,6 +360,11 @@ public class CidsVermessungRissSearchStatement extends AbstractCidsServerSearch 
 
     @Override
     public ServerConnectionContext getServerConnectionContext() {
-        return ServerConnectionContext.create(getClass().getSimpleName());
+        return serverConnectionContext;
+    }
+
+    @Override
+    public void setServerConnectionContext(final ServerConnectionContext serverConnectionContext) {
+        this.serverConnectionContext = serverConnectionContext;
     }
 }

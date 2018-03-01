@@ -11,7 +11,6 @@
  */
 package de.cismet.cids.custom.wunda_blau.search.server;
 
-import Sirius.server.middleware.interfaces.domainserver.ActionService;
 import Sirius.server.middleware.interfaces.domainserver.MetaService;
 import Sirius.server.middleware.types.MetaObjectNode;
 
@@ -21,8 +20,6 @@ import com.vividsolutions.jts.geom.Polygon;
 
 import org.apache.log4j.Logger;
 
-import java.io.StringReader;
-
 import java.rmi.RemoteException;
 
 import java.sql.Date;
@@ -31,9 +28,6 @@ import java.util.ArrayList;
 import java.util.Collection;
 import java.util.List;
 
-import de.cismet.cids.custom.utils.WundaBlauServerResources;
-
-import de.cismet.cids.server.actions.GetServerResourceServerAction;
 import de.cismet.cids.server.connectioncontext.ServerConnectionContext;
 import de.cismet.cids.server.connectioncontext.ServerConnectionContextProvider;
 import de.cismet.cids.server.search.AbstractCidsServerSearch;
@@ -64,6 +58,9 @@ public class CidsLandParcelSearchStatement extends AbstractCidsServerSearch impl
     private Date historicalFrom;
     private Date historicalTo;
     private Geometry geometry;
+
+    private ServerConnectionContext serverConnectionContext = ServerConnectionContext.create(getClass()
+                    .getSimpleName());
 
     //~ Constructors -----------------------------------------------------------
 
@@ -165,6 +162,11 @@ public class CidsLandParcelSearchStatement extends AbstractCidsServerSearch impl
 
     @Override
     public ServerConnectionContext getServerConnectionContext() {
-        return ServerConnectionContext.create(getClass().getSimpleName());
+        return serverConnectionContext;
+    }
+
+    @Override
+    public void setServerConnectionContext(final ServerConnectionContext serverConnectionContext) {
+        this.serverConnectionContext = serverConnectionContext;
     }
 }

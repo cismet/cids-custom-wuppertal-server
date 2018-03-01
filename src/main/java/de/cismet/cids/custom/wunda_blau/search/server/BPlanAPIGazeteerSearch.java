@@ -68,6 +68,9 @@ public class BPlanAPIGazeteerSearch extends AbstractCidsServerSearch implements 
     @Getter private final SearchInfo searchInfo;
     @Getter @Setter private String input;
 
+    private ServerConnectionContext serverConnectionContext = ServerConnectionContext.create(getClass()
+                    .getSimpleName());
+
     //~ Constructors -----------------------------------------------------------
 
     /**
@@ -132,7 +135,12 @@ public class BPlanAPIGazeteerSearch extends AbstractCidsServerSearch implements 
 
     @Override
     public ServerConnectionContext getServerConnectionContext() {
-        return ServerConnectionContext.create(getClass().getSimpleName());
+        return serverConnectionContext;
+    }
+
+    @Override
+    public void setServerConnectionContext(final ServerConnectionContext serverConnectionContext) {
+        this.serverConnectionContext = serverConnectionContext;
     }
 }
 

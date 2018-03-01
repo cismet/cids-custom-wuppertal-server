@@ -59,6 +59,9 @@ public class BaulastArtLightweightSearch extends AbstractCidsServerSearch implem
     @Getter @Setter private String[] representationFields;
     @Getter @Setter private String representationPattern;
 
+    private ServerConnectionContext serverConnectionContext = ServerConnectionContext.create(getClass()
+                    .getSimpleName());
+
     //~ Constructors -----------------------------------------------------------
 
     /**
@@ -135,6 +138,11 @@ public class BaulastArtLightweightSearch extends AbstractCidsServerSearch implem
 
     @Override
     public ServerConnectionContext getServerConnectionContext() {
-        return ServerConnectionContext.create(getClass().getSimpleName());
+        return serverConnectionContext;
+    }
+
+    @Override
+    public void setServerConnectionContext(final ServerConnectionContext serverConnectionContext) {
+        this.serverConnectionContext = serverConnectionContext;
     }
 }

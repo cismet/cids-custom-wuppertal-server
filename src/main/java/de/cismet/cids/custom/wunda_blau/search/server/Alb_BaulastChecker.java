@@ -30,6 +30,9 @@ public class Alb_BaulastChecker extends AbstractCidsServerSearch implements Serv
 
     private final String searchQuery;
 
+    private ServerConnectionContext serverConnectionContext = ServerConnectionContext.create(getClass()
+                    .getSimpleName());
+
     //~ Constructors -----------------------------------------------------------
 
     /**
@@ -69,6 +72,11 @@ public class Alb_BaulastChecker extends AbstractCidsServerSearch implements Serv
 
     @Override
     public ServerConnectionContext getServerConnectionContext() {
-        return ServerConnectionContext.create(getClass().getSimpleName());
+        return serverConnectionContext;
+    }
+
+    @Override
+    public void setServerConnectionContext(final ServerConnectionContext serverConnectionContext) {
+        this.serverConnectionContext = serverConnectionContext;
     }
 }
