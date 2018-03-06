@@ -17,10 +17,11 @@ import java.util.Collection;
 
 import de.cismet.cids.dynamics.CidsBean;
 
-import de.cismet.cids.server.connectioncontext.ServerConnectionContext;
-import de.cismet.cids.server.connectioncontext.ServerConnectionContextProvider;
 import de.cismet.cids.server.search.AbstractCidsServerSearch;
 import de.cismet.cids.server.search.SearchException;
+
+import de.cismet.connectioncontext.ServerConnectionContext;
+import de.cismet.connectioncontext.ServerConnectionContextStore;
 
 /**
  * Search the kk_verfahren parent of a kk_kompensation object.
@@ -28,7 +29,7 @@ import de.cismet.cids.server.search.SearchException;
  * @author   Thorsten Herter
  * @version  $Revision$, $Date$
  */
-public class KkVerfahrenSearch extends AbstractCidsServerSearch implements ServerConnectionContextProvider {
+public class KkVerfahrenSearch extends AbstractCidsServerSearch implements ServerConnectionContextStore {
 
     //~ Static fields/initializers ---------------------------------------------
 
@@ -41,8 +42,7 @@ public class KkVerfahrenSearch extends AbstractCidsServerSearch implements Serve
 
     private final int kompensationId;
 
-    private ServerConnectionContext serverConnectionContext = ServerConnectionContext.create(getClass()
-                    .getSimpleName());
+    private ServerConnectionContext connectionContext = ServerConnectionContext.create(getClass().getSimpleName());
 
     //~ Constructors -----------------------------------------------------------
 
@@ -63,14 +63,14 @@ public class KkVerfahrenSearch extends AbstractCidsServerSearch implements Serve
             final MetaService metaService = (MetaService)this.getActiveLocalServers().get(DOMAIN);
             if (metaService != null) {
                 final ArrayList<ArrayList> list = metaService.performCustomSearch(QUERY + kompensationId,
-                        getServerConnectionContext());
+                        getConnectionContext());
 
                 if ((list != null) && (list.size() == 1) && (list.get(0).size() == 1)) {
                     return Arrays.asList(metaService.getMetaObject(
                                 getUser(),
                                 (Integer)list.get(0).get(0),
                                 CidsBean.getMetaClassFromTableName(DOMAIN, "kk_verfahren").getId(),
-                                getServerConnectionContext()));
+                                getConnectionContext()));
                 } else {
                     LOG.error("active local server not found"); // NOI18N
                 }
@@ -85,12 +85,16 @@ public class KkVerfahrenSearch extends AbstractCidsServerSearch implements Serve
     }
 
     @Override
-    public ServerConnectionContext getServerConnectionContext() {
-        return serverConnectionContext;
+    public ServerConnectionContext getConnectionContext() {
+        return connectionContext;
     }
 
     @Override
-    public void setServerConnectionContext(final ServerConnectionContext serverConnectionContext) {
-        this.serverConnectionContext = serverConnectionContext;
+    public void initAfterConnectionContext() {
+    }
+
+    @Override
+    public void setConnectionContext(final ServerConnectionContext connectionContext) {
+        this.connectionContext = connectionContext;
     }
 }

@@ -28,13 +28,14 @@ import java.util.Date;
 import java.util.HashMap;
 import java.util.List;
 
-import de.cismet.cids.server.connectioncontext.ServerConnectionContext;
-import de.cismet.cids.server.connectioncontext.ServerConnectionContextProvider;
 import de.cismet.cids.server.search.AbstractCidsServerSearch;
 import de.cismet.cids.server.search.MetaObjectNodeServerSearch;
 import de.cismet.cids.server.search.SearchException;
 
 import de.cismet.cismap.commons.jtsgeometryfactories.PostGisGeometryFactory;
+
+import de.cismet.connectioncontext.ServerConnectionContext;
+import de.cismet.connectioncontext.ServerConnectionContextStore;
 
 /**
  * DOCUMENT ME!
@@ -43,7 +44,7 @@ import de.cismet.cismap.commons.jtsgeometryfactories.PostGisGeometryFactory;
  * @version  $Revision$, $Date$
  */
 public class CidsMauernSearchStatement extends AbstractCidsServerSearch implements MetaObjectNodeServerSearch,
-    ServerConnectionContextProvider {
+    ServerConnectionContextStore {
 
     //~ Static fields/initializers ---------------------------------------------
 
@@ -110,8 +111,7 @@ public class CidsMauernSearchStatement extends AbstractCidsServerSearch implemen
     private final StringBuilder fromBuilder = new StringBuilder(FROM);
     private final StringBuilder whereBuilder = new StringBuilder();
 
-    private ServerConnectionContext serverConnectionContext = ServerConnectionContext.create(getClass()
-                    .getSimpleName());
+    private ServerConnectionContext connectionContext = ServerConnectionContext.create(getClass().getSimpleName());
 
     //~ Constructors -----------------------------------------------------------
 
@@ -172,7 +172,7 @@ public class CidsMauernSearchStatement extends AbstractCidsServerSearch implemen
             if (LOG.isDebugEnabled()) {
                 LOG.debug("Executing SQL statement '" + sqlBuilder.toString() + "'.");
             }
-            resultset = metaService.performCustomSearch(sqlBuilder.toString(), getServerConnectionContext());
+            resultset = metaService.performCustomSearch(sqlBuilder.toString(), getConnectionContext());
 
             for (final ArrayList mauer : resultset) {
                 final int classID = (Integer)mauer.get(0);
@@ -605,12 +605,16 @@ public class CidsMauernSearchStatement extends AbstractCidsServerSearch implemen
     }
 
     @Override
-    public ServerConnectionContext getServerConnectionContext() {
-        return serverConnectionContext;
+    public ServerConnectionContext getConnectionContext() {
+        return connectionContext;
     }
 
     @Override
-    public void setServerConnectionContext(final ServerConnectionContext serverConnectionContext) {
-        this.serverConnectionContext = serverConnectionContext;
+    public void initAfterConnectionContext() {
+    }
+
+    @Override
+    public void setConnectionContext(final ServerConnectionContext connectionContext) {
+        this.connectionContext = connectionContext;
     }
 }

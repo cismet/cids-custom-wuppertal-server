@@ -97,14 +97,15 @@ import de.cismet.cids.dynamics.CidsBean;
 import de.cismet.cids.server.actions.ServerAction;
 import de.cismet.cids.server.actions.ServerActionParameter;
 import de.cismet.cids.server.actions.UserAwareServerAction;
-import de.cismet.cids.server.connectioncontext.ServerConnectionContext;
-import de.cismet.cids.server.connectioncontext.ServerConnectionContextProvider;
 
 import de.cismet.cids.utils.MetaClassCacheService;
 import de.cismet.cids.utils.serverresources.ServerResourcesLoader;
 
 import de.cismet.commons.security.AccessHandler;
 import de.cismet.commons.security.handler.SimpleHttpAccessHandler;
+
+import de.cismet.connectioncontext.ConnectionContextProvider;
+import de.cismet.connectioncontext.ServerConnectionContext;
 
 /**
  * DOCUMENT ME!
@@ -115,7 +116,7 @@ import de.cismet.commons.security.handler.SimpleHttpAccessHandler;
 @org.openide.util.lookup.ServiceProvider(service = ServerAction.class)
 public class FormSolutionServerNewStuffAvailableAction implements UserAwareServerAction,
     MetaServiceStore,
-    ServerConnectionContextProvider {
+    ConnectionContextProvider {
 
     //~ Static fields/initializers ---------------------------------------------
 
@@ -183,8 +184,7 @@ public class FormSolutionServerNewStuffAvailableAction implements UserAwareServe
     private final ProductType testCismet00Type;
     private final FileWriter specialLogWriter;
 
-    private ServerConnectionContext serverConnectionContext = ServerConnectionContext.create(getClass()
-                    .getSimpleName());
+    private ServerConnectionContext connectionContext = ServerConnectionContext.create(getClass().getSimpleName());
 
     //~ Constructors -----------------------------------------------------------
 
@@ -421,7 +421,7 @@ public class FormSolutionServerNewStuffAvailableAction implements UserAwareServe
                     getMetaService().updateMetaObject(
                         user,
                         bestellungBean.getMetaObject(),
-                        getServerConnectionContext());
+                        getConnectionContext());
                 }
             } catch (final Exception ex) {
                 LOG.error("Fehler beim Persistieren der Bean", ex);
@@ -503,7 +503,7 @@ public class FormSolutionServerNewStuffAvailableAction implements UserAwareServe
 
         final boolean noClose = (transid == null) || transid.startsWith(TEST_CISMET00_PREFIX)
                     || DomainServerImpl.getServerInstance()
-                    .hasConfigAttr(getUser(), "custom.formsolutions.noclose", getServerConnectionContext());
+                    .hasConfigAttr(getUser(), "custom.formsolutions.noclose", getConnectionContext());
         if (noClose) {
             return;
         }
@@ -720,7 +720,7 @@ public class FormSolutionServerNewStuffAvailableAction implements UserAwareServe
         final MetaObject[] produktMos = getMetaService().getMetaObject(
                 getUser(),
                 produktQuery,
-                getServerConnectionContext());
+                getConnectionContext());
         produktMos[0].setAllClasses(((MetaClassCacheService)Lookup.getDefault().lookup(MetaClassCacheService.class))
                     .getAllClasses(produktMos[0].getDomain()));
         return produktMos[0].getBean();
@@ -951,7 +951,7 @@ public class FormSolutionServerNewStuffAvailableAction implements UserAwareServe
                         getUser(),
                         mon.getObjectId(),
                         mon.getClassId(),
-                        getServerConnectionContext())
+                        getConnectionContext())
                         .getBean();
             return flurstueck;
         } else {
@@ -1181,7 +1181,7 @@ public class FormSolutionServerNewStuffAvailableAction implements UserAwareServe
                 final MetaObject persistedMo = getMetaService().insertMetaObject(
                         user,
                         bestellungBean.getMetaObject(),
-                        getServerConnectionContext());
+                        getConnectionContext());
 
                 final CidsBean persistedBestellungBean = persistedMo.getBean();
                 fsBeanMap.put(transid, persistedBestellungBean);
@@ -1534,7 +1534,7 @@ public class FormSolutionServerNewStuffAvailableAction implements UserAwareServe
                     getMetaService().updateMetaObject(
                         user,
                         bestellungBean.getMetaObject(),
-                        getServerConnectionContext());
+                        getConnectionContext());
 
                     createRechnung(fileNameRechnung, bestellungBean);
 
@@ -1568,7 +1568,7 @@ public class FormSolutionServerNewStuffAvailableAction implements UserAwareServe
                     getMetaService().updateMetaObject(
                         user,
                         bestellungBean.getMetaObject(),
-                        getServerConnectionContext());
+                        getConnectionContext());
                 }
             }
         } catch (final Exception ex) {
@@ -1599,7 +1599,7 @@ public class FormSolutionServerNewStuffAvailableAction implements UserAwareServe
                     getMetaService().updateMetaObject(
                         user,
                         bestellungBean.getMetaObject(),
-                        getServerConnectionContext());
+                        getConnectionContext());
                 } catch (final Exception ex) {
                     LOG.error("Fehler beim Persistieren der Bestellung", ex);
                 }
@@ -1630,7 +1630,7 @@ public class FormSolutionServerNewStuffAvailableAction implements UserAwareServe
         query += " WHERE name = '" + loginName + "'";
 
         CidsBean externalUser = null;
-        final MetaObject[] metaObjects = getMetaService().getMetaObject(user, query, getServerConnectionContext());
+        final MetaObject[] metaObjects = getMetaService().getMetaObject(user, query, getConnectionContext());
         if ((metaObjects != null) && (metaObjects.length > 0)) {
             externalUser = metaObjects[0].getBean();
         }
@@ -1699,8 +1699,7 @@ public class FormSolutionServerNewStuffAvailableAction implements UserAwareServe
                 return getMetaService().insertMetaObject(
                             user,
                             billingBean.getMetaObject(),
-                            getServerConnectionContext())
-                            .getBean();
+                            getConnectionContext()).getBean();
             }
         } catch (Exception e) {
             LOG.error("Error during the persitence of the billing log.", e);
@@ -1797,7 +1796,7 @@ public class FormSolutionServerNewStuffAvailableAction implements UserAwareServe
                                                 getUser(),
                                                 mon.getObjectId(),
                                                 mon.getClassId(),
-                                                getServerConnectionContext())
+                                                getConnectionContext())
                                         .getBean();
                             final String transid = (String)bestellungBean.getProperty("transid");
                             fsBeanMap.put(transid, bestellungBean);
@@ -1811,7 +1810,7 @@ public class FormSolutionServerNewStuffAvailableAction implements UserAwareServe
                                 metaService.updateMetaObject(
                                     getUser(),
                                     bestellungBean.getMetaObject(),
-                                    getServerConnectionContext());
+                                    getConnectionContext());
                             }
                         } catch (final Exception ex) {
                             LOG.error(ex, ex);
@@ -1943,12 +1942,7 @@ public class FormSolutionServerNewStuffAvailableAction implements UserAwareServe
     }
 
     @Override
-    public ServerConnectionContext getServerConnectionContext() {
-        return serverConnectionContext;
-    }
-
-    @Override
-    public void setServerConnectionContext(final ServerConnectionContext serverConnectionContext) {
-        this.serverConnectionContext = serverConnectionContext;
+    public ServerConnectionContext getConnectionContext() {
+        return connectionContext;
     }
 }

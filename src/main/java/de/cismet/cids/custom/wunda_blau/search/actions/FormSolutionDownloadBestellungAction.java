@@ -24,8 +24,9 @@ import de.cismet.cids.dynamics.CidsBean;
 import de.cismet.cids.server.actions.ServerAction;
 import de.cismet.cids.server.actions.ServerActionParameter;
 import de.cismet.cids.server.actions.UserAwareServerAction;
-import de.cismet.cids.server.connectioncontext.ServerConnectionContext;
-import de.cismet.cids.server.connectioncontext.ServerConnectionContextProvider;
+
+import de.cismet.connectioncontext.ConnectionContextProvider;
+import de.cismet.connectioncontext.ServerConnectionContext;
 
 /**
  * DOCUMENT ME!
@@ -36,7 +37,7 @@ import de.cismet.cids.server.connectioncontext.ServerConnectionContextProvider;
 @org.openide.util.lookup.ServiceProvider(service = ServerAction.class)
 public class FormSolutionDownloadBestellungAction implements ServerAction,
     UserAwareServerAction,
-    ServerConnectionContextProvider {
+    ConnectionContextProvider {
 
     //~ Static fields/initializers ---------------------------------------------
 
@@ -73,8 +74,7 @@ public class FormSolutionDownloadBestellungAction implements ServerAction,
 
     private User user;
 
-    private ServerConnectionContext serverConnectionContext = ServerConnectionContext.create(getClass()
-                    .getSimpleName());
+    private ServerConnectionContext connectionContext = ServerConnectionContext.create(getClass().getSimpleName());
 
     //~ Methods ----------------------------------------------------------------
 
@@ -105,7 +105,7 @@ public class FormSolutionDownloadBestellungAction implements ServerAction,
                 final MetaObjectNode mon = (MetaObjectNode)body;
 
                 final CidsBean bestellungBean = DomainServerImpl.getServerInstance()
-                            .getMetaObject(getUser(), mon.getObjectId(), mon.getClassId(), getServerConnectionContext())
+                            .getMetaObject(getUser(), mon.getObjectId(), mon.getClassId(), getConnectionContext())
                             .getBean();
                 final String filePath = rechung ? (String)bestellungBean.getProperty("rechnung_dateipfad")
                                                 : (String)bestellungBean.getProperty("produkt_dateipfad");
@@ -143,12 +143,7 @@ public class FormSolutionDownloadBestellungAction implements ServerAction,
     }
 
     @Override
-    public ServerConnectionContext getServerConnectionContext() {
-        return serverConnectionContext;
-    }
-
-    @Override
-    public void setServerConnectionContext(final ServerConnectionContext serverConnectionContext) {
-        this.serverConnectionContext = serverConnectionContext;
+    public ServerConnectionContext getConnectionContext() {
+        return connectionContext;
     }
 }

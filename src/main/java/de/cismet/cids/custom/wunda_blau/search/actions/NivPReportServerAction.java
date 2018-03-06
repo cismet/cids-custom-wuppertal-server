@@ -31,10 +31,11 @@ import de.cismet.cids.dynamics.CidsBean;
 import de.cismet.cids.server.actions.JasperReportServerAction;
 import de.cismet.cids.server.actions.ServerAction;
 import de.cismet.cids.server.actions.ServerActionParameter;
-import de.cismet.cids.server.connectioncontext.ServerConnectionContext;
-import de.cismet.cids.server.connectioncontext.ServerConnectionContextProvider;
 
 import de.cismet.cids.utils.serverresources.ServerResourcesLoader;
+
+import de.cismet.connectioncontext.ConnectionContextProvider;
+import de.cismet.connectioncontext.ServerConnectionContext;
 
 /**
  * DOCUMENT ME!
@@ -43,7 +44,7 @@ import de.cismet.cids.utils.serverresources.ServerResourcesLoader;
  * @version  $Revision$, $Date$
  */
 @org.openide.util.lookup.ServiceProvider(service = ServerAction.class)
-public class NivPReportServerAction extends JasperReportServerAction implements ServerConnectionContextProvider {
+public class NivPReportServerAction extends JasperReportServerAction implements ConnectionContextProvider {
 
     //~ Static fields/initializers ---------------------------------------------
 
@@ -67,8 +68,7 @@ public class NivPReportServerAction extends JasperReportServerAction implements 
 
     //~ Instance fields --------------------------------------------------------
 
-    private ServerConnectionContext serverConnectionContext = ServerConnectionContext.create(getClass()
-                    .getSimpleName());
+    private ServerConnectionContext connectionContext = ServerConnectionContext.create(getClass().getSimpleName());
 
     //~ Methods ----------------------------------------------------------------
 
@@ -96,7 +96,7 @@ public class NivPReportServerAction extends JasperReportServerAction implements 
                                 getUser(),
                                 reportMon.getObjectId(),
                                 reportMon.getClassId(),
-                                getServerConnectionContext())
+                                getConnectionContext())
                                 .getBean();
                     cidsBeans.add(cidsBean);
                 }
@@ -134,12 +134,7 @@ public class NivPReportServerAction extends JasperReportServerAction implements 
     }
 
     @Override
-    public ServerConnectionContext getServerConnectionContext() {
-        return serverConnectionContext;
-    }
-
-    @Override
-    public void setServerConnectionContext(final ServerConnectionContext serverConnectionContext) {
-        this.serverConnectionContext = serverConnectionContext;
+    public ServerConnectionContext getConnectionContext() {
+        return connectionContext;
     }
 }

@@ -16,10 +16,11 @@ import org.apache.log4j.Logger;
 import java.util.ArrayList;
 import java.util.Collection;
 
-import de.cismet.cids.server.connectioncontext.ServerConnectionContext;
-import de.cismet.cids.server.connectioncontext.ServerConnectionContextProvider;
 import de.cismet.cids.server.search.AbstractCidsServerSearch;
 import de.cismet.cids.server.search.MetaObjectNodeServerSearch;
+
+import de.cismet.connectioncontext.ServerConnectionContext;
+import de.cismet.connectioncontext.ServerConnectionContextStore;
 
 /**
  * DOCUMENT ME!
@@ -28,7 +29,7 @@ import de.cismet.cids.server.search.MetaObjectNodeServerSearch;
  * @version  $Revision$, $Date$
  */
 public class CustomStrassenSearchStatement extends AbstractCidsServerSearch implements MetaObjectNodeServerSearch,
-    ServerConnectionContextProvider {
+    ServerConnectionContextStore {
 
     //~ Static fields/initializers ---------------------------------------------
 
@@ -40,8 +41,7 @@ public class CustomStrassenSearchStatement extends AbstractCidsServerSearch impl
     private final String searchString;
     private final boolean searchForStrassenschluessel;
 
-    private ServerConnectionContext serverConnectionContext = ServerConnectionContext.create(getClass()
-                    .getSimpleName());
+    private ServerConnectionContext connectionContext = ServerConnectionContext.create(getClass().getSimpleName());
 
     //~ Constructors -----------------------------------------------------------
 
@@ -76,7 +76,7 @@ public class CustomStrassenSearchStatement extends AbstractCidsServerSearch impl
 
             final MetaService ms = (MetaService)getActiveLocalServers().get("WUNDA_BLAU");
 
-            final MetaClass c = ms.getClassByTableName(getUser(), "strasse", getServerConnectionContext());
+            final MetaClass c = ms.getClassByTableName(getUser(), "strasse", getConnectionContext());
 
             final String sql = ""
                         + "SELECT strassenschluessel, name "
@@ -86,7 +86,7 @@ public class CustomStrassenSearchStatement extends AbstractCidsServerSearch impl
                                                        : ("name LIKE '%" + searchString + "%'")) + " "
                         + "ORDER BY name desc";
 
-            final ArrayList<ArrayList> result = ms.performCustomSearch(sql, getServerConnectionContext());
+            final ArrayList<ArrayList> result = ms.performCustomSearch(sql, getConnectionContext());
 
             final ArrayList<MetaObjectNode> aln = new ArrayList<>();
             for (final ArrayList al : result) {
@@ -101,12 +101,16 @@ public class CustomStrassenSearchStatement extends AbstractCidsServerSearch impl
     }
 
     @Override
-    public ServerConnectionContext getServerConnectionContext() {
-        return serverConnectionContext;
+    public ServerConnectionContext getConnectionContext() {
+        return connectionContext;
     }
 
     @Override
-    public void setServerConnectionContext(final ServerConnectionContext serverConnectionContext) {
-        this.serverConnectionContext = serverConnectionContext;
+    public void initAfterConnectionContext() {
+    }
+
+    @Override
+    public void setConnectionContext(final ServerConnectionContext connectionContext) {
+        this.connectionContext = connectionContext;
     }
 }

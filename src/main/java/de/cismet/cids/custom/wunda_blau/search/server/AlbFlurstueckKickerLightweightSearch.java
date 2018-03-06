@@ -26,8 +26,6 @@ import java.util.List;
 
 import de.cismet.cids.dynamics.CidsBean;
 
-import de.cismet.cids.server.connectioncontext.ServerConnectionContext;
-import de.cismet.cids.server.connectioncontext.ServerConnectionContextProvider;
 import de.cismet.cids.server.search.AbstractCidsServerSearch;
 import de.cismet.cids.server.search.SearchException;
 
@@ -38,6 +36,9 @@ import de.cismet.cidsx.server.api.types.SearchParameterInfo;
 import de.cismet.cidsx.server.search.RestApiCidsServerSearch;
 import de.cismet.cidsx.server.search.builtin.legacy.LightweightMetaObjectsSearch;
 
+import de.cismet.connectioncontext.ServerConnectionContext;
+import de.cismet.connectioncontext.ServerConnectionContextStore;
+
 /**
  * Builtin Legacy Search to delegate the operation getLightweightMetaObjectsByQuery to the cids Pure REST Search API.
  *
@@ -47,7 +48,7 @@ import de.cismet.cidsx.server.search.builtin.legacy.LightweightMetaObjectsSearch
 @ServiceProvider(service = RestApiCidsServerSearch.class)
 public class AlbFlurstueckKickerLightweightSearch extends AbstractCidsServerSearch implements RestApiCidsServerSearch,
     LightweightMetaObjectsSearch,
-    ServerConnectionContextProvider {
+    ServerConnectionContextStore {
 
     //~ Static fields/initializers ---------------------------------------------
 
@@ -89,8 +90,7 @@ public class AlbFlurstueckKickerLightweightSearch extends AbstractCidsServerSear
     @Getter @Setter private String[] representationFields;
     @Getter @Setter private String representationPattern;
 
-    private ServerConnectionContext serverConnectionContext = ServerConnectionContext.create(getClass()
-                    .getSimpleName());
+    private ServerConnectionContext connectionContext = ServerConnectionContext.create(getClass().getSimpleName());
 
     //~ Constructors -----------------------------------------------------------
 
@@ -356,14 +356,14 @@ public class AlbFlurstueckKickerLightweightSearch extends AbstractCidsServerSear
                                 query,
                                 getRepresentationFields(),
                                 getRepresentationPattern(),
-                                getServerConnectionContext()));
+                                getConnectionContext()));
                 } else {
                     return Arrays.asList(metaService.getLightweightMetaObjectsByQuery(
                                 mc.getID(),
                                 getUser(),
                                 query,
                                 getRepresentationFields(),
-                                getServerConnectionContext()));
+                                getConnectionContext()));
                 }
             } catch (final RemoteException ex) {
                 throw new SearchException("error while loading lwmos", ex);
@@ -374,12 +374,16 @@ public class AlbFlurstueckKickerLightweightSearch extends AbstractCidsServerSear
     }
 
     @Override
-    public ServerConnectionContext getServerConnectionContext() {
-        return serverConnectionContext;
+    public ServerConnectionContext getConnectionContext() {
+        return connectionContext;
     }
 
     @Override
-    public void setServerConnectionContext(final ServerConnectionContext serverConnectionContext) {
-        this.serverConnectionContext = serverConnectionContext;
+    public void initAfterConnectionContext() {
+    }
+
+    @Override
+    public void setConnectionContext(final ServerConnectionContext connectionContext) {
+        this.connectionContext = connectionContext;
     }
 }

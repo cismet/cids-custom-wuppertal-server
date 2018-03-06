@@ -15,10 +15,11 @@ import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collection;
 
-import de.cismet.cids.server.connectioncontext.ServerConnectionContext;
-import de.cismet.cids.server.connectioncontext.ServerConnectionContextProvider;
 import de.cismet.cids.server.search.AbstractCidsServerSearch;
 import de.cismet.cids.server.search.SearchException;
+
+import de.cismet.connectioncontext.ServerConnectionContext;
+import de.cismet.connectioncontext.ServerConnectionContextStore;
 
 /**
  * Search the BPlan of a given geometry.
@@ -26,7 +27,7 @@ import de.cismet.cids.server.search.SearchException;
  * @author   Thorsten Herter
  * @version  $Revision$, $Date$
  */
-public class BPlanByGeometrySearch extends AbstractCidsServerSearch implements ServerConnectionContextProvider {
+public class BPlanByGeometrySearch extends AbstractCidsServerSearch implements ServerConnectionContextStore {
 
     //~ Static fields/initializers ---------------------------------------------
 
@@ -41,8 +42,7 @@ public class BPlanByGeometrySearch extends AbstractCidsServerSearch implements S
 
     private String geom;
 
-    private ServerConnectionContext serverConnectionContext = ServerConnectionContext.create(getClass()
-                    .getSimpleName());
+    private ServerConnectionContext connectionContext = ServerConnectionContext.create(getClass().getSimpleName());
 
     //~ Constructors -----------------------------------------------------------
 
@@ -65,7 +65,7 @@ public class BPlanByGeometrySearch extends AbstractCidsServerSearch implements S
                 final ArrayList<ArrayList> bPlanList = metaService.performCustomSearch(String.format(
                             QUERY_BPLAN,
                             geom),
-                        getServerConnectionContext());
+                        getConnectionContext());
 
                 String bPlanCs = null;
 
@@ -92,12 +92,16 @@ public class BPlanByGeometrySearch extends AbstractCidsServerSearch implements S
     }
 
     @Override
-    public ServerConnectionContext getServerConnectionContext() {
-        return serverConnectionContext;
+    public ServerConnectionContext getConnectionContext() {
+        return connectionContext;
     }
 
     @Override
-    public void setServerConnectionContext(final ServerConnectionContext serverConnectionContext) {
-        this.serverConnectionContext = serverConnectionContext;
+    public void initAfterConnectionContext() {
+    }
+
+    @Override
+    public void setConnectionContext(final ServerConnectionContext connectionContext) {
+        this.connectionContext = connectionContext;
     }
 }

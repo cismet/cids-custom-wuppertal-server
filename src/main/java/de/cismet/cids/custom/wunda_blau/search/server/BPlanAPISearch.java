@@ -24,8 +24,6 @@ import java.util.Collection;
 import java.util.LinkedList;
 import java.util.List;
 
-import de.cismet.cids.server.connectioncontext.ServerConnectionContext;
-import de.cismet.cids.server.connectioncontext.ServerConnectionContextProvider;
 import de.cismet.cids.server.search.AbstractCidsServerSearch;
 import de.cismet.cids.server.search.SearchException;
 
@@ -35,6 +33,9 @@ import de.cismet.cidsx.server.api.types.SearchInfo;
 import de.cismet.cidsx.server.api.types.SearchParameterInfo;
 import de.cismet.cidsx.server.search.RestApiCidsServerSearch;
 
+import de.cismet.connectioncontext.ServerConnectionContext;
+import de.cismet.connectioncontext.ServerConnectionContextStore;
+
 /**
  * Search to Retrieve the BPlan-Objects to the cids Pure REST Search API.
  *
@@ -43,7 +44,7 @@ import de.cismet.cidsx.server.search.RestApiCidsServerSearch;
  */
 @ServiceProvider(service = RestApiCidsServerSearch.class)
 public class BPlanAPISearch extends AbstractCidsServerSearch implements RestApiCidsServerSearch,
-    ServerConnectionContextProvider {
+    ServerConnectionContextStore {
 
     //~ Static fields/initializers ---------------------------------------------
 
@@ -65,8 +66,7 @@ public class BPlanAPISearch extends AbstractCidsServerSearch implements RestApiC
     @Getter @Setter private Integer srs;
     @Getter @Setter private String urlprefix;
 
-    private ServerConnectionContext serverConnectionContext = ServerConnectionContext.create(getClass()
-                    .getSimpleName());
+    private ServerConnectionContext connectionContext = ServerConnectionContext.create(getClass().getSimpleName());
 
     //~ Constructors -----------------------------------------------------------
 
@@ -129,7 +129,7 @@ public class BPlanAPISearch extends AbstractCidsServerSearch implements RestApiC
                 QUERY.setObjects(wktString, status, srs, urlprefix);
                 final ArrayList<ArrayList> results = metaService.performCustomSearch(
                         QUERY,
-                        getServerConnectionContext());
+                        getConnectionContext());
                 return results;
             } else {
                 LOG.error("active local server not found"); // NOI18N
@@ -142,13 +142,17 @@ public class BPlanAPISearch extends AbstractCidsServerSearch implements RestApiC
     }
 
     @Override
-    public ServerConnectionContext getServerConnectionContext() {
-        return serverConnectionContext;
+    public ServerConnectionContext getConnectionContext() {
+        return connectionContext;
     }
 
     @Override
-    public void setServerConnectionContext(final ServerConnectionContext serverConnectionContext) {
-        this.serverConnectionContext = serverConnectionContext;
+    public void initAfterConnectionContext() {
+    }
+
+    @Override
+    public void setConnectionContext(final ServerConnectionContext connectionContext) {
+        this.connectionContext = connectionContext;
     }
 }
 

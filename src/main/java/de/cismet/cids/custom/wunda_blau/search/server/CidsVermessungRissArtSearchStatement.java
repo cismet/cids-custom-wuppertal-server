@@ -16,9 +16,10 @@ import java.util.ArrayList;
 import java.util.Collection;
 import java.util.LinkedList;
 
-import de.cismet.cids.server.connectioncontext.ServerConnectionContext;
-import de.cismet.cids.server.connectioncontext.ServerConnectionContextProvider;
 import de.cismet.cids.server.search.AbstractCidsServerSearch;
+
+import de.cismet.connectioncontext.ServerConnectionContext;
+import de.cismet.connectioncontext.ServerConnectionContextStore;
 
 /**
  * DOCUMENT ME!
@@ -27,7 +28,7 @@ import de.cismet.cids.server.search.AbstractCidsServerSearch;
  * @version  $Revision$, $Date$
  */
 public class CidsVermessungRissArtSearchStatement extends AbstractCidsServerSearch
-        implements ServerConnectionContextProvider {
+        implements ServerConnectionContextStore {
 
     //~ Static fields/initializers ---------------------------------------------
 
@@ -49,8 +50,7 @@ public class CidsVermessungRissArtSearchStatement extends AbstractCidsServerSear
 
     private final User user;
 
-    private ServerConnectionContext serverConnectionContext = ServerConnectionContext.create(getClass()
-                    .getSimpleName());
+    private ServerConnectionContext connectionContext = ServerConnectionContext.create(getClass().getSimpleName());
 
     //~ Constructors -----------------------------------------------------------
 
@@ -85,14 +85,14 @@ public class CidsVermessungRissArtSearchStatement extends AbstractCidsServerSear
                 LOG.debug("Executing SQL statement '" + SQL + "'.");
             }
 
-            resultset = metaService.performCustomSearch(SQL, getServerConnectionContext());
+            resultset = metaService.performCustomSearch(SQL, getConnectionContext());
 
             for (final ArrayList veraenderungsart : resultset) {
                 final int classID = (Integer)veraenderungsart.get(0);
                 final int objectID = (Integer)veraenderungsart.get(1);
 
                 try {
-                    result.add(metaService.getMetaObject(user, objectID, classID, getServerConnectionContext()));
+                    result.add(metaService.getMetaObject(user, objectID, classID, getConnectionContext()));
                 } catch (final Exception ex) {
                     LOG.warn("Couldn't get CidsBean for class '" + classID + "', object '" + objectID + "', user '"
                                 + user + "'.",
@@ -108,12 +108,16 @@ public class CidsVermessungRissArtSearchStatement extends AbstractCidsServerSear
     }
 
     @Override
-    public ServerConnectionContext getServerConnectionContext() {
-        return serverConnectionContext;
+    public ServerConnectionContext getConnectionContext() {
+        return connectionContext;
     }
 
     @Override
-    public void setServerConnectionContext(final ServerConnectionContext serverConnectionContext) {
-        this.serverConnectionContext = serverConnectionContext;
+    public void initAfterConnectionContext() {
+    }
+
+    @Override
+    public void setConnectionContext(final ServerConnectionContext connectionContext) {
+        this.connectionContext = connectionContext;
     }
 }

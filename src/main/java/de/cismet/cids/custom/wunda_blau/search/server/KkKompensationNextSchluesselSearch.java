@@ -14,10 +14,11 @@ import org.apache.log4j.Logger;
 import java.util.ArrayList;
 import java.util.Collection;
 
-import de.cismet.cids.server.connectioncontext.ServerConnectionContext;
-import de.cismet.cids.server.connectioncontext.ServerConnectionContextProvider;
 import de.cismet.cids.server.search.AbstractCidsServerSearch;
 import de.cismet.cids.server.search.SearchException;
+
+import de.cismet.connectioncontext.ServerConnectionContext;
+import de.cismet.connectioncontext.ServerConnectionContextStore;
 
 /**
  * Search next value for the schluessel property of a new kk_kompensation object.
@@ -26,7 +27,7 @@ import de.cismet.cids.server.search.SearchException;
  * @version  $Revision$, $Date$
  */
 public class KkKompensationNextSchluesselSearch extends AbstractCidsServerSearch
-        implements ServerConnectionContextProvider {
+        implements ServerConnectionContextStore {
 
     //~ Static fields/initializers ---------------------------------------------
 
@@ -36,8 +37,7 @@ public class KkKompensationNextSchluesselSearch extends AbstractCidsServerSearch
 
     //~ Instance fields --------------------------------------------------------
 
-    private ServerConnectionContext serverConnectionContext = ServerConnectionContext.create(getClass()
-                    .getSimpleName());
+    private ServerConnectionContext connectionContext = ServerConnectionContext.create(getClass().getSimpleName());
 
     //~ Constructors -----------------------------------------------------------
 
@@ -55,7 +55,7 @@ public class KkKompensationNextSchluesselSearch extends AbstractCidsServerSearch
             final MetaService metaService = (MetaService)this.getActiveLocalServers().get(DOMAIN);
 
             if (metaService != null) {
-                final ArrayList<ArrayList> list = metaService.performCustomSearch(QUERY, getServerConnectionContext());
+                final ArrayList<ArrayList> list = metaService.performCustomSearch(QUERY, getConnectionContext());
 
                 if ((list.size() > 0) && (list.get(0).size() > 0)) {
                     return list.get(0);
@@ -71,12 +71,16 @@ public class KkKompensationNextSchluesselSearch extends AbstractCidsServerSearch
     }
 
     @Override
-    public ServerConnectionContext getServerConnectionContext() {
-        return serverConnectionContext;
+    public ServerConnectionContext getConnectionContext() {
+        return connectionContext;
     }
 
     @Override
-    public void setServerConnectionContext(final ServerConnectionContext serverConnectionContext) {
-        this.serverConnectionContext = serverConnectionContext;
+    public void initAfterConnectionContext() {
+    }
+
+    @Override
+    public void setConnectionContext(final ServerConnectionContext connectionContext) {
+        this.connectionContext = connectionContext;
     }
 }

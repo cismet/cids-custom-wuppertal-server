@@ -25,8 +25,9 @@ import de.cismet.cids.dynamics.CidsBean;
 import de.cismet.cids.server.actions.ServerAction;
 import de.cismet.cids.server.actions.ServerActionParameter;
 import de.cismet.cids.server.actions.UserAwareServerAction;
-import de.cismet.cids.server.connectioncontext.ServerConnectionContext;
-import de.cismet.cids.server.connectioncontext.ServerConnectionContextProvider;
+
+import de.cismet.connectioncontext.ConnectionContextProvider;
+import de.cismet.connectioncontext.ServerConnectionContext;
 
 /**
  * DOCUMENT ME!
@@ -37,7 +38,7 @@ import de.cismet.cids.server.connectioncontext.ServerConnectionContextProvider;
 @org.openide.util.lookup.ServiceProvider(service = ServerAction.class)
 public class FormSolutionBestellungChangeStatusServerAction implements UserAwareServerAction,
     MetaServiceStore,
-    ServerConnectionContextProvider {
+    ConnectionContextProvider {
 
     //~ Static fields/initializers ---------------------------------------------
 
@@ -64,8 +65,7 @@ public class FormSolutionBestellungChangeStatusServerAction implements UserAware
     private User user;
     private MetaService metaService;
 
-    private ServerConnectionContext serverConnectionContext = ServerConnectionContext.create(getClass()
-                    .getSimpleName());
+    private ServerConnectionContext connectionContext = ServerConnectionContext.create(getClass().getSimpleName());
 
     //~ Constructors -----------------------------------------------------------
 
@@ -112,7 +112,7 @@ public class FormSolutionBestellungChangeStatusServerAction implements UserAware
 
         try {
             final CidsBean bestellungBean = DomainServerImpl.getServerInstance()
-                        .getMetaObject(getUser(), mon.getObjectId(), mon.getClassId(), getServerConnectionContext())
+                        .getMetaObject(getUser(), mon.getObjectId(), mon.getClassId(), getConnectionContext())
                         .getBean();
             final String transid = (String)bestellungBean.getProperty("transid");
             final int status;
@@ -127,7 +127,7 @@ public class FormSolutionBestellungChangeStatusServerAction implements UserAware
                 bestellungBean.setProperty("erledigt", erledigt);
                 bestellungBean.setProperty("fehler", null);
                 DomainServerImpl.getServerInstance()
-                        .updateMetaObject(getUser(), bestellungBean.getMetaObject(), getServerConnectionContext());
+                        .updateMetaObject(getUser(), bestellungBean.getMetaObject(), getConnectionContext());
                 return true;
             }
             return false;
@@ -163,12 +163,7 @@ public class FormSolutionBestellungChangeStatusServerAction implements UserAware
     }
 
     @Override
-    public ServerConnectionContext getServerConnectionContext() {
-        return serverConnectionContext;
-    }
-
-    @Override
-    public void setServerConnectionContext(final ServerConnectionContext serverConnectionContext) {
-        this.serverConnectionContext = serverConnectionContext;
+    public ServerConnectionContext getConnectionContext() {
+        return connectionContext;
     }
 }

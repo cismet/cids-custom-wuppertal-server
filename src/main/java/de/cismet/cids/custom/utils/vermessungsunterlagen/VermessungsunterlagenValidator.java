@@ -37,17 +37,18 @@ import de.cismet.cids.custom.wunda_blau.search.server.VermessungFlurstueckKicker
 
 import de.cismet.cids.dynamics.CidsBean;
 
-import de.cismet.cids.server.connectioncontext.ServerConnectionContext;
-import de.cismet.cids.server.connectioncontext.ServerConnectionContextProvider;
 import de.cismet.cids.server.search.CidsServerSearch;
 import de.cismet.cids.server.search.SearchException;
+
+import de.cismet.connectioncontext.ClientConnectionContext;
+import de.cismet.connectioncontext.ConnectionContextProvider;
 
 /**
  * DOCUMENT ME!
  *
  * @version  $Revision$, $Date$
  */
-public class VermessungsunterlagenValidator implements ServerConnectionContextProvider {
+public class VermessungsunterlagenValidator implements ConnectionContextProvider {
 
     //~ Static fields/initializers ---------------------------------------------
 
@@ -79,18 +80,20 @@ public class VermessungsunterlagenValidator implements ServerConnectionContextPr
     @Getter private boolean pnrNotZero = false;
     @Getter private boolean geometryFromFlurstuecke = true;
 
-    private ServerConnectionContext serverConnectionContext = ServerConnectionContext.create(getClass()
-                    .getSimpleName());
+    private final ClientConnectionContext connectionContext;
 
     //~ Constructors -----------------------------------------------------------
 
     /**
      * Creates a new VermessungsunterlagenValidator object.
      *
-     * @param  helper  DOCUMENT ME!
+     * @param  helper             DOCUMENT ME!
+     * @param  connectionContext  DOCUMENT ME!
      */
-    public VermessungsunterlagenValidator(final VermessungsunterlagenHelper helper) {
+    public VermessungsunterlagenValidator(final VermessungsunterlagenHelper helper,
+            final ClientConnectionContext connectionContext) {
         this.helper = helper;
+        this.connectionContext = connectionContext;
     }
 
     //~ Methods ----------------------------------------------------------------
@@ -518,7 +521,7 @@ public class VermessungsunterlagenValidator implements ServerConnectionContextPr
                     + "_%';";
 
         final MetaService metaService = helper.getMetaService();
-        for (final ArrayList fields : metaService.performCustomSearch(query, getServerConnectionContext())) {
+        for (final ArrayList fields : metaService.performCustomSearch(query, getConnectionContext())) {
             final String kennzeichen = (String)fields.get(0);
             final CidsBean nachfolgerBean = searchFlurstueck(toAlkisId(
                         kennzeichen.substring(0, 6),
@@ -623,12 +626,7 @@ public class VermessungsunterlagenValidator implements ServerConnectionContextPr
     }
 
     @Override
-    public ServerConnectionContext getServerConnectionContext() {
-        return serverConnectionContext;
-    }
-
-    @Override
-    public void setServerConnectionContext(final ServerConnectionContext serverConnectionContext) {
-        this.serverConnectionContext = serverConnectionContext;
+    public ClientConnectionContext getConnectionContext() {
+        return connectionContext;
     }
 }

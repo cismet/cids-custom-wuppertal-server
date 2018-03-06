@@ -40,13 +40,14 @@ import de.cismet.cids.custom.wunda_blau.search.server.SearchProperties;
 
 import de.cismet.cids.server.actions.ServerAction;
 import de.cismet.cids.server.actions.ServerActionParameter;
-import de.cismet.cids.server.connectioncontext.ServerConnectionContext;
-import de.cismet.cids.server.connectioncontext.ServerConnectionContextProvider;
 import de.cismet.cids.server.search.SearchException;
 
 import de.cismet.cids.utils.serverresources.ServerResourcesLoader;
 
 import de.cismet.cismap.commons.jtsgeometryfactories.PostGisGeometryFactory;
+
+import de.cismet.connectioncontext.ConnectionContextProvider;
+import de.cismet.connectioncontext.ServerConnectionContext;
 
 /**
  * DOCUMENT ME!
@@ -55,7 +56,7 @@ import de.cismet.cismap.commons.jtsgeometryfactories.PostGisGeometryFactory;
  * @version  $Revision$, $Date$
  */
 @org.openide.util.lookup.ServiceProvider(service = ServerAction.class)
-public class NasZaehlObjekteServerAction implements ServerAction, MetaServiceStore, ServerConnectionContextProvider {
+public class NasZaehlObjekteServerAction implements ServerAction, MetaServiceStore, ConnectionContextProvider {
 
     //~ Static fields/initializers ---------------------------------------------
 
@@ -116,8 +117,7 @@ public class NasZaehlObjekteServerAction implements ServerAction, MetaServiceSto
 
     private MetaService metaService;
 
-    private ServerConnectionContext serverConnectionContext = ServerConnectionContext.create(getClass()
-                    .getSimpleName());
+    private ServerConnectionContext connectionContext = ServerConnectionContext.create(getClass().getSimpleName());
 
     //~ Constructors -----------------------------------------------------------
 
@@ -356,7 +356,7 @@ public class NasZaehlObjekteServerAction implements ServerAction, MetaServiceSto
                 if (LOG.isDebugEnabled()) {
                     LOG.debug("query: " + sb.toString());                                  // NOI18N
                 }
-                final ArrayList<ArrayList> lists = ms.performCustomSearch(sb.toString(), getServerConnectionContext());
+                final ArrayList<ArrayList> lists = ms.performCustomSearch(sb.toString(), getConnectionContext());
 
                 return lists.size();
             } catch (RemoteException ex) {
@@ -384,12 +384,7 @@ public class NasZaehlObjekteServerAction implements ServerAction, MetaServiceSto
     }
 
     @Override
-    public ServerConnectionContext getServerConnectionContext() {
-        return serverConnectionContext;
-    }
-
-    @Override
-    public void setServerConnectionContext(final ServerConnectionContext serverConnectionContext) {
-        this.serverConnectionContext = serverConnectionContext;
+    public ServerConnectionContext getConnectionContext() {
+        return connectionContext;
     }
 }

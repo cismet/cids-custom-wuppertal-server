@@ -21,6 +21,10 @@ import java.rmi.Naming;
 
 import de.cismet.cids.custom.utils.vermessungsunterlagen.VermessungsunterlagenHelper;
 
+import de.cismet.connectioncontext.ConnectionContext;
+import de.cismet.connectioncontext.ConnectionContextStore;
+import de.cismet.connectioncontext.ServerConnectionContext;
+
 /**
  * DOCUMENT ME!
  *
@@ -28,12 +32,16 @@ import de.cismet.cids.custom.utils.vermessungsunterlagen.VermessungsunterlagenHe
  * @version  $Revision$, $Date$
  */
 @org.openide.util.lookup.ServiceProvider(service = DomainServerStartupHook.class)
-public class VermessungsunterlagenStartupHook implements DomainServerStartupHook {
+public class VermessungsunterlagenStartupHook implements DomainServerStartupHook, ConnectionContextStore {
 
     //~ Static fields/initializers ---------------------------------------------
 
     private static final transient org.apache.log4j.Logger LOG = org.apache.log4j.Logger.getLogger(
             VermessungsunterlagenStartupHook.class);
+
+    //~ Instance fields --------------------------------------------------------
+
+    private ConnectionContext connectionContext = ServerConnectionContext.create(getClass().getSimpleName());
 
     //~ Methods ----------------------------------------------------------------
 
@@ -78,5 +86,15 @@ public class VermessungsunterlagenStartupHook implements DomainServerStartupHook
     @Override
     public String getDomain() {
         return "WUNDA_BLAU";
+    }
+
+    @Override
+    public void setConnectionContext(final ConnectionContext connectionContext) {
+        this.connectionContext = connectionContext;
+    }
+
+    @Override
+    public ConnectionContext getConnectionContext() {
+        return connectionContext;
     }
 }

@@ -28,13 +28,14 @@ import java.util.ArrayList;
 import java.util.Collection;
 import java.util.Date;
 
-import de.cismet.cids.server.connectioncontext.ServerConnectionContext;
-import de.cismet.cids.server.connectioncontext.ServerConnectionContextProvider;
 import de.cismet.cids.server.search.AbstractCidsServerSearch;
 import de.cismet.cids.server.search.MetaObjectNodeServerSearch;
 import de.cismet.cids.server.search.SearchException;
 
 import de.cismet.cismap.commons.jtsgeometryfactories.PostGisGeometryFactory;
+
+import de.cismet.connectioncontext.ServerConnectionContext;
+import de.cismet.connectioncontext.ServerConnectionContextStore;
 
 /**
  * DOCUMENT ME!
@@ -44,7 +45,7 @@ import de.cismet.cismap.commons.jtsgeometryfactories.PostGisGeometryFactory;
  */
 public class MetaObjectNodesStadtbildSerieSearchStatement extends AbstractCidsServerSearch
         implements MetaObjectNodeServerSearch,
-            ServerConnectionContextProvider {
+            ServerConnectionContextStore {
 
     //~ Static fields/initializers ---------------------------------------------
 
@@ -111,8 +112,7 @@ public class MetaObjectNodesStadtbildSerieSearchStatement extends AbstractCidsSe
      */
     private boolean preparationExecution = false;
 
-    private ServerConnectionContext serverConnectionContext = ServerConnectionContext.create(getClass()
-                    .getSimpleName());
+    private ServerConnectionContext connectionContext = ServerConnectionContext.create(getClass().getSimpleName());
 
     //~ Constructors -----------------------------------------------------------
 
@@ -141,7 +141,7 @@ public class MetaObjectNodesStadtbildSerieSearchStatement extends AbstractCidsSe
                 if (LOG.isDebugEnabled()) {
                     LOG.debug("The used query is: " + query.toString());
                 }
-                resultset = metaService.performCustomSearch(query.toString(), getServerConnectionContext());
+                resultset = metaService.performCustomSearch(query.toString(), getConnectionContext());
 
                 result.add(resultset.size());
                 return result;
@@ -173,7 +173,7 @@ public class MetaObjectNodesStadtbildSerieSearchStatement extends AbstractCidsSe
                 }
 
                 if (resultset == null) {
-                    resultset = metaService.performCustomSearch(query.toString(), getServerConnectionContext());
+                    resultset = metaService.performCustomSearch(query.toString(), getConnectionContext());
                 }
 
                 final ArrayList result = new ArrayList();
@@ -689,13 +689,17 @@ public class MetaObjectNodesStadtbildSerieSearchStatement extends AbstractCidsSe
     }
 
     @Override
-    public ServerConnectionContext getServerConnectionContext() {
-        return serverConnectionContext;
+    public ServerConnectionContext getConnectionContext() {
+        return connectionContext;
     }
 
     @Override
-    public void setServerConnectionContext(final ServerConnectionContext serverConnectionContext) {
-        this.serverConnectionContext = serverConnectionContext;
+    public void initAfterConnectionContext() {
+    }
+
+    @Override
+    public void setConnectionContext(final ServerConnectionContext connectionContext) {
+        this.connectionContext = connectionContext;
     }
 
     //~ Inner Classes ----------------------------------------------------------

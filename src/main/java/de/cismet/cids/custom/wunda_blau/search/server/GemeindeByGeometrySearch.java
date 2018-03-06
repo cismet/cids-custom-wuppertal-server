@@ -15,10 +15,11 @@ import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collection;
 
-import de.cismet.cids.server.connectioncontext.ServerConnectionContext;
-import de.cismet.cids.server.connectioncontext.ServerConnectionContextProvider;
 import de.cismet.cids.server.search.AbstractCidsServerSearch;
 import de.cismet.cids.server.search.SearchException;
+
+import de.cismet.connectioncontext.ServerConnectionContext;
+import de.cismet.connectioncontext.ServerConnectionContextStore;
 
 /**
  * Search the Gemeinde of a given geometry.
@@ -26,7 +27,7 @@ import de.cismet.cids.server.search.SearchException;
  * @author   Thorsten Herter
  * @version  $Revision$, $Date$
  */
-public class GemeindeByGeometrySearch extends AbstractCidsServerSearch implements ServerConnectionContextProvider {
+public class GemeindeByGeometrySearch extends AbstractCidsServerSearch implements ServerConnectionContextStore {
 
     //~ Static fields/initializers ---------------------------------------------
 
@@ -41,8 +42,7 @@ public class GemeindeByGeometrySearch extends AbstractCidsServerSearch implement
 
     private String geom;
 
-    private ServerConnectionContext serverConnectionContext = ServerConnectionContext.create(getClass()
-                    .getSimpleName());
+    private ServerConnectionContext connectionContext = ServerConnectionContext.create(getClass().getSimpleName());
 
     //~ Constructors -----------------------------------------------------------
 
@@ -65,7 +65,7 @@ public class GemeindeByGeometrySearch extends AbstractCidsServerSearch implement
                 final ArrayList<ArrayList> gemeindeList = metaService.performCustomSearch(String.format(
                             QUERY_GEMEINDE,
                             geom),
-                        getServerConnectionContext());
+                        getConnectionContext());
 
                 String gemeindeCs = null;
 
@@ -92,12 +92,16 @@ public class GemeindeByGeometrySearch extends AbstractCidsServerSearch implement
     }
 
     @Override
-    public ServerConnectionContext getServerConnectionContext() {
-        return serverConnectionContext;
+    public ServerConnectionContext getConnectionContext() {
+        return connectionContext;
     }
 
     @Override
-    public void setServerConnectionContext(final ServerConnectionContext serverConnectionContext) {
-        this.serverConnectionContext = serverConnectionContext;
+    public void initAfterConnectionContext() {
+    }
+
+    @Override
+    public void setConnectionContext(final ServerConnectionContext connectionContext) {
+        this.connectionContext = connectionContext;
     }
 }

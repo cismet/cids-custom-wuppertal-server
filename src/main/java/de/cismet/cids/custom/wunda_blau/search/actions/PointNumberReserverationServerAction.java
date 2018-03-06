@@ -25,8 +25,9 @@ import de.cismet.cids.custom.utils.pointnumberreservation.PointNumberReservation
 import de.cismet.cids.server.actions.ServerAction;
 import de.cismet.cids.server.actions.ServerActionParameter;
 import de.cismet.cids.server.actions.UserAwareServerAction;
-import de.cismet.cids.server.connectioncontext.ServerConnectionContext;
-import de.cismet.cids.server.connectioncontext.ServerConnectionContextProvider;
+
+import de.cismet.connectioncontext.ConnectionContextProvider;
+import de.cismet.connectioncontext.ServerConnectionContext;
 
 /**
  * DOCUMENT ME!
@@ -37,7 +38,7 @@ import de.cismet.cids.server.connectioncontext.ServerConnectionContextProvider;
 @org.openide.util.lookup.ServiceProvider(service = ServerAction.class)
 public class PointNumberReserverationServerAction implements UserAwareServerAction,
     MetaServiceStore,
-    ServerConnectionContextProvider {
+    ConnectionContextProvider {
 
     //~ Static fields/initializers ---------------------------------------------
 
@@ -76,8 +77,7 @@ public class PointNumberReserverationServerAction implements UserAwareServerActi
     private MetaService metaService;
     private User user;
 
-    private ServerConnectionContext serverConnectionContext = ServerConnectionContext.create(getClass()
-                    .getSimpleName());
+    private ServerConnectionContext connectionContext = ServerConnectionContext.create(getClass().getSimpleName());
 
     //~ Methods ----------------------------------------------------------------
 
@@ -213,7 +213,7 @@ public class PointNumberReserverationServerAction implements UserAwareServerActi
             final String conf = ((DomainServerImpl)getMetaService()).getConfigAttr(
                     getUser(),
                     "custom.punktnummernreservierung.profilkennung",
-                    getServerConnectionContext());
+                    getConnectionContext());
             if (conf != null) {
                 profilKennung = conf;
             }
@@ -361,12 +361,7 @@ public class PointNumberReserverationServerAction implements UserAwareServerActi
     }
 
     @Override
-    public ServerConnectionContext getServerConnectionContext() {
-        return serverConnectionContext;
-    }
-
-    @Override
-    public void setServerConnectionContext(final ServerConnectionContext serverConnectionContext) {
-        this.serverConnectionContext = serverConnectionContext;
+    public ServerConnectionContext getConnectionContext() {
+        return connectionContext;
     }
 }

@@ -22,10 +22,11 @@ import java.util.Collection;
 import java.util.HashMap;
 import java.util.Iterator;
 
-import de.cismet.cids.server.connectioncontext.ServerConnectionContext;
-import de.cismet.cids.server.connectioncontext.ServerConnectionContextProvider;
 import de.cismet.cids.server.search.AbstractCidsServerSearch;
 import de.cismet.cids.server.search.SearchException;
+
+import de.cismet.connectioncontext.ServerConnectionContext;
+import de.cismet.connectioncontext.ServerConnectionContextStore;
 
 /**
  * A server search which fetches the needed information for the charts in the billing statistics report. To fetch the
@@ -36,7 +37,7 @@ import de.cismet.cids.server.search.SearchException;
  * @version  $Revision$, $Date$
  */
 public class BillingStatisticsReportServerSearch extends AbstractCidsServerSearch
-        implements ServerConnectionContextProvider {
+        implements ServerConnectionContextStore {
 
     //~ Static fields/initializers ---------------------------------------------
 
@@ -128,8 +129,7 @@ public class BillingStatisticsReportServerSearch extends AbstractCidsServerSearc
 
     private final String billingBeanIds;
 
-    private ServerConnectionContext serverConnectionContext = ServerConnectionContext.create(getClass()
-                    .getSimpleName());
+    private ServerConnectionContext connectionContext = ServerConnectionContext.create(getClass().getSimpleName());
 
     //~ Constructors -----------------------------------------------------------
 
@@ -197,7 +197,7 @@ public class BillingStatisticsReportServerSearch extends AbstractCidsServerSearc
             final String query,
             final String key) throws RemoteException {
         final ArrayList<ArrayList> lists = ms.performCustomSearch(query.replace("$bean_ids$", billingBeanIds),
-                getServerConnectionContext());
+                getConnectionContext());
         if ((lists != null) && !lists.isEmpty()) {
             final ArrayList<BrancheAmountBean> beans = new ArrayList<BrancheAmountBean>();
             for (final Iterator it = lists.iterator(); it.hasNext();) {
@@ -228,7 +228,7 @@ public class BillingStatisticsReportServerSearch extends AbstractCidsServerSearc
     private void excuteEinnahmenQuery(final MetaService ms,
             final HashMap<String, ArrayList> results) throws RemoteException {
         final ArrayList<ArrayList> lists = ms.performCustomSearch(queryEinnahmen.replace("$bean_ids$", billingBeanIds),
-                getServerConnectionContext());
+                getConnectionContext());
         if ((lists != null) && !lists.isEmpty()) {
             final ArrayList<EinnahmenBean> beans = new ArrayList<EinnahmenBean>();
             for (final Iterator it = lists.iterator(); it.hasNext();) {
@@ -248,13 +248,17 @@ public class BillingStatisticsReportServerSearch extends AbstractCidsServerSearc
     }
 
     @Override
-    public ServerConnectionContext getServerConnectionContext() {
-        return serverConnectionContext;
+    public ServerConnectionContext getConnectionContext() {
+        return connectionContext;
     }
 
     @Override
-    public void setServerConnectionContext(final ServerConnectionContext serverConnectionContext) {
-        this.serverConnectionContext = serverConnectionContext;
+    public void initAfterConnectionContext() {
+    }
+
+    @Override
+    public void setConnectionContext(final ServerConnectionContext connectionContext) {
+        this.connectionContext = connectionContext;
     }
 
     //~ Inner Classes ----------------------------------------------------------

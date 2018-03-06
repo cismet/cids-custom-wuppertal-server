@@ -30,12 +30,13 @@ import de.cismet.cids.dynamics.CidsBean;
 import de.cismet.cids.server.actions.JasperReportServerAction;
 import de.cismet.cids.server.actions.ServerAction;
 import de.cismet.cids.server.actions.ServerActionParameter;
-import de.cismet.cids.server.connectioncontext.ServerConnectionContext;
-import de.cismet.cids.server.connectioncontext.ServerConnectionContextProvider;
 
 import de.cismet.cids.utils.serverresources.ServerResourcesLoader;
 
 import de.cismet.commons.utils.MultiPagePictureReader;
+
+import de.cismet.connectioncontext.ConnectionContextProvider;
+import de.cismet.connectioncontext.ServerConnectionContext;
 
 /**
  * DOCUMENT ME!
@@ -44,8 +45,7 @@ import de.cismet.commons.utils.MultiPagePictureReader;
  * @version  $Revision$, $Date$
  */
 @org.openide.util.lookup.ServiceProvider(service = ServerAction.class)
-public class VermessungsrissReportServerAction extends JasperReportServerAction
-        implements ServerConnectionContextProvider {
+public class VermessungsrissReportServerAction extends JasperReportServerAction implements ConnectionContextProvider {
 
     //~ Static fields/initializers ---------------------------------------------
 
@@ -67,8 +67,7 @@ public class VermessungsrissReportServerAction extends JasperReportServerAction
 
     //~ Instance fields --------------------------------------------------------
 
-    private ServerConnectionContext serverConnectionContext = ServerConnectionContext.create(getClass()
-                    .getSimpleName());
+    private ServerConnectionContext connectionContext = ServerConnectionContext.create(getClass().getSimpleName());
 
     //~ Methods ----------------------------------------------------------------
 
@@ -100,7 +99,7 @@ public class VermessungsrissReportServerAction extends JasperReportServerAction
                                 getUser(),
                                 reportMon.getObjectId(),
                                 reportMon.getClassId(),
-                                getServerConnectionContext())
+                                getConnectionContext())
                                 .getBean();
                     selectedVermessungsrisse.add(bean);
                 }
@@ -139,12 +138,7 @@ public class VermessungsrissReportServerAction extends JasperReportServerAction
     }
 
     @Override
-    public ServerConnectionContext getServerConnectionContext() {
-        return serverConnectionContext;
-    }
-
-    @Override
-    public void setServerConnectionContext(final ServerConnectionContext serverConnectionContext) {
-        this.serverConnectionContext = serverConnectionContext;
+    public ServerConnectionContext getConnectionContext() {
+        return connectionContext;
     }
 }

@@ -21,12 +21,13 @@ import java.util.ArrayList;
 import java.util.Collection;
 import java.util.List;
 
-import de.cismet.cids.server.connectioncontext.ServerConnectionContext;
-import de.cismet.cids.server.connectioncontext.ServerConnectionContextProvider;
 import de.cismet.cids.server.search.AbstractCidsServerSearch;
 import de.cismet.cids.server.search.MetaObjectNodeServerSearch;
 
 import de.cismet.cismap.commons.jtsgeometryfactories.PostGisGeometryFactory;
+
+import de.cismet.connectioncontext.ServerConnectionContext;
+import de.cismet.connectioncontext.ServerConnectionContextStore;
 
 /**
  * DOCUMENT ME!
@@ -35,7 +36,7 @@ import de.cismet.cismap.commons.jtsgeometryfactories.PostGisGeometryFactory;
  * @version  $Revision$, $Date$
  */
 public class CidsBaulastSearchStatement extends AbstractCidsServerSearch implements MetaObjectNodeServerSearch,
-    ServerConnectionContextProvider {
+    ServerConnectionContextStore {
 
     //~ Static fields/initializers ---------------------------------------------
 
@@ -84,8 +85,7 @@ public class CidsBaulastSearchStatement extends AbstractCidsServerSearch impleme
     private String fsquerypart = "";
     private String artquerypart = "";
 
-    private ServerConnectionContext serverConnectionContext = ServerConnectionContext.create(getClass()
-                    .getSimpleName());
+    private ServerConnectionContext connectionContext = ServerConnectionContext.create(getClass().getSimpleName());
 
     //~ Constructors -----------------------------------------------------------
 
@@ -169,7 +169,7 @@ public class CidsBaulastSearchStatement extends AbstractCidsServerSearch impleme
             final String primary = getPrimaryQuery();
             final String secondary = getSecondaryQuery();
             final MetaService ms = (MetaService)getActiveLocalServers().get("WUNDA_BLAU");
-            final List<ArrayList> primaryResultList = ms.performCustomSearch(primary, getServerConnectionContext());
+            final List<ArrayList> primaryResultList = ms.performCustomSearch(primary, getConnectionContext());
 
             final List<MetaObjectNode> aln = new ArrayList<MetaObjectNode>();
             for (final ArrayList al : primaryResultList) {
@@ -183,7 +183,7 @@ public class CidsBaulastSearchStatement extends AbstractCidsServerSearch impleme
             if ((flurstuecke != null) && (flurstuecke.size() > 0)) {
                 final List<ArrayList> secondaryResultList = ms.performCustomSearch(
                         secondary,
-                        getServerConnectionContext());
+                        getConnectionContext());
                 for (final ArrayList al : secondaryResultList) {
                     final int cid = (Integer)al.get(0);
                     final int oid = (Integer)al.get(1);
@@ -466,12 +466,16 @@ public class CidsBaulastSearchStatement extends AbstractCidsServerSearch impleme
     }
 
     @Override
-    public ServerConnectionContext getServerConnectionContext() {
-        return serverConnectionContext;
+    public ServerConnectionContext getConnectionContext() {
+        return connectionContext;
     }
 
     @Override
-    public void setServerConnectionContext(final ServerConnectionContext serverConnectionContext) {
-        this.serverConnectionContext = serverConnectionContext;
+    public void initAfterConnectionContext() {
+    }
+
+    @Override
+    public void setConnectionContext(final ServerConnectionContext connectionContext) {
+        this.connectionContext = connectionContext;
     }
 }
