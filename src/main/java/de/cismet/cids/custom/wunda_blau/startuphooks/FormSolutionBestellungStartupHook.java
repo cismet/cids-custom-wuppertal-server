@@ -14,13 +14,23 @@ package de.cismet.cids.custom.wunda_blau.startuphooks;
 
 import Sirius.server.middleware.impls.domainserver.DomainServerImpl;
 import Sirius.server.middleware.interfaces.domainserver.DomainServerStartupHook;
+import Sirius.server.middleware.interfaces.domainserver.MetaService;
+import Sirius.server.middleware.types.MetaClass;
+import Sirius.server.middleware.types.MetaObject;
+import Sirius.server.middleware.types.MetaObjectNode;
 import Sirius.server.newuser.User;
 import Sirius.server.newuser.UserServer;
 
 import java.rmi.Naming;
 
+import java.util.Arrays;
+
 import de.cismet.cids.custom.utils.formsolutions.FormSolutionsProperties;
 import de.cismet.cids.custom.wunda_blau.search.actions.FormSolutionServerNewStuffAvailableAction;
+
+import de.cismet.cids.dynamics.CidsBean;
+
+import de.cismet.cids.server.actions.ServerActionParameter;
 
 /**
  * DOCUMENT ME!
@@ -36,7 +46,48 @@ public class FormSolutionBestellungStartupHook implements DomainServerStartupHoo
     private static final transient org.apache.log4j.Logger LOG = org.apache.log4j.Logger.getLogger(
             FormSolutionBestellungStartupHook.class);
 
+    //~ Instance fields --------------------------------------------------------
+
+    private MetaService metaService;
+    private User user;
+
     //~ Methods ----------------------------------------------------------------
+
+    /**
+     * DOCUMENT ME!
+     *
+     * @param  user  DOCUMENT ME!
+     */
+    private void setUser(final User user) {
+        this.user = user;
+    }
+
+    /**
+     * DOCUMENT ME!
+     *
+     * @return  DOCUMENT ME!
+     */
+    public User getUser() {
+        return user;
+    }
+
+    /**
+     * DOCUMENT ME!
+     *
+     * @return  DOCUMENT ME!
+     */
+    public MetaService getMetaService() {
+        return metaService;
+    }
+
+    /**
+     * DOCUMENT ME!
+     *
+     * @param  metaService  DOCUMENT ME!
+     */
+    public void setMetaService(final MetaService metaService) {
+        this.metaService = metaService;
+    }
 
     @Override
     public void domainServerStarted() {
@@ -45,7 +96,7 @@ public class FormSolutionBestellungStartupHook implements DomainServerStartupHoo
                 @Override
                 public void run() {
                     try {
-                        DomainServerImpl metaService = null;
+                        MetaService metaService = null;
                         while (metaService == null) {
                             metaService = DomainServerImpl.getServerInstance();
                             try {
@@ -53,24 +104,96 @@ public class FormSolutionBestellungStartupHook implements DomainServerStartupHoo
                             } catch (InterruptedException ex) {
                             }
                         }
+                        setMetaService(metaService);
 
-                        final FormSolutionServerNewStuffAvailableAction action =
-                            new FormSolutionServerNewStuffAvailableAction(true);
-                        action.setMetaService(DomainServerImpl.getServerInstance());
                         final Object userServer = Naming.lookup("rmi://localhost/userServer");
-                        final User user = ((UserServer)userServer).getUser(
+                        setUser(
+                            ((UserServer)userServer).getUser(
                                 null,
                                 null,
                                 "WUNDA_BLAU",
                                 FormSolutionsProperties.getInstance().getCidsLogin(),
-                                FormSolutionsProperties.getInstance().getCidsPassword());
-                        action.setUser(user);
-                        action.execute(null);
+                                FormSolutionsProperties.getInstance().getCidsPassword()));
+
+                        final MetaObject[] mos = getUnfinishedBestellungen();
+                        if (mos != null) {
+                            for (final MetaObject mo : mos) {
+                                try {
+                                    redoBestellung(mo);
+                                } catch (final Exception ex) {
+                                    LOG.error("error while retrying FS_bestellung " + mo, ex);
+                                }
+                            }
+                        }
+                        requestOpenBestellungen();
                     } catch (final Exception ex) {
                         LOG.error("error while executing FormSolutionBestellungStartupHook", ex);
                     }
                 }
             }).start();
+    }
+
+    /**
+     * DOCUMENT ME!
+     *
+     * @return  DOCUMENT ME!
+     *
+     * @throws  Exception  DOCUMENT ME!
+     */
+    private MetaObject[] getUnfinishedBestellungen() throws Exception {
+        final MetaClass mcBestellung = CidsBean.getMetaClassFromTableName(
+                "WUNDA_BLAU",
+                "fs_bestellung");
+
+        final String pruefungQuery = "SELECT DISTINCT " + mcBestellung.getID() + ", "
+                    + mcBestellung.getTableName() + "." + mcBestellung.getPrimaryKey() + " "
+                    + "FROM " + mcBestellung.getTableName() + " "
+                    + "WHERE "
+                    + "  test IS NOT TRUE AND "
+                    + "  postweg IS NOT TRUE AND "
+                    + "  fehler IS NULL AND "
+                    + "  erledigt IS NOT TRUE "
+                    + ";";
+
+        return getMetaService().getMetaObject(getUser(), pruefungQuery);
+    }
+
+    /**
+     * DOCUMENT ME!
+     *
+     * @param  mo  DOCUMENT ME!
+     */
+    private void redoBestellung(final MetaObject mo) {
+        final MetaObjectNode mon = new MetaObjectNode(mo.getDomain(), mo.getId(), mo.getClassID());
+
+        final FormSolutionServerNewStuffAvailableAction action = new FormSolutionServerNewStuffAvailableAction(true);
+
+        action.setMetaService(getMetaService());
+        action.setUser(getUser());
+        action.execute(
+            null,
+            new ServerActionParameter(
+                FormSolutionServerNewStuffAvailableAction.PARAMETER_TYPE.METAOBJECTNODES.toString(),
+                Arrays.asList(mon)),
+            new ServerActionParameter(
+                FormSolutionServerNewStuffAvailableAction.PARAMETER_TYPE.STEP_TO_EXECUTE.toString(),
+                FormSolutionServerNewStuffAvailableAction.STATUS_CLOSE),
+            new ServerActionParameter(
+                FormSolutionServerNewStuffAvailableAction.PARAMETER_TYPE.SINGLE_STEP.toString(),
+                Boolean.FALSE));
+    }
+
+    /**
+     * DOCUMENT ME!
+     *
+     * @throws  Exception  DOCUMENT ME!
+     */
+    private void requestOpenBestellungen() throws Exception {
+        final FormSolutionServerNewStuffAvailableAction action = new FormSolutionServerNewStuffAvailableAction(true);
+
+        action.setMetaService(getMetaService());
+        action.setUser(getUser());
+        action.execute(null);
     }
 
     @Override
