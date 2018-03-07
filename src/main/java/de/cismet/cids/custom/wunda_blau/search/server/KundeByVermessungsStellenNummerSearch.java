@@ -26,8 +26,8 @@ import de.cismet.cids.custom.utils.pointnumberreservation.VermessungsStellenSear
 import de.cismet.cids.server.search.AbstractCidsServerSearch;
 import de.cismet.cids.server.search.SearchException;
 
-import de.cismet.connectioncontext.ServerConnectionContext;
-import de.cismet.connectioncontext.ServerConnectionContextStore;
+import de.cismet.connectioncontext.ConnectionContext;
+import de.cismet.connectioncontext.ConnectionContextStore;
 
 /**
  * DOCUMENT ME!
@@ -35,8 +35,7 @@ import de.cismet.connectioncontext.ServerConnectionContextStore;
  * @author   daniel
  * @version  $Revision$, $Date$
  */
-public class KundeByVermessungsStellenNummerSearch extends AbstractCidsServerSearch
-        implements ServerConnectionContextStore {
+public class KundeByVermessungsStellenNummerSearch extends AbstractCidsServerSearch implements ConnectionContextStore {
 
     //~ Static fields/initializers ---------------------------------------------
 
@@ -48,7 +47,7 @@ public class KundeByVermessungsStellenNummerSearch extends AbstractCidsServerSea
     private final String QUERY =
         "SELECT vermessungsstellennummer, name FROM billing_kunde WHERE vermessungsstellennummer LIKE '%1$s';";
 
-    private ServerConnectionContext connectionContext = ServerConnectionContext.create(getClass().getSimpleName());
+    private ConnectionContext connectionContext = ConnectionContext.createDummy();
 
     //~ Constructors -----------------------------------------------------------
 
@@ -62,6 +61,11 @@ public class KundeByVermessungsStellenNummerSearch extends AbstractCidsServerSea
     }
 
     //~ Methods ----------------------------------------------------------------
+
+    @Override
+    public void initWithConnectionContext(final ConnectionContext connectionContext) {
+        this.connectionContext = connectionContext;
+    }
 
     @Override
     public Collection performServerSearch() throws SearchException {
@@ -93,16 +97,7 @@ public class KundeByVermessungsStellenNummerSearch extends AbstractCidsServerSea
     }
 
     @Override
-    public ServerConnectionContext getConnectionContext() {
+    public ConnectionContext getConnectionContext() {
         return connectionContext;
-    }
-
-    @Override
-    public void initAfterConnectionContext() {
-    }
-
-    @Override
-    public void setConnectionContext(final ServerConnectionContext connectionContext) {
-        this.connectionContext = connectionContext;
     }
 }

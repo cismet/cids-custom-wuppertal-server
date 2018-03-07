@@ -53,8 +53,8 @@ import de.cismet.cids.dynamics.CidsBean;
 
 import de.cismet.cids.server.messages.CidsServerMessageManagerImpl;
 
-import de.cismet.connectioncontext.ClientConnectionContext;
-import de.cismet.connectioncontext.ConnectionContextProvider;
+import de.cismet.connectioncontext.ConnectionContext;
+import de.cismet.connectioncontext.ConnectionContextStore;
 
 /**
  * DOCUMENT ME!
@@ -62,13 +62,12 @@ import de.cismet.connectioncontext.ConnectionContextProvider;
  * @author   jruiz
  * @version  $Revision$, $Date$
  */
-public class BerechtigungspruefungHandler implements ConnectionContextProvider {
+public class BerechtigungspruefungHandler implements ConnectionContextStore {
 
     //~ Static fields/initializers ---------------------------------------------
 
     private static final ObjectMapper MAPPER = new ObjectMapper();
 
-    private static BerechtigungspruefungHandler INSTANCE;
     private static final transient org.apache.log4j.Logger LOG = org.apache.log4j.Logger.getLogger(
             BerechtigungspruefungHandler.class);
 
@@ -76,8 +75,7 @@ public class BerechtigungspruefungHandler implements ConnectionContextProvider {
 
     private MetaService metaService;
 
-    private final ClientConnectionContext connectionContext = ClientConnectionContext.create(getClass()
-                    .getSimpleName());
+    private ConnectionContext connectionContext = ConnectionContext.createDummy();
 
     //~ Constructors -----------------------------------------------------------
 
@@ -95,10 +93,7 @@ public class BerechtigungspruefungHandler implements ConnectionContextProvider {
      * @return  DOCUMENT ME!
      */
     public static BerechtigungspruefungHandler getInstance() {
-        if (INSTANCE == null) {
-            INSTANCE = new BerechtigungspruefungHandler();
-        }
-        return INSTANCE;
+        return LazyInitialiser.INSTANCE;
     }
 
     /**
@@ -657,7 +652,34 @@ public class BerechtigungspruefungHandler implements ConnectionContextProvider {
     }
 
     @Override
-    public ClientConnectionContext getConnectionContext() {
+    public ConnectionContext getConnectionContext() {
         return connectionContext;
+    }
+
+    @Override
+    public void initWithConnectionContext(final ConnectionContext connectionContext) {
+        this.connectionContext = connectionContext;
+    }
+
+    //~ Inner Classes ----------------------------------------------------------
+
+    /**
+     * DOCUMENT ME!
+     *
+     * @version  $Revision$, $Date$
+     */
+    private static final class LazyInitialiser {
+
+        //~ Static fields/initializers -----------------------------------------
+
+        private static final BerechtigungspruefungHandler INSTANCE = new BerechtigungspruefungHandler();
+
+        //~ Constructors -------------------------------------------------------
+
+        /**
+         * Creates a new LazyInitialiser object.
+         */
+        private LazyInitialiser() {
+        }
     }
 }

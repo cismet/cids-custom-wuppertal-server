@@ -22,6 +22,9 @@ import java.rmi.Naming;
 import de.cismet.cids.custom.utils.berechtigungspruefung.BerechtigungspruefungHandler;
 import de.cismet.cids.custom.utils.berechtigungspruefung.BerechtigungspruefungProperties;
 
+import de.cismet.connectioncontext.ConnectionContext;
+import de.cismet.connectioncontext.ConnectionContextStore;
+
 /**
  * DOCUMENT ME!
  *
@@ -29,14 +32,23 @@ import de.cismet.cids.custom.utils.berechtigungspruefung.BerechtigungspruefungPr
  * @version  $Revision$, $Date$
  */
 @org.openide.util.lookup.ServiceProvider(service = DomainServerStartupHook.class)
-public class BerechtigungspruefungStartupHook implements DomainServerStartupHook {
+public class BerechtigungspruefungStartupHook implements DomainServerStartupHook, ConnectionContextStore {
 
     //~ Static fields/initializers ---------------------------------------------
 
     private static final transient org.apache.log4j.Logger LOG = org.apache.log4j.Logger.getLogger(
             BerechtigungspruefungStartupHook.class);
 
+    //~ Instance fields --------------------------------------------------------
+
+    private ConnectionContext connectionContext = ConnectionContext.createDummy();
+
     //~ Methods ----------------------------------------------------------------
+
+    @Override
+    public void initWithConnectionContext(final ConnectionContext connectionContext) {
+        this.connectionContext = connectionContext;
+    }
 
     @Override
     public void domainServerStarted() {
@@ -61,10 +73,12 @@ public class BerechtigungspruefungStartupHook implements DomainServerStartupHook
                                 "WUNDA_BLAU",
                                 BerechtigungspruefungProperties.getInstance().getCidsLogin(),
                                 BerechtigungspruefungProperties.getInstance().getCidsPassword());
-                        BerechtigungspruefungHandler.getInstance().setMetaService(metaService);
-                        BerechtigungspruefungHandler.getInstance().sendMessagesForAllOpenFreigaben(user);
-                        BerechtigungspruefungHandler.getInstance().sendMessagesForAllOpenAnfragen(user);
-                        BerechtigungspruefungHandler.getInstance().deleteOldDateianhangFiles(user);
+                        final BerechtigungspruefungHandler handler = BerechtigungspruefungHandler.getInstance();
+                        handler.initWithConnectionContext(getConnectionContext());
+                        handler.setMetaService(metaService);
+                        handler.sendMessagesForAllOpenFreigaben(user);
+                        handler.sendMessagesForAllOpenAnfragen(user);
+                        handler.deleteOldDateianhangFiles(user);
                     } catch (final Exception ex) {
                         LOG.warn("Error while initializing the BerechtigungspruefungHandler !", ex);
                     }
@@ -75,5 +89,10 @@ public class BerechtigungspruefungStartupHook implements DomainServerStartupHook
     @Override
     public String getDomain() {
         return "WUNDA_BLAU";
+    }
+
+    @Override
+    public ConnectionContext getConnectionContext() {
+        return connectionContext;
     }
 }

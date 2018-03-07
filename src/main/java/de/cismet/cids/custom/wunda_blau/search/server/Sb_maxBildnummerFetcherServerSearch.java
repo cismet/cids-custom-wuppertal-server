@@ -17,8 +17,8 @@ import java.util.Collection;
 import de.cismet.cids.server.search.AbstractCidsServerSearch;
 import de.cismet.cids.server.search.SearchException;
 
-import de.cismet.connectioncontext.ServerConnectionContext;
-import de.cismet.connectioncontext.ServerConnectionContextStore;
+import de.cismet.connectioncontext.ConnectionContext;
+import de.cismet.connectioncontext.ConnectionContextStore;
 
 /**
  * DOCUMENT ME!
@@ -26,8 +26,7 @@ import de.cismet.connectioncontext.ServerConnectionContextStore;
  * @author   Gilles Baatz
  * @version  $Revision$, $Date$
  */
-public class Sb_maxBildnummerFetcherServerSearch extends AbstractCidsServerSearch
-        implements ServerConnectionContextStore {
+public class Sb_maxBildnummerFetcherServerSearch extends AbstractCidsServerSearch implements ConnectionContextStore {
 
     //~ Static fields/initializers ---------------------------------------------
 
@@ -36,9 +35,14 @@ public class Sb_maxBildnummerFetcherServerSearch extends AbstractCidsServerSearc
 
     //~ Instance fields --------------------------------------------------------
 
-    private ServerConnectionContext connectionContext = ServerConnectionContext.create(getClass().getSimpleName());
+    private ConnectionContext connectionContext = ConnectionContext.createDummy();
 
     //~ Methods ----------------------------------------------------------------
+
+    @Override
+    public void initWithConnectionContext(final ConnectionContext connectionContext) {
+        this.connectionContext = connectionContext;
+    }
 
     @Override
     public Collection performServerSearch() throws SearchException {
@@ -54,16 +58,7 @@ public class Sb_maxBildnummerFetcherServerSearch extends AbstractCidsServerSearc
     }
 
     @Override
-    public ServerConnectionContext getConnectionContext() {
+    public ConnectionContext getConnectionContext() {
         return connectionContext;
-    }
-
-    @Override
-    public void initAfterConnectionContext() {
-    }
-
-    @Override
-    public void setConnectionContext(final ServerConnectionContext connectionContext) {
-        this.connectionContext = connectionContext;
     }
 }

@@ -33,8 +33,8 @@ import de.cismet.cids.server.search.MetaObjectNodeServerSearch;
 
 import de.cismet.cismap.commons.jtsgeometryfactories.PostGisGeometryFactory;
 
-import de.cismet.connectioncontext.ServerConnectionContext;
-import de.cismet.connectioncontext.ServerConnectionContextStore;
+import de.cismet.connectioncontext.ConnectionContext;
+import de.cismet.connectioncontext.ConnectionContextStore;
 
 /**
  * DOCUMENT ME!
@@ -43,7 +43,7 @@ import de.cismet.connectioncontext.ServerConnectionContextStore;
  * @version  $Revision$, $Date$
  */
 public class CidsLandParcelSearchStatement extends AbstractCidsServerSearch implements MetaObjectNodeServerSearch,
-    ServerConnectionContextStore {
+    ConnectionContextStore {
 
     //~ Static fields/initializers ---------------------------------------------
 
@@ -60,7 +60,7 @@ public class CidsLandParcelSearchStatement extends AbstractCidsServerSearch impl
     private Date historicalTo;
     private Geometry geometry;
 
-    private ServerConnectionContext connectionContext = ServerConnectionContext.create(getClass().getSimpleName());
+    private ConnectionContext connectionContext = ConnectionContext.createDummy();
 
     //~ Constructors -----------------------------------------------------------
 
@@ -98,14 +98,19 @@ public class CidsLandParcelSearchStatement extends AbstractCidsServerSearch impl
     //~ Methods ----------------------------------------------------------------
 
     @Override
+    public void initWithConnectionContext(final ConnectionContext connectionContext) {
+        this.connectionContext = connectionContext;
+    }
+
+    @Override
     public Collection<MetaObjectNode> performServerSearch() {
         try {
             if ((searchActualParcel || searchHistoricalParcel) == false) {
-                return new ArrayList<MetaObjectNode>();
+                return new ArrayList<>();
             }
 
             if (searchHistoricalParcel && ((historicalFrom == null) || (historicalTo == null))) {
-                return new ArrayList<MetaObjectNode>();
+                return new ArrayList<>();
             }
 
             String query =
@@ -142,7 +147,7 @@ public class CidsLandParcelSearchStatement extends AbstractCidsServerSearch impl
                 }
             }
 
-            final List<MetaObjectNode> result = new ArrayList<MetaObjectNode>();
+            final List<MetaObjectNode> result = new ArrayList<>();
             final MetaService ms = (MetaService)getActiveLocalServers().get("WUNDA_BLAU");
             final ArrayList<ArrayList> searchResult = ms.performCustomSearch(query, getConnectionContext());
             for (final ArrayList al : searchResult) {
@@ -161,16 +166,7 @@ public class CidsLandParcelSearchStatement extends AbstractCidsServerSearch impl
     }
 
     @Override
-    public ServerConnectionContext getConnectionContext() {
+    public ConnectionContext getConnectionContext() {
         return connectionContext;
-    }
-
-    @Override
-    public void initAfterConnectionContext() {
-    }
-
-    @Override
-    public void setConnectionContext(final ServerConnectionContext connectionContext) {
-        this.connectionContext = connectionContext;
     }
 }

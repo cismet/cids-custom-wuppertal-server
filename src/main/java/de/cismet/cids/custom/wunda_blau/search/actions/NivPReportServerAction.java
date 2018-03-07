@@ -34,8 +34,8 @@ import de.cismet.cids.server.actions.ServerActionParameter;
 
 import de.cismet.cids.utils.serverresources.ServerResourcesLoader;
 
-import de.cismet.connectioncontext.ConnectionContextProvider;
-import de.cismet.connectioncontext.ServerConnectionContext;
+import de.cismet.connectioncontext.ConnectionContext;
+import de.cismet.connectioncontext.ConnectionContextStore;
 
 /**
  * DOCUMENT ME!
@@ -44,7 +44,7 @@ import de.cismet.connectioncontext.ServerConnectionContext;
  * @version  $Revision$, $Date$
  */
 @org.openide.util.lookup.ServiceProvider(service = ServerAction.class)
-public class NivPReportServerAction extends JasperReportServerAction implements ConnectionContextProvider {
+public class NivPReportServerAction extends JasperReportServerAction implements ConnectionContextStore {
 
     //~ Static fields/initializers ---------------------------------------------
 
@@ -68,9 +68,14 @@ public class NivPReportServerAction extends JasperReportServerAction implements 
 
     //~ Instance fields --------------------------------------------------------
 
-    private ServerConnectionContext connectionContext = ServerConnectionContext.create(getClass().getSimpleName());
+    private ConnectionContext connectionContext = ConnectionContext.createDummy();
 
     //~ Methods ----------------------------------------------------------------
+
+    @Override
+    public void initWithConnectionContext(final ConnectionContext connectionContext) {
+        this.connectionContext = connectionContext;
+    }
 
     @Override
     public Object execute(final Object body, final ServerActionParameter... params) {
@@ -134,7 +139,7 @@ public class NivPReportServerAction extends JasperReportServerAction implements 
     }
 
     @Override
-    public ServerConnectionContext getConnectionContext() {
+    public ConnectionContext getConnectionContext() {
         return connectionContext;
     }
 }

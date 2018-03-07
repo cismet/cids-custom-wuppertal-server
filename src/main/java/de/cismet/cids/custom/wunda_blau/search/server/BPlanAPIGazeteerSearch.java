@@ -42,8 +42,8 @@ import de.cismet.cidsx.server.api.types.SearchInfo;
 import de.cismet.cidsx.server.api.types.SearchParameterInfo;
 import de.cismet.cidsx.server.search.RestApiCidsServerSearch;
 
-import de.cismet.connectioncontext.ServerConnectionContext;
-import de.cismet.connectioncontext.ServerConnectionContextStore;
+import de.cismet.connectioncontext.ConnectionContext;
+import de.cismet.connectioncontext.ConnectionContextStore;
 
 /**
  * DOCUMENT ME!
@@ -53,7 +53,7 @@ import de.cismet.connectioncontext.ServerConnectionContextStore;
  */
 @ServiceProvider(service = RestApiCidsServerSearch.class)
 public class BPlanAPIGazeteerSearch extends AbstractCidsServerSearch implements RestApiCidsServerSearch,
-    ServerConnectionContextStore {
+    ConnectionContextStore {
 
     //~ Static fields/initializers ---------------------------------------------
 
@@ -69,7 +69,7 @@ public class BPlanAPIGazeteerSearch extends AbstractCidsServerSearch implements 
     @Getter private final SearchInfo searchInfo;
     @Getter @Setter private String input;
 
-    private ServerConnectionContext connectionContext = ServerConnectionContext.create(getClass().getSimpleName());
+    private ConnectionContext connectionContext = ConnectionContext.createDummy();
 
     //~ Constructors -----------------------------------------------------------
 
@@ -82,7 +82,7 @@ public class BPlanAPIGazeteerSearch extends AbstractCidsServerSearch implements 
         searchInfo.setName(this.getClass().getSimpleName());
         searchInfo.setDescription("BPlan Gazeteer Search to use in Geoportal 3");
 
-        final List<SearchParameterInfo> parameterDescription = new LinkedList<SearchParameterInfo>();
+        final List<SearchParameterInfo> parameterDescription = new LinkedList<>();
         searchInfo.setParameterDescription(parameterDescription);
 
         final SearchParameterInfo wktStringParameterInfo;
@@ -103,6 +103,11 @@ public class BPlanAPIGazeteerSearch extends AbstractCidsServerSearch implements 
     //~ Methods ----------------------------------------------------------------
 
     @Override
+    public void initWithConnectionContext(final ConnectionContext connectionContext) {
+        this.connectionContext = connectionContext;
+    }
+
+    @Override
     public Collection performServerSearch() throws SearchException {
         try {
             final MetaService metaService = (MetaService)this.getActiveLocalServers().get(DOMAIN);
@@ -113,7 +118,7 @@ public class BPlanAPIGazeteerSearch extends AbstractCidsServerSearch implements 
                 final ArrayList<ArrayList> results = metaService.performCustomSearch(
                         QUERY,
                         getConnectionContext());
-                final ArrayList<GazzResult> ret = new ArrayList<GazzResult>(results.size());
+                final ArrayList<GazzResult> ret = new ArrayList<>(results.size());
                 for (final ArrayList row : results) {
                     final String s = (String)row.get(0);
                     final String glyph = (String)row.get(1);
@@ -134,17 +139,8 @@ public class BPlanAPIGazeteerSearch extends AbstractCidsServerSearch implements 
     }
 
     @Override
-    public ServerConnectionContext getConnectionContext() {
+    public ConnectionContext getConnectionContext() {
         return connectionContext;
-    }
-
-    @Override
-    public void initAfterConnectionContext() {
-    }
-
-    @Override
-    public void setConnectionContext(final ServerConnectionContext connectionContext) {
-        this.connectionContext = connectionContext;
     }
 }
 

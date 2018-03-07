@@ -95,7 +95,8 @@ import de.cismet.commons.security.AccessHandler;
 import de.cismet.commons.security.WebDavClient;
 import de.cismet.commons.security.handler.SimpleHttpAccessHandler;
 
-import de.cismet.connectioncontext.ClientConnectionContext;
+import de.cismet.connectioncontext.AbstractConnectionContext;
+import de.cismet.connectioncontext.ConnectionContext;
 import de.cismet.connectioncontext.ConnectionContextProvider;
 
 import static org.apache.commons.net.ftp.FTP.BINARY_FILE_TYPE;
@@ -169,14 +170,17 @@ public class VermessungsunterlagenHelper implements ConnectionContextProvider {
     private User user;
     private final VermessungsunterlagenProperties vermessungsunterlagenProperties;
 
-    private ClientConnectionContext connectionContext = ClientConnectionContext.create(getClass().getSimpleName());
+    private final ConnectionContext connectionContext;
 
     //~ Constructors -----------------------------------------------------------
 
     /**
      * Creates a new VermessungsunterlagenHelper object.
+     *
+     * @param  connectionContext  DOCUMENT ME!
      */
-    private VermessungsunterlagenHelper() {
+    private VermessungsunterlagenHelper(final ConnectionContext connectionContext) {
+        this.connectionContext = connectionContext;
         Properties properties = null;
         try {
             properties = ServerResourcesLoader.getInstance()
@@ -868,7 +872,7 @@ public class VermessungsunterlagenHelper implements ConnectionContextProvider {
         try {
             configLog4J();
 
-            final File directory = new File(new VermessungsunterlagenHelper().vermessungsunterlagenProperties
+            final File directory = new File(VermessungsunterlagenHelper.getInstance().vermessungsunterlagenProperties
                             .getAbsPathTest());
             final File[] executeJobFiles = directory.listFiles(new FilenameFilter() {
 
@@ -1236,7 +1240,7 @@ public class VermessungsunterlagenHelper implements ConnectionContextProvider {
     }
 
     @Override
-    public ClientConnectionContext getConnectionContext() {
+    public ConnectionContext getConnectionContext() {
         return connectionContext;
     }
 
@@ -1251,7 +1255,10 @@ public class VermessungsunterlagenHelper implements ConnectionContextProvider {
 
         //~ Static fields/initializers -----------------------------------------
 
-        private static final VermessungsunterlagenHelper INSTANCE = new VermessungsunterlagenHelper();
+        private static final VermessungsunterlagenHelper INSTANCE = new VermessungsunterlagenHelper(ConnectionContext
+                        .create(
+                            AbstractConnectionContext.Category.INSTANCE,
+                            VermessungsunterlagenHelper.class.getSimpleName()));
 
         //~ Constructors -------------------------------------------------------
 

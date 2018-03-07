@@ -36,8 +36,8 @@ import de.cismet.cidsx.server.api.types.SearchParameterInfo;
 import de.cismet.cidsx.server.search.RestApiCidsServerSearch;
 import de.cismet.cidsx.server.search.builtin.legacy.LightweightMetaObjectsSearch;
 
-import de.cismet.connectioncontext.ServerConnectionContext;
-import de.cismet.connectioncontext.ServerConnectionContextStore;
+import de.cismet.connectioncontext.ConnectionContext;
+import de.cismet.connectioncontext.ConnectionContextStore;
 
 /**
  * Builtin Legacy Search to delegate the operation getLightweightMetaObjectsByQuery to the cids Pure REST Search API.
@@ -48,7 +48,7 @@ import de.cismet.connectioncontext.ServerConnectionContextStore;
 @ServiceProvider(service = RestApiCidsServerSearch.class)
 public class AlbFlurstueckKickerLightweightSearch extends AbstractCidsServerSearch implements RestApiCidsServerSearch,
     LightweightMetaObjectsSearch,
-    ServerConnectionContextStore {
+    ConnectionContextStore {
 
     //~ Static fields/initializers ---------------------------------------------
 
@@ -90,7 +90,7 @@ public class AlbFlurstueckKickerLightweightSearch extends AbstractCidsServerSear
     @Getter @Setter private String[] representationFields;
     @Getter @Setter private String representationPattern;
 
-    private ServerConnectionContext connectionContext = ServerConnectionContext.create(getClass().getSimpleName());
+    private ConnectionContext connectionContext = ConnectionContext.createDummy();
 
     //~ Constructors -----------------------------------------------------------
 
@@ -104,7 +104,7 @@ public class AlbFlurstueckKickerLightweightSearch extends AbstractCidsServerSear
         searchInfo.setDescription(
             "Builtin Legacy Search to delegate the operation getLightweightMetaObjectsByQuery to the cids Pure REST Search API.");
 
-        final List<SearchParameterInfo> parameterDescription = new LinkedList<SearchParameterInfo>();
+        final List<SearchParameterInfo> parameterDescription = new LinkedList<>();
         SearchParameterInfo searchParameterInfo;
 
         searchParameterInfo = new SearchParameterInfo();
@@ -153,6 +153,11 @@ public class AlbFlurstueckKickerLightweightSearch extends AbstractCidsServerSear
     }
 
     //~ Methods ----------------------------------------------------------------
+
+    @Override
+    public void initWithConnectionContext(final ConnectionContext connectionContext) {
+        this.connectionContext = connectionContext;
+    }
 
     @Override
     public Collection performServerSearch() throws SearchException {
@@ -374,16 +379,7 @@ public class AlbFlurstueckKickerLightweightSearch extends AbstractCidsServerSear
     }
 
     @Override
-    public ServerConnectionContext getConnectionContext() {
+    public ConnectionContext getConnectionContext() {
         return connectionContext;
-    }
-
-    @Override
-    public void initAfterConnectionContext() {
-    }
-
-    @Override
-    public void setConnectionContext(final ServerConnectionContext connectionContext) {
-        this.connectionContext = connectionContext;
     }
 }

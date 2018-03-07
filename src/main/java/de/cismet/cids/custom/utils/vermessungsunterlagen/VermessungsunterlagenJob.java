@@ -64,7 +64,6 @@ import de.cismet.cids.server.search.SearchException;
 
 import de.cismet.commons.concurrency.CismetExecutors;
 
-import de.cismet.connectioncontext.ClientConnectionContext;
 import de.cismet.connectioncontext.ConnectionContext;
 import de.cismet.connectioncontext.ConnectionContextProvider;
 
@@ -98,7 +97,7 @@ public class VermessungsunterlagenJob implements Runnable, ConnectionContextProv
 
     //~ Instance fields --------------------------------------------------------
 
-    private final ClientConnectionContext connectionContext;
+    private final ConnectionContext connectionContext;
 
     @Getter private final String key;
     @Getter private final VermessungsunterlagenAnfrageBean anfrageBean;
@@ -132,7 +131,7 @@ public class VermessungsunterlagenJob implements Runnable, ConnectionContextProv
      */
     public VermessungsunterlagenJob(final String jobkey,
             final VermessungsunterlagenAnfrageBean anfrageBean,
-            final ClientConnectionContext connectionContext) throws Exception {
+            final ConnectionContext connectionContext) throws Exception {
         this.key = jobkey;
         this.anfrageBean = anfrageBean;
 
@@ -143,7 +142,7 @@ public class VermessungsunterlagenJob implements Runnable, ConnectionContextProv
     //~ Methods ----------------------------------------------------------------
 
     @Override
-    public ClientConnectionContext getConnectionContext() {
+    public ConnectionContext getConnectionContext() {
         return connectionContext;
     }
 

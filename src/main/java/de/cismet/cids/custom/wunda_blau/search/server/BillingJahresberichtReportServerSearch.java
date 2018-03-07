@@ -23,7 +23,7 @@ import java.util.Iterator;
 
 import de.cismet.cids.server.search.SearchException;
 
-import de.cismet.connectioncontext.ServerConnectionContext;
+import de.cismet.connectioncontext.ConnectionContext;
 
 /**
  * DOCUMENT ME!
@@ -267,8 +267,8 @@ public class BillingJahresberichtReportServerSearch extends BillingStatisticsRep
     }
 
     @Override
-    public ServerConnectionContext getConnectionContext() {
-        return ServerConnectionContext.create(getClass().getSimpleName());
+    public ConnectionContext getConnectionContext() {
+        return ConnectionContext.createDummy();
     }
 
     //~ Inner Classes ----------------------------------------------------------

@@ -44,8 +44,8 @@ import de.cismet.cids.utils.serverresources.ServerResourcesLoader;
 
 import de.cismet.cismap.commons.jtsgeometryfactories.PostGisGeometryFactory;
 
-import de.cismet.connectioncontext.ServerConnectionContext;
-import de.cismet.connectioncontext.ServerConnectionContextProvider;
+import de.cismet.connectioncontext.ConnectionContext;
+import de.cismet.connectioncontext.ConnectionContextStore;
 
 /**
  * DOCUMENT ME!
@@ -54,7 +54,7 @@ import de.cismet.connectioncontext.ServerConnectionContextProvider;
  * @version  $Revision$, $Date$
  */
 @Deprecated
-public class NasZaehlObjekteSearch extends AbstractCidsServerSearch implements ServerConnectionContextProvider {
+public class NasZaehlObjekteSearch extends AbstractCidsServerSearch implements ConnectionContextStore {
 
     //~ Static fields/initializers ---------------------------------------------
 
@@ -122,8 +122,7 @@ public class NasZaehlObjekteSearch extends AbstractCidsServerSearch implements S
     final Geometry geometry;
     final NasZaehlObjekteSearch.NasSearchType searchType;
 
-    private ServerConnectionContext serverConnectionContext = ServerConnectionContext.create(getClass()
-                    .getSimpleName());
+    private ConnectionContext connectionContext = ConnectionContext.createDummy();
 
     //~ Constructors -----------------------------------------------------------
 
@@ -139,6 +138,11 @@ public class NasZaehlObjekteSearch extends AbstractCidsServerSearch implements S
     }
 
     //~ Methods ----------------------------------------------------------------
+
+    @Override
+    public void initWithConnectionContext(final ConnectionContext connectionContext) {
+        this.connectionContext = connectionContext;
+    }
 
     /**
      * DOCUMENT ME!
@@ -256,7 +260,7 @@ public class NasZaehlObjekteSearch extends AbstractCidsServerSearch implements S
                 if (LOG.isDebugEnabled()) {
                     LOG.debug("query: " + sb.toString());                                  // NOI18N
                 }
-                final ArrayList<ArrayList> lists = ms.performCustomSearch(sb.toString(), getServerConnectionContext());
+                final ArrayList<ArrayList> lists = ms.performCustomSearch(sb.toString(), getConnectionContext());
 
                 return lists.size();
             } catch (RemoteException ex) {
@@ -323,12 +327,7 @@ public class NasZaehlObjekteSearch extends AbstractCidsServerSearch implements S
     }
 
     @Override
-    public ServerConnectionContext getServerConnectionContext() {
-        return serverConnectionContext;
-    }
-
-    @Override
-    public void setServerConnectionContext(final ServerConnectionContext serverConnectionContext) {
-        this.serverConnectionContext = serverConnectionContext;
+    public ConnectionContext getConnectionContext() {
+        return connectionContext;
     }
 }

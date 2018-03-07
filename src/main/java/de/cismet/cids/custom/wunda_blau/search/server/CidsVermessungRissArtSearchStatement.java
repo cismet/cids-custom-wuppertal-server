@@ -18,8 +18,8 @@ import java.util.LinkedList;
 
 import de.cismet.cids.server.search.AbstractCidsServerSearch;
 
-import de.cismet.connectioncontext.ServerConnectionContext;
-import de.cismet.connectioncontext.ServerConnectionContextStore;
+import de.cismet.connectioncontext.ConnectionContext;
+import de.cismet.connectioncontext.ConnectionContextStore;
 
 /**
  * DOCUMENT ME!
@@ -27,8 +27,7 @@ import de.cismet.connectioncontext.ServerConnectionContextStore;
  * @author   jweintraut
  * @version  $Revision$, $Date$
  */
-public class CidsVermessungRissArtSearchStatement extends AbstractCidsServerSearch
-        implements ServerConnectionContextStore {
+public class CidsVermessungRissArtSearchStatement extends AbstractCidsServerSearch implements ConnectionContextStore {
 
     //~ Static fields/initializers ---------------------------------------------
 
@@ -50,7 +49,7 @@ public class CidsVermessungRissArtSearchStatement extends AbstractCidsServerSear
 
     private final User user;
 
-    private ServerConnectionContext connectionContext = ServerConnectionContext.create(getClass().getSimpleName());
+    private ConnectionContext connectionContext = ConnectionContext.createDummy();
 
     //~ Constructors -----------------------------------------------------------
 
@@ -64,6 +63,11 @@ public class CidsVermessungRissArtSearchStatement extends AbstractCidsServerSear
     }
 
     //~ Methods ----------------------------------------------------------------
+
+    @Override
+    public void initWithConnectionContext(final ConnectionContext connectionContext) {
+        this.connectionContext = connectionContext;
+    }
 
     @Override
     public Collection performServerSearch() {
@@ -108,16 +112,7 @@ public class CidsVermessungRissArtSearchStatement extends AbstractCidsServerSear
     }
 
     @Override
-    public ServerConnectionContext getConnectionContext() {
+    public ConnectionContext getConnectionContext() {
         return connectionContext;
-    }
-
-    @Override
-    public void initAfterConnectionContext() {
-    }
-
-    @Override
-    public void setConnectionContext(final ServerConnectionContext connectionContext) {
-        this.connectionContext = connectionContext;
     }
 }

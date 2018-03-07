@@ -20,8 +20,8 @@ import de.cismet.cids.dynamics.CidsBean;
 import de.cismet.cids.server.search.AbstractCidsServerSearch;
 import de.cismet.cids.server.search.SearchException;
 
-import de.cismet.connectioncontext.ServerConnectionContext;
-import de.cismet.connectioncontext.ServerConnectionContextStore;
+import de.cismet.connectioncontext.ConnectionContext;
+import de.cismet.connectioncontext.ConnectionContextStore;
 
 /**
  * Search the kk_verfahren parent of a kk_kompensation object.
@@ -29,7 +29,7 @@ import de.cismet.connectioncontext.ServerConnectionContextStore;
  * @author   Thorsten Herter
  * @version  $Revision$, $Date$
  */
-public class KkVerfahrenSearch extends AbstractCidsServerSearch implements ServerConnectionContextStore {
+public class KkVerfahrenSearch extends AbstractCidsServerSearch implements ConnectionContextStore {
 
     //~ Static fields/initializers ---------------------------------------------
 
@@ -42,7 +42,7 @@ public class KkVerfahrenSearch extends AbstractCidsServerSearch implements Serve
 
     private final int kompensationId;
 
-    private ServerConnectionContext connectionContext = ServerConnectionContext.create(getClass().getSimpleName());
+    private ConnectionContext connectionContext = ConnectionContext.createDummy();
 
     //~ Constructors -----------------------------------------------------------
 
@@ -56,6 +56,11 @@ public class KkVerfahrenSearch extends AbstractCidsServerSearch implements Serve
     }
 
     //~ Methods ----------------------------------------------------------------
+
+    @Override
+    public void initWithConnectionContext(final ConnectionContext connectionContext) {
+        this.connectionContext = connectionContext;
+    }
 
     @Override
     public Collection performServerSearch() throws SearchException {
@@ -85,16 +90,7 @@ public class KkVerfahrenSearch extends AbstractCidsServerSearch implements Serve
     }
 
     @Override
-    public ServerConnectionContext getConnectionContext() {
+    public ConnectionContext getConnectionContext() {
         return connectionContext;
-    }
-
-    @Override
-    public void initAfterConnectionContext() {
-    }
-
-    @Override
-    public void setConnectionContext(final ServerConnectionContext connectionContext) {
-        this.connectionContext = connectionContext;
     }
 }

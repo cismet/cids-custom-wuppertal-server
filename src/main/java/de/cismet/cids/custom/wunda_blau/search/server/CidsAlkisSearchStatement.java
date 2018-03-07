@@ -37,8 +37,8 @@ import de.cismet.cids.server.search.MetaObjectNodeServerSearch;
 
 import de.cismet.cismap.commons.jtsgeometryfactories.PostGisGeometryFactory;
 
-import de.cismet.connectioncontext.ServerConnectionContext;
-import de.cismet.connectioncontext.ServerConnectionContextStore;
+import de.cismet.connectioncontext.ConnectionContext;
+import de.cismet.connectioncontext.ConnectionContextStore;
 
 /**
  * DOCUMENT ME!
@@ -47,7 +47,7 @@ import de.cismet.connectioncontext.ServerConnectionContextStore;
  * @version  $Revision$, $Date$
  */
 public class CidsAlkisSearchStatement extends AbstractCidsServerSearch implements MetaObjectNodeServerSearch,
-    ServerConnectionContextStore {
+    ConnectionContextStore {
 
     //~ Static fields/initializers ---------------------------------------------
 
@@ -108,7 +108,7 @@ public class CidsAlkisSearchStatement extends AbstractCidsServerSearch implement
     private SucheUeber ueber = null;
     private Geometry geometry = null;
 
-    private ServerConnectionContext connectionContext = ServerConnectionContext.create(getClass().getSimpleName());
+    private ConnectionContext connectionContext = ConnectionContext.createDummy();
 
     //~ Constructors -----------------------------------------------------------
 
@@ -169,9 +169,14 @@ public class CidsAlkisSearchStatement extends AbstractCidsServerSearch implement
     //~ Methods ----------------------------------------------------------------
 
     @Override
+    public void initWithConnectionContext(final ConnectionContext connectionContext) {
+        this.connectionContext = connectionContext;
+    }
+
+    @Override
     public Collection<MetaObjectNode> performServerSearch() {
         try {
-            final List<MetaObjectNode> result = new ArrayList<MetaObjectNode>();
+            final List<MetaObjectNode> result = new ArrayList<>();
             final Properties properties = new Properties();
             final ActionService as = (ActionService)getActiveLocalServers().get("WUNDA_BLAU");
             properties.load(new StringReader(
@@ -322,16 +327,7 @@ public class CidsAlkisSearchStatement extends AbstractCidsServerSearch implement
     }
 
     @Override
-    public ServerConnectionContext getConnectionContext() {
+    public ConnectionContext getConnectionContext() {
         return connectionContext;
-    }
-
-    @Override
-    public void initAfterConnectionContext() {
-    }
-
-    @Override
-    public void setConnectionContext(final ServerConnectionContext connectionContext) {
-        this.connectionContext = connectionContext;
     }
 }

@@ -21,8 +21,8 @@ import de.cismet.cids.custom.utils.motd.MotdRetrieverListenerEvent;
 
 import de.cismet.cids.server.messages.CidsServerMessageManagerImpl;
 
-import de.cismet.connectioncontext.ServerConnectionContext;
-import de.cismet.connectioncontext.ServerConnectionContextStore;
+import de.cismet.connectioncontext.ConnectionContext;
+import de.cismet.connectioncontext.ConnectionContextStore;
 
 /**
  * DOCUMENT ME!
@@ -31,7 +31,7 @@ import de.cismet.connectioncontext.ServerConnectionContextStore;
  * @version  $Revision$, $Date$
  */
 @org.openide.util.lookup.ServiceProvider(service = DomainServerStartupHook.class)
-public class MotdWundaStartupHook implements DomainServerStartupHook, ServerConnectionContextStore {
+public class MotdWundaStartupHook implements DomainServerStartupHook, ConnectionContextStore {
 
     //~ Static fields/initializers ---------------------------------------------
 
@@ -48,9 +48,14 @@ public class MotdWundaStartupHook implements DomainServerStartupHook, ServerConn
 
     //~ Instance fields --------------------------------------------------------
 
-    private ServerConnectionContext connectionContext = ServerConnectionContext.create(getClass().getSimpleName());
+    private ConnectionContext connectionContext = ConnectionContext.createDummy();
 
     //~ Methods ----------------------------------------------------------------
+
+    @Override
+    public void initWithConnectionContext(final ConnectionContext connectionContext) {
+        this.connectionContext = connectionContext;
+    }
 
     @Override
     public void domainServerStarted() {
@@ -122,16 +127,7 @@ public class MotdWundaStartupHook implements DomainServerStartupHook, ServerConn
     }
 
     @Override
-    public ServerConnectionContext getConnectionContext() {
+    public ConnectionContext getConnectionContext() {
         return connectionContext;
-    }
-
-    @Override
-    public void setConnectionContext(final ServerConnectionContext connectionContext) {
-        this.connectionContext = connectionContext;
-    }
-
-    @Override
-    public void initAfterConnectionContext() {
     }
 }

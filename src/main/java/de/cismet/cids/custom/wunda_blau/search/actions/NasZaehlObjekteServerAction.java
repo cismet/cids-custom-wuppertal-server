@@ -46,8 +46,8 @@ import de.cismet.cids.utils.serverresources.ServerResourcesLoader;
 
 import de.cismet.cismap.commons.jtsgeometryfactories.PostGisGeometryFactory;
 
-import de.cismet.connectioncontext.ConnectionContextProvider;
-import de.cismet.connectioncontext.ServerConnectionContext;
+import de.cismet.connectioncontext.ConnectionContext;
+import de.cismet.connectioncontext.ConnectionContextStore;
 
 /**
  * DOCUMENT ME!
@@ -56,7 +56,7 @@ import de.cismet.connectioncontext.ServerConnectionContext;
  * @version  $Revision$, $Date$
  */
 @org.openide.util.lookup.ServiceProvider(service = ServerAction.class)
-public class NasZaehlObjekteServerAction implements ServerAction, MetaServiceStore, ConnectionContextProvider {
+public class NasZaehlObjekteServerAction implements ServerAction, MetaServiceStore, ConnectionContextStore {
 
     //~ Static fields/initializers ---------------------------------------------
 
@@ -117,7 +117,7 @@ public class NasZaehlObjekteServerAction implements ServerAction, MetaServiceSto
 
     private MetaService metaService;
 
-    private ServerConnectionContext connectionContext = ServerConnectionContext.create(getClass().getSimpleName());
+    private ConnectionContext connectionContext = ConnectionContext.createDummy();
 
     //~ Constructors -----------------------------------------------------------
 
@@ -160,6 +160,11 @@ public class NasZaehlObjekteServerAction implements ServerAction, MetaServiceSto
     }
 
     //~ Methods ----------------------------------------------------------------
+
+    @Override
+    public void initWithConnectionContext(final ConnectionContext connectionContext) {
+        this.connectionContext = connectionContext;
+    }
 
     @Override
     public MetaService getMetaService() {
@@ -384,7 +389,7 @@ public class NasZaehlObjekteServerAction implements ServerAction, MetaServiceSto
     }
 
     @Override
-    public ServerConnectionContext getConnectionContext() {
+    public ConnectionContext getConnectionContext() {
         return connectionContext;
     }
 }

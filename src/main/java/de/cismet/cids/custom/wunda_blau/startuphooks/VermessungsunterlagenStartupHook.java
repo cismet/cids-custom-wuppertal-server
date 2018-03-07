@@ -23,7 +23,6 @@ import de.cismet.cids.custom.utils.vermessungsunterlagen.VermessungsunterlagenHe
 
 import de.cismet.connectioncontext.ConnectionContext;
 import de.cismet.connectioncontext.ConnectionContextStore;
-import de.cismet.connectioncontext.ServerConnectionContext;
 
 /**
  * DOCUMENT ME!
@@ -41,9 +40,14 @@ public class VermessungsunterlagenStartupHook implements DomainServerStartupHook
 
     //~ Instance fields --------------------------------------------------------
 
-    private ConnectionContext connectionContext = ServerConnectionContext.create(getClass().getSimpleName());
+    private ConnectionContext connectionContext = ConnectionContext.createDummy();
 
     //~ Methods ----------------------------------------------------------------
+
+    @Override
+    public void initWithConnectionContext(final ConnectionContext connectionContext) {
+        this.connectionContext = connectionContext;
+    }
 
     @Override
     public void domainServerStarted() {
@@ -86,11 +90,6 @@ public class VermessungsunterlagenStartupHook implements DomainServerStartupHook
     @Override
     public String getDomain() {
         return "WUNDA_BLAU";
-    }
-
-    @Override
-    public void setConnectionContext(final ConnectionContext connectionContext) {
-        this.connectionContext = connectionContext;
     }
 
     @Override

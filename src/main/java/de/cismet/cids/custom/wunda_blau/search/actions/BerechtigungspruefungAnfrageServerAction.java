@@ -26,8 +26,8 @@ import de.cismet.cids.server.actions.ServerAction;
 import de.cismet.cids.server.actions.ServerActionParameter;
 import de.cismet.cids.server.actions.UserAwareServerAction;
 
-import de.cismet.connectioncontext.ConnectionContextProvider;
-import de.cismet.connectioncontext.ServerConnectionContext;
+import de.cismet.connectioncontext.ConnectionContext;
+import de.cismet.connectioncontext.ConnectionContextStore;
 
 /**
  * DOCUMENT ME!
@@ -38,7 +38,7 @@ import de.cismet.connectioncontext.ServerConnectionContext;
 @org.openide.util.lookup.ServiceProvider(service = ServerAction.class)
 public class BerechtigungspruefungAnfrageServerAction implements UserAwareServerAction,
     MetaServiceStore,
-    ConnectionContextProvider {
+    ConnectionContextStore {
 
     //~ Static fields/initializers ---------------------------------------------
 
@@ -66,9 +66,14 @@ public class BerechtigungspruefungAnfrageServerAction implements UserAwareServer
     private User user = null;
     private MetaService metaService = null;
 
-    private ServerConnectionContext connectionContext = ServerConnectionContext.create(getClass().getSimpleName());
+    private ConnectionContext connectionContext = ConnectionContext.createDummy();
 
     //~ Methods ----------------------------------------------------------------
+
+    @Override
+    public void initWithConnectionContext(final ConnectionContext connectionContext) {
+        this.connectionContext = connectionContext;
+    }
 
     @Override
     public Object execute(final Object body, final ServerActionParameter... params) {
@@ -179,7 +184,7 @@ public class BerechtigungspruefungAnfrageServerAction implements UserAwareServer
     }
 
     @Override
-    public ServerConnectionContext getConnectionContext() {
+    public ConnectionContext getConnectionContext() {
         return connectionContext;
     }
 }

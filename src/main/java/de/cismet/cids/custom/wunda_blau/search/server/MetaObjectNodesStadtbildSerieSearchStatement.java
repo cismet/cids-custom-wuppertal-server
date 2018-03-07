@@ -34,8 +34,8 @@ import de.cismet.cids.server.search.SearchException;
 
 import de.cismet.cismap.commons.jtsgeometryfactories.PostGisGeometryFactory;
 
-import de.cismet.connectioncontext.ServerConnectionContext;
-import de.cismet.connectioncontext.ServerConnectionContextStore;
+import de.cismet.connectioncontext.ConnectionContext;
+import de.cismet.connectioncontext.ConnectionContextStore;
 
 /**
  * DOCUMENT ME!
@@ -45,7 +45,7 @@ import de.cismet.connectioncontext.ServerConnectionContextStore;
  */
 public class MetaObjectNodesStadtbildSerieSearchStatement extends AbstractCidsServerSearch
         implements MetaObjectNodeServerSearch,
-            ServerConnectionContextStore {
+            ConnectionContextStore {
 
     //~ Static fields/initializers ---------------------------------------------
 
@@ -112,7 +112,7 @@ public class MetaObjectNodesStadtbildSerieSearchStatement extends AbstractCidsSe
      */
     private boolean preparationExecution = false;
 
-    private ServerConnectionContext connectionContext = ServerConnectionContext.create(getClass().getSimpleName());
+    private ConnectionContext connectionContext = ConnectionContext.createDummy();
 
     //~ Constructors -----------------------------------------------------------
 
@@ -126,6 +126,11 @@ public class MetaObjectNodesStadtbildSerieSearchStatement extends AbstractCidsSe
     }
 
     //~ Methods ----------------------------------------------------------------
+
+    @Override
+    public void initWithConnectionContext(final ConnectionContext connectionContext) {
+        this.connectionContext = connectionContext;
+    }
 
     /**
      * DOCUMENT ME!
@@ -689,17 +694,8 @@ public class MetaObjectNodesStadtbildSerieSearchStatement extends AbstractCidsSe
     }
 
     @Override
-    public ServerConnectionContext getConnectionContext() {
+    public ConnectionContext getConnectionContext() {
         return connectionContext;
-    }
-
-    @Override
-    public void initAfterConnectionContext() {
-    }
-
-    @Override
-    public void setConnectionContext(final ServerConnectionContext connectionContext) {
-        this.connectionContext = connectionContext;
     }
 
     //~ Inner Classes ----------------------------------------------------------

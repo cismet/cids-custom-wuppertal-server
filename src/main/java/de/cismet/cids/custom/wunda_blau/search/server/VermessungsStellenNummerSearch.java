@@ -26,8 +26,8 @@ import de.cismet.cids.custom.utils.pointnumberreservation.VermessungsStellenSear
 import de.cismet.cids.server.search.AbstractCidsServerSearch;
 import de.cismet.cids.server.search.SearchException;
 
-import de.cismet.connectioncontext.ServerConnectionContext;
-import de.cismet.connectioncontext.ServerConnectionContextStore;
+import de.cismet.connectioncontext.ConnectionContext;
+import de.cismet.connectioncontext.ConnectionContextStore;
 
 /**
  * DOCUMENT ME!
@@ -35,7 +35,7 @@ import de.cismet.connectioncontext.ServerConnectionContextStore;
  * @author   daniel
  * @version  $Revision$, $Date$
  */
-public class VermessungsStellenNummerSearch extends AbstractCidsServerSearch implements ServerConnectionContextStore {
+public class VermessungsStellenNummerSearch extends AbstractCidsServerSearch implements ConnectionContextStore {
 
     //~ Static fields/initializers ---------------------------------------------
 
@@ -48,7 +48,7 @@ public class VermessungsStellenNummerSearch extends AbstractCidsServerSearch imp
         "select k.vermessungsstellennummer, k.name from \"public\".billing_kunden_logins kl join billing_kunde k on k.id=kl.kunde "
                 + "where vermessungsstellennummer is not null and kl.name like '%1$s';";
 
-    private ServerConnectionContext connectionContext = ServerConnectionContext.create(getClass().getSimpleName());
+    private ConnectionContext connectionContext = ConnectionContext.createDummy();
 
     //~ Constructors -----------------------------------------------------------
 
@@ -62,6 +62,11 @@ public class VermessungsStellenNummerSearch extends AbstractCidsServerSearch imp
     }
 
     //~ Methods ----------------------------------------------------------------
+
+    @Override
+    public void initWithConnectionContext(final ConnectionContext connectionContext) {
+        this.connectionContext = connectionContext;
+    }
 
     @Override
     public Collection performServerSearch() throws SearchException {
@@ -93,16 +98,7 @@ public class VermessungsStellenNummerSearch extends AbstractCidsServerSearch imp
     }
 
     @Override
-    public ServerConnectionContext getConnectionContext() {
+    public ConnectionContext getConnectionContext() {
         return connectionContext;
-    }
-
-    @Override
-    public void initAfterConnectionContext() {
-    }
-
-    @Override
-    public void setConnectionContext(final ServerConnectionContext connectionContext) {
-        this.connectionContext = connectionContext;
     }
 }

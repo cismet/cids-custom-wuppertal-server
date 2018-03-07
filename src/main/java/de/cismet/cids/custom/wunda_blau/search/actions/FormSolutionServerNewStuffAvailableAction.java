@@ -62,7 +62,6 @@ import java.sql.ResultSet;
 import java.sql.SQLException;
 import java.sql.Timestamp;
 
-import java.text.DecimalFormat;
 import java.text.SimpleDateFormat;
 
 import java.util.ArrayList;
@@ -104,8 +103,8 @@ import de.cismet.cids.utils.serverresources.ServerResourcesLoader;
 import de.cismet.commons.security.AccessHandler;
 import de.cismet.commons.security.handler.SimpleHttpAccessHandler;
 
-import de.cismet.connectioncontext.ConnectionContextProvider;
-import de.cismet.connectioncontext.ServerConnectionContext;
+import de.cismet.connectioncontext.ConnectionContext;
+import de.cismet.connectioncontext.ConnectionContextStore;
 
 /**
  * DOCUMENT ME!
@@ -116,7 +115,7 @@ import de.cismet.connectioncontext.ServerConnectionContext;
 @org.openide.util.lookup.ServiceProvider(service = ServerAction.class)
 public class FormSolutionServerNewStuffAvailableAction implements UserAwareServerAction,
     MetaServiceStore,
-    ConnectionContextProvider {
+    ConnectionContextStore {
 
     //~ Static fields/initializers ---------------------------------------------
 
@@ -180,11 +179,11 @@ public class FormSolutionServerNewStuffAvailableAction implements UserAwareServe
     private User user;
     private MetaService metaService;
     private final String testCismet00Xml;
-    private final Set<String> ignoreTransids = new HashSet<String>();
+    private final Set<String> ignoreTransids = new HashSet<>();
     private final ProductType testCismet00Type;
     private final FileWriter specialLogWriter;
 
-    private ServerConnectionContext connectionContext = ServerConnectionContext.create(getClass().getSimpleName());
+    private ConnectionContext connectionContext = ConnectionContext.createDummy();
 
     //~ Constructors -----------------------------------------------------------
 
@@ -266,6 +265,11 @@ public class FormSolutionServerNewStuffAvailableAction implements UserAwareServe
     }
 
     //~ Methods ----------------------------------------------------------------
+
+    @Override
+    public void initWithConnectionContext(final ConnectionContext connectionContext) {
+        this.connectionContext = connectionContext;
+    }
 
     /**
      * DOCUMENT ME!
@@ -1942,7 +1946,7 @@ public class FormSolutionServerNewStuffAvailableAction implements UserAwareServe
     }
 
     @Override
-    public ServerConnectionContext getConnectionContext() {
+    public ConnectionContext getConnectionContext() {
         return connectionContext;
     }
 }

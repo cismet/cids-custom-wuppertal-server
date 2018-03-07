@@ -40,7 +40,7 @@ import de.cismet.cids.dynamics.CidsBean;
 import de.cismet.cids.server.search.CidsServerSearch;
 import de.cismet.cids.server.search.SearchException;
 
-import de.cismet.connectioncontext.ClientConnectionContext;
+import de.cismet.connectioncontext.ConnectionContext;
 import de.cismet.connectioncontext.ConnectionContextProvider;
 
 /**
@@ -80,7 +80,7 @@ public class VermessungsunterlagenValidator implements ConnectionContextProvider
     @Getter private boolean pnrNotZero = false;
     @Getter private boolean geometryFromFlurstuecke = true;
 
-    private final ClientConnectionContext connectionContext;
+    private final ConnectionContext connectionContext;
 
     //~ Constructors -----------------------------------------------------------
 
@@ -91,7 +91,7 @@ public class VermessungsunterlagenValidator implements ConnectionContextProvider
      * @param  connectionContext  DOCUMENT ME!
      */
     public VermessungsunterlagenValidator(final VermessungsunterlagenHelper helper,
-            final ClientConnectionContext connectionContext) {
+            final ConnectionContext connectionContext) {
         this.helper = helper;
         this.connectionContext = connectionContext;
     }
@@ -626,7 +626,7 @@ public class VermessungsunterlagenValidator implements ConnectionContextProvider
     }
 
     @Override
-    public ClientConnectionContext getConnectionContext() {
+    public ConnectionContext getConnectionContext() {
         return connectionContext;
     }
 }

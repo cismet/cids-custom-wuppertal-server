@@ -26,8 +26,8 @@ import de.cismet.cids.server.actions.ServerAction;
 import de.cismet.cids.server.actions.ServerActionParameter;
 import de.cismet.cids.server.actions.UserAwareServerAction;
 
-import de.cismet.connectioncontext.ConnectionContextProvider;
-import de.cismet.connectioncontext.ServerConnectionContext;
+import de.cismet.connectioncontext.ConnectionContext;
+import de.cismet.connectioncontext.ConnectionContextStore;
 
 /**
  * DOCUMENT ME!
@@ -38,7 +38,7 @@ import de.cismet.connectioncontext.ServerConnectionContext;
 @org.openide.util.lookup.ServiceProvider(service = ServerAction.class)
 public class FormSolutionBestellungChangeStatusServerAction implements UserAwareServerAction,
     MetaServiceStore,
-    ConnectionContextProvider {
+    ConnectionContextStore {
 
     //~ Static fields/initializers ---------------------------------------------
 
@@ -65,7 +65,7 @@ public class FormSolutionBestellungChangeStatusServerAction implements UserAware
     private User user;
     private MetaService metaService;
 
-    private ServerConnectionContext connectionContext = ServerConnectionContext.create(getClass().getSimpleName());
+    private ConnectionContext connectionContext = ConnectionContext.createDummy();
 
     //~ Constructors -----------------------------------------------------------
 
@@ -76,6 +76,11 @@ public class FormSolutionBestellungChangeStatusServerAction implements UserAware
     }
 
     //~ Methods ----------------------------------------------------------------
+
+    @Override
+    public void initWithConnectionContext(final ConnectionContext connectionContext) {
+        this.connectionContext = connectionContext;
+    }
 
     /**
      * DOCUMENT ME!
@@ -163,7 +168,7 @@ public class FormSolutionBestellungChangeStatusServerAction implements UserAware
     }
 
     @Override
-    public ServerConnectionContext getConnectionContext() {
+    public ConnectionContext getConnectionContext() {
         return connectionContext;
     }
 }
