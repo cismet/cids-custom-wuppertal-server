@@ -183,8 +183,8 @@ public class CidsAlkisSearchStatement extends AbstractCidsServerSearch implement
                     (String)as.executeTask(
                         getUser(),
                         GetServerResourceServerAction.TASK_NAME,
-                        getConnectionContext(),
-                        WundaBlauServerResources.ALKIS_CONF.getValue())));
+                        WundaBlauServerResources.ALKIS_CONF.getValue(),
+                        getConnectionContext())));
 
             final SOAPAccessProvider accessProvider = new SOAPAccessProvider(new AlkisConf(properties));
             final ALKISSearchServices searchService = accessProvider.getAlkisSearchService();
