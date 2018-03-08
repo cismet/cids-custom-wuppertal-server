@@ -567,7 +567,10 @@ public class VermessungsunterlagenValidator implements ConnectionContextProvider
     private Collection<CidsBean> searchFlurstuecke(final Geometry geom) throws Exception {
         final BufferingGeosearch search = new BufferingGeosearch();
         search.setGeometry(geom);
-        final MetaClass mc = CidsBean.getMetaClassFromTableName("WUNDA_BLAU", "alkis_landparcel");
+        final MetaClass mc = CidsBean.getMetaClassFromTableName(
+                "WUNDA_BLAU",
+                "alkis_landparcel",
+                getConnectionContext());
         search.setValidClasses(Arrays.asList(mc));
         final Collection<MetaObjectNode> mons = helper.performSearch(search);
 

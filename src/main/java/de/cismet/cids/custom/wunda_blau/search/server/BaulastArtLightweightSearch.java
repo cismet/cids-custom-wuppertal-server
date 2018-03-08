@@ -114,7 +114,7 @@ public class BaulastArtLightweightSearch extends AbstractCidsServerSearch implem
         }
         final MetaClass mc;
         try {
-            mc = CidsBean.getMetaClassFromTableName("WUNDA_BLAU", "alb_baulast_art");
+            mc = CidsBean.getMetaClassFromTableName("WUNDA_BLAU", "alb_baulast_art", getConnectionContext());
         } catch (final Exception ex) {
             throw new SearchException("error while loading metaclass", ex);
         }

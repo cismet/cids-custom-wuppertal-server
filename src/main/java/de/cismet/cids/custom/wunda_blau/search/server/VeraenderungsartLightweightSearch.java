@@ -128,7 +128,10 @@ public class VeraenderungsartLightweightSearch extends AbstractCidsServerSearch 
                     + VERMESSUNG_VERAENDERUNGSART_NAME;
         final MetaClass mc;
         try {
-            mc = CidsBean.getMetaClassFromTableName("WUNDA_BLAU", VERMESSUNG_VERAENDERUNGSART_TABLE_NAME);
+            mc = CidsBean.getMetaClassFromTableName(
+                    "WUNDA_BLAU",
+                    VERMESSUNG_VERAENDERUNGSART_TABLE_NAME,
+                    getConnectionContext());
         } catch (final Exception ex) {
             throw new SearchException("error while loadomg metaclass", ex);
         }

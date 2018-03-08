@@ -119,7 +119,7 @@ public class AdresseGebaeudeLightweightSearch extends AbstractCidsServerSearch i
         }
         final MetaClass mc;
         try {
-            mc = CidsBean.getMetaClassFromTableName("WUNDA_BLAU", "alkis_adresse");
+            mc = CidsBean.getMetaClassFromTableName("WUNDA_BLAU", "alkis_adresse", getConnectionContext());
         } catch (final Exception ex) {
             throw new SearchException("error while loading metaclass", ex);
         }

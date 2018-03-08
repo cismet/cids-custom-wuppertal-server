@@ -177,10 +177,12 @@ public class VermessungFlurstueckKickerLightweightSearch extends AbstractCidsSer
             try {
                 flurstueckKickerMetaClass = CidsBean.getMetaClassFromTableName(
                         "WUNDA_BLAU",
-                        FLURSTUECK_KICKER_TABLE_NAME);
+                        FLURSTUECK_KICKER_TABLE_NAME,
+                        getConnectionContext());
                 vermessungsGemarkungenMetaClass = CidsBean.getMetaClassFromTableName(
                         "WUNDA_BLAU",
-                        VERMESSUNG_GEMARKUNG_TABLE_NAME);
+                        VERMESSUNG_GEMARKUNG_TABLE_NAME,
+                        getConnectionContext());
             } catch (final Exception ex) {
                 throw new SearchException("error while loadomg metaclass", ex);
             }

@@ -74,7 +74,8 @@ public class KkVerfahrenSearch extends AbstractCidsServerSearch implements Conne
                     return Arrays.asList(metaService.getMetaObject(
                                 getUser(),
                                 (Integer)list.get(0).get(0),
-                                CidsBean.getMetaClassFromTableName(DOMAIN, "kk_verfahren").getId(),
+                                CidsBean.getMetaClassFromTableName(DOMAIN, "kk_verfahren", getConnectionContext())
+                                            .getId(),
                                 getConnectionContext()));
                 } else {
                     LOG.error("active local server not found"); // NOI18N

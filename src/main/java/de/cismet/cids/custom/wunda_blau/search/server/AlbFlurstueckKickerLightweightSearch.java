@@ -172,7 +172,10 @@ public class AlbFlurstueckKickerLightweightSearch extends AbstractCidsServerSear
             final String query;
             final MetaClass mc;
             try {
-                mc = CidsBean.getMetaClassFromTableName("WUNDA_BLAU", FLURSTUECK_KICKER_TABLE_NAME);
+                mc = CidsBean.getMetaClassFromTableName(
+                        "WUNDA_BLAU",
+                        FLURSTUECK_KICKER_TABLE_NAME,
+                        getConnectionContext());
             } catch (final Exception ex) {
                 throw new SearchException("error while loadomg metaclass", ex);
             }

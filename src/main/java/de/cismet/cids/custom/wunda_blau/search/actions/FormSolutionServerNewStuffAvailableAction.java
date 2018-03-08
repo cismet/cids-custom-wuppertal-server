@@ -301,15 +301,16 @@ public class FormSolutionServerNewStuffAvailableAction implements UserAwareServe
     /**
      * DOCUMENT ME!
      *
-     * @param   table_name  DOCUMENT ME!
+     * @param   table_name         DOCUMENT ME!
+     * @param   connectionContext  DOCUMENT ME!
      *
      * @return  DOCUMENT ME!
      */
-    private static MetaClass getMetaClass(final String table_name) {
+    private static MetaClass getMetaClass(final String table_name, final ConnectionContext connectionContext) {
         if (!METACLASS_CACHE.containsKey(table_name)) {
             MetaClass mc = null;
             try {
-                mc = CidsBean.getMetaClassFromTableName("WUNDA_BLAU", table_name);
+                mc = CidsBean.getMetaClassFromTableName("WUNDA_BLAU", table_name, connectionContext);
             } catch (final Exception ex) {
                 LOG.error("could not get metaclass of " + table_name, ex);
             }
@@ -709,9 +710,9 @@ public class FormSolutionServerNewStuffAvailableAction implements UserAwareServe
         final String produktKey = extractProduktKey(formSolutionsBestellung, productType);
         final String formatKey = extractFormatKey(formSolutionsBestellung);
 
-        final MetaClass produktTypMc = getMetaClass("fs_bestellung_produkt_typ");
-        final MetaClass produktMc = getMetaClass("fs_bestellung_produkt");
-        final MetaClass formatMc = getMetaClass("fs_bestellung_format");
+        final MetaClass produktTypMc = getMetaClass("fs_bestellung_produkt_typ", getConnectionContext());
+        final MetaClass produktMc = getMetaClass("fs_bestellung_produkt", getConnectionContext());
+        final MetaClass formatMc = getMetaClass("fs_bestellung_format", getConnectionContext());
         final String produktQuery = "SELECT DISTINCT " + produktMc.getID() + ", "
                     + produktMc.getTableName() + "." + produktMc.getPrimaryKey() + " "
                     + "FROM " + produktMc.getTableName() + ", " + produktTypMc.getTableName() + ", "
@@ -726,7 +727,7 @@ public class FormSolutionServerNewStuffAvailableAction implements UserAwareServe
                 produktQuery,
                 getConnectionContext());
         produktMos[0].setAllClasses(((MetaClassCacheService)Lookup.getDefault().lookup(MetaClassCacheService.class))
-                    .getAllClasses(produktMos[0].getDomain()));
+                    .getAllClasses(produktMos[0].getDomain(), getConnectionContext()));
         return produktMos[0].getBean();
     }
 
@@ -776,8 +777,8 @@ public class FormSolutionServerNewStuffAvailableAction implements UserAwareServe
      */
     private CidsBean createBestellungBean(final FormSolutionsBestellung formSolutionsBestellung,
             final ProductType productType) throws Exception {
-        final MetaClass bestellungMc = getMetaClass("fs_bestellung");
-        final MetaClass adresseMc = getMetaClass("fs_bestellung_adresse");
+        final MetaClass bestellungMc = getMetaClass("fs_bestellung", getConnectionContext());
+        final MetaClass adresseMc = getMetaClass("fs_bestellung_adresse", getConnectionContext());
 
         final CidsBean bestellungBean = bestellungMc.getEmptyInstance().getBean();
         final CidsBean adresseRechnungBean = adresseMc.getEmptyInstance().getBean();
@@ -1151,7 +1152,7 @@ public class FormSolutionServerNewStuffAvailableAction implements UserAwareServe
                 try {
                     final String[] landparcelcodes = ((String)bestellungBean.getProperty("landparcelcode")).split(",");
 
-                    final MetaClass geomMc = getMetaClass("geom");
+                    final MetaClass geomMc = getMetaClass("geom", getConnectionContext());
                     final CidsBean geomBean = geomMc.getEmptyInstance().getBean();
                     Geometry geom = null;
                     for (final String landparcelcode : landparcelcodes) {
@@ -1621,7 +1622,10 @@ public class FormSolutionServerNewStuffAvailableAction implements UserAwareServe
      * @throws  Exception  DOCUMENT ME!
      */
     public CidsBean getExternalUser(final String loginName) throws Exception {
-        final MetaClass mc = CidsBean.getMetaClassFromTableName("WUNDA_BLAU", "billing_kunden_logins");
+        final MetaClass mc = CidsBean.getMetaClassFromTableName(
+                "WUNDA_BLAU",
+                "billing_kunden_logins",
+                getConnectionContext());
         if (mc == null) {
             if (LOG.isDebugEnabled()) {
                 LOG.debug(
@@ -1651,7 +1655,10 @@ public class FormSolutionServerNewStuffAvailableAction implements UserAwareServe
      */
     private CidsBean doBilling(final CidsBean bestellungBean, final String transid) {
         try {
-            final CidsBean billingBean = CidsBean.createNewCidsBeanFromTableName("WUNDA_BLAU", "Billing_Billing");
+            final CidsBean billingBean = CidsBean.createNewCidsBeanFromTableName(
+                    "WUNDA_BLAU",
+                    "Billing_Billing",
+                    getConnectionContext());
 
             final boolean isPostweg = Boolean.TRUE.equals(bestellungBean.getProperty("postweg"));
             final Timestamp abrechnungsdatum = (Timestamp)bestellungBean.getProperty("eingang_ts");

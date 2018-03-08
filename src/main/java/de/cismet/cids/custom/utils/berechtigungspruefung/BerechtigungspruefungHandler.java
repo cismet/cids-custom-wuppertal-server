@@ -362,7 +362,8 @@ public class BerechtigungspruefungHandler implements ConnectionContextStore {
 
         final CidsBean newPruefungBean = CidsBean.createNewCidsBeanFromTableName(
                 "WUNDA_BLAU",
-                "berechtigungspruefung");
+                "berechtigungspruefung",
+                getConnectionContext());
         newPruefungBean.setProperty("dateiname", dateiname);
         newPruefungBean.setProperty("schluessel", schluessel);
         newPruefungBean.setProperty("anfrage_timestamp", new Timestamp(new Date().getTime()));
@@ -393,7 +394,8 @@ public class BerechtigungspruefungHandler implements ConnectionContextStore {
             final List<CidsBean> beans = new ArrayList<CidsBean>();
             final MetaClass mcBerechtigungspruefung = CidsBean.getMetaClassFromTableName(
                     "WUNDA_BLAU",
-                    "berechtigungspruefung");
+                    "berechtigungspruefung",
+                    getConnectionContext());
 
             final String pruefungQuery = "SELECT DISTINCT " + mcBerechtigungspruefung.getID() + ", "
                         + mcBerechtigungspruefung.getTableName() + "." + mcBerechtigungspruefung.getPrimaryKey() + " "
@@ -427,7 +429,8 @@ public class BerechtigungspruefungHandler implements ConnectionContextStore {
             final List<CidsBean> beans = new ArrayList<CidsBean>();
             final MetaClass mcBerechtigungspruefung = CidsBean.getMetaClassFromTableName(
                     "WUNDA_BLAU",
-                    "berechtigungspruefung");
+                    "berechtigungspruefung",
+                    getConnectionContext());
 
             final String pruefungQuery = "SELECT DISTINCT " + mcBerechtigungspruefung.getID() + ", "
                         + mcBerechtigungspruefung.getTableName() + "." + mcBerechtigungspruefung.getPrimaryKey() + " "
@@ -463,7 +466,8 @@ public class BerechtigungspruefungHandler implements ConnectionContextStore {
             final List<CidsBean> beans = new ArrayList<CidsBean>();
             final MetaClass mcBerechtigungspruefung = CidsBean.getMetaClassFromTableName(
                     "WUNDA_BLAU",
-                    "berechtigungspruefung");
+                    "berechtigungspruefung",
+                    getConnectionContext());
 
             final String pruefungQuery = "SELECT DISTINCT " + mcBerechtigungspruefung.getID() + ", "
                         + mcBerechtigungspruefung.getTableName() + "." + mcBerechtigungspruefung.getPrimaryKey() + " "
@@ -497,7 +501,8 @@ public class BerechtigungspruefungHandler implements ConnectionContextStore {
         try {
             final MetaClass mcBerechtigungspruefung = CidsBean.getMetaClassFromTableName(
                     "WUNDA_BLAU",
-                    "berechtigungspruefung");
+                    "berechtigungspruefung",
+                    getConnectionContext());
 
             final String pruefungQuery = "SELECT DISTINCT " + mcBerechtigungspruefung.getID() + ", "
                         + mcBerechtigungspruefung.getTableName() + "." + mcBerechtigungspruefung.getPrimaryKey() + " "
@@ -527,7 +532,8 @@ public class BerechtigungspruefungHandler implements ConnectionContextStore {
         try {
             final MetaClass mcBillingBilling = CidsBean.getMetaClassFromTableName(
                     "WUNDA_BLAU",
-                    "billing_billing");
+                    "billing_billing",
+                    getConnectionContext());
 
             final MetaObject mo = metaService.getMetaObject(
                     user,
@@ -552,7 +558,8 @@ public class BerechtigungspruefungHandler implements ConnectionContextStore {
         try {
             final MetaClass mcBillingStornogrund = CidsBean.getMetaClassFromTableName(
                     "WUNDA_BLAU",
-                    "billing_stornogrund");
+                    "billing_stornogrund",
+                    getConnectionContext());
 
             final MetaObject mo = metaService.getMetaObject(
                     user,
@@ -579,7 +586,8 @@ public class BerechtigungspruefungHandler implements ConnectionContextStore {
         try {
             final MetaClass mcBerechtigungspruefung = CidsBean.getMetaClassFromTableName(
                     "WUNDA_BLAU",
-                    "berechtigungspruefung");
+                    "berechtigungspruefung",
+                    getConnectionContext());
 
             final String tester = "^" + type + "-" + Integer.toString(year) + "-\\\\d{5}$";
             final String pruefungQuery = "SELECT " + mcBerechtigungspruefung.getID() + ", "

@@ -520,7 +520,10 @@ public class VermessungsunterlagenHelper implements ConnectionContextProvider {
         final CidsBean geomBean;
         if (geometry != null) {
             geometry.setSRID(SRID);
-            geomBean = CidsBean.createNewCidsBeanFromTableName("WUNDA_BLAU", mc_GEOM.getTableName());
+            geomBean = CidsBean.createNewCidsBeanFromTableName(
+                    "WUNDA_BLAU",
+                    mc_GEOM.getTableName(),
+                    getConnectionContext());
             geomBean.setProperty("geo_field", geometry);
         } else {
             geomBean = null;
@@ -528,19 +531,21 @@ public class VermessungsunterlagenHelper implements ConnectionContextProvider {
 
         final CidsBean jobCidsBean = CidsBean.createNewCidsBeanFromTableName(
                 "WUNDA_BLAU",
-                mc_VERMESSUNGSUNTERLAGENAUFTRAG.getTableName());
+                mc_VERMESSUNGSUNTERLAGENAUFTRAG.getTableName(),
+                getConnectionContext());
         jobCidsBean.setProperty("executejob_json", executeJobContent);
         jobCidsBean.setProperty("schluessel", job.getKey());
         jobCidsBean.setProperty("geometrie", geomBean);
         jobCidsBean.setProperty(
             "geometrie_flurstuecke",
-            CidsBean.createNewCidsBeanFromTableName("WUNDA_BLAU", mc_GEOM.getTableName()));
+            CidsBean.createNewCidsBeanFromTableName("WUNDA_BLAU", mc_GEOM.getTableName(), getConnectionContext()));
         jobCidsBean.setProperty("aktenzeichen", anfrageBean.getAktenzeichenKatasteramt());
         for (final VermessungsunterlagenAnfrageBean.AntragsflurstueckBean flurstueckBean
                     : anfrageBean.getAntragsflurstuecksArray()) {
             final CidsBean flurstueck = CidsBean.createNewCidsBeanFromTableName(
                     "WUNDA_BLAU",
-                    mc_VERMESSUNGSUNTERLAGENAUFTRAG_FLURSTUECK.getTableName());
+                    mc_VERMESSUNGSUNTERLAGENAUFTRAG_FLURSTUECK.getTableName(),
+                    getConnectionContext());
             flurstueck.setProperty("gemarkung", flurstueckBean.getGemarkungsID());
             flurstueck.setProperty("flur", flurstueckBean.getFlurID());
             flurstueck.setProperty("flurstueck", flurstueckBean.getFlurstuecksID());
@@ -550,7 +555,8 @@ public class VermessungsunterlagenHelper implements ConnectionContextProvider {
                     : anfrageBean.getPunktnummernreservierungsArray()) {
             final CidsBean pnr = CidsBean.createNewCidsBeanFromTableName(
                     "WUNDA_BLAU",
-                    mc_VERMESSUNGSUNTERLAGENAUFTRAG_PUNKTNUMMER.getTableName());
+                    mc_VERMESSUNGSUNTERLAGENAUFTRAG_PUNKTNUMMER.getTableName(),
+                    getConnectionContext());
             pnr.setProperty("anzahl", pnrBean.getAnzahlPunktnummern());
             pnr.setProperty("katasteramt", pnrBean.getKatasteramtsID());
             pnr.setProperty("kilometerquadrat", pnrBean.getUtmKilometerQuadrat());
@@ -572,7 +578,8 @@ public class VermessungsunterlagenHelper implements ConnectionContextProvider {
         for (final String art : anfrageBean.getArtderVermessung()) {
             final CidsBean pnr = CidsBean.createNewCidsBeanFromTableName(
                     "WUNDA_BLAU",
-                    mc_VERMESSUNGSUNTERLAGENAUFTRAG_VERMESSUNGSART.getTableName());
+                    mc_VERMESSUNGSUNTERLAGENAUFTRAG_VERMESSUNGSART.getTableName(),
+                    getConnectionContext());
             pnr.setProperty("name", art);
             jobCidsBean.getBeanCollectionProperty("vermessungsarten").add(pnr);
         }
@@ -690,7 +697,8 @@ public class VermessungsunterlagenHelper implements ConnectionContextProvider {
     public CidsBean selectOrCreateVermessungArt(final String vermessungsart) throws Exception {
         final CidsBean bean = CidsBean.createNewCidsBeanFromTableName(
                 "WUNDA_BLAU",
-                mc_VERMESSUNGSUNTERLAGENAUFTRAG_VERMESSUNGSART.getTableName());
+                mc_VERMESSUNGSUNTERLAGENAUFTRAG_VERMESSUNGSART.getTableName(),
+                getConnectionContext());
         getMetaService().getMetaObject(getUser(), "SELECT FROM ", getConnectionContext());
         return null;
     }
@@ -1032,7 +1040,7 @@ public class VermessungsunterlagenHelper implements ConnectionContextProvider {
                                 getConnectionContext());
                         mo.setAllClasses(
                             ((MetaClassCacheService)Lookup.getDefault().lookup(MetaClassCacheService.class))
-                                        .getAllClasses(mo.getDomain()));
+                                        .getAllClasses(mo.getDomain(), getConnectionContext()));
                         beans.add(mo.getBean());
                     } catch (final RemoteException ex) {
                         LOG.warn("error while loading AP: OID:" + mon.getObjectId() + ", GID: " + mon.getClassId(), ex);
