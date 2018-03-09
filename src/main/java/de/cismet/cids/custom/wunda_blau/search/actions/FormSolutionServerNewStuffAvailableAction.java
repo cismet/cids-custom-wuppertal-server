@@ -1114,12 +1114,30 @@ public class FormSolutionServerNewStuffAvailableAction implements UserAwareServe
             final String auftragXml = fsXmlMap.get(transid);
             final FormSolutionsBestellung formSolutionBestellung = fsBestellungMap.get(transid);
 
+            boolean duplicate = false;
+            try {
+                final MetaClass bestellungMc = getMetaClass("fs_bestellung");
+                final String searchQuery = "SELECT DISTINCT " + bestellungMc.getID() + ", "
+                            + bestellungMc.getTableName() + "." + bestellungMc.getPrimaryKey() + " "
+                            + "FROM " + bestellungMc.getTableName() + " "
+                            + "WHERE transid LIKE '" + transid + "';";
+                final MetaObject[] mos = getMetaService().getMetaObject(getUser(), searchQuery);
+                if ((mos != null) && (mos.length > 0)) {
+                    duplicate = true;
+                }
+            } catch (final Exception ex) {
+                final String message = "error while search for duplicates for " + transid;
+                LOG.error(message, ex);
+                logSpecial(message);
+            }
+
             try {
                 final Exception insertException = insertExceptionMap.get(transid);
                 final ProductType type = typeMap.get(transid);
 
                 final CidsBean bestellungBean = createBestellungBean(formSolutionBestellung, type);
                 bestellungBean.setProperty("form_xml_orig", auftragXml);
+                bestellungBean.setProperty("duplicate", duplicate);
                 if (insertException != null) {
                     bestellungBean.setProperty("fehler", "Fehler beim Erzeugen des MySQL-Datensatzes");
                     bestellungBean.setProperty("exception", getObjectMapper().writeValueAsString(insertException));
@@ -1167,9 +1185,8 @@ public class FormSolutionServerNewStuffAvailableAction implements UserAwareServe
                 final CidsBean persistedBestellungBean = persistedMo.getBean();
                 fsBeanMap.put(transid, persistedBestellungBean);
 
-                logSpecial("updating mysql entry for: " + transid);
-
                 if (!FormSolutionsProperties.getInstance().isMysqlDisabled()) {
+                    logSpecial("updating mysql entry for: " + transid);
                     getMySqlHelper().updateStatus(transid, STATUS_SAVE);
                 }
                 doStatusChangedRequest(transid);
@@ -1286,9 +1303,12 @@ public class FormSolutionServerNewStuffAvailableAction implements UserAwareServe
 
         final Map<String, URL> fsUrlMap = new HashMap<String, URL>(transids.size());
 
-        for (final String transid : new ArrayList<String>(fsBeanMap.keySet())) {
+        for (final String transid : new ArrayList<>(fsBeanMap.keySet())) {
             final CidsBean bestellungBean = fsBeanMap.get(transid);
-            if ((bestellungBean != null) && (bestellungBean.getProperty("fehler") == null)) {
+
+            if ((bestellungBean != null)
+                        && !Boolean.TRUE.equals(bestellungBean.getProperty("duplicate"))
+                        && (bestellungBean.getProperty("fehler") == null)) {
                 try {
                     final URL productUrl = createProductUrl(bestellungBean);
                     fsUrlMap.put(transid, productUrl);
@@ -1568,7 +1588,8 @@ public class FormSolutionServerNewStuffAvailableAction implements UserAwareServe
             if ((bestellungBean != null) && (bestellungBean.getProperty("fehler") == null)) {
                 try {
                     final Boolean propPostweg = (Boolean)bestellungBean.getProperty("postweg");
-                    if (!Boolean.TRUE.equals(propPostweg)) {
+                    final Boolean propDuplicate = (Boolean)bestellungBean.getProperty("duplicate");
+                    if (!Boolean.TRUE.equals(propDuplicate) && !Boolean.TRUE.equals(propPostweg)) {
                         bestellungBean.setProperty("erledigt", true);
                     }
                     getMetaService().updateMetaObject(user, bestellungBean.getMetaObject());
@@ -1845,7 +1866,10 @@ public class FormSolutionServerNewStuffAvailableAction implements UserAwareServe
                 case STATUS_BILLING: {
                     for (final String transid : new ArrayList<String>(fsBeanMap.keySet())) {
                         final CidsBean bestellungBean = fsBeanMap.get(transid);
-                        if (bestellungBean.getProperty("gutschein_code") == null) {
+
+                        if ((bestellungBean != null)
+                                    && !Boolean.TRUE.equals(bestellungBean.getProperty("duplicate"))
+                                    && (bestellungBean.getProperty("gutschein_code") == null)) {
                             doPureBilling(bestellungBean, transid);
                         }
                     }
