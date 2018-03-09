@@ -780,8 +780,8 @@ public class FormSolutionServerNewStuffAvailableAction implements UserAwareServe
         final MetaClass bestellungMc = getMetaClass("fs_bestellung", getConnectionContext());
         final MetaClass adresseMc = getMetaClass("fs_bestellung_adresse", getConnectionContext());
 
-        final CidsBean bestellungBean = bestellungMc.getEmptyInstance().getBean();
-        final CidsBean adresseRechnungBean = adresseMc.getEmptyInstance().getBean();
+        final CidsBean bestellungBean = bestellungMc.getEmptyInstance(getConnectionContext()).getBean();
+        final CidsBean adresseRechnungBean = adresseMc.getEmptyInstance(getConnectionContext()).getBean();
         final CidsBean adresseVersandBean;
 
         final String transid = formSolutionsBestellung.getTransId();
@@ -847,7 +847,7 @@ public class FormSolutionServerNewStuffAvailableAction implements UserAwareServe
         if (isLieferEqualsRechnungAnschrift) {
             adresseVersandBean = adresseRechnungBean;
         } else {
-            adresseVersandBean = adresseMc.getEmptyInstance().getBean();
+            adresseVersandBean = adresseMc.getEmptyInstance(getConnectionContext()).getBean();
             adresseVersandBean.setProperty("firma", trimedNotEmpty(formSolutionsBestellung.getFirma1()));
             adresseVersandBean.setProperty("name", trimedNotEmpty(formSolutionsBestellung.getAsName1()));
             adresseVersandBean.setProperty("vorname", trimedNotEmpty(formSolutionsBestellung.getAsVorname1()));
@@ -1153,7 +1153,7 @@ public class FormSolutionServerNewStuffAvailableAction implements UserAwareServe
                     final String[] landparcelcodes = ((String)bestellungBean.getProperty("landparcelcode")).split(",");
 
                     final MetaClass geomMc = getMetaClass("geom", getConnectionContext());
-                    final CidsBean geomBean = geomMc.getEmptyInstance().getBean();
+                    final CidsBean geomBean = geomMc.getEmptyInstance(getConnectionContext()).getBean();
                     Geometry geom = null;
                     for (final String landparcelcode : landparcelcodes) {
                         final CidsBean flurstueck = getFlurstueck(landparcelcode);
