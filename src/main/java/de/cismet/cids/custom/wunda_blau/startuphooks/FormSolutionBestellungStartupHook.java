@@ -31,6 +31,8 @@ import de.cismet.cids.custom.wunda_blau.search.actions.FormSolutionServerNewStuf
 import de.cismet.cids.dynamics.CidsBean;
 
 import de.cismet.cids.server.actions.ServerActionParameter;
+import de.cismet.connectioncontext.ConnectionContext;
+import de.cismet.connectioncontext.ConnectionContextStore;
 
 /**
  * DOCUMENT ME!
@@ -39,7 +41,7 @@ import de.cismet.cids.server.actions.ServerActionParameter;
  * @version  $Revision$, $Date$
  */
 @org.openide.util.lookup.ServiceProvider(service = DomainServerStartupHook.class)
-public class FormSolutionBestellungStartupHook implements DomainServerStartupHook {
+public class FormSolutionBestellungStartupHook implements DomainServerStartupHook, ConnectionContextStore {
 
     //~ Static fields/initializers ---------------------------------------------
 
@@ -50,9 +52,20 @@ public class FormSolutionBestellungStartupHook implements DomainServerStartupHoo
 
     private MetaService metaService;
     private User user;
+    private ConnectionContext connectionContext = ConnectionContext.createDummy();
 
     //~ Methods ----------------------------------------------------------------
 
+    @Override
+    public ConnectionContext getConnectionContext() {
+        return connectionContext;
+    }
+
+    @Override
+    public void initWithConnectionContext(ConnectionContext connectionContext) {
+        this.connectionContext = connectionContext;
+    }
+    
     /**
      * DOCUMENT ME!
      *
@@ -143,7 +156,7 @@ public class FormSolutionBestellungStartupHook implements DomainServerStartupHoo
     private MetaObject[] getUnfinishedBestellungen() throws Exception {
         final MetaClass mcBestellung = CidsBean.getMetaClassFromTableName(
                 "WUNDA_BLAU",
-                "fs_bestellung");
+                "fs_bestellung", getConnectionContext());
 
         final String pruefungQuery = "SELECT DISTINCT " + mcBestellung.getID() + ", "
                     + mcBestellung.getTableName() + "." + mcBestellung.getPrimaryKey() + " "
@@ -155,7 +168,7 @@ public class FormSolutionBestellungStartupHook implements DomainServerStartupHoo
                     + "  erledigt IS NOT TRUE "
                     + ";";
 
-        return getMetaService().getMetaObject(getUser(), pruefungQuery);
+        return getMetaService().getMetaObject(getUser(), pruefungQuery, getConnectionContext());
     }
 
     /**

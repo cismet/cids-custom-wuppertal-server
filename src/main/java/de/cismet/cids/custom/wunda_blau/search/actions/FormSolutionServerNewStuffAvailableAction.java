@@ -333,7 +333,7 @@ public class FormSolutionServerNewStuffAvailableAction implements UserAwareServe
             final Map<String, ProductType> typeMap) throws Exception {
         logSpecial("fetching open transids from FS");
 
-        final Collection<String> transIds = new ArrayList<String>();
+        final Collection<String> transIds = new ArrayList<>();
         try {
             final StringBuilder stringBuilder = new StringBuilder();
             final URL auftragsListeUrl;
@@ -1126,11 +1126,11 @@ public class FormSolutionServerNewStuffAvailableAction implements UserAwareServe
             final Map<String, ProductType> typeMap,
             final Map<String, Exception> insertExceptionMap) {
         // nur die transids bearbeiten, bei denen das Parsen auch geklappt hat
-        final Collection<String> transids = new ArrayList<String>(fsBestellungMap.keySet());
+        final Collection<String> transids = new ArrayList<>(fsBestellungMap.keySet());
 
         logSpecial("creating cids entries for num of objects: " + transids.size());
 
-        final Map<String, CidsBean> fsBeanMap = new HashMap<String, CidsBean>(transids.size());
+        final Map<String, CidsBean> fsBeanMap = new HashMap<>(transids.size());
         for (final String transid : transids) {
             logSpecial("creating cids entry for: " + transid);
 
@@ -1139,7 +1139,7 @@ public class FormSolutionServerNewStuffAvailableAction implements UserAwareServe
 
             boolean duplicate = false;
             try {
-                final MetaClass bestellungMc = getMetaClass("fs_bestellung");
+                final MetaClass bestellungMc = getMetaClass("fs_bestellung", getConnectionContext());
                 final String searchQuery = "SELECT DISTINCT " + bestellungMc.getID() + ", "
                             + bestellungMc.getTableName() + "." + bestellungMc.getPrimaryKey() + " "
                             + "FROM " + bestellungMc.getTableName() + " "
@@ -1249,7 +1249,7 @@ public class FormSolutionServerNewStuffAvailableAction implements UserAwareServe
     public final Map<String, Exception> createMySqlEntries(final Collection<String> transids) {
         logSpecial("creating mySQL entries for num of objects: " + transids.size());
 
-        final Map<String, Exception> insertExceptionMap = new HashMap<String, Exception>(transids.size());
+        final Map<String, Exception> insertExceptionMap = new HashMap<>(transids.size());
 
         if (!FormSolutionsProperties.getInstance().isMysqlDisabled()) {
             for (final String transid : transids) {
@@ -1293,7 +1293,7 @@ public class FormSolutionServerNewStuffAvailableAction implements UserAwareServe
      * @param  fsBeanMap  DOCUMENT ME!
      */
     private void closeTransactions(final Map<String, CidsBean> fsBeanMap) {
-        final Collection<String> transids = new ArrayList<String>(fsBeanMap.keySet());
+        final Collection<String> transids = new ArrayList<>(fsBeanMap.keySet());
         logSpecial("closing transactions for num of objects: " + transids.size());
 
         for (final String transid : transids) {
@@ -1323,9 +1323,9 @@ public class FormSolutionServerNewStuffAvailableAction implements UserAwareServe
      * @return  DOCUMENT ME!
      */
     private Map<String, URL> createUrlMap(final Map<String, CidsBean> fsBeanMap) {
-        final Collection<String> transids = new ArrayList<String>(fsBeanMap.keySet());
+        final Collection<String> transids = new ArrayList<>(fsBeanMap.keySet());
 
-        final Map<String, URL> fsUrlMap = new HashMap<String, URL>(transids.size());
+        final Map<String, URL> fsUrlMap = new HashMap<>(transids.size());
 
         for (final String transid : new ArrayList<>(fsBeanMap.keySet())) {
             final CidsBean bestellungBean = fsBeanMap.get(transid);
@@ -1521,7 +1521,7 @@ public class FormSolutionServerNewStuffAvailableAction implements UserAwareServe
      * @param  fsUrlMap   DOCUMENT ME!
      */
     private void downloadProdukte(final Map<String, CidsBean> fsBeanMap, final Map<String, URL> fsUrlMap) {
-        final Collection<String> transids = new ArrayList<String>(fsUrlMap.keySet());
+        final Collection<String> transids = new ArrayList<>(fsUrlMap.keySet());
 
         for (final String transid : transids) {
             final CidsBean bestellungBean = fsBeanMap.get(transid);
@@ -1612,7 +1612,7 @@ public class FormSolutionServerNewStuffAvailableAction implements UserAwareServe
      * @param  fsBeanMap  DOCUMENT ME!
      */
     private void finalizeBeans(final Map<String, CidsBean> fsBeanMap) {
-        final Collection<String> transids = new ArrayList<String>(fsBeanMap.keySet());
+        final Collection<String> transids = new ArrayList<>(fsBeanMap.keySet());
         for (final String transid : transids) {
             final CidsBean bestellungBean = fsBeanMap.get(transid);
             if ((bestellungBean != null) && (bestellungBean.getProperty("fehler") == null)) {
@@ -1745,7 +1745,7 @@ public class FormSolutionServerNewStuffAvailableAction implements UserAwareServe
      * @param  fsBeanMap  DOCUMENT ME!
      */
     private void finalizeMySqls(final Map<String, CidsBean> fsBeanMap) {
-        final Collection<String> transids = new ArrayList<String>(fsBeanMap.keySet());
+        final Collection<String> transids = new ArrayList<>(fsBeanMap.keySet());
         for (final String transid : transids) {
             final CidsBean bestellungBean = fsBeanMap.get(transid);
             if ((bestellungBean != null) && (bestellungBean.getProperty("fehler") == null)) {
@@ -1858,9 +1858,9 @@ public class FormSolutionServerNewStuffAvailableAction implements UserAwareServe
                 case STATUS_SAVE: {
                     if (fetchFromFs) {
                         try {
-                            final Map<String, ProductType> typeMap = new HashMap<String, ProductType>();
+                            final Map<String, ProductType> typeMap = new HashMap<>();
 
-                            final Collection<String> transIds = new ArrayList<String>();
+                            final Collection<String> transIds = new ArrayList<>();
                             transIds.addAll(getOpenExtendedTransids(ProductType.SGK, typeMap));
                             transIds.addAll(getOpenExtendedTransids(ProductType.ABK, typeMap));
 
@@ -1913,7 +1913,7 @@ public class FormSolutionServerNewStuffAvailableAction implements UserAwareServe
                     }
                 }
                 case STATUS_BILLING: {
-                    for (final String transid : new ArrayList<String>(fsBeanMap.keySet())) {
+                    for (final String transid : new ArrayList<>(fsBeanMap.keySet())) {
                         final CidsBean bestellungBean = fsBeanMap.get(transid);
 
                         if ((bestellungBean != null)
