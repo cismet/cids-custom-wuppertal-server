@@ -64,6 +64,9 @@ import de.cismet.cids.server.search.SearchException;
 
 import de.cismet.commons.concurrency.CismetExecutors;
 
+import de.cismet.connectioncontext.ConnectionContext;
+import de.cismet.connectioncontext.ConnectionContextProvider;
+
 import static de.cismet.cids.custom.utils.vermessungsunterlagen.VermessungsunterlagenHelper.writeExceptionJson;
 
 /**
@@ -72,7 +75,7 @@ import static de.cismet.cids.custom.utils.vermessungsunterlagen.Vermessungsunter
  * @author   jruiz
  * @version  $Revision$, $Date$
  */
-public class VermessungsunterlagenJob implements Runnable {
+public class VermessungsunterlagenJob implements Runnable, ConnectionContextProvider {
 
     //~ Static fields/initializers ---------------------------------------------
 
@@ -94,6 +97,8 @@ public class VermessungsunterlagenJob implements Runnable {
 
     //~ Instance fields --------------------------------------------------------
 
+    private final ConnectionContext connectionContext;
+
     @Getter private final String key;
     @Getter private final VermessungsunterlagenAnfrageBean anfrageBean;
     @Getter private Status status = Status.WAITING;
@@ -107,7 +112,9 @@ public class VermessungsunterlagenJob implements Runnable {
     private final transient CompletionService<VermessungsunterlagenTask> completionService =
         new ExecutorCompletionService<VermessungsunterlagenTask>(taskExecutor);
     private final transient VermessungsunterlagenHelper helper = VermessungsunterlagenHelper.getInstance();
-    private final transient VermessungsunterlagenValidator validator = new VermessungsunterlagenValidator(helper);
+    private final transient VermessungsunterlagenValidator validator = new VermessungsunterlagenValidator(
+            helper,
+            getConnectionContext());
     @Getter @Setter private transient CidsBean cidsBean;
     @Getter private final transient Collection<String> allowedTask;
 
@@ -116,20 +123,28 @@ public class VermessungsunterlagenJob implements Runnable {
     /**
      * Creates a new VermessungsunterlagenJobBean object.
      *
-     * @param   jobkey       DOCUMENT ME!
-     * @param   anfrageBean  DOCUMENT ME!
+     * @param   jobkey             DOCUMENT ME!
+     * @param   anfrageBean        DOCUMENT ME!
+     * @param   connectionContext  DOCUMENT ME!
      *
      * @throws  Exception  DOCUMENT ME!
      */
-    public VermessungsunterlagenJob(final String jobkey, final VermessungsunterlagenAnfrageBean anfrageBean)
-            throws Exception {
+    public VermessungsunterlagenJob(final String jobkey,
+            final VermessungsunterlagenAnfrageBean anfrageBean,
+            final ConnectionContext connectionContext) throws Exception {
         this.key = jobkey;
         this.anfrageBean = anfrageBean;
 
         this.allowedTask = helper.getAllowedTasks();
+        this.connectionContext = connectionContext;
     }
 
     //~ Methods ----------------------------------------------------------------
+
+    @Override
+    public ConnectionContext getConnectionContext() {
+        return connectionContext;
+    }
 
     /**
      * DOCUMENT ME!

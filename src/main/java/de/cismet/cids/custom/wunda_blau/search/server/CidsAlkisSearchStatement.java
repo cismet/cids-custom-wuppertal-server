@@ -37,13 +37,17 @@ import de.cismet.cids.server.search.MetaObjectNodeServerSearch;
 
 import de.cismet.cismap.commons.jtsgeometryfactories.PostGisGeometryFactory;
 
+import de.cismet.connectioncontext.ConnectionContext;
+import de.cismet.connectioncontext.ConnectionContextStore;
+
 /**
  * DOCUMENT ME!
  *
  * @author   stefan
  * @version  $Revision$, $Date$
  */
-public class CidsAlkisSearchStatement extends AbstractCidsServerSearch implements MetaObjectNodeServerSearch {
+public class CidsAlkisSearchStatement extends AbstractCidsServerSearch implements MetaObjectNodeServerSearch,
+    ConnectionContextStore {
 
     //~ Static fields/initializers ---------------------------------------------
 
@@ -104,6 +108,8 @@ public class CidsAlkisSearchStatement extends AbstractCidsServerSearch implement
     private SucheUeber ueber = null;
     private Geometry geometry = null;
 
+    private ConnectionContext connectionContext = ConnectionContext.createDummy();
+
     //~ Constructors -----------------------------------------------------------
 
     /**
@@ -163,16 +169,22 @@ public class CidsAlkisSearchStatement extends AbstractCidsServerSearch implement
     //~ Methods ----------------------------------------------------------------
 
     @Override
+    public void initWithConnectionContext(final ConnectionContext connectionContext) {
+        this.connectionContext = connectionContext;
+    }
+
+    @Override
     public Collection<MetaObjectNode> performServerSearch() {
         try {
-            final List<MetaObjectNode> result = new ArrayList<MetaObjectNode>();
+            final List<MetaObjectNode> result = new ArrayList<>();
             final Properties properties = new Properties();
             final ActionService as = (ActionService)getActiveLocalServers().get("WUNDA_BLAU");
             properties.load(new StringReader(
                     (String)as.executeTask(
                         getUser(),
                         GetServerResourceServerAction.TASK_NAME,
-                        WundaBlauServerResources.ALKIS_CONF.getValue())));
+                        WundaBlauServerResources.ALKIS_CONF.getValue(),
+                        getConnectionContext())));
 
             final SOAPAccessProvider accessProvider = new SOAPAccessProvider(new AlkisConf(properties));
             final ALKISSearchServices searchService = accessProvider.getAlkisSearchService();
@@ -297,7 +309,7 @@ public class CidsAlkisSearchStatement extends AbstractCidsServerSearch implement
             if (query != null) {
                 final MetaService ms = (MetaService)getActiveLocalServers().get("WUNDA_BLAU");
 
-                final List<ArrayList> resultList = ms.performCustomSearch(query);
+                final List<ArrayList> resultList = ms.performCustomSearch(query, getConnectionContext());
                 for (final ArrayList al : resultList) {
                     final int cid = (Integer)al.get(0);
                     final int oid = (Integer)al.get(1);
@@ -312,5 +324,10 @@ public class CidsAlkisSearchStatement extends AbstractCidsServerSearch implement
             LOG.error("Problem", e);
             throw new RuntimeException(e);
         }
+    }
+
+    @Override
+    public ConnectionContext getConnectionContext() {
+        return connectionContext;
     }
 }

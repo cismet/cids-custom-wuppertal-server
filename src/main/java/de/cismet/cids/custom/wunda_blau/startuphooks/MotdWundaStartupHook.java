@@ -21,6 +21,9 @@ import de.cismet.cids.custom.utils.motd.MotdRetrieverListenerEvent;
 
 import de.cismet.cids.server.messages.CidsServerMessageManagerImpl;
 
+import de.cismet.connectioncontext.ConnectionContext;
+import de.cismet.connectioncontext.ConnectionContextStore;
+
 /**
  * DOCUMENT ME!
  *
@@ -28,7 +31,7 @@ import de.cismet.cids.server.messages.CidsServerMessageManagerImpl;
  * @version  $Revision$, $Date$
  */
 @org.openide.util.lookup.ServiceProvider(service = DomainServerStartupHook.class)
-public class MotdWundaStartupHook implements DomainServerStartupHook {
+public class MotdWundaStartupHook implements DomainServerStartupHook, ConnectionContextStore {
 
     //~ Static fields/initializers ---------------------------------------------
 
@@ -43,7 +46,16 @@ public class MotdWundaStartupHook implements DomainServerStartupHook {
     public static final String MOTD_MESSAGE_MOTD = "motd";
     public static final String MOTD_MESSAGE_MOTD_EXTERN = "motd_extern";
 
+    //~ Instance fields --------------------------------------------------------
+
+    private ConnectionContext connectionContext = ConnectionContext.createDummy();
+
     //~ Methods ----------------------------------------------------------------
+
+    @Override
+    public void initWithConnectionContext(final ConnectionContext connectionContext) {
+        this.connectionContext = connectionContext;
+    }
 
     @Override
     public void domainServerStarted() {
@@ -66,10 +78,18 @@ public class MotdWundaStartupHook implements DomainServerStartupHook {
                                     public void totdChanged(final MotdRetrieverListenerEvent event) {
                                         if (event.isExtern()) {
                                             CidsServerMessageManagerImpl.getInstance()
-                                                    .publishMessage(MOTD_MESSAGE_TOTD_EXTERN, event.getContent(), true);
+                                                    .publishMessage(
+                                                        MOTD_MESSAGE_TOTD_EXTERN,
+                                                        event.getContent(),
+                                                        true,
+                                                        getConnectionContext());
                                         } else {
                                             CidsServerMessageManagerImpl.getInstance()
-                                                    .publishMessage(MOTD_MESSAGE_TOTD, event.getContent(), true);
+                                                    .publishMessage(
+                                                        MOTD_MESSAGE_TOTD,
+                                                        event.getContent(),
+                                                        true,
+                                                        getConnectionContext());
                                         }
                                     }
 
@@ -80,10 +100,15 @@ public class MotdWundaStartupHook implements DomainServerStartupHook {
                                                     .publishMessage(
                                                         MOTD_MESSAGE_MOTD_EXTERN,
                                                         event.getContent(),
-                                                        false);
+                                                        false,
+                                                        getConnectionContext());
                                         } else {
                                             CidsServerMessageManagerImpl.getInstance()
-                                                    .publishMessage(MOTD_MESSAGE_MOTD, event.getContent(), false);
+                                                    .publishMessage(
+                                                        MOTD_MESSAGE_MOTD,
+                                                        event.getContent(),
+                                                        false,
+                                                        getConnectionContext());
                                         }
                                     }
                                 });
@@ -99,5 +124,10 @@ public class MotdWundaStartupHook implements DomainServerStartupHook {
     @Override
     public String getDomain() {
         return "WUNDA_BLAU";
+    }
+
+    @Override
+    public ConnectionContext getConnectionContext() {
+        return connectionContext;
     }
 }

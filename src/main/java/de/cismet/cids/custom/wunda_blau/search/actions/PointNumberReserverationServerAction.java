@@ -26,6 +26,9 @@ import de.cismet.cids.server.actions.ServerAction;
 import de.cismet.cids.server.actions.ServerActionParameter;
 import de.cismet.cids.server.actions.UserAwareServerAction;
 
+import de.cismet.connectioncontext.ConnectionContext;
+import de.cismet.connectioncontext.ConnectionContextStore;
+
 /**
  * DOCUMENT ME!
  *
@@ -33,7 +36,9 @@ import de.cismet.cids.server.actions.UserAwareServerAction;
  * @version  $Revision$, $Date$
  */
 @org.openide.util.lookup.ServiceProvider(service = ServerAction.class)
-public class PointNumberReserverationServerAction implements UserAwareServerAction, MetaServiceStore {
+public class PointNumberReserverationServerAction implements UserAwareServerAction,
+    MetaServiceStore,
+    ConnectionContextStore {
 
     //~ Static fields/initializers ---------------------------------------------
 
@@ -72,7 +77,14 @@ public class PointNumberReserverationServerAction implements UserAwareServerActi
     private MetaService metaService;
     private User user;
 
+    private ConnectionContext connectionContext = ConnectionContext.createDummy();
+
     //~ Methods ----------------------------------------------------------------
+
+    @Override
+    public void initWithConnectionContext(final ConnectionContext connectionContext) {
+        this.connectionContext = connectionContext;
+    }
 
     /**
      * DOCUMENT ME!
@@ -205,7 +217,8 @@ public class PointNumberReserverationServerAction implements UserAwareServerActi
         try {
             final String conf = ((DomainServerImpl)getMetaService()).getConfigAttr(
                     getUser(),
-                    "custom.punktnummernreservierung.profilkennung");
+                    "custom.punktnummernreservierung.profilkennung",
+                    getConnectionContext());
             if (conf != null) {
                 profilKennung = conf;
             }
@@ -350,5 +363,10 @@ public class PointNumberReserverationServerAction implements UserAwareServerActi
     @Override
     public MetaService getMetaService() {
         return metaService;
+    }
+
+    @Override
+    public ConnectionContext getConnectionContext() {
+        return connectionContext;
     }
 }

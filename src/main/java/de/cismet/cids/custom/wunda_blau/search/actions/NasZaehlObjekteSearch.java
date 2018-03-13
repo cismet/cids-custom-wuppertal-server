@@ -44,6 +44,9 @@ import de.cismet.cids.utils.serverresources.ServerResourcesLoader;
 
 import de.cismet.cismap.commons.jtsgeometryfactories.PostGisGeometryFactory;
 
+import de.cismet.connectioncontext.ConnectionContext;
+import de.cismet.connectioncontext.ConnectionContextStore;
+
 /**
  * DOCUMENT ME!
  *
@@ -51,7 +54,7 @@ import de.cismet.cismap.commons.jtsgeometryfactories.PostGisGeometryFactory;
  * @version  $Revision$, $Date$
  */
 @Deprecated
-public class NasZaehlObjekteSearch extends AbstractCidsServerSearch {
+public class NasZaehlObjekteSearch extends AbstractCidsServerSearch implements ConnectionContextStore {
 
     //~ Static fields/initializers ---------------------------------------------
 
@@ -119,6 +122,8 @@ public class NasZaehlObjekteSearch extends AbstractCidsServerSearch {
     final Geometry geometry;
     final NasZaehlObjekteSearch.NasSearchType searchType;
 
+    private ConnectionContext connectionContext = ConnectionContext.createDummy();
+
     //~ Constructors -----------------------------------------------------------
 
     /**
@@ -133,6 +138,11 @@ public class NasZaehlObjekteSearch extends AbstractCidsServerSearch {
     }
 
     //~ Methods ----------------------------------------------------------------
+
+    @Override
+    public void initWithConnectionContext(final ConnectionContext connectionContext) {
+        this.connectionContext = connectionContext;
+    }
 
     /**
      * DOCUMENT ME!
@@ -250,7 +260,7 @@ public class NasZaehlObjekteSearch extends AbstractCidsServerSearch {
                 if (LOG.isDebugEnabled()) {
                     LOG.debug("query: " + sb.toString());                                  // NOI18N
                 }
-                final ArrayList<ArrayList> lists = ms.performCustomSearch(sb.toString());
+                final ArrayList<ArrayList> lists = ms.performCustomSearch(sb.toString(), getConnectionContext());
 
                 return lists.size();
             } catch (RemoteException ex) {
@@ -314,5 +324,10 @@ public class NasZaehlObjekteSearch extends AbstractCidsServerSearch {
 //        } catch (SearchException ex) {
 //            Exceptions.printStackTrace(ex);
 //        }
+    }
+
+    @Override
+    public ConnectionContext getConnectionContext() {
+        return connectionContext;
     }
 }

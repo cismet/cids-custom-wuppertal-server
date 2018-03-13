@@ -11,7 +11,6 @@
  */
 package de.cismet.cids.custom.wunda_blau.search.server;
 
-import Sirius.server.middleware.interfaces.domainserver.ActionService;
 import Sirius.server.middleware.interfaces.domainserver.MetaService;
 import Sirius.server.middleware.types.MetaObjectNode;
 
@@ -21,8 +20,6 @@ import com.vividsolutions.jts.geom.Polygon;
 
 import org.apache.log4j.Logger;
 
-import java.io.StringReader;
-
 import java.rmi.RemoteException;
 
 import java.sql.Date;
@@ -31,13 +28,13 @@ import java.util.ArrayList;
 import java.util.Collection;
 import java.util.List;
 
-import de.cismet.cids.custom.utils.WundaBlauServerResources;
-
-import de.cismet.cids.server.actions.GetServerResourceServerAction;
 import de.cismet.cids.server.search.AbstractCidsServerSearch;
 import de.cismet.cids.server.search.MetaObjectNodeServerSearch;
 
 import de.cismet.cismap.commons.jtsgeometryfactories.PostGisGeometryFactory;
+
+import de.cismet.connectioncontext.ConnectionContext;
+import de.cismet.connectioncontext.ConnectionContextStore;
 
 /**
  * DOCUMENT ME!
@@ -45,7 +42,8 @@ import de.cismet.cismap.commons.jtsgeometryfactories.PostGisGeometryFactory;
  * @author   mroncoroni
  * @version  $Revision$, $Date$
  */
-public class CidsLandParcelSearchStatement extends AbstractCidsServerSearch implements MetaObjectNodeServerSearch {
+public class CidsLandParcelSearchStatement extends AbstractCidsServerSearch implements MetaObjectNodeServerSearch,
+    ConnectionContextStore {
 
     //~ Static fields/initializers ---------------------------------------------
 
@@ -61,6 +59,8 @@ public class CidsLandParcelSearchStatement extends AbstractCidsServerSearch impl
     private Date historicalFrom;
     private Date historicalTo;
     private Geometry geometry;
+
+    private ConnectionContext connectionContext = ConnectionContext.createDummy();
 
     //~ Constructors -----------------------------------------------------------
 
@@ -98,14 +98,19 @@ public class CidsLandParcelSearchStatement extends AbstractCidsServerSearch impl
     //~ Methods ----------------------------------------------------------------
 
     @Override
+    public void initWithConnectionContext(final ConnectionContext connectionContext) {
+        this.connectionContext = connectionContext;
+    }
+
+    @Override
     public Collection<MetaObjectNode> performServerSearch() {
         try {
             if ((searchActualParcel || searchHistoricalParcel) == false) {
-                return new ArrayList<MetaObjectNode>();
+                return new ArrayList<>();
             }
 
             if (searchHistoricalParcel && ((historicalFrom == null) || (historicalTo == null))) {
-                return new ArrayList<MetaObjectNode>();
+                return new ArrayList<>();
             }
 
             String query =
@@ -142,9 +147,9 @@ public class CidsLandParcelSearchStatement extends AbstractCidsServerSearch impl
                 }
             }
 
-            final List<MetaObjectNode> result = new ArrayList<MetaObjectNode>();
+            final List<MetaObjectNode> result = new ArrayList<>();
             final MetaService ms = (MetaService)getActiveLocalServers().get("WUNDA_BLAU");
-            final ArrayList<ArrayList> searchResult = ms.performCustomSearch(query);
+            final ArrayList<ArrayList> searchResult = ms.performCustomSearch(query, getConnectionContext());
             for (final ArrayList al : searchResult) {
                 final int cid = (Integer)al.get(0);
                 final int oid = (Integer)al.get(1);
@@ -158,5 +163,10 @@ public class CidsLandParcelSearchStatement extends AbstractCidsServerSearch impl
             LOG.error("Problem", ex);
             throw new RuntimeException(ex);
         }
+    }
+
+    @Override
+    public ConnectionContext getConnectionContext() {
+        return connectionContext;
     }
 }

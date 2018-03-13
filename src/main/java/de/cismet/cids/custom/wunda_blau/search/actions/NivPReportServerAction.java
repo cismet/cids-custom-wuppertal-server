@@ -34,6 +34,9 @@ import de.cismet.cids.server.actions.ServerActionParameter;
 
 import de.cismet.cids.utils.serverresources.ServerResourcesLoader;
 
+import de.cismet.connectioncontext.ConnectionContext;
+import de.cismet.connectioncontext.ConnectionContextStore;
+
 /**
  * DOCUMENT ME!
  *
@@ -41,7 +44,7 @@ import de.cismet.cids.utils.serverresources.ServerResourcesLoader;
  * @version  $Revision$, $Date$
  */
 @org.openide.util.lookup.ServiceProvider(service = ServerAction.class)
-public class NivPReportServerAction extends JasperReportServerAction {
+public class NivPReportServerAction extends JasperReportServerAction implements ConnectionContextStore {
 
     //~ Static fields/initializers ---------------------------------------------
 
@@ -63,7 +66,16 @@ public class NivPReportServerAction extends JasperReportServerAction {
         POINT_MONS, JOBNUMBER, PROJECTNAME
     }
 
+    //~ Instance fields --------------------------------------------------------
+
+    private ConnectionContext connectionContext = ConnectionContext.createDummy();
+
     //~ Methods ----------------------------------------------------------------
+
+    @Override
+    public void initWithConnectionContext(final ConnectionContext connectionContext) {
+        this.connectionContext = connectionContext;
+    }
 
     @Override
     public Object execute(final Object body, final ServerActionParameter... params) {
@@ -88,7 +100,8 @@ public class NivPReportServerAction extends JasperReportServerAction {
                     final CidsBean cidsBean = getMetaService().getMetaObject(
                                 getUser(),
                                 reportMon.getObjectId(),
-                                reportMon.getClassId())
+                                reportMon.getClassId(),
+                                getConnectionContext())
                                 .getBean();
                     cidsBeans.add(cidsBean);
                 }
@@ -123,5 +136,10 @@ public class NivPReportServerAction extends JasperReportServerAction {
     @Override
     protected JasperReport getJasperReport() throws Exception {
         return ServerResourcesLoader.getInstance().loadJasperReport(WundaBlauServerResources.NIVP_JASPER.getValue());
+    }
+
+    @Override
+    public ConnectionContext getConnectionContext() {
+        return connectionContext;
     }
 }

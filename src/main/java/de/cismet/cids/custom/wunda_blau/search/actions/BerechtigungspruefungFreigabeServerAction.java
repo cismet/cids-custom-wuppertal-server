@@ -31,6 +31,9 @@ import de.cismet.cids.server.actions.ServerAction;
 import de.cismet.cids.server.actions.ServerActionParameter;
 import de.cismet.cids.server.actions.UserAwareServerAction;
 
+import de.cismet.connectioncontext.ConnectionContext;
+import de.cismet.connectioncontext.ConnectionContextStore;
+
 /**
  * DOCUMENT ME!
  *
@@ -38,7 +41,9 @@ import de.cismet.cids.server.actions.UserAwareServerAction;
  * @version  $Revision$, $Date$
  */
 @org.openide.util.lookup.ServiceProvider(service = ServerAction.class)
-public class BerechtigungspruefungFreigabeServerAction implements UserAwareServerAction, MetaServiceStore {
+public class BerechtigungspruefungFreigabeServerAction implements UserAwareServerAction,
+    MetaServiceStore,
+    ConnectionContextStore {
 
     //~ Static fields/initializers ---------------------------------------------
 
@@ -81,7 +86,14 @@ public class BerechtigungspruefungFreigabeServerAction implements UserAwareServe
     private User user = null;
     private MetaService metaService = null;
 
+    private ConnectionContext connectionContext = ConnectionContext.createDummy();
+
     //~ Methods ----------------------------------------------------------------
+
+    @Override
+    public void initWithConnectionContext(final ConnectionContext connectionContext) {
+        this.connectionContext = connectionContext;
+    }
 
     @Override
     public Object execute(final Object body, final ServerActionParameter... params) {
@@ -144,7 +156,10 @@ public class BerechtigungspruefungFreigabeServerAction implements UserAwareServe
                     pruefungBean.setProperty("pruefung_timestamp", now);
                 }
 
-                getMetaService().updateMetaObject(getUser(), pruefungBean.getMetaObject());
+                getMetaService().updateMetaObject(
+                    getUser(),
+                    pruefungBean.getMetaObject(),
+                    getConnectionContext());
 
                 if (pruefungsAbschluss) {
                     if (!pruefstatus && (downloadInfo instanceof BerechtigungspruefungBillingDownloadInfo)) { // storno
@@ -162,7 +177,10 @@ public class BerechtigungspruefungFreigabeServerAction implements UserAwareServe
                                 billingBean.setProperty("stornogrund", billingStornogrundBean);
                                 billingBean.setProperty("storniert_durch", getUser().toString());
 
-                                getMetaService().updateMetaObject(getUser(), billingBean.getMetaObject());
+                                getMetaService().updateMetaObject(
+                                    getUser(),
+                                    billingBean.getMetaObject(),
+                                    getConnectionContext());
                             } catch (Exception ex) {
                                 LOG.error("Error while setting 'storniert' of billing", ex);
                             }
@@ -204,5 +222,10 @@ public class BerechtigungspruefungFreigabeServerAction implements UserAwareServe
     @Override
     public MetaService getMetaService() {
         return metaService;
+    }
+
+    @Override
+    public ConnectionContext getConnectionContext() {
+        return connectionContext;
     }
 }

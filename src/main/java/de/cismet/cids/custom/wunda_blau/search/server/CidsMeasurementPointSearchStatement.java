@@ -26,14 +26,17 @@ import de.cismet.cids.server.search.MetaObjectNodeServerSearch;
 
 import de.cismet.cismap.commons.jtsgeometryfactories.PostGisGeometryFactory;
 
+import de.cismet.connectioncontext.ConnectionContext;
+import de.cismet.connectioncontext.ConnectionContextStore;
+
 /**
  * DOCUMENT ME!
  *
  * @author   jweintraut
  * @version  $Revision$, $Date$
  */
-public class CidsMeasurementPointSearchStatement extends AbstractCidsServerSearch
-        implements MetaObjectNodeServerSearch {
+public class CidsMeasurementPointSearchStatement extends AbstractCidsServerSearch implements MetaObjectNodeServerSearch,
+    ConnectionContextStore {
 
     //~ Static fields/initializers ---------------------------------------------
 
@@ -145,6 +148,8 @@ public class CidsMeasurementPointSearchStatement extends AbstractCidsServerSearc
     private GST gst;
     private Geometry geometry;
 
+    private ConnectionContext connectionContext = ConnectionContext.createDummy();
+
     //~ Constructors -----------------------------------------------------------
 
     /**
@@ -166,6 +171,11 @@ public class CidsMeasurementPointSearchStatement extends AbstractCidsServerSearc
     }
 
     //~ Methods ----------------------------------------------------------------
+
+    @Override
+    public void initWithConnectionContext(final ConnectionContext connectionContext) {
+        this.connectionContext = connectionContext;
+    }
 
     @Override
     public Collection<MetaObjectNode> performServerSearch() {
@@ -225,7 +235,7 @@ public class CidsMeasurementPointSearchStatement extends AbstractCidsServerSearc
             if (LOG.isDebugEnabled()) {
                 LOG.debug("Executing SQL statement '" + sqlBuilder.toString() + "'.");
             }
-            resultset = metaService.performCustomSearch(sqlBuilder.toString());
+            resultset = metaService.performCustomSearch(sqlBuilder.toString(), getConnectionContext());
 
             for (final ArrayList measurementPoint : resultset) {
                 final int classID = (Integer)measurementPoint.get(0);
@@ -410,5 +420,10 @@ public class CidsMeasurementPointSearchStatement extends AbstractCidsServerSearc
         }
 
         return whereClauseBuilder.toString();
+    }
+
+    @Override
+    public ConnectionContext getConnectionContext() {
+        return connectionContext;
     }
 }

@@ -26,6 +26,9 @@ import de.cismet.cids.server.actions.ServerAction;
 import de.cismet.cids.server.actions.ServerActionParameter;
 import de.cismet.cids.server.actions.UserAwareServerAction;
 
+import de.cismet.connectioncontext.ConnectionContext;
+import de.cismet.connectioncontext.ConnectionContextStore;
+
 /**
  * DOCUMENT ME!
  *
@@ -33,7 +36,9 @@ import de.cismet.cids.server.actions.UserAwareServerAction;
  * @version  $Revision$, $Date$
  */
 @org.openide.util.lookup.ServiceProvider(service = ServerAction.class)
-public class BerechtigungspruefungAnfrageServerAction implements UserAwareServerAction, MetaServiceStore {
+public class BerechtigungspruefungAnfrageServerAction implements UserAwareServerAction,
+    MetaServiceStore,
+    ConnectionContextStore {
 
     //~ Static fields/initializers ---------------------------------------------
 
@@ -61,7 +66,14 @@ public class BerechtigungspruefungAnfrageServerAction implements UserAwareServer
     private User user = null;
     private MetaService metaService = null;
 
+    private ConnectionContext connectionContext = ConnectionContext.createDummy();
+
     //~ Methods ----------------------------------------------------------------
+
+    @Override
+    public void initWithConnectionContext(final ConnectionContext connectionContext) {
+        this.connectionContext = connectionContext;
+    }
 
     @Override
     public Object execute(final Object body, final ServerActionParameter... params) {
@@ -119,7 +131,10 @@ public class BerechtigungspruefungAnfrageServerAction implements UserAwareServer
 
                     try {
                         billingBean.setProperty("geschaeftsbuchnummer", schluessel);
-                        getMetaService().updateMetaObject(getUser(), billingBean.getMetaObject());
+                        getMetaService().updateMetaObject(
+                            getUser(),
+                            billingBean.getMetaObject(),
+                            getConnectionContext());
                     } catch (Exception ex) {
                         LOG.error("Error while setting 'storniert' of billing", ex);
                     }
@@ -166,5 +181,10 @@ public class BerechtigungspruefungAnfrageServerAction implements UserAwareServer
     @Override
     public MetaService getMetaService() {
         return metaService;
+    }
+
+    @Override
+    public ConnectionContext getConnectionContext() {
+        return connectionContext;
     }
 }

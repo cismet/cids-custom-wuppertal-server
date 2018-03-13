@@ -18,13 +18,16 @@ import java.util.Collection;
 import de.cismet.cids.server.search.AbstractCidsServerSearch;
 import de.cismet.cids.server.search.SearchException;
 
+import de.cismet.connectioncontext.ConnectionContext;
+import de.cismet.connectioncontext.ConnectionContextStore;
+
 /**
  * Search the Gemeinde of a given geometry.
  *
  * @author   Thorsten Herter
  * @version  $Revision$, $Date$
  */
-public class GemeindeByGeometrySearch extends AbstractCidsServerSearch {
+public class GemeindeByGeometrySearch extends AbstractCidsServerSearch implements ConnectionContextStore {
 
     //~ Static fields/initializers ---------------------------------------------
 
@@ -38,6 +41,8 @@ public class GemeindeByGeometrySearch extends AbstractCidsServerSearch {
     //~ Instance fields --------------------------------------------------------
 
     private String geom;
+
+    private ConnectionContext connectionContext = ConnectionContext.createDummy();
 
     //~ Constructors -----------------------------------------------------------
 
@@ -53,13 +58,19 @@ public class GemeindeByGeometrySearch extends AbstractCidsServerSearch {
     //~ Methods ----------------------------------------------------------------
 
     @Override
+    public void initWithConnectionContext(final ConnectionContext connectionContext) {
+        this.connectionContext = connectionContext;
+    }
+
+    @Override
     public Collection performServerSearch() throws SearchException {
         try {
             final MetaService metaService = (MetaService)this.getActiveLocalServers().get(DOMAIN);
             if (metaService != null) {
                 final ArrayList<ArrayList> gemeindeList = metaService.performCustomSearch(String.format(
                             QUERY_GEMEINDE,
-                            geom));
+                            geom),
+                        getConnectionContext());
 
                 String gemeindeCs = null;
 
@@ -83,5 +94,10 @@ public class GemeindeByGeometrySearch extends AbstractCidsServerSearch {
         } catch (final Exception ex) {
             throw new SearchException("error while loading verfahren objects", ex);
         }
+    }
+
+    @Override
+    public ConnectionContext getConnectionContext() {
+        return connectionContext;
     }
 }

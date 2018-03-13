@@ -18,12 +18,16 @@ import java.util.List;
 import de.cismet.cids.server.search.AbstractCidsServerSearch;
 import de.cismet.cids.server.search.SearchException;
 
+import de.cismet.connectioncontext.ConnectionContext;
+import de.cismet.connectioncontext.ConnectionContextStore;
+
 /**
  * DOCUMENT ME!
  *
  * @version  $Revision$, $Date$
  */
-public class BerechtigungspruefungOffeneAnfragenStatement extends AbstractCidsServerSearch {
+public class BerechtigungspruefungOffeneAnfragenStatement extends AbstractCidsServerSearch
+        implements ConnectionContextStore {
 
     //~ Static fields/initializers ---------------------------------------------
 
@@ -39,6 +43,8 @@ public class BerechtigungspruefungOffeneAnfragenStatement extends AbstractCidsSe
 
     private final boolean checkPruefer;
     private final Collection<String> produkttypList;
+
+    private ConnectionContext connectionContext = ConnectionContext.createDummy();
 
     //~ Constructors -----------------------------------------------------------
 
@@ -66,6 +72,11 @@ public class BerechtigungspruefungOffeneAnfragenStatement extends AbstractCidsSe
     //~ Methods ----------------------------------------------------------------
 
     @Override
+    public void initWithConnectionContext(final ConnectionContext connectionContext) {
+        this.connectionContext = connectionContext;
+    }
+
+    @Override
     public Collection performServerSearch() throws SearchException {
         final MetaService ms = (MetaService)getActiveLocalServers().get("WUNDA_BLAU");
         if (ms != null) {
@@ -80,7 +91,7 @@ public class BerechtigungspruefungOffeneAnfragenStatement extends AbstractCidsSe
                 final String in = sb.toString();
                 final String query = (checkPruefer ? String.format(QUERY_PRUEFER_TEMPLATE, in, getUser().getName())
                                                    : String.format(QUERY_TEMPLATE, in));
-                final ArrayList<ArrayList> lists = ms.performCustomSearch(query);
+                final ArrayList<ArrayList> lists = ms.performCustomSearch(query, getConnectionContext());
                 final List<String> schluesselListe = new ArrayList();
                 if ((lists != null) && !lists.isEmpty()) {
                     for (final List list : lists) {
@@ -93,5 +104,10 @@ public class BerechtigungspruefungOffeneAnfragenStatement extends AbstractCidsSe
             }
         }
         return null;
+    }
+
+    @Override
+    public ConnectionContext getConnectionContext() {
+        return connectionContext;
     }
 }
