@@ -31,6 +31,7 @@ import de.cismet.cids.custom.wunda_blau.search.actions.FormSolutionServerNewStuf
 import de.cismet.cids.dynamics.CidsBean;
 
 import de.cismet.cids.server.actions.ServerActionParameter;
+
 import de.cismet.connectioncontext.ConnectionContext;
 import de.cismet.connectioncontext.ConnectionContextStore;
 
@@ -62,10 +63,10 @@ public class FormSolutionBestellungStartupHook implements DomainServerStartupHoo
     }
 
     @Override
-    public void initWithConnectionContext(ConnectionContext connectionContext) {
+    public void initWithConnectionContext(final ConnectionContext connectionContext) {
         this.connectionContext = connectionContext;
     }
-    
+
     /**
      * DOCUMENT ME!
      *
@@ -156,7 +157,8 @@ public class FormSolutionBestellungStartupHook implements DomainServerStartupHoo
     private MetaObject[] getUnfinishedBestellungen() throws Exception {
         final MetaClass mcBestellung = CidsBean.getMetaClassFromTableName(
                 "WUNDA_BLAU",
-                "fs_bestellung", getConnectionContext());
+                "fs_bestellung",
+                getConnectionContext());
 
         final String pruefungQuery = "SELECT DISTINCT " + mcBestellung.getID() + ", "
                     + mcBestellung.getTableName() + "." + mcBestellung.getPrimaryKey() + " "
