@@ -32,17 +32,22 @@ import java.util.Collection;
 
 import de.cismet.cids.server.search.AbstractCidsServerSearch;
 
+import de.cismet.connectioncontext.ConnectionContext;
+import de.cismet.connectioncontext.ConnectionContextStore;
+
 /**
  * DOCUMENT ME!
  *
  * @author   stefan
  * @version  $Revision$, $Date$
  */
-public class Alb_BaulastblattChecker extends AbstractCidsServerSearch {
+public class Alb_BaulastblattChecker extends AbstractCidsServerSearch implements ConnectionContextStore {
 
     //~ Instance fields --------------------------------------------------------
 
-    private String searchQuery;
+    private final String searchQuery;
+
+    private ConnectionContext connectionContext = ConnectionContext.createDummy();
 
     //~ Constructors -----------------------------------------------------------
 
@@ -61,11 +66,16 @@ public class Alb_BaulastblattChecker extends AbstractCidsServerSearch {
     //~ Methods ----------------------------------------------------------------
 
     @Override
+    public void initWithConnectionContext(final ConnectionContext connectionContext) {
+        this.connectionContext = connectionContext;
+    }
+
+    @Override
     public Collection performServerSearch() {
         final MetaService ms = (MetaService)getActiveLocalServers().get("WUNDA_BLAU");
         if (ms != null) {
             try {
-                final ArrayList<ArrayList> lists = ms.performCustomSearch(searchQuery);
+                final ArrayList<ArrayList> lists = ms.performCustomSearch(searchQuery, getConnectionContext());
                 return lists;
             } catch (RemoteException ex) {
             }
@@ -77,5 +87,10 @@ public class Alb_BaulastblattChecker extends AbstractCidsServerSearch {
     @Override
     public String toString() {
         return searchQuery;
+    }
+
+    @Override
+    public ConnectionContext getConnectionContext() {
+        return connectionContext;
     }
 }

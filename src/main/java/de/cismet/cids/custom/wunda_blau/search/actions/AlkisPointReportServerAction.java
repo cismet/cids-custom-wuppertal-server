@@ -34,6 +34,9 @@ import de.cismet.cids.server.actions.ServerActionParameter;
 
 import de.cismet.cids.utils.serverresources.ServerResourcesLoader;
 
+import de.cismet.connectioncontext.ConnectionContext;
+import de.cismet.connectioncontext.ConnectionContextStore;
+
 /**
  * DOCUMENT ME!
  *
@@ -41,7 +44,7 @@ import de.cismet.cids.utils.serverresources.ServerResourcesLoader;
  * @version  $Revision$, $Date$
  */
 @org.openide.util.lookup.ServiceProvider(service = ServerAction.class)
-public class AlkisPointReportServerAction extends JasperReportServerAction {
+public class AlkisPointReportServerAction extends JasperReportServerAction implements ConnectionContextStore {
 
     //~ Static fields/initializers ---------------------------------------------
 
@@ -61,7 +64,16 @@ public class AlkisPointReportServerAction extends JasperReportServerAction {
         POINT_MONS
     }
 
+    //~ Instance fields --------------------------------------------------------
+
+    private ConnectionContext connectionContext = ConnectionContext.createDummy();
+
     //~ Methods ----------------------------------------------------------------
+
+    @Override
+    public void initWithConnectionContext(final ConnectionContext connectionContext) {
+        this.connectionContext = connectionContext;
+    }
 
     @Override
     public Object execute(final Object body, final ServerActionParameter... params) {
@@ -81,7 +93,8 @@ public class AlkisPointReportServerAction extends JasperReportServerAction {
                     final CidsBean cidsBean = getMetaService().getMetaObject(
                                 getUser(),
                                 reportMon.getObjectId(),
-                                reportMon.getClassId())
+                                reportMon.getClassId(),
+                                getConnectionContext())
                                 .getBean();
                     cidsBeans.add(cidsBean);
                 }
@@ -114,5 +127,10 @@ public class AlkisPointReportServerAction extends JasperReportServerAction {
     @Override
     protected JasperReport getJasperReport() throws Exception {
         return ServerResourcesLoader.getInstance().loadJasperReport(WundaBlauServerResources.APMAPS_JASPER.getValue());
+    }
+
+    @Override
+    public ConnectionContext getConnectionContext() {
+        return connectionContext;
     }
 }

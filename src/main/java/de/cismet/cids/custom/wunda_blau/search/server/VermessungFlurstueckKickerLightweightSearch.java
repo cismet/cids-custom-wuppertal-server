@@ -36,6 +36,9 @@ import de.cismet.cidsx.server.api.types.SearchParameterInfo;
 import de.cismet.cidsx.server.search.RestApiCidsServerSearch;
 import de.cismet.cidsx.server.search.builtin.legacy.LightweightMetaObjectsSearch;
 
+import de.cismet.connectioncontext.ConnectionContext;
+import de.cismet.connectioncontext.ConnectionContextStore;
+
 /**
  * Builtin Legacy Search to delegate the operation getLightweightMetaObjectsByQuery to the cids Pure REST Search API.
  *
@@ -45,7 +48,8 @@ import de.cismet.cidsx.server.search.builtin.legacy.LightweightMetaObjectsSearch
 @ServiceProvider(service = RestApiCidsServerSearch.class)
 public class VermessungFlurstueckKickerLightweightSearch extends AbstractCidsServerSearch
         implements RestApiCidsServerSearch,
-            LightweightMetaObjectsSearch {
+            LightweightMetaObjectsSearch,
+            ConnectionContextStore {
 
     //~ Static fields/initializers ---------------------------------------------
 
@@ -86,6 +90,8 @@ public class VermessungFlurstueckKickerLightweightSearch extends AbstractCidsSer
     @Getter @Setter private String nenner;
     @Getter @Setter private String[] representationFields;
     @Getter @Setter private String representationPattern;
+
+    private ConnectionContext connectionContext = ConnectionContext.createDummy();
 
     //~ Constructors -----------------------------------------------------------
 
@@ -150,6 +156,11 @@ public class VermessungFlurstueckKickerLightweightSearch extends AbstractCidsSer
     //~ Methods ----------------------------------------------------------------
 
     @Override
+    public void initWithConnectionContext(final ConnectionContext connectionContext) {
+        this.connectionContext = connectionContext;
+    }
+
+    @Override
     public Collection performServerSearch() throws SearchException {
         if (searchFor != null) {
             final MetaService metaService = (MetaService)this.getActiveLocalServers().get("WUNDA_BLAU");
@@ -166,10 +177,12 @@ public class VermessungFlurstueckKickerLightweightSearch extends AbstractCidsSer
             try {
                 flurstueckKickerMetaClass = CidsBean.getMetaClassFromTableName(
                         "WUNDA_BLAU",
-                        FLURSTUECK_KICKER_TABLE_NAME);
+                        FLURSTUECK_KICKER_TABLE_NAME,
+                        getConnectionContext());
                 vermessungsGemarkungenMetaClass = CidsBean.getMetaClassFromTableName(
                         "WUNDA_BLAU",
-                        VERMESSUNG_GEMARKUNG_TABLE_NAME);
+                        VERMESSUNG_GEMARKUNG_TABLE_NAME,
+                        getConnectionContext());
             } catch (final Exception ex) {
                 throw new SearchException("error while loadomg metaclass", ex);
             }
@@ -353,13 +366,15 @@ public class VermessungFlurstueckKickerLightweightSearch extends AbstractCidsSer
                                 getUser(),
                                 query,
                                 getRepresentationFields(),
-                                getRepresentationPattern()));
+                                getRepresentationPattern(),
+                                getConnectionContext()));
                 } else {
                     return Arrays.asList(metaService.getLightweightMetaObjectsByQuery(
                                 metaClassToUse.getID(),
                                 getUser(),
                                 query,
-                                getRepresentationFields()));
+                                getRepresentationFields(),
+                                getConnectionContext()));
                 }
             } catch (final RemoteException ex) {
                 throw new SearchException("error while loading lwmos (MetaClass:+" + metaClassToUse.getID() + ", Query:"
@@ -369,5 +384,10 @@ public class VermessungFlurstueckKickerLightweightSearch extends AbstractCidsSer
         } else {
             throw new SearchException("searchFor has to be set");
         }
+    }
+
+    @Override
+    public ConnectionContext getConnectionContext() {
+        return connectionContext;
     }
 }

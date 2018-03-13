@@ -23,13 +23,16 @@ import java.util.Collection;
 import de.cismet.cids.server.search.AbstractCidsServerSearch;
 import de.cismet.cids.server.search.SearchException;
 
+import de.cismet.connectioncontext.ConnectionContext;
+import de.cismet.connectioncontext.ConnectionContextStore;
+
 /**
  * DOCUMENT ME!
  *
  * @author   daniel
  * @version  $Revision$, $Date$
  */
-public class MauerNummerSearch extends AbstractCidsServerSearch {
+public class MauerNummerSearch extends AbstractCidsServerSearch implements ConnectionContextStore {
 
     //~ Static fields/initializers ---------------------------------------------
 
@@ -37,8 +40,10 @@ public class MauerNummerSearch extends AbstractCidsServerSearch {
 
     //~ Instance fields --------------------------------------------------------
 
-    private String mauerNummer;
+    private final String mauerNummer;
     private final String QUERY = "SELECT id, mauer_nummer FROM mauer WHERE mauer_nummer = '%1$s'";
+
+    private ConnectionContext connectionContext = ConnectionContext.createDummy();
 
     //~ Constructors -----------------------------------------------------------
 
@@ -54,6 +59,11 @@ public class MauerNummerSearch extends AbstractCidsServerSearch {
     //~ Methods ----------------------------------------------------------------
 
     @Override
+    public void initWithConnectionContext(final ConnectionContext connectionContext) {
+        this.connectionContext = connectionContext;
+    }
+
+    @Override
     public Collection performServerSearch() throws SearchException {
         final MetaService ms = (MetaService)getActiveLocalServers().get("WUNDA_BLAU");
 
@@ -63,7 +73,7 @@ public class MauerNummerSearch extends AbstractCidsServerSearch {
                 if (LOG.isDebugEnabled()) {
                     LOG.debug("query: " + query); // NOI18N
                 }
-                final ArrayList<ArrayList> lists = ms.performCustomSearch(query);
+                final ArrayList<ArrayList> lists = ms.performCustomSearch(query, getConnectionContext());
                 return lists;
             } catch (RemoteException ex) {
                 LOG.error(ex.getMessage(), ex);
@@ -73,5 +83,10 @@ public class MauerNummerSearch extends AbstractCidsServerSearch {
         }
 
         return null;
+    }
+
+    @Override
+    public ConnectionContext getConnectionContext() {
+        return connectionContext;
     }
 }

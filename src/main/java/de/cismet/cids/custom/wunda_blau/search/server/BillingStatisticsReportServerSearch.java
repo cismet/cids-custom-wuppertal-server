@@ -25,6 +25,9 @@ import java.util.Iterator;
 import de.cismet.cids.server.search.AbstractCidsServerSearch;
 import de.cismet.cids.server.search.SearchException;
 
+import de.cismet.connectioncontext.ConnectionContext;
+import de.cismet.connectioncontext.ConnectionContextStore;
+
 /**
  * A server search which fetches the needed information for the charts in the billing statistics report. To fetch the
  * data, multiple queries are executed and their results are converted to beans ({@link BrancheAmountBean} or
@@ -33,7 +36,7 @@ import de.cismet.cids.server.search.SearchException;
  * @author   Gilles Baatz
  * @version  $Revision$, $Date$
  */
-public class BillingStatisticsReportServerSearch extends AbstractCidsServerSearch {
+public class BillingStatisticsReportServerSearch extends AbstractCidsServerSearch implements ConnectionContextStore {
 
     //~ Static fields/initializers ---------------------------------------------
 
@@ -125,6 +128,8 @@ public class BillingStatisticsReportServerSearch extends AbstractCidsServerSearc
 
     private final String billingBeanIds;
 
+    private ConnectionContext connectionContext = ConnectionContext.createDummy();
+
     //~ Constructors -----------------------------------------------------------
 
     /**
@@ -149,11 +154,16 @@ public class BillingStatisticsReportServerSearch extends AbstractCidsServerSearc
     //~ Methods ----------------------------------------------------------------
 
     @Override
+    public void initWithConnectionContext(final ConnectionContext connectionContext) {
+        this.connectionContext = connectionContext;
+    }
+
+    @Override
     public Collection performServerSearch() throws SearchException {
         final MetaService ms = (MetaService)getActiveLocalServers().get("WUNDA_BLAU");
         if (ms != null) {
             try {
-                final HashMap<String, ArrayList> results = new HashMap<String, ArrayList>();
+                final HashMap<String, ArrayList> results = new HashMap<>();
 
                 excuteQueryAndConvertResults(ms, results, queryKundenBranche, BRANCHEN_AMOUNTS);
                 excuteQueryAndConvertResults(ms, results, queryKundenAntraege, ANTRAEGE_AMOUNTS);
@@ -190,9 +200,10 @@ public class BillingStatisticsReportServerSearch extends AbstractCidsServerSearc
             final HashMap<String, ArrayList> results,
             final String query,
             final String key) throws RemoteException {
-        final ArrayList<ArrayList> lists = ms.performCustomSearch(query.replace("$bean_ids$", billingBeanIds));
+        final ArrayList<ArrayList> lists = ms.performCustomSearch(query.replace("$bean_ids$", billingBeanIds),
+                getConnectionContext());
         if ((lists != null) && !lists.isEmpty()) {
-            final ArrayList<BrancheAmountBean> beans = new ArrayList<BrancheAmountBean>();
+            final ArrayList<BrancheAmountBean> beans = new ArrayList<>();
             for (final Iterator it = lists.iterator(); it.hasNext();) {
                 final ArrayList row = (ArrayList)it.next();
 
@@ -220,9 +231,10 @@ public class BillingStatisticsReportServerSearch extends AbstractCidsServerSearc
      */
     private void excuteEinnahmenQuery(final MetaService ms,
             final HashMap<String, ArrayList> results) throws RemoteException {
-        final ArrayList<ArrayList> lists = ms.performCustomSearch(queryEinnahmen.replace("$bean_ids$", billingBeanIds));
+        final ArrayList<ArrayList> lists = ms.performCustomSearch(queryEinnahmen.replace("$bean_ids$", billingBeanIds),
+                getConnectionContext());
         if ((lists != null) && !lists.isEmpty()) {
-            final ArrayList<EinnahmenBean> beans = new ArrayList<EinnahmenBean>();
+            final ArrayList<EinnahmenBean> beans = new ArrayList<>();
             for (final Iterator it = lists.iterator(); it.hasNext();) {
                 final ArrayList row = (ArrayList)it.next();
 
@@ -237,6 +249,11 @@ public class BillingStatisticsReportServerSearch extends AbstractCidsServerSearc
             }
             results.put(EINNAHMEN, beans);
         }
+    }
+
+    @Override
+    public ConnectionContext getConnectionContext() {
+        return connectionContext;
     }
 
     //~ Inner Classes ----------------------------------------------------------

@@ -19,13 +19,17 @@ import java.util.Collection;
 import de.cismet.cids.server.search.AbstractCidsServerSearch;
 import de.cismet.cids.server.search.MetaObjectNodeServerSearch;
 
+import de.cismet.connectioncontext.ConnectionContext;
+import de.cismet.connectioncontext.ConnectionContextStore;
+
 /**
  * DOCUMENT ME!
  *
  * @author   thorsten
  * @version  $Revision$, $Date$
  */
-public class CustomStrassenSearchStatement extends AbstractCidsServerSearch implements MetaObjectNodeServerSearch {
+public class CustomStrassenSearchStatement extends AbstractCidsServerSearch implements MetaObjectNodeServerSearch,
+    ConnectionContextStore {
 
     //~ Static fields/initializers ---------------------------------------------
 
@@ -36,6 +40,8 @@ public class CustomStrassenSearchStatement extends AbstractCidsServerSearch impl
 
     private final String searchString;
     private final boolean searchForStrassenschluessel;
+
+    private ConnectionContext connectionContext = ConnectionContext.createDummy();
 
     //~ Constructors -----------------------------------------------------------
 
@@ -62,6 +68,11 @@ public class CustomStrassenSearchStatement extends AbstractCidsServerSearch impl
     //~ Methods ----------------------------------------------------------------
 
     @Override
+    public void initWithConnectionContext(final ConnectionContext connectionContext) {
+        this.connectionContext = connectionContext;
+    }
+
+    @Override
     public Collection<MetaObjectNode> performServerSearch() {
         try {
             if (LOG.isDebugEnabled()) {
@@ -70,7 +81,7 @@ public class CustomStrassenSearchStatement extends AbstractCidsServerSearch impl
 
             final MetaService ms = (MetaService)getActiveLocalServers().get("WUNDA_BLAU");
 
-            final MetaClass c = ms.getClassByTableName(getUser(), "strasse");
+            final MetaClass c = ms.getClassByTableName(getUser(), "strasse", getConnectionContext());
 
             final String sql = ""
                         + "SELECT strassenschluessel, name "
@@ -80,7 +91,7 @@ public class CustomStrassenSearchStatement extends AbstractCidsServerSearch impl
                                                        : ("name LIKE '%" + searchString + "%'")) + " "
                         + "ORDER BY name desc";
 
-            final ArrayList<ArrayList> result = ms.performCustomSearch(sql);
+            final ArrayList<ArrayList> result = ms.performCustomSearch(sql, getConnectionContext());
 
             final ArrayList<MetaObjectNode> aln = new ArrayList<>();
             for (final ArrayList al : result) {
@@ -92,5 +103,10 @@ public class CustomStrassenSearchStatement extends AbstractCidsServerSearch impl
             LOG.error("Problem", ex);
             throw new RuntimeException(ex);
         }
+    }
+
+    @Override
+    public ConnectionContext getConnectionContext() {
+        return connectionContext;
     }
 }

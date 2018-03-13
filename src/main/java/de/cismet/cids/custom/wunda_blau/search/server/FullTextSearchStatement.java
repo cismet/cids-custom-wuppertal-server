@@ -34,13 +34,17 @@ import java.util.Collection;
 import de.cismet.cids.server.search.AbstractCidsServerSearch;
 import de.cismet.cids.server.search.MetaObjectNodeServerSearch;
 
+import de.cismet.connectioncontext.ConnectionContext;
+import de.cismet.connectioncontext.ConnectionContextStore;
+
 /**
  * DOCUMENT ME!
  *
  * @author   thorsten
  * @version  $Revision$, $Date$
  */
-public class FullTextSearchStatement extends AbstractCidsServerSearch implements MetaObjectNodeServerSearch {
+public class FullTextSearchStatement extends AbstractCidsServerSearch implements MetaObjectNodeServerSearch,
+    ConnectionContextStore {
 
     //~ Static fields/initializers ---------------------------------------------
 
@@ -50,6 +54,8 @@ public class FullTextSearchStatement extends AbstractCidsServerSearch implements
     //~ Instance fields --------------------------------------------------------
 
     private String searchString;
+
+    private ConnectionContext connectionContext = ConnectionContext.createDummy();
 
     //~ Constructors -----------------------------------------------------------
 
@@ -63,6 +69,11 @@ public class FullTextSearchStatement extends AbstractCidsServerSearch implements
     }
 
     //~ Methods ----------------------------------------------------------------
+
+    @Override
+    public void initWithConnectionContext(final ConnectionContext connectionContext) {
+        this.connectionContext = connectionContext;
+    }
 
     @Override
     public Collection<MetaObjectNode> performServerSearch() {
@@ -120,7 +131,7 @@ public class FullTextSearchStatement extends AbstractCidsServerSearch implements
 
             final MetaService ms = (MetaService)getActiveLocalServers().get("WUNDA_BLAU");
 
-            final ArrayList<ArrayList> result = ms.performCustomSearch(sql);
+            final ArrayList<ArrayList> result = ms.performCustomSearch(sql, getConnectionContext());
 
             final ArrayList<MetaObjectNode> aln = new ArrayList<MetaObjectNode>();
             for (final ArrayList al : result) {
@@ -136,5 +147,10 @@ public class FullTextSearchStatement extends AbstractCidsServerSearch implements
             LOG.error("Problem", e);
             return null;
         }
+    }
+
+    @Override
+    public ConnectionContext getConnectionContext() {
+        return connectionContext;
     }
 }

@@ -40,12 +40,15 @@ import de.cismet.cids.dynamics.CidsBean;
 import de.cismet.cids.server.search.CidsServerSearch;
 import de.cismet.cids.server.search.SearchException;
 
+import de.cismet.connectioncontext.ConnectionContext;
+import de.cismet.connectioncontext.ConnectionContextProvider;
+
 /**
  * DOCUMENT ME!
  *
  * @version  $Revision$, $Date$
  */
-public class VermessungsunterlagenValidator {
+public class VermessungsunterlagenValidator implements ConnectionContextProvider {
 
     //~ Static fields/initializers ---------------------------------------------
 
@@ -77,15 +80,20 @@ public class VermessungsunterlagenValidator {
     @Getter private boolean pnrNotZero = false;
     @Getter private boolean geometryFromFlurstuecke = true;
 
+    private final ConnectionContext connectionContext;
+
     //~ Constructors -----------------------------------------------------------
 
     /**
      * Creates a new VermessungsunterlagenValidator object.
      *
-     * @param  helper  DOCUMENT ME!
+     * @param  helper             DOCUMENT ME!
+     * @param  connectionContext  DOCUMENT ME!
      */
-    public VermessungsunterlagenValidator(final VermessungsunterlagenHelper helper) {
+    public VermessungsunterlagenValidator(final VermessungsunterlagenHelper helper,
+            final ConnectionContext connectionContext) {
         this.helper = helper;
+        this.connectionContext = connectionContext;
     }
 
     //~ Methods ----------------------------------------------------------------
@@ -513,7 +521,7 @@ public class VermessungsunterlagenValidator {
                     + "_%';";
 
         final MetaService metaService = helper.getMetaService();
-        for (final ArrayList fields : metaService.performCustomSearch(query)) {
+        for (final ArrayList fields : metaService.performCustomSearch(query, getConnectionContext())) {
             final String kennzeichen = (String)fields.get(0);
             final CidsBean nachfolgerBean = searchFlurstueck(toAlkisId(
                         kennzeichen.substring(0, 6),
@@ -559,7 +567,10 @@ public class VermessungsunterlagenValidator {
     private Collection<CidsBean> searchFlurstuecke(final Geometry geom) throws Exception {
         final BufferingGeosearch search = new BufferingGeosearch();
         search.setGeometry(geom);
-        final MetaClass mc = CidsBean.getMetaClassFromTableName("WUNDA_BLAU", "alkis_landparcel");
+        final MetaClass mc = CidsBean.getMetaClassFromTableName(
+                "WUNDA_BLAU",
+                "alkis_landparcel",
+                getConnectionContext());
         search.setValidClasses(Arrays.asList(mc));
         final Collection<MetaObjectNode> mons = helper.performSearch(search);
 
@@ -615,5 +626,10 @@ public class VermessungsunterlagenValidator {
         } else {
             return null;
         }
+    }
+
+    @Override
+    public ConnectionContext getConnectionContext() {
+        return connectionContext;
     }
 }

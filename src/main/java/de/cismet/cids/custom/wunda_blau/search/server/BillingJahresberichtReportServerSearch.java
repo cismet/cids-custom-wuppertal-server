@@ -23,6 +23,8 @@ import java.util.Iterator;
 
 import de.cismet.cids.server.search.SearchException;
 
+import de.cismet.connectioncontext.ConnectionContext;
+
 /**
  * DOCUMENT ME!
  *
@@ -198,7 +200,8 @@ public class BillingJahresberichtReportServerSearch extends BillingStatisticsRep
             final HashMap<String, ArrayList> results,
             final String query,
             final String key) throws RemoteException {
-        final ArrayList<ArrayList> lists = ms.performCustomSearch(query.replace("${Jahr}", Integer.toString(year)));
+        final ArrayList<ArrayList> lists = ms.performCustomSearch(query.replace("${Jahr}", Integer.toString(year)),
+                getConnectionContext());
         if ((lists != null) && !lists.isEmpty()) {
             final ArrayList<AmountBean> beans = new ArrayList<AmountBean>();
             for (final Iterator it = lists.iterator(); it.hasNext();) {
@@ -234,7 +237,8 @@ public class BillingJahresberichtReportServerSearch extends BillingStatisticsRep
         if (LOG.isDebugEnabled()) {
             LOG.debug(query.replace("${Jahr}", Integer.toString(year)));
         }
-        final ArrayList<ArrayList> lists = ms.performCustomSearch(query.replace("${Jahr}", Integer.toString(year)));
+        final ArrayList<ArrayList> lists = ms.performCustomSearch(query.replace("${Jahr}", Integer.toString(year)),
+                getConnectionContext());
         if ((lists != null)) {
             final AnzahlProVerwendungszweckBean bean = new AnzahlProVerwendungszweckBean();
             for (final Iterator it = lists.iterator(); it.hasNext();) {
@@ -260,6 +264,11 @@ public class BillingJahresberichtReportServerSearch extends BillingStatisticsRep
             beans.add(bean);
             results.put(key, beans);
         }
+    }
+
+    @Override
+    public ConnectionContext getConnectionContext() {
+        return ConnectionContext.createDummy();
     }
 
     //~ Inner Classes ----------------------------------------------------------

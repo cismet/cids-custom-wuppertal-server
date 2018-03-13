@@ -46,6 +46,9 @@ import de.cismet.cids.utils.serverresources.ServerResourcesLoader;
 
 import de.cismet.cismap.commons.jtsgeometryfactories.PostGisGeometryFactory;
 
+import de.cismet.connectioncontext.ConnectionContext;
+import de.cismet.connectioncontext.ConnectionContextStore;
+
 /**
  * DOCUMENT ME!
  *
@@ -53,7 +56,7 @@ import de.cismet.cismap.commons.jtsgeometryfactories.PostGisGeometryFactory;
  * @version  $Revision$, $Date$
  */
 @org.openide.util.lookup.ServiceProvider(service = ServerAction.class)
-public class NasZaehlObjekteServerAction implements ServerAction, MetaServiceStore {
+public class NasZaehlObjekteServerAction implements ServerAction, MetaServiceStore, ConnectionContextStore {
 
     //~ Static fields/initializers ---------------------------------------------
 
@@ -114,6 +117,8 @@ public class NasZaehlObjekteServerAction implements ServerAction, MetaServiceSto
 
     private MetaService metaService;
 
+    private ConnectionContext connectionContext = ConnectionContext.createDummy();
+
     //~ Constructors -----------------------------------------------------------
 
     /**
@@ -155,6 +160,11 @@ public class NasZaehlObjekteServerAction implements ServerAction, MetaServiceSto
     }
 
     //~ Methods ----------------------------------------------------------------
+
+    @Override
+    public void initWithConnectionContext(final ConnectionContext connectionContext) {
+        this.connectionContext = connectionContext;
+    }
 
     @Override
     public MetaService getMetaService() {
@@ -351,7 +361,7 @@ public class NasZaehlObjekteServerAction implements ServerAction, MetaServiceSto
                 if (LOG.isDebugEnabled()) {
                     LOG.debug("query: " + sb.toString());                                  // NOI18N
                 }
-                final ArrayList<ArrayList> lists = ms.performCustomSearch(sb.toString());
+                final ArrayList<ArrayList> lists = ms.performCustomSearch(sb.toString(), getConnectionContext());
 
                 return lists.size();
             } catch (RemoteException ex) {
@@ -376,5 +386,10 @@ public class NasZaehlObjekteServerAction implements ServerAction, MetaServiceSto
                 "Error during NasZaehlObjekte search.Could not create db connection to fme_import database",
                 ex);
         }
+    }
+
+    @Override
+    public ConnectionContext getConnectionContext() {
+        return connectionContext;
     }
 }

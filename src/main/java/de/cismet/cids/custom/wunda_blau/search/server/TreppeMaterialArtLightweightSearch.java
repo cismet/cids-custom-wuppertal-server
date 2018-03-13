@@ -33,6 +33,9 @@ import de.cismet.cidsx.server.api.types.SearchParameterInfo;
 import de.cismet.cidsx.server.search.RestApiCidsServerSearch;
 import de.cismet.cidsx.server.search.builtin.legacy.LightweightMetaObjectsSearch;
 
+import de.cismet.connectioncontext.ConnectionContext;
+import de.cismet.connectioncontext.ConnectionContextStore;
+
 /**
  * Builtin Legacy Search to delegate the operation getLightweightMetaObjectsByQuery to the cids Pure REST Search API.
  *
@@ -41,7 +44,8 @@ import de.cismet.cidsx.server.search.builtin.legacy.LightweightMetaObjectsSearch
  */
 @ServiceProvider(service = RestApiCidsServerSearch.class)
 public class TreppeMaterialArtLightweightSearch extends AbstractCidsServerSearch implements RestApiCidsServerSearch,
-    LightweightMetaObjectsSearch {
+    LightweightMetaObjectsSearch,
+    ConnectionContextStore {
 
     //~ Static fields/initializers ---------------------------------------------
 
@@ -65,6 +69,8 @@ public class TreppeMaterialArtLightweightSearch extends AbstractCidsServerSearch
     }
 
     //~ Instance fields --------------------------------------------------------
+
+    private ConnectionContext connectionContext = ConnectionContext.createDummy();
 
     @Getter private final SearchInfo searchInfo;
     @Getter @Setter private SearchFor searchFor;
@@ -113,6 +119,16 @@ public class TreppeMaterialArtLightweightSearch extends AbstractCidsServerSearch
     //~ Methods ----------------------------------------------------------------
 
     @Override
+    public void initWithConnectionContext(final ConnectionContext connectionContext) {
+        this.connectionContext = connectionContext;
+    }
+
+    @Override
+    public ConnectionContext getConnectionContext() {
+        return connectionContext;
+    }
+
+    @Override
     public Collection performServerSearch() throws SearchException {
         final SearchFor searchFor = getSearchFor();
         final Integer materialId = getMaterialId();
@@ -157,7 +173,7 @@ public class TreppeMaterialArtLightweightSearch extends AbstractCidsServerSearch
         final String query = "SELECT id, name FROM " + table
                     + (conditions.isEmpty() ? "" : (" wHERE " + String.join(" AND ", conditions)));
         try {
-            final MetaClass mc = CidsBean.getMetaClassFromTableName("WUNDA_BLAU", table);
+            final MetaClass mc = CidsBean.getMetaClassFromTableName("WUNDA_BLAU", table, getConnectionContext());
             if (getRepresentationPattern() != null) {
                 return Arrays.asList(metaService.getLightweightMetaObjectsByQuery(
                             mc.getID(),

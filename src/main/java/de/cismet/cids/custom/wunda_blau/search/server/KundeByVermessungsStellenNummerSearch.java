@@ -26,13 +26,16 @@ import de.cismet.cids.custom.utils.pointnumberreservation.VermessungsStellenSear
 import de.cismet.cids.server.search.AbstractCidsServerSearch;
 import de.cismet.cids.server.search.SearchException;
 
+import de.cismet.connectioncontext.ConnectionContext;
+import de.cismet.connectioncontext.ConnectionContextStore;
+
 /**
  * DOCUMENT ME!
  *
  * @author   daniel
  * @version  $Revision$, $Date$
  */
-public class KundeByVermessungsStellenNummerSearch extends AbstractCidsServerSearch {
+public class KundeByVermessungsStellenNummerSearch extends AbstractCidsServerSearch implements ConnectionContextStore {
 
     //~ Static fields/initializers ---------------------------------------------
 
@@ -43,6 +46,8 @@ public class KundeByVermessungsStellenNummerSearch extends AbstractCidsServerSea
     private final String vermessungsstellennummer;
     private final String QUERY =
         "SELECT vermessungsstellennummer, name FROM billing_kunde WHERE vermessungsstellennummer LIKE '%1$s';";
+
+    private ConnectionContext connectionContext = ConnectionContext.createDummy();
 
     //~ Constructors -----------------------------------------------------------
 
@@ -58,6 +63,11 @@ public class KundeByVermessungsStellenNummerSearch extends AbstractCidsServerSea
     //~ Methods ----------------------------------------------------------------
 
     @Override
+    public void initWithConnectionContext(final ConnectionContext connectionContext) {
+        this.connectionContext = connectionContext;
+    }
+
+    @Override
     public Collection performServerSearch() throws SearchException {
         final MetaService ms = (MetaService)getActiveLocalServers().get("WUNDA_BLAU");
 
@@ -67,7 +77,7 @@ public class KundeByVermessungsStellenNummerSearch extends AbstractCidsServerSea
                 if (LOG.isDebugEnabled()) {
                     LOG.debug("query: " + query); // NOI18N
                 }
-                final ArrayList<ArrayList> lists = ms.performCustomSearch(query);
+                final ArrayList<ArrayList> lists = ms.performCustomSearch(query, getConnectionContext());
                 final ArrayList<VermessungsStellenSearchResult> result =
                     new ArrayList<VermessungsStellenSearchResult>();
                 for (final ArrayList l : lists) {
@@ -84,5 +94,10 @@ public class KundeByVermessungsStellenNummerSearch extends AbstractCidsServerSea
         }
 
         return null;
+    }
+
+    @Override
+    public ConnectionContext getConnectionContext() {
+        return connectionContext;
     }
 }
