@@ -663,7 +663,10 @@ public class VermessungsunterlagenHelper implements ConnectionContextProvider {
         if (geom != null) {
             geomBean = (CidsBean)jobCidsBean.getProperty("geometrie_flurstuecke");
             if (geomBean == null) {
-                geomBean = CidsBean.createNewCidsBeanFromTableName("WUNDA_BLAU", mc_GEOM.getTableName(), getConnectionContext());
+                geomBean = CidsBean.createNewCidsBeanFromTableName(
+                        "WUNDA_BLAU",
+                        mc_GEOM.getTableName(),
+                        getConnectionContext());
             }
             geomBean.setProperty("geo_field", geom);
         } else {
@@ -1020,7 +1023,7 @@ public class VermessungsunterlagenHelper implements ConnectionContextProvider {
      * @throws  SearchException  DOCUMENT ME!
      */
     public Collection performSearch(final CidsServerSearch serverSearch) throws SearchException {
-        final Map localServers = new HashMap<String, Remote>();
+        final Map localServers = new HashMap<>();
         localServers.put("WUNDA_BLAU", getMetaService());
         serverSearch.setActiveLocalServers(localServers);
         serverSearch.setUser(getUser());
