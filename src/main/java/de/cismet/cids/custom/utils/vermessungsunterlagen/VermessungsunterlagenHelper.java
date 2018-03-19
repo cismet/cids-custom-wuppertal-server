@@ -536,9 +536,6 @@ public class VermessungsunterlagenHelper implements ConnectionContextProvider {
         jobCidsBean.setProperty("executejob_json", executeJobContent);
         jobCidsBean.setProperty("schluessel", job.getKey());
         jobCidsBean.setProperty("geometrie", geomBean);
-        jobCidsBean.setProperty(
-            "geometrie_flurstuecke",
-            CidsBean.createNewCidsBeanFromTableName("WUNDA_BLAU", mc_GEOM.getTableName(), getConnectionContext()));
         jobCidsBean.setProperty("aktenzeichen", anfrageBean.getAktenzeichenKatasteramt());
         for (final VermessungsunterlagenAnfrageBean.AntragsflurstueckBean flurstueckBean
                     : anfrageBean.getAntragsflurstuecksArray()) {
@@ -662,7 +659,21 @@ public class VermessungsunterlagenHelper implements ConnectionContextProvider {
             throws Exception {
         final CidsBean jobCidsBean = job.getCidsBean();
 
-        jobCidsBean.setProperty("geometrie_flurstuecke.geo_field", geom);
+        CidsBean geomBean;
+        if (geom != null) {
+            geomBean = (CidsBean)jobCidsBean.getProperty("geometrie_flurstuecke");
+            if (geomBean == null) {
+                geomBean = CidsBean.createNewCidsBeanFromTableName(
+                        "WUNDA_BLAU",
+                        mc_GEOM.getTableName(),
+                        getConnectionContext());
+            }
+            geomBean.setProperty("geo_field", geom);
+        } else {
+            geomBean = null;
+        }
+
+        jobCidsBean.setProperty("geometrie_flurstuecke", geomBean);
 
         getMetaService().updateMetaObject(getUser(), jobCidsBean.getMetaObject(), getConnectionContext());
     }
@@ -1012,7 +1023,7 @@ public class VermessungsunterlagenHelper implements ConnectionContextProvider {
      * @throws  SearchException  DOCUMENT ME!
      */
     public Collection performSearch(final CidsServerSearch serverSearch) throws SearchException {
-        final Map localServers = new HashMap<String, Remote>();
+        final Map localServers = new HashMap<>();
         localServers.put("WUNDA_BLAU", getMetaService());
         serverSearch.setActiveLocalServers(localServers);
         serverSearch.setUser(getUser());
