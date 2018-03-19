@@ -12,6 +12,7 @@
  */
 package de.cismet.cids.custom.utils.vermessungsunterlagen;
 
+import Sirius.server.localserver.attribute.ObjectAttribute;
 import Sirius.server.middleware.interfaces.domainserver.MetaService;
 import Sirius.server.middleware.types.LightweightMetaObject;
 import Sirius.server.middleware.types.MetaClass;
@@ -33,7 +34,6 @@ import de.cismet.cids.custom.wunda_blau.search.server.AlbFlurstueckKickerLightwe
 import de.cismet.cids.custom.wunda_blau.search.server.BufferingGeosearch;
 import de.cismet.cids.custom.wunda_blau.search.server.CidsAlkisSearchStatement;
 import de.cismet.cids.custom.wunda_blau.search.server.KundeByVermessungsStellenNummerSearch;
-import de.cismet.cids.custom.wunda_blau.search.server.VermessungFlurstueckKickerLightweightSearch;
 
 import de.cismet.cids.dynamics.CidsBean;
 
@@ -376,8 +376,11 @@ public class VermessungsunterlagenValidator implements ConnectionContextProvider
      * @param   flurstueckBean  DOCUMENT ME!
      *
      * @return  DOCUMENT ME!
+     *
+     * @throws  VermessungsunterlagenValidatorException  DOCUMENT ME!
      */
-    private boolean isWuppGemarkung(final VermessungsunterlagenAnfrageBean.AntragsflurstueckBean flurstueckBean) {
+    private boolean isWuppGemarkung(final VermessungsunterlagenAnfrageBean.AntragsflurstueckBean flurstueckBean)
+            throws VermessungsunterlagenValidatorException {
         if ((flurstueckBean == null) || (flurstueckBean.getGemarkungsID() == null)) {
             return false;
         }
@@ -388,15 +391,28 @@ public class VermessungsunterlagenValidator implements ConnectionContextProvider
                 return false;
             }
 
-            final VermessungFlurstueckKickerLightweightSearch search =
-                new VermessungFlurstueckKickerLightweightSearch();
-            search.setSearchFor(VermessungFlurstueckKickerLightweightSearch.SearchFor.GEMARKUNG);
-            search.setGemarkungsnummer(Integer.toString(gemarkungId));
-            search.setRepresentationFields(new String[] {});
+            final AlbFlurstueckKickerLightweightSearch search = new AlbFlurstueckKickerLightweightSearch();
+            search.setSearchFor(AlbFlurstueckKickerLightweightSearch.SearchFor.GEMARKUNGEN);
+            search.setRepresentationFields(new String[] { "id", "gemarkung", "name" });
             final Collection<LightweightMetaObject> lwmos = helper.performSearch(search);
-            return !lwmos.isEmpty();
-        } catch (final Exception ex) {
+            if (lwmos != null) {
+                for (final LightweightMetaObject lwmo : lwmos) {
+                    if (lwmo != null) {
+                        final ObjectAttribute oa = lwmo.getAttributeByFieldName("gemarkung");
+                        if (oa != null) {
+                            final Object value = oa.getValue();
+                            if ((value instanceof Integer) && ((Integer)value).equals(gemarkungId)) {
+                                return true;
+                            }
+                        }
+                    }
+                }
+            }
             return false;
+        } catch (final Exception ex) {
+            throw new VermessungsunterlagenValidatorException("Fehler beim Suchen der Gemarkung: "
+                        + flurstueckBean.getGemarkungsID(),
+                ex);
         }
     }
 
@@ -474,7 +490,7 @@ public class VermessungsunterlagenValidator implements ConnectionContextProvider
             }
             return flurstuecke;
         } catch (final Exception ex) {
-            throw new VermessungsunterlagenValidatorException("Fehler beim laden des Flurstuecks: " + alkisId, ex);
+            throw new VermessungsunterlagenValidatorException("Fehler beim Laden des Flurstücks: " + alkisId, ex);
         }
     }
 
