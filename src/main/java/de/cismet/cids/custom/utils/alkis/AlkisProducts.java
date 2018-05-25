@@ -19,8 +19,6 @@ import org.jdom.Document;
 import org.jdom.Element;
 import org.jdom.input.SAXBuilder;
 
-import org.openide.util.Exceptions;
-
 import java.awt.Point;
 
 import java.io.StringReader;
@@ -67,39 +65,40 @@ public class AlkisProducts {
     public static final String HEADER_CONTENTTYPE_VALUE_POST = "application/x-www-form-urlencoded";
     public static final HashMap<String, String> POST_HEADER = new HashMap<String, String>();
 
+    //~ Enums ------------------------------------------------------------------
+
+    /**
+     * DOCUMENT ME!
+     *
+     * @version  $Revision$, $Date$
+     */
+    public enum Type {
+
+        //~ Enum constants -----------------------------------------------------
+
+        FLURSTUECKSNACHWEIS_PDF, FLURSTUECKSNACHWEIS_HTML, FLURSTUECKS_UND_EIGENTUMSNACHWEIS_NRW_PDF,
+        FLURSTUECKS_UND_EIGENTUMSNACHWEIS_NRW_HTML, FLURSTUECKS_UND_EIGENTUMSNACHWEIS_KOMMUNAL_PDF,
+        FLURSTUECKS_UND_EIGENTUMSNACHWEIS_KOMMUNAL_HTML, FLURSTUECKS_UND_EIGENTUMSNACHWEIS_KOMMUNAL_INTERN_PDF,
+        FLURSTUECKS_UND_EIGENTUMSNACHWEIS_KOMMUNAL_INTERN_HTML,
+
+        BESTANDSNACHWEIS_NRW_PDF, BESTANDSNACHWEIS_STICHTAGSBEZOGEN_NRW_PDF, BESTANDSNACHWEIS_NRW_HTML,
+        BESTANDSNACHWEIS_KOMMUNAL_PDF, BESTANDSNACHWEIS_KOMMUNAL_HTML, BESTANDSNACHWEIS_KOMMUNAL_INTERN_PDF,
+        BESTANDSNACHWEIS_KOMMUNAL_INTERN_HTML, GRUNDSTUECKSNACHWEIS_NRW_PDF, GRUNDSTUECKSNACHWEIS_NRW_HTML,
+
+        PUNKTLISTE_PDF, PUNKTLISTE_HTML, PUNKTLISTE_TXT
+    }
+
     //~ Instance fields --------------------------------------------------------
 
-    // Flurstueck
-    public final String FLURSTUECKSNACHWEIS_PDF;
-    public final String FLURSTUECKSNACHWEIS_HTML;
-    public final String FLURSTUECKS_UND_EIGENTUMSNACHWEIS_NRW_PDF;
-    public final String FLURSTUECKS_UND_EIGENTUMSNACHWEIS_NRW_HTML;
-    public final String FLURSTUECKS_UND_EIGENTUMSNACHWEIS_KOMMUNAL_PDF;
-    public final String FLURSTUECKS_UND_EIGENTUMSNACHWEIS_KOMMUNAL_HTML;
-    public final String FLURSTUECKS_UND_EIGENTUMSNACHWEIS_KOMMUNAL_INTERN_PDF;
-    public final String FLURSTUECKS_UND_EIGENTUMSNACHWEIS_KOMMUNAL_INTERN_HTML;
-    // Buchungsblatt
-    public final String BESTANDSNACHWEIS_NRW_PDF;
-    public final String BESTANDSNACHWEIS_STICHTAGSBEZOGEN_NRW_PDF;
-    public final String BESTANDSNACHWEIS_NRW_HTML;
-    public final String BESTANDSNACHWEIS_KOMMUNAL_PDF;
-    public final String BESTANDSNACHWEIS_KOMMUNAL_HTML;
-    public final String BESTANDSNACHWEIS_KOMMUNAL_INTERN_PDF;
-    public final String BESTANDSNACHWEIS_KOMMUNAL_INTERN_HTML;
-    public final String GRUNDSTUECKSNACHWEIS_NRW_PDF;
-    public final String GRUNDSTUECKSNACHWEIS_NRW_HTML;
-    // Punkt
-    public final String PUNKTLISTE_PDF;
-    public final String PUNKTLISTE_HTML;
-    public final String PUNKTLISTE_TXT;
-    //
-    public final Map<String, Point> ALKIS_FORMATS;
-    public final List<AlkisProductDescription> ALKIS_MAP_PRODUCTS;
-    private final String IDENTIFICATIONANDMORE;
+    private final Map<String, Point> alkisFormats;
+    private final List<AlkisProductDescription> alkisMapProducts;
+    private final String identificationAndMore;
     private final SimpleDateFormat stichtagDateFormat = new SimpleDateFormat("dd.MM.yyyy");
 
     private final AlkisConf alkisConf;
     //
+
+    private final Map<Type, String> productMap = new HashMap();
 
     //~ Constructors -----------------------------------------------------------
 
@@ -123,42 +122,59 @@ public class AlkisProducts {
 
         final List<AlkisProductDescription> mapProducts = new ArrayList<AlkisProductDescription>();
         final Map<String, Point> formatMap = new HashMap<String, Point>();
-        ALKIS_FORMATS = Collections.unmodifiableMap(formatMap);
-        ALKIS_MAP_PRODUCTS = Collections.unmodifiableList(mapProducts);
-        IDENTIFICATIONANDMORE = "user=" + alkisConf.USER + "&password=" + alkisConf.PASSWORD + "&service="
+        alkisFormats = Collections.unmodifiableMap(formatMap);
+        alkisMapProducts = Collections.unmodifiableList(mapProducts);
+        identificationAndMore = "user=" + alkisConf.USER + "&password=" + alkisConf.PASSWORD + "&service="
                     + alkisConf.SERVICE
                     + "&script=" + productProperties.getProperty("NACHVERARBEITUNG_SCRIPT");
-        FLURSTUECKSNACHWEIS_PDF = productProperties.getProperty("FLURSTUECKSNACHWEIS_PDF");
-        FLURSTUECKSNACHWEIS_HTML = productProperties.getProperty("FLURSTUECKSNACHWEIS_HTML");
-        FLURSTUECKS_UND_EIGENTUMSNACHWEIS_KOMMUNAL_PDF = productProperties.getProperty(
-                "FLURSTUECKS_UND_EIGENTUMSNACHWEIS_KOMMUNAL_PDF");
-        FLURSTUECKS_UND_EIGENTUMSNACHWEIS_KOMMUNAL_HTML = productProperties.getProperty(
-                "FLURSTUECKS_UND_EIGENTUMSNACHWEIS_KOMMUNAL_HTML");
-        FLURSTUECKS_UND_EIGENTUMSNACHWEIS_KOMMUNAL_INTERN_PDF = productProperties.getProperty(
-                "FLURSTUECKS_UND_EIGENTUMSNACHWEIS_KOMMUNAL_INTERN_PDF");
-        FLURSTUECKS_UND_EIGENTUMSNACHWEIS_KOMMUNAL_INTERN_HTML = productProperties.getProperty(
-                "FLURSTUECKS_UND_EIGENTUMSNACHWEIS_KOMMUNAL_INTERN_HTML");
-        FLURSTUECKS_UND_EIGENTUMSNACHWEIS_NRW_PDF = productProperties.getProperty(
-                "FLURSTUECKS_UND_EIGENTUMSNACHWEIS_NRW_PDF");
-        FLURSTUECKS_UND_EIGENTUMSNACHWEIS_NRW_HTML = productProperties.getProperty(
-                "FLURSTUECKS_UND_EIGENTUMSNACHWEIS_NRW_HTML");
-        //
-        GRUNDSTUECKSNACHWEIS_NRW_PDF = productProperties.getProperty("GRUNDSTUECKSNACHWEIS_NRW_PDF");
-        GRUNDSTUECKSNACHWEIS_NRW_HTML = productProperties.getProperty("GRUNDSTUECKSNACHWEIS_NRW_HTML");
-        BESTANDSNACHWEIS_NRW_PDF = productProperties.getProperty("BESTANDSNACHWEIS_NRW_PDF");
-        BESTANDSNACHWEIS_STICHTAGSBEZOGEN_NRW_PDF = productProperties.getProperty(
-                "BESTANDSNACHWEIS_STICHTAGSBEZOGEN_NRW_PDF");
-        BESTANDSNACHWEIS_NRW_HTML = productProperties.getProperty("BESTANDSNACHWEIS_NRW_HTML");
-        BESTANDSNACHWEIS_KOMMUNAL_PDF = productProperties.getProperty("BESTANDSNACHWEIS_KOMMUNAL_PDF");
-        BESTANDSNACHWEIS_KOMMUNAL_HTML = productProperties.getProperty("BESTANDSNACHWEIS_KOMMUNAL_HTML");
-        BESTANDSNACHWEIS_KOMMUNAL_INTERN_PDF = productProperties.getProperty(
-                "BESTANDSNACHWEIS_KOMMUNAL_INTERN_PDF");
-        BESTANDSNACHWEIS_KOMMUNAL_INTERN_HTML = productProperties.getProperty(
-                "BESTANDSNACHWEIS_KOMMUNAL_INTERN_HTML");
-        //
-        PUNKTLISTE_PDF = productProperties.getProperty("PUNKTLISTE_PDF");
-        PUNKTLISTE_HTML = productProperties.getProperty("PUNKTLISTE_HTML");
-        PUNKTLISTE_TXT = productProperties.getProperty("PUNKTLISTE_TXT");
+        productMap.put(Type.FLURSTUECKSNACHWEIS_PDF, productProperties.getProperty("FLURSTUECKSNACHWEIS_PDF"));
+        productMap.put(Type.FLURSTUECKSNACHWEIS_HTML, productProperties.getProperty("FLURSTUECKSNACHWEIS_HTML"));
+        productMap.put(
+            Type.FLURSTUECKS_UND_EIGENTUMSNACHWEIS_KOMMUNAL_PDF,
+            productProperties.getProperty("FLURSTUECKS_UND_EIGENTUMSNACHWEIS_KOMMUNAL_PDF"));
+        productMap.put(
+            Type.FLURSTUECKS_UND_EIGENTUMSNACHWEIS_KOMMUNAL_HTML,
+            productProperties.getProperty("FLURSTUECKS_UND_EIGENTUMSNACHWEIS_KOMMUNAL_HTML"));
+        productMap.put(
+            Type.FLURSTUECKS_UND_EIGENTUMSNACHWEIS_KOMMUNAL_INTERN_PDF,
+            productProperties.getProperty("FLURSTUECKS_UND_EIGENTUMSNACHWEIS_KOMMUNAL_INTERN_PDF"));
+        productMap.put(
+            Type.FLURSTUECKS_UND_EIGENTUMSNACHWEIS_KOMMUNAL_INTERN_HTML,
+            productProperties.getProperty("FLURSTUECKS_UND_EIGENTUMSNACHWEIS_KOMMUNAL_INTERN_HTML"));
+        productMap.put(
+            Type.FLURSTUECKS_UND_EIGENTUMSNACHWEIS_NRW_PDF,
+            productProperties.getProperty("FLURSTUECKS_UND_EIGENTUMSNACHWEIS_NRW_PDF"));
+        productMap.put(
+            Type.FLURSTUECKS_UND_EIGENTUMSNACHWEIS_NRW_HTML,
+            productProperties.getProperty("FLURSTUECKS_UND_EIGENTUMSNACHWEIS_NRW_HTML"));
+
+        productMap.put(
+            Type.GRUNDSTUECKSNACHWEIS_NRW_PDF,
+            productProperties.getProperty("GRUNDSTUECKSNACHWEIS_NRW_PDF"));
+        productMap.put(
+            Type.GRUNDSTUECKSNACHWEIS_NRW_HTML,
+            productProperties.getProperty("GRUNDSTUECKSNACHWEIS_NRW_HTML"));
+        productMap.put(Type.BESTANDSNACHWEIS_NRW_PDF, productProperties.getProperty("BESTANDSNACHWEIS_NRW_PDF"));
+        productMap.put(
+            Type.BESTANDSNACHWEIS_STICHTAGSBEZOGEN_NRW_PDF,
+            productProperties.getProperty("BESTANDSNACHWEIS_STICHTAGSBEZOGEN_NRW_PDF"));
+        productMap.put(Type.BESTANDSNACHWEIS_NRW_HTML, productProperties.getProperty("BESTANDSNACHWEIS_NRW_HTML"));
+        productMap.put(
+            Type.BESTANDSNACHWEIS_KOMMUNAL_PDF,
+            productProperties.getProperty("BESTANDSNACHWEIS_KOMMUNAL_PDF"));
+        productMap.put(
+            Type.BESTANDSNACHWEIS_KOMMUNAL_HTML,
+            productProperties.getProperty("BESTANDSNACHWEIS_KOMMUNAL_HTML"));
+        productMap.put(
+            Type.BESTANDSNACHWEIS_KOMMUNAL_INTERN_PDF,
+            productProperties.getProperty("BESTANDSNACHWEIS_KOMMUNAL_INTERN_PDF"));
+        productMap.put(
+            Type.BESTANDSNACHWEIS_KOMMUNAL_INTERN_HTML,
+            productProperties.getProperty("BESTANDSNACHWEIS_KOMMUNAL_INTERN_HTML"));
+
+        productMap.put(Type.PUNKTLISTE_PDF, productProperties.getProperty("PUNKTLISTE_PDF"));
+        productMap.put(Type.PUNKTLISTE_HTML, productProperties.getProperty("PUNKTLISTE_HTML"));
+        productMap.put(Type.PUNKTLISTE_TXT, productProperties.getProperty("PUNKTLISTE_TXT"));
 
         final Document document = new SAXBuilder().build(new StringReader(produktbeschreibungXml));
         // ---------Kartenprodukte----------
@@ -274,11 +290,40 @@ public class AlkisProducts {
     /**
      * DOCUMENT ME!
      *
+     * @return  DOCUMENT ME!
+     */
+    public Map<String, Point> getAlkisFormats() {
+        return alkisFormats;
+    }
+
+    /**
+     * DOCUMENT ME!
+     *
+     * @return  DOCUMENT ME!
+     */
+    public List<AlkisProductDescription> getAlkisMapProducts() {
+        return alkisMapProducts;
+    }
+
+    /**
+     * DOCUMENT ME!
+     *
+     * @param   type  DOCUMENT ME!
+     *
+     * @return  DOCUMENT ME!
+     */
+    public String get(final Type type) {
+        return productMap.get(type);
+    }
+
+    /**
+     * DOCUMENT ME!
+     *
      * @param   pointBean  DOCUMENT ME!
      *
      * @return  DOCUMENT ME!
      */
-    public String getPointDataForProduct(final CidsBean pointBean) {
+    public static String getPointDataForProduct(final CidsBean pointBean) {
         final StringBuilder sb = new StringBuilder("AX_");
         sb.append(pointBean.getProperty("pointtype"));
         sb.append(":");
@@ -310,7 +355,7 @@ public class AlkisProducts {
                     .append("&id=")
                     .append(objectID)
                     .append("&")
-                    .append(IDENTIFICATIONANDMORE);
+                    .append(identificationAndMore);
         if (user != null) {
             try {
                 urlBuilder.append("&ordernumber=").append(URLEncoder.encode(user.getName(), "UTF-8"));
@@ -349,7 +394,7 @@ public class AlkisProducts {
                     .append("&id=")
                     .append(objectID)
                     .append("&")
-                    .append(IDENTIFICATIONANDMORE);
+                    .append(identificationAndMore);
         if (user != null) {
             try {
                 urlBuilder.append("&ordernumber=").append(URLEncoder.encode(user.getName(), "UTF-8"));
@@ -370,7 +415,7 @@ public class AlkisProducts {
      */
     public String productListenNachweisUrl(final String punktliste, final String productCode) {
         return alkisConf.LISTEN_NACHWEIS_SERVICE + "?" + MLESSNUMBER + "&product="
-                    + productCode + "&ids=" + punktliste + "&" + IDENTIFICATIONANDMORE;
+                    + productCode + "&ids=" + punktliste + "&" + identificationAndMore;
     }
 
     /**
@@ -380,7 +425,7 @@ public class AlkisProducts {
      *
      * @return  DOCUMENT ME!
      */
-    private String generateFabricationNotices(final String fertigungsVermerk) {
+    private static String generateFabricationNotices(final String fertigungsVermerk) {
         if (fertigungsVermerk != null) {
             try {
                 final String notice1 = URLEncoder.encode(
@@ -405,7 +450,7 @@ public class AlkisProducts {
      *
      * @return  DOCUMENT ME!
      */
-    private String generateFabricationNotice(final String fertigungsVermerk) {
+    private static String generateFabricationNotice(final String fertigungsVermerk) {
         if (fertigungsVermerk != null) {
             try {
                 final String note = URLEncoder.encode(
@@ -435,7 +480,7 @@ public class AlkisProducts {
     public URL productKarteUrl(final String parcelCode, final String fertigungsVermerk) throws MalformedURLException {
         final String fabricationNotices = generateFabricationNotices(fertigungsVermerk);
         return new URL(alkisConf.LIEGENSCHAFTSKARTE_SERVICE + "?" + MLESSNUMBER
-                        + "&landparcel=" + parcelCode + "&" + IDENTIFICATIONANDMORE
+                        + "&landparcel=" + parcelCode + "&" + identificationAndMore
                         + ((fabricationNotices != null) ? ("&" + fabricationNotices) : ""));
     }
 
@@ -491,7 +536,7 @@ public class AlkisProducts {
             url.append("&additionalLandparcel=true");
         }
         url.append('&');
-        url.append(IDENTIFICATIONANDMORE);
+        url.append(identificationAndMore);
         if ((produkt.getMassstabMin() != null) && (produkt.getMassstabMax() != null)) {
             url.append("&scale=");
             url.append(produkt.getMassstab());
@@ -512,7 +557,7 @@ public class AlkisProducts {
      * @return  DOCUMENT ME!
      */
     public Collection<URL> getCorrespondingPointURLs(final String pointcode) {
-        final Collection<URL> validURLs = new LinkedList<URL>();
+        final Collection<URL> validURLs = new LinkedList<>();
 
         // The pointcode of a alkis point has a specific format:
         // 25xx56xx1xxxxx

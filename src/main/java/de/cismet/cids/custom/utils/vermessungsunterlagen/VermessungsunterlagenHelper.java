@@ -1195,7 +1195,7 @@ public class VermessungsunterlagenHelper implements ConnectionContextProvider {
         AlkisProductDescription minimalWidthFittingProduct = null;
         AlkisProductDescription minimalHeightFittingProduct = null;
         AlkisProductDescription defaultProduct = null;
-        for (final AlkisProductDescription product : ServerAlkisProducts.getInstance().ALKIS_MAP_PRODUCTS) {
+        for (final AlkisProductDescription product : ServerAlkisProducts.getInstance().getAlkisMapProducts()) {
             if (clazz.equals(product.getClazz()) && type.equals(product.getType())) {
                 if (product.isDefaultProduct()) {
                     defaultProduct = product;

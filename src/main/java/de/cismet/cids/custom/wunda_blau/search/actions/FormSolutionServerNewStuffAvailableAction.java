@@ -84,6 +84,7 @@ import javax.xml.bind.ValidationEventHandler;
 
 import de.cismet.cids.custom.utils.WundaBlauServerResources;
 import de.cismet.cids.custom.utils.alkis.AlkisProductDescription;
+import de.cismet.cids.custom.utils.alkis.AlkisProducts;
 import de.cismet.cids.custom.utils.alkis.ServerAlkisProducts;
 import de.cismet.cids.custom.utils.formsolutions.FormSolutionFtpClient;
 import de.cismet.cids.custom.utils.formsolutions.FormSolutionsBestellung;
@@ -919,7 +920,7 @@ public class FormSolutionServerNewStuffAvailableAction implements UserAwareServe
             final Integer massstab) {
         final String scale = Integer.toString(massstab);
         AlkisProductDescription selectedProduct = null;
-        for (final AlkisProductDescription product : ServerAlkisProducts.getInstance().ALKIS_MAP_PRODUCTS) {
+        for (final AlkisProductDescription product : ServerAlkisProducts.getInstance().getAlkisMapProducts()) {
             if (product.getCode().startsWith(produktKey) && scale.equals(product.getMassstab())
                         && dinFormat.equals(product.getDinFormat())) {
                 selectedProduct = product;

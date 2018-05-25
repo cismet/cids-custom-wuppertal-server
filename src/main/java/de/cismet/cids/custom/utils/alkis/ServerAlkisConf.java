@@ -15,6 +15,7 @@ package de.cismet.cids.custom.utils.alkis;
 import de.cismet.cids.custom.utils.WundaBlauServerResources;
 
 import de.cismet.cids.utils.serverresources.ServerResourcesLoader;
+import java.util.Properties;
 
 /**
  * DOCUMENT ME!
@@ -31,9 +32,8 @@ public class ServerAlkisConf extends AlkisConf {
      *
      * @throws  Exception  DOCUMENT ME!
      */
-    private ServerAlkisConf() throws Exception {
-        super(ServerResourcesLoader.getInstance().loadProperties(
-                WundaBlauServerResources.ALKIS_CONF.getValue()));
+    private ServerAlkisConf(final Properties properties) throws Exception {
+        super(properties);
     }
 
     //~ Methods ----------------------------------------------------------------
@@ -62,7 +62,8 @@ public class ServerAlkisConf extends AlkisConf {
 
         static {
             try {
-                INSTANCE = new ServerAlkisConf();
+                INSTANCE = new ServerAlkisConf(ServerResourcesLoader.getInstance().loadProperties(
+                WundaBlauServerResources.ALKIS_CONF.getValue()));
             } catch (final Exception ex) {
                 throw new RuntimeException("Exception while initializing ServerAlkisConf", ex);
             }
