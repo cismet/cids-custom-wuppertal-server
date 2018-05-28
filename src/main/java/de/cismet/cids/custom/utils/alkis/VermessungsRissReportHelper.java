@@ -123,7 +123,7 @@ public class VermessungsRissReportHelper {
             }
 
             final StringBuilder description;
-            if (host.equals(alkisConf.VERMESSUNG_HOST_GRENZNIEDERSCHRIFTEN)) {
+            if (host.equals(alkisConf.getVermessungHostGrenzniederschriften())) {
                 description = new StringBuilder("Ergänzende Dokumente zum Vermessungsriss ");
             } else {
                 description = new StringBuilder("Vermessungsriss ");
@@ -139,7 +139,7 @@ public class VermessungsRissReportHelper {
 
             final List<URL> urlList;
             // we search for reduced size images, since we need the reduced size image for the report
-            if (host.equals(alkisConf.VERMESSUNG_HOST_GRENZNIEDERSCHRIFTEN)) {
+            if (host.equals(alkisConf.getVermessungHostGrenzniederschriften())) {
                 urlList = VermessungsrissPictureFinder.getInstance()
                             .findGrenzniederschriftPicture(
                                     true,
@@ -223,8 +223,8 @@ public class VermessungsRissReportHelper {
             startingPage += pageCount;
         }
 
-        final String type = host.equals(alkisConf.VERMESSUNG_HOST_GRENZNIEDERSCHRIFTEN) ? TYPE_COMPLEMENTARYDOCUMENTS
-                                                                                        : TYPE_VERMESSUNGSRISSE;
+        final String type = host.equals(alkisConf.getVermessungHostGrenzniederschriften()) ? TYPE_COMPLEMENTARYDOCUMENTS
+                                                                                           : TYPE_VERMESSUNGSRISSE;
 
         final HashMap parameters = new HashMap();
         parameters.put(PARAMETER_JOBNUMBER, jobNumber);

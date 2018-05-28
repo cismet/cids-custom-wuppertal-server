@@ -124,8 +124,8 @@ public class AlkisProducts {
         final Map<String, Point> formatMap = new HashMap<String, Point>();
         alkisFormats = Collections.unmodifiableMap(formatMap);
         alkisMapProducts = Collections.unmodifiableList(mapProducts);
-        identificationAndMore = "user=" + alkisConf.USER + "&password=" + alkisConf.PASSWORD + "&service="
-                    + alkisConf.SERVICE
+        identificationAndMore = "user=" + alkisConf.getUser() + "&password=" + alkisConf.getPassword() + "&service="
+                    + alkisConf.getService()
                     + "&script=" + productProperties.getProperty("NACHVERARBEITUNG_SCRIPT");
         productMap.put(Type.FLURSTUECKSNACHWEIS_PDF, productProperties.getProperty("FLURSTUECKSNACHWEIS_PDF"));
         productMap.put(Type.FLURSTUECKSNACHWEIS_HTML, productProperties.getProperty("FLURSTUECKSNACHWEIS_HTML"));
@@ -348,7 +348,7 @@ public class AlkisProducts {
             final User user,
             final String fertigungsVermerk) throws MalformedURLException {
         final String fabricationNotice = generateFabricationNotice(fertigungsVermerk);
-        final StringBuilder urlBuilder = new StringBuilder(alkisConf.EINZEL_NACHWEIS_SERVICE).append("?")
+        final StringBuilder urlBuilder = new StringBuilder(alkisConf.getEinzelNachweisService()).append("?")
                     .append(MLESSNUMBER)
                     .append("&product=")
                     .append(productCode)
@@ -385,7 +385,7 @@ public class AlkisProducts {
             final String productCode,
             final Date stichtag,
             final User user) throws MalformedURLException {
-        final StringBuilder urlBuilder = new StringBuilder(alkisConf.EINZEL_NACHWEIS_SERVICE).append("?")
+        final StringBuilder urlBuilder = new StringBuilder(alkisConf.getEinzelNachweisService()).append("?")
                     .append(MLESSNUMBER)
                     .append("&reportingDate=")
                     .append(stichtagDateFormat.format(stichtag))
@@ -414,7 +414,7 @@ public class AlkisProducts {
      * @return  DOCUMENT ME!
      */
     public String productListenNachweisUrl(final String punktliste, final String productCode) {
-        return alkisConf.LISTEN_NACHWEIS_SERVICE + "?" + MLESSNUMBER + "&product="
+        return alkisConf.getListenNachweisService() + "?" + MLESSNUMBER + "&product="
                     + productCode + "&ids=" + punktliste + "&" + identificationAndMore;
     }
 
@@ -479,7 +479,7 @@ public class AlkisProducts {
      */
     public URL productKarteUrl(final String parcelCode, final String fertigungsVermerk) throws MalformedURLException {
         final String fabricationNotices = generateFabricationNotices(fertigungsVermerk);
-        return new URL(alkisConf.LIEGENSCHAFTSKARTE_SERVICE + "?" + MLESSNUMBER
+        return new URL(alkisConf.getLiegenschaftskarteService() + "?" + MLESSNUMBER
                         + "&landparcel=" + parcelCode + "&" + identificationAndMore
                         + ((fabricationNotices != null) ? ("&" + fabricationNotices) : ""));
     }
@@ -510,7 +510,7 @@ public class AlkisProducts {
             final String auftragsNr,
             final boolean moreThanOneParcel,
             final String fertigungsVermerk) throws MalformedURLException {
-        final StringBuilder url = new StringBuilder(alkisConf.LIEGENSCHAFTSKARTE_SERVICE);
+        final StringBuilder url = new StringBuilder(alkisConf.getLiegenschaftskarteService());
         url.append('?');
         url.append(MLESSNUMBER);
         url.append("&landparcel=");
@@ -570,7 +570,7 @@ public class AlkisProducts {
 
         final StringBuilder urlBuilder;
         if (pointcode.trim().length() < 15) {
-            urlBuilder = new StringBuilder(alkisConf.APMAPS_HOST);
+            urlBuilder = new StringBuilder(alkisConf.getApmapsHost());
 
             final String kilometerquadratPart1 = pointcode.substring(2, 4);
             final String kilometerquadratPart2 = pointcode.substring(6, 8);
@@ -579,13 +579,13 @@ public class AlkisProducts {
             urlBuilder.append(kilometerquadratPart1);
             urlBuilder.append(kilometerquadratPart2);
             urlBuilder.append('/');
-            urlBuilder.append(alkisConf.APMAPS_PREFIX);
+            urlBuilder.append(alkisConf.getApmapsPrefix());
             urlBuilder.append(pointcode);
             urlBuilder.append('.');
         } else {
-            urlBuilder = new StringBuilder(alkisConf.APMAPS_ETRS_HOST);
+            urlBuilder = new StringBuilder(alkisConf.getApmapsEtrsHost());
             urlBuilder.append('/');
-            urlBuilder.append(alkisConf.APMAPS_PREFIX);
+            urlBuilder.append(alkisConf.getApmapsPrefix());
             urlBuilder.append(pointcode);
             urlBuilder.append('.');
         }
@@ -621,11 +621,11 @@ public class AlkisProducts {
     public Collection<URL> getCorrespondingNivPURLs(final java.lang.String dgkBlattnummer,
             final String laufendeNummer) {
         final Collection<URL> validURLs = new LinkedList<URL>();
-        final StringBuilder urlBuilder = new StringBuilder(alkisConf.NIVP_HOST);
+        final StringBuilder urlBuilder = new StringBuilder(alkisConf.getNivpHost());
         urlBuilder.append('/');
         urlBuilder.append(dgkBlattnummer);
         urlBuilder.append('/');
-        urlBuilder.append(alkisConf.NIVP_PREFIX);
+        urlBuilder.append(alkisConf.getNivpPrefix());
         urlBuilder.append(dgkBlattnummer);
         urlBuilder.append(getFormattedLaufendeNummerNivP(laufendeNummer));
         urlBuilder.append('.');
