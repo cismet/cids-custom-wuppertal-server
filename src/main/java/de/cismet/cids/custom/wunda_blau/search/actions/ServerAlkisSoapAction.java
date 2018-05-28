@@ -15,8 +15,6 @@ import de.aedsicad.aaaweb.service.alkis.info.ALKISInfoServices;
 import de.aedsicad.aaaweb.service.util.Buchungsblatt;
 import de.aedsicad.aaaweb.service.util.Point;
 
-import javassist.bytecode.CodeAttribute;
-
 import java.rmi.RemoteException;
 
 import de.cismet.cids.custom.utils.alkis.SOAPAccessProvider;
@@ -38,6 +36,8 @@ public class ServerAlkisSoapAction implements ServerAction {
 
     private static final transient org.apache.log4j.Logger LOG = org.apache.log4j.Logger.getLogger(
             ServerAlkisSoapAction.class);
+
+    public static final String TASKNAME = "alkisSoapTunnelAction";
 
     //~ Enums ------------------------------------------------------------------
 
@@ -96,7 +96,7 @@ public class ServerAlkisSoapAction implements ServerAction {
 
     @Override
     public String getTaskName() {
-        return "alkisSoapTunnelAction";
+        return TASKNAME;
     }
 
     /**
@@ -105,7 +105,7 @@ public class ServerAlkisSoapAction implements ServerAction {
      * @return  DOCUMENT ME!
      */
     private static SOAPAccessProvider getSOAPAccessProvider() {
-        return LazyInitialiser.soapProvider;
+        return LazyInitialiser.INSTANCE;
     }
 
     /**
@@ -128,7 +128,7 @@ public class ServerAlkisSoapAction implements ServerAction {
 
         //~ Static fields/initializers -----------------------------------------
 
-        private static final SOAPAccessProvider soapProvider = new SOAPAccessProvider(ServerAlkisConf.getInstance());
+        private static final SOAPAccessProvider INSTANCE = new SOAPAccessProvider(ServerAlkisConf.getInstance());
 
         //~ Constructors -------------------------------------------------------
 
