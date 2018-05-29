@@ -97,17 +97,17 @@ public class VermUntTaskAPUebersicht extends VermUntTaskAP {
         OutputStream out = null;
         try {
             final URL url = ServerAlkisProducts.productKarteUrl(
-                            landparcelcode,
-                            product.getCode(),
-                            Double.valueOf(0).intValue(),
-                            Double.valueOf(center.x).intValue(),
-                            Double.valueOf(center.y).intValue(),
-                            product.getMassstabMin(),
-                            product.getMassstabMax(),
-                            "",
-                            auftragsnummer,
-                            false,
-                            null);
+                    landparcelcode,
+                    product.getCode(),
+                    Double.valueOf(0).intValue(),
+                    Double.valueOf(center.x).intValue(),
+                    Double.valueOf(center.y).intValue(),
+                    product.getMassstabMin(),
+                    product.getMassstabMax(),
+                    "",
+                    auftragsnummer,
+                    false,
+                    null);
 
             final String filename = product.getCode() + "." + landparcelcode.replace("/", "--")
                         + ((flurstuecke.size() > 1) ? ".ua" : "") + ".pdf";

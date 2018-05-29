@@ -990,17 +990,17 @@ public class FormSolutionServerNewStuffAvailableAction implements UserAwareServe
             ? String.format(GUTSCHEIN_ADDITIONAL_TEXT, bestellungBean.getProperty("gutschein_code")) : null;
 
         final URL url = ServerAlkisProducts.productKarteUrl(
-                        flurstueckKennzeichen,
-                        productDesc.getCode(),
-                        0,
-                        (int)center.getX(),
-                        (int)center.getY(),
-                        productDesc.getMassstabMin(),
-                        productDesc.getMassstabMax(),
-                        gutscheincodeAdditionalText,
-                        transid,
-                        false,
-                        null);
+                flurstueckKennzeichen,
+                productDesc.getCode(),
+                0,
+                (int)center.getX(),
+                (int)center.getY(),
+                productDesc.getMassstabMin(),
+                productDesc.getMassstabMax(),
+                gutscheincodeAdditionalText,
+                transid,
+                false,
+                null);
 
         return url;
     }
