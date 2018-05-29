@@ -39,13 +39,13 @@ public class VermessungsUnterlagenPortalDownloadAction implements ServerAction {
     @Override
     public Object execute(final Object body, final ServerActionParameter... params) {
         final String schluessel = (String)body;
-        final String tmp = VermessungsunterlagenHelper.getInstance().getProperties().getFtpPath();
-        final String ftpZipPath = (tmp.isEmpty() ? "" : ("/" + tmp)) + "/"
-                    + VermessungsunterlagenHelper.DIR_PREFIX + "_" + schluessel + ".zip";
+        final String tmp = VermessungsunterlagenHelper.getInstance().getProperties().getWebDavPath();
+        final String webDavPath = (tmp.isEmpty() ? "" : ("/" + tmp)) + "/" + VermessungsunterlagenHelper.DIR_PREFIX
+                    + "_" + schluessel + ".zip";
 
         InputStream inputStream = null;
         try {
-            inputStream = VermessungsunterlagenHelper.getInstance().downloadFromFTP(ftpZipPath);
+            inputStream = VermessungsunterlagenHelper.getInstance().downloadFromWebDAV(webDavPath);
             return IOUtils.toByteArray(inputStream);
         } catch (final Exception ex) {
             return new Exception("Fehler beim Herunterladen der Zip-Datei.", ex);
