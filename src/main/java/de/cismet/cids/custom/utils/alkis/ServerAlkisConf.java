@@ -12,6 +12,11 @@
  */
 package de.cismet.cids.custom.utils.alkis;
 
+import lombok.Getter;
+
+import java.io.File;
+import java.io.FileInputStream;
+
 import java.util.Properties;
 
 import de.cismet.cids.custom.utils.WundaBlauServerResources;
@@ -24,7 +29,12 @@ import de.cismet.cids.utils.serverresources.ServerResourcesLoader;
  * @author   jruiz
  * @version  $Revision$, $Date$
  */
+@Getter
 public class ServerAlkisConf extends AlkisConf {
+
+    //~ Instance fields --------------------------------------------------------
+
+    private final AlkisCreds creds;
 
     //~ Constructors -----------------------------------------------------------
 
@@ -37,6 +47,15 @@ public class ServerAlkisConf extends AlkisConf {
      */
     private ServerAlkisConf(final Properties properties) throws Exception {
         super(properties);
+
+        final String crendentialsFile = getCredentialsFile();
+        if (crendentialsFile != null) {
+            final Properties credProperties = new Properties();
+            credProperties.load(new FileInputStream(new File(crendentialsFile)));
+            creds = new AlkisCreds(credProperties);
+        } else {
+            creds = null;
+        }
     }
 
     //~ Methods ----------------------------------------------------------------

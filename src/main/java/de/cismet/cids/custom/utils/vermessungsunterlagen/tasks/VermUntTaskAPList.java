@@ -18,6 +18,7 @@ import java.io.InputStream;
 import java.io.OutputStream;
 import java.io.StringReader;
 
+import java.net.MalformedURLException;
 import java.net.URL;
 
 import java.util.Collection;
@@ -65,7 +66,13 @@ public class VermUntTaskAPList extends VermUntTaskAP {
 
         if (punktListenString.length() > 3) {
             if ((code != null) && (code.length() > 0)) {
-                final String url = ServerAlkisProducts.getInstance().productListenNachweisUrl(punktListenString, code);
+                String url = null;
+                try {
+                    url = ServerAlkisProducts.productListenNachweisUrl(punktListenString, code).toString();
+                } catch (MalformedURLException ex) {
+                    final String message = "Beim Generieren der URL kam es zu einem unerwarteten Fehler.";
+                    throw new VermessungsunterlagenTaskException(getType(), message, ex);
+                }
                 if ((url != null) && (url.trim().length() > 0)) {
                     final int parameterPosition = url.indexOf('?');
 

@@ -45,8 +45,8 @@ public final class SOAPAccessProvider {
      *
      * @throws  IllegalStateException  DOCUMENT ME!
      */
-    public SOAPAccessProvider(final AlkisConf alkisConf) {
-        final String identityCard = alkisConf.getUser() + "," + alkisConf.getPassword();
+    public SOAPAccessProvider(final ServerAlkisConf alkisConf) {
+        final String identityCard = alkisConf.getCreds().getUser() + "," + alkisConf.getCreds().getPassword();
         final String service = alkisConf.getService();
         final String catalogService = alkisConf.getServer() + alkisConf.getCatalogService();
         final String infoService = alkisConf.getServer() + alkisConf.getInfoService();

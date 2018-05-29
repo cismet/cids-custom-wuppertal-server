@@ -110,13 +110,14 @@ public class VermUntTaskNivPUebersicht extends VermUntTaskNivP {
         InputStream in = null;
         OutputStream out = null;
         try {
-            final URL url = ServerAlkisProducts.getInstance()
-                        .productKarteUrl(
+            final URL url = ServerAlkisProducts.productKarteUrl(
                             landparcelcode,
-                            product,
+                            product.getCode(),
                             Double.valueOf(0).intValue(),
                             Double.valueOf(center.x).intValue(),
                             Double.valueOf(center.y).intValue(),
+                            product.getMassstabMin(),
+                            product.getMassstabMax(),
                             "",
                             auftragsnummer,
                             false,

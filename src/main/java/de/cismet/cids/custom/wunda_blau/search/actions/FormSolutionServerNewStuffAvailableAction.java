@@ -84,7 +84,6 @@ import javax.xml.bind.ValidationEventHandler;
 
 import de.cismet.cids.custom.utils.WundaBlauServerResources;
 import de.cismet.cids.custom.utils.alkis.AlkisProductDescription;
-import de.cismet.cids.custom.utils.alkis.AlkisProducts;
 import de.cismet.cids.custom.utils.alkis.ServerAlkisProducts;
 import de.cismet.cids.custom.utils.formsolutions.FormSolutionFtpClient;
 import de.cismet.cids.custom.utils.formsolutions.FormSolutionsBestellung;
@@ -990,13 +989,14 @@ public class FormSolutionServerNewStuffAvailableAction implements UserAwareServe
         final String gutscheincodeAdditionalText = (bestellungBean.getProperty("gutschein_code") != null)
             ? String.format(GUTSCHEIN_ADDITIONAL_TEXT, bestellungBean.getProperty("gutschein_code")) : null;
 
-        final URL url = ServerAlkisProducts.getInstance()
-                    .productKarteUrl(
+        final URL url = ServerAlkisProducts.productKarteUrl(
                         flurstueckKennzeichen,
-                        productDesc,
+                        productDesc.getCode(),
                         0,
                         (int)center.getX(),
                         (int)center.getY(),
+                        productDesc.getMassstabMin(),
+                        productDesc.getMassstabMax(),
                         gutscheincodeAdditionalText,
                         transid,
                         false,
