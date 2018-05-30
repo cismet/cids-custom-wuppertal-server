@@ -40,7 +40,7 @@ import de.cismet.connectioncontext.ConnectionContextStore;
  * Builtin Legacy Search to delegate the operation getLightweightMetaObjectsByQuery to the cids Pure REST Search API.
  *
  * @author   sandra
- * @version  $Revision$, $Date$
+ * @version  $1.0$, $31.05.2018$
  */
 @ServiceProvider(service = RestApiCidsServerSearch.class)
 public class QsgebStatusLightweightSearch extends AbstractCidsServerSearch implements RestApiCidsServerSearch,
@@ -188,13 +188,15 @@ public class QsgebStatusLightweightSearch extends AbstractCidsServerSearch imple
                             getUser(),
                             query,
                             getRepresentationFields(),
-                            getRepresentationPattern()));
+                            getRepresentationPattern(),
+                            connectionContext));
             } else {
                 return Arrays.asList(metaService.getLightweightMetaObjectsByQuery(
                             mc.getID(),
                             getUser(),
                             query,
-                            getRepresentationFields()));
+                            getRepresentationFields(),
+                            connectionContext));
             }
         } catch (final Exception ex) {
             throw new SearchException("error while loading lwmos", ex);
