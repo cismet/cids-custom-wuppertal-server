@@ -151,16 +151,13 @@ public class QsgebStatusLightweightSearch extends AbstractCidsServerSearch imple
                     conditions.add(String.format("id = %d", 0));
                     conditions.add(String.format("id = %d", 1));
                     conditions.add(String.format("id = %d", 4));
-                    break;
                 case 1:
                     conditions.add(String.format("id = %d", 1));
                     conditions.add(String.format("id = %d", 2));
-                    break;
                 case 2:
                     conditions.add(String.format("id = %d", 2));
                     conditions.add(String.format("id = %d", 3));
-                    break;
-                //andere Fälle treten momentan nicht auf, da dann cbStatus.setEnabled(false);
+                default://andere Fälle treten momentan nicht auf, da dann cbStatus.setEnabled(false);
             }
         }
 
