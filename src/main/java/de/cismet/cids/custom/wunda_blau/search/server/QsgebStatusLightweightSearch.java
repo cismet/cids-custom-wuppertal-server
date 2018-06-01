@@ -26,10 +26,8 @@ import de.cismet.cids.dynamics.CidsBean;
 import de.cismet.cids.server.search.AbstractCidsServerSearch;
 import de.cismet.cids.server.search.SearchException;
 
-import de.cismet.cidsx.base.types.Type;
 
 import de.cismet.cidsx.server.api.types.SearchInfo;
-import de.cismet.cidsx.server.api.types.SearchParameterInfo;
 import de.cismet.cidsx.server.search.RestApiCidsServerSearch;
 import de.cismet.cidsx.server.search.builtin.legacy.LightweightMetaObjectsSearch;
 
@@ -37,7 +35,7 @@ import de.cismet.connectioncontext.ConnectionContext;
 import de.cismet.connectioncontext.ConnectionContextStore;
 
 /**
- * Builtin Legacy Search to delegate the operation getLightweightMetaObjectsByQuery to the cids Pure REST Search API.
+ * Search for qsgeb by status.
  *
  * @author   sandra
  * @version  $1.0$, $31.05.2018$
@@ -54,26 +52,12 @@ public class QsgebStatusLightweightSearch extends AbstractCidsServerSearch imple
     private static final String TABLE_QSGEB_STATUS = "qsgeb_status"; 
     public static final String FIELD__STATUS_ID = "status.id";
 
-    //~ Enums ------------------------------------------------------------------
-
-    /**
-     * DOCUMENT ME!
-     *
-     * @version  $Revision$, $Date$
-     */
-    public enum SearchFor {
-
-        //~ Enum constants -----------------------------------------------------
-
-        STATUS
-    }
 
     //~ Instance fields --------------------------------------------------------
 
     private ConnectionContext connectionContext = ConnectionContext.createDummy();
 
     @Getter private final SearchInfo searchInfo;
-    @Getter @Setter private SearchFor searchFor;
     @Getter @Setter private Integer statusId;
     @Getter @Setter private String representationPattern;
     @Getter @Setter private String[] representationFields;
@@ -81,35 +65,28 @@ public class QsgebStatusLightweightSearch extends AbstractCidsServerSearch imple
     //~ Constructors -----------------------------------------------------------
 
     /**
-     * Creates a new LightweightMetaObjectsByQuerySearch object.
+     * Creates a new LightweightMetaObjectsByQuerySearch object for QsgebMarkerEditor.
      */
     public QsgebStatusLightweightSearch() {
         this.searchInfo = new SearchInfo(
                 this.getClass().getName(),
                 this.getClass().getSimpleName(),
-                "Builtin Legacy Search to delegate the operation getLightweightMetaObjectsByQuery to the cids Pure REST Search API.",
-                Arrays.asList(
-                    new SearchParameterInfo[] {
-                        new MySearchParameterInfo(FIELD__STATUS_ID, Type.INTEGER),
-                        new MySearchParameterInfo("searchFor", Type.UNDEFINED),
-                        new MySearchParameterInfo("representationPattern", Type.STRING, true),
-                        new MySearchParameterInfo("representationFields", Type.STRING, true)
-                    }),
-                new MySearchParameterInfo("return", Type.ENTITY_REFERENCE, true));
+                "Search qsgeb",
+                null,
+                null);
     }
 
     /**
      * Creates a new StatusArtLightweightSearch object.
      *
-     * @param  searchFor              DOCUMENT ME!
+     * 
      * @param  representationPattern  DOCUMENT ME!
      * @param  representationFields   DOCUMENT ME!
      */
-    public QsgebStatusLightweightSearch(final SearchFor searchFor,
+    public QsgebStatusLightweightSearch(
             final String representationPattern,
             final String[] representationFields) {
         this();
-        setSearchFor(searchFor);
         setRepresentationPattern(representationPattern);
         setRepresentationFields(representationFields);
     }
@@ -128,14 +105,9 @@ public class QsgebStatusLightweightSearch extends AbstractCidsServerSearch imple
 
     @Override
     public Collection performServerSearch() throws SearchException {
-        final SearchFor searchFor = getSearchFor();
         final Integer statusId = getStatusId();
-
-        if (searchFor == null) {
-            throw new SearchException("searchFor has to be set");
-        }
-
         final MetaService metaService = (MetaService)this.getActiveLocalServers().get("WUNDA_BLAU");
+        
         if (metaService == null) {
             final String message = "Lightweight Meta Objects By Query Search "
                         + "could not connect ot MetaService @domain 'WUNDA_BLAU'";
@@ -145,37 +117,29 @@ public class QsgebStatusLightweightSearch extends AbstractCidsServerSearch imple
 
         final Collection<String> conditions = new ArrayList<>();
         if (statusId != null) {
-            //conditions.add(String.format("status = %d", statusId));
             switch (statusId){
-                case 0:
-                    conditions.add(String.format("id = %d", 0));
-                    conditions.add(String.format("id = %d", 1));
-                    conditions.add(String.format("id = %d", 4));
+                case 0:{
+                    conditions.add(String.format("id = 0"));
+                    conditions.add(String.format("id = 1"));
+                    conditions.add(String.format("id = 4"));
                     break;
-                case 1:
-                    conditions.add(String.format("id = %d", 1));
-                    conditions.add(String.format("id = %d", 2));
+                }
+                case 1:{
+                    conditions.add(String.format("id = 1"));
+                    conditions.add(String.format("id = 2"));
                     break;
-                case 2:
-                    conditions.add(String.format("id = %d", 2));
-                    conditions.add(String.format("id = %d", 3));
+                }
+                case 2:{
+                    conditions.add(String.format("id = 2"));
+                    conditions.add(String.format("id = 3"));
                     break;
-                default: break;//andere Fälle treten momentan nicht auf, da dann cbStatus.setEnabled(false);
+                }
+                default:{ break;}//andere Fälle treten momentan nicht auf, da dann cbStatus.setEnabled(false);
             }
         }
 
-        final String table;
-        switch (searchFor) {
-            case STATUS: {
-                table = TABLE_QSGEB_STATUS;
-            }
-            break;
-            default: {
-                // should be unreachable, because searchFor was already checked for null above
-                throw new SearchException("searchFor has to be set");
-            }
-        }
-
+        final String table = TABLE_QSGEB_STATUS;
+      
         final String query = "SELECT id, name FROM " + table 
                     + (conditions.isEmpty() ? "" : (" WHERE " + String.join(" OR ", conditions)))
                     + " ORDER BY id";
@@ -203,39 +167,4 @@ public class QsgebStatusLightweightSearch extends AbstractCidsServerSearch imple
         }
     }
 
-    //~ Inner Classes ----------------------------------------------------------
-
-    /**
-     * DOCUMENT ME!
-     *
-     * @version  $Revision$, $Date$
-     */
-    private class MySearchParameterInfo extends SearchParameterInfo {
-
-        //~ Constructors -------------------------------------------------------
-
-        /**
-         * Creates a new MySearchParameterInfo object.
-         *
-         * @param  key   DOCUMENT ME!
-         * @param  type  DOCUMENT ME!
-         */
-        private MySearchParameterInfo(final String key, final Type type) {
-            this(key, type, null);
-        }
-        /**
-         * Creates a new MySearchParameterInfo object.
-         *
-         * @param  key    DOCUMENT ME!
-         * @param  type   DOCUMENT ME!
-         * @param  array  DOCUMENT ME!
-         */
-        private MySearchParameterInfo(final String key, final Type type, final Boolean array) {
-            super.setKey(key);
-            super.setType(type);
-            if (array != null) {
-                super.setArray(array);
-            }
-        }
-    }
 }
