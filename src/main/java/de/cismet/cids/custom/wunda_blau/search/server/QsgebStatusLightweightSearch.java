@@ -26,7 +26,6 @@ import de.cismet.cids.dynamics.CidsBean;
 import de.cismet.cids.server.search.AbstractCidsServerSearch;
 import de.cismet.cids.server.search.SearchException;
 
-
 import de.cismet.cidsx.server.api.types.SearchInfo;
 import de.cismet.cidsx.server.search.RestApiCidsServerSearch;
 import de.cismet.cidsx.server.search.builtin.legacy.LightweightMetaObjectsSearch;
@@ -49,9 +48,8 @@ public class QsgebStatusLightweightSearch extends AbstractCidsServerSearch imple
 
     private static final Logger LOG = Logger.getLogger(QsgebStatusLightweightSearch.class);
 
-    private static final String TABLE_QSGEB_STATUS = "qsgeb_status"; 
+    private static final String TABLE_QSGEB_STATUS = "qsgeb_status";
     public static final String FIELD__STATUS_ID = "status.id";
-
 
     //~ Instance fields --------------------------------------------------------
 
@@ -79,7 +77,6 @@ public class QsgebStatusLightweightSearch extends AbstractCidsServerSearch imple
     /**
      * Creates a new StatusArtLightweightSearch object.
      *
-     * 
      * @param  representationPattern  DOCUMENT ME!
      * @param  representationFields   DOCUMENT ME!
      */
@@ -107,7 +104,7 @@ public class QsgebStatusLightweightSearch extends AbstractCidsServerSearch imple
     public Collection performServerSearch() throws SearchException {
         final Integer statusId = getStatusId();
         final MetaService metaService = (MetaService)this.getActiveLocalServers().get("WUNDA_BLAU");
-        
+
         if (metaService == null) {
             final String message = "Lightweight Meta Objects By Query Search "
                         + "could not connect ot MetaService @domain 'WUNDA_BLAU'";
@@ -117,33 +114,35 @@ public class QsgebStatusLightweightSearch extends AbstractCidsServerSearch imple
 
         final Collection<String> conditions = new ArrayList<>();
         if (statusId != null) {
-            switch (statusId){
-                case 0:{
+            switch (statusId) {
+                case 0: {
                     conditions.add(String.format("id = 0"));
                     conditions.add(String.format("id = 1"));
                     conditions.add(String.format("id = 4"));
                     break;
                 }
-                case 1:{
+                case 1: {
                     conditions.add(String.format("id = 1"));
                     conditions.add(String.format("id = 2"));
                     break;
                 }
-                case 2:{
+                case 2: {
                     conditions.add(String.format("id = 2"));
                     conditions.add(String.format("id = 3"));
                     break;
                 }
-                default:{ break;}//andere Fälle treten momentan nicht auf, da dann cbStatus.setEnabled(false);
+                default: {
+                    break;
+                } // andere Fälle treten momentan nicht auf, da dann cbStatus.setEnabled(false);
             }
         }
 
         final String table = TABLE_QSGEB_STATUS;
-      
-        final String query = "SELECT id, name FROM " + table 
+
+        final String query = "SELECT id, name FROM " + table
                     + (conditions.isEmpty() ? "" : (" WHERE " + String.join(" OR ", conditions)))
                     + " ORDER BY id";
-        
+
         try {
             final MetaClass mc = CidsBean.getMetaClassFromTableName("WUNDA_BLAU", table, getConnectionContext());
             if (getRepresentationPattern() != null) {
@@ -166,5 +165,4 @@ public class QsgebStatusLightweightSearch extends AbstractCidsServerSearch imple
             throw new SearchException("error while loading lwmos", ex);
         }
     }
-
 }
