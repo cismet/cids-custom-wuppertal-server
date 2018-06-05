@@ -51,12 +51,19 @@ public class QsgebStatusLightweightSearch extends AbstractCidsServerSearch imple
     private static final String TABLE_QSGEB_STATUS = "qsgeb_status";
     public static final String FIELD__STATUS_ID = "status.id";
 
+    public static final String FIELD__SCHLUESSEL = "schluessel";
+    public static final String STATUS_PRUEFEN_SCHLUESSEL = "pruefen";
+    public static final String STATUS_ZUR_BEARBEITUNG_SCHLUESSEL = "zurBearbeitung";
+    public static final String STATUS_IN_BEARBEITUNG_SCHLUESSEL = "inBearbeitung";
+    public static final String STATUS_KEINE_BEARBEITUNG_SCHLUESSEL = "keineBearbeitung";
+    public static final String STATUS_ERLEDIGT_SCHLUESSEL = "erledigt";
+
     //~ Instance fields --------------------------------------------------------
 
     private ConnectionContext connectionContext = ConnectionContext.createDummy();
 
     @Getter private final SearchInfo searchInfo;
-    @Getter @Setter private Integer statusId;
+    @Getter @Setter private String statusSchluessel;
     @Getter @Setter private String representationPattern;
     @Getter @Setter private String[] representationFields;
 
@@ -79,13 +86,16 @@ public class QsgebStatusLightweightSearch extends AbstractCidsServerSearch imple
      *
      * @param  representationPattern  DOCUMENT ME!
      * @param  representationFields   DOCUMENT ME!
+     * @param  schluessel             DOCUMENT ME!
      */
     public QsgebStatusLightweightSearch(
             final String representationPattern,
-            final String[] representationFields) {
+            final String[] representationFields,
+            final String schluessel) {
         this();
         setRepresentationPattern(representationPattern);
         setRepresentationFields(representationFields);
+        setStatusSchluessel(schluessel);
     }
 
     //~ Methods ----------------------------------------------------------------
@@ -102,7 +112,7 @@ public class QsgebStatusLightweightSearch extends AbstractCidsServerSearch imple
 
     @Override
     public Collection performServerSearch() throws SearchException {
-        final Integer statusId = getStatusId();
+        final String statusSchluessel = getStatusSchluessel();
         final MetaService metaService = (MetaService)this.getActiveLocalServers().get("WUNDA_BLAU");
 
         if (metaService == null) {
@@ -113,22 +123,22 @@ public class QsgebStatusLightweightSearch extends AbstractCidsServerSearch imple
         }
 
         final Collection<String> conditions = new ArrayList<>();
-        if (statusId != null) {
-            switch (statusId) {
-                case 0: {
-                    conditions.add(String.format("id = 0"));
-                    conditions.add(String.format("id = 1"));
-                    conditions.add(String.format("id = 4"));
+        if (statusSchluessel != null) {
+            switch (statusSchluessel) {
+                case STATUS_PRUEFEN_SCHLUESSEL: {
+                    conditions.add(FIELD__SCHLUESSEL + " = '" + STATUS_PRUEFEN_SCHLUESSEL + "'");
+                    conditions.add(FIELD__SCHLUESSEL + " = '" + STATUS_ZUR_BEARBEITUNG_SCHLUESSEL + "'");
+                    conditions.add(FIELD__SCHLUESSEL + " = '" + STATUS_KEINE_BEARBEITUNG_SCHLUESSEL + "'");
                     break;
                 }
-                case 1: {
-                    conditions.add(String.format("id = 1"));
-                    conditions.add(String.format("id = 2"));
+                case STATUS_ZUR_BEARBEITUNG_SCHLUESSEL: {
+                    conditions.add(FIELD__SCHLUESSEL + " = '" + STATUS_ZUR_BEARBEITUNG_SCHLUESSEL + "'");
+                    conditions.add(FIELD__SCHLUESSEL + " = '" + STATUS_IN_BEARBEITUNG_SCHLUESSEL + "'");
                     break;
                 }
-                case 2: {
-                    conditions.add(String.format("id = 2"));
-                    conditions.add(String.format("id = 3"));
+                case STATUS_IN_BEARBEITUNG_SCHLUESSEL: {
+                    conditions.add(FIELD__SCHLUESSEL + " = '" + STATUS_IN_BEARBEITUNG_SCHLUESSEL + "'");
+                    conditions.add(FIELD__SCHLUESSEL + " = '" + STATUS_ERLEDIGT_SCHLUESSEL + "'");
                     break;
                 }
                 default: {
