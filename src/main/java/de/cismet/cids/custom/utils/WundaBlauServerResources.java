@@ -68,6 +68,7 @@ public enum WundaBlauServerResources {
     BERECHTIGUNGSPRUEFUNG_CONF_JSON(new TextServerResource("/berechtigungspruefung/berechtigungspruefung_conf.json")),
 
     VERMESSUNGSUNTERLAGENPORTAL_PROPERTIES(new TextServerResource("/vermessungsunterlagenportal/vup_conf.properties")),
+    QSGEB_PROPERTIES(new TextServerResource("/qsgeb/qsgeb_conf.properties")),
 
     MOTD_WUNDA_BLAU_PROPERTIES(new TextServerResource("/motd/wunda_blau.properties")),
     MOTD_VERDIS_GRUNDIS_PROPERTIES(new TextServerResource("/motd/verdis_grundis.properties")),
