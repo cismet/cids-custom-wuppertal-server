@@ -362,6 +362,24 @@ public class VermessungsunterlagenHelper implements ConnectionContextProvider {
     /**
      * DOCUMENT ME!
      *
+     * @param   webDAVFilePath  DOCUMENT ME!
+     *
+     * @return  DOCUMENT ME!
+     *
+     * @throws  Exception  DOCUMENT ME!
+     */
+    public InputStream downloadFromWebDAV(final String webDAVFilePath) throws Exception {
+        final WebDavClient webdavclient = new WebDavClient(
+                null,
+                vermessungsunterlagenProperties.getWebDavLogin(),
+                vermessungsunterlagenProperties.getWebDavPass(),
+                false);
+        return webdavclient.getInputStream(webDAVFilePath);
+    }
+
+    /**
+     * DOCUMENT ME!
+     *
      * @param   executeJobContent  DOCUMENT ME!
      *
      * @return  DOCUMENT ME!
