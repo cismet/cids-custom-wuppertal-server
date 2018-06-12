@@ -12,6 +12,8 @@
  */
 package de.cismet.cids.custom.utils.alkis;
 
+import lombok.Getter;
+
 import java.util.Properties;
 
 /**
@@ -20,36 +22,34 @@ import java.util.Properties;
  * @author   jruiz
  * @version  $Revision$, $Date$
  */
-public class AlkisConf {
+@Getter
+public abstract class AlkisConf {
 
     //~ Instance fields --------------------------------------------------------
 
-    public final String SERVER;
-    public final String SERVICE;
-    public final String USER;
-    public final String PASSWORD;
-
-    public final String CATALOG_SERVICE;
-    public final String INFO_SERVICE;
-    public final String SEARCH_SERVICE;
-    public final String SRS_GEOM;
-    public final String SRS_SERVICE;
-    public final String MAP_CALL_STRING;
-    public final double GEO_BUFFER;
-    public final double GEO_BUFFER_MULTIPLIER;
-    public final String EINZEL_NACHWEIS_SERVICE;
-    public final String LISTEN_NACHWEIS_SERVICE;
-    public final String LIEGENSCHAFTSKARTE_SERVICE;
-    public final String NIVP_HOST;
-    public final String NIVP_PREFIX;
-    public final String APMAPS_HOST;
-    public final String APMAPS_ETRS_HOST;
-    public final String APMAPS_PREFIX;
-    public final String VERMESSUNG_HOST_BILDER;
-    public final String VERMESSUNG_HOST_GRENZNIEDERSCHRIFTEN;
-    public final String LANDPARCEL_FEATURE_RENDERER_COLOR;
-
-    public final String DEMOSERVICEURL;
+    private final String credentialsFile;
+    private final String service;
+    private final String server;
+    private final String catalogService;
+    private final String infoService;
+    private final String searchService;
+    private final String srsGeom;
+    private final String srsService;
+    private final String mapCallString;
+    private final double geoBuffer;
+    private final double geoBufferMultiplier;
+    private final String einzelNachweisService;
+    private final String listenNachweisService;
+    private final String LiegenschaftskarteService;
+    private final String nivpHost;
+    private final String nivpPrefix;
+    private final String apmapsHost;
+    private final String apmapsEtrsHost;
+    private final String apmapsPrefix;
+    private final String vermessungHostBilder;
+    private final String vermessungHostGrenzniederschriften;
+    private final String landparcelFeatureRendererColor;
+    private final String demoServiceUrl;
 
     //~ Constructors -----------------------------------------------------------
 
@@ -59,38 +59,28 @@ public class AlkisConf {
      * @param  serviceProperties  DOCUMENT ME!
      */
     public AlkisConf(final Properties serviceProperties) {
-        SERVER = serviceProperties.getProperty("SERVER");
-        SERVICE = serviceProperties.getProperty("SERVICE");
-        USER = serviceProperties.getProperty("USER");
-        PASSWORD = serviceProperties.getProperty("PASSWORD");
-
-        DEMOSERVICEURL = serviceProperties.getProperty("DEMOSERVICEURL");
-
-        CATALOG_SERVICE = serviceProperties.getProperty("CATALOG_SERVICE");
-        INFO_SERVICE = serviceProperties.getProperty("INFO_SERVICE");
-        SEARCH_SERVICE = serviceProperties.getProperty("SEARCH_SERVICE");
-
-        EINZEL_NACHWEIS_SERVICE = SERVER + serviceProperties.getProperty("BUCH_NACHWEIS_SERVICE");
-        LISTEN_NACHWEIS_SERVICE = SERVER + serviceProperties.getProperty("LISTEN_NACHWEIS_SERVICE");
-        LIEGENSCHAFTSKARTE_SERVICE = SERVER + serviceProperties.getProperty("LIEGENSCHAFTSKARTE_SERVICE");
-
-        SRS_GEOM = serviceProperties.getProperty("SRS_GEOM");
-        SRS_SERVICE = serviceProperties.getProperty("SRS_SERVICE");
-        MAP_CALL_STRING = serviceProperties.getProperty("MAP_CALL_STRING") + SRS_SERVICE;
-        GEO_BUFFER = Double.parseDouble(serviceProperties.getProperty("GEO_BUFFER"));
-        GEO_BUFFER_MULTIPLIER = Double.parseDouble(serviceProperties.getProperty("GEO_BUFFER_MULTIPLIER"));
-
-        NIVP_HOST = serviceProperties.getProperty("NIVP_HOST");
-        NIVP_PREFIX = serviceProperties.getProperty("NIVP_PREFIX");
-
-        APMAPS_HOST = serviceProperties.getProperty("APMAPS_HOST");
-        APMAPS_PREFIX = serviceProperties.getProperty("APMAPS_PREFIX");
-
-        VERMESSUNG_HOST_BILDER = serviceProperties.getProperty("VERMESSUNG_HOST_BILDER");
-        VERMESSUNG_HOST_GRENZNIEDERSCHRIFTEN = serviceProperties.getProperty(
-                "VERMESSUNG_HOST_GRENZNIEDERSCHRIFTEN");
-        APMAPS_ETRS_HOST = serviceProperties.getProperty("APMAPS_ETRS_HOST");
-
-        LANDPARCEL_FEATURE_RENDERER_COLOR = serviceProperties.getProperty("LANDPARCEL_FEATURE_RENDERER_COLOR");
+        credentialsFile = serviceProperties.getProperty("CREDENTIALS_FILE");
+        service = serviceProperties.getProperty("SERVICE");
+        server = serviceProperties.getProperty("SERVER");
+        demoServiceUrl = serviceProperties.getProperty("DEMOSERVICEURL");
+        catalogService = serviceProperties.getProperty("CATALOG_SERVICE");
+        infoService = serviceProperties.getProperty("INFO_SERVICE");
+        searchService = serviceProperties.getProperty("SEARCH_SERVICE");
+        einzelNachweisService = server + serviceProperties.getProperty("BUCH_NACHWEIS_SERVICE");
+        listenNachweisService = server + serviceProperties.getProperty("LISTEN_NACHWEIS_SERVICE");
+        LiegenschaftskarteService = server + serviceProperties.getProperty("LIEGENSCHAFTSKARTE_SERVICE");
+        srsGeom = serviceProperties.getProperty("SRS_GEOM");
+        srsService = serviceProperties.getProperty("SRS_SERVICE");
+        mapCallString = serviceProperties.getProperty("MAP_CALL_STRING") + srsService;
+        geoBuffer = Double.parseDouble(serviceProperties.getProperty("GEO_BUFFER"));
+        geoBufferMultiplier = Double.parseDouble(serviceProperties.getProperty("GEO_BUFFER_MULTIPLIER"));
+        nivpHost = serviceProperties.getProperty("NIVP_HOST");
+        nivpPrefix = serviceProperties.getProperty("NIVP_PREFIX");
+        apmapsHost = serviceProperties.getProperty("APMAPS_HOST");
+        apmapsPrefix = serviceProperties.getProperty("APMAPS_PREFIX");
+        vermessungHostBilder = serviceProperties.getProperty("VERMESSUNG_HOST_BILDER");
+        vermessungHostGrenzniederschriften = serviceProperties.getProperty("VERMESSUNG_HOST_GRENZNIEDERSCHRIFTEN");
+        apmapsEtrsHost = serviceProperties.getProperty("APMAPS_ETRS_HOST");
+        landparcelFeatureRendererColor = serviceProperties.getProperty("LANDPARCEL_FEATURE_RENDERER_COLOR");
     }
 }
