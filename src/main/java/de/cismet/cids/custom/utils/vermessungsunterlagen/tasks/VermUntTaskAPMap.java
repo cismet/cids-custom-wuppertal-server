@@ -26,6 +26,7 @@ import java.util.Map;
 
 import de.cismet.cids.custom.utils.WundaBlauServerResources;
 import de.cismet.cids.custom.utils.alkis.AlkisPointReportBean;
+import de.cismet.cids.custom.utils.alkis.AlkisProducts;
 import de.cismet.cids.custom.utils.alkis.ServerAlkisProducts;
 import de.cismet.cids.custom.utils.vermessungsunterlagen.VermessungsunterlagenHelper;
 import de.cismet.cids.custom.utils.vermessungsunterlagen.exceptions.VermessungsunterlagenTaskException;
@@ -64,7 +65,8 @@ public class VermUntTaskAPMap extends VermUntTaskAP {
     public void performTask() throws VermessungsunterlagenTaskException {
         OutputStream out = null;
         try {
-            final String filename = getPath() + "/" + ServerAlkisProducts.getInstance().PUNKTLISTE_PDF + ".pdf";
+            final String filename = getPath() + "/"
+                        + ServerAlkisProducts.getInstance().get(AlkisProducts.Type.PUNKTLISTE_PDF) + ".pdf";
             out = new FileOutputStream(filename);
             final Map parameters = new HashMap();
             parameters.put("SUBREPORT_DIR", DomainServerImpl.getServerProperties().getServerResourcesBasePath() + "/");

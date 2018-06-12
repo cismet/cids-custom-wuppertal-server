@@ -48,7 +48,7 @@ public class VermUntTaskRisseBilder extends VermUntTaskRisse {
             TYPE,
             jobKey,
             risseBeans,
-            ServerAlkisConf.getInstance().VERMESSUNG_HOST_BILDER,
+            ServerAlkisConf.getInstance().getVermessungHostBilder(),
             auftragsnummer,
             projektnummer);
     }

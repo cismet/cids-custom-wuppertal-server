@@ -18,10 +18,12 @@ import java.io.InputStream;
 import java.io.OutputStream;
 import java.io.StringReader;
 
+import java.net.MalformedURLException;
 import java.net.URL;
 
 import java.util.Collection;
 
+import de.cismet.cids.custom.utils.alkis.AlkisProducts;
 import de.cismet.cids.custom.utils.alkis.ServerAlkisProducts;
 import de.cismet.cids.custom.utils.vermessungsunterlagen.VermessungsunterlagenHelper;
 import de.cismet.cids.custom.utils.vermessungsunterlagen.exceptions.VermessungsunterlagenTaskException;
@@ -39,7 +41,6 @@ public class VermUntTaskAPList extends VermUntTaskAP {
     //~ Static fields/initializers ---------------------------------------------
 
     public static final String TYPE = "AP_List";
-    private static final ServerAlkisProducts PRODUCTS = ServerAlkisProducts.getInstance();
 
     //~ Constructors -----------------------------------------------------------
 
@@ -58,13 +59,20 @@ public class VermUntTaskAPList extends VermUntTaskAP {
     @Override
     public void performTask() throws VermessungsunterlagenTaskException {
         final String punktListenString = getPunktlistenStringForChosenPoints(getAlkisPoints());
-        final String code = PRODUCTS.PUNKTLISTE_TXT;
-        final String filename = getPath() + "/" + ServerAlkisProducts.getInstance().PUNKTLISTE_TXT + ".plst";
+        final String code = ServerAlkisProducts.getInstance().get(AlkisProducts.Type.PUNKTLISTE_TXT);
+        final String filename = getPath() + "/"
+                    + ServerAlkisProducts.getInstance().get(AlkisProducts.Type.PUNKTLISTE_TXT) + ".plst";
         final File fileToSaveTo = new File(filename);
 
         if (punktListenString.length() > 3) {
             if ((code != null) && (code.length() > 0)) {
-                final String url = PRODUCTS.productListenNachweisUrl(punktListenString, code);
+                String url = null;
+                try {
+                    url = ServerAlkisProducts.productListenNachweisUrl(punktListenString, code).toString();
+                } catch (MalformedURLException ex) {
+                    final String message = "Beim Generieren der URL kam es zu einem unerwarteten Fehler.";
+                    throw new VermessungsunterlagenTaskException(getType(), message, ex);
+                }
                 if ((url != null) && (url.trim().length() > 0)) {
                     final int parameterPosition = url.indexOf('?');
 
@@ -125,7 +133,7 @@ public class VermUntTaskAPList extends VermUntTaskAP {
             if (punktListeString.length() > 0) {
                 punktListeString.append(",");
             }
-            punktListeString.append(PRODUCTS.getPointDataForProduct(alkisPoint));
+            punktListeString.append(ServerAlkisProducts.getInstance().getPointDataForProduct(alkisPoint));
         }
 
         return punktListeString.toString();
