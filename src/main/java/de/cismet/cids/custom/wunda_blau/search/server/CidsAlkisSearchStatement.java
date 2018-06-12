@@ -7,6 +7,7 @@
 ****************************************************/
 package de.cismet.cids.custom.wunda_blau.search.server;
 
+import Sirius.server.middleware.interfaces.domainserver.ActionService;
 import Sirius.server.middleware.interfaces.domainserver.MetaService;
 import Sirius.server.middleware.types.MetaObjectNode;
 
@@ -171,7 +172,10 @@ public class CidsAlkisSearchStatement extends AbstractCidsServerSearch implement
     public Collection<MetaObjectNode> performServerSearch() {
         try {
             final List<MetaObjectNode> result = new ArrayList<>();
-            final SOAPAccessProvider accessProvider = new SOAPAccessProvider(ServerAlkisConf.getInstance());
+            final SOAPAccessProvider accessProvider = new SOAPAccessProvider(ServerAlkisConf.loadFromDomainServer(
+                        getUser(),
+                        (ActionService)getActiveLocalServers().get("WUNDA_BLAU"),
+                        getConnectionContext()));
             final ALKISSearchServices searchService = accessProvider.getAlkisSearchService();
 
             String query = null;

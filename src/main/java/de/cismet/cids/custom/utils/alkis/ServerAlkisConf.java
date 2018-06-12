@@ -12,16 +12,24 @@
  */
 package de.cismet.cids.custom.utils.alkis;
 
+import Sirius.server.middleware.interfaces.domainserver.ActionService;
+import Sirius.server.newuser.User;
+
 import lombok.Getter;
 
 import java.io.File;
 import java.io.FileInputStream;
+import java.io.StringReader;
 
 import java.util.Properties;
 
 import de.cismet.cids.custom.utils.WundaBlauServerResources;
 
+import de.cismet.cids.server.actions.GetServerResourceServerAction;
+
 import de.cismet.cids.utils.serverresources.ServerResourcesLoader;
+
+import de.cismet.connectioncontext.ConnectionContext;
 
 /**
  * DOCUMENT ME!
@@ -67,6 +75,30 @@ public class ServerAlkisConf extends AlkisConf {
      */
     public static ServerAlkisConf getInstance() {
         return LazyInitialiser.INSTANCE;
+    }
+
+    /**
+     * DOCUMENT ME!
+     *
+     * @param   user               DOCUMENT ME!
+     * @param   as                 DOCUMENT ME!
+     * @param   connectionContext  DOCUMENT ME!
+     *
+     * @return  DOCUMENT ME!
+     *
+     * @throws  Exception  DOCUMENT ME!
+     */
+    public static ServerAlkisConf loadFromDomainServer(final User user,
+            final ActionService as,
+            final ConnectionContext connectionContext) throws Exception {
+        final Properties properties = new Properties();
+        properties.load(new StringReader(
+                (String)as.executeTask(
+                    user,
+                    GetServerResourceServerAction.TASK_NAME,
+                    WundaBlauServerResources.ALKIS_CONF.getValue(),
+                    connectionContext)));
+        return new ServerAlkisConf(properties);
     }
 
     //~ Inner Classes ----------------------------------------------------------
