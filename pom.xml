@@ -13,7 +13,11 @@
 
     <groupId>de.cismet.cids.custom.wupp.server</groupId>
     <artifactId>cids-custom-server-wuppertal</artifactId>
+<<<<<<< HEAD
     <version>6.8-SNAPSHOT</version>
+=======
+    <version>6.7-SNAPSHOT</version>
+>>>>>>> dev
     <packaging>jar</packaging>
     
     <name>${names.cids.custom-wuppertal-server} [${project.version}]</name>
