@@ -236,8 +236,8 @@ public class VermessungsrissPictureFinder {
     public String getObjectPath(final boolean isGrenzNiederschrift, final String filename) {
         final Integer gemarkung;
         if (filename.startsWith(PATH_PLATZHALTER)) {
-            return (isGrenzNiederschrift ? alkisConf.VERMESSUNG_HOST_GRENZNIEDERSCHRIFTEN
-                                         : alkisConf.VERMESSUNG_HOST_BILDER) + filename;
+            return (isGrenzNiederschrift ? alkisConf.getVermessungHostGrenzniederschriften()
+                                         : alkisConf.getVermessungHostBilder()) + filename;
         }
         final String[] splittedFilename = filename.split("-");
         gemarkung = Integer.parseInt(splittedFilename[1]);
@@ -408,9 +408,9 @@ public class VermessungsrissPictureFinder {
     public String getFolder(final boolean isGrenzniederschrift, final Integer gemarkung) {
         final StringBuffer buf;
         if (isGrenzniederschrift) {
-            buf = new StringBuffer(alkisConf.VERMESSUNG_HOST_GRENZNIEDERSCHRIFTEN);
+            buf = new StringBuffer(alkisConf.getVermessungHostGrenzniederschriften());
         } else {
-            buf = new StringBuffer(alkisConf.VERMESSUNG_HOST_BILDER);
+            buf = new StringBuffer(alkisConf.getVermessungHostBilder());
         }
         return buf.append(String.format("%04d", gemarkung)).toString();
     }

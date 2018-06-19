@@ -45,12 +45,12 @@ public final class SOAPAccessProvider {
      *
      * @throws  IllegalStateException  DOCUMENT ME!
      */
-    public SOAPAccessProvider(final AlkisConf alkisConf) {
-        final String identityCard = alkisConf.USER + "," + alkisConf.PASSWORD;
-        final String service = alkisConf.SERVICE;
-        final String catalogService = alkisConf.SERVER + alkisConf.CATALOG_SERVICE;
-        final String infoService = alkisConf.SERVER + alkisConf.INFO_SERVICE;
-        final String searchService = alkisConf.SERVER + alkisConf.SEARCH_SERVICE;
+    public SOAPAccessProvider(final ServerAlkisConf alkisConf) {
+        final String identityCard = alkisConf.getCreds().getUser() + "," + alkisConf.getCreds().getPassword();
+        final String service = alkisConf.getService();
+        final String catalogService = alkisConf.getServer() + alkisConf.getCatalogService();
+        final String infoService = alkisConf.getServer() + alkisConf.getInfoService();
+        final String searchService = alkisConf.getServer() + alkisConf.getSearchService();
 
         this.identityCard = identityCard;
         this.service = service;
@@ -61,13 +61,13 @@ public final class SOAPAccessProvider {
             this.alkisSearchService = new ALKISSearchServicesServiceLocator().getALKISSearchServices(new URL(
                         searchService));
         } catch (Exception ex) {
-            throw new IllegalStateException("Can not create SOAPAccessProvider" + alkisConf.SERVER
+            throw new IllegalStateException("Can not create SOAPAccessProvider" + alkisConf.getServer()
                         + "|"
-                        + alkisConf.CATALOG_SERVICE + "|"
-                        + alkisConf.SERVER + "|"
-                        + alkisConf.INFO_SERVICE + "|"
-                        + alkisConf.SERVER + "|"
-                        + alkisConf.SEARCH_SERVICE,
+                        + alkisConf.getCatalogService() + "|"
+                        + alkisConf.getServer() + "|"
+                        + alkisConf.getInfoService() + "|"
+                        + alkisConf.getServer() + "|"
+                        + alkisConf.getSearchService(),
                 ex);
         }
     }

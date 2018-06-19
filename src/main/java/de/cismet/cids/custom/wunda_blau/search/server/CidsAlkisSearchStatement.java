@@ -20,18 +20,13 @@ import de.aedsicad.aaaweb.service.alkis.search.ALKISSearchServices;
 import org.apache.commons.lang.StringEscapeUtils;
 import org.apache.log4j.Logger;
 
-import java.io.StringReader;
-
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.List;
-import java.util.Properties;
 
-import de.cismet.cids.custom.utils.WundaBlauServerResources;
-import de.cismet.cids.custom.utils.alkis.AlkisConf;
 import de.cismet.cids.custom.utils.alkis.SOAPAccessProvider;
+import de.cismet.cids.custom.utils.alkis.ServerAlkisConf;
 
-import de.cismet.cids.server.actions.GetServerResourceServerAction;
 import de.cismet.cids.server.search.AbstractCidsServerSearch;
 import de.cismet.cids.server.search.MetaObjectNodeServerSearch;
 
@@ -177,16 +172,10 @@ public class CidsAlkisSearchStatement extends AbstractCidsServerSearch implement
     public Collection<MetaObjectNode> performServerSearch() {
         try {
             final List<MetaObjectNode> result = new ArrayList<>();
-            final Properties properties = new Properties();
-            final ActionService as = (ActionService)getActiveLocalServers().get("WUNDA_BLAU");
-            properties.load(new StringReader(
-                    (String)as.executeTask(
+            final SOAPAccessProvider accessProvider = new SOAPAccessProvider(ServerAlkisConf.loadFromDomainServer(
                         getUser(),
-                        GetServerResourceServerAction.TASK_NAME,
-                        WundaBlauServerResources.ALKIS_CONF.getValue(),
-                        getConnectionContext())));
-
-            final SOAPAccessProvider accessProvider = new SOAPAccessProvider(new AlkisConf(properties));
+                        (ActionService)getActiveLocalServers().get("WUNDA_BLAU"),
+                        getConnectionContext()));
             final ALKISSearchServices searchService = accessProvider.getAlkisSearchService();
 
             String query = null;

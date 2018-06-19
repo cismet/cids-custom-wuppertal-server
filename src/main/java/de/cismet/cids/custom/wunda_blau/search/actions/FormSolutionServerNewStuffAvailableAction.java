@@ -919,7 +919,7 @@ public class FormSolutionServerNewStuffAvailableAction implements UserAwareServe
             final Integer massstab) {
         final String scale = Integer.toString(massstab);
         AlkisProductDescription selectedProduct = null;
-        for (final AlkisProductDescription product : ServerAlkisProducts.getInstance().ALKIS_MAP_PRODUCTS) {
+        for (final AlkisProductDescription product : ServerAlkisProducts.getInstance().getAlkisMapProducts()) {
             if (product.getCode().startsWith(produktKey) && scale.equals(product.getMassstab())
                         && dinFormat.equals(product.getDinFormat())) {
                 selectedProduct = product;
@@ -989,17 +989,18 @@ public class FormSolutionServerNewStuffAvailableAction implements UserAwareServe
         final String gutscheincodeAdditionalText = (bestellungBean.getProperty("gutschein_code") != null)
             ? String.format(GUTSCHEIN_ADDITIONAL_TEXT, bestellungBean.getProperty("gutschein_code")) : null;
 
-        final URL url = ServerAlkisProducts.getInstance()
-                    .productKarteUrl(
-                        flurstueckKennzeichen,
-                        productDesc,
-                        0,
-                        (int)center.getX(),
-                        (int)center.getY(),
-                        gutscheincodeAdditionalText,
-                        transid,
-                        false,
-                        null);
+        final URL url = ServerAlkisProducts.productKarteUrl(
+                flurstueckKennzeichen,
+                productDesc.getCode(),
+                0,
+                (int)center.getX(),
+                (int)center.getY(),
+                productDesc.getMassstabMin(),
+                productDesc.getMassstabMax(),
+                gutscheincodeAdditionalText,
+                transid,
+                false,
+                null);
 
         return url;
     }
