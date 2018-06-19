@@ -374,7 +374,7 @@ public class VermessungsunterlagenHelper implements ConnectionContextProvider {
                 vermessungsunterlagenProperties.getWebDavLogin(),
                 vermessungsunterlagenProperties.getWebDavPass(),
                 false);
-        return webdavclient.getInputStream(webDAVFilePath);
+        return webdavclient.getInputStream(vermessungsunterlagenProperties.getWebDavHost() + webDAVFilePath);
     }
 
     /**
