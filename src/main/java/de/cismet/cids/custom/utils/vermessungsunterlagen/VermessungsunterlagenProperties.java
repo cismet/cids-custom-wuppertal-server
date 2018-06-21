@@ -32,6 +32,8 @@ public class VermessungsunterlagenProperties {
     //~ Static fields/initializers ---------------------------------------------
 
     private static final transient Logger LOG = Logger.getLogger(VermessungsunterlagenProperties.class);
+    public static final String FROM_WEBDAV = "webdav";
+    public static final String FROM_FTP = "ftp";
 
     //~ Instance fields --------------------------------------------------------
 
@@ -52,6 +54,8 @@ public class VermessungsunterlagenProperties {
     private final String absPathPdfRisse;
     private final String absPathPdfNivP;
     private final String absPathPdfPnrVermstelle;
+    private final String jobResultFrom;
+    private final String downloadFrom;
 
     //~ Constructors -----------------------------------------------------------
 
@@ -79,6 +83,8 @@ public class VermessungsunterlagenProperties {
         absPathPdfRisse = readProperty("ABS_PATH_PDF_RISSE", null);
         absPathPdfNivP = readProperty("ABS_PATH_PDF_NIVP", null);
         absPathPdfPnrVermstelle = readProperty("ABS_PATH_PDF_PNR_VERMSTELLE", null);
+        jobResultFrom = readProperty("JOB_RESULT_FROM", "webdav");
+        downloadFrom = readProperty("DOWNLOAD_FROM", "webdav");
     }
 
     //~ Methods ----------------------------------------------------------------

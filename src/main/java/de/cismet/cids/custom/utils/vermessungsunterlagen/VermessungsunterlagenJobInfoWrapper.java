@@ -67,7 +67,12 @@ public class VermessungsunterlagenJobInfoWrapper {
      */
     private void refreshJobResult() {
         if (job != null) {
-            jobResult = job.getFtpZipPath();
+            final String jobResultFrom = VermessungsunterlagenHelper.getInstance().getProperties().getJobResultFrom();
+            if (VermessungsunterlagenProperties.FROM_FTP.equals(jobResultFrom)) {
+                jobResult = job.getFtpZipPath();
+            } else if (VermessungsunterlagenProperties.FROM_WEBDAV.equals(jobResultFrom)) {
+                jobResult = job.getWebDAVPath();
+            }
         }
     }
 
