@@ -116,6 +116,7 @@ public class VermUntTaskNivPUebersicht extends VermUntTaskNivP {
                     Double.valueOf(0).intValue(),
                     Double.valueOf(center.x).intValue(),
                     Double.valueOf(center.y).intValue(),
+                    product.getMassstab(),
                     product.getMassstabMin(),
                     product.getMassstabMax(),
                     "",

@@ -81,7 +81,7 @@ public class AlkisProductServerAction implements ConnectionContextStore, UserAwa
 
         //~ Enum constants -----------------------------------------------------
 
-        ALKIS_CODE, PRODUKT, FERTIGUNGSVERMERK, STICHTAG, X, Y, MASSSTAB_MIN, MASSSTAB_MAX, WINKEL, ZUSATZ,
+        ALKIS_CODE, PRODUKT, FERTIGUNGSVERMERK, STICHTAG, X, Y, MASSSTAB, MASSSTAB_MIN, MASSSTAB_MAX, WINKEL, ZUSATZ,
         AUFTRAGSNUMMER
     }
 
@@ -129,6 +129,7 @@ public class AlkisProductServerAction implements ConnectionContextStore, UserAwa
             Integer winkel = null;
             Integer x = null;
             Integer y = null;
+            String massstab = null;
             String massstabMin = null;
             String massstabMax = null;
             String zusatz = null;
@@ -150,6 +151,8 @@ public class AlkisProductServerAction implements ConnectionContextStore, UserAwa
                         x = (Integer)sap.getValue();
                     } else if (sap.getKey().equals(AlkisProductServerAction.Parameter.Y.toString())) {
                         y = (Integer)sap.getValue();
+                    } else if (sap.getKey().equals(AlkisProductServerAction.Parameter.MASSSTAB.toString())) {
+                        massstab = (String)sap.getValue();
                     } else if (sap.getKey().equals(AlkisProductServerAction.Parameter.MASSSTAB_MIN.toString())) {
                         massstabMin = (String)sap.getValue();
                     } else if (sap.getKey().equals(AlkisProductServerAction.Parameter.MASSSTAB_MAX.toString())) {
@@ -176,6 +179,7 @@ public class AlkisProductServerAction implements ConnectionContextStore, UserAwa
                             winkel,
                             x,
                             y,
+                            massstab,
                             massstabMin,
                             massstabMax,
                             zusatz,
