@@ -246,6 +246,7 @@ public final class ServerAlkisProducts extends AlkisProducts {
             final int winkel,
             final int centerX,
             final int centerY,
+            final String massstab,
             final String massstabMin,
             final String massstabMax,
             final String zusText,
@@ -269,6 +270,10 @@ public final class ServerAlkisProducts extends AlkisProducts {
         }
         url.append(getIdentification()).append(getMore());
         final String fabricationNotices = generateFabricationNotices(fertigungsVermerk);
+        if (massstabMin != null && massstabMax != null) {
+            url.append("&scale=");
+            url.append(massstab);
+        }
         if (fabricationNotices != null) {
             url.append(fabricationNotices);
         }

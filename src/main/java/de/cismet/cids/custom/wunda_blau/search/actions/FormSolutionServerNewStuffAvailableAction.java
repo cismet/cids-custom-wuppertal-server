@@ -995,6 +995,7 @@ public class FormSolutionServerNewStuffAvailableAction implements UserAwareServe
                 0,
                 (int)center.getX(),
                 (int)center.getY(),
+                productDesc.getMassstab(),
                 productDesc.getMassstabMin(),
                 productDesc.getMassstabMax(),
                 gutscheincodeAdditionalText,

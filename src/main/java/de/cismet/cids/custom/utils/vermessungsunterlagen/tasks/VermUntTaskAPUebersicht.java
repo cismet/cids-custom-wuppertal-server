@@ -102,6 +102,7 @@ public class VermUntTaskAPUebersicht extends VermUntTaskAP {
                     Double.valueOf(0).intValue(),
                     Double.valueOf(center.x).intValue(),
                     Double.valueOf(center.y).intValue(),
+                    product.getMassstab(),
                     product.getMassstabMin(),
                     product.getMassstabMax(),
                     "",
