@@ -230,6 +230,7 @@ public final class ServerAlkisProducts extends AlkisProducts {
      * @param   winkel             DOCUMENT ME!
      * @param   centerX            DOCUMENT ME!
      * @param   centerY            DOCUMENT ME!
+     * @param   massstab           DOCUMENT ME!
      * @param   massstabMin        DOCUMENT ME!
      * @param   massstabMax        DOCUMENT ME!
      * @param   zusText            DOCUMENT ME!
@@ -270,7 +271,7 @@ public final class ServerAlkisProducts extends AlkisProducts {
         }
         url.append(getIdentification()).append(getMore());
         final String fabricationNotices = generateFabricationNotices(fertigungsVermerk);
-        if (massstabMin != null && massstabMax != null) {
+        if ((massstabMin != null) && (massstabMax != null)) {
             url.append("&scale=");
             url.append(massstab);
         }
