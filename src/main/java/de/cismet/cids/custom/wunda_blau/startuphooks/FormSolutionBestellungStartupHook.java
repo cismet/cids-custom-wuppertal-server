@@ -165,6 +165,7 @@ public class FormSolutionBestellungStartupHook implements DomainServerStartupHoo
                     + "FROM " + mcBestellung.getTableName() + " "
                     + "WHERE "
                     + "  test IS NOT TRUE AND "
+                    + "  duplicate IS NOT TRUE AND "
                     + "  postweg IS NOT TRUE AND "
                     + "  fehler IS NULL AND "
                     + "  erledigt IS NOT TRUE "
