@@ -67,6 +67,7 @@ public enum WundaBlauServerResources {
     BERECHTIGUNGSPRUEFUNG_PROPERTIES(new TextServerResource("/berechtigungspruefung/berechtigungspruefung.properties")),
     BERECHTIGUNGSPRUEFUNG_CONF_JSON(new TextServerResource("/berechtigungspruefung/berechtigungspruefung_conf.json")),
 
+    GRUNDWASSERMESSSTELLEN_PROPERTIES(new TextServerResource("/grundwassermessstellen/gwm_conf.properties")),
     VERMESSUNGSUNTERLAGENPORTAL_PROPERTIES(new TextServerResource("/vermessungsunterlagenportal/vup_conf.properties")),
     QSGEB_PROPERTIES(new TextServerResource("/qsgeb/qsgeb_conf.properties")),
 
