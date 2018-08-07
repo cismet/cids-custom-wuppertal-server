@@ -258,6 +258,8 @@ public class BillingJahresberichtReportServerSearch extends BillingStatisticsRep
                     bean.setNumberVU_s(number);
                 } else if ("WV ein".equalsIgnoreCase(name)) {
                     bean.setNumberWV_ein(number);
+                } else if ("GDZ".equalsIgnoreCase(name)) {
+                    bean.setNumberGDZ(number);
                 }
             }
             final ArrayList<AnzahlProVerwendungszweckBean> beans = new ArrayList<AnzahlProVerwendungszweckBean>();
@@ -319,5 +321,6 @@ public class BillingJahresberichtReportServerSearch extends BillingStatisticsRep
         private Number numberVU_hV = (long)0;
         private Number numberVU_s = (long)0;
         private Number numberWV_ein = (long)0;
+        private Number numberGDZ = (long)0;
     }
 }
