@@ -76,7 +76,6 @@ public class BillingJahresberichtReportServerSearch extends BillingStatisticsRep
         "select verwendungskey, count(*) from billing_billing where extract(year from abrechnungsdatum) = ${Jahr} and storniert is null and username not like 'NICHT-ZAEHLEN%' and not (netto_summe =0 or netto_summe is null) group by verwendungskey;";
     private final String queryAnzahlDownloadsKostenfrei =
         "select verwendungskey, count(*) from billing_billing where extract(year from ts) = ${Jahr} and storniert is null and username not like 'NICHT-ZAEHLEN%' and (netto_summe =0 or netto_summe is null) group by verwendungskey;";
-    private final String queryAnzahlProVerwendungszweck = "";
     private final String querySummeProVerwendungszweck =
         "select verwendungskey, sum(netto_summe) from billing_billing where extract(year from abrechnungsdatum) = ${Jahr} and storniert is null and username not like 'NICHT-ZAEHLEN%' and not (netto_summe =0 or netto_summe is null) group by verwendungskey;";
     private final String queryAnzahlProdukteVermessungsunterlagenTs3 = "select produktbezeichnung,count(id) from ( "
@@ -126,7 +125,7 @@ public class BillingJahresberichtReportServerSearch extends BillingStatisticsRep
         final MetaService ms = (MetaService)getActiveLocalServers().get("WUNDA_BLAU");
         if (ms != null) {
             try {
-                final HashMap<String, ArrayList> results = new HashMap<String, ArrayList>();
+                final HashMap<String, ArrayList> results = new HashMap<>();
 
                 excuteQueryAndConvertAmountResults(
                     ms,
@@ -203,7 +202,7 @@ public class BillingJahresberichtReportServerSearch extends BillingStatisticsRep
         final ArrayList<ArrayList> lists = ms.performCustomSearch(query.replace("${Jahr}", Integer.toString(year)),
                 getConnectionContext());
         if ((lists != null) && !lists.isEmpty()) {
-            final ArrayList<AmountBean> beans = new ArrayList<AmountBean>();
+            final ArrayList<AmountBean> beans = new ArrayList<>();
             for (final Iterator it = lists.iterator(); it.hasNext();) {
                 final ArrayList row = (ArrayList)it.next();
 
@@ -262,7 +261,7 @@ public class BillingJahresberichtReportServerSearch extends BillingStatisticsRep
                     bean.setNumberGDZ(number);
                 }
             }
-            final ArrayList<AnzahlProVerwendungszweckBean> beans = new ArrayList<AnzahlProVerwendungszweckBean>();
+            final ArrayList<AnzahlProVerwendungszweckBean> beans = new ArrayList<>();
             beans.add(bean);
             results.put(key, beans);
         }
