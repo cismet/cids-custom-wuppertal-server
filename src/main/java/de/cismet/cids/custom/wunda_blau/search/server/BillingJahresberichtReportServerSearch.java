@@ -16,8 +16,11 @@ import java.io.Serializable;
 
 import java.rmi.RemoteException;
 
+import java.text.SimpleDateFormat;
+
 import java.util.ArrayList;
 import java.util.Collection;
+import java.util.Date;
 import java.util.HashMap;
 import java.util.Iterator;
 
@@ -53,39 +56,39 @@ public class BillingJahresberichtReportServerSearch extends BillingStatisticsRep
 
     //~ Instance fields --------------------------------------------------------
 
+    private final SimpleDateFormat postgresDateFormat = new SimpleDateFormat("yyyy-MM-dd");
     private final String queryKundenAbrechnungWiederverkaeufer = "select kunde.name  "
                 + "from billing_kunde as kunde "
                 + "join billing_kunde_kundengruppe_array as verbindung on kunde.id = verbindung.kunde "
                 + "join billing_kundengruppe as gruppe on verbindung.billing_kundengruppe_reference = gruppe.kunden_arr "
                 + "where gruppe.name ='Abrechnung_Wiederverkaeufer_jährlich'  "
-                + "and (vertragsende is null or extract(year from vertragsende) >= ${Jahr}) "
+                + "and (vertragsende is null or date_trunc('day',vertragsende) >= '${from}' and date_trunc('day',vertragsende) <= '${till}') "
                 + "order by kunde.name;";
 
     private final String queryAnzahlKundenPerGruppe = "select gruppe.name, count(kunde.name)"
                 + "from billing_kunde as kunde "
                 + "join billing_kunde_kundengruppe_array as verbindung on kunde.id = verbindung.kunde "
                 + "join billing_kundengruppe as gruppe on verbindung.billing_kundengruppe_reference = gruppe.kunden_arr "
-                + "where (vertragsende is null or vertragsende >= '${Jahr}-12-31') "
+                + "where (vertragsende is null or vertragsende >= '${till}') "
                 + "group by gruppe.name order by gruppe.name asc;";
 
     private final String queryAnzahlGeschaeftsbuchnummernKostenpflichtig =
-        "select sub.verwendungskey, count(*) from (select distinct geschaeftsbuchnummer,username,verwendungskey from billing_billing  where extract(year from abrechnungsdatum) = ${Jahr} and storniert is null and username not like 'NICHT-ZAEHLEN%' and not (netto_summe =0 or netto_summe is null)) as sub group by sub.verwendungskey;";
+        "select sub.verwendungskey, count(*) from (select distinct geschaeftsbuchnummer,username,verwendungskey from billing_billing  where date_trunc('day',abrechnungsdatum) >= '${from}' and date_trunc('day',abrechnungsdatum) <= '${till}' and storniert is null and username not like 'NICHT-ZAEHLEN%' and not (netto_summe =0 or netto_summe is null)) as sub group by sub.verwendungskey;";
     private final String queryAnzahlGeschaeftsbuchnummernKostenfrei =
-        "select sub.verwendungskey, count(*) from (select distinct geschaeftsbuchnummer,username,verwendungskey from billing_billing where extract(year from ts) = ${Jahr} and storniert is null and username not like 'NICHT-ZAEHLEN%' and (netto_summe =0 or netto_summe is null)) as sub group by sub.verwendungskey;";
+        "select sub.verwendungskey, count(*) from (select distinct geschaeftsbuchnummer,username,verwendungskey from billing_billing where date_trunc('day',ts) >= '${from}' and date_trunc('day',ts) <= '${till}' and storniert is null and username not like 'NICHT-ZAEHLEN%' and (netto_summe =0 or netto_summe is null)) as sub group by sub.verwendungskey;";
     private final String queryAnzahlDownloadsKostenpflichtig =
-        "select verwendungskey, count(*) from billing_billing where extract(year from abrechnungsdatum) = ${Jahr} and storniert is null and username not like 'NICHT-ZAEHLEN%' and not (netto_summe =0 or netto_summe is null) group by verwendungskey;";
+        "select verwendungskey, count(*) from billing_billing where date_trunc('day',abrechnungsdatum) >= '${from}' and date_trunc('day',abrechnungsdatum) <= '${till}' and storniert is null and username not like 'NICHT-ZAEHLEN%' and not (netto_summe =0 or netto_summe is null) group by verwendungskey;";
     private final String queryAnzahlDownloadsKostenfrei =
-        "select verwendungskey, count(*) from billing_billing where extract(year from ts) = ${Jahr} and storniert is null and username not like 'NICHT-ZAEHLEN%' and (netto_summe =0 or netto_summe is null) group by verwendungskey;";
-    private final String queryAnzahlProVerwendungszweck = "";
+        "select verwendungskey, count(*) from billing_billing where date_trunc('day',abrechnungsdatum) >= '${from}' and date_trunc('day',abrechnungsdatum) <= '${till}' and storniert is null and username not like 'NICHT-ZAEHLEN%' and (netto_summe =0 or netto_summe is null) group by verwendungskey;";
     private final String querySummeProVerwendungszweck =
-        "select verwendungskey, sum(netto_summe) from billing_billing where extract(year from abrechnungsdatum) = ${Jahr} and storniert is null and username not like 'NICHT-ZAEHLEN%' and not (netto_summe =0 or netto_summe is null) group by verwendungskey;";
+        "select verwendungskey, sum(netto_summe) from billing_billing where date_trunc('day',abrechnungsdatum) >= '${from}' and date_trunc('day',abrechnungsdatum) <= '${till}' and storniert is null and username not like 'NICHT-ZAEHLEN%' and not (netto_summe =0 or netto_summe is null) group by verwendungskey;";
     private final String queryAnzahlProdukteVermessungsunterlagenTs3 = "select produktbezeichnung,count(id) from ( "
                 + "select "
                 + "        produktbezeichnung, id "
                 + "from billing_billing "
                 + "where "
                 + "        verwendungszweck = 'Vermessungsunterlagen (amtlicher Lageplan TS 3)' "
-                + "        and extract(year from ts) = ${Jahr} "
+                + "        and date_trunc('day',ts) >= '${from}' and date_trunc('day',ts) <= '${till}' "
                 + "        and storniert is null "
                 + "        and username not like 'NICHT-ZAEHLEN%' "
                 + "group by produktbezeichnung, id "
@@ -97,14 +100,15 @@ public class BillingJahresberichtReportServerSearch extends BillingStatisticsRep
                 + "from billing_billing "
                 + "where "
                 + "        verwendungszweck = 'Vermessungsunterlagen (hoheitliche Vermessung TS 4)' "
-                + "        and extract(year from ts) = ${Jahr} "
+                + "        and date_trunc('day',ts) >= '${from}' and date_trunc('day',ts) <= '${till}' "
                 + "        and storniert is null "
                 + "        and username not like 'NICHT-ZAEHLEN%' "
                 + "group by produktbezeichnung, id "
                 + "order by produktbezeichnung) as temptable "
                 + "group by produktbezeichnung;";
 
-    private final int year;
+    private final Date from;
+    private final Date till;
 
     //~ Constructors -----------------------------------------------------------
 
@@ -112,11 +116,13 @@ public class BillingJahresberichtReportServerSearch extends BillingStatisticsRep
      * Creates a new GeschaeftsberichtBranchenAmounts object.
      *
      * @param  billingBeanIds  timestampEnd DOCUMENT ME!
-     * @param  year            DOCUMENT ME!
+     * @param  from            year DOCUMENT ME!
+     * @param  till            DOCUMENT ME!
      */
-    public BillingJahresberichtReportServerSearch(final String billingBeanIds, final int year) {
+    public BillingJahresberichtReportServerSearch(final String billingBeanIds, final Date from, final Date till) {
         super(billingBeanIds);
-        this.year = year;
+        this.from = from;
+        this.till = till;
     }
 
     //~ Methods ----------------------------------------------------------------
@@ -126,7 +132,7 @@ public class BillingJahresberichtReportServerSearch extends BillingStatisticsRep
         final MetaService ms = (MetaService)getActiveLocalServers().get("WUNDA_BLAU");
         if (ms != null) {
             try {
-                final HashMap<String, ArrayList> results = new HashMap<String, ArrayList>();
+                final HashMap<String, ArrayList> results = new HashMap<>();
 
                 excuteQueryAndConvertAmountResults(
                     ms,
@@ -200,10 +206,12 @@ public class BillingJahresberichtReportServerSearch extends BillingStatisticsRep
             final HashMap<String, ArrayList> results,
             final String query,
             final String key) throws RemoteException {
-        final ArrayList<ArrayList> lists = ms.performCustomSearch(query.replace("${Jahr}", Integer.toString(year)),
+        final ArrayList<ArrayList> lists = ms.performCustomSearch(query.replace(
+                    "${from}",
+                    postgresDateFormat.format(from)).replace("${till}", postgresDateFormat.format(till)),
                 getConnectionContext());
         if ((lists != null) && !lists.isEmpty()) {
-            final ArrayList<AmountBean> beans = new ArrayList<AmountBean>();
+            final ArrayList<AmountBean> beans = new ArrayList<>();
             for (final Iterator it = lists.iterator(); it.hasNext();) {
                 final ArrayList row = (ArrayList)it.next();
 
@@ -234,10 +242,9 @@ public class BillingJahresberichtReportServerSearch extends BillingStatisticsRep
             final HashMap<String, ArrayList> results,
             final String query,
             final String key) throws RemoteException {
-        if (LOG.isDebugEnabled()) {
-            LOG.debug(query.replace("${Jahr}", Integer.toString(year)));
-        }
-        final ArrayList<ArrayList> lists = ms.performCustomSearch(query.replace("${Jahr}", Integer.toString(year)),
+        final ArrayList<ArrayList> lists = ms.performCustomSearch(query.replace(
+                    "${from}",
+                    postgresDateFormat.format(from)).replace("${till}", postgresDateFormat.format(till)),
                 getConnectionContext());
         if ((lists != null)) {
             final AnzahlProVerwendungszweckBean bean = new AnzahlProVerwendungszweckBean();
@@ -258,9 +265,11 @@ public class BillingJahresberichtReportServerSearch extends BillingStatisticsRep
                     bean.setNumberVU_s(number);
                 } else if ("WV ein".equalsIgnoreCase(name)) {
                     bean.setNumberWV_ein(number);
+                } else if ("GDZ".equalsIgnoreCase(name)) {
+                    bean.setNumberGDZ(number);
                 }
             }
-            final ArrayList<AnzahlProVerwendungszweckBean> beans = new ArrayList<AnzahlProVerwendungszweckBean>();
+            final ArrayList<AnzahlProVerwendungszweckBean> beans = new ArrayList<>();
             beans.add(bean);
             results.put(key, beans);
         }
@@ -319,5 +328,6 @@ public class BillingJahresberichtReportServerSearch extends BillingStatisticsRep
         private Number numberVU_hV = (long)0;
         private Number numberVU_s = (long)0;
         private Number numberWV_ein = (long)0;
+        private Number numberGDZ = (long)0;
     }
 }
