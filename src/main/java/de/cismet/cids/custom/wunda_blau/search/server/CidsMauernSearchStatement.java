@@ -351,7 +351,7 @@ public class CidsMauernSearchStatement extends AbstractCidsServerSearch implemen
                 whereBuilder.append(" (");
                 boolean flag = false;
                 if (hoeheVon != null) {
-                    whereBuilder.append("m.hoehe_min >=").append(hoeheVon);
+                    whereBuilder.append("m.hoehe_max >=").append(hoeheVon);
                     flag = true;
                 }
                 if (hoeheBis != null) {
