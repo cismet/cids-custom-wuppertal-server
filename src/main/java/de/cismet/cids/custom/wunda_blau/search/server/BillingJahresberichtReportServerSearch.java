@@ -155,6 +155,8 @@ public class BillingJahresberichtReportServerSearch extends BillingStatisticsRep
     public static final String KUNDEN_ABRECHNUNG_WIEDERVERKAEUFER = "kundenAbrechnungWiederverkaeuferJahrlich";
     public static final String ANZAHL_KUNDEN = "anzahlKundenPerGruppe";
 
+    public static final String VERWENDUNGSZWECK_GESCHAEFTSBUCHNUMMERN_KOSTENPFLICHTIG =
+        "anzahlGeschaeftsbuchnummernKostenpflichtig";
     public static final String VERWENDUNGSZWECK_GESCHAEFTSBUCHNUMMERN_KOSTENPFLICHTIG_LK =
         "anzahlGeschaeftsbuchnummernKostenpflichtigLk";
     public static final String VERWENDUNGSZWECK_GESCHAEFTSBUCHNUMMERN_KOSTENPFLICHTIG_BL =
@@ -162,6 +164,8 @@ public class BillingJahresberichtReportServerSearch extends BillingStatisticsRep
     public static final String VERWENDUNGSZWECK_GESCHAEFTSBUCHNUMMERN_KOSTENPFLICHTIG_KO =
         "anzahlGeschaeftsbuchnummernKostenpflichtigKo";
 
+    public static final String VERWENDUNGSZWECK_GESCHAEFTSBUCHNUMMERN_KOSTENFREI =
+        "anzahlGeschaeftsbuchnummernKostenfrei";
     public static final String VERWENDUNGSZWECK_GESCHAEFTSBUCHNUMMERN_KOSTENFREI_LK =
         "anzahlGeschaeftsbuchnummernKostenfreiLk";
     public static final String VERWENDUNGSZWECK_GESCHAEFTSBUCHNUMMERN_KOSTENFREI_BL =
@@ -169,10 +173,12 @@ public class BillingJahresberichtReportServerSearch extends BillingStatisticsRep
     public static final String VERWENDUNGSZWECK_GESCHAEFTSBUCHNUMMERN_KOSTENFREI_KO =
         "anzahlGeschaeftsbuchnummernKostenfreiKo";
 
+    public static final String VERWENDUNGSZWECK_DOWNLOADS_KOSTENPFLICHTIG = "anzahlDownloadsKostenpflichtig";
     public static final String VERWENDUNGSZWECK_DOWNLOADS_KOSTENPFLICHTIG_LK = "anzahlDownloadsKostenpflichtigLk";
     public static final String VERWENDUNGSZWECK_DOWNLOADS_KOSTENPFLICHTIG_BL = "anzahlDownloadsKostenpflichtigBl";
     public static final String VERWENDUNGSZWECK_DOWNLOADS_KOSTENPFLICHTIG_KO = "anzahlDownloadsKostenpflichtigKo";
 
+    public static final String VERWENDUNGSZWECK_DOWNLOADS_KOSTENFREI = "anzahlDownloadsGeschaeftsbuchnummerKostenfrei";
     public static final String VERWENDUNGSZWECK_DOWNLOADS_KOSTENFREI_LK =
         "anzahlDownloadsGeschaeftsbuchnummerKostenfreiLk";
     public static final String VERWENDUNGSZWECK_DOWNLOADS_KOSTENFREI_BL =
@@ -180,13 +186,16 @@ public class BillingJahresberichtReportServerSearch extends BillingStatisticsRep
     public static final String VERWENDUNGSZWECK_DOWNLOADS_KOSTENFREI_KO =
         "anzahlDownloadsGeschaeftsbuchnummerKostenfreiKo";
 
+    public static final String VERWENDUNGSZWECK_ANZAHL = "anzahlVerwendungszwecke";
     public static final String VERWENDUNGSZWECK_ANZAHL_LK = "anzahlVerwendungszweckeLk";
     public static final String VERWENDUNGSZWECK_ANZAHL_KO = "anzahlVerwendungszweckeBl";
     public static final String VERWENDUNGSZWECK_ANZAHL_BL = "anzahlVerwendungszweckeKo";
 
+    public static final String VERWENDUNGSZWECK_SUMME_EINNAHMEN = "anzahlVerwendungszweckeSummeEinnahmen";
     public static final String VERWENDUNGSZWECK_SUMME_EINNAHMEN_LK = "anzahlVerwendungszweckeSummeEinnahmenLk";
     public static final String VERWENDUNGSZWECK_SUMME_EINNAHMEN_BL = "anzahlVerwendungszweckeSummeEinnahmenBl";
     public static final String VERWENDUNGSZWECK_SUMME_EINNAHMEN_KO = "anzahlVerwendungszweckeSummeEinnahmenKo";
+
     public static final String ANZAHL_VERMESSUNGSUNTERLAGEN_TS3 = "anzahlProdukteVermessungsunterlagenTs3";
     public static final String ANZAHL_VERMESSUNGSUNTERLAGEN_TS4 = "anzahlProdukteVermessungsunterlagenTs4";
 
@@ -285,6 +294,12 @@ public class BillingJahresberichtReportServerSearch extends BillingStatisticsRep
                     ms,
                     results,
                     QUERY_ANZAHL_GESCHAEFTSBUCHNUMMER_KOSTENPLICHTIG,
+                    null,
+                    VERWENDUNGSZWECK_GESCHAEFTSBUCHNUMMERN_KOSTENPFLICHTIG);
+                excuteQueryAndConvertAmountPerVerwendungszweckResults(
+                    ms,
+                    results,
+                    QUERY_ANZAHL_GESCHAEFTSBUCHNUMMER_KOSTENPLICHTIG,
                     Arrays.asList(PRODUCTS_LK),
                     VERWENDUNGSZWECK_GESCHAEFTSBUCHNUMMERN_KOSTENPFLICHTIG_LK);
                 excuteQueryAndConvertAmountPerVerwendungszweckResults(
@@ -301,6 +316,12 @@ public class BillingJahresberichtReportServerSearch extends BillingStatisticsRep
                     VERWENDUNGSZWECK_GESCHAEFTSBUCHNUMMERN_KOSTENPFLICHTIG_KO);
 
                 // QUERY_ANZAHL_GESCHAEFTSBUCHNUMMER_KOSTENFREI
+                excuteQueryAndConvertAmountPerVerwendungszweckResults(
+                    ms,
+                    results,
+                    QUERY_ANZAHL_GESCHAEFTSBUCHNUMMER_KOSTENFREI,
+                    null,
+                    VERWENDUNGSZWECK_GESCHAEFTSBUCHNUMMERN_KOSTENFREI);
                 excuteQueryAndConvertAmountPerVerwendungszweckResults(
                     ms,
                     results,
@@ -325,6 +346,12 @@ public class BillingJahresberichtReportServerSearch extends BillingStatisticsRep
                     ms,
                     results,
                     QUERY_ANZAHL_DOWNLOADS_KOSTENPFLICHTIG,
+                    null,
+                    VERWENDUNGSZWECK_DOWNLOADS_KOSTENPFLICHTIG);
+                excuteQueryAndConvertAmountPerVerwendungszweckResults(
+                    ms,
+                    results,
+                    QUERY_ANZAHL_DOWNLOADS_KOSTENPFLICHTIG,
                     Arrays.asList(PRODUCTS_LK),
                     VERWENDUNGSZWECK_DOWNLOADS_KOSTENPFLICHTIG_LK);
                 excuteQueryAndConvertAmountPerVerwendungszweckResults(
@@ -345,6 +372,12 @@ public class BillingJahresberichtReportServerSearch extends BillingStatisticsRep
                     ms,
                     results,
                     QUERY_ANZAHL_DOWNLOADS_KOSTENFREI,
+                    null,
+                    VERWENDUNGSZWECK_DOWNLOADS_KOSTENFREI);
+                excuteQueryAndConvertAmountPerVerwendungszweckResults(
+                    ms,
+                    results,
+                    QUERY_ANZAHL_DOWNLOADS_KOSTENFREI,
                     Arrays.asList(PRODUCTS_BL),
                     VERWENDUNGSZWECK_DOWNLOADS_KOSTENFREI_BL);
                 excuteQueryAndConvertAmountPerVerwendungszweckResults(
@@ -361,6 +394,12 @@ public class BillingJahresberichtReportServerSearch extends BillingStatisticsRep
                     VERWENDUNGSZWECK_DOWNLOADS_KOSTENFREI_KO);
 
                 // QUERY_SUMME_PRO_VERWENDUNGSZWECK
+                excuteQueryAndConvertAmountPerVerwendungszweckResults(
+                    ms,
+                    results,
+                    QUERY_SUMME_PRO_VERWENDUNGSZWECK,
+                    null,
+                    VERWENDUNGSZWECK_SUMME_EINNAHMEN);
                 excuteQueryAndConvertAmountPerVerwendungszweckResults(
                     ms,
                     results,
@@ -457,7 +496,7 @@ public class BillingJahresberichtReportServerSearch extends BillingStatisticsRep
             for (final String productKey : productKeys) {
                 quotedProductKeys.add("'" + productKey + "'");
             }
-            return String.format("produktkey in (%s)", String.join(",", quotedProductKeys));
+            return String.format("produktkey = any(array[%s])", String.join(",", quotedProductKeys));
         } else {
             return "true";
         }
@@ -479,12 +518,14 @@ public class BillingJahresberichtReportServerSearch extends BillingStatisticsRep
             final String query,
             final Collection<String> productKeys,
             final String key) throws RemoteException {
-        final ArrayList<ArrayList> lists = ms.performCustomSearch(query.replace(
+        final String filledQuery = query.replace(
                     "${productKeys}",
-                    generateProductKeysPart(productKeys)).replace("${from}", POSTGRES_DATE_FORMAT.format(from)).replace(
-                    "${till}",
-                    POSTGRES_DATE_FORMAT.format(till)),
-                getConnectionContext());
+                    generateProductKeysPart(productKeys))
+                    .replace("${from}", POSTGRES_DATE_FORMAT.format(from))
+                    .replace(
+                        "${till}",
+                        POSTGRES_DATE_FORMAT.format(till));
+        final ArrayList<ArrayList> lists = ms.performCustomSearch(filledQuery, getConnectionContext());
         if ((lists != null)) {
             final AnzahlProVerwendungszweckBean bean = new AnzahlProVerwendungszweckBean();
             for (final Iterator it = lists.iterator(); it.hasNext();) {
