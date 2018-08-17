@@ -41,116 +41,121 @@ public class BillingJahresberichtReportServerSearch extends BillingStatisticsRep
     private static final org.apache.log4j.Logger LOG = org.apache.log4j.Logger.getLogger(
             BillingJahresberichtReportServerSearch.class);
 
-    private static final String[] PRODUCTS_LK = new String[] {
-            "fsnw",
-            "fsuenw",
-            "benw",
-            "bestnw",
-            "grnw",
-            "fknw4",
-            "fknw3",
-            "fknw2",
-            "fknw1",
-            "fknw0",
-            "schknw4",
-            "schknw3",
-            "schknw2",
-            "schknw1",
-            "schknw0",
-            "abknw4",
-            "abknw3",
-            "abknw2",
-            "abknw1",
-            "abknw0",
-            "pktlsttxt",
-            "pktlstpdf",
-            "fnp4",
-            "fnp3",
-            "fnp2",
-            "fnp1",
-            "fnp0",
-            "appdf",
-            "nivppdf",
-            "vrpdf",
-            "vrpdf_a2",
-            "doklapdf",
-            "doklapdf_a2",
-            "nasoeig",
-            "naspkt",
-            "abktiff",
-            "dgm1",
-            "dgm5",
-            "dgm10",
-            "gebu",
-            "flu",
-        };
-    private static final String[] PRODUCTS_BL = new String[] { "bla", "blab_be" };
-    private static final String[] PRODUCTS_KO = new String[] {
-            "ofkom0",
-            "ofkom1",
-            "ofkom2",
-            "ofkom3",
-            "ofkom4",
-            "abkhkom0",
-            "abkhkom1",
-            "abkhkom2",
-            "abkhkom3",
-            "abkhkom4",
-            "skhkom0",
-            "skhkom1",
-            "skhkom2",
-            "skhkom3",
-            "skhkom4",
-            "ofkkom0",
-            "ofkkom1",
-            "ofkkom2",
-            "ofkkom3",
-            "ofkkom4",
-            "sptiff",
-            "ortho5",
-            "ortho15",
-            "hoeli1",
-            "hoeli5",
-            "hoept",
-            "adr",
-            "stb",
-            "fsuekom",
-            "bekom",
-            "skmekom4",
-            "skmekom3",
-            "skmekom2",
-            "skmekom1",
-            "skmekom0",
-            "skkom4",
-            "skkom3",
-            "skkom2",
-            "skkom1",
-            "skkom0",
-            "dgkkom4",
-            "dgkkom3",
-            "dgkkom2",
-            "dgkkom1",
-            "dgkkom0",
-            "nivpükom4",
-            "nivpükom3",
-            "nivpükom2",
-            "nivpükom1",
-            "nivpükom0",
-            "apükom4",
-            "apükom3",
-            "apükom2",
-            "apükom1",
-            "apükom0",
-            "pnükom4",
-            "pnükom3",
-            "pnükom2",
-            "pnükom1",
-            "pnükom0",
-            "eiglkom",
-            "skmekomdxf",
-            "skmekomtiff",
-            "naskom",
-        };
+    private static final String PRODUCTS_LK = "lk";
+    private static final String PRODUCTS_BL = "bl";
+    private static final String PRODUCTS_KO = "ko";
+
+//
+//    private static final String[] PRODUCTS_LK = new String[] {
+//            "fsnw",
+//            "fsuenw",
+//            "benw",
+//            "bestnw",
+//            "grnw",
+//            "fknw4",
+//            "fknw3",
+//            "fknw2",
+//            "fknw1",
+//            "fknw0",
+//            "schknw4",
+//            "schknw3",
+//            "schknw2",
+//            "schknw1",
+//            "schknw0",
+//            "abknw4",
+//            "abknw3",
+//            "abknw2",
+//            "abknw1",
+//            "abknw0",
+//            "pktlsttxt",
+//            "pktlstpdf",
+//            "fnp4",
+//            "fnp3",
+//            "fnp2",
+//            "fnp1",
+//            "fnp0",
+//            "appdf",
+//            "nivppdf",
+//            "vrpdf",
+//            "vrpdf_a2",
+//            "doklapdf",
+//            "doklapdf_a2",
+//            "nasoeig",
+//            "naspkt",
+//            "abktiff",
+//            "dgm1",
+//            "dgm5",
+//            "dgm10",
+//            "gebu",
+//            "flu",
+//        };
+//    private static final String[] PRODUCTS_BL = new String[] { "bla", "blab_be" };
+//    private static final String[] PRODUCTS_KO = new String[] {
+//            "ofkom0",
+//            "ofkom1",
+//            "ofkom2",
+//            "ofkom3",
+//            "ofkom4",
+//            "abkhkom0",
+//            "abkhkom1",
+//            "abkhkom2",
+//            "abkhkom3",
+//            "abkhkom4",
+//            "skhkom0",
+//            "skhkom1",
+//            "skhkom2",
+//            "skhkom3",
+//            "skhkom4",
+//            "ofkkom0",
+//            "ofkkom1",
+//            "ofkkom2",
+//            "ofkkom3",
+//            "ofkkom4",
+//            "sptiff",
+//            "ortho5",
+//            "ortho15",
+//            "hoeli1",
+//            "hoeli5",
+//            "hoept",
+//            "adr",
+//            "stb",
+//            "fsuekom",
+//            "bekom",
+//            "skmekom4",
+//            "skmekom3",
+//            "skmekom2",
+//            "skmekom1",
+//            "skmekom0",
+//            "skkom4",
+//            "skkom3",
+//            "skkom2",
+//            "skkom1",
+//            "skkom0",
+//            "dgkkom4",
+//            "dgkkom3",
+//            "dgkkom2",
+//            "dgkkom1",
+//            "dgkkom0",
+//            "nivpükom4",
+//            "nivpükom3",
+//            "nivpükom2",
+//            "nivpükom1",
+//            "nivpükom0",
+//            "apükom4",
+//            "apükom3",
+//            "apükom2",
+//            "apükom1",
+//            "apükom0",
+//            "pnükom4",
+//            "pnükom3",
+//            "pnükom2",
+//            "pnükom1",
+//            "pnükom0",
+//            "eiglkom",
+//            "skmekomdxf",
+//            "skmekomtiff",
+//            "naskom",
+//        };
 
     public static final String KUNDEN_ABRECHNUNG_WIEDERVERKAEUFER = "kundenAbrechnungWiederverkaeuferJahrlich";
     public static final String ANZAHL_KUNDEN = "anzahlKundenPerGruppe";
@@ -216,15 +221,15 @@ public class BillingJahresberichtReportServerSearch extends BillingStatisticsRep
                 + "group by gruppe.name order by gruppe.name asc;";
 
     private static final String QUERY_ANZAHL_GESCHAEFTSBUCHNUMMER_KOSTENPLICHTIG =
-        "select sub.verwendungskey, count(*) from (select distinct geschaeftsbuchnummer,username,verwendungskey from billing_billing  where ${productKeys} and date_trunc('day',abrechnungsdatum) >= '${from}' and date_trunc('day',abrechnungsdatum) <= '${till}' and storniert is null and username not like 'NICHT-ZAEHLEN%' and not (netto_summe =0 or netto_summe is null)) as sub group by sub.verwendungskey;";
+        "select sub.verwendungskey, count(*) from (select distinct geschaeftsbuchnummer,username,verwendungskey from billing_billing LEFT JOIN billing_jahresbericht_products ON billing_billing.produktkey = billing_jahresbericht_products.key where ${productKeys} and date_trunc('day',abrechnungsdatum) >= '${from}' and date_trunc('day',abrechnungsdatum) <= '${till}' and storniert is null and username not like 'NICHT-ZAEHLEN%' and not (netto_summe =0 or netto_summe is null)) as sub group by sub.verwendungskey;";
     private static final String QUERY_ANZAHL_GESCHAEFTSBUCHNUMMER_KOSTENFREI =
-        "select sub.verwendungskey, count(*) from (select distinct geschaeftsbuchnummer,username,verwendungskey from billing_billing where ${productKeys} and date_trunc('day',ts) >= '${from}' and date_trunc('day',ts) <= '${till}' and storniert is null and username not like 'NICHT-ZAEHLEN%' and (netto_summe =0 or netto_summe is null)) as sub group by sub.verwendungskey;";
+        "select sub.verwendungskey, count(*) from (select distinct geschaeftsbuchnummer,username,verwendungskey from billing_billing LEFT JOIN billing_jahresbericht_products ON billing_billing.produktkey = billing_jahresbericht_products.key where ${productKeys} and date_trunc('day',ts) >= '${from}' and date_trunc('day',ts) <= '${till}' and storniert is null and username not like 'NICHT-ZAEHLEN%' and (netto_summe =0 or netto_summe is null)) as sub group by sub.verwendungskey;";
     private static final String QUERY_ANZAHL_DOWNLOADS_KOSTENPFLICHTIG =
-        "select verwendungskey, count(*) from billing_billing where ${productKeys} and date_trunc('day',abrechnungsdatum) >= '${from}' and date_trunc('day',abrechnungsdatum) <= '${till}' and storniert is null and username not like 'NICHT-ZAEHLEN%' and not (netto_summe =0 or netto_summe is null) group by verwendungskey;";
+        "select verwendungskey, count(*) from billing_billing LEFT JOIN billing_jahresbericht_products ON billing_billing.produktkey = billing_jahresbericht_products.key where ${productKeys} and date_trunc('day',abrechnungsdatum) >= '${from}' and date_trunc('day',abrechnungsdatum) <= '${till}' and storniert is null and username not like 'NICHT-ZAEHLEN%' and not (netto_summe =0 or netto_summe is null) group by verwendungskey;";
     private static final String QUERY_ANZAHL_DOWNLOADS_KOSTENFREI =
-        "select verwendungskey, count(*) from billing_billing where ${productKeys} and date_trunc('day',abrechnungsdatum) >= '${from}' and date_trunc('day',abrechnungsdatum) <= '${till}' and storniert is null and username not like 'NICHT-ZAEHLEN%' and (netto_summe =0 or netto_summe is null) group by verwendungskey;";
+        "select verwendungskey, count(*) from billing_billing LEFT JOIN billing_jahresbericht_products ON billing_billing.produktkey = billing_jahresbericht_products.key where ${productKeys} and date_trunc('day',abrechnungsdatum) >= '${from}' and date_trunc('day',abrechnungsdatum) <= '${till}' and storniert is null and username not like 'NICHT-ZAEHLEN%' and (netto_summe =0 or netto_summe is null) group by verwendungskey;";
     private static final String QUERY_SUMME_PRO_VERWENDUNGSZWECK =
-        "select verwendungskey, sum(netto_summe) from billing_billing where ${productKeys} and date_trunc('day',abrechnungsdatum) >= '${from}' and date_trunc('day',abrechnungsdatum) <= '${till}' and storniert is null and username not like 'NICHT-ZAEHLEN%' and not (netto_summe =0 or netto_summe is null) group by verwendungskey;";
+        "select verwendungskey, sum(netto_summe) from billing_billing LEFT JOIN billing_jahresbericht_products ON billing_billing.produktkey = billing_jahresbericht_products.key where ${productKeys} and date_trunc('day',abrechnungsdatum) >= '${from}' and date_trunc('day',abrechnungsdatum) <= '${till}' and storniert is null and username not like 'NICHT-ZAEHLEN%' and not (netto_summe =0 or netto_summe is null) group by verwendungskey;";
 
     private static final String QUERY_ANZAHL_PRODUKTE_VERMESSUNGSUNTERLAGEN_TS3 =
         "select produktbezeichnung,count(id) from ( "
@@ -300,19 +305,19 @@ public class BillingJahresberichtReportServerSearch extends BillingStatisticsRep
                     ms,
                     results,
                     QUERY_ANZAHL_GESCHAEFTSBUCHNUMMER_KOSTENPLICHTIG,
-                    Arrays.asList(PRODUCTS_LK),
+                    PRODUCTS_LK,
                     VERWENDUNGSZWECK_GESCHAEFTSBUCHNUMMERN_KOSTENPFLICHTIG_LK);
                 excuteQueryAndConvertAmountPerVerwendungszweckResults(
                     ms,
                     results,
                     QUERY_ANZAHL_GESCHAEFTSBUCHNUMMER_KOSTENPLICHTIG,
-                    Arrays.asList(PRODUCTS_BL),
+                    PRODUCTS_BL,
                     VERWENDUNGSZWECK_GESCHAEFTSBUCHNUMMERN_KOSTENPFLICHTIG_BL);
                 excuteQueryAndConvertAmountPerVerwendungszweckResults(
                     ms,
                     results,
                     QUERY_ANZAHL_GESCHAEFTSBUCHNUMMER_KOSTENPLICHTIG,
-                    Arrays.asList(PRODUCTS_KO),
+                    PRODUCTS_KO,
                     VERWENDUNGSZWECK_GESCHAEFTSBUCHNUMMERN_KOSTENPFLICHTIG_KO);
 
                 // QUERY_ANZAHL_GESCHAEFTSBUCHNUMMER_KOSTENFREI
@@ -326,19 +331,19 @@ public class BillingJahresberichtReportServerSearch extends BillingStatisticsRep
                     ms,
                     results,
                     QUERY_ANZAHL_GESCHAEFTSBUCHNUMMER_KOSTENFREI,
-                    Arrays.asList(PRODUCTS_LK),
+                    PRODUCTS_LK,
                     VERWENDUNGSZWECK_GESCHAEFTSBUCHNUMMERN_KOSTENFREI_LK);
                 excuteQueryAndConvertAmountPerVerwendungszweckResults(
                     ms,
                     results,
                     QUERY_ANZAHL_GESCHAEFTSBUCHNUMMER_KOSTENFREI,
-                    Arrays.asList(PRODUCTS_BL),
+                    PRODUCTS_BL,
                     VERWENDUNGSZWECK_GESCHAEFTSBUCHNUMMERN_KOSTENFREI_BL);
                 excuteQueryAndConvertAmountPerVerwendungszweckResults(
                     ms,
                     results,
                     QUERY_ANZAHL_GESCHAEFTSBUCHNUMMER_KOSTENFREI,
-                    Arrays.asList(PRODUCTS_KO),
+                    PRODUCTS_KO,
                     VERWENDUNGSZWECK_GESCHAEFTSBUCHNUMMERN_KOSTENFREI_KO);
 
                 // QUERY_ANZAHL_DOWNLOADS_KOSTENPFLICHTIG
@@ -352,19 +357,19 @@ public class BillingJahresberichtReportServerSearch extends BillingStatisticsRep
                     ms,
                     results,
                     QUERY_ANZAHL_DOWNLOADS_KOSTENPFLICHTIG,
-                    Arrays.asList(PRODUCTS_LK),
+                    PRODUCTS_LK,
                     VERWENDUNGSZWECK_DOWNLOADS_KOSTENPFLICHTIG_LK);
                 excuteQueryAndConvertAmountPerVerwendungszweckResults(
                     ms,
                     results,
                     QUERY_ANZAHL_DOWNLOADS_KOSTENFREI,
-                    Arrays.asList(PRODUCTS_LK),
+                    PRODUCTS_LK,
                     VERWENDUNGSZWECK_DOWNLOADS_KOSTENFREI_LK);
                 excuteQueryAndConvertAmountPerVerwendungszweckResults(
                     ms,
                     results,
                     QUERY_ANZAHL_DOWNLOADS_KOSTENPFLICHTIG,
-                    Arrays.asList(PRODUCTS_BL),
+                    PRODUCTS_BL,
                     VERWENDUNGSZWECK_DOWNLOADS_KOSTENPFLICHTIG_BL);
 
                 // QUERY_ANZAHL_DOWNLOADS_KOSTENFREI
@@ -378,19 +383,19 @@ public class BillingJahresberichtReportServerSearch extends BillingStatisticsRep
                     ms,
                     results,
                     QUERY_ANZAHL_DOWNLOADS_KOSTENFREI,
-                    Arrays.asList(PRODUCTS_BL),
+                    PRODUCTS_BL,
                     VERWENDUNGSZWECK_DOWNLOADS_KOSTENFREI_BL);
                 excuteQueryAndConvertAmountPerVerwendungszweckResults(
                     ms,
                     results,
                     QUERY_ANZAHL_DOWNLOADS_KOSTENPFLICHTIG,
-                    Arrays.asList(PRODUCTS_KO),
+                    PRODUCTS_KO,
                     VERWENDUNGSZWECK_DOWNLOADS_KOSTENPFLICHTIG_KO);
                 excuteQueryAndConvertAmountPerVerwendungszweckResults(
                     ms,
                     results,
                     QUERY_ANZAHL_DOWNLOADS_KOSTENFREI,
-                    Arrays.asList(PRODUCTS_KO),
+                    PRODUCTS_KO,
                     VERWENDUNGSZWECK_DOWNLOADS_KOSTENFREI_KO);
 
                 // QUERY_SUMME_PRO_VERWENDUNGSZWECK
@@ -404,19 +409,19 @@ public class BillingJahresberichtReportServerSearch extends BillingStatisticsRep
                     ms,
                     results,
                     QUERY_SUMME_PRO_VERWENDUNGSZWECK,
-                    Arrays.asList(PRODUCTS_LK),
+                    PRODUCTS_LK,
                     VERWENDUNGSZWECK_SUMME_EINNAHMEN_LK);
                 excuteQueryAndConvertAmountPerVerwendungszweckResults(
                     ms,
                     results,
                     QUERY_SUMME_PRO_VERWENDUNGSZWECK,
-                    Arrays.asList(PRODUCTS_BL),
+                    PRODUCTS_BL,
                     VERWENDUNGSZWECK_SUMME_EINNAHMEN_BL);
                 excuteQueryAndConvertAmountPerVerwendungszweckResults(
                     ms,
                     results,
                     QUERY_SUMME_PRO_VERWENDUNGSZWECK,
-                    Arrays.asList(PRODUCTS_KO),
+                    PRODUCTS_KO,
                     VERWENDUNGSZWECK_SUMME_EINNAHMEN_KO);
 
                 // QUERY_ANZAHL_PRODUKTE_VERMESSUNGSUNTERLAGEN_TS*
@@ -486,45 +491,28 @@ public class BillingJahresberichtReportServerSearch extends BillingStatisticsRep
     /**
      * DOCUMENT ME!
      *
-     * @param   productKeys  DOCUMENT ME!
-     *
-     * @return  DOCUMENT ME!
-     */
-    private String generateProductKeysPart(final Collection<String> productKeys) {
-        if ((productKeys != null) && !productKeys.isEmpty()) {
-            final Collection<String> quotedProductKeys = new ArrayList<>(productKeys.size());
-            for (final String productKey : productKeys) {
-                quotedProductKeys.add("'" + productKey + "'");
-            }
-            return String.format("produktkey = any(array[%s])", String.join(",", quotedProductKeys));
-        } else {
-            return "true";
-        }
-    }
-
-    /**
-     * DOCUMENT ME!
-     *
-     * @param   ms           DOCUMENT ME!
-     * @param   results      DOCUMENT ME!
-     * @param   query        DOCUMENT ME!
-     * @param   productKeys  DOCUMENT ME!
-     * @param   key          DOCUMENT ME!
+     * @param   ms               DOCUMENT ME!
+     * @param   results          DOCUMENT ME!
+     * @param   query            DOCUMENT ME!
+     * @param   productCategory  DOCUMENT ME!
+     * @param   key              DOCUMENT ME!
      *
      * @throws  RemoteException  DOCUMENT ME!
      */
     private void excuteQueryAndConvertAmountPerVerwendungszweckResults(final MetaService ms,
             final HashMap<String, ArrayList> results,
             final String query,
-            final Collection<String> productKeys,
+            final String productCategory,
             final String key) throws RemoteException {
         final String filledQuery = query.replace(
                     "${productKeys}",
-                    generateProductKeysPart(productKeys))
+                    (productCategory != null)
+                        ? (" billing_jahresbericht_products.category = '" + productCategory + "' ") : " TRUE ")
                     .replace("${from}", POSTGRES_DATE_FORMAT.format(from))
                     .replace(
                         "${till}",
                         POSTGRES_DATE_FORMAT.format(till));
+        LOG.info(filledQuery);
         final ArrayList<ArrayList> lists = ms.performCustomSearch(filledQuery, getConnectionContext());
         if ((lists != null)) {
             final AnzahlProVerwendungszweckBean bean = new AnzahlProVerwendungszweckBean();
