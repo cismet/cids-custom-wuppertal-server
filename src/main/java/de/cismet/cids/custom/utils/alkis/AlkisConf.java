@@ -48,6 +48,10 @@ public abstract class AlkisConf {
     private final String apmapsPrefix;
     private final String vermessungHostBilder;
     private final String vermessungHostGrenzniederschriften;
+    private final String vermessungHostFlurbuecher;
+    private final String vermessungHostLiegenschaftsbuecher;
+    private final String vermessungHostNamensverzeichnis;
+    private final String vermessungHostErgaenzungskarten;
     private final String landparcelFeatureRendererColor;
     private final String demoServiceUrl;
 
@@ -80,6 +84,11 @@ public abstract class AlkisConf {
         apmapsPrefix = serviceProperties.getProperty("APMAPS_PREFIX");
         vermessungHostBilder = serviceProperties.getProperty("VERMESSUNG_HOST_BILDER");
         vermessungHostGrenzniederschriften = serviceProperties.getProperty("VERMESSUNG_HOST_GRENZNIEDERSCHRIFTEN");
+        vermessungHostErgaenzungskarten = serviceProperties.getProperty("VERMESSUNG_HOST_ERGAENZUNGSKARTEN");
+        vermessungHostFlurbuecher = serviceProperties.getProperty("VERMESSUNG_HOST_FLURBUECHER");
+        vermessungHostLiegenschaftsbuecher = serviceProperties.getProperty("VERMESSUNG_HOST_LIEGENSCHAFTSBUECHER");
+        vermessungHostNamensverzeichnis = serviceProperties.getProperty("VERMESSUNG_HOST_NAMENSVERZEICHNIS");
+
         apmapsEtrsHost = serviceProperties.getProperty("APMAPS_ETRS_HOST");
         landparcelFeatureRendererColor = serviceProperties.getProperty("LANDPARCEL_FEATURE_RENDERER_COLOR");
     }
