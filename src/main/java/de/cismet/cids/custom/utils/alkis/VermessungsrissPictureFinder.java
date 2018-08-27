@@ -53,6 +53,15 @@ public class VermessungsrissPictureFinder {
     private static final String LINKEXTENSION = ".txt";
     private static final String GRENZNIEDERSCHRIFT_PREFIX = "GN";
     private static final String VERMESSUNGSRISS_PREFIX = "VR";
+    private static final String BUCHWERK_ERGAENZUNGSKARTEN_PREFIX = "GN";
+    private static final String BUCHWERK_FLURBUECHER_PREFIX = "FB";
+    private static final String BUCHWERK_LIEGENSCHAFTSBUECHER_PREFIX = "LB";
+    private static final String BUCHWERK_NAMENSVERZEICHNIS_PREFIX = "NV";
+    private static final String BUCHWERK_ERGAENZUNGSKARTEN_SCHLUESSEL = "518";
+    private static final String BUCHWERK_FLURBUECHER1_SCHLUESSEL = "536";
+    private static final String BUCHWERK_FLURBUECHER2_SCHLUESSEL = "537";
+    private static final String BUCHWERK_LIEGENSCHAFTSBUECHER_SCHLUESSEL = "546";
+    private static final String BUCHWERK_NAMENSVERZEICHNIS_SCHLUESSEL = "566";
     private static final String PATH_PLATZHALTER = "platzhalter";
 
     //~ Instance fields --------------------------------------------------------
@@ -104,6 +113,25 @@ public class VermessungsrissPictureFinder {
     /**
      * DOCUMENT ME!
      *
+     * @param   schluessel    DOCUMENT ME!
+     * @param   gemarkung     DOCUMENT ME!
+     * @param   steuerbezirk  DOCUMENT ME!
+     * @param   bezeichner    DOCUMENT ME!
+     * @param   historisch    DOCUMENT ME!
+     *
+     * @return  DOCUMENT ME!
+     */
+    public List<URL> findVermessungsbuchwerkPicture(final String schluessel,
+            final Integer gemarkung,
+            final Integer steuerbezirk,
+            final String bezeichner,
+            final boolean historisch) {
+        return findVermessungsbuchwerkPicture(true, schluessel, gemarkung, steuerbezirk, bezeichner, historisch);
+    }
+
+    /**
+     * DOCUMENT ME!
+     *
      * @param   checkReducedSize  DOCUMENT ME!
      * @param   riss              DOCUMENT ME!
      * @param   gemarkung         DOCUMENT ME!
@@ -118,6 +146,37 @@ public class VermessungsrissPictureFinder {
             final String flur,
             final String blatt) {
         final String picturePath = getVermessungsrissPictureFilename(riss, gemarkung, flur, blatt);
+        if (LOG.isDebugEnabled()) {
+            LOG.debug("findVermessungrissPicture: " + picturePath);
+        }
+
+        return probeWebserverForRightSuffix(checkReducedSize, picturePath);
+    }
+
+    /**
+     * DOCUMENT ME!
+     *
+     * @param   checkReducedSize  DOCUMENT ME!
+     * @param   schluessel        DOCUMENT ME!
+     * @param   gemarkung         DOCUMENT ME!
+     * @param   steuerbezirk      DOCUMENT ME!
+     * @param   bezeichner        DOCUMENT ME!
+     * @param   historisch        DOCUMENT ME!
+     *
+     * @return  DOCUMENT ME!
+     */
+    public List<URL> findVermessungsbuchwerkPicture(final boolean checkReducedSize,
+            final String schluessel,
+            final Integer gemarkung,
+            final Integer steuerbezirk,
+            final String bezeichner,
+            final boolean historisch) {
+        final String picturePath = getVermessungsbuchwerkPictureFilename(
+                schluessel,
+                gemarkung,
+                steuerbezirk,
+                bezeichner,
+                historisch);
         if (LOG.isDebugEnabled()) {
             LOG.debug("findVermessungrissPicture: " + picturePath);
         }
@@ -228,6 +287,52 @@ public class VermessungsrissPictureFinder {
     /**
      * DOCUMENT ME!
      *
+     * @param   withPath      DOCUMENT ME!
+     * @param   schluessel    DOCUMENT ME!
+     * @param   gemarkung     DOCUMENT ME!
+     * @param   steuerbezirk  DOCUMENT ME!
+     * @param   bezeichner    DOCUMENT ME!
+     * @param   historisch    isGrenzniederschrift DOCUMENT ME!
+     *
+     * @return  DOCUMENT ME!
+     */
+    public String getBuchwerkFilename(final boolean withPath,
+            final String schluessel,
+            final Integer gemarkung,
+            final Integer steuerbezirk,
+            final String bezeichner,
+            final boolean historisch) {
+        final StringBuffer buf = new StringBuffer();
+        if (withPath) {
+            buf.append(getBuchwerkFolder(schluessel, gemarkung));
+            buf.append(SEP);
+        }
+
+        if (BUCHWERK_ERGAENZUNGSKARTEN_SCHLUESSEL.equals(schluessel)) {
+            buf.append(BUCHWERK_ERGAENZUNGSKARTEN_PREFIX).append("_");
+        } else if (BUCHWERK_FLURBUECHER1_SCHLUESSEL.equals(schluessel)) {
+            buf.append(BUCHWERK_FLURBUECHER_PREFIX).append("_");
+        } else if (BUCHWERK_FLURBUECHER2_SCHLUESSEL.equals(schluessel)) {
+            buf.append(BUCHWERK_FLURBUECHER_PREFIX).append("_");
+        } else if (BUCHWERK_LIEGENSCHAFTSBUECHER_SCHLUESSEL.equals(schluessel)) {
+            buf.append(BUCHWERK_LIEGENSCHAFTSBUECHER_PREFIX).append("_");
+        } else if (BUCHWERK_NAMENSVERZEICHNIS_SCHLUESSEL.equals(schluessel)) {
+            buf.append(BUCHWERK_NAMENSVERZEICHNIS_PREFIX).append("_");
+        }
+        buf.append(StringUtils.leftPad(schluessel, 3, '0'))
+                .append("-")
+                .append(String.format("%04d", gemarkung))
+                .append("-")
+                .append(historisch ? "001" : "000")
+                .append("-")
+                .append(steuerbezirk)
+                .append(StringUtils.leftPad(bezeichner, 7, '0'));
+        return buf.toString();
+    }
+
+    /**
+     * DOCUMENT ME!
+     *
      * @param   isGrenzNiederschrift  DOCUMENT ME!
      * @param   filename              DOCUMENT ME!
      *
@@ -296,6 +401,27 @@ public class VermessungsrissPictureFinder {
             final String flur,
             final String blatt) {
         final String ret = getObjectFilename(true, false, riss, gemarkung, flur, blatt);
+
+        return (ret != null) ? ret : null;
+    }
+
+    /**
+     * DOCUMENT ME!
+     *
+     * @param   schluessel    DOCUMENT ME!
+     * @param   gemarkung     DOCUMENT ME!
+     * @param   steuerbezirk  DOCUMENT ME!
+     * @param   bezeichner    DOCUMENT ME!
+     * @param   historisch    DOCUMENT ME!
+     *
+     * @return  DOCUMENT ME!
+     */
+    public String getVermessungsbuchwerkPictureFilename(final String schluessel,
+            final Integer gemarkung,
+            final Integer steuerbezirk,
+            final String bezeichner,
+            final boolean historisch) {
+        final String ret = getBuchwerkFilename(true, schluessel, gemarkung, steuerbezirk, bezeichner, historisch);
 
         return (ret != null) ? ret : null;
     }
@@ -413,6 +539,34 @@ public class VermessungsrissPictureFinder {
             buf = new StringBuffer(alkisConf.getVermessungHostBilder());
         }
         return buf.append(String.format("%04d", gemarkung)).toString();
+    }
+
+    /**
+     * DOCUMENT ME!
+     *
+     * @param   schluessel  DOCUMENT ME!
+     * @param   gemarkung   DOCUMENT ME!
+     *
+     * @return  DOCUMENT ME!
+     */
+    public String getBuchwerkFolder(final String schluessel, final Integer gemarkung) {
+        final StringBuffer buf = new StringBuffer();
+        if (BUCHWERK_NAMENSVERZEICHNIS_SCHLUESSEL.equals(schluessel)) {
+            buf.append(alkisConf.getVermessungHostNamensverzeichnis())
+                    .append(SEP)
+                    .append(BUCHWERK_NAMENSVERZEICHNIS_PREFIX)
+                    .append("_")
+                    .append(StringUtils.leftPad(schluessel, 3, '0'))
+                    .append("-")
+                    .append(String.format("%04d", gemarkung));
+        } else if (BUCHWERK_FLURBUECHER1_SCHLUESSEL.equals(schluessel)) {
+            buf.append(alkisConf.getVermessungHostFlurbuecher());
+        } else if (BUCHWERK_FLURBUECHER2_SCHLUESSEL.equals(schluessel)) {
+            buf.append(alkisConf.getVermessungHostFlurbuecher());
+        } else if (BUCHWERK_LIEGENSCHAFTSBUECHER_SCHLUESSEL.equals(schluessel)) {
+            buf.append(alkisConf.getVermessungHostLiegenschaftsbuecher());
+        }
+        return buf.toString();
     }
 
     /**
