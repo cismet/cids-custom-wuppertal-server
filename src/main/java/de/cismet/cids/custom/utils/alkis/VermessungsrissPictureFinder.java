@@ -22,6 +22,8 @@ import java.net.URL;
 import java.util.ArrayList;
 import java.util.List;
 
+import de.cismet.cids.dynamics.CidsBean;
+
 import de.cismet.commons.security.handler.ExtendedAccessHandler;
 import de.cismet.commons.security.handler.SimpleHttpAccessHandler;
 
@@ -122,7 +124,7 @@ public class VermessungsrissPictureFinder {
      * @return  DOCUMENT ME!
      */
     public List<URL> findVermessungsbuchwerkPicture(final String schluessel,
-            final Integer gemarkung,
+            final CidsBean gemarkung,
             final Integer steuerbezirk,
             final String bezeichner,
             final boolean historisch) {
@@ -167,7 +169,7 @@ public class VermessungsrissPictureFinder {
      */
     public List<URL> findVermessungsbuchwerkPicture(final boolean checkReducedSize,
             final String schluessel,
-            final Integer gemarkung,
+            final CidsBean gemarkung,
             final Integer steuerbezirk,
             final String bezeichner,
             final boolean historisch) {
@@ -298,7 +300,7 @@ public class VermessungsrissPictureFinder {
      */
     public String getBuchwerkFilename(final boolean withPath,
             final String schluessel,
-            final Integer gemarkung,
+            final CidsBean gemarkung,
             final Integer steuerbezirk,
             final String bezeichner,
             final boolean historisch) {
@@ -321,7 +323,7 @@ public class VermessungsrissPictureFinder {
         }
         buf.append(StringUtils.leftPad(schluessel, 3, '0'))
                 .append("-")
-                .append(String.format("%04d", gemarkung))
+                .append(String.format("%04d", (Integer)gemarkung.getProperty("id")))
                 .append("-")
                 .append(historisch ? "001" : "000")
                 .append("-")
@@ -417,7 +419,7 @@ public class VermessungsrissPictureFinder {
      * @return  DOCUMENT ME!
      */
     public String getVermessungsbuchwerkPictureFilename(final String schluessel,
-            final Integer gemarkung,
+            final CidsBean gemarkung,
             final Integer steuerbezirk,
             final String bezeichner,
             final boolean historisch) {
@@ -549,7 +551,7 @@ public class VermessungsrissPictureFinder {
      *
      * @return  DOCUMENT ME!
      */
-    public String getBuchwerkFolder(final String schluessel, final Integer gemarkung) {
+    public String getBuchwerkFolder(final String schluessel, final CidsBean gemarkung) {
         final StringBuffer buf = new StringBuffer();
         if (BUCHWERK_NAMENSVERZEICHNIS_SCHLUESSEL.equals(schluessel)) {
             buf.append(alkisConf.getVermessungHostNamensverzeichnis())
@@ -558,13 +560,15 @@ public class VermessungsrissPictureFinder {
                     .append("_")
                     .append(StringUtils.leftPad(schluessel, 3, '0'))
                     .append("-")
-                    .append(String.format("%04d", gemarkung));
+                    .append(String.format("%04d", (Integer)gemarkung.getProperty("id")));
         } else if (BUCHWERK_FLURBUECHER1_SCHLUESSEL.equals(schluessel)) {
             buf.append(alkisConf.getVermessungHostFlurbuecher());
         } else if (BUCHWERK_FLURBUECHER2_SCHLUESSEL.equals(schluessel)) {
             buf.append(alkisConf.getVermessungHostFlurbuecher());
         } else if (BUCHWERK_LIEGENSCHAFTSBUECHER_SCHLUESSEL.equals(schluessel)) {
-            buf.append(alkisConf.getVermessungHostLiegenschaftsbuecher());
+            buf.append(alkisConf.getVermessungHostLiegenschaftsbuecher())
+                    .append(SEP)
+                    .append((String)gemarkung.getProperty("name"));
         }
         return buf.toString();
     }
