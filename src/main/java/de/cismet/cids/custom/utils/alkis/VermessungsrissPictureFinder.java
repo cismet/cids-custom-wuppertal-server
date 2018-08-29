@@ -60,9 +60,10 @@ public class VermessungsrissPictureFinder {
     private static final String BUCHWERK_LIEGENSCHAFTSBUECHER_PREFIX = "LB";
     private static final String BUCHWERK_NAMENSVERZEICHNIS_PREFIX = "NV";
     private static final String BUCHWERK_ERGAENZUNGSKARTEN_SCHLUESSEL = "518";
-    private static final String BUCHWERK_FLURBUECHER1_SCHLUESSEL = "536";
-    private static final String BUCHWERK_FLURBUECHER2_SCHLUESSEL = "537";
-    private static final String BUCHWERK_LIEGENSCHAFTSBUECHER_SCHLUESSEL = "546";
+    private static final String BUCHWERK_FLURBUECHER_SCHLUESSEL1 = "536";
+    private static final String BUCHWERK_FLURBUECHER_SCHLUESSEL2 = "537";
+    private static final String BUCHWERK_LIEGENSCHAFTSBUECHER_SCHLUESSEL1 = "546";
+    private static final String BUCHWERK_LIEGENSCHAFTSBUECHER_SCHLUESSEL2 = "547";
     private static final String BUCHWERK_NAMENSVERZEICHNIS_SCHLUESSEL = "566";
     private static final String PATH_PLATZHALTER = "platzhalter";
 
@@ -312,11 +313,11 @@ public class VermessungsrissPictureFinder {
 
         if (BUCHWERK_ERGAENZUNGSKARTEN_SCHLUESSEL.equals(schluessel)) {
             buf.append(BUCHWERK_ERGAENZUNGSKARTEN_PREFIX).append("_");
-        } else if (BUCHWERK_FLURBUECHER1_SCHLUESSEL.equals(schluessel)) {
+        } else if (BUCHWERK_FLURBUECHER_SCHLUESSEL1.equals(schluessel)
+                    || BUCHWERK_FLURBUECHER_SCHLUESSEL2.equals(schluessel)) {
             buf.append(BUCHWERK_FLURBUECHER_PREFIX).append("_");
-        } else if (BUCHWERK_FLURBUECHER2_SCHLUESSEL.equals(schluessel)) {
-            buf.append(BUCHWERK_FLURBUECHER_PREFIX).append("_");
-        } else if (BUCHWERK_LIEGENSCHAFTSBUECHER_SCHLUESSEL.equals(schluessel)) {
+        } else if (BUCHWERK_LIEGENSCHAFTSBUECHER_SCHLUESSEL1.equals(schluessel)
+                    || BUCHWERK_LIEGENSCHAFTSBUECHER_SCHLUESSEL2.equals(schluessel)) {
             buf.append(BUCHWERK_LIEGENSCHAFTSBUECHER_PREFIX).append("_");
         } else if (BUCHWERK_NAMENSVERZEICHNIS_SCHLUESSEL.equals(schluessel)) {
             buf.append(BUCHWERK_NAMENSVERZEICHNIS_PREFIX).append("_");
@@ -561,11 +562,11 @@ public class VermessungsrissPictureFinder {
                     .append(StringUtils.leftPad(schluessel, 3, '0'))
                     .append("-")
                     .append(String.format("%04d", (Integer)gemarkung.getProperty("id")));
-        } else if (BUCHWERK_FLURBUECHER1_SCHLUESSEL.equals(schluessel)) {
+        } else if (BUCHWERK_FLURBUECHER_SCHLUESSEL1.equals(schluessel)
+                    || BUCHWERK_FLURBUECHER_SCHLUESSEL2.equals(schluessel)) {
             buf.append(alkisConf.getVermessungHostFlurbuecher());
-        } else if (BUCHWERK_FLURBUECHER2_SCHLUESSEL.equals(schluessel)) {
-            buf.append(alkisConf.getVermessungHostFlurbuecher());
-        } else if (BUCHWERK_LIEGENSCHAFTSBUECHER_SCHLUESSEL.equals(schluessel)) {
+        } else if (BUCHWERK_LIEGENSCHAFTSBUECHER_SCHLUESSEL1.equals(schluessel)
+                    || BUCHWERK_LIEGENSCHAFTSBUECHER_SCHLUESSEL2.equals(schluessel)) {
             buf.append(alkisConf.getVermessungHostLiegenschaftsbuecher())
                     .append(SEP)
                     .append((String)gemarkung.getProperty("name"));
