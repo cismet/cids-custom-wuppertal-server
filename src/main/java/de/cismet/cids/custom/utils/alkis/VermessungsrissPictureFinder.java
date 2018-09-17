@@ -16,8 +16,10 @@ import org.apache.commons.io.IOUtils;
 import org.apache.commons.lang.StringUtils;
 
 import java.io.InputStream;
+import java.io.UnsupportedEncodingException;
 
 import java.net.URL;
+import java.net.URLEncoder;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -291,7 +293,6 @@ public class VermessungsrissPictureFinder {
     /**
      * DOCUMENT ME!
      *
-     * @param   withPath      DOCUMENT ME!
      * @param   schluessel    DOCUMENT ME!
      * @param   gemarkung     DOCUMENT ME!
      * @param   steuerbezirk  DOCUMENT ME!
@@ -299,19 +300,17 @@ public class VermessungsrissPictureFinder {
      * @param   historisch    isGrenzniederschrift DOCUMENT ME!
      *
      * @return  DOCUMENT ME!
+     *
+     * @throws  UnsupportedEncodingException  DOCUMENT ME!
      */
-    public String getBuchwerkFilename(final boolean withPath,
-            final String schluessel,
+    public String getBuchwerkFilename(final String schluessel,
             final CidsBean gemarkung,
             final Integer steuerbezirk,
             final String bezeichner,
-            final boolean historisch) {
+            final boolean historisch) throws UnsupportedEncodingException {
         final StringBuffer buf = new StringBuffer();
-        if (withPath) {
-            buf.append(getBuchwerkFolder(schluessel, gemarkung));
-            buf.append(SEP);
-        }
-
+        buf.append(getBuchwerkFolder(schluessel, gemarkung));
+        buf.append(SEP);
         if (SCHLUESSEL_ERGAENZUNGSKARTEN.equals(schluessel)) {
             buf.append(PREFIX_ERGAENZUNGSKARTEN).append("_");
         } else if (SCHLUESSEL_FLURBUECHER1.equals(schluessel)
@@ -427,7 +426,13 @@ public class VermessungsrissPictureFinder {
             final Integer steuerbezirk,
             final String bezeichner,
             final boolean historisch) {
-        final String ret = getBuchwerkFilename(true, schluessel, gemarkung, steuerbezirk, bezeichner, historisch);
+        final String ret;
+        try {
+            ret = getBuchwerkFilename(schluessel, gemarkung, steuerbezirk, bezeichner, historisch);
+        } catch (final UnsupportedEncodingException ex) {
+            LOG.error(ex, ex);
+            return null;
+        }
 
         return (ret != null) ? ret : null;
     }
@@ -460,7 +465,7 @@ public class VermessungsrissPictureFinder {
         if (LOG.isDebugEnabled()) {
             LOG.debug("Searching for picture: " + fileWithoutSuffix + "xxx");
         }
-        final List<URL> results = new ArrayList<URL>();
+        final List<URL> results = new ArrayList<>();
         // check if there is a reduced size image direcly...
         final String searchName = checkReducedSize ? (fileWithoutSuffix + SUFFIX_REDUCED_SIZE) : fileWithoutSuffix;
         for (final String suffix : SUFFIXE) {
@@ -562,8 +567,11 @@ public class VermessungsrissPictureFinder {
      * @param   gemarkung   DOCUMENT ME!
      *
      * @return  DOCUMENT ME!
+     *
+     * @throws  UnsupportedEncodingException  DOCUMENT ME!
      */
-    public String getBuchwerkFolder(final String schluessel, final CidsBean gemarkung) {
+    public String getBuchwerkFolder(final String schluessel, final CidsBean gemarkung)
+            throws UnsupportedEncodingException {
         final StringBuffer buf = new StringBuffer();
         if (SCHLUESSEL_NAMENSVERZEICHNIS.equals(schluessel)) {
             buf.append(alkisConf.getVermessungHostNamensverzeichnis())
@@ -580,7 +588,7 @@ public class VermessungsrissPictureFinder {
                     || SCHLUESSEL_LIEGENSCHAFTSBUECHER2.equals(schluessel)) {
             buf.append(alkisConf.getVermessungHostLiegenschaftsbuecher())
                     .append(SEP)
-                    .append((String)gemarkung.getProperty("name"));
+                    .append(URLEncoder.encode((String)gemarkung.getProperty("name"), "UTF-8"));
         }
         return buf.toString();
     }
