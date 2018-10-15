@@ -46,6 +46,7 @@ public abstract class AlkisConf {
     private final String apmapsHost;
     private final String apmapsEtrsHost;
     private final String apmapsPrefix;
+    private final String vermessungHost;
     private final String vermessungHostBilder;
     private final String vermessungHostGrenzniederschriften;
     private final String vermessungHostFlurbuecher;
@@ -82,6 +83,7 @@ public abstract class AlkisConf {
         nivpPrefix = serviceProperties.getProperty("NIVP_PREFIX");
         apmapsHost = serviceProperties.getProperty("APMAPS_HOST");
         apmapsPrefix = serviceProperties.getProperty("APMAPS_PREFIX");
+        vermessungHost = serviceProperties.getProperty("VERMESSUNG_HOST");
         vermessungHostBilder = serviceProperties.getProperty("VERMESSUNG_HOST_BILDER");
         vermessungHostGrenzniederschriften = serviceProperties.getProperty("VERMESSUNG_HOST_GRENZNIEDERSCHRIFTEN");
         vermessungHostErgaenzungskarten = serviceProperties.getProperty("VERMESSUNG_HOST_ERGAENZUNGSKARTEN");

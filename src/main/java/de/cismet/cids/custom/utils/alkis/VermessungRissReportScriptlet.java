@@ -76,21 +76,25 @@ public class VermessungRissReportScriptlet extends JRDefaultScriptlet {
             final String flur,
             final String blatt,
             final ExtendedAccessHandler extendedAccessHandler) {
-        final List<URL> validURLs;
+        final List<String> validDocuments;
         if (host.equals(ServerAlkisConf.getInstance().getVermessungHostGrenzniederschriften())) {
-            validURLs = VermessungsrissPictureFinder.getInstance()
+            validDocuments = VermessungsrissPictureFinder.getInstance()
                         .findGrenzniederschriftPicture(schluessel, gemarkung, flur, blatt);
         } else {
-            validURLs = VermessungsrissPictureFinder.getInstance()
+            validDocuments = VermessungsrissPictureFinder.getInstance()
                         .findVermessungsrissPicture(schluessel, gemarkung, flur, blatt);
         }
 
         boolean imageAvailable = false;
-        for (final URL urls : validURLs) {
-            final URL url = urls;
-            if (extendedAccessHandler.checkIfURLaccessible(url)) {
-                imageAvailable = true;
-                break;
+        for (final String document : validDocuments) {
+            try {
+                final URL url = VermessungsrissPictureFinder.getInstance().getUrlForDocument(document);
+                if (extendedAccessHandler.checkIfURLaccessible(url)) {
+                    imageAvailable = true;
+                    break;
+                }
+            } catch (final Exception ex) {
+                LOG.error(ex, ex);
             }
         }
         return imageAvailable;

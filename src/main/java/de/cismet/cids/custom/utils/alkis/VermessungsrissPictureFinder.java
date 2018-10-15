@@ -39,8 +39,14 @@ public class VermessungsrissPictureFinder {
 
     //~ Static fields/initializers ---------------------------------------------
 
+    private static final org.apache.log4j.Logger LOG = org.apache.log4j.Logger.getLogger(
+            VermessungsrissPictureFinder.class);
+
+    private static final String DOWNLOAD_TEMPLATE =
+        "<rasterfari:url>?REQUEST=GetMap&SERVICE=WMS&customDocumentInfo=download&LAYERS=<rasterfari:document>";
+
     public static final String SEP = "/";
-    static final org.apache.log4j.Logger LOG = org.apache.log4j.Logger.getLogger(VermessungsrissPictureFinder.class);
+
     private static final String[] SUFFIXE = new String[] {
             ".tif",
             ".jpg",
@@ -53,7 +59,6 @@ public class VermessungsrissPictureFinder {
             ".TIFF",
             ".JPEG"
         };
-    public static final String SUFFIX_REDUCED_SIZE = "_rs";
     private static final String LINKEXTENSION = ".txt";
     private static final String PREFIX_GRENZNIEDERSCHRIFT = "GN";
     private static final String PREFIX_VERMESSUNGSRISS = "VR";
@@ -101,18 +106,23 @@ public class VermessungsrissPictureFinder {
     /**
      * DOCUMENT ME!
      *
-     * @param   riss       blattnummer picture DOCUMENT ME!
-     * @param   gemarkung  laufendeNummer DOCUMENT ME!
+     * @param   riss       DOCUMENT ME!
+     * @param   gemarkung  DOCUMENT ME!
      * @param   flur       DOCUMENT ME!
      * @param   blatt      DOCUMENT ME!
      *
      * @return  DOCUMENT ME!
      */
-    public List<URL> findVermessungsrissPicture(final String riss,
+    public List<String> findVermessungsrissPicture(final String riss,
             final Integer gemarkung,
             final String flur,
             final String blatt) {
-        return findVermessungsrissPicture(true, riss, gemarkung, flur, blatt);
+        final String picturePath = getVermessungsrissPictureFilename(riss, gemarkung, flur, blatt);
+        if (LOG.isDebugEnabled()) {
+            LOG.debug("findVermessungrissPicture: " + picturePath);
+        }
+
+        return probeWebserverForRightSuffix(picturePath);
     }
 
     /**
@@ -126,67 +136,23 @@ public class VermessungsrissPictureFinder {
      *
      * @return  DOCUMENT ME!
      */
-    public List<URL> findVermessungsbuchwerkPicture(final String schluessel,
-            final CidsBean gemarkung,
-            final Integer steuerbezirk,
-            final String bezeichner,
-            final boolean historisch) {
-        return findVermessungsbuchwerkPicture(true, schluessel, gemarkung, steuerbezirk, bezeichner, historisch);
-    }
-
-    /**
-     * DOCUMENT ME!
-     *
-     * @param   checkReducedSize  DOCUMENT ME!
-     * @param   riss              DOCUMENT ME!
-     * @param   gemarkung         DOCUMENT ME!
-     * @param   flur              DOCUMENT ME!
-     * @param   blatt             DOCUMENT ME!
-     *
-     * @return  DOCUMENT ME!
-     */
-    public List<URL> findVermessungsrissPicture(final boolean checkReducedSize,
-            final String riss,
-            final Integer gemarkung,
-            final String flur,
-            final String blatt) {
-        final String picturePath = getVermessungsrissPictureFilename(riss, gemarkung, flur, blatt);
-        if (LOG.isDebugEnabled()) {
-            LOG.debug("findVermessungrissPicture: " + picturePath);
-        }
-
-        return probeWebserverForRightSuffix(checkReducedSize, picturePath);
-    }
-
-    /**
-     * DOCUMENT ME!
-     *
-     * @param   checkReducedSize  DOCUMENT ME!
-     * @param   schluessel        DOCUMENT ME!
-     * @param   gemarkung         DOCUMENT ME!
-     * @param   steuerbezirk      DOCUMENT ME!
-     * @param   bezeichner        DOCUMENT ME!
-     * @param   historisch        DOCUMENT ME!
-     *
-     * @return  DOCUMENT ME!
-     */
-    public List<URL> findVermessungsbuchwerkPicture(final boolean checkReducedSize,
+    public List<String> findVermessungsbuchwerkPicture(
             final String schluessel,
             final CidsBean gemarkung,
             final Integer steuerbezirk,
             final String bezeichner,
             final boolean historisch) {
-        final String picturePath = getVermessungsbuchwerkPictureFilename(
+        final String fileName = getVermessungsbuchwerkPictureFilename(
                 schluessel,
                 gemarkung,
                 steuerbezirk,
                 bezeichner,
                 historisch);
         if (LOG.isDebugEnabled()) {
-            LOG.debug("findVermessungrissPicture: " + picturePath);
+            LOG.debug("findVermessungrissPicture: " + fileName);
         }
 
-        return probeWebserverForRightSuffix(checkReducedSize, picturePath);
+        return probeWebserverForRightSuffix(fileName);
     }
 
     /**
@@ -199,26 +165,7 @@ public class VermessungsrissPictureFinder {
      *
      * @return  DOCUMENT ME!
      */
-    public List<URL> findGrenzniederschriftPicture(final String riss,
-            final Integer gemarkung,
-            final String flur,
-            final String blatt) {
-        return findGrenzniederschriftPicture(false, riss, gemarkung, flur, blatt);
-    }
-
-    /**
-     * DOCUMENT ME!
-     *
-     * @param   checkReducedSize  DOCUMENT ME!
-     * @param   riss              DOCUMENT ME!
-     * @param   gemarkung         DOCUMENT ME!
-     * @param   flur              DOCUMENT ME!
-     * @param   blatt             DOCUMENT ME!
-     *
-     * @return  DOCUMENT ME!
-     */
-    public List<URL> findGrenzniederschriftPicture(final boolean checkReducedSize,
-            final String riss,
+    public List<String> findGrenzniederschriftPicture(final String riss,
             final Integer gemarkung,
             final String flur,
             final String blatt) {
@@ -226,7 +173,7 @@ public class VermessungsrissPictureFinder {
         if (LOG.isDebugEnabled()) {
             LOG.debug("findGrenzniederschriftPicture: " + picturePath);
         }
-        return probeWebserverForRightSuffix(checkReducedSize, picturePath);
+        return probeWebserverForRightSuffix(picturePath);
     }
 
     /**
@@ -310,7 +257,6 @@ public class VermessungsrissPictureFinder {
             final boolean historisch) throws UnsupportedEncodingException {
         final StringBuffer buf = new StringBuffer();
         buf.append(getBuchwerkFolder(schluessel, gemarkung));
-        buf.append(SEP);
         if (SCHLUESSEL_ERGAENZUNGSKARTEN.equals(schluessel)) {
             buf.append(PREFIX_ERGAENZUNGSKARTEN).append("_");
         } else if (SCHLUESSEL_FLURBUECHER1.equals(schluessel)
@@ -330,6 +276,7 @@ public class VermessungsrissPictureFinder {
                 .append("-")
                 .append(steuerbezirk)
                 .append(StringUtils.leftPad(bezeichner, 7, '0'));
+
         return buf.toString();
     }
 
@@ -440,60 +387,54 @@ public class VermessungsrissPictureFinder {
     /**
      * DOCUMENT ME!
      *
-     * @param   checkReducedSize   DOCUMENT ME!
      * @param   fileWithoutSuffix  DOCUMENT ME!
      *
      * @return  DOCUMENT ME!
      */
-    private List<URL> probeWebserverForRightSuffix(final boolean checkReducedSize,
-            final String fileWithoutSuffix) {
-        return probeWebserverForRightSuffix(checkReducedSize, fileWithoutSuffix, 0);
+    private List<String> probeWebserverForRightSuffix(final String fileWithoutSuffix) {
+        return probeWebserverForRightSuffix(fileWithoutSuffix, 0);
     }
 
     /**
      * DOCUMENT ME!
      *
-     * @param   checkReducedSize   DOCUMENT ME!
+     * @param   document  DOCUMENT ME!
+     *
+     * @return  DOCUMENT ME!
+     *
+     * @throws  Exception  DOCUMENT ME!
+     */
+    public final URL getUrlForDocument(final String document) throws Exception {
+        return new URL(DOWNLOAD_TEMPLATE.replace("<rasterfari:url>", alkisConf.getVermessungHost()).replace(
+                    "<rasterfari:document>",
+                    document));
+    }
+
+    /**
+     * DOCUMENT ME!
+     *
      * @param   fileWithoutSuffix  DOCUMENT ME!
      * @param   recursionDepth     DOCUMENT ME!
      *
      * @return  DOCUMENT ME!
      */
-    public List<URL> probeWebserverForRightSuffix(final boolean checkReducedSize,
-            final String fileWithoutSuffix,
-            final int recursionDepth) {
+    public List<String> probeWebserverForRightSuffix(final String fileWithoutSuffix, final int recursionDepth) {
         if (LOG.isDebugEnabled()) {
             LOG.debug("Searching for picture: " + fileWithoutSuffix + "xxx");
         }
-        final List<URL> results = new ArrayList<>();
-        // check if there is a reduced size image direcly...
-        final String searchName = checkReducedSize ? (fileWithoutSuffix + SUFFIX_REDUCED_SIZE) : fileWithoutSuffix;
+        final List<String> results = new ArrayList<>();
         for (final String suffix : SUFFIXE) {
+            final String fileWithSuffix = fileWithoutSuffix + suffix;
             try {
-                final URL objectURL = new URL(searchName + suffix);
-
+                final URL objectURL = getUrlForDocument(fileWithSuffix);
                 if (simpleUrlAccessHandler.checkIfURLaccessible(objectURL)) {
-                    results.add(objectURL);
+                    results.add(fileWithSuffix);
                 }
             } catch (Exception ex) {
-                LOG.error("Problem occured, during checking for " + searchName + suffix, ex);
+                LOG.error("Problem occured, during checking for " + fileWithSuffix, ex);
             }
         }
-        // we need to do an extra round if we checked with _rs suffix...
-        if (results.isEmpty() && checkReducedSize) {
-            for (final String suffix : SUFFIXE) {
-                try {
-                    final URL objectURL = new URL(fileWithoutSuffix + suffix);
-
-                    if (simpleUrlAccessHandler.checkIfURLaccessible(objectURL)) {
-                        results.add(objectURL);
-                    }
-                } catch (Exception ex) {
-                    LOG.error("Problem occured, during checking for " + searchName + suffix, ex);
-                }
-            }
-        }
-        // if the results is still empty check if there is a link...
+        // if the results is empty check if there is a link...
         if (results.isEmpty()) {
             if (LOG.isDebugEnabled()) {
                 LOG.debug("No picture file found. Check for Links");
@@ -501,15 +442,13 @@ public class VermessungsrissPictureFinder {
             if (recursionDepth < 3) {
                 InputStream urlStream = null;
                 try {
-                    final URL objectURL = new URL(fileWithoutSuffix + LINKEXTENSION);
+                    final URL objectURL = getUrlForDocument(fileWithoutSuffix + LINKEXTENSION);
                     if (simpleUrlAccessHandler.checkIfURLaccessible(objectURL)) {
                         urlStream = simpleUrlAccessHandler.doRequest(objectURL);
                         if (urlStream != null) {
-                            final String link = IOUtils.toString(urlStream);
+                            final String link = IOUtils.toString(urlStream, "UTF-8");
                             final boolean isGrenzNiederschrift = fileWithoutSuffix.contains(PREFIX_GRENZNIEDERSCHRIFT);
-                            return probeWebserverForRightSuffix(
-                                    checkReducedSize,
-                                    getObjectPath(isGrenzNiederschrift, link.trim()),
+                            return probeWebserverForRightSuffix(getObjectPath(isGrenzNiederschrift, link.trim()),
                                     recursionDepth
                                             + 1);
                         }

@@ -137,47 +137,37 @@ public class VermessungsRissReportHelper {
             description.append(vermessungsriss.getProperty("blatt"));
             description.append(" - Seite ");
 
-            final List<URL> urlList;
+            final List<String> documents;
             // we search for reduced size images, since we need the reduced size image for the report
             if (host.equals(alkisConf.getVermessungHostGrenzniederschriften())) {
-                urlList = VermessungsrissPictureFinder.getInstance()
+                documents = VermessungsrissPictureFinder.getInstance()
                             .findGrenzniederschriftPicture(
-                                    true,
                                     schluessel,
                                     gemarkung,
                                     flur,
                                     blatt);
             } else {
-                urlList = VermessungsrissPictureFinder.getInstance()
+                documents = VermessungsrissPictureFinder.getInstance()
                             .findVermessungsrissPicture(
-                                    true,
                                     schluessel,
                                     gemarkung,
                                     flur,
                                     blatt);
             }
 
-            if ((urlList == null) || urlList.isEmpty()) {
+            if ((documents == null) || documents.isEmpty()) {
                 LOG.info("No document URLS found for the Vermessungsriss report");
             }
-            boolean isOfReducedSize = false;
             MultiPagePictureReader reader = null;
             int pageCount = 0;
             final StringBuilder fileReference = new StringBuilder();
-            if (urlList != null) {
-                for (final URL url : urlList) {
+            if (documents != null) {
+                for (final String document : documents) {
                     try {
-                        if (url.toString().contains("_rs")) {
-                            isOfReducedSize = true;
-                        }
+                        final URL url = VermessungsrissPictureFinder.getInstance().getUrlForDocument(document);
                         reader = multiPageReaderClass.getConstructor(URL.class, boolean.class, boolean.class)
                                     .newInstance(url, false, false);
                         pageCount = reader.getNumberOfPages();
-                        // when a reduced size image was found we download the original file as jpg also
-                        if (isOfReducedSize) {
-                            additionalFilesToDownload.add(new URL(
-                                    url.toString().replaceAll("_rs", "")));
-                        }
 
                         String path = url.getPath();
                         path = path.substring(path.lastIndexOf('/') + 1);
@@ -186,8 +176,7 @@ public class VermessungsRissReportHelper {
                         fileReference.append(')');
                         break;
                     } catch (final Exception ex) {
-                        LOG.warn("Could not read document from URL '" + url.toExternalForm()
-                                    + "'. Skipping this url.",
+                        LOG.warn("Could not read document from URL '" + document + "'. Skipping this url.",
                             ex);
                     }
                 }
@@ -214,10 +203,7 @@ public class VermessungsRissReportHelper {
                         reader));
             }
 
-            String startingPageString = Integer.toString(startingPage);
-            if (isOfReducedSize) {
-                startingPageString = startingPageString.concat("*");
-            }
+            final String startingPageString = Integer.toString(startingPage);
 
             startingPages.put(vermessungsriss.getProperty("id"), startingPageString);
             startingPage += pageCount;
