@@ -51,6 +51,7 @@ public abstract class AlkisConf {
     private final String rasterfariUrl;
     private final String nivpHost;
     private final String nivpPrefix;
+    private final String apmapsHost;
     private final String apmapsEtrsHost;
     private final String apmapsPrefix;
     private final String vermessungHostBilder;
@@ -95,7 +96,7 @@ public abstract class AlkisConf {
         vermessungHostFlurbuecher = serviceProperties.getProperty("VERMESSUNG_HOST_FLURBUECHER");
         vermessungHostLiegenschaftsbuecher = serviceProperties.getProperty("VERMESSUNG_HOST_LIEGENSCHAFTSBUECHER");
         vermessungHostNamensverzeichnis = serviceProperties.getProperty("VERMESSUNG_HOST_NAMENSVERZEICHNIS");
-
+        apmapsHost = serviceProperties.getProperty("APMAPS_HOST");
         apmapsEtrsHost = serviceProperties.getProperty("APMAPS_ETRS_HOST");
         landparcelFeatureRendererColor = serviceProperties.getProperty("LANDPARCEL_FEATURE_RENDERER_COLOR");
     }
@@ -111,7 +112,7 @@ public abstract class AlkisConf {
      *
      * @throws  Exception  DOCUMENT ME!
      */
-    public final URL getUrlForDocument(final String document) throws Exception {
+    public final URL getDownloadUrlForDocument(final String document) throws Exception {
         return new URL(DOWNLOAD_TEMPLATE.replace("<rasterfari:url>", getRasterfariUrl()).replace(
                     "<rasterfari:document>",
                     document));

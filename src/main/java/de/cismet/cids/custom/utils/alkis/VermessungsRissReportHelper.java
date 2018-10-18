@@ -164,7 +164,7 @@ public class VermessungsRissReportHelper {
             if (documents != null) {
                 for (final String document : documents) {
                     try {
-                        final URL url = ServerAlkisConf.getInstance().getUrlForDocument(document);
+                        final URL url = ServerAlkisConf.getInstance().getDownloadUrlForDocument(document);
                         reader = multiPageReaderClass.getConstructor(URL.class, boolean.class, boolean.class)
                                     .newInstance(url, false, false);
                         pageCount = reader.getNumberOfPages();

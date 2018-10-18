@@ -88,7 +88,7 @@ public class VermessungRissReportScriptlet extends JRDefaultScriptlet {
         boolean imageAvailable = false;
         for (final String document : validDocuments) {
             try {
-                final URL url = ServerAlkisConf.getInstance().getUrlForDocument(document);
+                final URL url = ServerAlkisConf.getInstance().getDownloadUrlForDocument(document);
                 if (extendedAccessHandler.checkIfURLaccessible(url)) {
                     imageAvailable = true;
                     break;

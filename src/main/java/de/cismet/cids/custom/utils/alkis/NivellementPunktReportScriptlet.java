@@ -55,7 +55,7 @@ public class NivellementPunktReportScriptlet extends JRDefaultScriptlet {
         for (final String document : validDocuments) {
             final URL url;
             try {
-                url = ServerAlkisConf.getInstance().getUrlForDocument(document);
+                url = ServerAlkisConf.getInstance().getDownloadUrlForDocument(document);
                 if (EXTENDED_ACCESS_HANDLER.checkIfURLaccessible(url)) {
                     return true;
                 }
@@ -81,7 +81,7 @@ public class NivellementPunktReportScriptlet extends JRDefaultScriptlet {
         InputStream streamToReadFrom = null;
         for (final String document : validDocuments) {
             try {
-                final URL url = ServerAlkisConf.getInstance().getUrlForDocument(document);
+                final URL url = ServerAlkisConf.getInstance().getDownloadUrlForDocument(document);
                 if (EXTENDED_ACCESS_HANDLER.checkIfURLaccessible(url)) {
                     streamToReadFrom = EXTENDED_ACCESS_HANDLER.doRequest(url);
                     if (streamToReadFrom != null) {

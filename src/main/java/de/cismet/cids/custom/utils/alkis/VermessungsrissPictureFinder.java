@@ -411,7 +411,7 @@ public class VermessungsrissPictureFinder {
         for (final String suffix : SUFFIXE) {
             final String fileWithSuffix = fileWithoutSuffix + suffix;
             try {
-                final URL objectURL = alkisConf.getUrlForDocument(fileWithSuffix);
+                final URL objectURL = alkisConf.getDownloadUrlForDocument(fileWithSuffix);
                 if (simpleUrlAccessHandler.checkIfURLaccessible(objectURL)) {
                     results.add(fileWithSuffix);
                 }
@@ -427,7 +427,7 @@ public class VermessungsrissPictureFinder {
             if (recursionDepth < 3) {
                 InputStream urlStream = null;
                 try {
-                    final URL objectURL = alkisConf.getUrlForDocument(fileWithoutSuffix + LINKEXTENSION);
+                    final URL objectURL = alkisConf.getDownloadUrlForDocument(fileWithoutSuffix + LINKEXTENSION);
                     if (simpleUrlAccessHandler.checkIfURLaccessible(objectURL)) {
                         urlStream = simpleUrlAccessHandler.doRequest(objectURL);
                         if (urlStream != null) {
