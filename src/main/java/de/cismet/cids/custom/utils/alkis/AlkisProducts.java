@@ -345,7 +345,7 @@ public abstract class AlkisProducts {
 
         final StringBuilder urlBuilder;
         if (pointcode.trim().length() < 15) {
-            urlBuilder = new StringBuilder(alkisConf.getApmapsHost());
+            urlBuilder = new StringBuilder(alkisConf.getRasterfariUrl());
 
             final String kilometerquadratPart1 = pointcode.substring(2, 4);
             final String kilometerquadratPart2 = pointcode.substring(6, 8);
@@ -393,36 +393,22 @@ public abstract class AlkisProducts {
      *
      * @return  DOCUMENT ME!
      */
-    public Collection<URL> getCorrespondingNivPURLs(final java.lang.String dgkBlattnummer,
+    public Collection<String> getCorrespondingNivPURLs(final java.lang.String dgkBlattnummer,
             final String laufendeNummer) {
-        final Collection<URL> validURLs = new LinkedList<URL>();
+        final Collection<String> validDocuments = new LinkedList<>();
         final StringBuilder urlBuilder = new StringBuilder(alkisConf.getNivpHost());
-        urlBuilder.append('/');
         urlBuilder.append(dgkBlattnummer);
         urlBuilder.append('/');
         urlBuilder.append(alkisConf.getNivpPrefix());
         urlBuilder.append(dgkBlattnummer);
         urlBuilder.append(getFormattedLaufendeNummerNivP(laufendeNummer));
         urlBuilder.append('.');
+        final String documentWithoutPrefix = urlBuilder.toString();
         for (final String suffix : SUFFIXES) {
-            URL urlToTry = null;
-            try {
-                urlToTry = new URL(urlBuilder.toString() + suffix);
-            } catch (MalformedURLException ex) {
-                LOG.warn("The URL '" + urlBuilder.toString() + suffix
-                            + "' is malformed. Can't load the corresponding picture.",
-                    ex);
-            }
-
-            if (urlToTry != null) {
-                if (LOG.isDebugEnabled()) {
-                    LOG.debug("Valid URL: " + urlToTry.toExternalForm());
-                }
-
-                validURLs.add(urlToTry);
-            }
+            final String documentWithPrefix = documentWithoutPrefix + suffix;
+            validDocuments.add(documentWithPrefix);
         }
-        return validURLs;
+        return validDocuments;
     }
 
     /**

@@ -398,21 +398,6 @@ public class VermessungsrissPictureFinder {
     /**
      * DOCUMENT ME!
      *
-     * @param   document  DOCUMENT ME!
-     *
-     * @return  DOCUMENT ME!
-     *
-     * @throws  Exception  DOCUMENT ME!
-     */
-    public final URL getUrlForDocument(final String document) throws Exception {
-        return new URL(DOWNLOAD_TEMPLATE.replace("<rasterfari:url>", alkisConf.getVermessungHost()).replace(
-                    "<rasterfari:document>",
-                    document));
-    }
-
-    /**
-     * DOCUMENT ME!
-     *
      * @param   fileWithoutSuffix  DOCUMENT ME!
      * @param   recursionDepth     DOCUMENT ME!
      *
@@ -426,7 +411,7 @@ public class VermessungsrissPictureFinder {
         for (final String suffix : SUFFIXE) {
             final String fileWithSuffix = fileWithoutSuffix + suffix;
             try {
-                final URL objectURL = getUrlForDocument(fileWithSuffix);
+                final URL objectURL = alkisConf.getUrlForDocument(fileWithSuffix);
                 if (simpleUrlAccessHandler.checkIfURLaccessible(objectURL)) {
                     results.add(fileWithSuffix);
                 }
@@ -442,7 +427,7 @@ public class VermessungsrissPictureFinder {
             if (recursionDepth < 3) {
                 InputStream urlStream = null;
                 try {
-                    final URL objectURL = getUrlForDocument(fileWithoutSuffix + LINKEXTENSION);
+                    final URL objectURL = alkisConf.getUrlForDocument(fileWithoutSuffix + LINKEXTENSION);
                     if (simpleUrlAccessHandler.checkIfURLaccessible(objectURL)) {
                         urlStream = simpleUrlAccessHandler.doRequest(objectURL);
                         if (urlStream != null) {
