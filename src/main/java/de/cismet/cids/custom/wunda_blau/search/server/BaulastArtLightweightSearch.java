@@ -36,6 +36,9 @@ import de.cismet.cidsx.server.api.types.SearchParameterInfo;
 import de.cismet.cidsx.server.search.RestApiCidsServerSearch;
 import de.cismet.cidsx.server.search.builtin.legacy.LightweightMetaObjectsSearch;
 
+import de.cismet.connectioncontext.ConnectionContext;
+import de.cismet.connectioncontext.ConnectionContextStore;
+
 /**
  * Builtin Legacy Search to delegate the operation getLightweightMetaObjectsByQuery to the cids Pure REST Search API.
  *
@@ -44,7 +47,8 @@ import de.cismet.cidsx.server.search.builtin.legacy.LightweightMetaObjectsSearch
  */
 @ServiceProvider(service = RestApiCidsServerSearch.class)
 public class BaulastArtLightweightSearch extends AbstractCidsServerSearch implements RestApiCidsServerSearch,
-    LightweightMetaObjectsSearch {
+    LightweightMetaObjectsSearch,
+    ConnectionContextStore {
 
     //~ Static fields/initializers ---------------------------------------------
 
@@ -55,6 +59,8 @@ public class BaulastArtLightweightSearch extends AbstractCidsServerSearch implem
     @Getter private final SearchInfo searchInfo;
     @Getter @Setter private String[] representationFields;
     @Getter @Setter private String representationPattern;
+
+    private ConnectionContext connectionContext = ConnectionContext.createDummy();
 
     //~ Constructors -----------------------------------------------------------
 
@@ -68,7 +74,7 @@ public class BaulastArtLightweightSearch extends AbstractCidsServerSearch implem
         searchInfo.setDescription(
             "Builtin Legacy Search to delegate the operation getLightweightMetaObjectsByQuery to the cids Pure REST Search API.");
 
-        final List<SearchParameterInfo> parameterDescription = new LinkedList<SearchParameterInfo>();
+        final List<SearchParameterInfo> parameterDescription = new LinkedList<>();
         searchInfo.setParameterDescription(parameterDescription);
         SearchParameterInfo searchParameterInfo;
 
@@ -93,6 +99,11 @@ public class BaulastArtLightweightSearch extends AbstractCidsServerSearch implem
     //~ Methods ----------------------------------------------------------------
 
     @Override
+    public void initWithConnectionContext(final ConnectionContext connectionContext) {
+        this.connectionContext = connectionContext;
+    }
+
+    @Override
     public Collection performServerSearch() throws SearchException {
         final MetaService metaService = (MetaService)this.getActiveLocalServers().get("WUNDA_BLAU");
         if (metaService == null) {
@@ -103,7 +114,7 @@ public class BaulastArtLightweightSearch extends AbstractCidsServerSearch implem
         }
         final MetaClass mc;
         try {
-            mc = CidsBean.getMetaClassFromTableName("WUNDA_BLAU", "alb_baulast_art");
+            mc = CidsBean.getMetaClassFromTableName("WUNDA_BLAU", "alb_baulast_art", getConnectionContext());
         } catch (final Exception ex) {
             throw new SearchException("error while loading metaclass", ex);
         }
@@ -115,16 +126,23 @@ public class BaulastArtLightweightSearch extends AbstractCidsServerSearch implem
                             getUser(),
                             query,
                             getRepresentationFields(),
-                            getRepresentationPattern()));
+                            getRepresentationPattern(),
+                            getConnectionContext()));
             } else {
                 return Arrays.asList(metaService.getLightweightMetaObjectsByQuery(
                             mc.getID(),
                             getUser(),
                             query,
-                            getRepresentationFields()));
+                            getRepresentationFields(),
+                            getConnectionContext()));
             }
         } catch (final RemoteException ex) {
             throw new SearchException("error while loading lwmos", ex);
         }
+    }
+
+    @Override
+    public ConnectionContext getConnectionContext() {
+        return connectionContext;
     }
 }

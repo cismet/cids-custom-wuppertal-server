@@ -35,6 +35,9 @@ import de.cismet.cids.utils.serverresources.ServerResourcesLoader;
 
 import de.cismet.commons.utils.MultiPagePictureReader;
 
+import de.cismet.connectioncontext.ConnectionContext;
+import de.cismet.connectioncontext.ConnectionContextStore;
+
 /**
  * DOCUMENT ME!
  *
@@ -42,7 +45,7 @@ import de.cismet.commons.utils.MultiPagePictureReader;
  * @version  $Revision$, $Date$
  */
 @org.openide.util.lookup.ServiceProvider(service = ServerAction.class)
-public class VermessungsrissReportServerAction extends JasperReportServerAction {
+public class VermessungsrissReportServerAction extends JasperReportServerAction implements ConnectionContextStore {
 
     //~ Static fields/initializers ---------------------------------------------
 
@@ -62,7 +65,16 @@ public class VermessungsrissReportServerAction extends JasperReportServerAction 
         JOB_NUMBER, PROJECT_NAME, RISSE_MONS, HOST
     }
 
+    //~ Instance fields --------------------------------------------------------
+
+    private ConnectionContext connectionContext = ConnectionContext.createDummy();
+
     //~ Methods ----------------------------------------------------------------
+
+    @Override
+    public void initWithConnectionContext(final ConnectionContext connectionContext) {
+        this.connectionContext = connectionContext;
+    }
 
     @Override
     public Object execute(final Object body, final ServerActionParameter... params) {
@@ -91,7 +103,8 @@ public class VermessungsrissReportServerAction extends JasperReportServerAction 
                     final CidsBean bean = getMetaService().getMetaObject(
                                 getUser(),
                                 reportMon.getObjectId(),
-                                reportMon.getClassId())
+                                reportMon.getClassId(),
+                                getConnectionContext())
                                 .getBean();
                     selectedVermessungsrisse.add(bean);
                 }
@@ -127,5 +140,10 @@ public class VermessungsrissReportServerAction extends JasperReportServerAction 
     protected JasperReport getJasperReport() throws Exception {
         return ServerResourcesLoader.getInstance()
                     .loadJasperReport(WundaBlauServerResources.VERMESSUNGSRISSE_JASPER.getValue());
+    }
+
+    @Override
+    public ConnectionContext getConnectionContext() {
+        return connectionContext;
     }
 }

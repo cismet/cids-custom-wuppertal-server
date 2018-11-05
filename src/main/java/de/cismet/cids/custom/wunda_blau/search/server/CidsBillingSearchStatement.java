@@ -13,7 +13,7 @@ package de.cismet.cids.custom.wunda_blau.search.server;
 
 import Sirius.server.middleware.interfaces.domainserver.MetaService;
 import Sirius.server.middleware.types.MetaObject;
-import Sirius.server.newuser.User;
+import Sirius.server.middleware.types.MetaObjectNode;
 
 import org.apache.log4j.Logger;
 
@@ -22,12 +22,18 @@ import java.rmi.RemoteException;
 import java.text.SimpleDateFormat;
 
 import java.util.ArrayList;
-import java.util.Arrays;
 import java.util.Collection;
 import java.util.Date;
+import java.util.List;
+
+import de.cismet.cids.custom.tostringconverter.wunda_blau.BillingBillingToStringConverter;
 
 import de.cismet.cids.server.search.AbstractCidsServerSearch;
+import de.cismet.cids.server.search.MetaObjectNodeServerSearch;
 import de.cismet.cids.server.search.SearchException;
+
+import de.cismet.connectioncontext.ConnectionContext;
+import de.cismet.connectioncontext.ConnectionContextStore;
 
 /**
  * DOCUMENT ME!
@@ -35,7 +41,8 @@ import de.cismet.cids.server.search.SearchException;
  * @author   Gilles Baatz
  * @version  $Revision$, $Date$
  */
-public class CidsBillingSearchStatement extends AbstractCidsServerSearch {
+public class CidsBillingSearchStatement extends AbstractCidsServerSearch implements ConnectionContextStore,
+    MetaObjectNodeServerSearch {
 
     //~ Static fields/initializers ---------------------------------------------
 
@@ -63,7 +70,7 @@ public class CidsBillingSearchStatement extends AbstractCidsServerSearch {
     private String projekt;
     private String userID;
     private String abrechnungsturnusID;
-    private ArrayList<String> verwendungszweckKeys = new ArrayList<String>();
+    private ArrayList<String> verwendungszweckKeys = new ArrayList<>();
     private Kostentyp kostentyp = Kostentyp.IGNORIEREN;
     private Date from;
     private Date till;
@@ -71,8 +78,7 @@ public class CidsBillingSearchStatement extends AbstractCidsServerSearch {
     private Date abrechnungsdatumTill;
     private StringBuilder query;
     private final SimpleDateFormat postgresDateFormat = new SimpleDateFormat("yyyy-MM-dd");
-    private final User user;
-    private ArrayList<MetaObject> kundeMetaObjects = new ArrayList<MetaObject>();
+    private ArrayList<MetaObject> kundeMetaObjects = new ArrayList<>();
     private String kundenname;
 
     private Boolean showStornierteBillings = false;
@@ -86,66 +92,81 @@ public class CidsBillingSearchStatement extends AbstractCidsServerSearch {
      */
     private Boolean showAbgerechneteBillings = false;
 
+    private ConnectionContext connectionContext = ConnectionContext.createDummy();
+
     //~ Constructors -----------------------------------------------------------
 
     /**
      * Creates a new CidsBillingSearchStatement object.
-     *
-     * @param  user  DOCUMENT ME!
      */
-    public CidsBillingSearchStatement(final User user) {
-        this.user = user;
+    public CidsBillingSearchStatement() {
     }
 
     /**
      * Creates a new CidsBillingSearchStatement object.
      *
-     * @param  user             DOCUMENT ME!
      * @param  kundeMetaObject  kundeBean DOCUMENT ME!
      */
-    public CidsBillingSearchStatement(final User user, final MetaObject kundeMetaObject) {
-        this.user = user;
+    public CidsBillingSearchStatement(final MetaObject kundeMetaObject) {
         this.kundeMetaObjects.add(kundeMetaObject);
     }
 
     /**
      * Creates a new CidsBillingSearchStatement object.
      *
-     * @param  user              DOCUMENT ME!
      * @param  kundeMetaObjects  DOCUMENT ME!
      */
-    public CidsBillingSearchStatement(final User user, final ArrayList<MetaObject> kundeMetaObjects) {
-        this.user = user;
+    public CidsBillingSearchStatement(final ArrayList<MetaObject> kundeMetaObjects) {
         this.kundeMetaObjects = kundeMetaObjects;
     }
 
     /**
      * Creates a new CidsBillingSearchStatement object.
      *
-     * @param  user        DOCUMENT ME!
      * @param  kundenname  DOCUMENT ME!
      */
-    public CidsBillingSearchStatement(final User user, final String kundenname) {
-        this.user = user;
+    public CidsBillingSearchStatement(final String kundenname) {
         this.kundenname = kundenname;
     }
 
     //~ Methods ----------------------------------------------------------------
 
     @Override
-    public Collection<MetaObject> performServerSearch() throws SearchException {
+    public void initWithConnectionContext(final ConnectionContext connectionContext) {
+        this.connectionContext = connectionContext;
+    }
+
+    @Override
+    public Collection<MetaObjectNode> performServerSearch() throws SearchException {
         final MetaService ms = (MetaService)getActiveLocalServers().get(DOMAIN);
         if (ms != null) {
             try {
+                final List<MetaObjectNode> result = new ArrayList<>();
+
                 generateQuery();
                 if (LOG.isDebugEnabled()) {
                     LOG.debug("The used query is: " + query.toString());
                 }
 
-                final MetaObject[] billingMetaObjects = ms.getMetaObject(user, query.toString());
-                final ArrayList<MetaObject> billingCollection = new ArrayList<MetaObject>(Arrays.asList(
-                            billingMetaObjects));
-                return billingCollection;
+                final ArrayList<ArrayList> searchResult = ms.performCustomSearch(query.toString(),
+                        getConnectionContext());
+                for (final ArrayList al : searchResult) {
+                    final int cid = (Integer)al.get(0);
+                    final int oid = (Integer)al.get(1);
+                    final String geschaeftsbuchnummer = (String)al.get(2);
+                    final String kundenname = (String)al.get(3);
+                    final String username = (String)al.get(4);
+                    final Date angelegt = (Date)al.get(5);
+                    final String name = BillingBillingToStringConverter.createString(
+                            geschaeftsbuchnummer,
+                            kundenname,
+                            username,
+                            angelegt);
+                    final MetaObjectNode mon = new MetaObjectNode(DOMAIN, oid, cid, name, null, null);
+                    result.add(mon);
+                }
+
+                return result;
             } catch (RemoteException ex) {
                 LOG.error(ex.getMessage(), ex);
             }
@@ -200,8 +221,8 @@ public class CidsBillingSearchStatement extends AbstractCidsServerSearch {
         query = new StringBuilder();
         query.append("SELECT " + "(SELECT id "
                     + "                FROM    cs_class "
-                    + "                WHERE   name ilike 'billing' "
-                    + "                ), b.id ");
+                    + "                WHERE   name ilike '" + CIDSCLASS + "' "
+                    + "                ), b.id, b.geschaeftsbuchnummer, kunde.name, b.username, b.ts ");
         query.append(" FROM billing_billing b");
         query.append(" JOIN billing_kunden_logins as logins");
         query.append("     ON b.angelegt_durch = logins.id");
@@ -227,7 +248,7 @@ public class CidsBillingSearchStatement extends AbstractCidsServerSearch {
     private void appendKunde() {
         if (kundenname == null) {
             if (kundeMetaObjects.isEmpty()) {
-                query.append(" true ");
+                query.append(" b.username NOT ILIKE 'muster_%' AND b.username NOT ILIKE 'test_%' ");
             } else {
                 // create the following structure: (id_1, id_2, ... ,  id_n)
                 final StringBuilder customerListString = new StringBuilder(" kunde.id in (");
@@ -592,5 +613,10 @@ public class CidsBillingSearchStatement extends AbstractCidsServerSearch {
      */
     public void setShowAbgerechneteBillings(final Boolean showAbgerechneteBillings) {
         this.showAbgerechneteBillings = showAbgerechneteBillings;
+    }
+
+    @Override
+    public ConnectionContext getConnectionContext() {
+        return connectionContext;
     }
 }

@@ -34,13 +34,17 @@ import de.cismet.cids.server.search.SearchException;
 
 import de.cismet.cismap.commons.jtsgeometryfactories.PostGisGeometryFactory;
 
+import de.cismet.connectioncontext.ConnectionContext;
+import de.cismet.connectioncontext.ConnectionContextStore;
+
 /**
  * DOCUMENT ME!
  *
  * @author   daniel
  * @version  $Revision$, $Date$
  */
-public class CidsMauernSearchStatement extends AbstractCidsServerSearch implements MetaObjectNodeServerSearch {
+public class CidsMauernSearchStatement extends AbstractCidsServerSearch implements MetaObjectNodeServerSearch,
+    ConnectionContextStore {
 
     //~ Static fields/initializers ---------------------------------------------
 
@@ -107,6 +111,8 @@ public class CidsMauernSearchStatement extends AbstractCidsServerSearch implemen
     private final StringBuilder fromBuilder = new StringBuilder(FROM);
     private final StringBuilder whereBuilder = new StringBuilder();
 
+    private ConnectionContext connectionContext = ConnectionContext.createDummy();
+
     //~ Constructors -----------------------------------------------------------
 
     /**
@@ -139,6 +145,11 @@ public class CidsMauernSearchStatement extends AbstractCidsServerSearch implemen
     //~ Methods ----------------------------------------------------------------
 
     @Override
+    public void initWithConnectionContext(final ConnectionContext connectionContext) {
+        this.connectionContext = connectionContext;
+    }
+
+    @Override
     public Collection<MetaObjectNode> performServerSearch() throws SearchException {
         try {
             final ArrayList result = new ArrayList();
@@ -166,7 +177,7 @@ public class CidsMauernSearchStatement extends AbstractCidsServerSearch implemen
             if (LOG.isDebugEnabled()) {
                 LOG.debug("Executing SQL statement '" + sqlBuilder.toString() + "'.");
             }
-            resultset = metaService.performCustomSearch(sqlBuilder.toString());
+            resultset = metaService.performCustomSearch(sqlBuilder.toString(), getConnectionContext());
 
             for (final ArrayList mauer : resultset) {
                 final int classID = (Integer)mauer.get(0);
@@ -340,7 +351,7 @@ public class CidsMauernSearchStatement extends AbstractCidsServerSearch implemen
                 whereBuilder.append(" (");
                 boolean flag = false;
                 if (hoeheVon != null) {
-                    whereBuilder.append("m.hoehe_min >=").append(hoeheVon);
+                    whereBuilder.append("m.hoehe_max >=").append(hoeheVon);
                     flag = true;
                 }
                 if (hoeheBis != null) {
@@ -596,5 +607,10 @@ public class CidsMauernSearchStatement extends AbstractCidsServerSearch implemen
                 whereBuilder.append(") ");
             }
         }
+    }
+
+    @Override
+    public ConnectionContext getConnectionContext() {
+        return connectionContext;
     }
 }

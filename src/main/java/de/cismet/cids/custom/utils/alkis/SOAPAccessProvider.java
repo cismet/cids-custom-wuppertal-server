@@ -51,32 +51,31 @@ public final class SOAPAccessProvider {
      *
      * @throws  IllegalStateException  DOCUMENT ME!
      */
-    public SOAPAccessProvider(final AlkisConf alkisConf) {
+    public SOAPAccessProvider(final ServerAlkisConf alkisConf) {
         this.alkisConf = alkisConf;
+        //final String identityCard = alkisConf.getCreds().getUser() + "," + alkisConf.getCreds().getPassword();
 
 //        final String identityCard = alkisConf.USER + "," + alkisConf.PASSWORD;
-        final String serviceUrl = alkisConf.SERVICE;
-        final String tokenServiceUrl = alkisConf.SERVER + alkisConf.TOKEN_SERVICE;
-        final String catalogServiceUrl = alkisConf.SERVER + alkisConf.CATALOG_SERVICE;
-        final String infoServiceUrl = alkisConf.SERVER + alkisConf.INFO_SERVICE;
-        final String searchServiceUrl = alkisConf.SERVER + alkisConf.SEARCH_SERVICE;
+        final String serviceUrl = alkisConf.getService();
+        final String tokenServiceUrl = alkisConf.getServer() + alkisConf.getTokenService();
+        final String catalogServiceUrl = alkisConf.getServer() + alkisConf.getCatalogService();
+        final String infoServiceUrl = alkisConf.getServer() + alkisConf.getInfoService();
+        final String searchServiceUrl = alkisConf.getServer() + alkisConf.getSearchService();
 
         this.service = serviceUrl;                
         try {           
             this.tokenService = new TokenServicesServiceLocator().getTokenServices(new URL(tokenServiceUrl));            
-            this.alkisCatalogServices = new ALKISCatalogServicesServiceLocator().getALKISCatalogServices(new URL(
-                        catalogServiceUrl));
+            this.alkisCatalogServices = new ALKISCatalogServicesServiceLocator().getALKISCatalogServices(new URL(catalogServiceUrl));
             this.alkisInfoService = new ALKISInfoServicesServiceLocator().getALKISInfoServices(new URL(infoServiceUrl));
-            this.alkisSearchService = new ALKISSearchServicesServiceLocator().getALKISSearchServices(new URL(
-                        searchServiceUrl));
+            this.alkisSearchService = new ALKISSearchServicesServiceLocator().getALKISSearchServices(new URL(searchServiceUrl));
         } catch (Exception ex) {
-            throw new IllegalStateException("Can not create SOAPAccessProvider" + alkisConf.SERVER
+            throw new IllegalStateException("Can not create SOAPAccessProvider" + alkisConf.getServer()
                         + "|"
-                        + alkisConf.CATALOG_SERVICE + "|"
-                        + alkisConf.SERVER + "|"
-                        + alkisConf.INFO_SERVICE + "|"
-                        + alkisConf.SERVER + "|"
-                        + alkisConf.SEARCH_SERVICE,
+                        + alkisConf.getCatalogService() + "|"
+                        + alkisConf.getServer() + "|"
+                        + alkisConf.getInfoService() + "|"
+                        + alkisConf.getServer() + "|"
+                        + alkisConf.getSearchService(),
                 ex);
         }
     }
@@ -91,7 +90,7 @@ public final class SOAPAccessProvider {
     public String login() {
         try {
             if (aToken == null || !getTokenService().isTokenValid(aToken)) {
-                aToken = getTokenService().login(alkisConf.USER, alkisConf.PASSWORD);
+                aToken = getTokenService().login(alkisConf.getUser(), alkisConf.getPassword());
             }
         } catch (final Exception ex) {
             LOG.fatal("login failed", ex);

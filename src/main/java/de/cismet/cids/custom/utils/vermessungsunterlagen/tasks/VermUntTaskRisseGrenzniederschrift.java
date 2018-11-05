@@ -48,7 +48,7 @@ public class VermUntTaskRisseGrenzniederschrift extends VermUntTaskRisse {
             TYPE,
             jobKey,
             risseBeans,
-            ServerAlkisConf.getInstance().VERMESSUNG_HOST_GRENZNIEDERSCHRIFTEN,
+            ServerAlkisConf.getInstance().getVermessungHostGrenzniederschriften(),
             auftragsnummer,
             projektnummer);
     }

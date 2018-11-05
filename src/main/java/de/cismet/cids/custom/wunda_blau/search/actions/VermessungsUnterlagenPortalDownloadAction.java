@@ -17,6 +17,7 @@ import org.apache.commons.io.IOUtils;
 import java.io.InputStream;
 
 import de.cismet.cids.custom.utils.vermessungsunterlagen.VermessungsunterlagenHelper;
+import de.cismet.cids.custom.utils.vermessungsunterlagen.VermessungsunterlagenProperties;
 
 import de.cismet.cids.server.actions.ServerAction;
 import de.cismet.cids.server.actions.ServerActionParameter;
@@ -39,13 +40,22 @@ public class VermessungsUnterlagenPortalDownloadAction implements ServerAction {
     @Override
     public Object execute(final Object body, final ServerActionParameter... params) {
         final String schluessel = (String)body;
-        final String tmp = VermessungsunterlagenHelper.getInstance().getProperties().getFtpPath();
-        final String ftpZipPath = (tmp.isEmpty() ? "" : ("/" + tmp)) + "/"
-                    + VermessungsunterlagenHelper.DIR_PREFIX + "_" + schluessel + ".zip";
-
         InputStream inputStream = null;
         try {
-            inputStream = VermessungsunterlagenHelper.getInstance().downloadFromFTP(ftpZipPath);
+            final String downloadFrom = VermessungsunterlagenHelper.getInstance().getProperties().getDownloadFrom();
+            if (VermessungsunterlagenProperties.FROM_WEBDAV.equals(downloadFrom)) {
+                final String tmp = VermessungsunterlagenHelper.getInstance().getProperties().getWebDavPath();
+                final String webDavPath = (tmp.isEmpty() ? "" : ("/" + tmp)) + "/"
+                            + VermessungsunterlagenHelper.DIR_PREFIX
+                            + "_" + schluessel + ".zip";
+                inputStream = VermessungsunterlagenHelper.getInstance().downloadFromWebDAV(webDavPath);
+            } else if (VermessungsunterlagenProperties.FROM_FTP.equals(downloadFrom)) {
+                final String tmp = VermessungsunterlagenHelper.getInstance().getProperties().getFtpPath();
+                final String ftpZipPath = (tmp.isEmpty() ? "" : ("/" + tmp)) + "/"
+                            + VermessungsunterlagenHelper.DIR_PREFIX
+                            + "_" + schluessel + ".zip";
+                inputStream = VermessungsunterlagenHelper.getInstance().downloadFromFTP(ftpZipPath);
+            }
             return IOUtils.toByteArray(inputStream);
         } catch (final Exception ex) {
             return new Exception("Fehler beim Herunterladen der Zip-Datei.", ex);

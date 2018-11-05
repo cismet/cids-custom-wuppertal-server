@@ -19,13 +19,17 @@ import java.util.Collection;
 import de.cismet.cids.server.search.AbstractCidsServerSearch;
 import de.cismet.cids.server.search.MetaObjectNodeServerSearch;
 
+import de.cismet.connectioncontext.ConnectionContext;
+import de.cismet.connectioncontext.ConnectionContextStore;
+
 /**
  * DOCUMENT ME!
  *
  * @author   thorsten
  * @version  $Revision$, $Date$
  */
-public class CustomStrassenSearchStatement extends AbstractCidsServerSearch implements MetaObjectNodeServerSearch {
+public class CustomStrassenSearchStatement extends AbstractCidsServerSearch implements MetaObjectNodeServerSearch,
+    ConnectionContextStore {
 
     //~ Static fields/initializers ---------------------------------------------
 
@@ -34,7 +38,10 @@ public class CustomStrassenSearchStatement extends AbstractCidsServerSearch impl
 
     //~ Instance fields --------------------------------------------------------
 
-    private String searchString;
+    private final String searchString;
+    private final boolean searchForStrassenschluessel;
+
+    private ConnectionContext connectionContext = ConnectionContext.createDummy();
 
     //~ Constructors -----------------------------------------------------------
 
@@ -44,10 +51,26 @@ public class CustomStrassenSearchStatement extends AbstractCidsServerSearch impl
      * @param  searchString  DOCUMENT ME!
      */
     public CustomStrassenSearchStatement(final String searchString) {
+        this(searchString, false);
+    }
+
+    /**
+     * Creates a new CustomStrassenSearchStatement object.
+     *
+     * @param  searchString                 DOCUMENT ME!
+     * @param  searchForStrassenschluessel  DOCUMENT ME!
+     */
+    public CustomStrassenSearchStatement(final String searchString, final boolean searchForStrassenschluessel) {
         this.searchString = searchString;
+        this.searchForStrassenschluessel = searchForStrassenschluessel;
     }
 
     //~ Methods ----------------------------------------------------------------
+
+    @Override
+    public void initWithConnectionContext(final ConnectionContext connectionContext) {
+        this.connectionContext = connectionContext;
+    }
 
     @Override
     public Collection<MetaObjectNode> performServerSearch() {
@@ -58,25 +81,32 @@ public class CustomStrassenSearchStatement extends AbstractCidsServerSearch impl
 
             final MetaService ms = (MetaService)getActiveLocalServers().get("WUNDA_BLAU");
 
-            final MetaClass c = ms.getClassByTableName(getUser(), "strasse");
+            final MetaClass c = ms.getClassByTableName(getUser(), "strasse", getConnectionContext());
 
-            final String sql = "select strassenschluessel,name from strasse where name like '%" + searchString
-                        + "%' order by name desc";
+            final String sql = ""
+                        + "SELECT strassenschluessel, name "
+                        + "FROM strasse "
+                        + "WHERE "
+                        + (searchForStrassenschluessel ? ("strassenschluessel = " + searchString + "")
+                                                       : ("name LIKE '%" + searchString + "%'")) + " "
+                        + "ORDER BY name desc";
 
-            final ArrayList<ArrayList> result = ms.performCustomSearch(sql);
+            final ArrayList<ArrayList> result = ms.performCustomSearch(sql, getConnectionContext());
 
-            final ArrayList<MetaObjectNode> aln = new ArrayList<MetaObjectNode>();
+            final ArrayList<MetaObjectNode> aln = new ArrayList<>();
             for (final ArrayList al : result) {
                 final int id = (Integer)al.get(0);
-                final MetaObjectNode mon = new MetaObjectNode(c.getDomain(), id, c.getId());
-
-                aln.add(mon);
+                aln.add(new MetaObjectNode(c.getDomain(), id, c.getId()));
             }
-            // Thread.sleep(5000);
             return aln;
-        } catch (Exception e) {
-            LOG.error("Problem", e);
-            throw new RuntimeException(e);
+        } catch (final Exception ex) {
+            LOG.error("Problem", ex);
+            throw new RuntimeException(ex);
         }
+    }
+
+    @Override
+    public ConnectionContext getConnectionContext() {
+        return connectionContext;
     }
 }

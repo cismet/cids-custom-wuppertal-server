@@ -20,22 +20,20 @@ import de.aedsicad.aaaweb.service.alkis.search.ALKISSearchServices;
 import org.apache.commons.lang.StringEscapeUtils;
 import org.apache.log4j.Logger;
 
-import java.io.StringReader;
-
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.List;
-import java.util.Properties;
 
-import de.cismet.cids.custom.utils.WundaBlauServerResources;
-import de.cismet.cids.custom.utils.alkis.AlkisConf;
 import de.cismet.cids.custom.utils.alkis.SOAPAccessProvider;
+import de.cismet.cids.custom.utils.alkis.ServerAlkisConf;
 
-import de.cismet.cids.server.actions.GetServerResourceServerAction;
 import de.cismet.cids.server.search.AbstractCidsServerSearch;
 import de.cismet.cids.server.search.MetaObjectNodeServerSearch;
 
 import de.cismet.cismap.commons.jtsgeometryfactories.PostGisGeometryFactory;
+
+import de.cismet.connectioncontext.ConnectionContext;
+import de.cismet.connectioncontext.ConnectionContextStore;
 
 /**
  * DOCUMENT ME!
@@ -43,7 +41,8 @@ import de.cismet.cismap.commons.jtsgeometryfactories.PostGisGeometryFactory;
  * @author   stefan
  * @version  $Revision$, $Date$
  */
-public class CidsAlkisSearchStatement extends AbstractCidsServerSearch implements MetaObjectNodeServerSearch {
+public class CidsAlkisSearchStatement extends AbstractCidsServerSearch implements MetaObjectNodeServerSearch,
+    ConnectionContextStore {
 
     //~ Static fields/initializers ---------------------------------------------
 
@@ -104,6 +103,8 @@ public class CidsAlkisSearchStatement extends AbstractCidsServerSearch implement
     private SucheUeber ueber = null;
     private Geometry geometry = null;
 
+    private ConnectionContext connectionContext = ConnectionContext.createDummy();
+
     //~ Constructors -----------------------------------------------------------
 
     /**
@@ -163,18 +164,18 @@ public class CidsAlkisSearchStatement extends AbstractCidsServerSearch implement
     //~ Methods ----------------------------------------------------------------
 
     @Override
+    public void initWithConnectionContext(final ConnectionContext connectionContext) {
+        this.connectionContext = connectionContext;
+    }
+
+    @Override
     public Collection<MetaObjectNode> performServerSearch() {
         try {
-            final List<MetaObjectNode> result = new ArrayList<MetaObjectNode>();
-            final Properties properties = new Properties();
-            final ActionService as = (ActionService)getActiveLocalServers().get("WUNDA_BLAU");
-            properties.load(new StringReader(
-                    (String)as.executeTask(
+            final List<MetaObjectNode> result = new ArrayList<>();
+            final SOAPAccessProvider accessProvider = new SOAPAccessProvider(ServerAlkisConf.loadFromDomainServer(
                         getUser(),
-                        GetServerResourceServerAction.TASK_NAME,
-                        WundaBlauServerResources.ALKIS_CONF.getValue())));
-
-            final SOAPAccessProvider accessProvider = new SOAPAccessProvider(new AlkisConf(properties));
+                        (ActionService)getActiveLocalServers().get("WUNDA_BLAU"),
+                        getConnectionContext()));
             final ALKISSearchServices searchService = accessProvider.getAlkisSearchService();
 
             String query = null;
@@ -298,7 +299,7 @@ public class CidsAlkisSearchStatement extends AbstractCidsServerSearch implement
             if (query != null) {
                 final MetaService ms = (MetaService)getActiveLocalServers().get("WUNDA_BLAU");
 
-                final List<ArrayList> resultList = ms.performCustomSearch(query);
+                final List<ArrayList> resultList = ms.performCustomSearch(query, getConnectionContext());
                 for (final ArrayList al : resultList) {
                     final int cid = (Integer)al.get(0);
                     final int oid = (Integer)al.get(1);
@@ -313,5 +314,10 @@ public class CidsAlkisSearchStatement extends AbstractCidsServerSearch implement
             LOG.error("Problem", e);
             throw new RuntimeException(e);
         }
+    }
+
+    @Override
+    public ConnectionContext getConnectionContext() {
+        return connectionContext;
     }
 }

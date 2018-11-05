@@ -32,36 +32,41 @@ public class BillingBillingToStringConverter extends CustomToStringConverter {
 
     //~ Methods ----------------------------------------------------------------
 
+    /**
+     * DOCUMENT ME!
+     *
+     * @param   geschaeftsbuchnummer  DOCUMENT ME!
+     * @param   kundenname            DOCUMENT ME!
+     * @param   username              DOCUMENT ME!
+     * @param   angelegt              DOCUMENT ME!
+     *
+     * @return  DOCUMENT ME!
+     */
+    public static String createString(final String geschaeftsbuchnummer,
+            final String kundenname,
+            final String username,
+            final Date angelegt) {
+        final StringBuilder sb = new StringBuilder();
+        if ((kundenname == null) || kundenname.isEmpty()) {
+            sb.append((username == null) ? "kein Benutzername" : username);
+        } else {
+            sb.append(kundenname);
+        }
+        sb.append(" - ");
+        sb.append((geschaeftsbuchnummer == null) ? "keine Geschäftsbuchnummer angegeben" : geschaeftsbuchnummer);
+        sb.append(" - ");
+        sb.append(DATE_FORMAT.format(angelegt));
+
+        return sb.toString();
+    }
+
     @Override
     public String createString() {
-        String geschaeftsbuchnummer = (String)cidsBean.getProperty("geschaeftsbuchnummer");
-        if (geschaeftsbuchnummer == null) {
-            geschaeftsbuchnummer = "keine Geschäftsbuchnummer angegeben";
-        }
-
-        String kundenname = (String)cidsBean.getProperty("angelegt_durch.kunde.name");
-        if (kundenname == null) {
-            kundenname = "";
-        }
-
-        String username = (String)cidsBean.getProperty("username");
-        if (username == null) {
-            username = "kein Benutzername";
-        }
-
+        final String geschaeftsbuchnummer = (String)cidsBean.getProperty("geschaeftsbuchnummer");
+        final String kundenname = (String)cidsBean.getProperty("angelegt_durch.kunde.name");
+        final String username = (String)cidsBean.getProperty("username");
         final Date angelegt = (Date)cidsBean.getProperty("ts");
 
-        final StringBuilder name = new StringBuilder();
-        if (!kundenname.equals("")) {
-            name.append(kundenname);
-        } else {
-            name.append(username);
-        }
-        name.append(" - ");
-        name.append(geschaeftsbuchnummer);
-        name.append(" - ");
-        name.append(DATE_FORMAT.format(angelegt));
-
-        return name.toString();
+        return createString(geschaeftsbuchnummer, kundenname, username, angelegt);
     }
 }

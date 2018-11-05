@@ -62,7 +62,6 @@ import java.sql.ResultSet;
 import java.sql.SQLException;
 import java.sql.Timestamp;
 
-import java.text.DecimalFormat;
 import java.text.SimpleDateFormat;
 
 import java.util.ArrayList;
@@ -104,6 +103,9 @@ import de.cismet.cids.utils.serverresources.ServerResourcesLoader;
 import de.cismet.commons.security.AccessHandler;
 import de.cismet.commons.security.handler.SimpleHttpAccessHandler;
 
+import de.cismet.connectioncontext.ConnectionContext;
+import de.cismet.connectioncontext.ConnectionContextStore;
+
 /**
  * DOCUMENT ME!
  *
@@ -111,7 +113,9 @@ import de.cismet.commons.security.handler.SimpleHttpAccessHandler;
  * @version  $Revision$, $Date$
  */
 @org.openide.util.lookup.ServiceProvider(service = ServerAction.class)
-public class FormSolutionServerNewStuffAvailableAction implements UserAwareServerAction, MetaServiceStore {
+public class FormSolutionServerNewStuffAvailableAction implements UserAwareServerAction,
+    MetaServiceStore,
+    ConnectionContextStore {
 
     //~ Static fields/initializers ---------------------------------------------
 
@@ -175,9 +179,11 @@ public class FormSolutionServerNewStuffAvailableAction implements UserAwareServe
     private User user;
     private MetaService metaService;
     private final String testCismet00Xml;
-    private final Set<String> ignoreTransids = new HashSet<String>();
+    private final Set<String> ignoreTransids = new HashSet<>();
     private final ProductType testCismet00Type;
     private final FileWriter specialLogWriter;
+
+    private ConnectionContext connectionContext = ConnectionContext.createDummy();
 
     //~ Constructors -----------------------------------------------------------
 
@@ -260,6 +266,11 @@ public class FormSolutionServerNewStuffAvailableAction implements UserAwareServe
 
     //~ Methods ----------------------------------------------------------------
 
+    @Override
+    public void initWithConnectionContext(final ConnectionContext connectionContext) {
+        this.connectionContext = connectionContext;
+    }
+
     /**
      * DOCUMENT ME!
      *
@@ -290,15 +301,16 @@ public class FormSolutionServerNewStuffAvailableAction implements UserAwareServe
     /**
      * DOCUMENT ME!
      *
-     * @param   table_name  DOCUMENT ME!
+     * @param   table_name         DOCUMENT ME!
+     * @param   connectionContext  DOCUMENT ME!
      *
      * @return  DOCUMENT ME!
      */
-    private static MetaClass getMetaClass(final String table_name) {
+    private static MetaClass getMetaClass(final String table_name, final ConnectionContext connectionContext) {
         if (!METACLASS_CACHE.containsKey(table_name)) {
             MetaClass mc = null;
             try {
-                mc = CidsBean.getMetaClassFromTableName("WUNDA_BLAU", table_name);
+                mc = CidsBean.getMetaClassFromTableName("WUNDA_BLAU", table_name, connectionContext);
             } catch (final Exception ex) {
                 LOG.error("could not get metaclass of " + table_name, ex);
             }
@@ -321,7 +333,7 @@ public class FormSolutionServerNewStuffAvailableAction implements UserAwareServe
             final Map<String, ProductType> typeMap) throws Exception {
         logSpecial("fetching open transids from FS");
 
-        final Collection<String> transIds = new ArrayList<String>();
+        final Collection<String> transIds = new ArrayList<>();
         try {
             final StringBuilder stringBuilder = new StringBuilder();
             final URL auftragsListeUrl;
@@ -411,7 +423,10 @@ public class FormSolutionServerNewStuffAvailableAction implements UserAwareServe
                 bestellungBean.setProperty("fehler_ts", new Timestamp(new Date().getTime()));
                 bestellungBean.setProperty("exception", getObjectMapper().writeValueAsString(exception));
                 if (persist) {
-                    getMetaService().updateMetaObject(user, bestellungBean.getMetaObject());
+                    getMetaService().updateMetaObject(
+                        user,
+                        bestellungBean.getMetaObject(),
+                        getConnectionContext());
                 }
             } catch (final Exception ex) {
                 LOG.error("Fehler beim Persistieren der Bean", ex);
@@ -492,7 +507,8 @@ public class FormSolutionServerNewStuffAvailableAction implements UserAwareServe
         logSpecial("closing transaction for: " + transid);
 
         final boolean noClose = (transid == null) || transid.startsWith(TEST_CISMET00_PREFIX)
-                    || DomainServerImpl.getServerInstance().hasConfigAttr(getUser(), "custom.formsolutions.noclose");
+                    || DomainServerImpl.getServerInstance()
+                    .hasConfigAttr(getUser(), "custom.formsolutions.noclose", getConnectionContext());
         if (noClose) {
             return;
         }
@@ -694,9 +710,9 @@ public class FormSolutionServerNewStuffAvailableAction implements UserAwareServe
         final String produktKey = extractProduktKey(formSolutionsBestellung, productType);
         final String formatKey = extractFormatKey(formSolutionsBestellung);
 
-        final MetaClass produktTypMc = getMetaClass("fs_bestellung_produkt_typ");
-        final MetaClass produktMc = getMetaClass("fs_bestellung_produkt");
-        final MetaClass formatMc = getMetaClass("fs_bestellung_format");
+        final MetaClass produktTypMc = getMetaClass("fs_bestellung_produkt_typ", getConnectionContext());
+        final MetaClass produktMc = getMetaClass("fs_bestellung_produkt", getConnectionContext());
+        final MetaClass formatMc = getMetaClass("fs_bestellung_format", getConnectionContext());
         final String produktQuery = "SELECT DISTINCT " + produktMc.getID() + ", "
                     + produktMc.getTableName() + "." + produktMc.getPrimaryKey() + " "
                     + "FROM " + produktMc.getTableName() + ", " + produktTypMc.getTableName() + ", "
@@ -706,9 +722,12 @@ public class FormSolutionServerNewStuffAvailableAction implements UserAwareServe
                     + "AND " + produktTypMc.getTableName() + ".key = '" + produktKey + "' "
                     + "AND " + formatMc.getTableName() + ".key = '" + formatKey + "' "
                     + "LIMIT 1;";
-        final MetaObject[] produktMos = getMetaService().getMetaObject(getUser(), produktQuery);
+        final MetaObject[] produktMos = getMetaService().getMetaObject(
+                getUser(),
+                produktQuery,
+                getConnectionContext());
         produktMos[0].setAllClasses(((MetaClassCacheService)Lookup.getDefault().lookup(MetaClassCacheService.class))
-                    .getAllClasses(produktMos[0].getDomain()));
+                    .getAllClasses(produktMos[0].getDomain(), getConnectionContext()));
         return produktMos[0].getBean();
     }
 
@@ -758,11 +777,11 @@ public class FormSolutionServerNewStuffAvailableAction implements UserAwareServe
      */
     private CidsBean createBestellungBean(final FormSolutionsBestellung formSolutionsBestellung,
             final ProductType productType) throws Exception {
-        final MetaClass bestellungMc = getMetaClass("fs_bestellung");
-        final MetaClass adresseMc = getMetaClass("fs_bestellung_adresse");
+        final MetaClass bestellungMc = getMetaClass("fs_bestellung", getConnectionContext());
+        final MetaClass adresseMc = getMetaClass("fs_bestellung_adresse", getConnectionContext());
 
-        final CidsBean bestellungBean = bestellungMc.getEmptyInstance().getBean();
-        final CidsBean adresseRechnungBean = adresseMc.getEmptyInstance().getBean();
+        final CidsBean bestellungBean = bestellungMc.getEmptyInstance(getConnectionContext()).getBean();
+        final CidsBean adresseRechnungBean = adresseMc.getEmptyInstance(getConnectionContext()).getBean();
         final CidsBean adresseVersandBean;
 
         final String transid = formSolutionsBestellung.getTransId();
@@ -828,7 +847,7 @@ public class FormSolutionServerNewStuffAvailableAction implements UserAwareServe
         if (isLieferEqualsRechnungAnschrift) {
             adresseVersandBean = adresseRechnungBean;
         } else {
-            adresseVersandBean = adresseMc.getEmptyInstance().getBean();
+            adresseVersandBean = adresseMc.getEmptyInstance(getConnectionContext()).getBean();
             adresseVersandBean.setProperty("firma", trimedNotEmpty(formSolutionsBestellung.getFirma1()));
             adresseVersandBean.setProperty("name", trimedNotEmpty(formSolutionsBestellung.getAsName1()));
             adresseVersandBean.setProperty("vorname", trimedNotEmpty(formSolutionsBestellung.getAsVorname1()));
@@ -900,7 +919,7 @@ public class FormSolutionServerNewStuffAvailableAction implements UserAwareServe
             final Integer massstab) {
         final String scale = Integer.toString(massstab);
         AlkisProductDescription selectedProduct = null;
-        for (final AlkisProductDescription product : ServerAlkisProducts.getInstance().ALKIS_MAP_PRODUCTS) {
+        for (final AlkisProductDescription product : ServerAlkisProducts.getInstance().getAlkisMapProducts()) {
             if (product.getCode().startsWith(produktKey) && scale.equals(product.getMassstab())
                         && dinFormat.equals(product.getDinFormat())) {
                 selectedProduct = product;
@@ -933,7 +952,11 @@ public class FormSolutionServerNewStuffAvailableAction implements UserAwareServe
         final Collection<MetaObjectNode> mons = search.performServerSearch();
         if ((mons != null) && !mons.isEmpty()) {
             final MetaObjectNode mon = new ArrayList<MetaObjectNode>(mons).get(0);
-            final CidsBean flurstueck = getMetaService().getMetaObject(getUser(), mon.getObjectId(), mon.getClassId())
+            final CidsBean flurstueck = getMetaService().getMetaObject(
+                        getUser(),
+                        mon.getObjectId(),
+                        mon.getClassId(),
+                        getConnectionContext())
                         .getBean();
             return flurstueck;
         } else {
@@ -966,17 +989,19 @@ public class FormSolutionServerNewStuffAvailableAction implements UserAwareServe
         final String gutscheincodeAdditionalText = (bestellungBean.getProperty("gutschein_code") != null)
             ? String.format(GUTSCHEIN_ADDITIONAL_TEXT, bestellungBean.getProperty("gutschein_code")) : null;
 
-        final URL url = ServerAlkisProducts.getInstance()
-                    .productKarteUrl(
-                        flurstueckKennzeichen,
-                        productDesc,
-                        0,
-                        (int)center.getX(),
-                        (int)center.getY(),
-                        gutscheincodeAdditionalText,
-                        transid,
-                        false,
-                        null);
+        final URL url = ServerAlkisProducts.productKarteUrl(
+                flurstueckKennzeichen,
+                productDesc.getCode(),
+                0,
+                (int)center.getX(),
+                (int)center.getY(),
+                productDesc.getMassstab(),
+                productDesc.getMassstabMin(),
+                productDesc.getMassstabMax(),
+                gutscheincodeAdditionalText,
+                transid,
+                false,
+                null);
 
         return url;
     }
@@ -1103,16 +1128,33 @@ public class FormSolutionServerNewStuffAvailableAction implements UserAwareServe
             final Map<String, ProductType> typeMap,
             final Map<String, Exception> insertExceptionMap) {
         // nur die transids bearbeiten, bei denen das Parsen auch geklappt hat
-        final Collection<String> transids = new ArrayList<String>(fsBestellungMap.keySet());
+        final Collection<String> transids = new ArrayList<>(fsBestellungMap.keySet());
 
         logSpecial("creating cids entries for num of objects: " + transids.size());
 
-        final Map<String, CidsBean> fsBeanMap = new HashMap<String, CidsBean>(transids.size());
+        final Map<String, CidsBean> fsBeanMap = new HashMap<>(transids.size());
         for (final String transid : transids) {
             logSpecial("creating cids entry for: " + transid);
 
             final String auftragXml = fsXmlMap.get(transid);
             final FormSolutionsBestellung formSolutionBestellung = fsBestellungMap.get(transid);
+
+            boolean duplicate = false;
+            try {
+                final MetaClass bestellungMc = getMetaClass("fs_bestellung", getConnectionContext());
+                final String searchQuery = "SELECT DISTINCT " + bestellungMc.getID() + ", "
+                            + bestellungMc.getTableName() + "." + bestellungMc.getPrimaryKey() + " "
+                            + "FROM " + bestellungMc.getTableName() + " "
+                            + "WHERE transid LIKE '" + transid + "';";
+                final MetaObject[] mos = getMetaService().getMetaObject(getUser(), searchQuery);
+                if ((mos != null) && (mos.length > 0)) {
+                    duplicate = true;
+                }
+            } catch (final Exception ex) {
+                final String message = "error while search for duplicates for " + transid;
+                LOG.error(message, ex);
+                logSpecial(message);
+            }
 
             try {
                 final Exception insertException = insertExceptionMap.get(transid);
@@ -1120,6 +1162,7 @@ public class FormSolutionServerNewStuffAvailableAction implements UserAwareServe
 
                 final CidsBean bestellungBean = createBestellungBean(formSolutionBestellung, type);
                 bestellungBean.setProperty("form_xml_orig", auftragXml);
+                bestellungBean.setProperty("duplicate", duplicate);
                 if (insertException != null) {
                     bestellungBean.setProperty("fehler", "Fehler beim Erzeugen des MySQL-Datensatzes");
                     bestellungBean.setProperty("exception", getObjectMapper().writeValueAsString(insertException));
@@ -1129,8 +1172,8 @@ public class FormSolutionServerNewStuffAvailableAction implements UserAwareServe
                 try {
                     final String[] landparcelcodes = ((String)bestellungBean.getProperty("landparcelcode")).split(",");
 
-                    final MetaClass geomMc = getMetaClass("geom");
-                    final CidsBean geomBean = geomMc.getEmptyInstance().getBean();
+                    final MetaClass geomMc = getMetaClass("geom", getConnectionContext());
+                    final CidsBean geomBean = geomMc.getEmptyInstance(getConnectionContext()).getBean();
                     Geometry geom = null;
                     for (final String landparcelcode : landparcelcodes) {
                         final CidsBean flurstueck = getFlurstueck(landparcelcode);
@@ -1162,14 +1205,14 @@ public class FormSolutionServerNewStuffAvailableAction implements UserAwareServe
 
                 final MetaObject persistedMo = getMetaService().insertMetaObject(
                         user,
-                        bestellungBean.getMetaObject());
+                        bestellungBean.getMetaObject(),
+                        getConnectionContext());
 
                 final CidsBean persistedBestellungBean = persistedMo.getBean();
                 fsBeanMap.put(transid, persistedBestellungBean);
 
-                logSpecial("updating mysql entry for: " + transid);
-
                 if (!FormSolutionsProperties.getInstance().isMysqlDisabled()) {
+                    logSpecial("updating mysql entry for: " + transid);
                     getMySqlHelper().updateStatus(transid, STATUS_SAVE);
                 }
                 doStatusChangedRequest(transid);
@@ -1208,7 +1251,7 @@ public class FormSolutionServerNewStuffAvailableAction implements UserAwareServe
     public final Map<String, Exception> createMySqlEntries(final Collection<String> transids) {
         logSpecial("creating mySQL entries for num of objects: " + transids.size());
 
-        final Map<String, Exception> insertExceptionMap = new HashMap<String, Exception>(transids.size());
+        final Map<String, Exception> insertExceptionMap = new HashMap<>(transids.size());
 
         if (!FormSolutionsProperties.getInstance().isMysqlDisabled()) {
             for (final String transid : transids) {
@@ -1252,7 +1295,7 @@ public class FormSolutionServerNewStuffAvailableAction implements UserAwareServe
      * @param  fsBeanMap  DOCUMENT ME!
      */
     private void closeTransactions(final Map<String, CidsBean> fsBeanMap) {
-        final Collection<String> transids = new ArrayList<String>(fsBeanMap.keySet());
+        final Collection<String> transids = new ArrayList<>(fsBeanMap.keySet());
         logSpecial("closing transactions for num of objects: " + transids.size());
 
         for (final String transid : transids) {
@@ -1282,13 +1325,16 @@ public class FormSolutionServerNewStuffAvailableAction implements UserAwareServe
      * @return  DOCUMENT ME!
      */
     private Map<String, URL> createUrlMap(final Map<String, CidsBean> fsBeanMap) {
-        final Collection<String> transids = new ArrayList<String>(fsBeanMap.keySet());
+        final Collection<String> transids = new ArrayList<>(fsBeanMap.keySet());
 
-        final Map<String, URL> fsUrlMap = new HashMap<String, URL>(transids.size());
+        final Map<String, URL> fsUrlMap = new HashMap<>(transids.size());
 
-        for (final String transid : new ArrayList<String>(fsBeanMap.keySet())) {
+        for (final String transid : new ArrayList<>(fsBeanMap.keySet())) {
             final CidsBean bestellungBean = fsBeanMap.get(transid);
-            if ((bestellungBean != null) && (bestellungBean.getProperty("fehler") == null)) {
+
+            if ((bestellungBean != null)
+                        && !Boolean.TRUE.equals(bestellungBean.getProperty("duplicate"))
+                        && (bestellungBean.getProperty("fehler") == null)) {
                 try {
                     final URL productUrl = createProductUrl(bestellungBean);
                     fsUrlMap.put(transid, productUrl);
@@ -1477,7 +1523,7 @@ public class FormSolutionServerNewStuffAvailableAction implements UserAwareServe
      * @param  fsUrlMap   DOCUMENT ME!
      */
     private void downloadProdukte(final Map<String, CidsBean> fsBeanMap, final Map<String, URL> fsUrlMap) {
-        final Collection<String> transids = new ArrayList<String>(fsUrlMap.keySet());
+        final Collection<String> transids = new ArrayList<>(fsUrlMap.keySet());
 
         for (final String transid : transids) {
             final CidsBean bestellungBean = fsBeanMap.get(transid);
@@ -1512,7 +1558,10 @@ public class FormSolutionServerNewStuffAvailableAction implements UserAwareServe
                                 + ".pdf");
                     bestellungBean.setProperty("produkt_ts", new Timestamp(new Date().getTime()));
 
-                    getMetaService().updateMetaObject(user, bestellungBean.getMetaObject());
+                    getMetaService().updateMetaObject(
+                        user,
+                        bestellungBean.getMetaObject(),
+                        getConnectionContext());
 
                     createRechnung(fileNameRechnung, bestellungBean);
 
@@ -1543,7 +1592,10 @@ public class FormSolutionServerNewStuffAvailableAction implements UserAwareServe
                 final CidsBean billingBean = doBilling(bestellungBean, transid);
                 if (billingBean != null) {
                     bestellungBean.setProperty("fk_billing", billingBean);
-                    getMetaService().updateMetaObject(user, bestellungBean.getMetaObject());
+                    getMetaService().updateMetaObject(
+                        user,
+                        bestellungBean.getMetaObject(),
+                        getConnectionContext());
                 }
             }
         } catch (final Exception ex) {
@@ -1562,16 +1614,20 @@ public class FormSolutionServerNewStuffAvailableAction implements UserAwareServe
      * @param  fsBeanMap  DOCUMENT ME!
      */
     private void finalizeBeans(final Map<String, CidsBean> fsBeanMap) {
-        final Collection<String> transids = new ArrayList<String>(fsBeanMap.keySet());
+        final Collection<String> transids = new ArrayList<>(fsBeanMap.keySet());
         for (final String transid : transids) {
             final CidsBean bestellungBean = fsBeanMap.get(transid);
             if ((bestellungBean != null) && (bestellungBean.getProperty("fehler") == null)) {
                 try {
                     final Boolean propPostweg = (Boolean)bestellungBean.getProperty("postweg");
-                    if (!Boolean.TRUE.equals(propPostweg)) {
+                    final Boolean propDuplicate = (Boolean)bestellungBean.getProperty("duplicate");
+                    if (!Boolean.TRUE.equals(propDuplicate) && !Boolean.TRUE.equals(propPostweg)) {
                         bestellungBean.setProperty("erledigt", true);
                     }
-                    getMetaService().updateMetaObject(user, bestellungBean.getMetaObject());
+                    getMetaService().updateMetaObject(
+                        user,
+                        bestellungBean.getMetaObject(),
+                        getConnectionContext());
                 } catch (final Exception ex) {
                     LOG.error("Fehler beim Persistieren der Bestellung", ex);
                 }
@@ -1589,7 +1645,10 @@ public class FormSolutionServerNewStuffAvailableAction implements UserAwareServe
      * @throws  Exception  DOCUMENT ME!
      */
     public CidsBean getExternalUser(final String loginName) throws Exception {
-        final MetaClass mc = CidsBean.getMetaClassFromTableName("WUNDA_BLAU", "billing_kunden_logins");
+        final MetaClass mc = CidsBean.getMetaClassFromTableName(
+                "WUNDA_BLAU",
+                "billing_kunden_logins",
+                getConnectionContext());
         if (mc == null) {
             if (LOG.isDebugEnabled()) {
                 LOG.debug(
@@ -1602,7 +1661,7 @@ public class FormSolutionServerNewStuffAvailableAction implements UserAwareServe
         query += " WHERE name = '" + loginName + "'";
 
         CidsBean externalUser = null;
-        final MetaObject[] metaObjects = getMetaService().getMetaObject(user, query);
+        final MetaObject[] metaObjects = getMetaService().getMetaObject(user, query, getConnectionContext());
         if ((metaObjects != null) && (metaObjects.length > 0)) {
             externalUser = metaObjects[0].getBean();
         }
@@ -1619,7 +1678,10 @@ public class FormSolutionServerNewStuffAvailableAction implements UserAwareServe
      */
     private CidsBean doBilling(final CidsBean bestellungBean, final String transid) {
         try {
-            final CidsBean billingBean = CidsBean.createNewCidsBeanFromTableName("WUNDA_BLAU", "Billing_Billing");
+            final CidsBean billingBean = CidsBean.createNewCidsBeanFromTableName(
+                    "WUNDA_BLAU",
+                    "Billing_Billing",
+                    getConnectionContext());
 
             final boolean isPostweg = Boolean.TRUE.equals(bestellungBean.getProperty("postweg"));
             final Timestamp abrechnungsdatum = (Timestamp)bestellungBean.getProperty("eingang_ts");
@@ -1668,7 +1730,10 @@ public class FormSolutionServerNewStuffAvailableAction implements UserAwareServe
                 LOG.info("Test-Object would have created this Billing-Entry: " + billingBean.getMOString());
                 return null;
             } else {
-                return getMetaService().insertMetaObject(user, billingBean.getMetaObject()).getBean();
+                return getMetaService().insertMetaObject(
+                            user,
+                            billingBean.getMetaObject(),
+                            getConnectionContext()).getBean();
             }
         } catch (Exception e) {
             LOG.error("Error during the persitence of the billing log.", e);
@@ -1682,7 +1747,7 @@ public class FormSolutionServerNewStuffAvailableAction implements UserAwareServe
      * @param  fsBeanMap  DOCUMENT ME!
      */
     private void finalizeMySqls(final Map<String, CidsBean> fsBeanMap) {
-        final Collection<String> transids = new ArrayList<String>(fsBeanMap.keySet());
+        final Collection<String> transids = new ArrayList<>(fsBeanMap.keySet());
         for (final String transid : transids) {
             final CidsBean bestellungBean = fsBeanMap.get(transid);
             if ((bestellungBean != null) && (bestellungBean.getProperty("fehler") == null)) {
@@ -1761,7 +1826,11 @@ public class FormSolutionServerNewStuffAvailableAction implements UserAwareServe
                         final CidsBean bestellungBean;
                         try {
                             bestellungBean = DomainServerImpl.getServerInstance()
-                                        .getMetaObject(getUser(), mon.getObjectId(), mon.getClassId())
+                                        .getMetaObject(
+                                                getUser(),
+                                                mon.getObjectId(),
+                                                mon.getClassId(),
+                                                getConnectionContext())
                                         .getBean();
                             final String transid = (String)bestellungBean.getProperty("transid");
                             fsBeanMap.put(transid, bestellungBean);
@@ -1772,7 +1841,10 @@ public class FormSolutionServerNewStuffAvailableAction implements UserAwareServe
                                 bestellungBean.setProperty("exception", null);
                                 bestellungBean.setProperty("produkt_dateipfad", null);
                                 bestellungBean.setProperty("produkt_dateiname_orig", null);
-                                metaService.updateMetaObject(getUser(), bestellungBean.getMetaObject());
+                                metaService.updateMetaObject(
+                                    getUser(),
+                                    bestellungBean.getMetaObject(),
+                                    getConnectionContext());
                             }
                         } catch (final Exception ex) {
                             LOG.error(ex, ex);
@@ -1788,9 +1860,9 @@ public class FormSolutionServerNewStuffAvailableAction implements UserAwareServe
                 case STATUS_SAVE: {
                     if (fetchFromFs) {
                         try {
-                            final Map<String, ProductType> typeMap = new HashMap<String, ProductType>();
+                            final Map<String, ProductType> typeMap = new HashMap<>();
 
-                            final Collection<String> transIds = new ArrayList<String>();
+                            final Collection<String> transIds = new ArrayList<>();
                             transIds.addAll(getOpenExtendedTransids(ProductType.SGK, typeMap));
                             transIds.addAll(getOpenExtendedTransids(ProductType.ABK, typeMap));
 
@@ -1843,9 +1915,12 @@ public class FormSolutionServerNewStuffAvailableAction implements UserAwareServe
                     }
                 }
                 case STATUS_BILLING: {
-                    for (final String transid : new ArrayList<String>(fsBeanMap.keySet())) {
+                    for (final String transid : new ArrayList<>(fsBeanMap.keySet())) {
                         final CidsBean bestellungBean = fsBeanMap.get(transid);
-                        if (bestellungBean.getProperty("gutschein_code") == null) {
+
+                        if ((bestellungBean != null)
+                                    && !Boolean.TRUE.equals(bestellungBean.getProperty("duplicate"))
+                                    && (bestellungBean.getProperty("gutschein_code") == null)) {
                             doPureBilling(bestellungBean, transid);
                         }
                     }
@@ -1901,5 +1976,10 @@ public class FormSolutionServerNewStuffAvailableAction implements UserAwareServe
                 LOG.warn("could not write to logSpecial", ex);
             }
         }
+    }
+
+    @Override
+    public ConnectionContext getConnectionContext() {
+        return connectionContext;
     }
 }

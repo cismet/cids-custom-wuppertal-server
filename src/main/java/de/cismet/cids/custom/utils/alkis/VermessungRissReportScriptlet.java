@@ -77,7 +77,7 @@ public class VermessungRissReportScriptlet extends JRDefaultScriptlet {
             final String blatt,
             final ExtendedAccessHandler extendedAccessHandler) {
         final List<URL> validURLs;
-        if (host.equals(ServerAlkisConf.getInstance().VERMESSUNG_HOST_GRENZNIEDERSCHRIFTEN)) {
+        if (host.equals(ServerAlkisConf.getInstance().getVermessungHostGrenzniederschriften())) {
             validURLs = VermessungsrissPictureFinder.getInstance()
                         .findGrenzniederschriftPicture(schluessel, gemarkung, flur, blatt);
         } else {
