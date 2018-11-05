@@ -60,7 +60,8 @@ public class AlkisSOAPSearch {
         // searchService.searchOwnersWithAttributes(accessProvider.getIdentityCard(), accessProvider.getService(),
         // salutation, vorname, name, geburtsname, geburtstag, null, null, TIMEOUT);
         final long l = System.currentTimeMillis();
-        final String[] ownersIds = search.searchOwnersWithAttributes(aToken,
+        final String[] ownersIds = search.searchOwnersWithAttributes(
+                aToken,
                 access.getService(),
                 null,
                 null,

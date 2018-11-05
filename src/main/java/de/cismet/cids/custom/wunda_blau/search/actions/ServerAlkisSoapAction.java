@@ -67,7 +67,10 @@ public class ServerAlkisSoapAction implements ServerAction {
                 // POINT
                 try {
                     final String pointCode = params[0].getValue().toString();
-                    final Point point = getALKISInfoServices().getPoint(aToken, getSOAPAccessProvider().getService(), pointCode);
+                    final Point point = getALKISInfoServices().getPoint(
+                            aToken,
+                            getSOAPAccessProvider().getService(),
+                            pointCode);
                     return point;
                 } catch (RemoteException remoteException) {
                     LOG.error("Error in ServerAlkisSoapAction", remoteException);
@@ -93,7 +96,7 @@ public class ServerAlkisSoapAction implements ServerAction {
                 }
             }
         } finally {
-            getSOAPAccessProvider().logout();                    
+            getSOAPAccessProvider().logout();
         }
     }
 

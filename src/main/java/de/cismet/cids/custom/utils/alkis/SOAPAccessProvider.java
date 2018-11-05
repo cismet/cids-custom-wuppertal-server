@@ -30,8 +30,10 @@ import java.net.URL;
  */
 public final class SOAPAccessProvider {
 
+    //~ Static fields/initializers ---------------------------------------------
+
     private static final org.apache.log4j.Logger LOG = org.apache.log4j.Logger.getLogger(SOAPAccessProvider.class);
-    
+
     //~ Instance fields --------------------------------------------------------
 
     private final AlkisConf alkisConf;
@@ -41,7 +43,7 @@ public final class SOAPAccessProvider {
     private final ALKISSearchServices alkisSearchService;
     private final TokenServices tokenService;
     private String aToken;
-    
+
     //~ Constructors -----------------------------------------------------------
 
     /**
@@ -53,7 +55,7 @@ public final class SOAPAccessProvider {
      */
     public SOAPAccessProvider(final ServerAlkisConf alkisConf) {
         this.alkisConf = alkisConf;
-        //final String identityCard = alkisConf.getCreds().getUser() + "," + alkisConf.getCreds().getPassword();
+        // final String identityCard = alkisConf.getCreds().getUser() + "," + alkisConf.getCreds().getPassword();
 
 //        final String identityCard = alkisConf.USER + "," + alkisConf.PASSWORD;
         final String serviceUrl = alkisConf.getService();
@@ -62,12 +64,14 @@ public final class SOAPAccessProvider {
         final String infoServiceUrl = alkisConf.getServer() + alkisConf.getInfoService();
         final String searchServiceUrl = alkisConf.getServer() + alkisConf.getSearchService();
 
-        this.service = serviceUrl;                
-        try {           
-            this.tokenService = new TokenServicesServiceLocator().getTokenServices(new URL(tokenServiceUrl));            
-            this.alkisCatalogServices = new ALKISCatalogServicesServiceLocator().getALKISCatalogServices(new URL(catalogServiceUrl));
+        this.service = serviceUrl;
+        try {
+            this.tokenService = new TokenServicesServiceLocator().getTokenServices(new URL(tokenServiceUrl));
+            this.alkisCatalogServices = new ALKISCatalogServicesServiceLocator().getALKISCatalogServices(new URL(
+                        catalogServiceUrl));
             this.alkisInfoService = new ALKISInfoServicesServiceLocator().getALKISInfoServices(new URL(infoServiceUrl));
-            this.alkisSearchService = new ALKISSearchServicesServiceLocator().getALKISSearchServices(new URL(searchServiceUrl));
+            this.alkisSearchService = new ALKISSearchServicesServiceLocator().getALKISSearchServices(new URL(
+                        searchServiceUrl));
         } catch (Exception ex) {
             throw new IllegalStateException("Can not create SOAPAccessProvider" + alkisConf.getServer()
                         + "|"
@@ -89,20 +93,23 @@ public final class SOAPAccessProvider {
      */
     public String login() {
         try {
-            if (aToken == null || !getTokenService().isTokenValid(aToken)) {
+            if ((aToken == null) || !getTokenService().isTokenValid(aToken)) {
                 aToken = getTokenService().login(alkisConf.getUser(), alkisConf.getPassword());
             }
         } catch (final Exception ex) {
             LOG.fatal("login failed", ex);
             aToken = null;
-        }        
+        }
         return aToken;
     }
-    
+
+    /**
+     * DOCUMENT ME!
+     */
     public void logout() {
         try {
             getTokenService().logout(aToken);
-        } catch (final Exception ex) {            
+        } catch (final Exception ex) {
         }
         aToken = null;
     }
@@ -116,10 +123,15 @@ public final class SOAPAccessProvider {
         return service;
     }
 
+    /**
+     * DOCUMENT ME!
+     *
+     * @return  DOCUMENT ME!
+     */
     public TokenServices getTokenService() {
         return tokenService;
     }
-    
+
     /**
      * DOCUMENT ME!
      *
@@ -134,7 +146,7 @@ public final class SOAPAccessProvider {
      *
      * @return  the alkisInfoService
      */
-    public ALKISInfoServices getAlkisInfoService() {        
+    public ALKISInfoServices getAlkisInfoService() {
         return alkisInfoService;
     }
 

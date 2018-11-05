@@ -191,7 +191,8 @@ public class CidsAlkisSearchStatement extends AbstractCidsServerSearch implement
                         salutation = "3000"; // NOI18N
                     }
                     final String aToken = accessProvider.login();
-                    final String[] ownersIds = searchService.searchOwnersWithAttributes(aToken,
+                    final String[] ownersIds = searchService.searchOwnersWithAttributes(
+                            aToken,
                             accessProvider.getService(),
                             salutation,
                             vorname,
