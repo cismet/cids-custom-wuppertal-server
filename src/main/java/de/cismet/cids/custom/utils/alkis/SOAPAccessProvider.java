@@ -36,7 +36,7 @@ public final class SOAPAccessProvider {
 
     //~ Instance fields --------------------------------------------------------
 
-    private final AlkisConf alkisConf;
+    private final ServerAlkisConf alkisConf;
     private final String service;
     private final ALKISCatalogServices alkisCatalogServices;
     private final ALKISInfoServices alkisInfoService;
@@ -94,7 +94,7 @@ public final class SOAPAccessProvider {
     public String login() {
         try {
             if ((aToken == null) || !getTokenService().isTokenValid(aToken)) {
-                aToken = getTokenService().login(alkisConf.getUser(), alkisConf.getPassword());
+                aToken = getTokenService().login(alkisConf.getCreds().getUser(), alkisConf.getCreds().getPassword());
             }
         } catch (final Exception ex) {
             LOG.fatal("login failed", ex);

@@ -79,7 +79,7 @@ public class ServerAlkisSoapAction implements ServerAction {
             } else {
                 // BUCHUNGSBLATT
                 try {
-                    final String buchungsblattCode = params[0].getValue().toString();
+                    final String buchungsblattCode = fixBuchungslattCode(params[0].getValue().toString());
                     final String[] uuids = getALKISInfoServices().translateBuchungsblattCodeIntoUUIds(
                             aToken,
                             getSOAPAccessProvider().getService(),
@@ -97,6 +97,26 @@ public class ServerAlkisSoapAction implements ServerAction {
             }
         } finally {
             getSOAPAccessProvider().logout();
+        }
+    }
+
+    /**
+     * DOCUMENT ME!
+     *
+     * @param   buchungsblattCode  DOCUMENT ME!
+     *
+     * @return  DOCUMENT ME!
+     */
+    public static String fixBuchungslattCode(final String buchungsblattCode) {
+        if (buchungsblattCode != null) {
+            final StringBuffer buchungsblattCodeSB = new StringBuffer(buchungsblattCode);
+            // Fix SICAD-API-strangeness...
+            while (buchungsblattCodeSB.length() < 14) {
+                buchungsblattCodeSB.append(" ");
+            }
+            return buchungsblattCodeSB.toString();
+        } else {
+            return "";
         }
     }
 
