@@ -119,9 +119,9 @@ public class CidsGrundwassermessstelleSearch extends AbstractCidsServerSearch im
                     if (wertPair.getStoffSchuessel() != null) {
                         final String schluesselQuery = "grundwassermessstelle_messwert.stoff_schluessel = '"
                                     + wertPair.getStoffSchuessel() + "'";
-                        final String messwertVonQuery = "grundwassermessstelle_messwert.wert >= "
+                        final String messwertVonQuery = "abs(grundwassermessstelle_messwert.wert) >= "
                                     + wertPair.getVonValue();
-                        final String messwertBisQuery = "grundwassermessstelle_messwert.wert <= "
+                        final String messwertBisQuery = "abs(grundwassermessstelle_messwert.wert) <= "
                                     + wertPair.getBisValue();
                         if ((wertPair.getVonValue() != null) && (wertPair.getBisValue() != null)) {
                             conditions.add("(" + schluesselQuery + " AND " + messwertVonQuery + " AND "
