@@ -32,9 +32,11 @@ public class GrundwassermessstellenWebDavTunnelAction extends WebDavTunnelAction
 
     private static final org.apache.log4j.Logger LOG = org.apache.log4j.Logger.getLogger(
             GrundwassermessstellenWebDavTunnelAction.class);
-    private static GrundwassermessstellenProperties PROPERTIES;
-
     public static final String TASK_NAME = "GrundwassermessstellenWebDavTunnelAction";
+
+    //~ Instance fields --------------------------------------------------------
+
+    private final GrundwassermessstellenProperties properties;
 
     //~ Constructors -----------------------------------------------------------
 
@@ -42,30 +44,31 @@ public class GrundwassermessstellenWebDavTunnelAction extends WebDavTunnelAction
      * Creates a new GrundwassermessstellenWebDavTunnelAction object.
      */
     public GrundwassermessstellenWebDavTunnelAction() {
-        super(
-            getProperties().getWebDavLogin(),
-            getProperties().getWebDavPass(),
-            getProperties().getWebDavHost()
-                    + getProperties().getWebDavPath());
+        GrundwassermessstellenProperties properties = null;
+        try {
+            properties = new GrundwassermessstellenProperties(ServerResourcesLoader.getInstance().loadProperties(
+                        WundaBlauServerResources.GRUNDWASSERMESSSTELLEN_PROPERTIES.getValue()));
+        } catch (final Exception ex) {
+            LOG.error("GrundwassermessstellenWebDavTunnelAction could not load the properties", ex);
+        }
+        this.properties = properties;
     }
 
     //~ Methods ----------------------------------------------------------------
 
-    /**
-     * DOCUMENT ME!
-     *
-     * @return  DOCUMENT ME!
-     */
-    private static GrundwassermessstellenProperties getProperties() {
-        if (PROPERTIES == null) {
-            try {
-                PROPERTIES = new GrundwassermessstellenProperties(ServerResourcesLoader.getInstance().loadProperties(
-                            WundaBlauServerResources.GRUNDWASSERMESSSTELLEN_PROPERTIES.getValue()));
-            } catch (final Exception ex) {
-                LOG.error("GrundwassermessstellenWebDavTunnelAction could not load the properties", ex);
-            }
-        }
-        return PROPERTIES;
+    @Override
+    protected String getUsername() {
+        return (properties != null) ? properties.getWebDavLogin() : null;
+    }
+
+    @Override
+    protected String getPassword() {
+        return (properties != null) ? properties.getWebDavPass() : null;
+    }
+
+    @Override
+    protected String getWebdavPath() {
+        return (properties != null) ? (properties.getWebDavHost() + properties.getWebDavPath()) : null;
     }
 
     @Override

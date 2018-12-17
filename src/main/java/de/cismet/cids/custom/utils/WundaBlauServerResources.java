@@ -71,10 +71,7 @@ public enum WundaBlauServerResources {
     VERMESSUNGSUNTERLAGENPORTAL_PROPERTIES(new TextServerResource("/vermessungsunterlagenportal/vup_conf.properties")),
     QSGEB_PROPERTIES(new TextServerResource("/qsgeb/qsgeb_conf.properties")),
 
-    MOTD_WUNDA_BLAU_PROPERTIES(new TextServerResource("/motd/wunda_blau.properties")),
-    MOTD_VERDIS_GRUNDIS_PROPERTIES(new TextServerResource("/motd/verdis_grundis.properties")),
-    MOTD_LAGIS_PROPERTIES(new TextServerResource("/motd/lagis.properties")),
-    MOTD_BELIS2_PROPERTIES(new TextServerResource("/motd/belis2.properties")),
+    MOTD_PROPERTIES(new TextServerResource("/motd/wunda_blau.properties")),
 
     PNR_TEMPLATE_BEN_AUFTR_ALL(new TextServerResource("/pointnumberreservation/A_Ben_Auftr_alle_PKZ.xml")),
     PNR_TEMPLATE_BEN_AUFTR_ONE_ANR(new TextServerResource("/pointnumberreservation/A_Ben_Auftr_eine_ANR.xml")),
