@@ -42,10 +42,8 @@ public class VermessungsrissPictureFinder {
     private static final org.apache.log4j.Logger LOG = org.apache.log4j.Logger.getLogger(
             VermessungsrissPictureFinder.class);
 
-    private static final String DOWNLOAD_TEMPLATE =
-        "<rasterfari:url>?REQUEST=GetMap&SERVICE=WMS&customDocumentInfo=download&LAYERS=<rasterfari:document>";
-
     public static final String SEP = "/";
+    public static final String SUFFIX_REDUCED_SIZE = "_rs";
 
     private static final String[] SUFFIXE = new String[] {
             ".tif",
@@ -122,7 +120,7 @@ public class VermessungsrissPictureFinder {
             LOG.debug("findVermessungrissPicture: " + picturePath);
         }
 
-        return probeWebserverForRightSuffix(picturePath);
+        return probeWebserverForRightSuffix(true, picturePath);
     }
 
     /**
@@ -136,8 +134,7 @@ public class VermessungsrissPictureFinder {
      *
      * @return  DOCUMENT ME!
      */
-    public List<String> findVermessungsbuchwerkPicture(
-            final String schluessel,
+    public List<String> findVermessungsbuchwerkPicture(final String schluessel,
             final CidsBean gemarkung,
             final Integer steuerbezirk,
             final String bezeichner,
@@ -152,7 +149,7 @@ public class VermessungsrissPictureFinder {
             LOG.debug("findVermessungrissPicture: " + fileName);
         }
 
-        return probeWebserverForRightSuffix(fileName);
+        return probeWebserverForRightSuffix(true, fileName);
     }
 
     /**
@@ -173,7 +170,7 @@ public class VermessungsrissPictureFinder {
         if (LOG.isDebugEnabled()) {
             LOG.debug("findGrenzniederschriftPicture: " + picturePath);
         }
-        return probeWebserverForRightSuffix(picturePath);
+        return probeWebserverForRightSuffix(true, picturePath);
     }
 
     /**
@@ -391,25 +388,27 @@ public class VermessungsrissPictureFinder {
      *
      * @return  DOCUMENT ME!
      */
-    private List<String> probeWebserverForRightSuffix(final String fileWithoutSuffix) {
-        return probeWebserverForRightSuffix(fileWithoutSuffix, 0);
+    private List<String> probeWebserverForRightSuffix(final boolean checkReducedSize, final String fileWithoutSuffix) {
+        return probeWebserverForRightSuffix(checkReducedSize, fileWithoutSuffix, 0);
     }
 
     /**
      * DOCUMENT ME!
      *
+     * @param checkReducedSize
      * @param   fileWithoutSuffix  DOCUMENT ME!
      * @param   recursionDepth     DOCUMENT ME!
      *
      * @return  DOCUMENT ME!
      */
-    public List<String> probeWebserverForRightSuffix(final String fileWithoutSuffix, final int recursionDepth) {
+    public List<String> probeWebserverForRightSuffix(final boolean checkReducedSize, final String fileWithoutSuffix, final int recursionDepth) {
         if (LOG.isDebugEnabled()) {
             LOG.debug("Searching for picture: " + fileWithoutSuffix + "xxx");
         }
         final List<String> results = new ArrayList<>();
+        // check if there is a reduced size image direcly...        
         for (final String suffix : SUFFIXE) {
-            final String fileWithSuffix = fileWithoutSuffix + suffix;
+            final String fileWithSuffix = checkReducedSize ? (fileWithoutSuffix + SUFFIX_REDUCED_SIZE) : fileWithoutSuffix + suffix;
             try {
                 final URL objectURL = alkisConf.getDownloadUrlForDocument(fileWithSuffix);
                 if (simpleUrlAccessHandler.checkIfURLaccessible(objectURL)) {
@@ -419,6 +418,20 @@ public class VermessungsrissPictureFinder {
                 LOG.error("Problem occured, during checking for " + fileWithSuffix, ex);
             }
         }
+        // we need to do an extra round if we checked with _rs suffix...
+        if (results.isEmpty() && checkReducedSize) {
+            for (final String suffix : SUFFIXE) {
+                final String fileWithSuffix = fileWithoutSuffix + suffix;
+                try {
+                    final URL objectURL = alkisConf.getDownloadUrlForDocument(fileWithSuffix);
+                    if (simpleUrlAccessHandler.checkIfURLaccessible(objectURL)) {
+                        results.add(fileWithSuffix);
+                    }
+                } catch (Exception ex) {
+                    LOG.error("Problem occured, during checking for " + fileWithSuffix, ex);
+                }
+            }
+        }        
         // if the results is empty check if there is a link...
         if (results.isEmpty()) {
             if (LOG.isDebugEnabled()) {
@@ -433,7 +446,7 @@ public class VermessungsrissPictureFinder {
                         if (urlStream != null) {
                             final String link = IOUtils.toString(urlStream, "UTF-8");
                             final boolean isGrenzNiederschrift = fileWithoutSuffix.contains(PREFIX_GRENZNIEDERSCHRIFT);
-                            return probeWebserverForRightSuffix(getObjectPath(isGrenzNiederschrift, link.trim()),
+                            return probeWebserverForRightSuffix(checkReducedSize, getObjectPath(isGrenzNiederschrift, link.trim()),
                                     recursionDepth
                                             + 1);
                         }
