@@ -408,7 +408,7 @@ public class VermessungsrissPictureFinder {
         final List<String> results = new ArrayList<>();
         // check if there is a reduced size image direcly...        
         for (final String suffix : SUFFIXE) {
-            final String fileWithSuffix = checkReducedSize ? (fileWithoutSuffix + SUFFIX_REDUCED_SIZE) : fileWithoutSuffix + suffix;
+            final String fileWithSuffix = (checkReducedSize ? (fileWithoutSuffix + SUFFIX_REDUCED_SIZE) : fileWithoutSuffix) + suffix;
             try {
                 final URL objectURL = alkisConf.getDownloadUrlForDocument(fileWithSuffix);
                 if (simpleUrlAccessHandler.checkIfURLaccessible(objectURL)) {
