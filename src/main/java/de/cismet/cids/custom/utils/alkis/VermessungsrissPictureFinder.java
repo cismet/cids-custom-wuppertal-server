@@ -406,9 +406,10 @@ public class VermessungsrissPictureFinder {
             LOG.debug("Searching for picture: " + fileWithoutSuffix + "xxx");
         }
         final List<String> results = new ArrayList<>();
-        // check if there is a reduced size image direcly...        
+        // check if there is a reduced size image direcly...
         for (final String suffix : SUFFIXE) {
-            final String fileWithSuffix = (checkReducedSize ? (fileWithoutSuffix + SUFFIX_REDUCED_SIZE) : fileWithoutSuffix) + suffix;
+            final String fileWithSuffix = (checkReducedSize ? (fileWithoutSuffix + SUFFIX_REDUCED_SIZE)
+                                                            : fileWithoutSuffix) + suffix;
             try {
                 final URL objectURL = alkisConf.getDownloadUrlForDocument(fileWithSuffix);
                 if (simpleUrlAccessHandler.checkIfURLaccessible(objectURL)) {
@@ -431,7 +432,7 @@ public class VermessungsrissPictureFinder {
                     LOG.error("Problem occured, during checking for " + fileWithSuffix, ex);
                 }
             }
-        }        
+        }
         // if the results is empty check if there is a link...
         if (results.isEmpty()) {
             if (LOG.isDebugEnabled()) {
@@ -524,8 +525,8 @@ public class VermessungsrissPictureFinder {
         } else if (SCHLUESSEL_LIEGENSCHAFTSBUECHER1.equals(schluessel)
                     || SCHLUESSEL_LIEGENSCHAFTSBUECHER2.equals(schluessel)) {
             buf.append(alkisConf.getVermessungHostLiegenschaftsbuecher())
-                    .append(SEP)
-                    .append(URLEncoder.encode((String)gemarkung.getProperty("name"), "UTF-8"));
+                    .append(URLEncoder.encode((String)gemarkung.getProperty("name"), "UTF-8"))
+                    .append(SEP);
         }
         return buf.toString();
     }
