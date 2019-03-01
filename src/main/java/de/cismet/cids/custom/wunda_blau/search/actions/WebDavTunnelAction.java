@@ -60,35 +60,34 @@ public class WebDavTunnelAction implements ServerAction {
         GET, PUT, DELETE, PROXY, USERNAME, PASSWORD, NTAUTH
     }
 
-    //~ Instance fields --------------------------------------------------------
-
-    private final String username;
-    private final String password;
-    private final String webdavPath;
-
-    //~ Constructors -----------------------------------------------------------
-
-    /**
-     * Creates a new WebDavTunnelAction object.
-     */
-    public WebDavTunnelAction() {
-        this(null, null, null);
-    }
-
-    /**
-     * Creates a new WebDavTunnelAction object.
-     *
-     * @param  username    DOCUMENT ME!
-     * @param  password    DOCUMENT ME!
-     * @param  webdavPath  DOCUMENT ME!
-     */
-    protected WebDavTunnelAction(final String username, final String password, final String webdavPath) {
-        this.username = username;
-        this.password = password;
-        this.webdavPath = webdavPath;
-    }
-
     //~ Methods ----------------------------------------------------------------
+
+    /**
+     * DOCUMENT ME!
+     *
+     * @return  DOCUMENT ME!
+     */
+    protected String getUsername() {
+        return null;
+    }
+
+    /**
+     * DOCUMENT ME!
+     *
+     * @return  DOCUMENT ME!
+     */
+    protected String getPassword() {
+        return null;
+    }
+
+    /**
+     * DOCUMENT ME!
+     *
+     * @return  DOCUMENT ME!
+     */
+    protected String getWebdavPath() {
+        return null;
+    }
 
     @Override
     public Object execute(final Object body, final ServerActionParameter... params) {
@@ -98,9 +97,9 @@ public class WebDavTunnelAction implements ServerAction {
             boolean isPut = false;
             boolean isDelete = false;
             Proxy proxy = null;
-            final String webdavPath = this.webdavPath;
-            String username = this.username;
-            String password = this.password;
+            final String webdavPath = getWebdavPath();
+            String username = getUsername();
+            String password = getPassword();
             boolean useNTAuth = false;
 
             for (final ServerActionParameter sap : params) {
