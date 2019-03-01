@@ -120,7 +120,7 @@ public class VermessungsrissPictureFinder {
             LOG.debug("findVermessungrissPicture: " + picturePath);
         }
 
-        return probeWebserverForRightSuffix(true, picturePath);
+        return probeWebserverForRightSuffix(false, true, picturePath);
     }
 
     /**
@@ -149,7 +149,7 @@ public class VermessungsrissPictureFinder {
             LOG.debug("findVermessungrissPicture: " + fileName);
         }
 
-        return probeWebserverForRightSuffix(true, fileName);
+        return probeWebserverForRightSuffix(true, true, fileName);
     }
 
     /**
@@ -170,7 +170,7 @@ public class VermessungsrissPictureFinder {
         if (LOG.isDebugEnabled()) {
             LOG.debug("findGrenzniederschriftPicture: " + picturePath);
         }
-        return probeWebserverForRightSuffix(true, picturePath);
+        return probeWebserverForRightSuffix(false, true, picturePath);
     }
 
     /**
@@ -384,24 +384,32 @@ public class VermessungsrissPictureFinder {
     /**
      * DOCUMENT ME!
      *
+     * @param   buchwerk           DOCUMENT ME!
+     * @param   checkReducedSize   DOCUMENT ME!
      * @param   fileWithoutSuffix  DOCUMENT ME!
      *
      * @return  DOCUMENT ME!
      */
-    private List<String> probeWebserverForRightSuffix(final boolean checkReducedSize, final String fileWithoutSuffix) {
-        return probeWebserverForRightSuffix(checkReducedSize, fileWithoutSuffix, 0);
+    private List<String> probeWebserverForRightSuffix(final boolean buchwerk,
+            final boolean checkReducedSize,
+            final String fileWithoutSuffix) {
+        return probeWebserverForRightSuffix(buchwerk, checkReducedSize, fileWithoutSuffix, 0);
     }
 
     /**
      * DOCUMENT ME!
      *
-     * @param checkReducedSize
+     * @param   buchwerk           DOCUMENT ME!
+     * @param   checkReducedSize   DOCUMENT ME!
      * @param   fileWithoutSuffix  DOCUMENT ME!
      * @param   recursionDepth     DOCUMENT ME!
      *
      * @return  DOCUMENT ME!
      */
-    public List<String> probeWebserverForRightSuffix(final boolean checkReducedSize, final String fileWithoutSuffix, final int recursionDepth) {
+    public List<String> probeWebserverForRightSuffix(final boolean buchwerk,
+            final boolean checkReducedSize,
+            final String fileWithoutSuffix,
+            final int recursionDepth) {
         if (LOG.isDebugEnabled()) {
             LOG.debug("Searching for picture: " + fileWithoutSuffix + "xxx");
         }
@@ -415,7 +423,7 @@ public class VermessungsrissPictureFinder {
                 if (simpleUrlAccessHandler.checkIfURLaccessible(objectURL)) {
                     results.add(fileWithSuffix);
                 }
-            } catch (Exception ex) {
+            } catch (final Exception ex) {
                 LOG.error("Problem occured, during checking for " + fileWithSuffix, ex);
             }
         }
@@ -445,11 +453,26 @@ public class VermessungsrissPictureFinder {
                     if (simpleUrlAccessHandler.checkIfURLaccessible(objectURL)) {
                         urlStream = simpleUrlAccessHandler.doRequest(objectURL);
                         if (urlStream != null) {
-                            final String link = IOUtils.toString(urlStream, "UTF-8");
-                            final boolean isGrenzNiederschrift = fileWithoutSuffix.contains(PREFIX_GRENZNIEDERSCHRIFT);
-                            return probeWebserverForRightSuffix(checkReducedSize, getObjectPath(isGrenzNiederschrift, link.trim()),
-                                    recursionDepth
-                                            + 1);
+                            final String link = IOUtils.toString(urlStream).trim();
+                            if (buchwerk) {
+                                return probeWebserverForRightSuffix(
+                                        buchwerk,
+                                        checkReducedSize,
+                                        fileWithoutSuffix.substring(0, fileWithoutSuffix.lastIndexOf(SEP))
+                                                + SEP
+                                                + link,
+                                        recursionDepth
+                                                + 1);
+                            } else {
+                                final boolean isGrenzNiederschrift = fileWithoutSuffix.contains(
+                                        PREFIX_GRENZNIEDERSCHRIFT);
+                                return probeWebserverForRightSuffix(
+                                        buchwerk,
+                                        checkReducedSize,
+                                        getObjectPath(isGrenzNiederschrift, link),
+                                        recursionDepth
+                                                + 1);
+                            }
                         }
                     }
                 } catch (Exception ex) {
