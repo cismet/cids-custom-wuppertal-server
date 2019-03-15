@@ -14,6 +14,8 @@ package de.cismet.cids.custom.utils.alkis;
 
 import lombok.Getter;
 
+import java.net.URL;
+
 import java.util.Properties;
 
 /**
@@ -24,6 +26,11 @@ import java.util.Properties;
  */
 @Getter
 public abstract class AlkisConf {
+
+    //~ Static fields/initializers ---------------------------------------------
+
+    private static final String DOWNLOAD_TEMPLATE =
+        "<rasterfari:url>?REQUEST=GetMap&SERVICE=WMS&customDocumentInfo=download&LAYERS=<rasterfari:document>";
 
     //~ Instance fields --------------------------------------------------------
 
@@ -41,6 +48,7 @@ public abstract class AlkisConf {
     private final String einzelNachweisService;
     private final String listenNachweisService;
     private final String LiegenschaftskarteService;
+    private final String rasterfariUrl;
     private final String nivpHost;
     private final String nivpPrefix;
     private final String apmapsHost;
@@ -78,9 +86,9 @@ public abstract class AlkisConf {
         mapCallString = serviceProperties.getProperty("MAP_CALL_STRING") + srsService;
         geoBuffer = Double.parseDouble(serviceProperties.getProperty("GEO_BUFFER"));
         geoBufferMultiplier = Double.parseDouble(serviceProperties.getProperty("GEO_BUFFER_MULTIPLIER"));
+        rasterfariUrl = serviceProperties.getProperty("RASTERFARI_URL");
         nivpHost = serviceProperties.getProperty("NIVP_HOST");
         nivpPrefix = serviceProperties.getProperty("NIVP_PREFIX");
-        apmapsHost = serviceProperties.getProperty("APMAPS_HOST");
         apmapsPrefix = serviceProperties.getProperty("APMAPS_PREFIX");
         vermessungHostBilder = serviceProperties.getProperty("VERMESSUNG_HOST_BILDER");
         vermessungHostGrenzniederschriften = serviceProperties.getProperty("VERMESSUNG_HOST_GRENZNIEDERSCHRIFTEN");
@@ -88,8 +96,25 @@ public abstract class AlkisConf {
         vermessungHostFlurbuecher = serviceProperties.getProperty("VERMESSUNG_HOST_FLURBUECHER");
         vermessungHostLiegenschaftsbuecher = serviceProperties.getProperty("VERMESSUNG_HOST_LIEGENSCHAFTSBUECHER");
         vermessungHostNamensverzeichnis = serviceProperties.getProperty("VERMESSUNG_HOST_NAMENSVERZEICHNIS");
-
+        apmapsHost = serviceProperties.getProperty("APMAPS_HOST");
         apmapsEtrsHost = serviceProperties.getProperty("APMAPS_ETRS_HOST");
         landparcelFeatureRendererColor = serviceProperties.getProperty("LANDPARCEL_FEATURE_RENDERER_COLOR");
+    }
+
+    //~ Methods ----------------------------------------------------------------
+
+    /**
+     * DOCUMENT ME!
+     *
+     * @param   document  DOCUMENT ME!
+     *
+     * @return  DOCUMENT ME!
+     *
+     * @throws  Exception  DOCUMENT ME!
+     */
+    public final URL getDownloadUrlForDocument(final String document) throws Exception {
+        return new URL(DOWNLOAD_TEMPLATE.replace("<rasterfari:url>", getRasterfariUrl()).replace(
+                    "<rasterfari:document>",
+                    document));
     }
 }
