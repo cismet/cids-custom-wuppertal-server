@@ -331,8 +331,8 @@ public abstract class AlkisProducts {
      *
      * @return  DOCUMENT ME!
      */
-    public Collection<URL> getCorrespondingPointURLs(final String pointcode) {
-        final Collection<URL> validURLs = new LinkedList<>();
+    public Collection<String> getCorrespondingPointDocuments(final String pointcode) {
+        final Collection<String> validDocuments = new LinkedList<>();
 
         // The pointcode of a alkis point has a specific format:
         // 25xx56xx1xxxxx
@@ -340,17 +340,15 @@ public abstract class AlkisProducts {
         // |  Part 2 of the "Kilometerquadrat"
         // Part 1 of the "Kilometerquadrat"
         if ((pointcode == null) || (pointcode.trim().length() < 9) || (pointcode.trim().length() > 15)) {
-            return validURLs;
+            return validDocuments;
         }
 
         final StringBuilder urlBuilder;
         if (pointcode.trim().length() < 15) {
-            urlBuilder = new StringBuilder(alkisConf.getApmapsHost());
-
             final String kilometerquadratPart1 = pointcode.substring(2, 4);
             final String kilometerquadratPart2 = pointcode.substring(6, 8);
 
-            urlBuilder.append('/');
+            urlBuilder = new StringBuilder(alkisConf.getApmapsHost());
             urlBuilder.append(kilometerquadratPart1);
             urlBuilder.append(kilometerquadratPart2);
             urlBuilder.append('/');
@@ -359,30 +357,14 @@ public abstract class AlkisProducts {
             urlBuilder.append('.');
         } else {
             urlBuilder = new StringBuilder(alkisConf.getApmapsEtrsHost());
-            urlBuilder.append('/');
             urlBuilder.append(alkisConf.getApmapsPrefix());
             urlBuilder.append(pointcode);
             urlBuilder.append('.');
         }
         for (final String suffix : SUFFIXES) {
-            URL urlToTry = null;
-            try {
-                urlToTry = new URL(urlBuilder.toString() + suffix);
-            } catch (MalformedURLException ex) {
-                LOG.warn("The URL '" + urlBuilder.toString() + suffix
-                            + "' is malformed. Can't load the corresponding picture.",
-                    ex);
-            }
-
-            if (urlToTry != null) {
-                if (LOG.isDebugEnabled()) {
-                    LOG.debug("Valid URL: " + urlToTry.toExternalForm());
-                }
-
-                validURLs.add(urlToTry);
-            }
+            validDocuments.add(urlBuilder.toString() + suffix);
         }
-        return validURLs;
+        return validDocuments;
     }
 
     /**
@@ -393,36 +375,21 @@ public abstract class AlkisProducts {
      *
      * @return  DOCUMENT ME!
      */
-    public Collection<URL> getCorrespondingNivPURLs(final java.lang.String dgkBlattnummer,
+    public Collection<String> getCorrespondingNivPURLs(final java.lang.String dgkBlattnummer,
             final String laufendeNummer) {
-        final Collection<URL> validURLs = new LinkedList<URL>();
+        final Collection<String> validDocuments = new LinkedList<>();
         final StringBuilder urlBuilder = new StringBuilder(alkisConf.getNivpHost());
-        urlBuilder.append('/');
         urlBuilder.append(dgkBlattnummer);
         urlBuilder.append('/');
         urlBuilder.append(alkisConf.getNivpPrefix());
         urlBuilder.append(dgkBlattnummer);
         urlBuilder.append(getFormattedLaufendeNummerNivP(laufendeNummer));
         urlBuilder.append('.');
+        final String documentWithoutPrefix = urlBuilder.toString();
         for (final String suffix : SUFFIXES) {
-            URL urlToTry = null;
-            try {
-                urlToTry = new URL(urlBuilder.toString() + suffix);
-            } catch (MalformedURLException ex) {
-                LOG.warn("The URL '" + urlBuilder.toString() + suffix
-                            + "' is malformed. Can't load the corresponding picture.",
-                    ex);
-            }
-
-            if (urlToTry != null) {
-                if (LOG.isDebugEnabled()) {
-                    LOG.debug("Valid URL: " + urlToTry.toExternalForm());
-                }
-
-                validURLs.add(urlToTry);
-            }
+            validDocuments.add(documentWithoutPrefix + suffix);
         }
-        return validURLs;
+        return validDocuments;
     }
 
     /**
