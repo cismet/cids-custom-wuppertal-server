@@ -31,10 +31,6 @@ import java.util.Properties;
 import java.util.Timer;
 import java.util.TimerTask;
 
-import de.cismet.cids.custom.utils.WundaBlauServerResources;
-
-import de.cismet.cids.utils.serverresources.ServerResourcesLoader;
-
 import de.cismet.commons.security.AccessHandler;
 import de.cismet.commons.security.handler.SimpleHttpAccessHandler;
 
@@ -50,12 +46,10 @@ public class MotdRetriever {
 
     private static final transient org.apache.log4j.Logger LOG = org.apache.log4j.Logger.getLogger(MotdRetriever.class);
 
-    private static MotdRetriever INSTANCE;
-
     //~ Instance fields --------------------------------------------------------
 
     private final SimpleHttpAccessHandler httpHandler = new SimpleHttpAccessHandler();
-    private final Collection<MotdRetrieverListener> listeners = new ArrayList<MotdRetrieverListener>();
+    private final Collection<MotdRetrieverListener> listeners = new ArrayList<>();
     private final MotdRetrieverListenerHandler listenerHandler = new MotdRetrieverListenerHandler();
     private final Timer timer = new Timer();
     private String domain;
@@ -68,14 +62,18 @@ public class MotdRetriever {
     private String motd_extern_url;
     private Integer retrieveRate;
     private String noMessage;
-    private Map<String, Boolean> retrieveSuccessfulMap = new HashMap<String, Boolean>();
+    private final Properties properties;
+    private final Map<String, Boolean> retrieveSuccessfulMap = new HashMap<>();
 
     //~ Constructors -----------------------------------------------------------
 
     /**
      * Creates a new MotdRetriever object.
+     *
+     * @param  properties  DOCUMENT ME!
      */
-    private MotdRetriever() {
+    public MotdRetriever(final Properties properties) {
+        this.properties = properties;
     }
 
     //~ Methods ----------------------------------------------------------------
@@ -99,27 +97,10 @@ public class MotdRetriever {
             throw new IllegalStateException("MotdRetriever wurde bereits initialisiert !");
         }
         try {
-            final Properties serviceProperties;
-            if (domain.equalsIgnoreCase("wunda_blau")) {
-                serviceProperties = ServerResourcesLoader.getInstance()
-                            .loadProperties(WundaBlauServerResources.MOTD_WUNDA_BLAU_PROPERTIES.getValue());
-            } else if (domain.equalsIgnoreCase("verdis_grundis")) {
-                serviceProperties = ServerResourcesLoader.getInstance()
-                            .loadProperties(WundaBlauServerResources.MOTD_VERDIS_GRUNDIS_PROPERTIES.getValue());
-            } else if (domain.equalsIgnoreCase("lagis")) {
-                serviceProperties = ServerResourcesLoader.getInstance()
-                            .loadProperties(WundaBlauServerResources.MOTD_LAGIS_PROPERTIES.getValue());
-            } else if (domain.equalsIgnoreCase("belis2")) {
-                serviceProperties = ServerResourcesLoader.getInstance()
-                            .loadProperties(WundaBlauServerResources.MOTD_BELIS2_PROPERTIES.getValue());
-            } else {
-                return false;
-            }
-
-            motd_url = serviceProperties.getProperty("MOTD_URL");
-            motd_extern_url = serviceProperties.getProperty("MOTD_EXTERN_URL");
-            retrieveRate = Integer.parseInt(serviceProperties.getProperty("RETRIEVE_RATE_IN_MS"));
-            noMessage = serviceProperties.getProperty("NO_MESSAGE");
+            motd_url = properties.getProperty("MOTD_URL");
+            motd_extern_url = properties.getProperty("MOTD_EXTERN_URL");
+            retrieveRate = Integer.parseInt(properties.getProperty("RETRIEVE_RATE_IN_MS"));
+            noMessage = properties.getProperty("NO_MESSAGE");
 
             this.domain = domain;
             return true;
@@ -128,18 +109,6 @@ public class MotdRetriever {
                 "Fehler beim Initialisieren des MotdRetrievers. Es werden keine aktuellen Meldungen verteilt !",
                 ex);
         }
-    }
-
-    /**
-     * DOCUMENT ME!
-     *
-     * @return  DOCUMENT ME!
-     */
-    public static MotdRetriever getInstance() {
-        if (INSTANCE == null) {
-            INSTANCE = new MotdRetriever();
-        }
-        return INSTANCE;
     }
 
     /**

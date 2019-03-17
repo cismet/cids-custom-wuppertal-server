@@ -42,6 +42,7 @@ public class WebDavTunnelAction implements ServerAction {
 
     //~ Static fields/initializers ---------------------------------------------
 
+    public static final String TASK_NAME = "webDavTunnelAction";
     private static final transient org.apache.log4j.Logger LOG = org.apache.log4j.Logger.getLogger(
             WebDavTunnelAction.class);
 
@@ -59,15 +60,34 @@ public class WebDavTunnelAction implements ServerAction {
         GET, PUT, DELETE, PROXY, USERNAME, PASSWORD, NTAUTH
     }
 
-    //~ Constructors -----------------------------------------------------------
+    //~ Methods ----------------------------------------------------------------
 
     /**
-     * Creates a new WebDavTunnelAction object.
+     * DOCUMENT ME!
+     *
+     * @return  DOCUMENT ME!
      */
-    public WebDavTunnelAction() {
+    protected String getUsername() {
+        return null;
     }
 
-    //~ Methods ----------------------------------------------------------------
+    /**
+     * DOCUMENT ME!
+     *
+     * @return  DOCUMENT ME!
+     */
+    protected String getPassword() {
+        return null;
+    }
+
+    /**
+     * DOCUMENT ME!
+     *
+     * @return  DOCUMENT ME!
+     */
+    protected String getWebdavPath() {
+        return null;
+    }
 
     @Override
     public Object execute(final Object body, final ServerActionParameter... params) {
@@ -77,8 +97,9 @@ public class WebDavTunnelAction implements ServerAction {
             boolean isPut = false;
             boolean isDelete = false;
             Proxy proxy = null;
-            String username = null;
-            String password = null;
+            final String webdavPath = getWebdavPath();
+            String username = getUsername();
+            String password = getPassword();
             boolean useNTAuth = false;
 
             for (final ServerActionParameter sap : params) {
@@ -91,13 +112,16 @@ public class WebDavTunnelAction implements ServerAction {
                 } else if (sap.getKey().equals(PARAMETER_TYPE.NTAUTH.toString())) {
                     useNTAuth = (Boolean)sap.getValue();
                 } else if (sap.getKey().equals(PARAMETER_TYPE.GET.toString())) {
-                    path = (String)sap.getValue();
+                    path = ((String)sap.getValue() != null)
+                        ? (((webdavPath != null) ? webdavPath : "") + (String)sap.getValue()) : null;
                     isGet = true;
                 } else if (sap.getKey().equals(PARAMETER_TYPE.PUT.toString())) {
-                    path = (String)sap.getValue();
+                    path = ((String)sap.getValue() != null)
+                        ? (((webdavPath != null) ? webdavPath : "") + (String)sap.getValue()) : null;
                     isPut = true;
                 } else if (sap.getKey().equals(PARAMETER_TYPE.DELETE.toString())) {
-                    path = (String)sap.getValue();
+                    path = ((String)sap.getValue() != null)
+                        ? (((webdavPath != null) ? webdavPath : "") + (String)sap.getValue()) : null;
                     isDelete = true;
                 }
             }
@@ -124,6 +148,6 @@ public class WebDavTunnelAction implements ServerAction {
 
     @Override
     public String getTaskName() {
-        return "webDavTunnelAction";
+        return TASK_NAME;
     }
 }

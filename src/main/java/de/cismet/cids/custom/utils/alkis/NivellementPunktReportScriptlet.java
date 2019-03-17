@@ -49,12 +49,17 @@ public class NivellementPunktReportScriptlet extends JRDefaultScriptlet {
      * @return  DOCUMENT ME!
      */
     public Boolean isImageAvailable(final String dgkBlattnummer, final String laufendeNummer) {
-        final Collection<URL> validURLs = ServerAlkisProducts.getInstance()
+        final Collection<String> validDocuments = ServerAlkisProducts.getInstance()
                     .getCorrespondingNivPURLs(dgkBlattnummer, laufendeNummer);
 
-        for (final URL url : validURLs) {
-            if (EXTENDED_ACCESS_HANDLER.checkIfURLaccessible(url)) {
-                return true;
+        for (final String document : validDocuments) {
+            final URL url;
+            try {
+                url = ServerAlkisConf.getInstance().getDownloadUrlForDocument(document);
+                if (EXTENDED_ACCESS_HANDLER.checkIfURLaccessible(url)) {
+                    return true;
+                }
+            } catch (final Exception ex) {
             }
         }
 
@@ -70,12 +75,13 @@ public class NivellementPunktReportScriptlet extends JRDefaultScriptlet {
      * @return  DOCUMENT ME!
      */
     public Image loadImage(final String dgkBlattnummer, final String laufendeNummer) {
-        final Collection<URL> validURLs = ServerAlkisProducts.getInstance()
+        final Collection<String> validDocuments = ServerAlkisProducts.getInstance()
                     .getCorrespondingNivPURLs(dgkBlattnummer, laufendeNummer);
 
         InputStream streamToReadFrom = null;
-        for (final URL url : validURLs) {
+        for (final String document : validDocuments) {
             try {
+                final URL url = ServerAlkisConf.getInstance().getDownloadUrlForDocument(document);
                 if (EXTENDED_ACCESS_HANDLER.checkIfURLaccessible(url)) {
                     streamToReadFrom = EXTENDED_ACCESS_HANDLER.doRequest(url);
                     if (streamToReadFrom != null) {
@@ -83,7 +89,7 @@ public class NivellementPunktReportScriptlet extends JRDefaultScriptlet {
                     }
                 }
             } catch (final Exception ex) {
-                LOG.warn("An exception occurred while opening URL '" + url.toExternalForm() + "'. Skipping this url.",
+                LOG.warn("An exception occurred while opening URL for '" + document + "'. Skipping this url.",
                     ex);
             }
         }
