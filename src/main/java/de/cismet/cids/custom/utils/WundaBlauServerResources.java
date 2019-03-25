@@ -55,8 +55,8 @@ public enum WundaBlauServerResources {
 
     VCM_PROPERTIES(new TextServerResource("/virtualcitymap/vcm.properties")),
 
-    TIFFER_ACTION_CFG(new TextServerResource("/tiffer/tifferAction.cfg")),
     IMAGE_ANNOTATOR_FONT(new BinaryServerResource("/tiffer/Calibri_Bold.ttf")),
+    STADTBILDER_CONF_PROPERTIES(new TextServerResource("/stadtbilder/sb_conf.properties")),
 
     ALKIS_CONF(new TextServerResource("/alkis/alkis_conf.properties")),
     ALKIS_PRODUCTS_PROPERTIES(new TextServerResource("/alkis/alkis_products.properties")),

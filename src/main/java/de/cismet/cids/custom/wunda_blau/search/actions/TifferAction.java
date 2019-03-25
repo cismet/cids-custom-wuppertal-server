@@ -11,8 +11,6 @@
  */
 package de.cismet.cids.custom.wunda_blau.search.actions;
 
-import Sirius.server.middleware.impls.domainserver.DomainServerImpl;
-
 import org.apache.log4j.Logger;
 
 import java.awt.image.BufferedImage;
@@ -26,7 +24,6 @@ import java.net.URL;
 
 import java.util.HashMap;
 import java.util.Iterator;
-import java.util.PropertyResourceBundle;
 
 import javax.imageio.IIOImage;
 import javax.imageio.ImageIO;
@@ -34,14 +31,12 @@ import javax.imageio.ImageWriteParam;
 import javax.imageio.ImageWriter;
 import javax.imageio.stream.ImageOutputStream;
 
-import de.cismet.cids.custom.utils.WundaBlauServerResources;
+import de.cismet.cids.custom.utils.ServerStadtbilderConf;
 
 import de.cismet.cids.server.actions.ServerAction;
 import de.cismet.cids.server.actions.ServerActionParameter;
 
-import de.cismet.cids.utils.serverresources.ServerResourcesLoader;
-
-import static de.cismet.cids.custom.wunda_blau.search.actions.TifferAction.ParameterType.*;
+import de.cismet.commons.security.handler.SimpleHttpAccessHandler;
 
 /**
  * A server action which adds a simple footer with text to an image. This image can be downloaded from a URL.
@@ -69,12 +64,8 @@ public class TifferAction implements ServerAction {
 
         //~ Enum constants -----------------------------------------------------
 
-        BILDNUMMER, FORMAT, SCALE, SUBDIR
+        BILDNUMMER, ART, BLICKRICHTUNG, JAHR, FORMAT, SCALE, SUBDIR
     }
-
-    //~ Instance fields --------------------------------------------------------
-
-    private final PropertyResourceBundle res;
 
     //~ Constructors -----------------------------------------------------------
 
@@ -82,17 +73,6 @@ public class TifferAction implements ServerAction {
      * Creates a new TifferAction object.
      */
     public TifferAction() {
-        PropertyResourceBundle res = null;
-        if ((DomainServerImpl.getServerProperties() != null)
-                    && "WUNDA_BLAU".equals(DomainServerImpl.getServerProperties().getServerName())) {
-            try {
-                res = new PropertyResourceBundle(ServerResourcesLoader.getInstance().loadStringReader(
-                            WundaBlauServerResources.TIFFER_ACTION_CFG.getValue()));
-            } catch (Exception e) {
-                LOG.error("Resource not found");
-            }
-        }
-        this.res = res;
     }
 
     //~ Methods ----------------------------------------------------------------
@@ -101,29 +81,25 @@ public class TifferAction implements ServerAction {
     public Object execute(final Object body, final ServerActionParameter... params) {
         final HashMap parameterMap = createHashMap(params);
 
-        String txt = res.getString("annotation");
-        final String base = res.getString("base");
-        final String separator = res.getString("separator");
-        final String urlOrFile = res.getString("resource_type");
-        if (LOG.isDebugEnabled()) {
-            LOG.debug(txt + "\n" + base + "\n" + separator + "\n" + urlOrFile);
-        }
-
-        final String bildnummer = (String)parameterMap.get(BILDNUMMER.toString());
+        String txt = ServerStadtbilderConf.getInstance().getTifferAnnotation();
+        final String bildnummer = (String)parameterMap.get(ParameterType.BILDNUMMER.toString());
+        final String art = (String)parameterMap.get(ParameterType.ART.toString());
+        final String blickrichtung = (String)parameterMap.get(ParameterType.BLICKRICHTUNG.toString());
+        final Integer jahr = (Integer)parameterMap.get(ParameterType.JAHR.toString());
 
         if (bildnummer == null) {
             return null;
         }
 
-        String format = (String)parameterMap.get(FORMAT.toString());
-        final String scale = (String)parameterMap.get(SCALE.toString());
+        String format = (String)parameterMap.get(ParameterType.FORMAT.toString());
+        final String scale = (String)parameterMap.get(ParameterType.SCALE.toString());
 
-        String subdir = (String)parameterMap.get(SUBDIR.toString());
+        String subdir = (String)parameterMap.get(ParameterType.SUBDIR.toString());
         if (subdir == null) {
             subdir = "";
         }
 
-        txt = txt.replace("$bnr$", bildnummer);
+        txt = txt.replace(ServerStadtbilderConf.IMAGE_NUMBER, bildnummer);
         txt = txt.replace("(c)", "\u00A9");
 
         ////////////////////////////////////////////////////////////////////////////////////////
@@ -137,6 +113,8 @@ public class TifferAction implements ServerAction {
                 format = "BMP";
             } else if (format.equalsIgnoreCase("png")) {
                 format = "PNG";
+            } else if (format.equalsIgnoreCase("tif")) {
+                format = "TIF";
             } else {
                 format = "TIFF";
             }
@@ -155,16 +133,20 @@ public class TifferAction implements ServerAction {
             LOG.error("scale Format", e);
         }
 
-        ImageAnnotator a;
+        final ImageAnnotator a;
         try {
-            if (!urlOrFile.equalsIgnoreCase("file")) {
-                final URL imgUrl = new URL("http://" + base + subdir + bildnummer + "." + format.toLowerCase());
-                a = new ImageAnnotator(imgUrl, txt);
-            } else // file
-            {
-                final String fileLocation = base + subdir + bildnummer + "." + format.toLowerCase();
-                a = new ImageAnnotator(fileLocation, txt);
+            URL imgUrl = null;
+            for (final URL url
+                        : ServerStadtbilderConf.getInstance().getHighresPictureUrls(
+                            bildnummer,
+                            art,
+                            jahr,
+                            blickrichtung)) {
+                if ((new SimpleHttpAccessHandler()).checkIfURLaccessible(url)) {
+                    imgUrl = url;
+                }
             }
+            a = new ImageAnnotator(imgUrl, txt);
         } catch (MalformedURLException ex) {
             LOG.error("MalformedURLException while annotating the image.", ex);
             return null;
@@ -251,5 +233,26 @@ public class TifferAction implements ServerAction {
     @Override
     public String getTaskName() {
         return ACTION_NAME;
+    }
+
+    /**
+     * DOCUMENT ME!
+     *
+     * @param  args  DOCUMENT ME!
+     */
+    public static void main(final String[] args) {
+        try {
+            final URL imgUrl = new URL("http://localhost/001_001_159000016.tif");
+            new ImageAnnotator(imgUrl, "dies ist ein Test");
+        } catch (MalformedURLException ex) {
+            ex.printStackTrace();
+            LOG.error("MalformedURLException while annotating the image.", ex);
+        } catch (IOException ex) {
+            ex.printStackTrace();
+            LOG.error("IOException while annotating the image.", ex);
+        } catch (Exception ex) {
+            ex.printStackTrace();
+            LOG.error("Some other exception while annotating the image.", ex);
+        }
     }
 }
