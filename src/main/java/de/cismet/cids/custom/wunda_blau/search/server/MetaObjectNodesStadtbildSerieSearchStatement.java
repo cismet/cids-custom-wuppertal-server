@@ -64,7 +64,7 @@ public class MetaObjectNodesStadtbildSerieSearchStatement extends AbstractCidsSe
 
         //~ Enum constants -----------------------------------------------------
 
-        BODENNAH("2"), LUFTSCHRAEG("0"), LUFTSENK("1");
+        LUFTSCHRAEG("0"), LUFTSENK("1"), BODENNAH("2"), REIHENSCHRAEG("3");
 
         //~ Instance fields ----------------------------------------------------
 
@@ -86,9 +86,9 @@ public class MetaObjectNodesStadtbildSerieSearchStatement extends AbstractCidsSe
 
     private Geometry geometryToSearchFor;
 
-    private ArrayList<Bildtyp> bildtypen = new ArrayList<Bildtyp>();
-    private ArrayList<Integer> suchwoerterIDs = new ArrayList<Integer>();
-    private ArrayList<Integer> nutzungseinschraenkungIDs = new ArrayList<Integer>();
+    private ArrayList<Bildtyp> bildtypen = new ArrayList<>();
+    private ArrayList<Integer> suchwoerterIDs = new ArrayList<>();
+    private ArrayList<Integer> nutzungseinschraenkungIDs = new ArrayList<>();
     private Interval interval;
     private Date from;
     private Date till;
@@ -96,7 +96,6 @@ public class MetaObjectNodesStadtbildSerieSearchStatement extends AbstractCidsSe
     private String ortID;
     private String hausnummer;
     private String imageNumberRule;
-    private final User user;
     private StringBuilder query;
     private final SimpleDateFormat postgresDateFormat = new SimpleDateFormat("yyyy-MM-dd");
     private ArrayList<ArrayList> resultset;
@@ -122,7 +121,6 @@ public class MetaObjectNodesStadtbildSerieSearchStatement extends AbstractCidsSe
      * @param  user  DOCUMENT ME!
      */
     public MetaObjectNodesStadtbildSerieSearchStatement(final User user) {
-        this.user = user;
     }
 
     //~ Methods ----------------------------------------------------------------
@@ -139,7 +137,7 @@ public class MetaObjectNodesStadtbildSerieSearchStatement extends AbstractCidsSe
      */
     public Collection prepareResultSetAndReturnItsSize() {
         final MetaService metaService = (MetaService)getActiveLocalServers().get(DOMAIN);
-        final Collection<Integer> result = new ArrayList<Integer>();
+        final Collection<Integer> result = new ArrayList<>();
         if (metaService != null) {
             try {
                 generateQuery();
