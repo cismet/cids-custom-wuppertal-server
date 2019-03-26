@@ -98,7 +98,7 @@ public abstract class StadtbilderConf {
             final String blickrichtung,
             final String format) {
         final String locationOfImage;
-        if (MetaObjectNodesStadtbildSerieSearchStatement.Bildtyp.REIHENSCHRAEG.equals(String.valueOf(bildtypId))) {
+        if (MetaObjectNodesStadtbildSerieSearchStatement.Bildtyp.REIHENSCHRAEG.getId() == bildtypId) {
             locationOfImage = getReihenschraegPreviewLocationTemplate().replace(YEAR, String.valueOf(jahr))
                         .replace(DIRECTION, blickrichtung)
                         .replace(IMAGE_NUMBER, imageNumber);
@@ -159,7 +159,7 @@ public abstract class StadtbilderConf {
             final String blickrichtung,
             final String format) {
         final String locationOfImage;
-        if (MetaObjectNodesStadtbildSerieSearchStatement.Bildtyp.REIHENSCHRAEG.equals(String.valueOf(bildtypId))) {
+        if (MetaObjectNodesStadtbildSerieSearchStatement.Bildtyp.REIHENSCHRAEG.getId() == bildtypId) {
             locationOfImage = getReihenschraegHighresLocationTemplate().replace(YEAR, String.valueOf(jahr))
                         .replace(DIRECTION, blickrichtung)
                         .replace(IMAGE_NUMBER, imageNumber);
