@@ -21,6 +21,8 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.Properties;
 
+import de.cismet.cids.custom.wunda_blau.search.server.MetaObjectNodesStadtbildSerieSearchStatement;
+
 /**
  * DOCUMENT ME!
  *
@@ -83,7 +85,7 @@ public abstract class StadtbilderConf {
      * DOCUMENT ME!
      *
      * @param   imageNumber    DOCUMENT ME!
-     * @param   art            DOCUMENT ME!
+     * @param   bildtypId      DOCUMENT ME!
      * @param   jahr           DOCUMENT ME!
      * @param   blickrichtung  DOCUMENT ME!
      * @param   format         DOCUMENT ME!
@@ -91,12 +93,12 @@ public abstract class StadtbilderConf {
      * @return  DOCUMENT ME!
      */
     public URL[] getPreviewPictureUrls(final String imageNumber,
-            final String art,
+            final Integer bildtypId,
             final Integer jahr,
             final String blickrichtung,
             final String format) {
         final String locationOfImage;
-        if ("Reihenschrägluftbilder".equals(art)) {
+        if (MetaObjectNodesStadtbildSerieSearchStatement.Bildtyp.REIHENSCHRAEG.equals(String.valueOf(bildtypId))) {
             locationOfImage = getReihenschraegPreviewLocationTemplate().replace(YEAR, String.valueOf(jahr))
                         .replace(DIRECTION, blickrichtung)
                         .replace(IMAGE_NUMBER, imageNumber);
@@ -127,24 +129,24 @@ public abstract class StadtbilderConf {
      * DOCUMENT ME!
      *
      * @param   imageNumber    DOCUMENT ME!
-     * @param   art            DOCUMENT ME!
+     * @param   bildtypId      DOCUMENT ME!
      * @param   jahr           DOCUMENT ME!
      * @param   blickrichtung  DOCUMENT ME!
      *
      * @return  DOCUMENT ME!
      */
     public URL[] getPreviewPictureUrls(final String imageNumber,
-            final String art,
+            final Integer bildtypId,
             final Integer jahr,
             final String blickrichtung) {
-        return getPreviewPictureUrls(imageNumber, art, jahr, blickrichtung, null);
+        return getPreviewPictureUrls(imageNumber, bildtypId, jahr, blickrichtung, null);
     }
 
     /**
      * DOCUMENT ME!
      *
      * @param   imageNumber    DOCUMENT ME!
-     * @param   art            DOCUMENT ME!
+     * @param   bildtypId      DOCUMENT ME!
      * @param   jahr           DOCUMENT ME!
      * @param   blickrichtung  DOCUMENT ME!
      * @param   format         DOCUMENT ME!
@@ -152,12 +154,12 @@ public abstract class StadtbilderConf {
      * @return  DOCUMENT ME!
      */
     public URL[] getHighresPictureUrls(final String imageNumber,
-            final String art,
+            final Integer bildtypId,
             final Integer jahr,
             final String blickrichtung,
             final String format) {
         final String locationOfImage;
-        if ("Reihenschrägluftbilder".equals(art)) {
+        if (MetaObjectNodesStadtbildSerieSearchStatement.Bildtyp.REIHENSCHRAEG.equals(String.valueOf(bildtypId))) {
             locationOfImage = getReihenschraegHighresLocationTemplate().replace(YEAR, String.valueOf(jahr))
                         .replace(DIRECTION, blickrichtung)
                         .replace(IMAGE_NUMBER, imageNumber);
@@ -190,16 +192,16 @@ public abstract class StadtbilderConf {
      * DOCUMENT ME!
      *
      * @param   imageNumber    DOCUMENT ME!
-     * @param   art            DOCUMENT ME!
+     * @param   bildtypId      DOCUMENT ME!
      * @param   jahr           DOCUMENT ME!
      * @param   blickrichtung  DOCUMENT ME!
      *
      * @return  DOCUMENT ME!
      */
     public URL[] getHighresPictureUrls(final String imageNumber,
-            final String art,
+            final Integer bildtypId,
             final Integer jahr,
             final String blickrichtung) {
-        return getHighresPictureUrls(imageNumber, art, jahr, blickrichtung, null);
+        return getHighresPictureUrls(imageNumber, bildtypId, jahr, blickrichtung, null);
     }
 }

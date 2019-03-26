@@ -64,7 +64,7 @@ public class TifferAction implements ServerAction {
 
         //~ Enum constants -----------------------------------------------------
 
-        BILDNUMMER, ART, BLICKRICHTUNG, JAHR, FORMAT, SCALE, SUBDIR
+        BILDNUMMER, BILDTYP_ID, BLICKRICHTUNG, JAHR, FORMAT, SCALE, SUBDIR
     }
 
     //~ Constructors -----------------------------------------------------------
@@ -83,7 +83,7 @@ public class TifferAction implements ServerAction {
 
         String txt = ServerStadtbilderConf.getInstance().getTifferAnnotation();
         final String bildnummer = (String)parameterMap.get(ParameterType.BILDNUMMER.toString());
-        final String art = (String)parameterMap.get(ParameterType.ART.toString());
+        final Integer bildtypId = (Integer)parameterMap.get(ParameterType.BILDTYP_ID.toString());
         final String blickrichtung = (String)parameterMap.get(ParameterType.BLICKRICHTUNG.toString());
         final Integer jahr = (Integer)parameterMap.get(ParameterType.JAHR.toString());
 
@@ -129,7 +129,7 @@ public class TifferAction implements ServerAction {
             if ((scale != null) && !scale.equals("0.0") && !scale.equals("0") && !scale.equals(".0")) {
                 scaleFactor = Double.parseDouble(scale);
             }
-        } catch (Exception e) {
+        } catch (final Exception e) {
             LOG.error("scale Format", e);
         }
 
@@ -139,7 +139,7 @@ public class TifferAction implements ServerAction {
             for (final URL url
                         : ServerStadtbilderConf.getInstance().getHighresPictureUrls(
                             bildnummer,
-                            art,
+                            bildtypId,
                             jahr,
                             blickrichtung)) {
                 if ((new SimpleHttpAccessHandler()).checkIfURLaccessible(url)) {
@@ -233,26 +233,5 @@ public class TifferAction implements ServerAction {
     @Override
     public String getTaskName() {
         return ACTION_NAME;
-    }
-
-    /**
-     * DOCUMENT ME!
-     *
-     * @param  args  DOCUMENT ME!
-     */
-    public static void main(final String[] args) {
-        try {
-            final URL imgUrl = new URL("http://localhost/001_001_159000016.tif");
-            new ImageAnnotator(imgUrl, "dies ist ein Test");
-        } catch (MalformedURLException ex) {
-            ex.printStackTrace();
-            LOG.error("MalformedURLException while annotating the image.", ex);
-        } catch (IOException ex) {
-            ex.printStackTrace();
-            LOG.error("IOException while annotating the image.", ex);
-        } catch (Exception ex) {
-            ex.printStackTrace();
-            LOG.error("Some other exception while annotating the image.", ex);
-        }
     }
 }
