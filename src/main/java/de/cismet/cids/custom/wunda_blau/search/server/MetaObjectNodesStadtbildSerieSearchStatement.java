@@ -64,11 +64,11 @@ public class MetaObjectNodesStadtbildSerieSearchStatement extends AbstractCidsSe
 
         //~ Enum constants -----------------------------------------------------
 
-        LUFTSCHRAEG("0"), LUFTSENK("1"), BODENNAH("2"), REIHENSCHRAEG("3");
+        LUFTSCHRAEG(0), LUFTSENK(1), BODENNAH(2), REIHENSCHRAEG(3);
 
         //~ Instance fields ----------------------------------------------------
 
-        private final String id;
+        private final int id;
 
         //~ Constructors -------------------------------------------------------
 
@@ -77,8 +77,19 @@ public class MetaObjectNodesStadtbildSerieSearchStatement extends AbstractCidsSe
          *
          * @param  id  DOCUMENT ME!
          */
-        private Bildtyp(final String id) {
+        private Bildtyp(final int id) {
             this.id = id;
+        }
+
+        //~ Methods ------------------------------------------------------------
+
+        /**
+         * DOCUMENT ME!
+         *
+         * @return  DOCUMENT ME!
+         */
+        public int getId() {
+            return id;
         }
     }
 
@@ -243,7 +254,7 @@ public class MetaObjectNodesStadtbildSerieSearchStatement extends AbstractCidsSe
         if (!bildtypen.isEmpty()) {
             final StringBuilder bildtypListString = new StringBuilder(" and sbs.bildtyp in (");
             for (final Bildtyp typ : bildtypen) {
-                bildtypListString.append(typ.id);
+                bildtypListString.append(String.valueOf(typ.getId()));
                 bildtypListString.append(",");
             }
             // remove last comma
