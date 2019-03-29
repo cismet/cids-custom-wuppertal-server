@@ -70,7 +70,7 @@ public class CidsBillingSearchStatement extends AbstractCidsServerSearch impleme
     private String projekt;
     private String userID;
     private String abrechnungsturnusID;
-    private ArrayList<String> verwendungszweckKeys = new ArrayList<String>();
+    private ArrayList<String> verwendungszweckKeys = new ArrayList<>();
     private Kostentyp kostentyp = Kostentyp.IGNORIEREN;
     private Date from;
     private Date till;
@@ -78,7 +78,7 @@ public class CidsBillingSearchStatement extends AbstractCidsServerSearch impleme
     private Date abrechnungsdatumTill;
     private StringBuilder query;
     private final SimpleDateFormat postgresDateFormat = new SimpleDateFormat("yyyy-MM-dd");
-    private ArrayList<MetaObject> kundeMetaObjects = new ArrayList<MetaObject>();
+    private ArrayList<MetaObject> kundeMetaObjects = new ArrayList<>();
     private String kundenname;
 
     private Boolean showStornierteBillings = false;
@@ -141,7 +141,7 @@ public class CidsBillingSearchStatement extends AbstractCidsServerSearch impleme
         final MetaService ms = (MetaService)getActiveLocalServers().get(DOMAIN);
         if (ms != null) {
             try {
-                final List<MetaObjectNode> result = new ArrayList<MetaObjectNode>();
+                final List<MetaObjectNode> result = new ArrayList<>();
 
                 generateQuery();
                 if (LOG.isDebugEnabled()) {
@@ -248,7 +248,7 @@ public class CidsBillingSearchStatement extends AbstractCidsServerSearch impleme
     private void appendKunde() {
         if (kundenname == null) {
             if (kundeMetaObjects.isEmpty()) {
-                query.append(" true ");
+                query.append(" b.username NOT ILIKE 'muster_%' AND b.username NOT ILIKE 'test_%' ");
             } else {
                 // create the following structure: (id_1, id_2, ... ,  id_n)
                 final StringBuilder customerListString = new StringBuilder(" kunde.id in (");

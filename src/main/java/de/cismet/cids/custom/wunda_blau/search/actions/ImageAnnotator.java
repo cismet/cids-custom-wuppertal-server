@@ -14,19 +14,29 @@ package de.cismet.cids.custom.wunda_blau.search.actions;
 
 import org.mortbay.log.Log;
 
-import java.awt.*;
-
-//import java.net.MalformedURLException;
+import java.awt.BasicStroke;
+import java.awt.Color;
+import java.awt.Font;
+import java.awt.FontMetrics;
+import java.awt.Graphics;
+import java.awt.Graphics2D;
+import java.awt.RenderingHints;
 import java.awt.image.BufferedImage;
 
-import java.io.*;
+import java.io.ByteArrayInputStream;
+import java.io.File;
+import java.io.IOException;
 
 import java.net.URL;
 
-import java.util.*;
+import java.util.ArrayList;
+import java.util.Iterator;
 
-import javax.imageio.*;
-import javax.imageio.stream.*;
+import javax.imageio.ImageIO;
+import javax.imageio.ImageReader;
+import javax.imageio.ImageWriter;
+import javax.imageio.stream.ImageInputStream;
+import javax.imageio.stream.ImageOutputStream;
 
 import de.cismet.cids.custom.utils.WundaBlauServerResources;
 
@@ -279,7 +289,7 @@ public class ImageAnnotator {
 
         final ImageInputStream iis = ImageIO.createImageInputStream(imgUrl.openStream());
 
-        reader.setInput(iis, false);
+        reader.setInput(iis, false, true);
 
         final int imageIndex = 0;
 

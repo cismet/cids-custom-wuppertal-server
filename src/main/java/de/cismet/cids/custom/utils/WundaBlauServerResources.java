@@ -55,8 +55,8 @@ public enum WundaBlauServerResources {
 
     VCM_PROPERTIES(new TextServerResource("/virtualcitymap/vcm.properties")),
 
-    TIFFER_ACTION_CFG(new TextServerResource("/tiffer/tifferAction.cfg")),
     IMAGE_ANNOTATOR_FONT(new BinaryServerResource("/tiffer/Calibri_Bold.ttf")),
+    STADTBILDER_CONF_PROPERTIES(new TextServerResource("/stadtbilder/sb_conf.properties")),
 
     ALKIS_CONF(new TextServerResource("/alkis/alkis_conf.properties")),
     ALKIS_PRODUCTS_PROPERTIES(new TextServerResource("/alkis/alkis_products.properties")),
@@ -67,13 +67,11 @@ public enum WundaBlauServerResources {
     BERECHTIGUNGSPRUEFUNG_PROPERTIES(new TextServerResource("/berechtigungspruefung/berechtigungspruefung.properties")),
     BERECHTIGUNGSPRUEFUNG_CONF_JSON(new TextServerResource("/berechtigungspruefung/berechtigungspruefung_conf.json")),
 
+    GRUNDWASSERMESSSTELLEN_PROPERTIES(new TextServerResource("/grundwassermessstellen/gwm_conf.properties")),
     VERMESSUNGSUNTERLAGENPORTAL_PROPERTIES(new TextServerResource("/vermessungsunterlagenportal/vup_conf.properties")),
     QSGEB_PROPERTIES(new TextServerResource("/qsgeb/qsgeb_conf.properties")),
 
-    MOTD_WUNDA_BLAU_PROPERTIES(new TextServerResource("/motd/wunda_blau.properties")),
-    MOTD_VERDIS_GRUNDIS_PROPERTIES(new TextServerResource("/motd/verdis_grundis.properties")),
-    MOTD_LAGIS_PROPERTIES(new TextServerResource("/motd/lagis.properties")),
-    MOTD_BELIS2_PROPERTIES(new TextServerResource("/motd/belis2.properties")),
+    MOTD_PROPERTIES(new TextServerResource("/motd/wunda_blau.properties")),
 
     PNR_TEMPLATE_BEN_AUFTR_ALL(new TextServerResource("/pointnumberreservation/A_Ben_Auftr_alle_PKZ.xml")),
     PNR_TEMPLATE_BEN_AUFTR_ONE_ANR(new TextServerResource("/pointnumberreservation/A_Ben_Auftr_eine_ANR.xml")),
@@ -83,7 +81,9 @@ public enum WundaBlauServerResources {
     PNR_TEMPLATE_PROLONG(new TextServerResource("/pointnumberreservation/A_Verlaengern.xml")),
     PNR_TEMPLATE_PROLONG_SUB(new TextServerResource("/pointnumberreservation/A_Verlaengern__Sub.xml")),
     PNR_TEMPLATE_RESERVIERUNG(new TextServerResource("/pointnumberreservation/A_reservierung.xml")),
-    PNR_TEMPLATE_RESERVIERUNG_SW(new TextServerResource("/pointnumberreservation/A_reservierung_startwert.xml"));
+    PNR_TEMPLATE_RESERVIERUNG_SW(new TextServerResource("/pointnumberreservation/A_reservierung_startwert.xml")),
+
+    POI_CONF_PROPERTIES(new TextServerResource("/poi/poi_conf.properties"));
 
     //~ Instance fields --------------------------------------------------------
 

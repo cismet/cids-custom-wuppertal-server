@@ -16,11 +16,15 @@ import org.apache.commons.io.IOUtils;
 import org.apache.commons.lang.StringUtils;
 
 import java.io.InputStream;
+import java.io.UnsupportedEncodingException;
 
 import java.net.URL;
+import java.net.URLEncoder;
 
 import java.util.ArrayList;
 import java.util.List;
+
+import de.cismet.cids.dynamics.CidsBean;
 
 import de.cismet.commons.security.handler.ExtendedAccessHandler;
 import de.cismet.commons.security.handler.SimpleHttpAccessHandler;
@@ -35,8 +39,12 @@ public class VermessungsrissPictureFinder {
 
     //~ Static fields/initializers ---------------------------------------------
 
+    private static final org.apache.log4j.Logger LOG = org.apache.log4j.Logger.getLogger(
+            VermessungsrissPictureFinder.class);
+
     public static final String SEP = "/";
-    static final org.apache.log4j.Logger LOG = org.apache.log4j.Logger.getLogger(VermessungsrissPictureFinder.class);
+    public static final String SUFFIX_REDUCED_SIZE = "_rs";
+
     private static final String[] SUFFIXE = new String[] {
             ".tif",
             ".jpg",
@@ -49,10 +57,19 @@ public class VermessungsrissPictureFinder {
             ".TIFF",
             ".JPEG"
         };
-    public static final String SUFFIX_REDUCED_SIZE = "_rs";
     private static final String LINKEXTENSION = ".txt";
-    private static final String GRENZNIEDERSCHRIFT_PREFIX = "GN";
-    private static final String VERMESSUNGSRISS_PREFIX = "VR";
+    private static final String PREFIX_GRENZNIEDERSCHRIFT = "GN";
+    private static final String PREFIX_VERMESSUNGSRISS = "VR";
+    private static final String PREFIX_ERGAENZUNGSKARTEN = "GN";
+    private static final String PREFIX_FLURBUECHER = "FB";
+    private static final String PREFIX_LIEGENSCHAFTSBUECHER = "LB";
+    private static final String PREFIX_NAMENSVERZEICHNIS = "NV";
+    private static final String SCHLUESSEL_ERGAENZUNGSKARTEN = "518";
+    private static final String SCHLUESSEL_FLURBUECHER1 = "536";
+    private static final String SCHLUESSEL_FLURBUECHER2 = "537";
+    private static final String SCHLUESSEL_LIEGENSCHAFTSBUECHER1 = "546";
+    private static final String SCHLUESSEL_LIEGENSCHAFTSBUECHER2 = "547";
+    private static final String SCHLUESSEL_NAMENSVERZEICHNIS = "566";
     private static final String PATH_PLATZHALTER = "platzhalter";
 
     //~ Instance fields --------------------------------------------------------
@@ -87,33 +104,14 @@ public class VermessungsrissPictureFinder {
     /**
      * DOCUMENT ME!
      *
-     * @param   riss       blattnummer picture DOCUMENT ME!
-     * @param   gemarkung  laufendeNummer DOCUMENT ME!
+     * @param   riss       DOCUMENT ME!
+     * @param   gemarkung  DOCUMENT ME!
      * @param   flur       DOCUMENT ME!
      * @param   blatt      DOCUMENT ME!
      *
      * @return  DOCUMENT ME!
      */
-    public List<URL> findVermessungsrissPicture(final String riss,
-            final Integer gemarkung,
-            final String flur,
-            final String blatt) {
-        return findVermessungsrissPicture(true, riss, gemarkung, flur, blatt);
-    }
-
-    /**
-     * DOCUMENT ME!
-     *
-     * @param   checkReducedSize  DOCUMENT ME!
-     * @param   riss              DOCUMENT ME!
-     * @param   gemarkung         DOCUMENT ME!
-     * @param   flur              DOCUMENT ME!
-     * @param   blatt             DOCUMENT ME!
-     *
-     * @return  DOCUMENT ME!
-     */
-    public List<URL> findVermessungsrissPicture(final boolean checkReducedSize,
-            final String riss,
+    public List<String> findVermessungsrissPicture(final String riss,
             final Integer gemarkung,
             final String flur,
             final String blatt) {
@@ -122,7 +120,36 @@ public class VermessungsrissPictureFinder {
             LOG.debug("findVermessungrissPicture: " + picturePath);
         }
 
-        return probeWebserverForRightSuffix(checkReducedSize, picturePath);
+        return probeWebserverForRightSuffix(false, true, picturePath);
+    }
+
+    /**
+     * DOCUMENT ME!
+     *
+     * @param   schluessel    DOCUMENT ME!
+     * @param   gemarkung     DOCUMENT ME!
+     * @param   steuerbezirk  DOCUMENT ME!
+     * @param   bezeichner    DOCUMENT ME!
+     * @param   historisch    DOCUMENT ME!
+     *
+     * @return  DOCUMENT ME!
+     */
+    public List<String> findVermessungsbuchwerkPicture(final String schluessel,
+            final CidsBean gemarkung,
+            final Integer steuerbezirk,
+            final String bezeichner,
+            final boolean historisch) {
+        final String fileName = getVermessungsbuchwerkPictureFilename(
+                schluessel,
+                gemarkung,
+                steuerbezirk,
+                bezeichner,
+                historisch);
+        if (LOG.isDebugEnabled()) {
+            LOG.debug("findVermessungrissPicture: " + fileName);
+        }
+
+        return probeWebserverForRightSuffix(true, true, fileName);
     }
 
     /**
@@ -135,26 +162,7 @@ public class VermessungsrissPictureFinder {
      *
      * @return  DOCUMENT ME!
      */
-    public List<URL> findGrenzniederschriftPicture(final String riss,
-            final Integer gemarkung,
-            final String flur,
-            final String blatt) {
-        return findGrenzniederschriftPicture(false, riss, gemarkung, flur, blatt);
-    }
-
-    /**
-     * DOCUMENT ME!
-     *
-     * @param   checkReducedSize  DOCUMENT ME!
-     * @param   riss              DOCUMENT ME!
-     * @param   gemarkung         DOCUMENT ME!
-     * @param   flur              DOCUMENT ME!
-     * @param   blatt             DOCUMENT ME!
-     *
-     * @return  DOCUMENT ME!
-     */
-    public List<URL> findGrenzniederschriftPicture(final boolean checkReducedSize,
-            final String riss,
+    public List<String> findGrenzniederschriftPicture(final String riss,
             final Integer gemarkung,
             final String flur,
             final String blatt) {
@@ -162,7 +170,7 @@ public class VermessungsrissPictureFinder {
         if (LOG.isDebugEnabled()) {
             LOG.debug("findGrenzniederschriftPicture: " + picturePath);
         }
-        return probeWebserverForRightSuffix(checkReducedSize, picturePath);
+        return probeWebserverForRightSuffix(false, true, picturePath);
     }
 
     /**
@@ -189,7 +197,7 @@ public class VermessungsrissPictureFinder {
      *
      * @param   withPath              DOCUMENT ME!
      * @param   isGrenzniederschrift  blattnummer DOCUMENT ME!
-     * @param   riss                  laufendeNummer DOCUMENT ME!
+     * @param   schluessel            laufendeNummer DOCUMENT ME!
      * @param   gemarkung             DOCUMENT ME!
      * @param   flur                  DOCUMENT ME!
      * @param   blatt                 DOCUMENT ME!
@@ -198,18 +206,19 @@ public class VermessungsrissPictureFinder {
      */
     public String getObjectFilename(final boolean withPath,
             final boolean isGrenzniederschrift,
-            final String riss,
+            final String schluessel,
             final Integer gemarkung,
             final String flur,
             final String blatt) {
+        final boolean isErganzungskarte = SCHLUESSEL_ERGAENZUNGSKARTEN.equals(schluessel);
         final StringBuffer buf = new StringBuffer();
         if (isGrenzniederschrift) {
-            buf.append(GRENZNIEDERSCHRIFT_PREFIX);
+            buf.append(PREFIX_GRENZNIEDERSCHRIFT);
         } else {
-            buf.append(VERMESSUNGSRISS_PREFIX);
+            buf.append(PREFIX_VERMESSUNGSRISS);
         }
         buf.append("_");
-        buf.append(StringUtils.leftPad(riss, 3, '0'));
+        buf.append(StringUtils.leftPad(schluessel, 3, '0'));
         buf.append("-");
         buf.append(String.format("%04d", gemarkung));
         buf.append("-");
@@ -218,11 +227,54 @@ public class VermessungsrissPictureFinder {
         buf.append(StringUtils.leftPad(blatt, 8, '0'));
         final StringBuffer b = new StringBuffer();
         if (withPath) {
-            b.append(getFolder(isGrenzniederschrift, gemarkung));
+            b.append(getFolder(isErganzungskarte, isGrenzniederschrift, gemarkung));
             b.append(SEP);
         }
         b.append(buf.toString());
         return b.toString();
+    }
+
+    /**
+     * DOCUMENT ME!
+     *
+     * @param   schluessel    DOCUMENT ME!
+     * @param   gemarkung     DOCUMENT ME!
+     * @param   steuerbezirk  DOCUMENT ME!
+     * @param   bezeichner    DOCUMENT ME!
+     * @param   historisch    isGrenzniederschrift DOCUMENT ME!
+     *
+     * @return  DOCUMENT ME!
+     *
+     * @throws  UnsupportedEncodingException  DOCUMENT ME!
+     */
+    public String getBuchwerkFilename(final String schluessel,
+            final CidsBean gemarkung,
+            final Integer steuerbezirk,
+            final String bezeichner,
+            final boolean historisch) throws UnsupportedEncodingException {
+        final StringBuffer buf = new StringBuffer();
+        buf.append(getBuchwerkFolder(schluessel, gemarkung));
+        if (SCHLUESSEL_ERGAENZUNGSKARTEN.equals(schluessel)) {
+            buf.append(PREFIX_ERGAENZUNGSKARTEN).append("_");
+        } else if (SCHLUESSEL_FLURBUECHER1.equals(schluessel)
+                    || SCHLUESSEL_FLURBUECHER2.equals(schluessel)) {
+            buf.append(PREFIX_FLURBUECHER).append("_");
+        } else if (SCHLUESSEL_LIEGENSCHAFTSBUECHER1.equals(schluessel)
+                    || SCHLUESSEL_LIEGENSCHAFTSBUECHER2.equals(schluessel)) {
+            buf.append(PREFIX_LIEGENSCHAFTSBUECHER).append("_");
+        } else if (SCHLUESSEL_NAMENSVERZEICHNIS.equals(schluessel)) {
+            buf.append(PREFIX_NAMENSVERZEICHNIS).append("_");
+        }
+        buf.append(StringUtils.leftPad(schluessel, 3, '0'))
+                .append("-")
+                .append(String.format("%04d", (Integer)gemarkung.getProperty("id")))
+                .append("-")
+                .append(historisch ? "001" : "000")
+                .append("-")
+                .append(steuerbezirk)
+                .append(StringUtils.leftPad(bezeichner, 7, '0'));
+
+        return buf.toString();
     }
 
     /**
@@ -234,16 +286,18 @@ public class VermessungsrissPictureFinder {
      * @return  DOCUMENT ME!
      */
     public String getObjectPath(final boolean isGrenzNiederschrift, final String filename) {
-        final Integer gemarkung;
         if (filename.startsWith(PATH_PLATZHALTER)) {
             return (isGrenzNiederschrift ? alkisConf.getVermessungHostGrenzniederschriften()
                                          : alkisConf.getVermessungHostBilder()) + filename;
         }
+        final boolean isErganzungskarte = filename.contains((isGrenzNiederschrift ? PREFIX_VERMESSUNGSRISS
+                                                                                  : PREFIX_GRENZNIEDERSCHRIFT) + "_"
+                        + SCHLUESSEL_ERGAENZUNGSKARTEN + "-");
         final String[] splittedFilename = filename.split("-");
-        gemarkung = Integer.parseInt(splittedFilename[1]);
-        String filenameWithPrefix = isGrenzNiederschrift ? GRENZNIEDERSCHRIFT_PREFIX : VERMESSUNGSRISS_PREFIX;
-        filenameWithPrefix += "_" + filename;
-        return new StringBuffer(getFolder(isGrenzNiederschrift, gemarkung)).append(SEP)
+        final Integer gemarkung = Integer.parseInt(splittedFilename[1]);
+        final String filenameWithPrefix = (isGrenzNiederschrift ? PREFIX_GRENZNIEDERSCHRIFT : PREFIX_VERMESSUNGSRISS)
+                    + "_" + filename;
+        return new StringBuffer(getFolder(isErganzungskarte, isGrenzNiederschrift, gemarkung)).append(SEP)
                     .append(filenameWithPrefix)
                     .toString();
     }
@@ -303,60 +357,91 @@ public class VermessungsrissPictureFinder {
     /**
      * DOCUMENT ME!
      *
-     * @param   checkReducedSize   DOCUMENT ME!
-     * @param   fileWithoutSuffix  DOCUMENT ME!
+     * @param   schluessel    DOCUMENT ME!
+     * @param   gemarkung     DOCUMENT ME!
+     * @param   steuerbezirk  DOCUMENT ME!
+     * @param   bezeichner    DOCUMENT ME!
+     * @param   historisch    DOCUMENT ME!
      *
      * @return  DOCUMENT ME!
      */
-    private List<URL> probeWebserverForRightSuffix(final boolean checkReducedSize,
-            final String fileWithoutSuffix) {
-        return probeWebserverForRightSuffix(checkReducedSize, fileWithoutSuffix, 0);
+    public String getVermessungsbuchwerkPictureFilename(final String schluessel,
+            final CidsBean gemarkung,
+            final Integer steuerbezirk,
+            final String bezeichner,
+            final boolean historisch) {
+        final String ret;
+        try {
+            ret = getBuchwerkFilename(schluessel, gemarkung, steuerbezirk, bezeichner, historisch);
+        } catch (final UnsupportedEncodingException ex) {
+            LOG.error(ex, ex);
+            return null;
+        }
+
+        return (ret != null) ? ret : null;
     }
 
     /**
      * DOCUMENT ME!
      *
+     * @param   buchwerk           DOCUMENT ME!
+     * @param   checkReducedSize   DOCUMENT ME!
+     * @param   fileWithoutSuffix  DOCUMENT ME!
+     *
+     * @return  DOCUMENT ME!
+     */
+    private List<String> probeWebserverForRightSuffix(final boolean buchwerk,
+            final boolean checkReducedSize,
+            final String fileWithoutSuffix) {
+        return probeWebserverForRightSuffix(buchwerk, checkReducedSize, fileWithoutSuffix, 0);
+    }
+
+    /**
+     * DOCUMENT ME!
+     *
+     * @param   buchwerk           DOCUMENT ME!
      * @param   checkReducedSize   DOCUMENT ME!
      * @param   fileWithoutSuffix  DOCUMENT ME!
      * @param   recursionDepth     DOCUMENT ME!
      *
      * @return  DOCUMENT ME!
      */
-    public List<URL> probeWebserverForRightSuffix(final boolean checkReducedSize,
+    public List<String> probeWebserverForRightSuffix(final boolean buchwerk,
+            final boolean checkReducedSize,
             final String fileWithoutSuffix,
             final int recursionDepth) {
         if (LOG.isDebugEnabled()) {
             LOG.debug("Searching for picture: " + fileWithoutSuffix + "xxx");
         }
-        final List<URL> results = new ArrayList<URL>();
+        final List<String> results = new ArrayList<>();
         // check if there is a reduced size image direcly...
-        final String searchName = checkReducedSize ? (fileWithoutSuffix + SUFFIX_REDUCED_SIZE) : fileWithoutSuffix;
         for (final String suffix : SUFFIXE) {
+            final String fileWithSuffix = (checkReducedSize ? (fileWithoutSuffix + SUFFIX_REDUCED_SIZE)
+                                                            : fileWithoutSuffix) + suffix;
             try {
-                final URL objectURL = new URL(searchName + suffix);
-
+                final URL objectURL = alkisConf.getDownloadUrlForDocument(fileWithSuffix);
                 if (simpleUrlAccessHandler.checkIfURLaccessible(objectURL)) {
-                    results.add(objectURL);
+                    results.add(fileWithSuffix);
                 }
-            } catch (Exception ex) {
-                LOG.error("Problem occured, during checking for " + searchName + suffix, ex);
+            } catch (final Exception ex) {
+                LOG.error("Problem occured, during checking for " + fileWithSuffix, ex);
             }
         }
         // we need to do an extra round if we checked with _rs suffix...
         if (results.isEmpty() && checkReducedSize) {
             for (final String suffix : SUFFIXE) {
+                final String fileWithSuffix = fileWithoutSuffix + suffix;
                 try {
-                    final URL objectURL = new URL(fileWithoutSuffix + suffix);
-
+                    final URL objectURL = alkisConf.getDownloadUrlForDocument(fileWithSuffix);
                     if (simpleUrlAccessHandler.checkIfURLaccessible(objectURL)) {
-                        results.add(objectURL);
+                        results.add(fileWithSuffix);
                     }
                 } catch (Exception ex) {
-                    LOG.error("Problem occured, during checking for " + searchName + suffix, ex);
+                    LOG.error("Problem occured, during checking for " + fileWithSuffix, ex);
                 }
             }
         }
-        // if the results is still empty check if there is a link...
+        // if the results is empty check if there is a link...
         if (results.isEmpty()) {
             if (LOG.isDebugEnabled()) {
                 LOG.debug("No picture file found. Check for Links");
@@ -364,17 +449,30 @@ public class VermessungsrissPictureFinder {
             if (recursionDepth < 3) {
                 InputStream urlStream = null;
                 try {
-                    final URL objectURL = new URL(fileWithoutSuffix + LINKEXTENSION);
+                    final URL objectURL = alkisConf.getDownloadUrlForDocument(fileWithoutSuffix + LINKEXTENSION);
                     if (simpleUrlAccessHandler.checkIfURLaccessible(objectURL)) {
                         urlStream = simpleUrlAccessHandler.doRequest(objectURL);
                         if (urlStream != null) {
-                            final String link = IOUtils.toString(urlStream);
-                            final boolean isGrenzNiederschrift = fileWithoutSuffix.contains(GRENZNIEDERSCHRIFT_PREFIX);
-                            return probeWebserverForRightSuffix(
-                                    checkReducedSize,
-                                    getObjectPath(isGrenzNiederschrift, link.trim()),
-                                    recursionDepth
-                                            + 1);
+                            final String link = IOUtils.toString(urlStream).trim();
+                            if (buchwerk) {
+                                return probeWebserverForRightSuffix(
+                                        buchwerk,
+                                        checkReducedSize,
+                                        fileWithoutSuffix.substring(0, fileWithoutSuffix.lastIndexOf(SEP))
+                                                + SEP
+                                                + link,
+                                        recursionDepth
+                                                + 1);
+                            } else {
+                                final boolean isGrenzNiederschrift = fileWithoutSuffix.contains(
+                                        PREFIX_GRENZNIEDERSCHRIFT);
+                                return probeWebserverForRightSuffix(
+                                        buchwerk,
+                                        checkReducedSize,
+                                        getObjectPath(isGrenzNiederschrift, link),
+                                        recursionDepth
+                                                + 1);
+                            }
                         }
                     }
                 } catch (Exception ex) {
@@ -400,19 +498,60 @@ public class VermessungsrissPictureFinder {
     /**
      * DOCUMENT ME!
      *
+     * @param   isErgaenzungskarte    DOCUMENT ME!
      * @param   isGrenzniederschrift  DOCUMENT ME!
      * @param   gemarkung             DOCUMENT ME!
      *
      * @return  DOCUMENT ME!
      */
-    public String getFolder(final boolean isGrenzniederschrift, final Integer gemarkung) {
+    public String getFolder(final boolean isErgaenzungskarte,
+            final boolean isGrenzniederschrift,
+            final Integer gemarkung) {
         final StringBuffer buf;
-        if (isGrenzniederschrift) {
+        if (isErgaenzungskarte) {
+            buf = new StringBuffer(alkisConf.getVermessungHostErgaenzungskarten());
+        } else if (isGrenzniederschrift) {
             buf = new StringBuffer(alkisConf.getVermessungHostGrenzniederschriften());
         } else {
             buf = new StringBuffer(alkisConf.getVermessungHostBilder());
         }
-        return buf.append(String.format("%04d", gemarkung)).toString();
+        if (!isErgaenzungskarte) {
+            buf.append(String.format("%04d", gemarkung));
+        }
+        return buf.toString();
+    }
+
+    /**
+     * DOCUMENT ME!
+     *
+     * @param   schluessel  DOCUMENT ME!
+     * @param   gemarkung   DOCUMENT ME!
+     *
+     * @return  DOCUMENT ME!
+     *
+     * @throws  UnsupportedEncodingException  DOCUMENT ME!
+     */
+    public String getBuchwerkFolder(final String schluessel, final CidsBean gemarkung)
+            throws UnsupportedEncodingException {
+        final StringBuffer buf = new StringBuffer();
+        if (SCHLUESSEL_NAMENSVERZEICHNIS.equals(schluessel)) {
+            buf.append(alkisConf.getVermessungHostNamensverzeichnis())
+                    .append(SEP)
+                    .append(PREFIX_NAMENSVERZEICHNIS)
+                    .append("_")
+                    .append(StringUtils.leftPad(schluessel, 3, '0'))
+                    .append("-")
+                    .append(String.format("%04d", (Integer)gemarkung.getProperty("id")));
+        } else if (SCHLUESSEL_FLURBUECHER1.equals(schluessel)
+                    || SCHLUESSEL_FLURBUECHER2.equals(schluessel)) {
+            buf.append(alkisConf.getVermessungHostFlurbuecher());
+        } else if (SCHLUESSEL_LIEGENSCHAFTSBUECHER1.equals(schluessel)
+                    || SCHLUESSEL_LIEGENSCHAFTSBUECHER2.equals(schluessel)) {
+            buf.append(alkisConf.getVermessungHostLiegenschaftsbuecher())
+                    .append(URLEncoder.encode((String)gemarkung.getProperty("name"), "UTF-8"))
+                    .append(SEP);
+        }
+        return buf.toString();
     }
 
     /**
