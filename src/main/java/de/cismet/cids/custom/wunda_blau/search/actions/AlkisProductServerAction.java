@@ -18,16 +18,11 @@ import Sirius.server.newuser.User;
 
 import org.apache.log4j.Logger;
 
-import java.io.ByteArrayOutputStream;
-import java.io.InputStream;
-import java.io.Reader;
-import java.io.StringReader;
-
 import java.net.URL;
 
 import java.util.Date;
 
-import de.cismet.cids.custom.utils.alkis.AlkisProducts;
+import de.cismet.cids.custom.utils.ServerStamperUtils;
 import de.cismet.cids.custom.utils.alkis.ServerAlkisConf;
 import de.cismet.cids.custom.utils.alkis.ServerAlkisProducts;
 
@@ -35,9 +30,7 @@ import de.cismet.cids.server.actions.ServerAction;
 import de.cismet.cids.server.actions.ServerActionParameter;
 import de.cismet.cids.server.actions.UserAwareServerAction;
 
-import de.cismet.commons.security.AccessHandler;
 import de.cismet.commons.security.exceptions.BadHttpStatusCodeException;
-import de.cismet.commons.security.handler.SimpleHttpAccessHandler;
 
 import de.cismet.connectioncontext.ConnectionContext;
 import de.cismet.connectioncontext.ConnectionContextStore;
@@ -55,7 +48,6 @@ public class AlkisProductServerAction implements ConnectionContextStore, UserAwa
 
     public static final Logger LOG = Logger.getLogger(AlkisProductServerAction.class);
     public static final String TASK_NAME = "alkisProduct";
-    private static final int MAX_BUFFER_SIZE = 1024;
     private static final String MASK_REPLACEMENT = "***";
 
     //~ Enums ------------------------------------------------------------------
@@ -213,13 +205,7 @@ public class AlkisProductServerAction implements ConnectionContextStore, UserAwa
                 }
             }
             if (url != null) {
-                final int parameterPosition = url.toString().indexOf('?');
-                if (Body.LISTENNACHWEIS.equals(body) && (parameterPosition >= 0)) {
-                    return doDownload(new URL(url.toString().substring(0, parameterPosition)),
-                            new StringReader(url.toString().substring(parameterPosition + 1)));
-                } else {
-                    return doDownload(url, null);
-                }
+                return doDownload(url, Body.LISTENNACHWEIS.equals(body));
             } else {
                 throw new Exception("url could not be generated");
             }
@@ -247,35 +233,22 @@ public class AlkisProductServerAction implements ConnectionContextStore, UserAwa
     /**
      * DOCUMENT ME!
      *
-     * @param   url               DOCUMENT ME!
-     * @param   requestParameter  DOCUMENT ME!
+     * @param   url         DOCUMENT ME!
+     * @param   postParams  requestParametersString DOCUMENT ME!
      *
      * @return  DOCUMENT ME!
      *
      * @throws  Exception  DOCUMENT ME!
      */
-    private byte[] doDownload(final URL url, final Reader requestParameter) throws Exception {
-        final InputStream src;
-        if (requestParameter != null) {
-            src =
-                new SimpleHttpAccessHandler().doRequest(
-                    url,
-                    requestParameter,
-                    AccessHandler.ACCESS_METHODS.POST_REQUEST,
-                    AlkisProducts.POST_HEADER);
-        } else {
-            src = new SimpleHttpAccessHandler().doRequest(url);
-        }
-        final ByteArrayOutputStream os = new ByteArrayOutputStream();
-        while (true) {
-            final byte[] buffer = new byte[MAX_BUFFER_SIZE];
-            final int read = src.read(buffer);
-            if (read < 0) {
-                return os.toByteArray();
-            } else {
-                os.write(buffer, 0, read);
-            }
-        }
+    private byte[] doDownload(final URL url, final boolean postParams) throws Exception {
+        final String queryString = url.getQuery();
+        final String urlString = url.toExternalForm();
+        final boolean fullUrl = (queryString == null) && postParams;
+        return ServerStamperUtils.getInstance()
+                    .stampRequest(
+                        fullUrl ? url : new URL(urlString.substring(0, urlString.lastIndexOf('?'))),
+                        fullUrl ? null : queryString,
+                        getConnectionContext());
     }
 
     @Override
