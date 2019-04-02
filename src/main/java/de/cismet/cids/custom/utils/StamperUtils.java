@@ -21,8 +21,8 @@ import lombok.Getter;
 import org.apache.commons.httpclient.methods.multipart.FilePart;
 import org.apache.commons.httpclient.methods.multipart.Part;
 import org.apache.commons.io.FileUtils;
+import org.apache.commons.io.IOUtils;
 
-import java.io.ByteArrayOutputStream;
 import java.io.File;
 import java.io.InputStream;
 
@@ -30,7 +30,7 @@ import java.net.URL;
 
 import java.util.ArrayList;
 import java.util.Collection;
-import java.util.Map;
+import java.util.UUID;
 
 import de.cismet.cids.custom.utils.alkis.AlkisProducts;
 
@@ -89,6 +89,18 @@ public class StamperUtils {
     /**
      * DOCUMENT ME!
      *
+     * @return  DOCUMENT ME!
+     */
+    private File createUniqueTmpDir() {
+        final String unique = UUID.randomUUID().toString();
+        final File uniqueTmpDir = new File(getConf().getTmpDir(), unique);
+        uniqueTmpDir.mkdirs();
+        return uniqueTmpDir;
+    }
+
+    /**
+     * DOCUMENT ME!
+     *
      * @param   url                DOCUMENT ME!
      * @param   postParams         requestParameter DOCUMENT ME!
      * @param   connectionContext  DOCUMENT ME!
@@ -100,56 +112,76 @@ public class StamperUtils {
     public byte[] stampRequest(final URL url,
             final String postParams,
             final ConnectionContext connectionContext) throws Exception {
-        final URL serviceUrl = new URL(getConf().getStamperService() + getConf().getStanmperRequest());
+        final URL serviceUrl = new URL(getConf().getStamperService() + getConf().getStamperRequest());
 
-        final File fileRequest = new File("/tmp/request.json");
-        final File fileContext = new File("/tmp/context.json");
+        final File uniqueTmpDir = createUniqueTmpDir();
+        final File fileRequest = new File(uniqueTmpDir, "request.json");
+        final File fileContext = new File(uniqueTmpDir, "context.json");
 
-        final OptionsJson optionsJson;
-        if (postParams != null) {
-            optionsJson = new OptionsJson(
-                    OptionsJson.Method.POST,
-                    new HeadersJson(AlkisProducts.HEADER_CONTENTTYPE_VALUE_POST),
-                    postParams);
-        } else {
-            optionsJson = new OptionsJson(OptionsJson.Method.GET, null, null);
-        }
-
-        FileUtils.writeStringToFile(
-            fileRequest,
-            new ObjectMapper().writeValueAsString(
-                new FetchJson(url, optionsJson)),
-            "UTF-8");
-        FileUtils.writeStringToFile(fileContext, new ObjectMapper().writeValueAsString(connectionContext), "UTF-8");
-
-        final Collection<Part> parts = new ArrayList<>();
-        parts.add(new FilePart("requestJson", fileRequest));
-        parts.add(new FilePart("context", fileContext));
-
-        final InputStream src =
-            new SimpleHttpAccessHandler().doMultipartRequest(serviceUrl, parts.toArray(new Part[0]), null);
-
-        final ByteArrayOutputStream os = new ByteArrayOutputStream();
-        while (true) {
-            final byte[] buffer = new byte[getConf().getMaxBufferSize()];
-            final int read = src.read(buffer);
-            if (read < 0) {
-                return os.toByteArray();
+        try {
+            final OptionsJson optionsJson;
+            if (postParams != null) {
+                optionsJson = new OptionsJson(
+                        OptionsJson.Method.POST,
+                        new HeadersJson(AlkisProducts.HEADER_CONTENTTYPE_VALUE_POST),
+                        postParams);
             } else {
-                os.write(buffer, 0, read);
+                optionsJson = new OptionsJson(OptionsJson.Method.GET, null, null);
             }
+
+            FileUtils.writeStringToFile(
+                fileRequest,
+                new ObjectMapper().writeValueAsString(
+                    new FetchJson(url, optionsJson)),
+                "UTF-8");
+            FileUtils.writeStringToFile(fileContext, new ObjectMapper().writeValueAsString(connectionContext), "UTF-8");
+
+            final Collection<Part> parts = new ArrayList<>();
+            parts.add(new FilePart("requestJson", fileRequest));
+            parts.add(new FilePart("context", fileContext));
+
+            return IOUtils.toByteArray(
+                    new SimpleHttpAccessHandler().doMultipartRequest(serviceUrl, parts.toArray(new Part[0]), null));
+        } finally {
+            fileContext.delete();
+            fileRequest.delete();
+            uniqueTmpDir.delete();
         }
     }
 
     /**
      * DOCUMENT ME!
      *
-     * @param   inputStream  DOCUMENT ME!
+     * @param   inputStream        DOCUMENT ME!
+     * @param   connectionContext  DOCUMENT ME!
      *
      * @return  DOCUMENT ME!
+     *
+     * @throws  Exception  java.lang.Exception
      */
-    public byte[] stampDocument(final InputStream inputStream) {
-        return null;
+    public byte[] stampDocument(final InputStream inputStream, final ConnectionContext connectionContext)
+            throws Exception {
+        final URL serviceUrl = new URL(getConf().getStamperService() + getConf().getStamperDocument());
+
+        final File uniqueTmpDir = createUniqueTmpDir();
+        final File fileDocument = new File(uniqueTmpDir, "document.pdf");
+        final File fileContext = new File(uniqueTmpDir, "context.json");
+
+        try {
+            FileUtils.copyInputStreamToFile(inputStream, fileDocument);
+            FileUtils.writeStringToFile(fileContext, new ObjectMapper().writeValueAsString(connectionContext), "UTF-8");
+
+            final Collection<Part> parts = new ArrayList<>();
+            parts.add(new FilePart("document", fileDocument));
+            parts.add(new FilePart("context", fileContext));
+
+            return IOUtils.toByteArray(
+                    new SimpleHttpAccessHandler().doMultipartRequest(serviceUrl, parts.toArray(new Part[0]), null));
+        } finally {
+            fileContext.delete();
+            fileDocument.delete();
+            uniqueTmpDir.delete();
+        }
     }
 
     //~ Inner Classes ----------------------------------------------------------

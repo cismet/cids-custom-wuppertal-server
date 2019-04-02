@@ -31,8 +31,9 @@ public class StamperConf {
 
     //~ Instance fields --------------------------------------------------------
 
+    private final String tmpDir;
     private final String stamperService;
-    private final String stanmperRequest;
+    private final String stamperRequest;
     private final String stamperDocument;
     private final String stamperVerify;
     private final int maxBufferSize;
@@ -47,8 +48,9 @@ public class StamperConf {
      * @throws  Exception  DOCUMENT ME!
      */
     public StamperConf(final Properties properties) throws Exception {
+        tmpDir = properties.getProperty("TMP_DIR");
         stamperService = properties.getProperty("STAMPER_SERVICE");
-        stanmperRequest = properties.getProperty("STAMPER_REQUEST");
+        stamperRequest = properties.getProperty("STAMPER_REQUEST");
         stamperDocument = properties.getProperty("STAMPER_DOCUMENT");
         stamperVerify = properties.getProperty("STAMPER_VERIFY");
         maxBufferSize = (properties.getProperty("MAX_BUFFER_SIZE") != null)
