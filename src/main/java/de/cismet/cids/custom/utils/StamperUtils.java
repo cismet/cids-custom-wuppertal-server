@@ -29,6 +29,7 @@ import java.io.InputStream;
 import java.net.URL;
 
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.Collection;
 import java.util.UUID;
 
@@ -45,6 +46,10 @@ import de.cismet.connectioncontext.ConnectionContext;
  * @version  $Revision$, $Date$
  */
 public class StamperUtils {
+
+    //~ Static fields/initializers ---------------------------------------------
+
+    private static final org.apache.log4j.Logger LOG = org.apache.log4j.Logger.getLogger(StamperUtils.class);
 
     //~ Instance fields --------------------------------------------------------
 
@@ -75,27 +80,41 @@ public class StamperUtils {
     /**
      * DOCUMENT ME!
      *
-     * @param   url                DOCUMENT ME!
-     * @param   connectionContext  DOCUMENT ME!
-     *
-     * @return  DOCUMENT ME!
-     *
-     * @throws  Exception  DOCUMENT ME!
-     */
-    public byte[] stampRequest(final URL url, final ConnectionContext connectionContext) throws Exception {
-        return stampRequest(url, null, connectionContext);
-    }
-
-    /**
-     * DOCUMENT ME!
-     *
      * @return  DOCUMENT ME!
      */
     private File createUniqueTmpDir() {
         final String unique = UUID.randomUUID().toString();
         final File uniqueTmpDir = new File(getConf().getTmpDir(), unique);
         uniqueTmpDir.mkdirs();
+        if (LOG.isDebugEnabled()) {
+            LOG.debug("uniqueTmpDir created: " + uniqueTmpDir.toString());
+        }
         return uniqueTmpDir;
+    }
+
+    /**
+     * DOCUMENT ME!
+     *
+     * @param   documentType  DOCUMENT ME!
+     *
+     * @return  DOCUMENT ME!
+     */
+    public boolean isStampEnabledFor(final String documentType) {
+        boolean isStampEnabledFor = false;
+        if (documentType != null) {
+            for (final String enabledFor : getConf().getEnabledFor()) {
+                final String pattern = enabledFor.trim().replace("?", ".?").replace("*", ".*?");
+                if (documentType.matches(pattern)) {
+                    isStampEnabledFor = true;
+                    break;
+                }
+            }
+        }
+
+        if (LOG.isDebugEnabled()) {
+            LOG.debug("stampEnabledFor(" + documentType + ") : " + isStampEnabledFor);
+        }
+        return isStampEnabledFor;
     }
 
     /**
@@ -114,27 +133,31 @@ public class StamperUtils {
             final ConnectionContext connectionContext) throws Exception {
         final URL serviceUrl = new URL(getConf().getStamperService() + getConf().getStamperRequest());
 
+        final OptionsJson optionsJson;
+        if (postParams != null) {
+            optionsJson = new OptionsJson(
+                    OptionsJson.Method.POST,
+                    new HeadersJson(AlkisProducts.HEADER_CONTENTTYPE_VALUE_POST),
+                    postParams);
+        } else {
+            optionsJson = new OptionsJson(OptionsJson.Method.GET, null, null);
+        }
+
+        final String optionsJsonAsString = new ObjectMapper().writeValueAsString(new FetchJson(url, optionsJson));
+        final String connectionContextJsonAsString = new ObjectMapper().writeValueAsString(connectionContext);
+        if (LOG.isDebugEnabled()) {
+            LOG.debug("serviceUrl: " + serviceUrl);
+            LOG.debug("optionsJsonAsString: " + optionsJsonAsString);
+            LOG.debug("connectionContextJsonAsString: " + connectionContextJsonAsString);
+        }
+
         final File uniqueTmpDir = createUniqueTmpDir();
         final File fileRequest = new File(uniqueTmpDir, "request.json");
         final File fileContext = new File(uniqueTmpDir, "context.json");
 
         try {
-            final OptionsJson optionsJson;
-            if (postParams != null) {
-                optionsJson = new OptionsJson(
-                        OptionsJson.Method.POST,
-                        new HeadersJson(AlkisProducts.HEADER_CONTENTTYPE_VALUE_POST),
-                        postParams);
-            } else {
-                optionsJson = new OptionsJson(OptionsJson.Method.GET, null, null);
-            }
-
-            FileUtils.writeStringToFile(
-                fileRequest,
-                new ObjectMapper().writeValueAsString(
-                    new FetchJson(url, optionsJson)),
-                "UTF-8");
-            FileUtils.writeStringToFile(fileContext, new ObjectMapper().writeValueAsString(connectionContext), "UTF-8");
+            FileUtils.writeStringToFile(fileRequest, optionsJsonAsString, "UTF-8");
+            FileUtils.writeStringToFile(fileContext, connectionContextJsonAsString, "UTF-8");
 
             final Collection<Part> parts = new ArrayList<>();
             parts.add(new FilePart("requestJson", fileRequest));
@@ -162,6 +185,11 @@ public class StamperUtils {
     public byte[] stampDocument(final InputStream inputStream, final ConnectionContext connectionContext)
             throws Exception {
         final URL serviceUrl = new URL(getConf().getStamperService() + getConf().getStamperDocument());
+        final String connectionContextJsonAsString = new ObjectMapper().writeValueAsString(connectionContext);
+        if (LOG.isDebugEnabled()) {
+            LOG.debug("serviceUrl: " + serviceUrl);
+            LOG.debug("connectionContextJsonAsString: " + connectionContextJsonAsString);
+        }
 
         final File uniqueTmpDir = createUniqueTmpDir();
         final File fileDocument = new File(uniqueTmpDir, "document.pdf");
@@ -169,7 +197,7 @@ public class StamperUtils {
 
         try {
             FileUtils.copyInputStreamToFile(inputStream, fileDocument);
-            FileUtils.writeStringToFile(fileContext, new ObjectMapper().writeValueAsString(connectionContext), "UTF-8");
+            FileUtils.writeStringToFile(fileContext, connectionContextJsonAsString, "UTF-8");
 
             final Collection<Part> parts = new ArrayList<>();
             parts.add(new FilePart("document", fileDocument));

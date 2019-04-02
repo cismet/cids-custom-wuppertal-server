@@ -25,10 +25,6 @@ import java.util.Properties;
 @Getter
 public class StamperConf {
 
-    //~ Static fields/initializers ---------------------------------------------
-
-    private static final int DEFAULT_MAX_BUFFER_SIZE = 1024;
-
     //~ Instance fields --------------------------------------------------------
 
     private final String tmpDir;
@@ -36,7 +32,7 @@ public class StamperConf {
     private final String stamperRequest;
     private final String stamperDocument;
     private final String stamperVerify;
-    private final int maxBufferSize;
+    private final String[] enabledFor;
 
     //~ Constructors -----------------------------------------------------------
 
@@ -53,7 +49,7 @@ public class StamperConf {
         stamperRequest = properties.getProperty("STAMPER_REQUEST");
         stamperDocument = properties.getProperty("STAMPER_DOCUMENT");
         stamperVerify = properties.getProperty("STAMPER_VERIFY");
-        maxBufferSize = (properties.getProperty("MAX_BUFFER_SIZE") != null)
-            ? Integer.parseInt(properties.getProperty("MAX_BUFFER_SIZE")) : DEFAULT_MAX_BUFFER_SIZE;
+        enabledFor = (properties.getProperty("ENABLED_FOR") != null) ? properties.getProperty("ENABLED_FOR").split(",")
+                                                                     : new String[0];
     }
 }

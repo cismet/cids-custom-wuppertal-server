@@ -50,8 +50,12 @@ public abstract class StampedJasperReportServerAction extends JasperReportServer
     @Override
     protected byte[] generateReport(final Map<String, Object> parameters, final JRDataSource dataSource)
             throws Exception {
-        try(final ByteArrayInputStream bis = new ByteArrayInputStream(super.generateReport(parameters, dataSource))) {
-            return ServerStamperUtils.getInstance().stampDocument(bis, getConnectionContext());
+        if (ServerStamperUtils.getInstance().isStampEnabledFor("action_" + getTaskName())) {
+            try(final ByteArrayInputStream bis = new ByteArrayInputStream(super.generateReport(parameters, dataSource))) {
+                return ServerStamperUtils.getInstance().stampDocument(bis, getConnectionContext());
+            }
+        } else {
+            return super.generateReport(parameters, dataSource);
         }
     }
 }

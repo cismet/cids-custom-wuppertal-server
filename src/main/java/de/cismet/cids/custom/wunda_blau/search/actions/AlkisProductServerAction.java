@@ -16,13 +16,17 @@ import Sirius.server.middleware.interfaces.domainserver.MetaService;
 import Sirius.server.middleware.interfaces.domainserver.MetaServiceStore;
 import Sirius.server.newuser.User;
 
+import org.apache.commons.io.IOUtils;
 import org.apache.log4j.Logger;
+
+import java.io.StringReader;
 
 import java.net.URL;
 
 import java.util.Date;
 
 import de.cismet.cids.custom.utils.ServerStamperUtils;
+import de.cismet.cids.custom.utils.alkis.AlkisProducts;
 import de.cismet.cids.custom.utils.alkis.ServerAlkisConf;
 import de.cismet.cids.custom.utils.alkis.ServerAlkisProducts;
 
@@ -30,7 +34,9 @@ import de.cismet.cids.server.actions.ServerAction;
 import de.cismet.cids.server.actions.ServerActionParameter;
 import de.cismet.cids.server.actions.UserAwareServerAction;
 
+import de.cismet.commons.security.AccessHandler;
 import de.cismet.commons.security.exceptions.BadHttpStatusCodeException;
+import de.cismet.commons.security.handler.SimpleHttpAccessHandler;
 
 import de.cismet.connectioncontext.ConnectionContext;
 import de.cismet.connectioncontext.ConnectionContextStore;
@@ -205,7 +211,7 @@ public class AlkisProductServerAction implements ConnectionContextStore, UserAwa
                 }
             }
             if (url != null) {
-                return doDownload(url, Body.LISTENNACHWEIS.equals(body));
+                return doDownload(url, Body.LISTENNACHWEIS.equals(body), (Body)body);
             } else {
                 throw new Exception("url could not be generated");
             }
@@ -235,20 +241,32 @@ public class AlkisProductServerAction implements ConnectionContextStore, UserAwa
      *
      * @param   url         DOCUMENT ME!
      * @param   postParams  requestParametersString DOCUMENT ME!
+     * @param   body        DOCUMENT ME!
      *
      * @return  DOCUMENT ME!
      *
      * @throws  Exception  DOCUMENT ME!
      */
-    private byte[] doDownload(final URL url, final boolean postParams) throws Exception {
+    private byte[] doDownload(final URL url, final boolean postParams, final Body body) throws Exception {
         final String queryString = url.getQuery();
         final String urlString = url.toExternalForm();
         final boolean fullUrl = (queryString == null) && postParams;
-        return ServerStamperUtils.getInstance()
-                    .stampRequest(
-                        fullUrl ? url : new URL(urlString.substring(0, urlString.lastIndexOf('?'))),
-                        fullUrl ? null : queryString,
-                        getConnectionContext());
+
+        final String documentType = "alkisrequest" + ((body != null) ? ("_" + body.toString().toLowerCase()) : "");
+        if (ServerStamperUtils.getInstance().isStampEnabledFor(documentType)) {
+            return ServerStamperUtils.getInstance()
+                        .stampRequest(
+                            fullUrl ? url : new URL(urlString.substring(0, urlString.lastIndexOf('?'))),
+                            fullUrl ? null : queryString,
+                            getConnectionContext());
+        } else {
+            return IOUtils.toByteArray(postParams
+                        ? new SimpleHttpAccessHandler().doRequest(
+                            url,
+                            new StringReader(queryString),
+                            AccessHandler.ACCESS_METHODS.POST_REQUEST,
+                            AlkisProducts.POST_HEADER) : new SimpleHttpAccessHandler().doRequest(url));
+        }
     }
 
     @Override
