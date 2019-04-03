@@ -20,6 +20,7 @@ import lombok.Getter;
 
 import org.apache.commons.httpclient.methods.multipart.FilePart;
 import org.apache.commons.httpclient.methods.multipart.Part;
+import org.apache.commons.httpclient.methods.multipart.StringPart;
 import org.apache.commons.io.FileUtils;
 import org.apache.commons.io.IOUtils;
 
@@ -37,7 +38,6 @@ import de.cismet.cids.custom.utils.alkis.AlkisProducts;
 import de.cismet.commons.security.handler.SimpleHttpAccessHandler;
 
 import de.cismet.connectioncontext.ConnectionContext;
-import org.apache.commons.httpclient.methods.multipart.StringPart;
 
 /**
  * DOCUMENT ME!
@@ -192,7 +192,7 @@ public class StamperUtils {
             LOG.debug("connectionContextJsonAsString: " + connectionContextJsonAsString);
         }
 
-        final File uniqueTmpDir = createUniqueTmpDir();        
+        final File uniqueTmpDir = createUniqueTmpDir();
         final File fileDocument = new File(uniqueTmpDir, "document.pdf");
         final File fileContext = new File(uniqueTmpDir, "context.json");
 
@@ -200,7 +200,7 @@ public class StamperUtils {
             FileUtils.copyInputStreamToFile(inputStream, fileDocument);
             FileUtils.writeStringToFile(fileContext, connectionContextJsonAsString, "UTF-8");
 
-            final Collection<Part> parts = new ArrayList<>();            
+            final Collection<Part> parts = new ArrayList<>();
             parts.add(new StringPart("password", getConf().getPassword()));
             parts.add(new FilePart("document", fileDocument));
             parts.add(new FilePart("context", fileContext));
