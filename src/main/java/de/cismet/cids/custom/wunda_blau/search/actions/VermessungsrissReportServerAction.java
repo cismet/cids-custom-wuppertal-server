@@ -21,13 +21,13 @@ import java.util.ArrayList;
 import java.util.Collection;
 import java.util.Map;
 
+import de.cismet.cids.custom.utils.StampedJasperReportServerAction;
 import de.cismet.cids.custom.utils.WundaBlauServerResources;
 import de.cismet.cids.custom.utils.alkis.VermessungRissReportBean;
 import de.cismet.cids.custom.utils.alkis.VermessungsRissReportHelper;
 
 import de.cismet.cids.dynamics.CidsBean;
 
-import de.cismet.cids.server.actions.JasperReportServerAction;
 import de.cismet.cids.server.actions.ServerAction;
 import de.cismet.cids.server.actions.ServerActionParameter;
 
@@ -45,7 +45,8 @@ import de.cismet.connectioncontext.ConnectionContextStore;
  * @version  $Revision$, $Date$
  */
 @org.openide.util.lookup.ServiceProvider(service = ServerAction.class)
-public class VermessungsrissReportServerAction extends JasperReportServerAction implements ConnectionContextStore {
+public class VermessungsrissReportServerAction extends StampedJasperReportServerAction
+        implements ConnectionContextStore {
 
     //~ Static fields/initializers ---------------------------------------------
 
@@ -98,7 +99,7 @@ public class VermessungsrissReportServerAction extends JasperReportServerAction 
                 }
             }
             if (reportMons != null) {
-                final Collection<CidsBean> selectedVermessungsrisse = new ArrayList<CidsBean>(reportMons.size());
+                final Collection<CidsBean> selectedVermessungsrisse = new ArrayList<>(reportMons.size());
                 for (final MetaObjectNode reportMon : reportMons) {
                     final CidsBean bean = getMetaService().getMetaObject(
                                 getUser(),
