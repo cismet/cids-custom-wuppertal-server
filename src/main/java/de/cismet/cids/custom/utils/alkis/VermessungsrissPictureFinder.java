@@ -313,7 +313,7 @@ public class VermessungsrissPictureFinder {
     public String getLinkFromLinkDocument(final boolean isGrenzNiederschrift, final String documentFileName) {
         InputStream urlStream = null;
         try {
-            final URL objectURL = new URL(documentFileName + LINKEXTENSION);
+            final URL objectURL = alkisConf.getDownloadUrlForDocument(documentFileName + LINKEXTENSION);
             if (simpleUrlAccessHandler.checkIfURLaccessible(objectURL)) {
                 urlStream = simpleUrlAccessHandler.doRequest(objectURL);
                 if (urlStream != null) {

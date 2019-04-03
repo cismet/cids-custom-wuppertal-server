@@ -32,6 +32,7 @@ public class StamperConf {
     private final String stamperRequest;
     private final String stamperDocument;
     private final String stamperVerify;
+    private final String password;
     private final String[] enabledFor;
 
     //~ Constructors -----------------------------------------------------------
@@ -49,6 +50,7 @@ public class StamperConf {
         stamperRequest = properties.getProperty("STAMPER_REQUEST");
         stamperDocument = properties.getProperty("STAMPER_DOCUMENT");
         stamperVerify = properties.getProperty("STAMPER_VERIFY");
+        password = properties.getProperty("STAMPER_PASSWORD");
         enabledFor = (properties.getProperty("ENABLED_FOR") != null) ? properties.getProperty("ENABLED_FOR").split(",")
                                                                      : new String[0];
     }
