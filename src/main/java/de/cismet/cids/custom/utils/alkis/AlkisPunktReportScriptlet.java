@@ -15,6 +15,8 @@ import net.sf.jasperreports.engine.JRDefaultScriptlet;
 
 import org.apache.log4j.Logger;
 
+import org.openide.util.Exceptions;
+
 import java.awt.Image;
 import java.awt.image.BufferedImage;
 import java.awt.image.RenderedImage;
@@ -71,11 +73,17 @@ public class AlkisPunktReportScriptlet extends JRDefaultScriptlet {
      * @return  DOCUMENT ME!
      */
     public static Boolean isImageAvailable(final String pointcode, final ExtendedAccessHandler extendedAccessHandler) {
-        final Collection<URL> validURLs = ServerAlkisProducts.getInstance().getCorrespondingPointURLs(pointcode);
+        final Collection<String> validDocuments = ServerAlkisProducts.getInstance()
+                    .getCorrespondingPointDocuments(pointcode);
 
-        for (final URL url : validURLs) {
-            if (extendedAccessHandler.checkIfURLaccessible(url)) {
-                return true;
+        for (final String document : validDocuments) {
+            final URL url;
+            try {
+                url = ServerAlkisConf.getInstance().getDownloadUrlForDocument(document);
+                if (extendedAccessHandler.checkIfURLaccessible(url)) {
+                    return true;
+                }
+            } catch (final Exception ex) {
             }
         }
 
@@ -102,12 +110,14 @@ public class AlkisPunktReportScriptlet extends JRDefaultScriptlet {
      * @return  DOCUMENT ME!
      */
     public static Image loadImage(final String pointcode, final ExtendedAccessHandler extendedAccessHandler) {
-        final Collection<URL> validURLs = ServerAlkisProducts.getInstance().getCorrespondingPointURLs(pointcode);
+        final Collection<String> validDocuments = ServerAlkisProducts.getInstance()
+                    .getCorrespondingPointDocuments(pointcode);
         String suffix = "";
 
         InputStream streamToReadFrom = null;
-        for (final URL url : validURLs) {
+        for (final String document : validDocuments) {
             try {
+                final URL url = ServerAlkisConf.getInstance().getDownloadUrlForDocument(document);
                 if (extendedAccessHandler.checkIfURLaccessible(url)) {
                     streamToReadFrom = extendedAccessHandler.doRequest(url);
                     suffix = url.toExternalForm().substring(url.toExternalForm().lastIndexOf('.'));
@@ -116,7 +126,7 @@ public class AlkisPunktReportScriptlet extends JRDefaultScriptlet {
                     }
                 }
             } catch (final Exception ex) {
-                LOG.warn("An exception occurred while opening URL '" + url.toExternalForm()
+                LOG.warn("An exception occurred while opening URL '" + document
                             + "'. Skipping this url.",
                     ex);
             }
