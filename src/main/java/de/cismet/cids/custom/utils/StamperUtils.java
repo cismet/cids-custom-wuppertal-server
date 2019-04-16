@@ -23,14 +23,19 @@ import org.apache.commons.httpclient.methods.multipart.Part;
 import org.apache.commons.httpclient.methods.multipart.StringPart;
 import org.apache.commons.io.FileUtils;
 import org.apache.commons.io.IOUtils;
+import org.apache.commons.lang.exception.ExceptionUtils;
 
 import java.io.File;
 import java.io.InputStream;
 
 import java.net.URL;
 
+import java.text.DateFormat;
+import java.text.SimpleDateFormat;
+
 import java.util.ArrayList;
 import java.util.Collection;
+import java.util.Date;
 import java.util.UUID;
 
 import de.cismet.cids.custom.utils.alkis.AlkisProducts;
@@ -50,6 +55,7 @@ public class StamperUtils {
     //~ Static fields/initializers ---------------------------------------------
 
     private static final org.apache.log4j.Logger LOG = org.apache.log4j.Logger.getLogger(StamperUtils.class);
+    private static final DateFormat DATE_FORMAT_SKIPPING_LOG = new SimpleDateFormat("dd.MM.yyyy - HH:mm:ss");
 
     //~ Instance fields --------------------------------------------------------
 
@@ -120,6 +126,78 @@ public class StamperUtils {
     /**
      * DOCUMENT ME!
      *
+     * @return  DOCUMENT ME!
+     */
+    public boolean isSkippingOnErrorEnabled() {
+        final String onErrorSkipAndLogInto = getConf().getOnErrorSkipAndLogInto();
+        return (onErrorSkipAndLogInto != null) && !onErrorSkipAndLogInto.trim().isEmpty();
+    }
+
+    /**
+     * DOCUMENT ME!
+     *
+     * @return  DOCUMENT ME!
+     */
+    public File getSkippingLogFile() {
+        if (isSkippingOnErrorEnabled()) {
+            return new File(getConf().getOnErrorSkipAndLogInto());
+        } else {
+            return null;
+        }
+    }
+
+    /**
+     * DOCUMENT ME!
+     *
+     * @param   documentType       DOCUMENT ME!
+     * @param   url                DOCUMENT ME!
+     * @param   postParams         DOCUMENT ME!
+     * @param   fallback           DOCUMENT ME!
+     * @param   connectionContext  DOCUMENT ME!
+     *
+     * @return  DOCUMENT ME!
+     *
+     * @throws  Exception  DOCUMENT ME!
+     */
+    public byte[] stampRequest(final String documentType,
+            final URL url,
+            final String postParams,
+            final StamperFallback fallback,
+            final ConnectionContext connectionContext) throws Exception {
+        if (isStampEnabledFor(documentType)) {
+            try {
+                return stampRequest(url, postParams, connectionContext);
+            } catch (final Exception ex) {
+                if (isSkippingOnErrorEnabled()) {
+                    final File skippingLogFile = getSkippingLogFile();
+                    LOG.info("Error while stamping request. skipping is enabled. Logging into "
+                                + skippingLogFile.getCanonicalPath(),
+                        ex);
+                    final StringBuffer sb = new StringBuffer();
+                    sb.append(DATE_FORMAT_SKIPPING_LOG.format(new Date()))
+                            .append(" | stampRequest(\n\t")
+                            .append(documentType)
+                            .append(",\n\t")
+                            .append(url.toExternalForm())
+                            .append(",\n\t")
+                            .append(postParams)
+                            .append("\n) => ")
+                            .append(ExceptionUtils.getStackTrace(ex))
+                            .append("\n");
+                    FileUtils.writeStringToFile(skippingLogFile, sb.toString(), "UTF-8", true);
+                    return fallback.createProduct();
+                } else {
+                    throw ex;
+                }
+            }
+        } else {
+            return fallback.createProduct();
+        }
+    }
+
+    /**
+     * DOCUMENT ME!
+     *
      * @param   url                DOCUMENT ME!
      * @param   postParams         requestParameter DOCUMENT ME!
      * @param   connectionContext  DOCUMENT ME!
@@ -128,7 +206,7 @@ public class StamperUtils {
      *
      * @throws  Exception  DOCUMENT ME!
      */
-    public byte[] stampRequest(final URL url,
+    private byte[] stampRequest(final URL url,
             final String postParams,
             final ConnectionContext connectionContext) throws Exception {
         final URL serviceUrl = new URL(getConf().getStamperService() + getConf().getStamperRequest());
@@ -176,6 +254,48 @@ public class StamperUtils {
     /**
      * DOCUMENT ME!
      *
+     * @param   documentType       DOCUMENT ME!
+     * @param   inputStream        DOCUMENT ME!
+     * @param   fallback           DOCUMENT ME!
+     * @param   connectionContext  DOCUMENT ME!
+     *
+     * @return  DOCUMENT ME!
+     *
+     * @throws  Exception  DOCUMENT ME!
+     */
+    public byte[] stampDocument(final String documentType,
+            final InputStream inputStream,
+            final StamperFallback fallback,
+            final ConnectionContext connectionContext) throws Exception {
+        if (isStampEnabledFor(documentType)) {
+            try {
+                return stampDocument(inputStream, connectionContext);
+            } catch (final Exception ex) {
+                if (isSkippingOnErrorEnabled()) {
+                    final File skippingLogFile = getSkippingLogFile();
+                    final StringBuffer sb = new StringBuffer();
+                    sb.append(DATE_FORMAT_SKIPPING_LOG.format(new Date()))
+                            .append(" | stampDocument(\n\t")
+                            .append(documentType)
+                            .append(",\n\t")
+                            .append(inputStream)
+                            .append("\n) => ")
+                            .append(ExceptionUtils.getStackTrace(ex))
+                            .append("\n");
+                    FileUtils.writeStringToFile(skippingLogFile, sb.toString(), "UTF-8", true);
+                    return fallback.createProduct();
+                } else {
+                    throw ex;
+                }
+            }
+        } else {
+            return fallback.createProduct();
+        }
+    }
+
+    /**
+     * DOCUMENT ME!
+     *
      * @param   inputStream        DOCUMENT ME!
      * @param   connectionContext  DOCUMENT ME!
      *
@@ -183,7 +303,7 @@ public class StamperUtils {
      *
      * @throws  Exception  java.lang.Exception
      */
-    public byte[] stampDocument(final InputStream inputStream, final ConnectionContext connectionContext)
+    private byte[] stampDocument(final InputStream inputStream, final ConnectionContext connectionContext)
             throws Exception {
         final URL serviceUrl = new URL(getConf().getStamperService() + getConf().getStamperDocument());
         final String connectionContextJsonAsString = new ObjectMapper().writeValueAsString(connectionContext);
@@ -212,6 +332,27 @@ public class StamperUtils {
             fileDocument.delete();
             uniqueTmpDir.delete();
         }
+    }
+
+    //~ Inner Interfaces -------------------------------------------------------
+
+    /**
+     * DOCUMENT ME!
+     *
+     * @version  $Revision$, $Date$
+     */
+    public interface StamperFallback {
+
+        //~ Methods ------------------------------------------------------------
+
+        /**
+         * DOCUMENT ME!
+         *
+         * @return  DOCUMENT ME!
+         *
+         * @throws  Exception  DOCUMENT ME!
+         */
+        byte[] createProduct() throws Exception;
     }
 
     //~ Inner Classes ----------------------------------------------------------
