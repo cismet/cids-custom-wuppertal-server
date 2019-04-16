@@ -34,6 +34,7 @@ public class StamperConf {
     private final String stamperVerify;
     private final String password;
     private final String[] enabledFor;
+    private final String onErrorSkipAndLogInto;
 
     //~ Constructors -----------------------------------------------------------
 
@@ -53,5 +54,6 @@ public class StamperConf {
         password = properties.getProperty("STAMPER_PASSWORD");
         enabledFor = (properties.getProperty("ENABLED_FOR") != null) ? properties.getProperty("ENABLED_FOR").split(",")
                                                                      : new String[0];
+        onErrorSkipAndLogInto = properties.getProperty("ON_ERROR_SKIP_AND_LOG_INTO");
     }
 }

@@ -26,6 +26,7 @@ import java.net.URL;
 import java.util.Date;
 
 import de.cismet.cids.custom.utils.ServerStamperUtils;
+import de.cismet.cids.custom.utils.StamperUtils;
 import de.cismet.cids.custom.utils.alkis.AlkisProducts;
 import de.cismet.cids.custom.utils.alkis.ServerAlkisConf;
 import de.cismet.cids.custom.utils.alkis.ServerAlkisProducts;
@@ -253,20 +254,26 @@ public class AlkisProductServerAction implements ConnectionContextStore, UserAwa
         final boolean fullUrl = (queryString == null) && postParams;
 
         final String documentType = "alkisrequest" + ((body != null) ? ("_" + body.toString().toLowerCase()) : "");
-        if (ServerStamperUtils.getInstance().isStampEnabledFor(documentType)) {
-            return ServerStamperUtils.getInstance()
-                        .stampRequest(
-                            fullUrl ? url : new URL(urlString.substring(0, urlString.lastIndexOf('?'))),
-                            fullUrl ? null : queryString,
-                            getConnectionContext());
-        } else {
-            return IOUtils.toByteArray(postParams
-                        ? new SimpleHttpAccessHandler().doRequest(
-                            url,
-                            new StringReader(queryString),
-                            AccessHandler.ACCESS_METHODS.POST_REQUEST,
-                            AlkisProducts.POST_HEADER) : new SimpleHttpAccessHandler().doRequest(url));
-        }
+        return ServerStamperUtils.getInstance()
+                    .stampRequest(
+                        documentType,
+                        fullUrl ? url : new URL(urlString.substring(0, urlString.lastIndexOf('?'))),
+                        fullUrl ? null : queryString,
+                        new StamperUtils.StamperFallback() {
+
+                            @Override
+                            public byte[] createProduct() throws Exception {
+                                return IOUtils.toByteArray(
+                                        postParams
+                                            ? new SimpleHttpAccessHandler().doRequest(
+                                                url,
+                                                new StringReader(queryString),
+                                                AccessHandler.ACCESS_METHODS.POST_REQUEST,
+                                                AlkisProducts.POST_HEADER)
+                                            : new SimpleHttpAccessHandler().doRequest(url));
+                            }
+                        },
+                        getConnectionContext());
     }
 
     @Override
