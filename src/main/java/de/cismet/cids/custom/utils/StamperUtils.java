@@ -36,6 +36,7 @@ import java.text.SimpleDateFormat;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.Date;
+import java.util.HashMap;
 import java.util.UUID;
 
 import de.cismet.cids.custom.utils.alkis.AlkisProducts;
@@ -56,6 +57,7 @@ public class StamperUtils {
 
     private static final org.apache.log4j.Logger LOG = org.apache.log4j.Logger.getLogger(StamperUtils.class);
     private static final DateFormat DATE_FORMAT_SKIPPING_LOG = new SimpleDateFormat("dd.MM.yyyy - HH:mm:ss");
+    private static final DateFormat DATE_FORMAT_STAMPER_CONTEXT = new SimpleDateFormat("dd.MM.yyyy - HH:mm:ss");
 
     //~ Instance fields --------------------------------------------------------
 
@@ -166,7 +168,10 @@ public class StamperUtils {
             final ConnectionContext connectionContext) throws Exception {
         if (isStampEnabledFor(documentType)) {
             try {
-                return stampRequest(url, postParams, connectionContext);
+                return stampRequest(
+                        url,
+                        postParams,
+                        createStamperContext(StamperContext.Type.Request, documentType, connectionContext));
             } catch (final Exception ex) {
                 if (isSkippingOnErrorEnabled()) {
                     final File skippingLogFile = getSkippingLogFile();
@@ -198,9 +203,9 @@ public class StamperUtils {
     /**
      * DOCUMENT ME!
      *
-     * @param   url                DOCUMENT ME!
-     * @param   postParams         requestParameter DOCUMENT ME!
-     * @param   connectionContext  DOCUMENT ME!
+     * @param   url             DOCUMENT ME!
+     * @param   postParams      requestParameter DOCUMENT ME!
+     * @param   stamperContext  DOCUMENT ME!
      *
      * @return  DOCUMENT ME!
      *
@@ -208,7 +213,7 @@ public class StamperUtils {
      */
     private byte[] stampRequest(final URL url,
             final String postParams,
-            final ConnectionContext connectionContext) throws Exception {
+            final StamperContext stamperContext) throws Exception {
         final URL serviceUrl = new URL(getConf().getStamperService() + getConf().getStamperRequest());
 
         final OptionsJson optionsJson;
@@ -222,7 +227,7 @@ public class StamperUtils {
         }
 
         final String optionsJsonAsString = new ObjectMapper().writeValueAsString(new FetchJson(url, optionsJson));
-        final String connectionContextJsonAsString = new ObjectMapper().writeValueAsString(connectionContext);
+        final String connectionContextJsonAsString = new ObjectMapper().writeValueAsString(stamperContext);
         if (LOG.isDebugEnabled()) {
             LOG.debug("serviceUrl: " + serviceUrl);
             LOG.debug("optionsJsonAsString: " + optionsJsonAsString);
@@ -269,7 +274,9 @@ public class StamperUtils {
             final ConnectionContext connectionContext) throws Exception {
         if (isStampEnabledFor(documentType)) {
             try {
-                return stampDocument(inputStream, connectionContext);
+                return stampDocument(
+                        inputStream,
+                        createStamperContext(StamperContext.Type.Document, documentType, connectionContext));
             } catch (final Exception ex) {
                 if (isSkippingOnErrorEnabled()) {
                     final File skippingLogFile = getSkippingLogFile();
@@ -296,17 +303,16 @@ public class StamperUtils {
     /**
      * DOCUMENT ME!
      *
-     * @param   inputStream        DOCUMENT ME!
-     * @param   connectionContext  DOCUMENT ME!
+     * @param   inputStream     DOCUMENT ME!
+     * @param   stamperContext  connectionContext DOCUMENT ME!
      *
      * @return  DOCUMENT ME!
      *
      * @throws  Exception  java.lang.Exception
      */
-    private byte[] stampDocument(final InputStream inputStream, final ConnectionContext connectionContext)
-            throws Exception {
+    private byte[] stampDocument(final InputStream inputStream, final StamperContext stamperContext) throws Exception {
         final URL serviceUrl = new URL(getConf().getStamperService() + getConf().getStamperDocument());
-        final String connectionContextJsonAsString = new ObjectMapper().writeValueAsString(connectionContext);
+        final String connectionContextJsonAsString = new ObjectMapper().writeValueAsString(stamperContext);
         if (LOG.isDebugEnabled()) {
             LOG.debug("serviceUrl: " + serviceUrl);
             LOG.debug("connectionContextJsonAsString: " + connectionContextJsonAsString);
@@ -332,6 +338,30 @@ public class StamperUtils {
             fileDocument.delete();
             uniqueTmpDir.delete();
         }
+    }
+
+    /**
+     * DOCUMENT ME!
+     *
+     * @param   contextType        DOCUMENT ME!
+     * @param   documentType       DOCUMENT ME!
+     * @param   connectionContext  DOCUMENT ME!
+     *
+     * @return  DOCUMENT ME!
+     */
+    private static StamperContext createStamperContext(final StamperContext.Type contextType,
+            final String documentType,
+            final ConnectionContext connectionContext) {
+        final HashMap<String, Object> infoFields = connectionContext.getInfoFields();
+        infoFields.remove(ConnectionContext.FIELD__CLIENT_IP);
+        final StamperContext stamperContext = new StamperContext(
+                DATE_FORMAT_STAMPER_CONTEXT.format(new Date()),
+                contextType,
+                documentType,
+                new StamperContextInfoConnectionContext(
+                    connectionContext.getCategory(),
+                    infoFields));
+        return stamperContext;
     }
 
     //~ Inner Interfaces -------------------------------------------------------
@@ -415,5 +445,51 @@ public class StamperUtils {
 
         @JsonProperty("Content-Type")
         private final String contentType;
+    }
+
+    /**
+     * DOCUMENT ME!
+     *
+     * @version  $Revision$, $Date$
+     */
+    @Getter
+    @AllArgsConstructor
+    public static class StamperContext {
+
+        //~ Enums --------------------------------------------------------------
+
+        /**
+         * DOCUMENT ME!
+         *
+         * @version  $Revision$, $Date$
+         */
+        public enum Type {
+
+            //~ Enum constants -------------------------------------------------
+
+            Request, Document
+        }
+
+        //~ Instance fields ----------------------------------------------------
+
+        private final String date;
+        private final Type type;
+        private final String documentType;
+        private final Object info;
+    }
+
+    /**
+     * DOCUMENT ME!
+     *
+     * @version  $Revision$, $Date$
+     */
+    @Getter
+    @AllArgsConstructor
+    public static class StamperContextInfoConnectionContext {
+
+        //~ Instance fields ----------------------------------------------------
+
+        private final ConnectionContext.Category category;
+        private final HashMap<String, Object> infoFields;
     }
 }
