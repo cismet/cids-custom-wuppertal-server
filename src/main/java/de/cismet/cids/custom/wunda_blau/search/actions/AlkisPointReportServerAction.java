@@ -23,12 +23,12 @@ import java.util.Collection;
 import java.util.HashMap;
 import java.util.Map;
 
+import de.cismet.cids.custom.utils.StampedJasperReportServerAction;
 import de.cismet.cids.custom.utils.WundaBlauServerResources;
 import de.cismet.cids.custom.utils.alkis.AlkisPointReportBean;
 
 import de.cismet.cids.dynamics.CidsBean;
 
-import de.cismet.cids.server.actions.JasperReportServerAction;
 import de.cismet.cids.server.actions.ServerAction;
 import de.cismet.cids.server.actions.ServerActionParameter;
 
@@ -44,7 +44,7 @@ import de.cismet.connectioncontext.ConnectionContextStore;
  * @version  $Revision$, $Date$
  */
 @org.openide.util.lookup.ServiceProvider(service = ServerAction.class)
-public class AlkisPointReportServerAction extends JasperReportServerAction implements ConnectionContextStore {
+public class AlkisPointReportServerAction extends StampedJasperReportServerAction implements ConnectionContextStore {
 
     //~ Static fields/initializers ---------------------------------------------
 
@@ -88,7 +88,7 @@ public class AlkisPointReportServerAction extends JasperReportServerAction imple
                 }
             }
             if (reportMons != null) {
-                final Collection<CidsBean> cidsBeans = new ArrayList<CidsBean>(reportMons.size());
+                final Collection<CidsBean> cidsBeans = new ArrayList<>(reportMons.size());
                 for (final MetaObjectNode reportMon : reportMons) {
                     final CidsBean cidsBean = getMetaService().getMetaObject(
                                 getUser(),
@@ -98,12 +98,12 @@ public class AlkisPointReportServerAction extends JasperReportServerAction imple
                                 .getBean();
                     cidsBeans.add(cidsBean);
                 }
-                final Collection<AlkisPointReportBean> reportBeans = new ArrayList<AlkisPointReportBean>(
+                final Collection<AlkisPointReportBean> reportBeans = new ArrayList<>(
                         reportMons.size());
                 reportBeans.add(new AlkisPointReportBean(cidsBeans));
                 final JRBeanCollectionDataSource dataSource = new JRBeanCollectionDataSource(reportBeans);
 
-                final Map<String, Object> parameters = new HashMap<String, Object>();
+                final Map<String, Object> parameters = new HashMap<>();
                 parameters.put(
                     "SUBREPORT_DIR",
                     DomainServerImpl.getServerProperties().getServerResourcesBasePath()
