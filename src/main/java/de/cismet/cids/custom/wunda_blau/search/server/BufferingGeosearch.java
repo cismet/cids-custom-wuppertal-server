@@ -43,8 +43,8 @@ public final class BufferingGeosearch extends DefaultGeoSearch {
     @Override
     public PreparableStatement getSearchSql(final String domainKey) {
         final String sql = ""                                                                                      // NOI18N
-                    + "SELECT DISTINCT i.class_id , "                                                              // NOI18N
-                    + "                i.object_id, "                                                              // NOI18N
+                    + "SELECT DISTINCT i.class_id ocid, "                                                          // NOI18N
+                    + "                i.object_id oid, "                                                          // NOI18N
                     + "                s.stringrep,s.geometry,s.lightweight_json "                                 // NOI18N
                     + "FROM            geom g, "                                                                   // NOI18N
                     + "                cs_attr_object_derived i "                                                  // NOI18N
