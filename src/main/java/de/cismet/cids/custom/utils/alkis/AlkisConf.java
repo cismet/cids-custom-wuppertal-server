@@ -70,7 +70,7 @@ public abstract class AlkisConf {
      *
      * @param  serviceProperties  DOCUMENT ME!
      */
-    public AlkisConf(final Properties serviceProperties) {
+    protected AlkisConf(final Properties serviceProperties) {
         credentialsFile = serviceProperties.getProperty("CREDENTIALS_FILE");
         service = serviceProperties.getProperty("SERVICE");
         server = serviceProperties.getProperty("SERVER");

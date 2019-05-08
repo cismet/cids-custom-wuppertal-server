@@ -55,8 +55,8 @@ public enum WundaBlauServerResources {
 
     VCM_PROPERTIES(new TextServerResource("/virtualcitymap/vcm.properties")),
 
-    TIFFER_ACTION_CFG(new TextServerResource("/tiffer/tifferAction.cfg")),
     IMAGE_ANNOTATOR_FONT(new BinaryServerResource("/tiffer/Calibri_Bold.ttf")),
+    STADTBILDER_CONF_PROPERTIES(new TextServerResource("/stadtbilder/sb_conf.properties")),
 
     ALKIS_CONF(new TextServerResource("/alkis/alkis_conf.properties")),
     ALKIS_PRODUCTS_PROPERTIES(new TextServerResource("/alkis/alkis_products.properties")),
@@ -81,7 +81,11 @@ public enum WundaBlauServerResources {
     PNR_TEMPLATE_PROLONG(new TextServerResource("/pointnumberreservation/A_Verlaengern.xml")),
     PNR_TEMPLATE_PROLONG_SUB(new TextServerResource("/pointnumberreservation/A_Verlaengern__Sub.xml")),
     PNR_TEMPLATE_RESERVIERUNG(new TextServerResource("/pointnumberreservation/A_reservierung.xml")),
-    PNR_TEMPLATE_RESERVIERUNG_SW(new TextServerResource("/pointnumberreservation/A_reservierung_startwert.xml"));
+    PNR_TEMPLATE_RESERVIERUNG_SW(new TextServerResource("/pointnumberreservation/A_reservierung_startwert.xml")),
+
+    POI_CONF_PROPERTIES(new TextServerResource("/poi/poi_conf.properties")),
+
+    STAMPER_CONF_PROPERTIES(new TextServerResource("/stamper/stamper_conf.properties"));
 
     //~ Instance fields --------------------------------------------------------
 
