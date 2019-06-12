@@ -17,7 +17,6 @@ import java.sql.DriverManager;
 import java.sql.PreparedStatement;
 import java.sql.ResultSet;
 import java.sql.SQLException;
-import java.sql.Timestamp;
 
 /**
  * DOCUMENT ME!
@@ -38,7 +37,8 @@ public class FormSolutionsMySqlHelper {
 
     private final PreparedStatement preparedSelectStatement;
     private final PreparedStatement preparedInsertStatement;
-    private final PreparedStatement preparedUpdateProduktStatement;
+    private final PreparedStatement preparedInsertCompleteStatement;
+    private final PreparedStatement preparedUpdateProductStatement;
     private final PreparedStatement preparedUpdateInfoStatement;
     private final PreparedStatement preparedUpdateStatusStatement;
 
@@ -59,7 +59,9 @@ public class FormSolutionsMySqlHelper {
                 "SELECT id FROM bestellung WHERE transid = ?;");
         this.preparedInsertStatement = connect.prepareStatement(
                 "INSERT INTO bestellung (id, transid, status, flurstueck, produkt, nur_download, email, dokument_dateipfad, dokument_dateiname, last_update) VALUES (default, ?, ?, null, null, null, null, null, null, now());");
-        this.preparedUpdateProduktStatement = connect.prepareStatement(
+        this.preparedInsertCompleteStatement = connect.prepareStatement(
+                "INSERT INTO bestellung (id, transid, status, flurstueck, produkt, nur_download, email, dokument_dateipfad, dokument_dateiname, last_update) VALUES (default, ?, ?, ?, ?, ?, ?, ?, ?, now());");
+        this.preparedUpdateProductStatement = connect.prepareStatement(
                 "UPDATE bestellung SET status = ?, last_update = now(), dokument_dateipfad = ?, dokument_dateiname = ? WHERE transid = ?;");
         this.preparedUpdateInfoStatement = connect.prepareStatement(
                 "UPDATE bestellung SET status = ?, last_update = now(), flurstueck = ?, produkt = ?, nur_download = ?, email = ? WHERE transid = ?;");
@@ -103,6 +105,40 @@ public class FormSolutionsMySqlHelper {
     /**
      * DOCUMENT ME!
      *
+     * @param   transid         DOCUMENT ME!
+     * @param   status          DOCUMENT ME!
+     * @param   landparcelcode  DOCUMENT ME!
+     * @param   product         DOCUMENT ME!
+     * @param   downloadOnly    DOCUMENT ME!
+     * @param   email           DOCUMENT ME!
+     * @param   filePath        DOCUMENT ME!
+     * @param   origName        DOCUMENT ME!
+     *
+     * @throws  SQLException  DOCUMENT ME!
+     */
+    public void insertProductMySql(final String transid,
+            final int status,
+            final String landparcelcode,
+            final String product,
+            final boolean downloadOnly,
+            final String email,
+            final String filePath,
+            final String origName) throws SQLException {
+        int index = 1;
+        preparedInsertCompleteStatement.setString(index++, transid);
+        preparedInsertCompleteStatement.setInt(index++, status);
+        preparedInsertCompleteStatement.setString(index++, landparcelcode);
+        preparedInsertCompleteStatement.setString(index++, product);
+        preparedInsertCompleteStatement.setBoolean(index++, downloadOnly);
+        preparedInsertCompleteStatement.setString(index++, email);
+        preparedInsertCompleteStatement.setString(index++, filePath);
+        preparedInsertCompleteStatement.setString(index++, origName);
+        preparedInsertCompleteStatement.executeUpdate();
+    }
+
+    /**
+     * DOCUMENT ME!
+     *
      * @param   transid  DOCUMENT ME!
      * @param   status   DOCUMENT ME!
      *
@@ -121,22 +157,22 @@ public class FormSolutionsMySqlHelper {
      * @param   transid         DOCUMENT ME!
      * @param   status          DOCUMENT ME!
      * @param   landparcelcode  DOCUMENT ME!
-     * @param   produkt         DOCUMENT ME!
+     * @param   product         DOCUMENT ME!
      * @param   downloadOnly    DOCUMENT ME!
      * @param   email           DOCUMENT ME!
      *
      * @throws  SQLException  DOCUMENT ME!
      */
-    public void updateEmail(final String transid,
+    public void updateRequest(final String transid,
             final int status,
             final String landparcelcode,
-            final String produkt,
+            final String product,
             final boolean downloadOnly,
             final String email) throws SQLException {
         int index = 1;
         preparedUpdateInfoStatement.setInt(index++, status);
         preparedUpdateInfoStatement.setString(index++, landparcelcode);
-        preparedUpdateInfoStatement.setString(index++, produkt);
+        preparedUpdateInfoStatement.setString(index++, product);
         preparedUpdateInfoStatement.setBoolean(index++, downloadOnly);
         preparedUpdateInfoStatement.setString(index++, email);
         preparedUpdateInfoStatement.setString(index++, transid);
@@ -153,14 +189,14 @@ public class FormSolutionsMySqlHelper {
      *
      * @throws  SQLException  DOCUMENT ME!
      */
-    public void updateProdukt(final String transid, final int status, final String filePath, final String origName)
+    public void updateProduct(final String transid, final int status, final String filePath, final String origName)
             throws SQLException {
         int index = 1;
-        preparedUpdateProduktStatement.setInt(index++, status);
-        preparedUpdateProduktStatement.setString(index++, filePath);
-        preparedUpdateProduktStatement.setString(index++, origName);
-        preparedUpdateProduktStatement.setString(index++, transid);
-        preparedUpdateProduktStatement.executeUpdate();
+        preparedUpdateProductStatement.setInt(index++, status);
+        preparedUpdateProductStatement.setString(index++, filePath);
+        preparedUpdateProductStatement.setString(index++, origName);
+        preparedUpdateProductStatement.setString(index++, transid);
+        preparedUpdateProductStatement.executeUpdate();
     }
 
     /**
