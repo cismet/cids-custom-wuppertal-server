@@ -17,6 +17,8 @@ import com.fasterxml.jackson.annotation.JsonProperty;
 
 import lombok.Getter;
 
+import java.util.HashMap;
+
 import de.cismet.cids.custom.utils.berechtigungspruefung.BerechtigungspruefungBillingDownloadInfo;
 
 /**
@@ -42,6 +44,7 @@ public class BerechtigungspruefungBescheinigungDownloadInfo extends Berechtigung
 
     @JsonProperty private final String protokoll;
     @JsonProperty private final BerechtigungspruefungBescheinigungInfo bescheinigungsInfo;
+    @JsonProperty private final HashMap<String, Integer> amounts;
 
     //~ Constructors -----------------------------------------------------------
 
@@ -52,13 +55,15 @@ public class BerechtigungspruefungBescheinigungDownloadInfo extends Berechtigung
      * @param  produktbezeichnung  DOCUMENT ME!
      * @param  protokoll           DOCUMENT ME!
      * @param  bescheinigungsInfo  DOCUMENT ME!
+     * @param  amounts             DOCUMENT ME!
      */
     public BerechtigungspruefungBescheinigungDownloadInfo(
             final String auftragsnummer,
             final String produktbezeichnung,
             final String protokoll,
-            final BerechtigungspruefungBescheinigungInfo bescheinigungsInfo) {
-        this(PRODUKT_TYP, auftragsnummer, produktbezeichnung, null, protokoll, bescheinigungsInfo);
+            final BerechtigungspruefungBescheinigungInfo bescheinigungsInfo,
+            final HashMap<String, Integer> amounts) {
+        this(PRODUKT_TYP, auftragsnummer, produktbezeichnung, null, protokoll, bescheinigungsInfo, amounts);
     }
 
     /**
@@ -70,15 +75,18 @@ public class BerechtigungspruefungBescheinigungDownloadInfo extends Berechtigung
      * @param  billingId           DOCUMENT ME!
      * @param  protokoll           DOCUMENT ME!
      * @param  bescheinigungsInfo  DOCUMENT ME!
+     * @param  amounts             DOCUMENT ME!
      */
     public BerechtigungspruefungBescheinigungDownloadInfo(@JsonProperty("produktTyp") final String produktTyp,
             @JsonProperty("auftragsnummer") final String auftragsnummer,
             @JsonProperty("produktbezeichnung") final String produktbezeichnung,
             @JsonProperty("billingId") final Integer billingId,
             @JsonProperty("protokoll") final String protokoll,
-            @JsonProperty("bescheinigungsInfo") final BerechtigungspruefungBescheinigungInfo bescheinigungsInfo) {
+            @JsonProperty("bescheinigungsInfo") final BerechtigungspruefungBescheinigungInfo bescheinigungsInfo,
+            @JsonProperty("amounts") final HashMap<String, Integer> amounts) {
         super(produktTyp, auftragsnummer, produktbezeichnung, billingId);
         this.protokoll = protokoll;
         this.bescheinigungsInfo = bescheinigungsInfo;
+        this.amounts = amounts;
     }
 }
