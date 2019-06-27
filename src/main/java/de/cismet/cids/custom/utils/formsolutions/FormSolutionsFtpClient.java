@@ -26,18 +26,18 @@ import static org.apache.commons.net.ftp.FTP.BINARY_FILE_TYPE;
  * @author   jruiz
  * @version  $Revision$, $Date$
  */
-public class FormSolutionFtpClient {
+public class FormSolutionsFtpClient {
 
     //~ Static fields/initializers ---------------------------------------------
 
-    private static FormSolutionFtpClient INSTANCE;
+    private static FormSolutionsFtpClient INSTANCE;
 
     //~ Constructors -----------------------------------------------------------
 
     /**
      * Creates a new FormSolutionBestellungFtpClient object.
      */
-    private FormSolutionFtpClient() {
+    private FormSolutionsFtpClient() {
     }
 
     //~ Methods ----------------------------------------------------------------
@@ -100,9 +100,9 @@ public class FormSolutionFtpClient {
      *
      * @return  DOCUMENT ME!
      */
-    public static FormSolutionFtpClient getInstance() {
+    public static FormSolutionsFtpClient getInstance() {
         if (INSTANCE == null) {
-            INSTANCE = new FormSolutionFtpClient();
+            INSTANCE = new FormSolutionsFtpClient();
         }
         return INSTANCE;
     }
