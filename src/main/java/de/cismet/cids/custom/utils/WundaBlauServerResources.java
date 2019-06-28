@@ -29,8 +29,8 @@ public enum WundaBlauServerResources {
 
     //~ Enum constants ---------------------------------------------------------
 
+    BAULASTBESCHEINIGUNG_JASPER(new JasperReportServerResource("/reports/baulastbescheinigung.jasper")),
     VERMESSUNGSRISSE_JASPER(new JasperReportServerResource("/reports/vermessungsrisse.jasper")),
-    POTENZIALFLAECHEN_JASPER(new JasperReportServerResource("/potenzialflaechen/potenzialflaechen_full.jasper")),
     VERMESSUNGSRISSE_DOCUMENT_JASPER(new JasperReportServerResource("/reports/vermessungsrisse_document.jasper")),
     VERMESSUNGSRISSE_OVERVIEW_JASPER(new JasperReportServerResource("/reports/vermessungsrisse_overview.jasper")),
     APMAPS_JASPER(new JasperReportServerResource("/reports/apmaps.jasper")),
@@ -42,6 +42,7 @@ public enum WundaBlauServerResources {
     FS_RECHNUNG_JASPER(new JasperReportServerResource("/reports/bestellung_rechnung.jasper")),
     FS_RECHNUNG_RUECKSEITE_JASPER(new JasperReportServerResource("/reports/bestellung_rechnung_rueckseite.jasper")),
 
+    POTENZIALFLAECHEN_JASPER(new JasperReportServerResource("/potenzialflaechen/potenzialflaechen_full.jasper")),
     BUTLER_PROPERTIES(new TextServerResource("/butler/butler.properties")),
 
     NAS_SERVER_PROPERTIES(new TextServerResource("/nas/nasServer_conf.properties")),
