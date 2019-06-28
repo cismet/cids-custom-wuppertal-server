@@ -46,6 +46,7 @@ public class FormSolutionsProperties {
     private final String cidsPassword;
     private final String urlAuftragslisteSgkFs;
     private final String urlAuftragslisteAbkFs;
+    private final String urlAuftragslisteBabFs;
     private final String urlAuftragFs;
     private final String urlAuftragDeleteFs;
     private final String urlStatusUpdate;
@@ -81,6 +82,7 @@ public class FormSolutionsProperties {
         cidsPassword = properties.getProperty("CIDS_PASSWORD");
         urlAuftragslisteSgkFs = properties.getProperty("URL_AUFTRAGSLISTE_SGK_FS");
         urlAuftragslisteAbkFs = properties.getProperty("URL_AUFTRAGSLISTE_ABK_FS");
+        urlAuftragslisteBabFs = properties.getProperty("URL_AUFTRAGSLISTE_BAB_FS");
         urlAuftragFs = properties.getProperty("URL_AUFTRAG_FS");
         urlAuftragDeleteFs = properties.getProperty("URL_AUFTRAG_DELETE_FS");
         urlStatusUpdate = properties.getProperty("URL_STATUS_UPDATE");
