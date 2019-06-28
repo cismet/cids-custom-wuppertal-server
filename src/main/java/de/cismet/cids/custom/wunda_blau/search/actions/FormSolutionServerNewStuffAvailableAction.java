@@ -85,7 +85,7 @@ import javax.xml.bind.ValidationEventHandler;
 import de.cismet.cids.custom.utils.WundaBlauServerResources;
 import de.cismet.cids.custom.utils.alkis.AlkisProductDescription;
 import de.cismet.cids.custom.utils.alkis.ServerAlkisProducts;
-import de.cismet.cids.custom.utils.formsolutions.FormSolutionFtpClient;
+import de.cismet.cids.custom.utils.formsolutions.FormSolutionsFtpClient;
 import de.cismet.cids.custom.utils.formsolutions.FormSolutionsBestellung;
 import de.cismet.cids.custom.utils.formsolutions.FormSolutionsMySqlHelper;
 import de.cismet.cids.custom.utils.formsolutions.FormSolutionsProperties;
@@ -1025,7 +1025,7 @@ public class FormSolutionServerNewStuffAvailableAction implements UserAwareServe
                     null,
                     creds);
 
-            FormSolutionFtpClient.getInstance()
+            FormSolutionsFtpClient.getInstance()
                     .upload(in, FormSolutionsProperties.getInstance().getProduktBasepath() + destinationPath);
         } finally {
             if (in != null) {
@@ -1508,7 +1508,7 @@ public class FormSolutionServerNewStuffAvailableAction implements UserAwareServe
 
             is = new ByteArrayInputStream(bytes);
 
-            FormSolutionFtpClient.getInstance()
+            FormSolutionsFtpClient.getInstance()
                     .upload(is, FormSolutionsProperties.getInstance().getProduktBasepath() + fileName);
         } finally {
             try {
