@@ -30,6 +30,7 @@ public enum WundaBlauServerResources {
     //~ Enum constants ---------------------------------------------------------
 
     BAULASTBESCHEINIGUNG_JASPER(new JasperReportServerResource("/reports/baulastbescheinigung.jasper")),
+    //BAULASTEN_JASPER(new JasperReportServerResource("/reports/baulasten.jasper")),
     VERMESSUNGSRISSE_JASPER(new JasperReportServerResource("/reports/vermessungsrisse.jasper")),
     VERMESSUNGSRISSE_DOCUMENT_JASPER(new JasperReportServerResource("/reports/vermessungsrisse_document.jasper")),
     VERMESSUNGSRISSE_OVERVIEW_JASPER(new JasperReportServerResource("/reports/vermessungsrisse_overview.jasper")),
@@ -60,6 +61,7 @@ public enum WundaBlauServerResources {
     IMAGE_ANNOTATOR_FONT(new BinaryServerResource("/tiffer/Calibri_Bold.ttf")),
     STADTBILDER_CONF_PROPERTIES(new TextServerResource("/stadtbilder/sb_conf.properties")),
 
+    URLCONFIG_PROPERTIES(new TextServerResource("/urlconfig.properties")),
     ALKIS_CONF(new TextServerResource("/alkis/alkis_conf.properties")),
     ALKIS_PRODUCTS_PROPERTIES(new TextServerResource("/alkis/alkis_products.properties")),
     ALKIS_BUCHUNTSBLATTBEZIRKE_JSON(new TextServerResource("/alkis/buchungsblattbezirke.json")),
