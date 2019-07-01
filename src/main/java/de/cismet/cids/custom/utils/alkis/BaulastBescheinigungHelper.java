@@ -18,6 +18,8 @@ import Sirius.server.middleware.types.MetaClass;
 import Sirius.server.middleware.types.MetaObject;
 import Sirius.server.middleware.types.MetaObjectNode;
 import Sirius.server.newuser.User;
+import com.fasterxml.jackson.core.JsonProcessingException;
+import com.fasterxml.jackson.databind.ObjectMapper;
 
 import de.aedsicad.aaaweb.service.util.Buchungsblatt;
 import de.aedsicad.aaaweb.service.util.Buchungsstelle;
@@ -40,8 +42,11 @@ import java.util.Set;
 import de.cismet.cids.custom.utils.berechtigungspruefung.DownloadInfoFactory;
 import de.cismet.cids.custom.utils.berechtigungspruefung.baulastbescheinigung.BerechtigungspruefungBescheinigungBaulastInfo;
 import de.cismet.cids.custom.utils.berechtigungspruefung.baulastbescheinigung.BerechtigungspruefungBescheinigungDownloadInfo;
+import de.cismet.cids.custom.utils.berechtigungspruefung.baulastbescheinigung.BerechtigungspruefungBescheinigungFlurstueckInfo;
 import de.cismet.cids.custom.utils.berechtigungspruefung.baulastbescheinigung.BerechtigungspruefungBescheinigungGruppeInfo;
 import de.cismet.cids.custom.utils.berechtigungspruefung.baulastbescheinigung.BerechtigungspruefungBescheinigungInfo;
+import de.cismet.cids.custom.wunda_blau.search.actions.BaulastBescheinigungReportServerAction;
+import de.cismet.cids.custom.wunda_blau.search.actions.BaulastenReportServerAction;
 import de.cismet.cids.custom.wunda_blau.search.actions.ServerAlkisSoapAction;
 import de.cismet.cids.custom.wunda_blau.search.server.BaulastSearchInfo;
 import de.cismet.cids.custom.wunda_blau.search.server.CidsBaulastSearchStatement;
@@ -51,9 +56,18 @@ import de.cismet.cids.dynamics.CidsBean;
 
 import de.cismet.cids.server.actions.ServerActionParameter;
 import de.cismet.cids.server.search.CidsServerSearch;
+import de.cismet.commons.security.handler.SimpleHttpAccessHandler;
 
 import de.cismet.connectioncontext.ConnectionContext;
 import de.cismet.connectioncontext.ConnectionContextStore;
+import java.io.ByteArrayInputStream;
+import java.io.FileOutputStream;
+import java.io.IOException;
+import java.io.InputStream;
+import java.net.URL;
+import java.util.zip.ZipEntry;
+import java.util.zip.ZipOutputStream;
+import org.apache.commons.io.IOUtils;
 
 /**
  * DOCUMENT ME!
@@ -667,7 +681,172 @@ public class BaulastBescheinigungHelper {
 
         return grundstueckeToFlurstueckeMap;
     }
+    
+    public static List<BerechtigungspruefungBescheinigungGruppeInfo> getSortedBescheinigungsGruppen(final Collection<BerechtigungspruefungBescheinigungGruppeInfo> bescheinigungsgruppen) {
+        final List<BerechtigungspruefungBescheinigungGruppeInfo> sortedBescheinigungsGruppen = new ArrayList<>(bescheinigungsgruppen);
+        Collections.sort(
+            sortedBescheinigungsGruppen,
+            new Comparator<BerechtigungspruefungBescheinigungGruppeInfo>() {
 
+                @Override
+                public int compare(final BerechtigungspruefungBescheinigungGruppeInfo o1,
+                        final BerechtigungspruefungBescheinigungGruppeInfo o2) {
+                    final String alkisId1 = o1.getFlurstuecke().iterator().next().getAlkisId();
+                    final String alkisId2 = o2.getFlurstuecke().iterator().next().getAlkisId();
+                    return alkisId1.compareTo(alkisId2);
+                }
+            });
+        return sortedBescheinigungsGruppen;
+    }
+    
+    private CidsBean loadBaulast(final BerechtigungspruefungBescheinigungBaulastInfo info) throws Exception {
+            final String query = "SELECT %d, id "
+                        + "FROM alb_baulast "
+                        + "WHERE blattnummer ILIKE '%s' "
+                        + "AND laufende_nummer ILIKE '%s'";
+            final MetaClass mcBaulast = getMetaClass("alb_baulast");
+            final MetaObject[] mos = getMetaObjects(String.format(
+                                query,
+                                mcBaulast.getID(),
+                                info.getBlattnummer(),
+                                info.getLaufende_nummer()));
+            if (mos != null && mos.length > 0) {
+                return mos[0].getBean();
+            } else {
+                return null;
+            }
+    }
+    
+    public void writeProcotol(final String protocol, final ZipOutputStream zipOut) throws IOException {
+        writeToZip("baulastbescheinigung_protokoll.txt", IOUtils.toInputStream(protocol, "UTF-8"), zipOut);
+    }
+    
+    public void writeFullBescheinigung(final BerechtigungspruefungBescheinigungDownloadInfo downloadInfo, final String jobName) {
+        try {
+            final ZipOutputStream zipOut = new ZipOutputStream(new FileOutputStream("/tmp/out.zip"));
+            writeProcotol(downloadInfo.getProtokoll(), zipOut);
+
+            if (downloadInfo.getBescheinigungsInfo() != null) {
+                final Set<CidsBean> allBaulasten = new HashSet<>();
+
+                // Download: Berichte für alle Bescheinigungsgruppen
+                int number = 0;                
+                for (final BerechtigungspruefungBescheinigungGruppeInfo bescheinigungsGruppeInfo : getSortedBescheinigungsGruppen(downloadInfo.getBescheinigungsInfo().getBescheinigungsgruppen())) {                     
+                    writeBescheinigungReport(
+                            bescheinigungsGruppeInfo, downloadInfo.getAuftragsnummer(),
+                            downloadInfo.getAuftragsnummer(),
+                            downloadInfo.getProduktbezeichnung(), 
+                            ++number,
+                            zipOut
+                    );
+                   
+                    // alle Baulasten ermitteln
+                    for (final BerechtigungspruefungBescheinigungBaulastInfo baulastInfo
+                                : bescheinigungsGruppeInfo.getBaulastenBelastet()) {
+                        allBaulasten.add(loadBaulast(baulastInfo));
+                    }
+                    for (final BerechtigungspruefungBescheinigungBaulastInfo baulastInfo
+                                : bescheinigungsGruppeInfo.getBaulastenBeguenstigt()) {
+                        allBaulasten.add(loadBaulast(baulastInfo));
+                    }
+                }
+
+                if (!allBaulasten.isEmpty()) {
+                    writeBaulastenReports(BaulastenReportGenerator.Type.TEXTBLATT_PLAN_RASTER, allBaulasten, downloadInfo.getAuftragsnummer(), downloadInfo.getProduktbezeichnung(), zipOut);
+                    writeAdditionalFiles(allBaulasten, zipOut);
+                }
+            }
+            zipOut.flush();
+        } catch (final Exception ex) {
+            LOG.fatal(ex, ex);
+        }
+    }
+    
+    private void writeToZip(final String fileName, final InputStream in, final ZipOutputStream zipOut) throws IOException {
+            final byte[] buf = new byte[1024];
+            int len;
+            zipOut.putNextEntry(new ZipEntry(fileName));
+            while ((len = in.read(buf)) > 0) {
+                zipOut.write(buf, 0, len);
+            }
+    }
+    
+    private void writeAdditionalFiles(final Collection<CidsBean> baulasten, final ZipOutputStream zipOut) throws Exception {
+        for (final URL url : BaulastenPictureFinder.getInstance().findAdditionalFiles(baulasten)) {
+            writeToZip(url.getFile().substring(url.getFile().lastIndexOf('/') + 1), new SimpleHttpAccessHandler().doRequest(url), zipOut);
+        }        
+    }
+    
+    private void writeBescheinigungReport(final BerechtigungspruefungBescheinigungGruppeInfo bescheinigungsGruppeInfo, final String auftragsNummer, final String projectName, final String anfrageSchluessel, final int number, final ZipOutputStream zipOut) throws JsonProcessingException, IOException {
+        final Collection<BerechtigungspruefungBescheinigungFlurstueckInfo> fls =
+            bescheinigungsGruppeInfo.getFlurstuecke();
+        final ServerActionParameter[] saps = new ServerActionParameter[] {
+                new ServerActionParameter<>(
+                    BaulastBescheinigungReportServerAction.Parameter.BESCHEINIGUNGGRUPPE_INFO.toString(),
+                    new ObjectMapper().writeValueAsString(bescheinigungsGruppeInfo)),
+                new ServerActionParameter<>(
+                    BaulastBescheinigungReportServerAction.Parameter.FABRICATION_DATE.toString(),
+                    new Date().getTime()),
+                /*new ServerActionParameter<>(
+                    BaulastBescheinigungReportServerAction.Parameter.FERTIGUNGS_VERMERK.toString(),
+                    ""),*/
+                new ServerActionParameter<>(
+                    BaulastBescheinigungReportServerAction.Parameter.JOB_NUMBER.toString(),
+                    auftragsNummer),
+                new ServerActionParameter<>(
+                    BaulastBescheinigungReportServerAction.Parameter.PROJECT_NAME.toString(),
+                    projectName),
+                new ServerActionParameter<>(
+                    BaulastBescheinigungReportServerAction.Parameter.ANFRAGE_SCHLUESSEL.toString(),
+                    anfrageSchluessel),
+            };
+
+        final BaulastBescheinigungReportServerAction serverAction = new BaulastBescheinigungReportServerAction();
+        serverAction.setMetaService(getMetaService());
+        serverAction.setUser(getUser());
+        serverAction.initWithConnectionContext(getConnectionContext());
+
+        writeToZip("bescheinigung_" + fls.iterator().next().getAlkisId().replace("/", "--")
+                    + (fls.size() > 1 ? ".ua" : "")
+                    + "_" + number, new ByteArrayInputStream((byte[])serverAction.execute(null, saps)), zipOut);
+    }
+    
+    private void writeBaulastenReports(final BaulastenReportGenerator.Type type,
+            final Collection<CidsBean> selectedBaulasten,
+            final String jobNumber,
+            final String projectName,
+            final ZipOutputStream zipOut) throws IOException {
+        final Collection<MetaObjectNode> mons = new ArrayList<>();
+        for (final CidsBean baulastBean : selectedBaulasten) {
+            mons.add(new MetaObjectNode(baulastBean));
+        }
+        final ServerActionParameter[] saps = new ServerActionParameter[] {
+                new ServerActionParameter<>(
+                    BaulastenReportServerAction.Parameter.BAULASTEN_MONS.toString(),
+                    mons),
+                /*new ServerActionParameter<>(
+                    BaulastenReportServerAction.Parameter.FERTIGUNGS_VERMERK.toString(),
+                    ""),*/
+                new ServerActionParameter<>(
+                    BaulastenReportServerAction.Parameter.JOB_NUMBER.toString(),
+                    jobNumber),
+                new ServerActionParameter<>(
+                    BaulastenReportServerAction.Parameter.PROJECT_NAME.toString(),
+                    projectName),
+                new ServerActionParameter<>(
+                    BaulastenReportServerAction.Parameter.TYPE.toString(),
+                    type),
+            };
+        
+        
+        final BaulastenReportServerAction serverAction = new BaulastenReportServerAction();
+        serverAction.setMetaService(getMetaService());
+        serverAction.setUser(getUser());
+        serverAction.initWithConnectionContext(getConnectionContext());
+
+        writeToZip("baulasten.pdf", new ByteArrayInputStream((byte[])serverAction.execute(null, saps)), zipOut);
+    }
+    
     /**
      * DOCUMENT ME!
      *
