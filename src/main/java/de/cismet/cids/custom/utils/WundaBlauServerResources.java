@@ -30,7 +30,7 @@ public enum WundaBlauServerResources {
     //~ Enum constants ---------------------------------------------------------
 
     BAULASTBESCHEINIGUNG_JASPER(new JasperReportServerResource("/reports/baulastbescheinigung.jasper")),
-    //BAULASTEN_JASPER(new JasperReportServerResource("/reports/baulasten.jasper")),
+    BAULASTEN_JASPER(new JasperReportServerResource("/reports/baulasten.jasper")),
     VERMESSUNGSRISSE_JASPER(new JasperReportServerResource("/reports/vermessungsrisse.jasper")),
     VERMESSUNGSRISSE_DOCUMENT_JASPER(new JasperReportServerResource("/reports/vermessungsrisse_document.jasper")),
     VERMESSUNGSRISSE_OVERVIEW_JASPER(new JasperReportServerResource("/reports/vermessungsrisse_overview.jasper")),
