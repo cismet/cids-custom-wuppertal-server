@@ -47,7 +47,6 @@ import java.util.Map;
 
 import javax.imageio.ImageIO;
 
-import de.cismet.cids.custom.utils.BaulastenPictureFinder;
 
 import de.cismet.cids.dynamics.CidsBean;
 

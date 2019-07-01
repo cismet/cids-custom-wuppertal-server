@@ -5,8 +5,9 @@
 *              ... and it just works.
 *
 ****************************************************/
-package de.cismet.cids.custom.utils;
+package de.cismet.cids.custom.utils.alkis;
 
+import de.cismet.cids.custom.utils.StaticProperties;
 import org.apache.commons.io.IOUtils;
 
 import java.net.URL;
@@ -18,6 +19,9 @@ import de.cismet.cids.dynamics.CidsBean;
 
 import de.cismet.commons.security.handler.ExtendedAccessHandler;
 import de.cismet.commons.security.handler.SimpleHttpAccessHandler;
+import java.util.Collection;
+import java.util.HashSet;
+import java.util.Set;
 
 /**
  * DOCUMENT ME!
@@ -278,6 +282,20 @@ public class BaulastenPictureFinder {
 
             return new FileWithoutSuffix(number, file);
         }
+    }
+    
+    public Set<URL> findAdditionalFiles(final Collection<CidsBean> baulasten) throws Exception {
+        final Collection<String> additionalFilesToDownload = new HashSet<>();
+        for (final CidsBean baulast : baulasten) {
+            final List<String> documentListRasterdaten = findPlanPicture(baulast);
+            additionalFilesToDownload.addAll(documentListRasterdaten);
+        }
+
+        final Set<URL> urls = new HashSet<>();
+        for (final String additionalFileToDownload : additionalFilesToDownload) {
+            urls.add(getUrlForDocument(additionalFileToDownload));
+        }
+        return urls;
     }
 
     /**

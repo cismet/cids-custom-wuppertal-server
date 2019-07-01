@@ -25,7 +25,7 @@ import java.util.ArrayList;
 import java.util.Collection;
 import java.util.Map;
 
-import de.cismet.cids.custom.utils.BaulastenPictureFinder;
+import de.cismet.cids.custom.utils.alkis.BaulastenPictureFinder;
 import de.cismet.cids.custom.utils.StampedJasperReportServerAction;
 import de.cismet.cids.custom.utils.WundaBlauServerResources;
 import de.cismet.cids.custom.utils.alkis.BaulastenReportGenerator;
