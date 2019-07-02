@@ -11,7 +11,6 @@ import Sirius.server.middleware.impls.domainserver.DomainServerImpl;
 import Sirius.server.middleware.types.MetaObjectNode;
 import Sirius.server.newuser.User;
 import Sirius.server.property.ServerProperties;
-import de.cismet.cids.custom.utils.formsolutions.FormSolutionsFtpClient;
 
 import org.apache.log4j.Logger;
 

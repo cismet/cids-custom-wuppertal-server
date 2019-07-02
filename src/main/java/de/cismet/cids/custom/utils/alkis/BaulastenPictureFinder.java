@@ -7,21 +7,22 @@
 ****************************************************/
 package de.cismet.cids.custom.utils.alkis;
 
-import de.cismet.cids.custom.utils.StaticProperties;
 import org.apache.commons.io.IOUtils;
 
 import java.net.URL;
 
 import java.util.ArrayList;
+import java.util.Collection;
+import java.util.HashSet;
 import java.util.List;
+import java.util.Set;
+
+import de.cismet.cids.custom.utils.StaticProperties;
 
 import de.cismet.cids.dynamics.CidsBean;
 
 import de.cismet.commons.security.handler.ExtendedAccessHandler;
 import de.cismet.commons.security.handler.SimpleHttpAccessHandler;
-import java.util.Collection;
-import java.util.HashSet;
-import java.util.Set;
 
 /**
  * DOCUMENT ME!
@@ -283,7 +284,16 @@ public class BaulastenPictureFinder {
             return new FileWithoutSuffix(number, file);
         }
     }
-    
+
+    /**
+     * DOCUMENT ME!
+     *
+     * @param   baulasten  DOCUMENT ME!
+     *
+     * @return  DOCUMENT ME!
+     *
+     * @throws  Exception  DOCUMENT ME!
+     */
     public Set<URL> findAdditionalFiles(final Collection<CidsBean> baulasten) throws Exception {
         final Collection<String> additionalFilesToDownload = new HashSet<>();
         for (final CidsBean baulast : baulasten) {

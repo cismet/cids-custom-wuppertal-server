@@ -17,6 +17,7 @@ import de.aedsicad.aaaweb.service.util.Point;
 
 import java.rmi.RemoteException;
 
+import de.cismet.cids.custom.utils.alkis.AlkisProducts;
 import de.cismet.cids.custom.utils.alkis.SOAPAccessProvider;
 import de.cismet.cids.custom.utils.alkis.ServerAlkisConf;
 
@@ -80,7 +81,7 @@ public class ServerAlkisSoapAction implements ServerAction {
                 final String[] uuids = getALKISInfoServices().translateBuchungsblattCodeIntoUUIds(
                         getSOAPAccessProvider().getIdentityCard(),
                         getSOAPAccessProvider().getService(),
-                        buchungsblattCode);
+                        AlkisProducts.fixBuchungslattCode(buchungsblattCode));
                 final Buchungsblatt buchungsblatt = getALKISInfoServices().getBuchungsblattWithUUID(
                         getSOAPAccessProvider().getIdentityCard(),
                         getSOAPAccessProvider().getService(),

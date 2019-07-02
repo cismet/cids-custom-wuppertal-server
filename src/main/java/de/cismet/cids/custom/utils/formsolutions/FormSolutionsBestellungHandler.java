@@ -91,6 +91,7 @@ import de.cismet.cids.custom.wunda_blau.search.actions.BaulastBescheinigungRepor
 import de.cismet.cids.custom.wunda_blau.search.server.CidsAlkisSearchStatement;
 
 import de.cismet.cids.dynamics.CidsBean;
+
 import de.cismet.cids.server.actions.ServerActionParameter;
 
 import de.cismet.cids.utils.MetaClassCacheService;
@@ -248,10 +249,15 @@ public class FormSolutionsBestellungHandler implements ConnectionContextProvider
 
     //~ Methods ----------------------------------------------------------------
 
+    /**
+     * DOCUMENT ME!
+     *
+     * @return  DOCUMENT ME!
+     */
     private BaulastBescheinigungHelper getBaulastBescheinigungHelper() {
         return baulastBescheinigungHelper;
     }
-    
+
     /**
      * DOCUMENT ME!
      *
@@ -2028,45 +2034,10 @@ public class FormSolutionsBestellungHandler implements ConnectionContextProvider
                                     flurstuecke,
                                     protocolBuffer,
                                     statusHolder);
-                            
-                            final BaulastBescheinigungReportServerAction reportAction = new BaulastBescheinigungReportServerAction();
-                            reportAction.initWithConnectionContext(getConnectionContext());
-                            reportAction.setMetaService(getMetaService());
-                            reportAction.setUser(getUser());
-                        
-                            for (final BerechtigungspruefungBescheinigungGruppeInfo bescheinigungsGruppeInfo : downloadInfo.getBescheinigungsInfo().getBescheinigungsgruppen()) {
-//                                final Collection<BerechtigungspruefungBescheinigungFlurstueckInfo> fls =
-//                                            bescheinigungsGruppeInfo.getFlurstuecke();
-//                                        final boolean ua = (fls.size() > 1);
-//                                        final String title = "Bescheinigung " + fls.iterator().next().getAlkisId() + (ua ? " (ua)" : "")
-//                                                    + " " + number + "/" + max;
-//                                        final String fileName = "bescheinigung_" + fls.iterator().next().getAlkisId().replace("/", "--")
-//                                                    + (ua ? ".ua" : "")
-//                                                    + "_" + number;
 
-                                final ServerActionParameter[] saps = new ServerActionParameter[] {
-                                        new ServerActionParameter<>(
-                                            BaulastBescheinigungReportServerAction.Parameter.BESCHEINIGUNGGRUPPE_INFO.toString(),
-                                            new ObjectMapper().writeValueAsString(bescheinigungsGruppeInfo)),
-                                        new ServerActionParameter<>(
-                                            BaulastBescheinigungReportServerAction.Parameter.FABRICATION_DATE.toString(),
-                                            downloadInfo.getBescheinigungsInfo().getDatum()),
-                                        new ServerActionParameter<>(
-                                            BaulastBescheinigungReportServerAction.Parameter.FERTIGUNGS_VERMERK.toString(),
-                                            "fertigungsvermerk"),
-                                        new ServerActionParameter<>(
-                                            BaulastBescheinigungReportServerAction.Parameter.JOB_NUMBER.toString(),
-                                            auftragsNummer),
-                                        new ServerActionParameter<>(
-                                            BaulastBescheinigungReportServerAction.Parameter.PROJECT_NAME.toString(),
-                                            downloadInfo.getProduktbezeichnung()),
-                                        new ServerActionParameter<>(
-                                            BaulastBescheinigungReportServerAction.Parameter.ANFRAGE_SCHLUESSEL.toString(),
-                                            ""),
-                                    };
-
-                                reportAction.execute(null, saps);                                
-                            }
+                            getBaulastBescheinigungHelper().writeFullBescheinigung(
+                                downloadInfo,
+                                transid);
                             LOG.fatal(protocolBuffer.toString());
                         }
                         break;
