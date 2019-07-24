@@ -266,7 +266,8 @@ public class AlkisProductServerAction implements ConnectionContextStore, UserAwa
                                 return IOUtils.toByteArray(
                                         postParams
                                             ? new SimpleHttpAccessHandler().doRequest(
-                                                fullUrl ? url : new URL(urlString.substring(0, urlString.lastIndexOf('?'))),
+                                                fullUrl ? url
+                                                        : new URL(urlString.substring(0, urlString.lastIndexOf('?'))),
                                                 fullUrl ? null : new StringReader(queryString),
                                                 AccessHandler.ACCESS_METHODS.POST_REQUEST,
                                                 AlkisProducts.POST_HEADER)
