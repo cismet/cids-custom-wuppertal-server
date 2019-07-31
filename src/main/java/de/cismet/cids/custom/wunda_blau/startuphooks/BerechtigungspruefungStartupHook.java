@@ -21,6 +21,7 @@ import java.rmi.Naming;
 
 import de.cismet.cids.custom.utils.berechtigungspruefung.BerechtigungspruefungHandler;
 import de.cismet.cids.custom.utils.berechtigungspruefung.BerechtigungspruefungProperties;
+import de.cismet.cids.custom.utils.formsolutions.FormSolutionsBestellungBerechtigungspruefungHandler;
 
 import de.cismet.connectioncontext.ConnectionContext;
 import de.cismet.connectioncontext.ConnectionContextStore;
@@ -79,6 +80,12 @@ public class BerechtigungspruefungStartupHook implements DomainServerStartupHook
                         handler.sendMessagesForAllOpenFreigaben(user);
                         handler.sendMessagesForAllOpenAnfragen(user);
                         handler.deleteOldDateianhangFiles(user);
+
+                        final FormSolutionsBestellungBerechtigungspruefungHandler fsbbh =
+                            FormSolutionsBestellungBerechtigungspruefungHandler.getInstance();
+                        fsbbh.initWithConnectionContext(getConnectionContext());
+                        fsbbh.setMetaService(metaService);
+                        fsbbh.setUser(user);
                     } catch (final Exception ex) {
                         LOG.warn("Error while initializing the BerechtigungspruefungHandler !", ex);
                     }

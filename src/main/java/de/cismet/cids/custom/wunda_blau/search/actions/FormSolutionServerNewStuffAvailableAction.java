@@ -58,7 +58,7 @@ public class FormSolutionServerNewStuffAvailableAction implements UserAwareServe
 
         //~ Enum constants -----------------------------------------------------
 
-        STEP_TO_EXECUTE, SINGLE_STEP, METAOBJECTNODES
+        STEP_TO_EXECUTE, SINGLE_STEP, METAOBJECTNODES, TEST
     }
 
     //~ Instance fields --------------------------------------------------------
@@ -80,6 +80,7 @@ public class FormSolutionServerNewStuffAvailableAction implements UserAwareServe
 
         boolean singleStep = false;
         int startStep = FormSolutionsBestellungHandler.STATUS_FETCH;
+        boolean test = false;
         Collection<MetaObjectNode> mons = null;
         if (params != null) {
             for (final ServerActionParameter sap : params) {
@@ -90,18 +91,20 @@ public class FormSolutionServerNewStuffAvailableAction implements UserAwareServe
                     startStep = (Integer)sap.getValue();
                 } else if (sap.getKey().equals(PARAMETER_TYPE.SINGLE_STEP.toString())) {
                     singleStep = (Boolean)sap.getValue();
+                } else if (sap.getKey().equals(PARAMETER_TYPE.TEST.toString())) {
+                    test = (Boolean)sap.getValue();
                 }
             }
         }
 
+        final FormSolutionsBestellungHandler handler = new FormSolutionsBestellungHandler(
+                getUser(),
+                getMetaService(),
+                getConnectionContext());
         if (mons == null) {
-            return new FormSolutionsBestellungHandler(getUser(), getMetaService(), getConnectionContext())
-                        .fetchEndExecuteAllOpen();
+            return handler.fetchEndExecuteAllOpen(test);
         } else {
-            return new FormSolutionsBestellungHandler(getUser(), getMetaService(), getConnectionContext()).execute(
-                    startStep,
-                    singleStep,
-                    mons);
+            return handler.execute(startStep, singleStep, test, mons);
         }
     }
 

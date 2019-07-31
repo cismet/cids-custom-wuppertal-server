@@ -191,6 +191,12 @@ public class FormSolutionsBestellung {
     @XmlElement(name = "Gutscheincode")
     private String gutscheinCode;
 
-//    @XmlElement(name = "E-Mailadresse.1")
-//    private String eMailadresse1;
+    @XmlElement(name = "Berechtigungsgrund")
+    private String berechtigungsgrund;
+
+    @XmlElement(name = "Begründungstext")
+    private String begruendungstext;
+
+    @XmlElement(name = "Nachweis")
+    private String nachweis;
 }

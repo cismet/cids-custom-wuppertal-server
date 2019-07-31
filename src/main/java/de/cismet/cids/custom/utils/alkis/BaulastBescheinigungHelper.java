@@ -72,6 +72,7 @@ import de.cismet.commons.security.handler.SimpleHttpAccessHandler;
 
 import de.cismet.connectioncontext.ConnectionContext;
 import de.cismet.connectioncontext.ConnectionContextStore;
+import java.io.File;
 
 /**
  * DOCUMENT ME!
@@ -757,9 +758,8 @@ public class BaulastBescheinigungHelper {
      * @param  downloadInfo  DOCUMENT ME!
      * @param  transId       DOCUMENT ME!
      */
-    public void writeFullBescheinigung(final BerechtigungspruefungBescheinigungDownloadInfo downloadInfo,
-            final String transId) {
-        try(final ZipOutputStream zipOut = new ZipOutputStream(new FileOutputStream("/tmp/" + transId + ".zip"))) {
+    public void writeFullBescheinigung(final BerechtigungspruefungBescheinigungDownloadInfo downloadInfo, final File file) {
+        try(final ZipOutputStream zipOut = new ZipOutputStream(new FileOutputStream(file))) {
             writeProcotol(downloadInfo.getProtokoll(), zipOut);
             if (downloadInfo.getBescheinigungsInfo() != null) {
                 final Set<CidsBean> allBaulasten = new HashSet<>();

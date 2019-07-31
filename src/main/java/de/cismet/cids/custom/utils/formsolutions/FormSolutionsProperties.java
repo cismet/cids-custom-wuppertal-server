@@ -46,7 +46,8 @@ public class FormSolutionsProperties {
     private final String cidsPassword;
     private final String urlAuftragslisteSgkFs;
     private final String urlAuftragslisteAbkFs;
-    private final String urlAuftragslisteBabFs;
+    private final String urlAuftragslisteBb1Fs;
+    private final String urlAuftragslisteBb2Fs;
     private final String urlAuftragFs;
     private final String urlAuftragDeleteFs;
     private final String urlStatusUpdate;
@@ -55,6 +56,7 @@ public class FormSolutionsProperties {
     private final String ftpPass;
     private final String testCismet00;
     private final String specialLogAbsPath;
+    private final String produktTmpAbsPath;
     private final String billingKundeLogin;
     private final String billingModus;
     private final String billingModusbezeichnung;
@@ -82,7 +84,8 @@ public class FormSolutionsProperties {
         cidsPassword = properties.getProperty("CIDS_PASSWORD");
         urlAuftragslisteSgkFs = properties.getProperty("URL_AUFTRAGSLISTE_SGK_FS");
         urlAuftragslisteAbkFs = properties.getProperty("URL_AUFTRAGSLISTE_ABK_FS");
-        urlAuftragslisteBabFs = properties.getProperty("URL_AUFTRAGSLISTE_BAB_FS");
+        urlAuftragslisteBb1Fs = properties.getProperty("URL_AUFTRAGSLISTE_BB1_FS");
+        urlAuftragslisteBb2Fs = properties.getProperty("URL_AUFTRAGSLISTE_BB2_FS");
         urlAuftragFs = properties.getProperty("URL_AUFTRAG_FS");
         urlAuftragDeleteFs = properties.getProperty("URL_AUFTRAG_DELETE_FS");
         urlStatusUpdate = properties.getProperty("URL_STATUS_UPDATE");
@@ -91,6 +94,7 @@ public class FormSolutionsProperties {
         ftpPass = properties.getProperty("FTP_PASS");
         testCismet00 = properties.getProperty("TEST_CISMET00");
         specialLogAbsPath = properties.getProperty("SPECIAL_LOG_ABS_PATH");
+        produktTmpAbsPath = properties.getProperty("PRODUKT_TMP_ABS_PATH");
         billingKundeLogin = properties.getProperty("BILLING_KUNDE_LOGIN");
         billingModus = properties.getProperty("BILLING_MODUS");
         billingModusbezeichnung = properties.getProperty("BILLING_MODUSBEZEICHNUNG");
