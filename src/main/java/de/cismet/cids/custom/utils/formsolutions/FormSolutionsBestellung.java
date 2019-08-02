@@ -194,6 +194,9 @@ public class FormSolutionsBestellung {
     @XmlElement(name = "Berechtigungsgrund")
     private String berechtigungsgrund;
 
+    @XmlElement(name = "sonstiger_Berechtigungsgrund")
+    private String berechtigungsgrund_sonstiger;
+
     @XmlElement(name = "Begründungstext")
     private String begruendungstext;
 

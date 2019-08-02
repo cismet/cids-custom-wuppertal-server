@@ -42,6 +42,7 @@ import org.openide.util.Lookup;
 import java.io.BufferedReader;
 import java.io.ByteArrayInputStream;
 import java.io.ByteArrayOutputStream;
+import java.io.File;
 import java.io.InputStream;
 import java.io.InputStreamReader;
 import java.io.StringReader;
@@ -86,6 +87,11 @@ import de.cismet.cids.custom.utils.alkis.BaulastBescheinigungHelper;
 import de.cismet.cids.custom.utils.alkis.ServerAlkisProducts;
 import de.cismet.cids.custom.utils.berechtigungspruefung.BerechtigungspruefungHandler;
 import de.cismet.cids.custom.utils.berechtigungspruefung.baulastbescheinigung.BerechtigungspruefungBescheinigungDownloadInfo;
+import de.cismet.cids.custom.utils.billing.BillingInfo;
+import de.cismet.cids.custom.utils.billing.BillingInfoHandler;
+import de.cismet.cids.custom.utils.billing.BillingPrice;
+import de.cismet.cids.custom.utils.billing.BillingProduct;
+import de.cismet.cids.custom.utils.billing.BillingProductGroupAmount;
 import de.cismet.cids.custom.wunda_blau.search.server.CidsAlkisSearchStatement;
 
 import de.cismet.cids.dynamics.CidsBean;
@@ -98,7 +104,6 @@ import de.cismet.commons.security.handler.SimpleHttpAccessHandler;
 
 import de.cismet.connectioncontext.ConnectionContext;
 import de.cismet.connectioncontext.ConnectionContextProvider;
-import java.io.File;
 
 /**
  * DOCUMENT ME!
@@ -160,6 +165,7 @@ public class FormSolutionsBestellungHandler implements ConnectionContextProvider
     private final Set<String> ignoreTransids = new HashSet<>();
 
     private final BaulastBescheinigungHelper baulastBescheinigungHelper;
+    private final BillingInfoHandler billingInfoHander;
 
     //~ Constructors -----------------------------------------------------------
 
@@ -230,6 +236,17 @@ public class FormSolutionsBestellungHandler implements ConnectionContextProvider
                 LOG.error("could not load " + WundaBlauServerResources.FS_IGNORE_TRANSID_TXT.getValue(), ex);
             }
         }
+
+        BillingInfoHandler billingInfoHander = null;
+        try {
+            billingInfoHander = new BillingInfoHandler(getObjectMapper().readValue(
+                        ServerResourcesLoader.getInstance().loadText(
+                            WundaBlauServerResources.BILLING_JSON.getValue()),
+                        BillingInfo.class));
+        } catch (final Exception ex) {
+            LOG.error(ex, ex);
+        }
+        this.billingInfoHander = billingInfoHander;
 
         this.baulastBescheinigungHelper = new BaulastBescheinigungHelper(user, metaService, connectionContext);
 
@@ -1048,21 +1065,25 @@ public class FormSolutionsBestellungHandler implements ConnectionContextProvider
         }
 
         final String farbauspraegung = formSolutionsBestellung.getFarbauspraegung();
-        final boolean farbig;
-        if ("farbig".equals(farbauspraegung)) {
-            farbig = true;
-        } else if ("Graustufen".equals(farbauspraegung)) {
-            farbig = false;
-        } else {
-            return null;
-        }
 
         switch (type) {
             case SGK: {
-                return farbig ? "LK.NRW.K.BF" : "LK.NRW.K.BSW";
+                if ("farbig".equals(farbauspraegung)) {
+                    return "LK.NRW.K.BF";
+                } else if ("Graustufen".equals(farbauspraegung)) {
+                    return "LK.NRW.K.BSW";
+                } else {
+                    return null;
+                }
             }
             case ABK: {
-                return farbig ? "LK.GDBNRW.A.ABKF" : "LK.GDBNRW.A.ABKSW";
+                if ("farbig".equals(farbauspraegung)) {
+                    return "LK.GDBNRW.A.ABKF";
+                } else if ("Graustufen".equals(farbauspraegung)) {
+                    return "LK.GDBNRW.A.ABKSW";
+                } else {
+                    return null;
+                }
             }
             case BAB: {
                 return "BAB";
@@ -1326,6 +1347,27 @@ public class FormSolutionsBestellungHandler implements ConnectionContextProvider
         bestellungBean.setProperty("test", isTest);
 
         return bestellungBean;
+    }
+
+    /**
+     * DOCUMENT ME!
+     *
+     * @param   downloadInfo  DOCUMENT ME!
+     *
+     * @return  DOCUMENT ME!
+     */
+    private double calculateBabGebuehr(final BerechtigungspruefungBescheinigungDownloadInfo downloadInfo) {
+        final BillingProduct product = billingInfoHander.getProducts().get("blab_be");
+        final String usage = "eigG frei";
+        final Collection<BillingProductGroupAmount> prodAmounts = new ArrayList<>();
+        for (final HashMap.Entry<String, Integer> amount : downloadInfo.getAmounts().entrySet()) {
+            prodAmounts.add(new BillingProductGroupAmount(amount.getKey(), amount.getValue()));
+        }
+        final double raw = BillingInfoHandler.calculateRawPrice(
+                product,
+                prodAmounts.toArray(new BillingProductGroupAmount[0]));
+        final BillingPrice price = new BillingPrice(raw, usage, product);
+        return price.getNetto();
     }
 
     /**
@@ -1987,6 +2029,7 @@ public class FormSolutionsBestellungHandler implements ConnectionContextProvider
     private boolean pruefungProdukt(final Map<String, CidsBean> fsBeanMap,
             final Map<String, FormSolutionsBestellung> fsBestellungMap) {
         final Collection<String> transids = new ArrayList<>(fsBestellungMap.keySet());
+
         for (final String transid : transids) {
             final CidsBean bestellungBean = fsBeanMap.get(transid);
             if ((bestellungBean != null) && (bestellungBean.getProperty("fehler") == null)) {
@@ -2017,7 +2060,7 @@ public class FormSolutionsBestellungHandler implements ConnectionContextProvider
                                     @Override
                                     public void setMessage(final String message) {
                                         super.setMessage(message);
-                                        LOG.fatal(message);
+                                        LOG.info(message);
                                     }
                                 };
 
@@ -2028,6 +2071,8 @@ public class FormSolutionsBestellungHandler implements ConnectionContextProvider
                                     flurstuecke,
                                     protocolBuffer,
                                     statusHolder);
+                            final Double gebuehr = calculateBabGebuehr(downloadInfo);
+                            bestellungBean.setProperty("gebuehr", gebuehr);
 
                             final FormSolutionsBestellung formSolutionBestellung = fsBestellungMap.get(transid);
 
@@ -2046,6 +2091,7 @@ public class FormSolutionsBestellungHandler implements ConnectionContextProvider
                                             formSolutionBestellung.getBegruendungstext(),
                                             dateiName,
                                             data);
+
                             bestellungBean.setProperty("berechtigungspruefung", pruefung);
                             getMetaService().updateMetaObject(
                                 getUser(),
@@ -2065,8 +2111,7 @@ public class FormSolutionsBestellungHandler implements ConnectionContextProvider
     /**
      * DOCUMENT ME!
      *
-     * @param  fsBeanMap        DOCUMENT ME!
-     * @param  fsBestellungMap  DOCUMENT ME!
+     * @param  fsBeanMap  DOCUMENT ME!
      */
     private void downloadProdukte(final Map<String, CidsBean> fsBeanMap) {
         final Collection<String> transids = new ArrayList<>(fsBeanMap.keySet());
@@ -2156,7 +2201,8 @@ public class FormSolutionsBestellungHandler implements ConnectionContextProvider
                                     new ObjectMapper().readValue((String)berechtigungspruefung.getProperty(
                                             "downloadinfo_json"),
                                         BerechtigungspruefungBescheinigungDownloadInfo.class);
-                                final File file = new File(FormSolutionsProperties.getInstance().getProduktTmpAbsPath() + transid + ".zip");
+                                final File file = new File(FormSolutionsProperties.getInstance().getProduktTmpAbsPath()
+                                                + transid + ".zip");
                                 getBaulastBescheinigungHelper().writeFullBescheinigung(downloadInfo, file);
                                 LOG.fatal(downloadInfo);
                             }

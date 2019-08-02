@@ -30,6 +30,7 @@ import org.apache.commons.io.IOUtils;
 import org.apache.log4j.Logger;
 
 import java.io.ByteArrayInputStream;
+import java.io.File;
 import java.io.FileOutputStream;
 import java.io.IOException;
 import java.io.InputStream;
@@ -72,7 +73,6 @@ import de.cismet.commons.security.handler.SimpleHttpAccessHandler;
 
 import de.cismet.connectioncontext.ConnectionContext;
 import de.cismet.connectioncontext.ConnectionContextStore;
-import java.io.File;
 
 /**
  * DOCUMENT ME!
@@ -756,9 +756,10 @@ public class BaulastBescheinigungHelper {
      * DOCUMENT ME!
      *
      * @param  downloadInfo  DOCUMENT ME!
-     * @param  transId       DOCUMENT ME!
+     * @param  file          transId DOCUMENT ME!
      */
-    public void writeFullBescheinigung(final BerechtigungspruefungBescheinigungDownloadInfo downloadInfo, final File file) {
+    public void writeFullBescheinigung(final BerechtigungspruefungBescheinigungDownloadInfo downloadInfo,
+            final File file) {
         try(final ZipOutputStream zipOut = new ZipOutputStream(new FileOutputStream(file))) {
             writeProcotol(downloadInfo.getProtokoll(), zipOut);
             if (downloadInfo.getBescheinigungsInfo() != null) {
