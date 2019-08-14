@@ -7,7 +7,6 @@
 ****************************************************/
 package de.cismet.cids.custom.wunda_blau.search.server;
 
-import Sirius.server.middleware.interfaces.domainserver.ActionService;
 import Sirius.server.middleware.interfaces.domainserver.MetaService;
 import Sirius.server.middleware.types.MetaObjectNode;
 
@@ -15,17 +14,11 @@ import com.vividsolutions.jts.geom.Geometry;
 
 import org.apache.log4j.Logger;
 
-import java.io.StringReader;
-
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collection;
 import java.util.List;
-import java.util.Properties;
 
-import de.cismet.cids.custom.utils.WundaBlauServerResources;
-
-import de.cismet.cids.server.actions.GetServerResourceServerAction;
 import de.cismet.cids.server.search.AbstractCidsServerSearch;
 import de.cismet.cids.server.search.MetaObjectNodeServerSearch;
 
@@ -45,13 +38,13 @@ import de.cismet.connectioncontext.ConnectionContextStore;
  *
  * @version  $Revision$, $Date$
  */
-public class PotenzialflaecheSearch extends AbstractCidsServerSearch implements RestApiCidsServerSearch,
+public class KstSearch extends AbstractCidsServerSearch implements RestApiCidsServerSearch,
     MetaObjectNodeServerSearch,
     ConnectionContextStore {
 
     //~ Static fields/initializers ---------------------------------------------
 
-    private static final transient Logger LOG = Logger.getLogger(PotenzialflaecheSearch.class);
+    private static final transient Logger LOG = Logger.getLogger(KstSearch.class);
     private static final String INTERSECTS_BUFFER = SearchProperties.getInstance().getIntersectsBuffer();
 
     //~ Enums ------------------------------------------------------------------
@@ -61,19 +54,16 @@ public class PotenzialflaecheSearch extends AbstractCidsServerSearch implements 
      *
      * @version  $Revision$, $Date$
      */
-    public enum SearchMode {
+    public enum SearchFor {
 
         //~ Enum constants -----------------------------------------------------
 
-        AND, OR,
+        BEZIRK
     }
 
     //~ Instance fields --------------------------------------------------------
 
-    private SearchMode searchMode = null;
-    private String nummer = null;
-    private String kampagne = null;
-    private String bezeichnung = null;
+    private SearchFor searchFor = null;
     private Geometry geom = null;
     private final SearchInfo searchInfo;
 
@@ -82,41 +72,29 @@ public class PotenzialflaecheSearch extends AbstractCidsServerSearch implements 
     //~ Constructors -----------------------------------------------------------
 
     /**
-     * Creates a new PotenzialflaecheSearch object.
+     * Creates a new KstSearch object.
      *
-     * @param  searchMode   DOCUMENT ME!
-     * @param  nummer       DOCUMENT ME!
-     * @param  kampagne     DOCUMENT ME!
-     * @param  bezeichnung  DOCUMENT ME!
-     * @param  geom         DOCUMENT ME!
+     * @param  searchFor  DOCUMENT ME!
+     * @param  geom       DOCUMENT ME!
      */
-    public PotenzialflaecheSearch(final SearchMode searchMode,
-            final String nummer,
-            final String kampagne,
-            final String bezeichnung,
-            final Geometry geom) {
+    public KstSearch(final SearchFor searchFor, final Geometry geom) {
         this();
-        this.searchMode = searchMode;
-        this.nummer = nummer;
-        this.kampagne = kampagne;
-        this.bezeichnung = bezeichnung;
+        this.searchFor = searchFor;
         this.geom = geom;
     }
 
     /**
-     * Creates a new PotenzialflaecheSearch object.
+     * Creates a new KstSearch object.
      */
-    private PotenzialflaecheSearch() {
+    private KstSearch() {
         this.searchInfo = new SearchInfo(
                 this.getClass().getName(),
                 this.getClass().getSimpleName(),
-                "Builtin Legacy Search to delegate the operation PotenzialflaecheSearchStatement to the cids Pure REST Search API.",
+                "Builtin Legacy Search to delegate the operation KstSearch to the cids Pure REST Search API.",
                 Arrays.asList(
                     new SearchParameterInfo[] {
-                        new MySearchParameterInfo("searchMode", Type.STRING),
-                        new MySearchParameterInfo("nummer", Type.STRING),
-                        new MySearchParameterInfo("kampagne", Type.STRING),
-                        new MySearchParameterInfo("bezeichnung", Type.STRING),
+                        new MySearchParameterInfo("searchFor", Type.STRING),
+                        new MySearchParameterInfo("geom", Type.UNDEFINED),
                     }),
                 new MySearchParameterInfo("return", Type.ENTITY_REFERENCE, true));
     }
@@ -137,35 +115,14 @@ public class PotenzialflaecheSearch extends AbstractCidsServerSearch implements 
     public Collection<MetaObjectNode> performServerSearch() {
         try {
             final List<MetaObjectNode> result = new ArrayList<>();
-            final Properties properties = new Properties();
-            final ActionService as = (ActionService)getActiveLocalServers().get("WUNDA_BLAU");
-            properties.load(new StringReader(
-                    (String)as.executeTask(
-                        getUser(),
-                        GetServerResourceServerAction.TASK_NAME,
-                        WundaBlauServerResources.POTENZIALFLAECHEN_PROPERTIES.getValue(),
-                        getConnectionContext())));
 
-            final Collection<String> wheres = new ArrayList<>();
-            switch (searchMode) {
-                case AND: {
-                    wheres.add("TRUE");
-                    break;
-                }
-                case OR: {
-                    wheres.add("FALSE");
+            String kst = null;
+            switch (searchFor) {
+                case BEZIRK: {
+                    kst = "kst_stadtbezirk";
                     break;
                 }
                 default:
-            }
-            if (nummer != null) {
-                wheres.add("pf_potenzialflaeche.nummer ILIKE '%" + nummer + "%'");
-            }
-            if (bezeichnung != null) {
-                wheres.add("pf_potenzialflaeche.bezeichnung ILIKE '%" + bezeichnung + "%'");
-            }
-            if (kampagne != null) {
-                wheres.add("pf_kampagne.bezeichnung ILIKE '%" + kampagne + "%'");
             }
 
             final String geomCondition;
@@ -179,33 +136,13 @@ public class PotenzialflaecheSearch extends AbstractCidsServerSearch implements 
             } else {
                 geomCondition = null;
             }
-            final String where;
-            switch (searchMode) {
-                case AND: {
-                    if (geomCondition != null) {
-                        wheres.add(geomCondition);
-                    }
-                    where = "WHERE " + String.join(" AND ", wheres);
-                    break;
-                }
-                case OR: {
-                    where = "WHERE " + String.join(" OR ", wheres)
-                                + ((geomCondition != null) ? (" AND " + geomCondition) : "");
-                    break;
-                }
-                default: {
-                    where = ((geomCondition != null) ? ("WHERE " + geomCondition) : "");
-                    break;
-                }
-            }
             final String query = "SELECT \n"
-                        + "	(SELECT id FROM cs_class WHERE table_name ILIKE 'pf_potenzialflaeche') AS class_id, "
-                        + "	pf_potenzialflaeche.id AS object_id, "
-                        + "	pf_potenzialflaeche.bezeichnung AS object_name "
-                        + "FROM pf_potenzialflaeche "
-                        + "LEFT JOIN pf_kampagne ON pf_potenzialflaeche.kampagne = pf_kampagne.id "
-                        + ((geomCondition != null) ? "LEFT JOIN geom ON pf_potenzialflaeche.geometrie = geom.id " : "")
-                        + where;
+                        + "	(SELECT id FROM cs_class WHERE table_name ILIKE '" + kst + "') AS class_id, "
+                        + "	kst.id AS object_id, "
+                        + "	kst.name AS object_name "
+                        + "FROM " + kst + " AS kst "
+                        + ((geomCondition != null) ? "LEFT JOIN geom ON kst.georeferenz = geom.id " : " ")
+                        + ((geomCondition != null) ? ("WHERE " + geomCondition) : " ");
 
             if (query != null) {
                 final MetaService ms = (MetaService)getActiveLocalServers().get("WUNDA_BLAU");
@@ -222,7 +159,7 @@ public class PotenzialflaecheSearch extends AbstractCidsServerSearch implements 
             }
             return result;
         } catch (final Exception ex) {
-            LOG.error("error while searching for potenzialflaeche", ex);
+            LOG.error("error while searching for kst object", ex);
             throw new RuntimeException(ex);
         }
     }
