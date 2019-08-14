@@ -13,18 +13,23 @@
 package de.cismet.cids.custom.wunda_blau.search.actions;
 
 import Sirius.server.middleware.impls.domainserver.DomainServerImpl;
+import Sirius.server.middleware.interfaces.domainserver.MetaService;
+import Sirius.server.middleware.types.MetaObject;
 import Sirius.server.middleware.types.MetaObjectNode;
+import Sirius.server.newuser.User;
 
 import com.vividsolutions.jts.geom.Geometry;
+
+import lombok.Getter;
 
 import net.sf.jasperreports.engine.JasperReport;
 import net.sf.jasperreports.engine.data.JRBeanCollectionDataSource;
 
-import java.awt.Image;
 import java.awt.image.BufferedImage;
 
 import java.io.ByteArrayInputStream;
 
+import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collection;
 import java.util.HashMap;
@@ -33,6 +38,7 @@ import java.util.Map;
 import javax.imageio.ImageIO;
 
 import de.cismet.cids.custom.utils.StampedJasperReportServerAction;
+import de.cismet.cids.custom.wunda_blau.search.server.KstSearch;
 
 import de.cismet.cids.dynamics.CidsBean;
 
@@ -180,10 +186,9 @@ public class PotenzialflaecheReportServerAction extends StampedJasperReportServe
             PotenzialflaecheReportServerAction.PROP_WBPF_NACHFOLGENUTZUNG,
             new StringReportProperty(PotenzialflaecheReportServerAction.PROP_WBPF_NACHFOLGENUTZUNG, "lblWbpfNn"));
         REPORT_PROPERTY_MAP.put(
-            "entwicklungsaussischten",
+            PotenzialflaecheReportServerAction.PROP_ENTWICKLUNGSAUSSSICHTEN,
             new StringReportProperty(
                 PotenzialflaecheReportServerAction.PROP_ENTWICKLUNGSAUSSSICHTEN,
-                "entwicklungsaussischten",
                 "lblEntwicklungsausssichten"));
         REPORT_PROPERTY_MAP.put(
             PotenzialflaecheReportServerAction.PROP_HANDLUNGSDRUCK,
@@ -196,8 +201,33 @@ public class PotenzialflaecheReportServerAction extends StampedJasperReportServe
             new VirtualReportProperty(PotenzialflaecheReportServerAction.PROP_STADTBEZIRK, "lblStadtbezirk") {
 
                 @Override
-                protected Object calculateProperty(final CidsBean flaecheBean) {
-                    return "Stadtbezirk1"; // todo: richtiger Bezirk
+                protected Object calculateProperty(final CidsBean flaecheBean,
+                        final User user,
+                        final MetaService metaService,
+                        final ConnectionContext connectionContext) {
+                    final KstSearch serverSearch = new KstSearch(
+                            KstSearch.SearchFor.BEZIRK,
+                            (Geometry)flaecheBean.getProperty("geometrie.geo_field"));
+                    serverSearch.setUser(user);
+                    serverSearch.initWithConnectionContext(connectionContext);
+                    final Map localServers = new HashMap<>();
+                    localServers.put("WUNDA_BLAU", metaService);
+                    serverSearch.setActiveLocalServers(localServers);
+                    final Collection<String> kstBezirkStrings = new ArrayList<>();
+                    try {
+                        for (final MetaObjectNode mon : serverSearch.performServerSearch()) {
+                            final MetaObject mo = metaService.getMetaObject(
+                                    user,
+                                    mon.getObjectId(),
+                                    mon.getClassId(),
+                                    connectionContext);
+                            kstBezirkStrings.add((String)mo.getBean().getProperty("name"));
+                        }
+                    } catch (final Exception ex) {
+                        LOG.error(ex, ex);
+                        return null;
+                    }
+                    return String.join(", ", kstBezirkStrings);
                 }
             });
         REPORT_PROPERTY_MAP.put(
@@ -205,7 +235,10 @@ public class PotenzialflaecheReportServerAction extends StampedJasperReportServe
             new VirtualReportProperty(PotenzialflaecheReportServerAction.PROP_GROESSE, "lblFlaechengroesse") {
 
                 @Override
-                protected Object calculateProperty(final CidsBean flaecheBean) {
+                protected Object calculateProperty(final CidsBean flaecheBean,
+                        final User user,
+                        final MetaService metaService,
+                        final ConnectionContext connectionContext) {
                     final Object geo = flaecheBean.getProperty("geometrie.geo_field");
                     double area = 0.0;
 
@@ -221,8 +254,11 @@ public class PotenzialflaecheReportServerAction extends StampedJasperReportServe
             new VirtualReportProperty(PotenzialflaecheReportServerAction.PROP_EIGENTUEMER, null) {
 
                 @Override
-                protected Object calculateProperty(final CidsBean flaecheBean) {
-                    return "privat"; // todo: richtiger Eigentümer
+                protected Object calculateProperty(final CidsBean flaecheBean,
+                        final User user,
+                        final MetaService metaService,
+                        final ConnectionContext connectionContext) {
+                    return "privat";
                 }
             });
         REPORT_PROPERTY_MAP.put(
@@ -230,27 +266,29 @@ public class PotenzialflaecheReportServerAction extends StampedJasperReportServe
             new VirtualReportProperty(PotenzialflaecheReportServerAction.PROP_ZENTRALER_VERSORGUNGSBEREICH, null) {
 
                 @Override
-                protected Object calculateProperty(final CidsBean flaecheBean) {
-                    return true; // todo: richtigen Wert ermitteln
+                protected Object calculateProperty(final CidsBean flaecheBean,
+                        final User user,
+                        final MetaService metaService,
+                        final ConnectionContext connectionContext) {
+                    return true;
                 }
             });
-
         REPORT_PROPERTY_MAP.put(
             PotenzialflaecheReportServerAction.PROP_REGIONALPLAN,
-            new StringListReportProperty(PotenzialflaecheReportServerAction.PROP_REGIONALPLAN, "lblRegionalplan"));
+            new StringReportProperty(PotenzialflaecheReportServerAction.PROP_REGIONALPLAN, "lblRegionalplan"));
         REPORT_PROPERTY_MAP.put(
             PotenzialflaecheReportServerAction.PROP_BISHERIGE_NUTZUNG,
-            new StringListReportProperty(
+            new StringReportProperty(
                 PotenzialflaecheReportServerAction.PROP_BISHERIGE_NUTZUNG,
                 "lblBisherigeNutzung"));
         REPORT_PROPERTY_MAP.put(
             PotenzialflaecheReportServerAction.PROP_UMGEBUNGSNUTZUNG,
-            new StringListReportProperty(
+            new StringReportProperty(
                 PotenzialflaecheReportServerAction.PROP_UMGEBUNGSNUTZUNG,
                 "lblUmgebungsnutzung"));
         REPORT_PROPERTY_MAP.put(
             PotenzialflaecheReportServerAction.PROP_OEPNV_ANBINDUNG,
-            new StringListReportProperty(PotenzialflaecheReportServerAction.PROP_OEPNV_ANBINDUNG, "lblOepnv"));
+            new StringReportProperty(PotenzialflaecheReportServerAction.PROP_OEPNV_ANBINDUNG, "lblOepnv"));
         REPORT_PROPERTY_MAP.put(
             PotenzialflaecheReportServerAction.PROP_BK_GEWERBE_INDUSTRIE,
             new ReportProperty(PotenzialflaecheReportServerAction.PROP_BK_GEWERBE_INDUSTRIE, "cbBfGewerbe"));
@@ -300,7 +338,7 @@ public class PotenzialflaecheReportServerAction extends StampedJasperReportServe
             new ReportProperty(PotenzialflaecheReportServerAction.PROP_GNN_EINZELHANDEL, "cbEinzelhandel"));
         REPORT_PROPERTY_MAP.put(
             PotenzialflaecheReportServerAction.PROP_GNN_SONSTIGES,
-            new StringReportProperty(PotenzialflaecheReportServerAction.PROP_GNN_SONSTIGES, "lblGnnSonstiges"));
+            new ReportProperty(PotenzialflaecheReportServerAction.PROP_GNN_SONSTIGES, "lblGnnSonstiges"));
     }
 
     //~ Enums ------------------------------------------------------------------
@@ -322,26 +360,6 @@ public class PotenzialflaecheReportServerAction extends StampedJasperReportServe
     private ConnectionContext connectionContext = ConnectionContext.createDummy();
 
     //~ Methods ----------------------------------------------------------------
-
-    /**
-     * DOCUMENT ME!
-     *
-     * @param   cidsBean    DOCUMENT ME!
-     * @param   orthoImage  DOCUMENT ME!
-     * @param   dgkImage    DOCUMENT ME!
-     *
-     * @return  DOCUMENT ME!
-     */
-    public Map generateParamters(final CidsBean cidsBean, final Image orthoImage, final Image dgkImage) {
-        final HashMap params = new HashMap();
-        for (final String dbProp : REPORT_PROPERTY_MAP.keySet()) {
-            final ReportProperty rp = REPORT_PROPERTY_MAP.get(dbProp);
-            rp.addParameterToMap(params, cidsBean);
-        }
-        params.put("KARTE_ORTHO", orthoImage);
-        params.put("KARTE_DGK", dgkImage);
-        return params;
-    }
 
     @Override
     public void initWithConnectionContext(final ConnectionContext connectionContext) {
@@ -384,7 +402,9 @@ public class PotenzialflaecheReportServerAction extends StampedJasperReportServe
 
                 final JRBeanCollectionDataSource dataSource = new JRBeanCollectionDataSource(Arrays.asList(
                             flaecheBean));
-                final Map<String, Object> parameters = generateParamters(flaecheBean, orthoImage, dgkImage);
+                final Map<String, Object> parameters = generateParams(flaecheBean, REPORT_PROPERTY_MAP);
+                parameters.put("KARTE_ORTHO", orthoImage);
+                parameters.put("KARTE_DGK", dgkImage);
                 parameters.put(
                     "SUBREPORT_DIR",
                     DomainServerImpl.getServerProperties().getServerResourcesBasePath()
@@ -418,6 +438,41 @@ public class PotenzialflaecheReportServerAction extends StampedJasperReportServe
         return connectionContext;
     }
 
+    /**
+     * DOCUMENT ME!
+     *
+     * @param   flaecheBean    DOCUMENT ME!
+     * @param   reportPropMap  DOCUMENT ME!
+     *
+     * @return  DOCUMENT ME!
+     */
+    public Map generateParams(final CidsBean flaecheBean, final Map<String, ReportProperty> reportPropMap) {
+        final HashMap params = new HashMap();
+        for (final String dbProp : reportPropMap.keySet()) {
+            final ReportProperty property = reportPropMap.get(dbProp);
+            final String parameterName = property.getParameterName();
+            if (property instanceof VirtualReportProperty) {
+                params.put(
+                    parameterName,
+                    ((VirtualReportProperty)property).calculateProperty(
+                        flaecheBean,
+                        getUser(),
+                        getMetaService(),
+                        getConnectionContext()));
+            } else if (property instanceof StringReportProperty) {
+                final Object object = flaecheBean.getProperty(property.getDbName());
+                if (object instanceof Collection) {
+                    params.put(parameterName, String.join(", ", (Collection)object));
+                } else {
+                    params.put(parameterName, (object == null) ? null : object.toString());
+                }
+            } else {
+                params.put(parameterName, flaecheBean.getProperty(property.getDbName()));
+            }
+        }
+        return params;
+    }
+
     //~ Inner Classes ----------------------------------------------------------
 
     /**
@@ -425,6 +480,7 @@ public class PotenzialflaecheReportServerAction extends StampedJasperReportServe
      *
      * @version  $Revision$, $Date$
      */
+    @Getter
     public static class ReportProperty {
 
         //~ Instance fields ----------------------------------------------------
@@ -465,63 +521,10 @@ public class PotenzialflaecheReportServerAction extends StampedJasperReportServe
         /**
          * DOCUMENT ME!
          *
-         * @return  the dbName
-         */
-        public String getDbName() {
-            return dbName;
-        }
-
-        /**
-         * DOCUMENT ME!
-         *
-         * @param   cidsBean  DOCUMENT ME!
-         *
-         * @return  DOCUMENT ME!
-         */
-        public Map generateParams(final CidsBean cidsBean) {
-            final HashMap params = new HashMap();
-            params.put("", LOG);
-
-            for (final String dbProp : REPORT_PROPERTY_MAP.keySet()) {
-                final ReportProperty rp = REPORT_PROPERTY_MAP.get(dbProp);
-                rp.addParameterToMap(params, cidsBean);
-            }
-
-            return params;
-        }
-
-        /**
-         * DOCUMENT ME!
-         *
-         * @param  map          DOCUMENT ME!
-         * @param  flaecheBean  DOCUMENT ME!
-         */
-        public void addParameterToMap(final Map map, final CidsBean flaecheBean) {
-            map.put(parameterName, flaecheBean.getProperty(dbName));
-        }
-
-        /**
-         * DOCUMENT ME!
-         *
          * @return  the editorLabel
          */
         public String getEditorLabelName() {
             return editorLabelName;
-        }
-
-        /**
-         * DOCUMENT ME!
-         *
-         * @param   o  DOCUMENT ME!
-         *
-         * @return  DOCUMENT ME!
-         */
-        protected String toString(final Object o) {
-            if (o == null) {
-                return null;
-            } else {
-                return o.toString();
-            }
         }
     }
 
@@ -535,31 +538,13 @@ public class PotenzialflaecheReportServerAction extends StampedJasperReportServe
         //~ Constructors -------------------------------------------------------
 
         /**
-         * Creates a new StringReportProperty object.
+         * Creates a new VirtualReportProperty object.
          *
          * @param  parameterName    DOCUMENT ME!
          * @param  editorLabelName  DOCUMENT ME!
          */
         public StringReportProperty(final String parameterName, final String editorLabelName) {
             super(parameterName, editorLabelName);
-        }
-
-        /**
-         * Creates a new StringReportProperty object.
-         *
-         * @param  parameterName    DOCUMENT ME!
-         * @param  dbName           DOCUMENT ME!
-         * @param  editorLabelName  DOCUMENT ME!
-         */
-        public StringReportProperty(final String parameterName, final String dbName, final String editorLabelName) {
-            super(parameterName, dbName, editorLabelName);
-        }
-
-        //~ Methods ------------------------------------------------------------
-
-        @Override
-        public void addParameterToMap(final Map map, final CidsBean flaecheBean) {
-            map.put(parameterName, toString(flaecheBean.getProperty(getDbName())));
         }
     }
 
@@ -584,69 +569,19 @@ public class PotenzialflaecheReportServerAction extends StampedJasperReportServe
 
         //~ Methods ------------------------------------------------------------
 
-        @Override
-        public void addParameterToMap(final Map map, final CidsBean flaecheBean) {
-            map.put(parameterName, calculateProperty(flaecheBean));
-        }
-
         /**
          * DOCUMENT ME!
          *
-         * @param   flaecheBean  DOCUMENT ME!
+         * @param   flaecheBean        DOCUMENT ME!
+         * @param   user               DOCUMENT ME!
+         * @param   metaService        DOCUMENT ME!
+         * @param   connectionContext  DOCUMENT ME!
          *
          * @return  DOCUMENT ME!
          */
-        protected abstract Object calculateProperty(CidsBean flaecheBean);
-    }
-
-    /**
-     * DOCUMENT ME!
-     *
-     * @version  $Revision$, $Date$
-     */
-    public static class StringListReportProperty extends ReportProperty {
-
-        //~ Constructors -------------------------------------------------------
-
-        /**
-         * Creates a new StringListReportProperty object.
-         *
-         * @param  parameterName    DOCUMENT ME!
-         * @param  editorLabelName  DOCUMENT ME!
-         */
-        public StringListReportProperty(final String parameterName, final String editorLabelName) {
-            super(parameterName, editorLabelName);
-        }
-
-        //~ Methods ------------------------------------------------------------
-
-        @Override
-        public void addParameterToMap(final Map map, final CidsBean flaecheBean) {
-            map.put(parameterName,
-                collectionToList((Collection)flaecheBean.getProperty(getDbName())));
-        }
-
-        /**
-         * DOCUMENT ME!
-         *
-         * @param   c  DOCUMENT ME!
-         *
-         * @return  DOCUMENT ME!
-         */
-        protected String collectionToList(final Collection c) {
-            final StringBuilder sb = new StringBuilder();
-            boolean firstString = true;
-
-            for (final Object o : c) {
-                if (firstString) {
-                    firstString = false;
-                } else {
-                    sb.append(", ");
-                }
-                sb.append(o.toString());
-            }
-
-            return sb.toString();
-        }
+        protected abstract Object calculateProperty(final CidsBean flaecheBean,
+                final User user,
+                final MetaService metaService,
+                final ConnectionContext connectionContext);
     }
 }
