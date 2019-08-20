@@ -462,7 +462,13 @@ public class PotenzialflaecheReportServerAction extends StampedJasperReportServe
             } else if (property instanceof StringReportProperty) {
                 final Object object = flaecheBean.getProperty(property.getDbName());
                 if (object instanceof Collection) {
-                    params.put(parameterName, String.join(", ", (Collection)object));
+                    final Collection<String> strings = new ArrayList<>();
+                    for (final Object single : (Collection)object) {
+                        if (single != null) {
+                            strings.add(String.valueOf(single));
+                        }
+                    }
+                    params.put(parameterName, String.join(", ", strings));
                 } else {
                     params.put(parameterName, (object == null) ? null : object.toString());
                 }
