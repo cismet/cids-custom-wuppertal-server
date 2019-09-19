@@ -62,6 +62,7 @@ public class FormSolutionsProperties {
     private final String billingVerwendungskeyDownload;
     private final String billingVerwendungskeyPostweg;
     private final String rechnungBerechnugsgGrundlage;
+    private String tmpBrokenpdfsAbsPath;
     private final boolean mysqlDisabled;
 
     //~ Constructors -----------------------------------------------------------
@@ -99,6 +100,7 @@ public class FormSolutionsProperties {
         mysqlDisabled = (properties.getProperty("MYSQL_DISABLED") != null)
                     && "true".equals(properties.getProperty("MYSQL_DISABLED").trim().toLowerCase());
         rechnungBerechnugsgGrundlage = properties.getProperty("RECHNUNG_BERECHNUNGSGRUNDLAGE");
+        tmpBrokenpdfsAbsPath = properties.getProperty("TMP_BROKENPDFS_ABS_PATH");
     }
 
     //~ Methods ----------------------------------------------------------------
