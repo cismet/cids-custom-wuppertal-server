@@ -42,10 +42,13 @@ import java.io.BufferedReader;
 import java.io.ByteArrayInputStream;
 import java.io.ByteArrayOutputStream;
 import java.io.File;
+import java.io.FileInputStream;
+import java.io.FileOutputStream;
 import java.io.FileWriter;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.InputStreamReader;
+import java.io.OutputStream;
 import java.io.StringReader;
 import java.io.UnsupportedEncodingException;
 
@@ -55,7 +58,6 @@ import java.nio.ByteBuffer;
 import java.nio.CharBuffer;
 import java.nio.charset.Charset;
 
-import java.rmi.Remote;
 import java.rmi.RemoteException;
 
 import java.sql.ResultSet;
@@ -126,10 +128,13 @@ public class FormSolutionServerNewStuffAvailableAction implements UserAwareServe
 
     private static final String TEST_CISMET00_PREFIX = "TEST_CISMET00-";
     private static final String GUTSCHEIN_ADDITIONAL_TEXT = "TESTAUSZUG - nur zur Demonstration (%s)";
+    private static final String PDF_START = "%PDF";
+    private static final String PDF_END = "%%EOF";
 
     private static final Map<String, MetaClass> METACLASS_CACHE = new HashMap();
     private static final ObjectMapper MAPPER = new ObjectMapper();
 
+    public static final int STATUS_CREATE = 100;
     public static final int STATUS_FETCH = 70;
     public static final int STATUS_PARSE = 60;
     public static final int STATUS_GETFLURSTUECK = 55;
@@ -574,7 +579,7 @@ public class FormSolutionServerNewStuffAvailableAction implements UserAwareServe
      *
      * @return  DOCUMENT ME!
      */
-    private static String extractProdukt(final FormSolutionsBestellung formSolutionsBestellung,
+    private static String extractProduct(final FormSolutionsBestellung formSolutionsBestellung,
             final ProductType type) {
         if (type == null) {
             return null;
@@ -739,7 +744,7 @@ public class FormSolutionServerNewStuffAvailableAction implements UserAwareServe
      * @return  DOCUMENT ME!
      */
     private static String extractLandparcelcode(final FormSolutionsBestellung formSolutionsBestellung) {
-        final Set<String> fskz = new LinkedHashSet<String>();
+        final Set<String> fskz = new LinkedHashSet<>();
         final String flurstueckskennzeichen = trimedNotEmpty(formSolutionsBestellung.getFlurstueckskennzeichen());
         if (flurstueckskennzeichen != null) {
             fskz.add(flurstueckskennzeichen);
@@ -900,14 +905,6 @@ public class FormSolutionServerNewStuffAvailableAction implements UserAwareServe
     /**
      * DOCUMENT ME!
      *
-     * @param  args  DOCUMENT ME!
-     */
-    public static void main(final String[] args) {
-        System.out.println("’  " + trimedNotEmpty("’"));
-    }
-    /**
-     * DOCUMENT ME!
-     *
      * @param   produktKey  DOCUMENT ME!
      * @param   dinFormat   DOCUMENT ME!
      * @param   massstab    DOCUMENT ME!
@@ -945,13 +942,13 @@ public class FormSolutionServerNewStuffAvailableAction implements UserAwareServe
                 flurstueckKennzeichen,
                 null);
 
-        final Map localServers = new HashMap<String, Remote>();
+        final Map localServers = new HashMap<>();
         localServers.put("WUNDA_BLAU", getMetaService());
         search.setActiveLocalServers(localServers);
         search.setUser(getUser());
         final Collection<MetaObjectNode> mons = search.performServerSearch();
         if ((mons != null) && !mons.isEmpty()) {
-            final MetaObjectNode mon = new ArrayList<MetaObjectNode>(mons).get(0);
+            final MetaObjectNode mon = new ArrayList<>(mons).get(0);
             final CidsBean flurstueck = getMetaService().getMetaObject(
                         getUser(),
                         mon.getObjectId(),
@@ -1010,26 +1007,111 @@ public class FormSolutionServerNewStuffAvailableAction implements UserAwareServe
     /**
      * DOCUMENT ME!
      *
-     * @param   productUrl       DOCUMENT ME!
-     * @param   destinationPath  DOCUMENT ME!
+     * @param   productUrl  DOCUMENT ME!
+     * @param   fileName    DOCUMENT ME!
      *
      * @throws  Exception  DOCUMENT ME!
      */
-    private void downloadProdukt(final URL productUrl, final String destinationPath) throws Exception {
-        InputStream in = null;
-        try {
-            in = getHttpAccessHandler().doRequest(
-                    productUrl,
-                    new StringReader(""),
-                    AccessHandler.ACCESS_METHODS.GET_REQUEST,
-                    null,
-                    creds);
+    private void createProdukt(final URL productUrl, final String fileName) throws Exception {
+        final File tmpFile;
 
-            FormSolutionFtpClient.getInstance()
-                    .upload(in, FormSolutionsProperties.getInstance().getProduktBasepath() + destinationPath);
-        } finally {
-            if (in != null) {
-                in.close();
+        // request Produkt
+        try(final InputStream in = getHttpAccessHandler().doRequest(
+                            productUrl,
+                            new StringReader(""),
+                            AccessHandler.ACCESS_METHODS.GET_REQUEST,
+                            null,
+                            creds)) {
+            tmpFile = writeProduktToTmp(in, fileName);
+        }
+
+        // test requested Produkt
+        try(final InputStream in = new FileInputStream(tmpFile)) {
+            testPdfValidity(in);
+        }
+
+        // upload Produkt to FTP
+        final String ftpFilePath = FormSolutionsProperties.getInstance().getProduktBasepath()
+                    + ensureCorrectDirectorySeparator(fileName);
+        try(final InputStream in = new FileInputStream(tmpFile)) {
+            FormSolutionFtpClient.getInstance().upload(in, ftpFilePath);
+        }
+        // no errors until here => tmpFile can now be deleted
+        if (tmpFile != null) {
+            tmpFile.delete();
+        }
+
+        // Download Produkt from FTP and test it
+        try(final ByteArrayOutputStream out = new ByteArrayOutputStream();
+            ) {
+            FormSolutionFtpClient.getInstance().download(ftpFilePath, out);
+            try(final InputStream in = new ByteArrayInputStream(out.toByteArray())) {
+                testPdfValidity(in);
+            }
+        }
+    }
+
+    /**
+     * DOCUMENT ME!
+     *
+     * @param   filePath  DOCUMENT ME!
+     *
+     * @return  DOCUMENT ME!
+     */
+    private static String ensureCorrectDirectorySeparator(final String filePath) {
+        final String s = DomainServerImpl.getServerProperties().getFileSeparator();
+        return "/".equals(s) ? filePath : filePath.replace("/", s);
+    }
+
+    /**
+     * DOCUMENT ME!
+     *
+     * @param   in        DOCUMENT ME!
+     * @param   fileName  DOCUMENT ME!
+     *
+     * @return  DOCUMENT ME!
+     *
+     * @throws  Exception  DOCUMENT ME!
+     */
+    private File writeProduktToTmp(final InputStream in, final String fileName) throws Exception {
+        final File tmpFile = new File(FormSolutionsProperties.getInstance().getTmpBrokenpdfsAbsPath()
+                        + DomainServerImpl.getServerProperties().getFileSeparator() + fileName);
+        try(final OutputStream out = new FileOutputStream(tmpFile)) {
+            IOUtils.copy(in, out);
+        }
+        return tmpFile;
+    }
+
+    /**
+     * DOCUMENT ME!
+     *
+     * @param   in  DOCUMENT ME!
+     *
+     * @throws  Exception  DOCUMENT ME!
+     */
+    private static void testPdfValidity(final InputStream in) throws Exception {
+        try(final InputStreamReader ir = new InputStreamReader(in);
+                    final BufferedReader rd = new BufferedReader(ir)) {
+            String firstLine = null;
+            String lastLine = null;
+            {
+                String line;
+                while ((line = rd.readLine()) != null) {
+                    if (firstLine == null) {
+                        firstLine = line;
+                    }
+                    lastLine = line;
+                }
+            }
+
+            if (firstLine == null) {
+                throw new Exception("PDF broken: first line is null");
+            }
+            if (!firstLine.startsWith(PDF_START)) {
+                throw new Exception("PDF broken: first line doesn't start with " + PDF_START);
+            }
+            if (!PDF_END.equals(lastLine)) {
+                throw new Exception("PDF broken: last line equals " + PDF_END);
             }
         }
     }
@@ -1044,7 +1126,7 @@ public class FormSolutionServerNewStuffAvailableAction implements UserAwareServe
     private Map<String, String> extractXmlParts(final Collection<String> transids) {
         logSpecial("extracting xml parts for num of objects: " + transids.size());
 
-        final Map<String, String> fsXmlMap = new HashMap<String, String>(transids.size());
+        final Map<String, String> fsXmlMap = new HashMap<>(transids.size());
 
         for (final String transid : transids) {
             try {
@@ -1072,11 +1154,11 @@ public class FormSolutionServerNewStuffAvailableAction implements UserAwareServe
      */
     private Map<String, FormSolutionsBestellung> createBestellungMap(final Map<String, String> fsXmlMap,
             final Map<String, ProductType> typeMap) {
-        final Collection<String> transids = new ArrayList<String>(fsXmlMap.keySet());
+        final Collection<String> transids = new ArrayList<>(fsXmlMap.keySet());
 
         logSpecial("creating simple bestellung bean for num of objects: " + transids.size());
 
-        final Map<String, FormSolutionsBestellung> fsBestellungMap = new HashMap<String, FormSolutionsBestellung>(
+        final Map<String, FormSolutionsBestellung> fsBestellungMap = new HashMap<>(
                 transids.size());
         for (final String transid : transids) {
             try {
@@ -1097,11 +1179,11 @@ public class FormSolutionServerNewStuffAvailableAction implements UserAwareServe
                 logSpecial("updating mysql email entry for: " + transid);
 
                 if (!FormSolutionsProperties.getInstance().isMysqlDisabled()) {
-                    getMySqlHelper().updateEmail(
+                    getMySqlHelper().updateRequest(
                         transid,
                         STATUS_PARSE,
                         extractLandparcelcode(formSolutionsBestellung),
-                        extractProdukt(formSolutionsBestellung, typeMap.get(transid)),
+                        extractProduct(formSolutionsBestellung, typeMap.get(transid)),
                         downloadOnly,
                         email);
                 }
@@ -1245,39 +1327,48 @@ public class FormSolutionServerNewStuffAvailableAction implements UserAwareServe
     /**
      * DOCUMENT ME!
      *
+     * @param   transid  DOCUMENT ME!
+     *
+     * @return  DOCUMENT ME!
+     */
+    private boolean checkMysqlEntry(final String transid) {
+        boolean mysqlEntryAlreadyExists = false;
+        ResultSet resultSet = null;
+        try {
+            resultSet = getMySqlHelper().select(transid);
+            mysqlEntryAlreadyExists = (resultSet != null) && resultSet.next();
+        } catch (final SQLException ex) {
+            LOG.error("check nach bereits vorhandenen transids fehlgeschlagen.", ex);
+        } finally {
+            if (resultSet != null) {
+                try {
+                    resultSet.close();
+                } catch (SQLException ex) {
+                }
+            }
+        }
+        return mysqlEntryAlreadyExists;
+    }
+
+    /**
+     * DOCUMENT ME!
+     *
      * @param   transids  DOCUMENT ME!
      *
      * @return  DOCUMENT ME!
      */
     public final Map<String, Exception> createMySqlEntries(final Collection<String> transids) {
-        logSpecial("creating mySQL entries for num of objects: " + transids.size());
-
         final Map<String, Exception> insertExceptionMap = new HashMap<>(transids.size());
 
         if (!FormSolutionsProperties.getInstance().isMysqlDisabled()) {
             for (final String transid : transids) {
-                boolean mysqlEntryAlreadyExists = false;
-                ResultSet resultSet = null;
                 try {
-                    resultSet = getMySqlHelper().select(transid);
-                    mysqlEntryAlreadyExists = (resultSet != null) && resultSet.next();
-                } catch (final SQLException ex) {
-                    LOG.error("check nach bereits vorhandenen transids fehlgeschlagen.", ex);
-                } finally {
-                    if (resultSet != null) {
-                        try {
-                            resultSet.close();
-                        } catch (SQLException ex) {
-                        }
-                    }
-                }
+                    logSpecial("updating or inserting mySQL entry for: " + transid);
 
-                logSpecial("updating or inserting mySQL entry for: " + transid);
-                try {
-                    if (mysqlEntryAlreadyExists) {
-                        getMySqlHelper().updateStatus(transid, 100);
+                    if (checkMysqlEntry(transid)) {
+                        getMySqlHelper().updateStatus(transid, STATUS_CREATE);
                     } else {
-                        getMySqlHelper().insertMySql(transid, 100);
+                        getMySqlHelper().insertMySql(transid, STATUS_CREATE);
                     }
                     doStatusChangedRequest(transid);
                 } catch (final Exception ex) {
@@ -1540,7 +1631,7 @@ public class FormSolutionServerNewStuffAvailableAction implements UserAwareServe
                     final String fileName = transid + ".pdf";
                     final String fileNameRechnung = "RE_" + transid + ".pdf";
 
-                    downloadProdukt(productUrl, fileName);
+                    createProdukt(productUrl, fileName);
 
                     final String fileNameOrig = (String)bestellungBean.getProperty("fk_produkt.fk_typ.key")
                                 + "."
@@ -1567,13 +1658,27 @@ public class FormSolutionServerNewStuffAvailableAction implements UserAwareServe
                     createRechnung(fileNameRechnung, bestellungBean);
 
                     if (!FormSolutionsProperties.getInstance().isMysqlDisabled()) {
-                        getMySqlHelper().updateProdukt(
-                            transid,
-                            STATUS_DOWNLOAD,
-                            (String)bestellungBean.getProperty("produkt_dateipfad"),
-                            (String)bestellungBean.getProperty("produkt_dateiname_orig"));
+                        if (checkMysqlEntry(transid)) {
+                            getMySqlHelper().updateProduct(
+                                transid,
+                                STATUS_DOWNLOAD,
+                                (String)bestellungBean.getProperty("produkt_dateipfad"),
+                                (String)bestellungBean.getProperty("produkt_dateiname_orig"));
+                        } else {
+                            if (!FormSolutionsProperties.getInstance().isMysqlDisabled()) {
+                                getMySqlHelper().insertProductMySql(
+                                    transid,
+                                    STATUS_DOWNLOAD,
+                                    (String)bestellungBean.getProperty("landparcelcode"),
+                                    (String)bestellungBean.getProperty("fk_product.fk_typ.name"),
+                                    Boolean.TRUE.equals((Boolean)bestellungBean.getProperty("postweg")),
+                                    (String)bestellungBean.getProperty("email"),
+                                    (String)bestellungBean.getProperty("produkt_dateipfad"),
+                                    (String)bestellungBean.getProperty("produkt_dateiname_orig"));
+                            }
+                        }
+                        doStatusChangedRequest(transid);
                     }
-                    doStatusChangedRequest(transid);
                 } catch (final Exception ex) {
                     setErrorStatus(transid, STATUS_DOWNLOAD, bestellungBean, "Fehler beim Erzeugen des Produktes", ex);
                 }
@@ -1902,9 +2007,11 @@ public class FormSolutionServerNewStuffAvailableAction implements UserAwareServe
                     }
                 }
                 case STATUS_CLOSE: {
-                    closeTransactions(fsBeanMap);
-                    if (singleStep) {
-                        break;
+                    if (fetchFromFs) {
+                        closeTransactions(fsBeanMap);
+                        if (singleStep) {
+                            break;
+                        }
                     }
                 }
                 case STATUS_CREATEURL:

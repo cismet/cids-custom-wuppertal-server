@@ -47,15 +47,21 @@ public abstract class StampedJasperReportServerAction extends JasperReportServer
     public ConnectionContext getConnectionContext() {
         return connectionContext;
     }
+
     @Override
     protected byte[] generateReport(final Map<String, Object> parameters, final JRDataSource dataSource)
             throws Exception {
-        if (ServerStamperUtils.getInstance().isStampEnabledFor("action_" + getTaskName())) {
-            try(final ByteArrayInputStream bis = new ByteArrayInputStream(super.generateReport(parameters, dataSource))) {
-                return ServerStamperUtils.getInstance().stampDocument(bis, getConnectionContext());
-            }
-        } else {
-            return super.generateReport(parameters, dataSource);
+        final String documentType = "action_" + getTaskName();
+        final byte[] bytes = super.generateReport(parameters, dataSource);
+        try(final ByteArrayInputStream bis = new ByteArrayInputStream(bytes)) {
+            return ServerStamperUtils.getInstance()
+                        .stampDocument(documentType, bis, new StamperUtils.StamperFallback() {
+
+                                @Override
+                                public byte[] createProduct() throws Exception {
+                                    return bytes;
+                                }
+                            }, getConnectionContext());
         }
     }
 }
