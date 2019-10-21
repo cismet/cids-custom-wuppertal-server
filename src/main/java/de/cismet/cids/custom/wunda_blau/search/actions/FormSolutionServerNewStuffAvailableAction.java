@@ -18,7 +18,6 @@ import Sirius.server.middleware.types.MetaClass;
 import Sirius.server.middleware.types.MetaObject;
 import Sirius.server.middleware.types.MetaObjectNode;
 import Sirius.server.newuser.User;
-import Sirius.server.property.ServerProperties;
 
 import com.fasterxml.jackson.core.type.TypeReference;
 import com.fasterxml.jackson.databind.ObjectMapper;
@@ -43,10 +42,13 @@ import java.io.BufferedReader;
 import java.io.ByteArrayInputStream;
 import java.io.ByteArrayOutputStream;
 import java.io.File;
+import java.io.FileInputStream;
+import java.io.FileOutputStream;
 import java.io.FileWriter;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.InputStreamReader;
+import java.io.OutputStream;
 import java.io.StringReader;
 import java.io.UnsupportedEncodingException;
 
@@ -105,8 +107,6 @@ import de.cismet.commons.security.handler.SimpleHttpAccessHandler;
 
 import de.cismet.connectioncontext.ConnectionContext;
 import de.cismet.connectioncontext.ConnectionContextStore;
-import java.io.FileOutputStream;
-import java.io.OutputStream;
 
 /**
  * DOCUMENT ME!
@@ -120,7 +120,7 @@ public class FormSolutionServerNewStuffAvailableAction implements UserAwareServe
     ConnectionContextStore {
 
     //~ Static fields/initializers ---------------------------------------------
-    
+
     private static final transient org.apache.log4j.Logger LOG = org.apache.log4j.Logger.getLogger(
             FormSolutionServerNewStuffAvailableAction.class);
 
@@ -1006,77 +1006,115 @@ public class FormSolutionServerNewStuffAvailableAction implements UserAwareServe
     /**
      * DOCUMENT ME!
      *
-     * @param   productUrl       DOCUMENT ME!
-     * @param   fileName  DOCUMENT ME!
+     * @param   productUrl  DOCUMENT ME!
+     * @param   fileName    DOCUMENT ME!
      *
      * @throws  Exception  DOCUMENT ME!
      */
-    private void downloadProdukt(final URL productUrl, final String fileName) throws Exception {
-        try (final InputStream in = getHttpAccessHandler().doRequest(
-                    productUrl,
-                    new StringReader(""),
-                    AccessHandler.ACCESS_METHODS.GET_REQUEST,
-                    null,
-                    creds)) {
-            FormSolutionFtpClient.getInstance()
-                    .upload(in, FormSolutionsProperties.getInstance().getProduktBasepath() + fileName);            
-            testProdukt(fileName);
+    private void createProdukt(final URL productUrl, final String fileName) throws Exception {
+        final File tmpFile;
+
+        // request Produkt
+        try(final InputStream in = getHttpAccessHandler().doRequest(
+                            productUrl,
+                            new StringReader(""),
+                            AccessHandler.ACCESS_METHODS.GET_REQUEST,
+                            null,
+                            creds)) {
+            tmpFile = writeProduktToTmp(in, fileName);
+        }
+
+        // test requested Produkt
+        try(final InputStream in = new FileInputStream(tmpFile)) {
+            testPdfValidity(in);
+        }
+
+        // upload Produkt to FTP
+        final String ftpFilePath = FormSolutionsProperties.getInstance().getProduktBasepath()
+                    + ensureCorrectDirectorySeparator(fileName);
+        try(final InputStream in = new FileInputStream(tmpFile)) {
+            FormSolutionFtpClient.getInstance().upload(in, ftpFilePath);
+        }
+        // no errors until here => tmpFile can now be deleted
+        if (tmpFile != null) {
+            tmpFile.delete();
+        }
+
+        // Download Produkt from FTP and test it
+        try(final ByteArrayOutputStream out = new ByteArrayOutputStream();
+            ) {
+            FormSolutionFtpClient.getInstance().download(ftpFilePath, out);
+            try(final InputStream in = new ByteArrayInputStream(out.toByteArray())) {
+                testPdfValidity(in);
+            }
         }
     }
-    
-    private void testProdukt(final String destinationPath) throws Exception {
-        final ServerProperties serverProps = DomainServerImpl.getServerProperties();
-        final String s = serverProps.getFileSeparator();
 
-        try (final ByteArrayOutputStream out = new ByteArrayOutputStream()) {        
-            if ("/".equals(s)) {
-                FormSolutionFtpClient.getInstance().download(FormSolutionsProperties.getInstance().getProduktBasepath() + destinationPath, out);
-            } else {
-                FormSolutionFtpClient.getInstance().download(FormSolutionsProperties.getInstance().getProduktBasepath() + destinationPath.replace("/", s), out);
-            }
+    /**
+     * DOCUMENT ME!
+     *
+     * @param   filePath  DOCUMENT ME!
+     *
+     * @return  DOCUMENT ME!
+     */
+    private static String ensureCorrectDirectorySeparator(final String filePath) {
+        final String s = DomainServerImpl.getServerProperties().getFileSeparator();
+        return "/".equals(s) ? filePath : filePath.replace("/", s);
+    }
 
-            testPdfValidity(out.toByteArray());
-        }        
+    /**
+     * DOCUMENT ME!
+     *
+     * @param   in        DOCUMENT ME!
+     * @param   fileName  DOCUMENT ME!
+     *
+     * @return  DOCUMENT ME!
+     *
+     * @throws  Exception  DOCUMENT ME!
+     */
+    private File writeProduktToTmp(final InputStream in, final String fileName) throws Exception {
+        final File tmpFile = new File(FormSolutionsProperties.getInstance().getTmpBrokenpdfsAbsPath()
+                        + DomainServerImpl.getServerProperties().getFileSeparator() + fileName);
+        try(final OutputStream out = new FileOutputStream(tmpFile)) {
+            IOUtils.copy(in, out);
+        }
+        return tmpFile;
     }
-    
-    private static void testPdfValidity(final byte[] bytes) throws Exception {
-        try (final InputStream is = new ByteArrayInputStream(bytes)) {
-            testPdfValidity(is);
-        } catch (final Exception ex) {
-            final File tmpFile = new File(FormSolutionsProperties.getInstance().getTmpBrokenpdfsAbsPath());
-            try (
-                    final InputStream is = new ByteArrayInputStream(bytes);
-                    final OutputStream os = new FileOutputStream(tmpFile)
-            ) {
-                IOUtils.copy(is, os);
-                throw ex;
-            }
-        }        
-    }
-    
-    private static void testPdfValidity(final InputStream is) throws Exception {        
-        try (final BufferedReader rd = new BufferedReader(new InputStreamReader(is))) {
+
+    /**
+     * DOCUMENT ME!
+     *
+     * @param   in  DOCUMENT ME!
+     *
+     * @throws  Exception  DOCUMENT ME!
+     */
+    private static void testPdfValidity(final InputStream in) throws Exception {
+        try(final InputStreamReader ir = new InputStreamReader(in);
+                    final BufferedReader rd = new BufferedReader(ir)) {
             String firstLine = null;
             String lastLine = null;
-            String line;
-            while((line = rd.readLine()) != null) {
-                if (firstLine == null) {
-                    firstLine = line;
+            {
+                String line;
+                while ((line = rd.readLine()) != null) {
+                    if (firstLine == null) {
+                        firstLine = line;
+                    }
+                    lastLine = line;
                 }
-                lastLine = line;
-            }       
-            
+            }
+
             if (firstLine == null) {
                 throw new Exception("PDF broken: first line is null");
-            } if (!firstLine.startsWith(PDF_START)) {
+            }
+            if (!firstLine.startsWith(PDF_START)) {
                 throw new Exception("PDF broken: first line doesn't start with " + PDF_START);
             }
             if (!PDF_END.equals(lastLine)) {
-                throw new Exception("PDF broken: last line equals " + PDF_END);                
+                throw new Exception("PDF broken: last line equals " + PDF_END);
             }
         }
     }
-    
+
     /**
      * DOCUMENT ME!
      *
@@ -1592,7 +1630,7 @@ public class FormSolutionServerNewStuffAvailableAction implements UserAwareServe
                     final String fileName = transid + ".pdf";
                     final String fileNameRechnung = "RE_" + transid + ".pdf";
 
-                    downloadProdukt(productUrl, fileName);
+                    createProdukt(productUrl, fileName);
 
                     final String fileNameOrig = (String)bestellungBean.getProperty("fk_produkt.fk_typ.key")
                                 + "."
