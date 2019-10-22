@@ -73,7 +73,8 @@ public enum WundaBlauServerResources {
     PNR_TEMPLATE_RESERVIERUNG(new TextServerResource("/pointnumberreservation/A_reservierung.xml")),
     PNR_TEMPLATE_RESERVIERUNG_SW(new TextServerResource("/pointnumberreservation/A_reservierung_startwert.xml")),
     POI_CONF_PROPERTIES(new TextServerResource("/poi/poi_conf.properties")),
-    STAMPER_CONF_PROPERTIES(new TextServerResource("/stamper/stamper_conf.properties"));
+    STAMPER_CONF_PROPERTIES(new TextServerResource("/stamper/stamper_conf.properties")),
+    ORBIT_AUTH_JSON(new TextServerResource("/orbit/auth.json"));
 
     //~ Instance fields --------------------------------------------------------
 
