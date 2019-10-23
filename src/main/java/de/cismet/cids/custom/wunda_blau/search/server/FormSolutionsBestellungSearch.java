@@ -21,6 +21,8 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
+import de.cismet.cids.custom.utils.formsolutions.FormSolutionsProperties;
+
 import de.cismet.cids.server.search.AbstractCidsServerSearch;
 import de.cismet.cids.server.search.MetaObjectNodeServerSearch;
 
@@ -40,6 +42,7 @@ public class FormSolutionsBestellungSearch extends AbstractCidsServerSearch impl
     //~ Instance fields --------------------------------------------------------
 
     @Setter @Getter private String berechtigungspruefungSchluessel;
+    @Setter @Getter private String transidHash;
 
     private ConnectionContext connectionContext = ConnectionContext.createDummy();
 
@@ -68,7 +71,15 @@ public class FormSolutionsBestellungSearch extends AbstractCidsServerSearch impl
             final List<MetaObjectNode> result = new ArrayList<>();
 
             final Map<String, Object> filter = new HashMap<>();
-            filter.put("berechtigungspruefung.schluessel", berechtigungspruefungSchluessel);
+            if (getBerechtigungspruefungSchluessel() != null) {
+                filter.put("berechtigungspruefung.schluessel", getBerechtigungspruefungSchluessel());
+            }
+            if (getTransidHash() != null) {
+                filter.put(String.format(
+                        "md5('%s'||fs_bestellung.transid)",
+                        FormSolutionsProperties.getInstance().getTransidHashpepper()),
+                    getTransidHash());
+            }
             final Collection<String> filterStrings = new ArrayList<>();
             for (final Map.Entry<String, Object> entry : filter.entrySet()) {
                 if (entry.getValue() instanceof String) {
