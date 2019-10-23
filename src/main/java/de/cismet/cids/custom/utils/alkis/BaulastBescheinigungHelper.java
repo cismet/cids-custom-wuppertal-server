@@ -409,11 +409,7 @@ public class BaulastBescheinigungHelper {
 
         final HashMap<String, Integer> prodAmounts = new HashMap<>();
         if (anzahlNegativ > 0) {
-            if (anzahlNegativ > 10) {
-                prodAmounts.put("ea_blab_neg_ab_10", 1);
-            } else {
-                prodAmounts.put("ea_blab_neg", anzahlNegativ);
-            }
+            prodAmounts.put("ea_blab_neg", anzahlNegativ);
         }
         if (anzahlPositiv1 > 0) {
             prodAmounts.put("ea_blab_pos_1", anzahlPositiv1);

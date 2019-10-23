@@ -43,11 +43,11 @@ public enum WundaBlauServerResources {
     NIVP_OVERVIEW_JASPER(new JasperReportServerResource("/reports/nivp_overview.jasper")),
     FS_RECHNUNG_JASPER(new JasperReportServerResource("/reports/bestellung_rechnung.jasper")),
     FS_RECHNUNG_RUECKSEITE_JASPER(new JasperReportServerResource("/reports/bestellung_rechnung_rueckseite.jasper")),
+
+    POTENZIALFLAECHEN_JASPER(new JasperReportServerResource("/potenzialflaechen/potenzialflaechen_full.jasper")),
     FS_TEST_XML(new TextServerResource("/formsolutions/TEST_CISMET00.xml")),
     FS_IGNORE_TRANSID_TXT(new TextServerResource("/formsolutions/ignoreTransids.txt")),
     FORMSOLUTIONS_PROPERTIES(new TextServerResource("/formsolutions/fs_conf.properties")),
-
-    POTENZIALFLAECHEN_JASPER(new JasperReportServerResource("/potenzialflaechen/potenzialflaechen_full.jasper")),
     BUTLER_PROPERTIES(new TextServerResource("/butler/butler.properties")),
     NAS_SERVER_PROPERTIES(new TextServerResource("/nas/nasServer_conf.properties")),
     NAS_PRODUCT_DESCRIPTION_JSON(new TextServerResource("/nas/nasProductDescription.json")),
