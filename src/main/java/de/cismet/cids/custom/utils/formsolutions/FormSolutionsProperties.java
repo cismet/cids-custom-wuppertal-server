@@ -65,7 +65,11 @@ public class FormSolutionsProperties {
     private final String billingVerwendungskeyDownload;
     private final String billingVerwendungskeyPostweg;
     private final String rechnungBerechnugsgGrundlage;
-    private String tmpBrokenpdfsAbsPath;
+    private final String tmpBrokenpdfsAbsPath;
+    private final String transidHashpepper;
+    private final String redirectionFormat;
+    private final String urlCreateCacheid;
+    private final String cidsActionHttpRedirectorUrl;
     private final boolean mysqlDisabled;
 
     //~ Constructors -----------------------------------------------------------
@@ -107,6 +111,10 @@ public class FormSolutionsProperties {
                     && "true".equals(properties.getProperty("MYSQL_DISABLED").trim().toLowerCase());
         rechnungBerechnugsgGrundlage = properties.getProperty("RECHNUNG_BERECHNUNGSGRUNDLAGE");
         tmpBrokenpdfsAbsPath = properties.getProperty("TMP_BROKENPDFS_ABS_PATH");
+        transidHashpepper = properties.getProperty("TRANSID_HASHPEPPER");
+        redirectionFormat = properties.getProperty("REDIRECTION_FORMAT");
+        urlCreateCacheid = properties.getProperty("URL_CREATE_CACHEID");
+        cidsActionHttpRedirectorUrl = properties.getProperty("CIDS_ACTION_HTTP_REDIRECTOR_URL");
     }
 
     //~ Methods ----------------------------------------------------------------

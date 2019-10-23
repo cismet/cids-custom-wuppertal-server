@@ -32,6 +32,7 @@ import net.sf.jasperreports.engine.JasperPrint;
 import net.sf.jasperreports.engine.JasperReport;
 import net.sf.jasperreports.engine.data.JRBeanCollectionDataSource;
 
+import org.apache.commons.codec.digest.DigestUtils;
 import org.apache.commons.httpclient.UsernamePasswordCredentials;
 import org.apache.commons.io.IOUtils;
 import org.apache.commons.lang.RandomStringUtils;
@@ -115,12 +116,6 @@ public class FormSolutionsBestellungHandler implements ConnectionContextProvider
 
     //~ Static fields/initializers ---------------------------------------------
 
-    private static final Logger LOG = Logger.getLogger(FormSolutionsBestellungHandler.class);
-    private static final String TEST_CISMET00_PREFIX = "TEST_CISMET00-";
-    private static final String GUTSCHEIN_ADDITIONAL_TEXT = "TESTAUSZUG - nur zur Demonstration (%s)";
-
-    private static final ObjectMapper MAPPER = new ObjectMapper();
-
     public static final int STATUS_CREATE = 100;
     public static final int STATUS_FETCH = 70;
     public static final int STATUS_PARSE = 60;
@@ -136,7 +131,18 @@ public class FormSolutionsBestellungHandler implements ConnectionContextProvider
 
     public static final int GUTSCHEIN_YES = 1;
     public static final int GUTSCHEIN_NO = 2;
+
+    private static final Logger LOG = Logger.getLogger(FormSolutionsBestellungHandler.class);
+    private static final String TEST_CISMET00_PREFIX = "TEST_CISMET00-";
+    private static final String GUTSCHEIN_ADDITIONAL_TEXT = "TESTAUSZUG - nur zur Demonstration (%s)";
+    private static final ObjectMapper MAPPER = new ObjectMapper();
     private static final Map<String, MetaClass> METACLASS_CACHE = new HashMap();
+    private static final String EXTERNAL_USER_QUERY_TEMPLATE = "SELECT %d, %s FROM %s WHERE name = '%s';";
+    private static final String UNFINISHED_BESTELLUNGEN_QUERY_TEMPLATE =
+        "SELECT %d, %s FROM %s WHERE test IS NOT TRUE AND duplicate IS NOT TRUE AND postweg IS NOT TRUE AND fehler IS NULL AND erledigt IS NOT TRUE;";
+    private static final String PRODUKT_QUERY_TEMPLATE = "SELECT DISTINCT %d, %s FROM %s WHERE %s LIMIT 1;";
+    private static final String BESTELLUNG_BY_TRANSID_QUERY_TEMPLATE =
+        "SELECT DISTINCT %d, %s FROM %s WHERE transid LIKE '%s';";
 
     //~ Enums ------------------------------------------------------------------
 
@@ -149,7 +155,7 @@ public class FormSolutionsBestellungHandler implements ConnectionContextProvider
 
         //~ Enum constants -----------------------------------------------------
 
-        SGK, ABK, BAB
+        SGK, ABK, BAB_VORBEREITUNG, BAB_ABSCHLUSS
     }
 
     //~ Instance fields --------------------------------------------------------
@@ -157,13 +163,11 @@ public class FormSolutionsBestellungHandler implements ConnectionContextProvider
     private final User user;
     private final MetaService metaService;
     private final ConnectionContext connectionContext;
-    private final SimpleHttpAccessHandler HTTP_HANDLER = new SimpleHttpAccessHandler();
-
+    private final SimpleHttpAccessHandler httpHandler = new SimpleHttpAccessHandler();
     private final UsernamePasswordCredentials creds;
     private final String testCismet00Xml;
     private final ProductType testCismet00Type;
     private final Set<String> ignoreTransids = new HashSet<>();
-
     private final BaulastBescheinigungHelper baulastBescheinigungHelper;
     private final BillingInfoHandler billingInfoHander;
 
@@ -247,13 +251,10 @@ public class FormSolutionsBestellungHandler implements ConnectionContextProvider
             LOG.error(ex, ex);
         }
         this.billingInfoHander = billingInfoHander;
-
         this.baulastBescheinigungHelper = new BaulastBescheinigungHelper(user, metaService, connectionContext);
-
         this.testCismet00Type = testCismet00Type;
         this.testCismet00Xml = testCismet00Xml;
         this.creds = creds;
-
         this.user = user;
         this.metaService = metaService;
         this.connectionContext = connectionContext;
@@ -373,12 +374,15 @@ public class FormSolutionsBestellungHandler implements ConnectionContextProvider
             }
             return null;
         }
-        String query = "SELECT " + mc.getID() + ", " + mc.getPrimaryKey() + " ";
-        query += "FROM " + mc.getTableName();
-        query += " WHERE name = '" + loginName + "'";
+        final String query = String.format(
+                EXTERNAL_USER_QUERY_TEMPLATE,
+                mc.getID(),
+                mc.getPrimaryKey(),
+                mc.getTableName(),
+                loginName);
 
         CidsBean externalUser = null;
-        final MetaObject[] metaObjects = getMetaService().getMetaObject(user, query, getConnectionContext());
+        final MetaObject[] metaObjects = getMetaService().getMetaObject(getUser(), query, getConnectionContext());
         if ((metaObjects != null) && (metaObjects.length > 0)) {
             externalUser = metaObjects[0].getBean();
         }
@@ -673,18 +677,13 @@ public class FormSolutionsBestellungHandler implements ConnectionContextProvider
                 "WUNDA_BLAU",
                 "fs_bestellung",
                 getConnectionContext());
-
-        final String pruefungQuery = "SELECT DISTINCT " + mcBestellung.getID() + ", "
-                    + mcBestellung.getTableName() + "." + mcBestellung.getPrimaryKey() + " "
-                    + "FROM " + mcBestellung.getTableName() + " "
-                    + "WHERE "
-                    + "  test IS NOT TRUE AND "
-                    + "  duplicate IS NOT TRUE AND "
-                    + "  postweg IS NOT TRUE AND "
-                    + "  fehler IS NULL AND "
-                    + "  erledigt IS NOT TRUE "
-                    + ";";
-
+        final String pruefungQuery = String.format(
+                UNFINISHED_BESTELLUNGEN_QUERY_TEMPLATE,
+                mcBestellung.getID(),
+                mcBestellung.getTableName()
+                        + "."
+                        + mcBestellung.getPrimaryKey(),
+                mcBestellung.getTableName());
         return getMetaService().getMetaObject(getUser(), pruefungQuery, getConnectionContext());
     }
 
@@ -713,8 +712,12 @@ public class FormSolutionsBestellungHandler implements ConnectionContextProvider
                     auftragsListeUrl = new URL(FormSolutionsProperties.getInstance().getUrlAuftragslisteAbkFs());
                 }
                 break;
-                case BAB: {
+                case BAB_VORBEREITUNG: {
                     auftragsListeUrl = new URL(FormSolutionsProperties.getInstance().getUrlAuftragslisteBb1Fs());
+                }
+                break;
+                case BAB_ABSCHLUSS: {
+                    auftragsListeUrl = new URL(FormSolutionsProperties.getInstance().getUrlAuftragslisteBb2Fs());
                 }
                 break;
                 default: {
@@ -808,7 +811,7 @@ public class FormSolutionsBestellungHandler implements ConnectionContextProvider
                         bestellungBean.setProperty("erledigt", true);
                     }
                     getMetaService().updateMetaObject(
-                        user,
+                        getUser(),
                         bestellungBean.getMetaObject(),
                         getConnectionContext());
                 } catch (final Exception ex) {
@@ -860,7 +863,7 @@ public class FormSolutionsBestellungHandler implements ConnectionContextProvider
                 bestellungBean.setProperty("exception", getObjectMapper().writeValueAsString(exception));
                 if (persist) {
                     getMetaService().updateMetaObject(
-                        user,
+                        getUser(),
                         bestellungBean.getMetaObject(),
                         getConnectionContext());
                 }
@@ -1038,7 +1041,7 @@ public class FormSolutionsBestellungHandler implements ConnectionContextProvider
                 produktSB = new StringBuffer("Amtliche Basiskarte").append(farbig ? " (farbig)" : " (sw)");
             }
             break;
-            case BAB: {
+            case BAB_VORBEREITUNG: {
                 produktSB = new StringBuffer("Baulastenbescheinigung");
             }
             break;
@@ -1085,7 +1088,7 @@ public class FormSolutionsBestellungHandler implements ConnectionContextProvider
                     return null;
                 }
             }
-            case BAB: {
+            case BAB_VORBEREITUNG: {
                 return "BAB";
             }
             default: {
@@ -1160,18 +1163,33 @@ public class FormSolutionsBestellungHandler implements ConnectionContextProvider
         final MetaClass produktTypMc = getMetaClass("fs_bestellung_produkt_typ", getConnectionContext());
         final MetaClass produktMc = getMetaClass("fs_bestellung_produkt", getConnectionContext());
         final MetaClass formatMc = getMetaClass("fs_bestellung_format", getConnectionContext());
-        final String produktQuery = "SELECT DISTINCT " + produktMc.getID() + ", "
-                    + produktMc.getTableName() + "." + produktMc.getPrimaryKey() + " "
-                    + "FROM " + produktMc.getTableName() + ", " + produktTypMc.getTableName() + ", "
-                    + formatMc.getTableName() + " "
-                    + "WHERE "
-                    + ((formatKey != null)
-                        ? (produktMc.getTableName() + ".fk_format = " + formatMc.getTableName() + ".id") : "TRUE") + " "
-                    + "AND " + produktMc.getTableName() + ".fk_typ = " + produktTypMc.getTableName() + ".id "
-                    + "AND " + produktTypMc.getTableName() + ".key = '" + produktKey + "' "
-                    + "AND " + ((formatKey != null) ? (formatMc.getTableName() + ".key = '" + formatKey + "'") : "TRUE")
-                    + " "
-                    + "LIMIT 1;";
+
+        final String produktQuery = String.format(
+                PRODUKT_QUERY_TEMPLATE,
+                produktMc.getID(),
+                produktMc.getTableName()
+                        + "."
+                        + produktMc.getPrimaryKey(),
+                produktMc.getTableName()
+                        + ", "
+                        + produktTypMc.getTableName()
+                        + ", "
+                        + formatMc.getTableName(),
+                ((formatKey != null) ? (produktMc.getTableName() + ".fk_format = " + formatMc.getTableName() + ".id")
+                                     : "TRUE")
+                        + " "
+                        + "AND "
+                        + produktMc.getTableName()
+                        + ".fk_typ = "
+                        + produktTypMc.getTableName()
+                        + ".id "
+                        + "AND "
+                        + produktTypMc.getTableName()
+                        + ".key = '"
+                        + produktKey
+                        + "' "
+                        + "AND "
+                        + ((formatKey != null) ? (formatMc.getTableName() + ".key = '" + formatKey + "'") : "TRUE"));
         final MetaObject[] produktMos = getMetaService().getMetaObject(
                 getUser(),
                 produktQuery,
@@ -1499,27 +1517,32 @@ public class FormSolutionsBestellungHandler implements ConnectionContextProvider
     /**
      * DOCUMENT ME!
      *
+     * @param   in               DOCUMENT ME!
+     * @param   destinationPath  DOCUMENT ME!
+     *
+     * @throws  Exception  DOCUMENT ME!
+     */
+    private void downloadProdukt(final InputStream in, final String destinationPath) throws Exception {
+        FormSolutionsFtpClient.getInstance()
+                .upload(in, FormSolutionsProperties.getInstance().getProduktBasepath() + destinationPath);
+    }
+    /**
+     * DOCUMENT ME!
+     *
      * @param   productUrl       DOCUMENT ME!
      * @param   destinationPath  DOCUMENT ME!
      *
      * @throws  Exception  DOCUMENT ME!
      */
-    private void downloadProdukt(final URL productUrl, final String destinationPath) throws Exception {
-        InputStream in = null;
-        try {
-            in = getHttpAccessHandler().doRequest(
-                    productUrl,
-                    new StringReader(""),
-                    AccessHandler.ACCESS_METHODS.GET_REQUEST,
-                    null,
-                    creds);
-
-            FormSolutionsFtpClient.getInstance()
-                    .upload(in, FormSolutionsProperties.getInstance().getProduktBasepath() + destinationPath);
-        } finally {
-            if (in != null) {
-                in.close();
-            }
+    private void downloadKartenProdukt(final URL productUrl, final String destinationPath) throws Exception {
+        try(final InputStream in = getHttpAccessHandler().doRequest(
+                            productUrl,
+                            new StringReader(""),
+                            AccessHandler.ACCESS_METHODS.GET_REQUEST,
+                            null,
+                            creds);
+            ) {
+            downloadProdukt(in, destinationPath);
         }
     }
 
@@ -1638,10 +1661,14 @@ public class FormSolutionsBestellungHandler implements ConnectionContextProvider
             boolean duplicate = false;
             try {
                 final MetaClass bestellungMc = getMetaClass("fs_bestellung", getConnectionContext());
-                final String searchQuery = "SELECT DISTINCT " + bestellungMc.getID() + ", "
-                            + bestellungMc.getTableName() + "." + bestellungMc.getPrimaryKey() + " "
-                            + "FROM " + bestellungMc.getTableName() + " "
-                            + "WHERE transid LIKE '" + transid + "';";
+                final String searchQuery = String.format(
+                        BESTELLUNG_BY_TRANSID_QUERY_TEMPLATE,
+                        bestellungMc.getID(),
+                        bestellungMc.getTableName()
+                                + "."
+                                + bestellungMc.getPrimaryKey(),
+                        bestellungMc.getTableName(),
+                        transid);
                 final MetaObject[] mos = getMetaService().getMetaObject(getUser(), searchQuery);
                 if ((mos != null) && (mos.length > 0)) {
                     duplicate = true;
@@ -1700,7 +1727,7 @@ public class FormSolutionsBestellungHandler implements ConnectionContextProvider
                 FormSolutionBestellungSpecialLogger.getInstance().log("persisting cids entry for: " + transid);
 
                 final MetaObject persistedMo = getMetaService().insertMetaObject(
-                        user,
+                        getUser(),
                         bestellungBean.getMetaObject(),
                         getConnectionContext());
 
@@ -1732,8 +1759,8 @@ public class FormSolutionsBestellungHandler implements ConnectionContextProvider
             return ProductType.SGK;
         } else if (ProductType.ABK.toString().equals(string)) {
             return ProductType.ABK;
-        } else if (ProductType.BAB.toString().equals(string)) {
-            return ProductType.BAB;
+        } else if (ProductType.BAB_VORBEREITUNG.toString().equals(string)) {
+            return ProductType.BAB_VORBEREITUNG;
         } else {
             return null;
         }
@@ -2042,7 +2069,7 @@ public class FormSolutionsBestellungHandler implements ConnectionContextProvider
                         case ABK: {
                             return true;
                         }
-                        case BAB: {
+                        case BAB_VORBEREITUNG: {
                             final String flurstueckKennzeichen = ((String)bestellungBean.getProperty("landparcelcode"));
                             final String auftragsNummer = transid;
                             final String produktBezeichnung = (String)bestellungBean.getProperty("landparcelcode");
@@ -2111,6 +2138,17 @@ public class FormSolutionsBestellungHandler implements ConnectionContextProvider
     /**
      * DOCUMENT ME!
      *
+     * @param   transid  DOCUMENT ME!
+     *
+     * @return  DOCUMENT ME!
+     */
+    private static String createTransidHash(final String transid) {
+        return DigestUtils.md5Hex(FormSolutionsProperties.getInstance().getTransidHashpepper() + transid);
+    }
+
+    /**
+     * DOCUMENT ME!
+     *
      * @param  fsBeanMap  DOCUMENT ME!
      */
     private void downloadProdukte(final Map<String, CidsBean> fsBeanMap) {
@@ -2128,7 +2166,7 @@ public class FormSolutionsBestellungHandler implements ConnectionContextProvider
                     bestellungBean.setProperty("produkt_dateiname_orig", null);
                     bestellungBean.setProperty("produkt_ts", null);
 
-                    metaService.updateMetaObject(
+                    getMetaService().updateMetaObject(
                         getUser(),
                         bestellungBean.getMetaObject(),
                         getConnectionContext());
@@ -2140,7 +2178,7 @@ public class FormSolutionsBestellungHandler implements ConnectionContextProvider
                             final String fileName = transid + ".pdf";
                             final String fileNameRechnung = "RE_" + transid + ".pdf";
 
-                            downloadProdukt(productUrl, fileName);
+                            downloadKartenProdukt(productUrl, fileName);
 
                             final String fileNameOrig = (String)bestellungBean.getProperty("fk_produkt.fk_typ.key")
                                         + "."
@@ -2161,7 +2199,7 @@ public class FormSolutionsBestellungHandler implements ConnectionContextProvider
                             bestellungBean.setProperty("produkt_ts", new Timestamp(new Date().getTime()));
 
                             getMetaService().updateMetaObject(
-                                user,
+                                getUser(),
                                 bestellungBean.getMetaObject(),
                                 getConnectionContext());
 
@@ -2193,7 +2231,27 @@ public class FormSolutionsBestellungHandler implements ConnectionContextProvider
                             }
                         }
                         break;
-                        case BAB: {
+                        case BAB_VORBEREITUNG: {
+                            final String transidHash = createTransidHash(transid);
+                            final String redirectorUrlTemplate = FormSolutionsProperties.getInstance()
+                                        .getCidsActionHttpRedirectorUrl();
+                            final URL redirect2formsolutionsUrl = new URL(String.format(
+                                        redirectorUrlTemplate,
+                                        transidHash));
+
+                            bestellungBean.setProperty("request_url", redirect2formsolutionsUrl.toString());
+                            bestellungBean.setProperty("produkt_ts", new Timestamp(new Date().getTime()));
+                            getMetaService().updateMetaObject(
+                                getUser(),
+                                bestellungBean.getMetaObject(),
+                                getConnectionContext());
+
+                            LOG.fatal(redirect2formsolutionsUrl);
+                            // mysql update
+                            // doStatusChangedRequest(transid);
+                        }
+                        break;
+                        case BAB_ABSCHLUSS: {
                             final CidsBean berechtigungspruefung = (CidsBean)bestellungBean.getProperty(
                                     "berechtigungspruefung");
                             if (berechtigungspruefung != null) {
@@ -2224,24 +2282,25 @@ public class FormSolutionsBestellungHandler implements ConnectionContextProvider
      * @return  DOCUMENT ME!
      */
     private ProductType determineProductType(final CidsBean bestellungBean) {
-        final String type = ((bestellungBean != null) && (bestellungBean.getProperty("fk_produkt.fk_typ.key") != null))
-            ? (String)bestellungBean.getProperty("fk_produkt.fk_typ.key") : null;
-        switch (type) {
-            case "LK.NRW.K.BF":
-            case "LK.NRW.K.BSW": {
-                return ProductType.SGK;
-            }
-            case "LK.GDBNRW.A.ABKF":
-            case "LK.GDBNRW.A.ABKSW": {
-                return ProductType.ABK;
-            }
-            case "BAB": {
-                return ProductType.BAB;
-            }
-            default: {
-                return null;
+        final boolean hasTypKey = (bestellungBean != null)
+                    && (bestellungBean.getProperty("fk_produkt.fk_typ.key") != null);
+        final String type = hasTypKey ? (String)bestellungBean.getProperty("fk_produkt.fk_typ.key") : null;
+        if (type != null) {
+            switch (type) {
+                case "LK.NRW.K.BF":
+                case "LK.NRW.K.BSW": {
+                    return ProductType.SGK;
+                }
+                case "LK.GDBNRW.A.ABKF":
+                case "LK.GDBNRW.A.ABKSW": {
+                    return ProductType.ABK;
+                }
+                case "BAB": {
+                    return ProductType.BAB_VORBEREITUNG;
+                }
             }
         }
+        return null;
     }
 
     /**
@@ -2250,7 +2309,7 @@ public class FormSolutionsBestellungHandler implements ConnectionContextProvider
      * @return  DOCUMENT ME!
      */
     private SimpleHttpAccessHandler getHttpAccessHandler() {
-        return HTTP_HANDLER;
+        return httpHandler;
     }
 
     /**
@@ -2275,7 +2334,7 @@ public class FormSolutionsBestellungHandler implements ConnectionContextProvider
                 if (billingBean != null) {
                     bestellungBean.setProperty("fk_billing", billingBean);
                     getMetaService().updateMetaObject(
-                        user,
+                        getUser(),
                         bestellungBean.getMetaObject(),
                         getConnectionContext());
                 }
