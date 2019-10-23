@@ -31,42 +31,27 @@ public class FormSolutionsMySqlHelper {
     private static final transient org.apache.log4j.Logger LOG = org.apache.log4j.Logger.getLogger(
             FormSolutionsMySqlHelper.class);
 
-    private static FormSolutionsMySqlHelper INSTANCE;
-
     //~ Instance fields --------------------------------------------------------
 
-    private final PreparedStatement preparedSelectStatement;
-    private final PreparedStatement preparedInsertStatement;
-    private final PreparedStatement preparedInsertCompleteStatement;
-    private final PreparedStatement preparedUpdateProductStatement;
-    private final PreparedStatement preparedUpdateInfoStatement;
-    private final PreparedStatement preparedUpdateStatusStatement;
-
-    private Connection connect = null;
+    private PreparedStatement preparedSelectStatement;
+    private PreparedStatement preparedInsertStatement;
+    private PreparedStatement preparedInsertCompleteStatement;
+    private PreparedStatement preparedUpdateProductStatement;
+    private PreparedStatement preparedUpdateInfoStatement;
+    private PreparedStatement preparedUpdateStatusStatement;
+    private Connection connection = null;
 
     //~ Constructors -----------------------------------------------------------
 
     /**
      * Creates a new FormSolutionsMySqlHelper object.
-     *
-     * @throws  Exception  DOCUMENT ME!
      */
-    private FormSolutionsMySqlHelper() throws Exception {
-        Class.forName("com.mysql.jdbc.Driver");
-        this.connect = DriverManager.getConnection(FormSolutionsProperties.getInstance().getMysqlJdbc());
-
-        this.preparedSelectStatement = connect.prepareStatement(
-                "SELECT id FROM bestellung WHERE transid = ?;");
-        this.preparedInsertStatement = connect.prepareStatement(
-                "INSERT INTO bestellung (id, transid, status, flurstueck, produkt, nur_download, email, dokument_dateipfad, dokument_dateiname, last_update) VALUES (default, ?, ?, null, null, null, null, null, null, now());");
-        this.preparedInsertCompleteStatement = connect.prepareStatement(
-                "INSERT INTO bestellung (id, transid, status, flurstueck, produkt, nur_download, email, dokument_dateipfad, dokument_dateiname, last_update) VALUES (default, ?, ?, ?, ?, ?, ?, ?, ?, now());");
-        this.preparedUpdateProductStatement = connect.prepareStatement(
-                "UPDATE bestellung SET status = ?, last_update = now(), dokument_dateipfad = ?, dokument_dateiname = ? WHERE transid = ?;");
-        this.preparedUpdateInfoStatement = connect.prepareStatement(
-                "UPDATE bestellung SET status = ?, last_update = now(), flurstueck = ?, produkt = ?, nur_download = ?, email = ? WHERE transid = ?;");
-        this.preparedUpdateStatusStatement = connect.prepareStatement(
-                "UPDATE bestellung SET status = ?, last_update = now() WHERE transid = ?;");
+    private FormSolutionsMySqlHelper() {
+        try {
+            Class.forName("com.mysql.jdbc.Driver");
+        } catch (ClassNotFoundException ex) {
+            LOG.error("com.mysql.jdbc.Driver not found, FormSolutionsMySqlHelper will not work !", ex);
+        }
     }
 
     //~ Methods ----------------------------------------------------------------
@@ -74,17 +59,25 @@ public class FormSolutionsMySqlHelper {
     /**
      * DOCUMENT ME!
      *
-     * @return  DOCUMENT ME!
+     * @throws  SQLException  DOCUMENT ME!
      */
-    public static FormSolutionsMySqlHelper getInstance() {
-        if (INSTANCE == null) {
-            try {
-                INSTANCE = new FormSolutionsMySqlHelper();
-            } catch (final Exception ex) {
-                LOG.error("error while intiliazing FormSolutionsMySqlHelper", ex);
-            }
+    private void connect() throws SQLException {
+        if (this.connection == null) {
+            this.connection = DriverManager.getConnection(FormSolutionsProperties.getInstance().getMysqlJdbc());
+
+            this.preparedSelectStatement = connection.prepareStatement(
+                    "SELECT id FROM bestellung WHERE transid = ?;");
+            this.preparedInsertStatement = connection.prepareStatement(
+                    "INSERT INTO bestellung (id, transid, status, flurstueck, produkt, nur_download, email, dokument_dateipfad, dokument_dateiname, last_update) VALUES (default, ?, ?, null, null, null, null, null, null, now());");
+            this.preparedInsertCompleteStatement = connection.prepareStatement(
+                    "INSERT INTO bestellung (id, transid, status, flurstueck, produkt, nur_download, email, dokument_dateipfad, dokument_dateiname, last_update) VALUES (default, ?, ?, ?, ?, ?, ?, ?, ?, now());");
+            this.preparedUpdateProductStatement = connection.prepareStatement(
+                    "UPDATE bestellung SET status = ?, last_update = now(), dokument_dateipfad = ?, dokument_dateiname = ? WHERE transid = ?;");
+            this.preparedUpdateInfoStatement = connection.prepareStatement(
+                    "UPDATE bestellung SET status = ?, last_update = now(), flurstueck = ?, produkt = ?, nur_download = ?, email = ? WHERE transid = ?;");
+            this.preparedUpdateStatusStatement = connection.prepareStatement(
+                    "UPDATE bestellung SET status = ?, last_update = now() WHERE transid = ?;");
         }
-        return INSTANCE;
     }
 
     /**
@@ -96,6 +89,8 @@ public class FormSolutionsMySqlHelper {
      * @throws  SQLException  DOCUMENT ME!
      */
     public void insertMySql(final String transid, final int status) throws SQLException {
+        connect();
+
         int index = 1;
         preparedInsertStatement.setString(index++, transid);
         preparedInsertStatement.setInt(index++, status);
@@ -124,6 +119,8 @@ public class FormSolutionsMySqlHelper {
             final String email,
             final String filePath,
             final String origName) throws SQLException {
+        connect();
+
         int index = 1;
         preparedInsertCompleteStatement.setString(index++, transid);
         preparedInsertCompleteStatement.setInt(index++, status);
@@ -145,6 +142,8 @@ public class FormSolutionsMySqlHelper {
      * @throws  SQLException  DOCUMENT ME!
      */
     public void updateStatus(final String transid, final int status) throws SQLException {
+        connect();
+
         int index = 1;
         preparedUpdateStatusStatement.setInt(index++, status);
         preparedUpdateStatusStatement.setString(index++, transid);
@@ -169,6 +168,8 @@ public class FormSolutionsMySqlHelper {
             final String product,
             final boolean downloadOnly,
             final String email) throws SQLException {
+        connect();
+
         int index = 1;
         preparedUpdateInfoStatement.setInt(index++, status);
         preparedUpdateInfoStatement.setString(index++, landparcelcode);
@@ -191,6 +192,8 @@ public class FormSolutionsMySqlHelper {
      */
     public void updateProduct(final String transid, final int status, final String filePath, final String origName)
             throws SQLException {
+        connect();
+
         int index = 1;
         preparedUpdateProductStatement.setInt(index++, status);
         preparedUpdateProductStatement.setString(index++, filePath);
@@ -209,8 +212,41 @@ public class FormSolutionsMySqlHelper {
      * @throws  SQLException  DOCUMENT ME!
      */
     public ResultSet select(final String transid) throws SQLException {
+        connect();
+
         preparedSelectStatement.setString(1, transid);
         final ResultSet resultSet = preparedSelectStatement.executeQuery();
         return resultSet;
+    }
+
+    /**
+     * DOCUMENT ME!
+     *
+     * @return  DOCUMENT ME!
+     */
+    public static FormSolutionsMySqlHelper getInstance() {
+        return LazyInitialiser.INSTANCE;
+    }
+
+    //~ Inner Classes ----------------------------------------------------------
+
+    /**
+     * DOCUMENT ME!
+     *
+     * @version  $Revision$, $Date$
+     */
+    private static final class LazyInitialiser {
+
+        //~ Static fields/initializers -----------------------------------------
+
+        private static final FormSolutionsMySqlHelper INSTANCE = new FormSolutionsMySqlHelper();
+
+        //~ Constructors -------------------------------------------------------
+
+        /**
+         * Creates a new LazyInitialiser object.
+         */
+        private LazyInitialiser() {
+        }
     }
 }

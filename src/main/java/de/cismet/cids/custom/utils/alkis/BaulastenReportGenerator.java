@@ -47,7 +47,6 @@ import java.util.Map;
 
 import javax.imageio.ImageIO;
 
-
 import de.cismet.cids.dynamics.CidsBean;
 
 import de.cismet.commons.utils.MultiPagePictureReader;
