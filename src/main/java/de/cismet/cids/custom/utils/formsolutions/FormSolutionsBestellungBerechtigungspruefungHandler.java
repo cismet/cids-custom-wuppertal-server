@@ -23,6 +23,7 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
+import de.cismet.cids.custom.utils.berechtigungspruefung.BerechtigungspruefungProperties;
 import de.cismet.cids.custom.wunda_blau.search.server.FormSolutionsBestellungSearch;
 
 import de.cismet.cids.server.messages.CidsServerMessageManagerImpl;
@@ -138,7 +139,8 @@ public class FormSolutionsBestellungBerechtigungspruefungHandler implements Conn
 
         @Override
         public void messagePublished(final CidsServerMessageManagerListenerEvent csmmle) {
-            if ("berechtigungspruefungFreigabe".equals(csmmle.getMessage().getCategory())) {
+            if (BerechtigungspruefungProperties.getInstance().getCsmFreigabe().equals(
+                            csmmle.getMessage().getCategory())) {
                 final FormSolutionsBestellungSearch search = new FormSolutionsBestellungSearch();
                 final Map localServers = new HashMap<>();
                 localServers.put("WUNDA_BLAU", getMetaService());
@@ -153,7 +155,7 @@ public class FormSolutionsBestellungBerechtigungspruefungHandler implements Conn
                     search.setBerechtigungspruefungSchluessel(schluessel);
                     final Collection<MetaObjectNode> mons = search.performServerSearch();
                     new FormSolutionsBestellungHandler(getUser(), getMetaService(), getConnectionContext())
-                            .executeBeginningWithStep(FormSolutionsBestellungHandler.STATUS_DOWNLOAD, mons);
+                            .executeBeginningWithStep(FormSolutionsBestellungHandler.STATUS_PRODUKT, mons);
                 }
             }
         }
