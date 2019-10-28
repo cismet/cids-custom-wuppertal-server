@@ -1030,31 +1030,40 @@ public class FormSolutionsBestellungHandler implements ConnectionContextProvider
         }
 
         final String farbauspraegung = formSolutionsBestellung.getFarbauspraegung();
-        final boolean farbig;
+        final Boolean farbig;
         if ("farbig".equals(farbauspraegung)) {
             farbig = true;
         } else if ("Graustufen".equals(farbauspraegung)) {
             farbig = false;
         } else {
-            return null;
+            farbig = null;
         }
 
         final String massstab = formSolutionsBestellung.getMassstab();
-
         final StringBuffer produktSB;
         switch (type) {
             case SGK: {
-                produktSB = new StringBuffer("Stadtgrundkarte mit kom. Erg.").append(farbig ? " (farbig)" : " (sw)");
+                if (farbig != null) {
+                    produktSB = new StringBuffer("Stadtgrundkarte mit kom. Erg.").append(Boolean.TRUE.equals(farbig)
+                                ? " (farbig)" : " (sw)");
+                } else {
+                    return null;
+                }
             }
             break;
             case ABK: {
-                produktSB = new StringBuffer("Amtliche Basiskarte").append(farbig ? " (farbig)" : " (sw)");
+                if (farbig != null) {
+                    produktSB = new StringBuffer("Amtliche Basiskarte").append(Boolean.TRUE.equals(farbig) ? " (farbig)"
+                                                                                                           : " (sw)");
+                } else {
+                    return null;
+                }
             }
             break;
-            case BAB_WEITERLEITUNG: {
-                produktSB = new StringBuffer("Baulastenbescheinigung");
+            case BAB_WEITERLEITUNG:
+            case BAB_ABSCHLUSS: {
+                return "Baulastenbescheinigung";
             }
-            break;
             default: {
                 return null;
             }
