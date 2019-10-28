@@ -106,31 +106,34 @@ public class BerechtigungspruefungHandler implements ConnectionContextStore {
         final Date thresholdDate = getThresholdAnhangDate();
 
         // look for all anhang files
-        for (final File file : directory.listFiles()) {
-            if (file.isFile()) {
-                try {
-                    final String fileName = file.getName();
-                    final BasicFileAttributes attr = Files.readAttributes(file.toPath(), BasicFileAttributes.class);
-                    final Date creationDate = new Date(attr.creationTime().toMillis());
+        if (directory.listFiles() != null) {
+            for (final File file : directory.listFiles()) {
+                if (file.isFile()) {
+                    try {
+                        final String fileName = file.getName();
+                        final BasicFileAttributes attr = Files.readAttributes(file.toPath(), BasicFileAttributes.class);
+                        final Date creationDate = new Date(attr.creationTime().toMillis());
 
-                    // file older then threshold date (1 month) ?
-                    if (creationDate.before(thresholdDate)) {
-                        final CidsBean anfrageBean = loadAnfrageBean(user, fileName);
-                        // assuring, that the file corresponds to an existing bean This prevents accidental deletion of
-                        // non-anhang files (i.e. if AnhangAbsPath was set to a path that contains also other files)
-                        if (anfrageBean != null) {
-                            final Timestamp anfrageTs = (Timestamp)anfrageBean.getProperty("anfrage_timestamp");
-                            // timestamp filed in the bean agrees with the file creation date ?
-                            if (anfrageTs.before(thresholdDate)) {
-                                LOG.info("deleting old Anhang file: " + file.getName() + " (date: "
-                                            + creationDate.toString() + ")");
-                                // now we can delete (hopefully)
-                                file.delete();
+                        // file older then threshold date (1 month) ?
+                        if (creationDate.before(thresholdDate)) {
+                            final CidsBean anfrageBean = loadAnfrageBean(user, fileName);
+                            // assuring, that the file corresponds to an existing bean This prevents accidental deletion
+                            // of non-anhang files (i.e. if AnhangAbsPath was set to a path that contains also other
+                            // files)
+                            if (anfrageBean != null) {
+                                final Timestamp anfrageTs = (Timestamp)anfrageBean.getProperty("anfrage_timestamp");
+                                // timestamp filed in the bean agrees with the file creation date ?
+                                if (anfrageTs.before(thresholdDate)) {
+                                    LOG.info("deleting old Anhang file: " + file.getName() + " (date: "
+                                                + creationDate.toString() + ")");
+                                    // now we can delete (hopefully)
+                                    file.delete();
+                                }
                             }
                         }
+                    } catch (final IOException ex) {
+                        LOG.warn("could not delete Anhang file: " + file.getName(), ex);
                     }
-                } catch (final IOException ex) {
-                    LOG.warn("could not delete Anhang file: " + file.getName(), ex);
                 }
             }
         }
@@ -339,9 +342,11 @@ public class BerechtigungspruefungHandler implements ConnectionContextStore {
      * @param   dateiname           DOCUMENT ME!
      * @param   data                DOCUMENT ME!
      *
+     * @return  DOCUMENT ME!
+     *
      * @throws  Exception  DOCUMENT ME!
      */
-    public void addNewAnfrage(final User user,
+    public CidsBean addNewAnfrage(final User user,
             final String schluessel,
             final BerechtigungspruefungDownloadInfo downloadInfo,
             final String berechtigungsgrund,
@@ -375,10 +380,13 @@ public class BerechtigungspruefungHandler implements ConnectionContextStore {
         newPruefungBean.setProperty("produkttyp", downloadInfo.getProduktTyp());
         newPruefungBean.setProperty("downloadinfo_json", new ObjectMapper().writeValueAsString(downloadInfo));
 
-        DomainServerImpl.getServerInstance()
-                .insertMetaObject(user, newPruefungBean.getMetaObject(), getConnectionContext());
+        final CidsBean insertedPruefungBean = DomainServerImpl.getServerInstance()
+                    .insertMetaObject(user, newPruefungBean.getMetaObject(), getConnectionContext())
+                    .getBean();
 
-        sendAnfrageMessages(Arrays.asList(newPruefungBean));
+        sendAnfrageMessages(Arrays.asList(insertedPruefungBean));
+
+        return insertedPruefungBean;
     }
 
     /**
