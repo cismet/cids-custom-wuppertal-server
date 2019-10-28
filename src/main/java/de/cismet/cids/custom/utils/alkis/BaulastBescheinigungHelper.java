@@ -881,9 +881,12 @@ public class BaulastBescheinigungHelper {
         serverAction.setUser(getUser());
         serverAction.initWithConnectionContext(getConnectionContext());
 
-        writeToZip("bescheinigung_" + fls.iterator().next().getAlkisId().replace("/", "--")
-                    + ((fls.size() > 1) ? ".ua" : "")
-                    + "_" + number,
+        final String fileName = String.format(
+                "bescheinigung_%s%s_%d.pdf",
+                fls.iterator().next().getAlkisId().replace("/", "--"),
+                ((fls.size() > 1) ? ".ua" : ""),
+                number);
+        writeToZip(fileName,
             new ByteArrayInputStream((byte[])serverAction.execute(null, saps)),
             zipOut);
     }
