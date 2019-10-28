@@ -16,7 +16,7 @@ import org.apache.log4j.Logger;
 
 import java.io.ByteArrayOutputStream;
 
-import de.cismet.cids.custom.utils.formsolutions.FormSolutionFtpClient;
+import de.cismet.cids.custom.utils.formsolutions.FormSolutionsFtpClient;
 import de.cismet.cids.custom.utils.formsolutions.FormSolutionsProperties;
 
 import de.cismet.cids.dynamics.CidsBean;
@@ -124,9 +124,9 @@ public class FormSolutionDownloadBestellungAction implements ServerAction,
                 final ByteArrayOutputStream out = new ByteArrayOutputStream();
 
                 if ("/".equals(s)) {
-                    FormSolutionFtpClient.getInstance().download(fullFilePath, out);
+                    FormSolutionsFtpClient.getInstance().download(fullFilePath, out);
                 } else {
-                    FormSolutionFtpClient.getInstance().download(fullFilePath.replace("/", s), out);
+                    FormSolutionsFtpClient.getInstance().download(fullFilePath.replace("/", s), out);
                 }
 
                 return out.toByteArray();
