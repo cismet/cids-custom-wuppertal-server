@@ -43,6 +43,7 @@ public class FormSolutionsBestellungSearch extends AbstractCidsServerSearch impl
 
     @Setter @Getter private String berechtigungspruefungSchluessel;
     @Setter @Getter private String transidHash;
+    @Setter @Getter private String requestUrl;
 
     private ConnectionContext connectionContext = ConnectionContext.createDummy();
 
@@ -79,6 +80,9 @@ public class FormSolutionsBestellungSearch extends AbstractCidsServerSearch impl
                         "md5('%s'||fs_bestellung.transid)",
                         FormSolutionsProperties.getInstance().getTransidHashpepper()),
                     getTransidHash());
+            }
+            if (getRequestUrl() != null) {
+                filter.put("fs_bestellung.request_url", getRequestUrl());
             }
             final Collection<String> filterStrings = new ArrayList<>();
             for (final Map.Entry<String, Object> entry : filter.entrySet()) {
