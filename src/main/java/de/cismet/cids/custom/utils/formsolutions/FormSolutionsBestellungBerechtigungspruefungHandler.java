@@ -155,7 +155,7 @@ public class FormSolutionsBestellungBerechtigungspruefungHandler implements Conn
                     search.setBerechtigungspruefungSchluessel(schluessel);
                     final Collection<MetaObjectNode> mons = search.performServerSearch();
                     new FormSolutionsBestellungHandler(getUser(), getMetaService(), getConnectionContext())
-                            .executeBeginningWithStep(FormSolutionsBestellungHandler.STATUS_PRODUKT, mons);
+                            .executeSingleStep(FormSolutionsBestellungHandler.STATUS_PRODUKT, mons);
                 }
             }
         }
