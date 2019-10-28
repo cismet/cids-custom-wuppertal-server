@@ -250,8 +250,8 @@ public class FormSolutionsMySqlHelper {
 
         int index = 1;
         preparedUpdatePruefungFreigabeStatement.setInt(index++, status);
-        preparedUpdatePruefungFreigabeStatement.setString(index++, transid);
         preparedUpdatePruefungFreigabeStatement.setString(index++, abschlussformular);
+        preparedUpdatePruefungFreigabeStatement.setString(index++, transid);
         preparedUpdatePruefungFreigabeStatement.executeUpdate();
     }
 
