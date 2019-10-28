@@ -19,6 +19,15 @@ import Sirius.server.newuser.User;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
 
+import org.apache.commons.io.IOUtils;
+
+import java.io.InputStream;
+import java.io.StringReader;
+
+import java.net.URL;
+import java.net.URLEncoder;
+
+import java.util.ArrayList;
 import java.util.Collection;
 import java.util.HashMap;
 import java.util.Map;
@@ -31,6 +40,9 @@ import de.cismet.cids.dynamics.CidsBean;
 import de.cismet.cids.server.actions.ServerAction;
 import de.cismet.cids.server.actions.ServerActionParameter;
 import de.cismet.cids.server.actions.UserAwareServerAction;
+
+import de.cismet.commons.security.AccessHandler;
+import de.cismet.commons.security.handler.SimpleHttpAccessHandler;
 
 import de.cismet.connectioncontext.ConnectionContext;
 import de.cismet.connectioncontext.ConnectionContextStore;
@@ -76,6 +88,30 @@ public class Redirect2FormsolutionsAction implements UserAwareServerAction, Meta
     @Override
     public void initWithConnectionContext(final ConnectionContext connectionContext) {
         this.connectionContext = connectionContext;
+    }
+
+    /**
+     * DOCUMENT ME!
+     *
+     * @param   map  DOCUMENT ME!
+     *
+     * @return  DOCUMENT ME!
+     *
+     * @throws  Exception  DOCUMENT ME!
+     */
+    private static String urlEncodeUTF8(final Map<String, Object> map) throws Exception {
+        final Collection<String> keyValues = new ArrayList<>();
+        for (final Map.Entry<String, Object> entry : map.entrySet()) {
+            final String key = entry.getKey();
+            final Object value = entry.getValue();
+            if (key != null) {
+                keyValues.add(String.format(
+                        "%s=%s",
+                        URLEncoder.encode(key, "UTF-8"),
+                        URLEncoder.encode((value != null) ? value.toString() : "", "UTF-8")));
+            }
+        }
+        return String.join("&", keyValues);
     }
 
     @Override
@@ -139,7 +175,9 @@ public class Redirect2FormsolutionsAction implements UserAwareServerAction, Meta
 
                     final Map<String, Object> form = new HashMap();
                     form.put("Antragsteller.Daten.Vorgang", transid);
-                    form.put("Antragsteller.Daten.Flurstueckskennzeichen", null);
+                    form.put(
+                        "Antragsteller.Daten.Flurstueckskennzeichen",
+                        (String)bestellungBean.getProperty("landparcelcode"));
                     form.put("Antragsteller.Daten.betrag", gebuehr);
 
                     form.put("Antragsteller.Daten.Email bei Postversand.E-Mailadresse.E-Mailadresse", email);
@@ -176,25 +214,31 @@ public class Redirect2FormsolutionsAction implements UserAwareServerAction, Meta
                         "Antragsteller.Daten.AS_Adresse_Abweichende_Lieferanschrift.AS_Adresse.Adresse.AS_Ort",
                         lieferOrt);
 
-                    final Redirect2FormsolutionsActionResultJson requestOptions =
-                        new Redirect2FormsolutionsActionResultJson(
-                            new FormSolutionCacheRequestOptionsJson(
-                                FormSolutionsProperties.getInstance().getUrlCreateCacheid(),
-                                "POST",
-                                form),
-                            FormSolutionsProperties.getInstance().getRedirectionFormat());
-                    return MAPPER.writeValueAsString(requestOptions);
+                    final HashMap<String, String> headerMap = new HashMap<>();
+                    headerMap.put("Content-Type", "application/x-www-form-urlencoded");
+                    final InputStream in =
+                        new SimpleHttpAccessHandler().doRequest(
+                            new URL(FormSolutionsProperties.getInstance().getUrlCreateCacheid()),
+                            new StringReader(urlEncodeUTF8(form)),
+                            AccessHandler.ACCESS_METHODS.POST_REQUEST,
+                            headerMap);
+                    final String cacheID = IOUtils.toString(in, "UTF-8");
+                    final String redirectionLink = String.format(FormSolutionsProperties.getInstance()
+                                    .getRedirectionFormat(),
+                            cacheID);
+
+                    bestellungBean.setProperty("request_url", redirectionLink);
+                    getMetaService().updateMetaObject(
+                        getUser(),
+                        bestellungBean.getMetaObject(),
+                        getConnectionContext());
+                    return redirectionLink;
                 }
             } catch (final Exception ex) {
                 LOG.error(ex, ex);
                 return null;
             }
         }
-        /*
-         * { "url": , "form": { "Antragsteller.Daten.Vorgang" : "TEST-CISMET-4711" }, "method": "POST" },
-         * "redirectToFormat": }
-         */
-
         return null;
     }
 
