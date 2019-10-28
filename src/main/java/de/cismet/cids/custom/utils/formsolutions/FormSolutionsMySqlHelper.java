@@ -39,6 +39,8 @@ public class FormSolutionsMySqlHelper {
     private PreparedStatement preparedUpdateProductStatement;
     private PreparedStatement preparedUpdateInfoStatement;
     private PreparedStatement preparedUpdateStatusStatement;
+    private PreparedStatement preparedUpdatePruefungFreigabeStatement;
+    private PreparedStatement preparedUpdatePruefungAblehnungStatement;
     private Connection connection = null;
 
     //~ Constructors -----------------------------------------------------------
@@ -77,6 +79,10 @@ public class FormSolutionsMySqlHelper {
                     "UPDATE bestellung SET status = ?, last_update = now(), flurstueck = ?, produkt = ?, nur_download = ?, email = ? WHERE transid = ?;");
             this.preparedUpdateStatusStatement = connection.prepareStatement(
                     "UPDATE bestellung SET status = ?, last_update = now() WHERE transid = ?;");
+            this.preparedUpdatePruefungFreigabeStatement = connection.prepareStatement(
+                    "UPDATE bestellung SET status = ?, last_update = now(), abschlussformular = ? WHERE transid = ?;");
+            this.preparedUpdatePruefungAblehnungStatement = connection.prepareStatement(
+                    "UPDATE bestellung SET status = ?, last_update = now(), ablehnungsgrund = ? WHERE transid = ?;");
         }
     }
 
@@ -88,13 +94,49 @@ public class FormSolutionsMySqlHelper {
      *
      * @throws  SQLException  DOCUMENT ME!
      */
-    public void insertMySql(final String transid, final int status) throws SQLException {
+    public void insertOrUpdateStatus(final String transid, final int status) throws SQLException {
+        if (checkMysqlEntry(transid)) {
+            updateStatus(transid, status);
+        } else {
+            insertStatus(transid, status);
+        }
+    }
+
+    /**
+     * DOCUMENT ME!
+     *
+     * @param   transid  DOCUMENT ME!
+     * @param   status   DOCUMENT ME!
+     *
+     * @throws  SQLException  DOCUMENT ME!
+     */
+    public void insertStatus(final String transid, final int status) throws SQLException {
         connect();
 
         int index = 1;
         preparedInsertStatement.setString(index++, transid);
         preparedInsertStatement.setInt(index++, status);
         preparedInsertStatement.executeUpdate();
+    }
+
+    /**
+     * DOCUMENT ME!
+     *
+     * @param   transid  DOCUMENT ME!
+     *
+     * @return  DOCUMENT ME!
+     *
+     * @throws  SQLException  DOCUMENT ME!
+     */
+    public boolean checkMysqlEntry(final String transid) throws SQLException {
+        boolean mysqlEntryAlreadyExists = false;
+        try(final ResultSet resultSet = select(transid)) {
+            mysqlEntryAlreadyExists = (resultSet != null) && resultSet.next();
+        } catch (final SQLException ex) {
+            LOG.error("check nach bereits vorhandenen transids fehlgeschlagen.", ex);
+        }
+
+        return mysqlEntryAlreadyExists;
     }
 
     /**
@@ -111,7 +153,50 @@ public class FormSolutionsMySqlHelper {
      *
      * @throws  SQLException  DOCUMENT ME!
      */
-    public void insertProductMySql(final String transid,
+    public void insertOrUpdateProduct(final String transid,
+            final int status,
+            final String landparcelcode,
+            final String product,
+            final boolean downloadOnly,
+            final String email,
+            final String filePath,
+            final String origName) throws SQLException {
+        if (checkMysqlEntry(transid)) {
+            updateProduct(
+                transid,
+                status,
+                filePath,
+                origName);
+        } else {
+            if (!FormSolutionsProperties.getInstance().isMysqlDisabled()) {
+                insertProduct(
+                    transid,
+                    status,
+                    landparcelcode,
+                    product,
+                    downloadOnly,
+                    email,
+                    filePath,
+                    origName);
+            }
+        }
+    }
+
+    /**
+     * DOCUMENT ME!
+     *
+     * @param   transid         DOCUMENT ME!
+     * @param   status          DOCUMENT ME!
+     * @param   landparcelcode  DOCUMENT ME!
+     * @param   product         DOCUMENT ME!
+     * @param   downloadOnly    DOCUMENT ME!
+     * @param   email           DOCUMENT ME!
+     * @param   filePath        DOCUMENT ME!
+     * @param   origName        DOCUMENT ME!
+     *
+     * @throws  SQLException  DOCUMENT ME!
+     */
+    public void insertProduct(final String transid,
             final int status,
             final String landparcelcode,
             final String product,
@@ -148,6 +233,46 @@ public class FormSolutionsMySqlHelper {
         preparedUpdateStatusStatement.setInt(index++, status);
         preparedUpdateStatusStatement.setString(index++, transid);
         preparedUpdateStatusStatement.executeUpdate();
+    }
+
+    /**
+     * DOCUMENT ME!
+     *
+     * @param   transid            DOCUMENT ME!
+     * @param   status             DOCUMENT ME!
+     * @param   abschlussformular  DOCUMENT ME!
+     *
+     * @throws  SQLException  DOCUMENT ME!
+     */
+    public void updatePruefungFreigabe(final String transid, final int status, final String abschlussformular)
+            throws SQLException {
+        connect();
+
+        int index = 1;
+        preparedUpdatePruefungFreigabeStatement.setInt(index++, status);
+        preparedUpdatePruefungFreigabeStatement.setString(index++, transid);
+        preparedUpdatePruefungFreigabeStatement.setString(index++, abschlussformular);
+        preparedUpdatePruefungFreigabeStatement.executeUpdate();
+    }
+
+    /**
+     * DOCUMENT ME!
+     *
+     * @param   transid          DOCUMENT ME!
+     * @param   status           DOCUMENT ME!
+     * @param   ablehnungsgrund  DOCUMENT ME!
+     *
+     * @throws  SQLException  DOCUMENT ME!
+     */
+    public void updatePruefungAblehnung(final String transid, final int status, final String ablehnungsgrund)
+            throws SQLException {
+        connect();
+
+        int index = 1;
+        preparedUpdatePruefungAblehnungStatement.setInt(index++, status);
+        preparedUpdatePruefungAblehnungStatement.setString(index++, transid);
+        preparedUpdatePruefungAblehnungStatement.setString(index++, ablehnungsgrund);
+        preparedUpdatePruefungAblehnungStatement.executeUpdate();
     }
 
     /**
