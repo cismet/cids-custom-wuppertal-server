@@ -46,6 +46,8 @@ public class FormSolutionsProperties {
     private final String cidsPassword;
     private final String urlAuftragslisteSgkFs;
     private final String urlAuftragslisteAbkFs;
+    private final String urlAuftragslisteBb1Fs;
+    private final String urlAuftragslisteBb2Fs;
     private final String urlAuftragFs;
     private final String urlAuftragDeleteFs;
     private final String urlStatusUpdate;
@@ -54,6 +56,8 @@ public class FormSolutionsProperties {
     private final String ftpPass;
     private final String testCismet00;
     private final String specialLogAbsPath;
+    private final String produktTmpAbsPath;
+    private final String anhangTmpAbsPath;
     private final String billingKundeLogin;
     private final String billingModus;
     private final String billingModusbezeichnung;
@@ -62,7 +66,11 @@ public class FormSolutionsProperties {
     private final String billingVerwendungskeyDownload;
     private final String billingVerwendungskeyPostweg;
     private final String rechnungBerechnugsgGrundlage;
-    private String tmpBrokenpdfsAbsPath;
+    private final String tmpBrokenpdfsAbsPath;
+    private final String transidHashpepper;
+    private final String redirectionFormat;
+    private final String urlCreateCacheid;
+    private final String cidsActionHttpRedirectorUrl;
     private final boolean mysqlDisabled;
 
     //~ Constructors -----------------------------------------------------------
@@ -82,6 +90,8 @@ public class FormSolutionsProperties {
         cidsPassword = properties.getProperty("CIDS_PASSWORD");
         urlAuftragslisteSgkFs = properties.getProperty("URL_AUFTRAGSLISTE_SGK_FS");
         urlAuftragslisteAbkFs = properties.getProperty("URL_AUFTRAGSLISTE_ABK_FS");
+        urlAuftragslisteBb1Fs = properties.getProperty("URL_AUFTRAGSLISTE_BB1_FS");
+        urlAuftragslisteBb2Fs = properties.getProperty("URL_AUFTRAGSLISTE_BB2_FS");
         urlAuftragFs = properties.getProperty("URL_AUFTRAG_FS");
         urlAuftragDeleteFs = properties.getProperty("URL_AUFTRAG_DELETE_FS");
         urlStatusUpdate = properties.getProperty("URL_STATUS_UPDATE");
@@ -90,6 +100,8 @@ public class FormSolutionsProperties {
         ftpPass = properties.getProperty("FTP_PASS");
         testCismet00 = properties.getProperty("TEST_CISMET00");
         specialLogAbsPath = properties.getProperty("SPECIAL_LOG_ABS_PATH");
+        produktTmpAbsPath = properties.getProperty("PRODUKT_TMP_ABS_PATH");
+        anhangTmpAbsPath = properties.getProperty("ANHANG_TMP_ABS_PATH");
         billingKundeLogin = properties.getProperty("BILLING_KUNDE_LOGIN");
         billingModus = properties.getProperty("BILLING_MODUS");
         billingModusbezeichnung = properties.getProperty("BILLING_MODUSBEZEICHNUNG");
@@ -101,6 +113,10 @@ public class FormSolutionsProperties {
                     && "true".equals(properties.getProperty("MYSQL_DISABLED").trim().toLowerCase());
         rechnungBerechnugsgGrundlage = properties.getProperty("RECHNUNG_BERECHNUNGSGRUNDLAGE");
         tmpBrokenpdfsAbsPath = properties.getProperty("TMP_BROKENPDFS_ABS_PATH");
+        transidHashpepper = properties.getProperty("TRANSID_HASHPEPPER");
+        redirectionFormat = properties.getProperty("REDIRECTION_FORMAT");
+        urlCreateCacheid = properties.getProperty("URL_CREATE_CACHEID");
+        cidsActionHttpRedirectorUrl = properties.getProperty("CIDS_ACTION_HTTP_REDIRECTOR_URL");
     }
 
     //~ Methods ----------------------------------------------------------------
