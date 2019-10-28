@@ -57,6 +57,7 @@ public class FormSolutionsProperties {
     private final String testCismet00;
     private final String specialLogAbsPath;
     private final String produktTmpAbsPath;
+    private final String anhangTmpAbsPath;
     private final String billingKundeLogin;
     private final String billingModus;
     private final String billingModusbezeichnung;
@@ -100,6 +101,7 @@ public class FormSolutionsProperties {
         testCismet00 = properties.getProperty("TEST_CISMET00");
         specialLogAbsPath = properties.getProperty("SPECIAL_LOG_ABS_PATH");
         produktTmpAbsPath = properties.getProperty("PRODUKT_TMP_ABS_PATH");
+        anhangTmpAbsPath = properties.getProperty("ANHANG_TMP_ABS_PATH");
         billingKundeLogin = properties.getProperty("BILLING_KUNDE_LOGIN");
         billingModus = properties.getProperty("BILLING_MODUS");
         billingModusbezeichnung = properties.getProperty("BILLING_MODUSBEZEICHNUNG");
