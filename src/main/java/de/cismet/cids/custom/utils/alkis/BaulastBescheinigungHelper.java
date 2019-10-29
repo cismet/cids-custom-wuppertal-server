@@ -464,11 +464,6 @@ public class BaulastBescheinigungHelper {
             if (!gruppeMap.containsKey(gruppeKey)) {
                 gruppeMap.put(gruppeKey, newGruppe);
             }
-            final BerechtigungspruefungBescheinigungGruppeInfo gruppe = gruppeMap.get(gruppeKey);
-            gruppe.getFlurstuecke()
-                    .add(DownloadInfoFactory.createBerechtigungspruefungBescheinigungFlurstueckInfo(
-                            flurstueck,
-                            flurstueckeToGrundstueckeMap.get(flurstueck)));
         }
 
         final Set<BerechtigungspruefungBescheinigungGruppeInfo> bescheinigungsgruppen = new HashSet<>(
