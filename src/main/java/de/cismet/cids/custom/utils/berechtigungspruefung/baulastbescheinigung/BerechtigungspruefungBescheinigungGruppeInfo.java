@@ -39,6 +39,7 @@ public class BerechtigungspruefungBescheinigungGruppeInfo {
 
     //~ Instance fields --------------------------------------------------------
 
+    @JsonProperty private final String name;
     @JsonProperty private final List<BerechtigungspruefungBescheinigungFlurstueckInfo> flurstuecke;
     @JsonProperty private final List<BerechtigungspruefungBescheinigungBaulastInfo> baulastenBeguenstigt;
     @JsonProperty private final List<BerechtigungspruefungBescheinigungBaulastInfo> baulastenBelastet;
@@ -48,14 +49,16 @@ public class BerechtigungspruefungBescheinigungGruppeInfo {
     /**
      * Creates a new BaulastenBescheinigungsGruppeInfo object.
      *
+     * @param  name                  DOCUMENT ME!
      * @param  flurstuecke           DOCUMENT ME!
      * @param  baulastenBeguenstigt  DOCUMENT ME!
      * @param  baulastenBelastet     DOCUMENT ME!
      */
-    public BerechtigungspruefungBescheinigungGruppeInfo(
+    public BerechtigungspruefungBescheinigungGruppeInfo(@JsonProperty("name") final String name,
             @JsonProperty("flurstuecke") final List<BerechtigungspruefungBescheinigungFlurstueckInfo> flurstuecke,
             @JsonProperty("baulastenBeguenstigt") final List<BerechtigungspruefungBescheinigungBaulastInfo> baulastenBeguenstigt,
             @JsonProperty("baulastenBelastet") final List<BerechtigungspruefungBescheinigungBaulastInfo> baulastenBelastet) {
+        this.name = name;
         this.flurstuecke = flurstuecke;
         this.baulastenBeguenstigt = baulastenBeguenstigt;
         this.baulastenBelastet = baulastenBelastet;
@@ -67,15 +70,14 @@ public class BerechtigungspruefungBescheinigungGruppeInfo {
     public String toString() {
         final StringBuffer sb = new StringBuffer();
 
-        final List<BerechtigungspruefungBescheinigungBaulastInfo> sortedBeguenstigt =
-            new ArrayList<BerechtigungspruefungBescheinigungBaulastInfo>(
+        final List<BerechtigungspruefungBescheinigungBaulastInfo> sortedBeguenstigt = new ArrayList<>(
                 baulastenBeguenstigt);
         Collections.sort(sortedBeguenstigt, new BaulastBeanComparator());
 
         boolean first = true;
         for (final BerechtigungspruefungBescheinigungBaulastInfo baulast : sortedBeguenstigt) {
             if (!first) {
-                sb.append(", ");
+                sb.append(",");
                 first = false;
             }
             sb.append(baulast.toString());
@@ -83,9 +85,7 @@ public class BerechtigungspruefungBescheinigungGruppeInfo {
 
         sb.append("|");
 
-        final List<BerechtigungspruefungBescheinigungBaulastInfo> sortedBelastet =
-            new ArrayList<BerechtigungspruefungBescheinigungBaulastInfo>(
-                baulastenBelastet);
+        final List<BerechtigungspruefungBescheinigungBaulastInfo> sortedBelastet = new ArrayList<>(baulastenBelastet);
         Collections.sort(sortedBelastet, new BaulastBeanComparator());
 
         first = true;

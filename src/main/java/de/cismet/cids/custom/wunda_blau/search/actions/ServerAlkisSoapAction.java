@@ -17,6 +17,7 @@ import de.aedsicad.aaaweb.service.util.Point;
 
 import java.rmi.RemoteException;
 
+import de.cismet.cids.custom.utils.alkis.AlkisProducts;
 import de.cismet.cids.custom.utils.alkis.SOAPAccessProvider;
 import de.cismet.cids.custom.utils.alkis.ServerAlkisConf;
 

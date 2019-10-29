@@ -26,18 +26,14 @@ import static org.apache.commons.net.ftp.FTP.BINARY_FILE_TYPE;
  * @author   jruiz
  * @version  $Revision$, $Date$
  */
-public class FormSolutionFtpClient {
-
-    //~ Static fields/initializers ---------------------------------------------
-
-    private static FormSolutionFtpClient INSTANCE;
+public class FormSolutionsFtpClient {
 
     //~ Constructors -----------------------------------------------------------
 
     /**
      * Creates a new FormSolutionBestellungFtpClient object.
      */
-    private FormSolutionFtpClient() {
+    private FormSolutionsFtpClient() {
     }
 
     //~ Methods ----------------------------------------------------------------
@@ -100,10 +96,29 @@ public class FormSolutionFtpClient {
      *
      * @return  DOCUMENT ME!
      */
-    public static FormSolutionFtpClient getInstance() {
-        if (INSTANCE == null) {
-            INSTANCE = new FormSolutionFtpClient();
+    public static FormSolutionsFtpClient getInstance() {
+        return LazyInitialiser.INSTANCE;
+    }
+
+    //~ Inner Classes ----------------------------------------------------------
+
+    /**
+     * DOCUMENT ME!
+     *
+     * @version  $Revision$, $Date$
+     */
+    private static final class LazyInitialiser {
+
+        //~ Static fields/initializers -----------------------------------------
+
+        private static final FormSolutionsFtpClient INSTANCE = new FormSolutionsFtpClient();
+
+        //~ Constructors -------------------------------------------------------
+
+        /**
+         * Creates a new LazyInitialiser object.
+         */
+        private LazyInitialiser() {
         }
-        return INSTANCE;
     }
 }
