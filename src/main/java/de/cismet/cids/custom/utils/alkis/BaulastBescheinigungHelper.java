@@ -457,13 +457,18 @@ public class BaulastBescheinigungHelper {
             final BerechtigungspruefungBescheinigungGruppeInfo newGruppe = DownloadInfoFactory
                         .createBerechtigungspruefungBescheinigungGruppeInfo(
                             flurstueckeToGrundstueckeMap.get(flurstueck).iterator().next(),
-                            flurstueckeToGrundstueckeMap,
                             baulastenBeguenstigt,
                             baulastenBelastet);
             final String gruppeKey = newGruppe.toString();
             if (!gruppeMap.containsKey(gruppeKey)) {
                 gruppeMap.put(gruppeKey, newGruppe);
             }
+
+            final BerechtigungspruefungBescheinigungGruppeInfo gruppe = gruppeMap.get(gruppeKey);
+            gruppe.getFlurstuecke()
+                    .add(DownloadInfoFactory.createBerechtigungspruefungBescheinigungFlurstueckInfo(
+                            flurstueck,
+                            flurstueckeToGrundstueckeMap.get(flurstueck)));
         }
 
         final Set<BerechtigungspruefungBescheinigungGruppeInfo> bescheinigungsgruppen = new HashSet<>(
