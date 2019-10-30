@@ -138,25 +138,17 @@ public class DownloadInfoFactory {
     /**
      * DOCUMENT ME!
      *
-     * @param   name                          DOCUMENT ME!
-     * @param   flurstuecketoGrundstueckeMap  DOCUMENT ME!
-     * @param   baulastenBeguenstigtBeans     DOCUMENT ME!
-     * @param   baulastenBelastetBeans        DOCUMENT ME!
+     * @param   name                       DOCUMENT ME!
+     * @param   baulastenBeguenstigtBeans  DOCUMENT ME!
+     * @param   baulastenBelastetBeans     DOCUMENT ME!
      *
      * @return  DOCUMENT ME!
      */
     public static BerechtigungspruefungBescheinigungGruppeInfo createBerechtigungspruefungBescheinigungGruppeInfo(
             final String name,
-            final Map<CidsBean, Collection<String>> flurstuecketoGrundstueckeMap,
             final Collection<CidsBean> baulastenBeguenstigtBeans,
             final Collection<CidsBean> baulastenBelastetBeans) {
         final List<BerechtigungspruefungBescheinigungFlurstueckInfo> flurstueckeInfo = new ArrayList<>();
-        for (final CidsBean flurstueck : flurstuecketoGrundstueckeMap.keySet()) {
-            flurstueckeInfo.add(createBerechtigungspruefungBescheinigungFlurstueckInfo(
-                    flurstueck,
-                    flurstuecketoGrundstueckeMap.get(flurstueck)));
-        }
-
         final List<BerechtigungspruefungBescheinigungBaulastInfo> baulastBeguenstigtInfos = new ArrayList<>();
         for (final CidsBean baulastBeguenstigt : baulastenBeguenstigtBeans) {
             final BerechtigungspruefungBescheinigungBaulastInfo baulastBeguenstigtInfo =
@@ -252,8 +244,8 @@ public class DownloadInfoFactory {
         if (adressen.isEmpty()) {
             lage = "";
         } else {
-            final Set<String> strassen = new HashSet<String>();
-            final Map<String, Collection<String>> hausnummernMap = new HashMap<String, Collection<String>>();
+            final Set<String> strassen = new HashSet<>();
+            final Map<String, Collection<String>> hausnummernMap = new HashMap<>();
             for (final CidsBean adresse : adressen) {
                 final String strasse = (String)adresse.getProperty("strasse");
                 final String hausnummer = (String)adresse.getProperty("nummer");
