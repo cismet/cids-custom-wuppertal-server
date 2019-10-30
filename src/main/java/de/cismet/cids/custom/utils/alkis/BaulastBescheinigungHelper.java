@@ -231,7 +231,9 @@ public class BaulastBescheinigungHelper {
      *
      * @return  DOCUMENT ME!
      *
-     * @throws  Exception  DOCUMENT ME!
+     * @throws  Exception             DOCUMENT ME!
+     * @throws  InterruptedException  DOCUMENT ME!
+     * @throws  BaBeException         DOCUMENT ME!
      */
     private Map<CidsBean, Set<CidsBean>> createFlurstueckeToBaulastenMap(final Collection<CidsBean> flurstuecke,
             final boolean belastet,
@@ -261,69 +263,64 @@ public class BaulastBescheinigungHelper {
         for (final CidsBean flurstueck : flurstuecke) {
             protocolBuffer.appendLine(" * Flurstück: " + flurstueck + " ...");
             final Set<CidsBean> baulasten = new HashSet<>();
-            try {
-                final BaulastSearchInfo searchInfo = new BaulastSearchInfo();
-                final Integer gemarkung = Integer.parseInt(((String)flurstueck.getProperty("alkis_id")).substring(
-                            2,
-                            6));
-                final String flur = (String)flurstueck.getProperty("flur");
-                final String zaehler = Integer.toString(Integer.parseInt(
-                            (String)flurstueck.getProperty("fstck_zaehler")));
-                final String nenner = (flurstueck.getProperty("fstck_nenner") == null)
-                    ? "0" : Integer.toString(Integer.parseInt((String)flurstueck.getProperty("fstck_nenner")));
+            final BaulastSearchInfo searchInfo = new BaulastSearchInfo();
+            final Integer gemarkung = Integer.parseInt(((String)flurstueck.getProperty("alkis_id")).substring(
+                        2,
+                        6));
+            final String flur = (String)flurstueck.getProperty("flur");
+            final String zaehler = Integer.toString(Integer.parseInt((String)flurstueck.getProperty("fstck_zaehler")));
+            final String nenner = (flurstueck.getProperty("fstck_nenner") == null)
+                ? "0" : Integer.toString(Integer.parseInt((String)flurstueck.getProperty("fstck_nenner")));
 
-                final FlurstueckInfo fsi = new FlurstueckInfo(gemarkung, flur, zaehler, nenner);
-                searchInfo.setFlurstuecke(Arrays.asList(fsi));
-                searchInfo.setResult(CidsBaulastSearchStatement.Result.BAULAST);
-                searchInfo.setBelastet(belastet);
-                searchInfo.setBeguenstigt(!belastet);
-                searchInfo.setBlattnummer("");
-                searchInfo.setArt("");
-                final CidsBaulastSearchStatement search = new CidsBaulastSearchStatement(
-                        searchInfo,
-                        mcBaulast.getId(),
-                        -1);
+            final FlurstueckInfo fsi = new FlurstueckInfo(gemarkung, flur, zaehler, nenner);
+            searchInfo.setFlurstuecke(Arrays.asList(fsi));
+            searchInfo.setResult(CidsBaulastSearchStatement.Result.BAULAST);
+            searchInfo.setBelastet(belastet);
+            searchInfo.setBeguenstigt(!belastet);
+            searchInfo.setBlattnummer("");
+            searchInfo.setArt("");
+            final CidsBaulastSearchStatement search = new CidsBaulastSearchStatement(
+                    searchInfo,
+                    mcBaulast.getId(),
+                    -1);
 
-                if (Thread.currentThread().isInterrupted()) {
-                    throw new InterruptedException();
-                }
-                final Collection<MetaObjectNode> mons = executeSearch(search);
-                for (final MetaObjectNode mon : mons) {
-                    final MetaObject mo = getMetaObject(mon.getObjectId(), mon.getClassId());
-                    if ((mo.getBean() != null) && (mo.getBean() != null)
-                                && (mo.getBean().getProperty("loeschungsdatum") != null)) {
-                        continue;
-                    }
-                    if (mon.getName().startsWith("indirekt: ")) {
-                        throw new BaBeException(
-                            "Zu den angegebenen Flurstücken kann aktuell keine Baulastauskunft erteilt werden, da sich einige der enthaltenen Baulasten im Bearbeitungszugriff befinden.");
-                    }
-                }
-
-                final String alkisId = (String)flurstueck.getProperty("alkis_id");
-
-                if (Thread.currentThread().isInterrupted()) {
-                    throw new InterruptedException();
-                }
-                final MetaObject[] mos = getMetaObjects(String.format(
-                            query,
-                            mcBaulast.getID(),
-                            mcBaulast.getPrimaryKey(),
-                            alkisId));
-                for (final MetaObject mo : mos) {
-                    final CidsBean baulast = mo.getBean();
-                    final Boolean geprueft = (Boolean)baulast.getProperty("geprueft");
-                    if ((geprueft == null) || (geprueft == false)) {
-                        throw new BaBeException(
-                            "Zu den angegebenen Flurstücken kann aktuell keine Baulastauskunft erteilt werden, da sich einige der enthaltenen Baulasten im Bearbeitungszugriff befinden.");
-                    }
-                    protocolBuffer.appendLine("   => Baulast: " + baulast);
-                    baulasten.add(baulast);
-                }
-                flurstueckeToBaulastenMap.put(flurstueck, baulasten);
-            } catch (final Exception ex) {
-                LOG.fatal(ex, ex);
+            if (Thread.currentThread().isInterrupted()) {
+                throw new InterruptedException();
             }
+            final Collection<MetaObjectNode> mons = executeSearch(search);
+            for (final MetaObjectNode mon : mons) {
+                final MetaObject mo = getMetaObject(mon.getObjectId(), mon.getClassId());
+                if ((mo.getBean() != null) && (mo.getBean() != null)
+                            && (mo.getBean().getProperty("loeschungsdatum") != null)) {
+                    continue;
+                }
+                if (mon.getName().startsWith("indirekt: ")) {
+                    throw new BaBeException(
+                        "Zu den angegebenen Flurstücken kann aktuell keine Baulastauskunft erteilt werden, da sich einige der enthaltenen Baulasten im Bearbeitungszugriff befinden.");
+                }
+            }
+
+            final String alkisId = (String)flurstueck.getProperty("alkis_id");
+
+            if (Thread.currentThread().isInterrupted()) {
+                throw new InterruptedException();
+            }
+            final MetaObject[] mos = getMetaObjects(String.format(
+                        query,
+                        mcBaulast.getID(),
+                        mcBaulast.getPrimaryKey(),
+                        alkisId));
+            for (final MetaObject mo : mos) {
+                final CidsBean baulast = mo.getBean();
+                final Boolean geprueft = (Boolean)baulast.getProperty("geprueft");
+                if ((geprueft == null) || (geprueft == false)) {
+                    throw new BaBeException(
+                        "Zu den angegebenen Flurstücken kann aktuell keine Baulastauskunft erteilt werden, da sich einige der enthaltenen Baulasten im Bearbeitungszugriff befinden.");
+                }
+                protocolBuffer.appendLine("   => Baulast: " + baulast);
+                baulasten.add(baulast);
+            }
+            flurstueckeToBaulastenMap.put(flurstueck, baulasten);
         }
         return flurstueckeToBaulastenMap;
     }
