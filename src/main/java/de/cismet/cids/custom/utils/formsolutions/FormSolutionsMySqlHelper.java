@@ -270,8 +270,8 @@ public class FormSolutionsMySqlHelper {
 
         int index = 1;
         preparedUpdatePruefungAblehnungStatement.setInt(index++, status);
-        preparedUpdatePruefungAblehnungStatement.setString(index++, transid);
         preparedUpdatePruefungAblehnungStatement.setString(index++, ablehnungsgrund);
+        preparedUpdatePruefungAblehnungStatement.setString(index++, transid);
         preparedUpdatePruefungAblehnungStatement.executeUpdate();
     }
 
