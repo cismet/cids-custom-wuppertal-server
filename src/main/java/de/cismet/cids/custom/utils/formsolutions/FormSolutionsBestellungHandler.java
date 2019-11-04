@@ -1583,19 +1583,20 @@ public class FormSolutionsBestellungHandler implements ConnectionContextProvider
             final String gutscheincodeAdditionalText = (bestellungBean.getProperty("gutschein_code") != null)
                 ? String.format(GUTSCHEIN_ADDITIONAL_TEXT, bestellungBean.getProperty("gutschein_code")) : null;
 
-            final URL url = ServerAlkisProducts.productKarteUrl(
-                    flurstueckKennzeichen,
-                    productDesc.getCode(),
-                    0,
-                    (int)center.getX(),
-                    (int)center.getY(),
-                    productDesc.getMassstab(),
-                    productDesc.getMassstabMin(),
-                    productDesc.getMassstabMax(),
-                    gutscheincodeAdditionalText,
-                    transid,
-                    false,
-                    null);
+            final URL url = ServerAlkisProducts.getInstance()
+                        .productKarteUrl(
+                            flurstueckKennzeichen,
+                            productDesc.getCode(),
+                            0,
+                            (int)center.getX(),
+                            (int)center.getY(),
+                            productDesc.getMassstab(),
+                            productDesc.getMassstabMin(),
+                            productDesc.getMassstabMax(),
+                            gutscheincodeAdditionalText,
+                            transid,
+                            false,
+                            null);
             return url;
         } else {
             return null;

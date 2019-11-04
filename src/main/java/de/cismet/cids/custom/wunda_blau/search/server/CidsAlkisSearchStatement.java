@@ -190,8 +190,9 @@ public class CidsAlkisSearchStatement extends AbstractCidsServerSearch implement
                     } else if (ptyp == Personentyp.FIRMA) {
                         salutation = "3000"; // NOI18N
                     }
-                    final String[] ownersIds = searchService.searchOwnersWithAttributes(accessProvider
-                                    .getIdentityCard(),
+                    final String aToken = accessProvider.login();
+                    final String[] ownersIds = searchService.searchOwnersWithAttributes(
+                            aToken,
                             accessProvider.getService(),
                             salutation,
                             vorname,
@@ -201,6 +202,7 @@ public class CidsAlkisSearchStatement extends AbstractCidsServerSearch implement
                             null,
                             null,
                             TIMEOUT);
+                    accessProvider.logout();
 
                     if (ownersIds != null) {
                         final StringBuilder whereClauseBuilder = new StringBuilder(ownersIds.length * 20);

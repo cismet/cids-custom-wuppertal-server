@@ -68,7 +68,8 @@ public class VermUntTaskAPList extends VermUntTaskAP {
             if ((code != null) && (code.length() > 0)) {
                 String url = null;
                 try {
-                    url = ServerAlkisProducts.productListenNachweisUrl(punktListenString, code).toString();
+                    url = ServerAlkisProducts.getInstance().productListenNachweisUrl(punktListenString, code)
+                                .toString();
                 } catch (MalformedURLException ex) {
                     final String message = "Beim Generieren der URL kam es zu einem unerwarteten Fehler.";
                     throw new VermessungsunterlagenTaskException(getType(), message, ex);

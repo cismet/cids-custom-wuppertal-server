@@ -40,6 +40,10 @@ public final class ServerAlkisProducts extends AlkisProducts {
     private static ServerAlkisProducts INSTANCE;
     private static final SimpleDateFormat STICHTAG_DATE_FORMAT = new SimpleDateFormat("dd.MM.yyyy");
 
+    //~ Instance fields --------------------------------------------------------
+
+    private final SOAPAccessProvider soapAccessProvider;
+
     //~ Constructors -----------------------------------------------------------
 
     /**
@@ -52,11 +56,12 @@ public final class ServerAlkisProducts extends AlkisProducts {
      *
      * @throws  Exception  DOCUMENT ME!
      */
-    public ServerAlkisProducts(final AlkisConf alkisConf,
+    private ServerAlkisProducts(final ServerAlkisConf alkisConf,
             final Properties productProperties,
             final Properties formats,
             final String produktbeschreibungXml) throws Exception {
         super(alkisConf, productProperties, formats, produktbeschreibungXml);
+        soapAccessProvider = new SOAPAccessProvider(alkisConf);
     }
 
     //~ Methods ----------------------------------------------------------------
@@ -98,7 +103,7 @@ public final class ServerAlkisProducts extends AlkisProducts {
      *
      * @throws  MalformedURLException  DOCUMENT ME!
      */
-    public static URL productEinzelNachweisUrl(final String objectID,
+    public URL productEinzelNachweisUrl(final String objectID,
             final String productCode,
             final User user,
             final String fertigungsVermerk) throws MalformedURLException {
@@ -131,7 +136,7 @@ public final class ServerAlkisProducts extends AlkisProducts {
      *
      * @throws  MalformedURLException  DOCUMENT ME!
      */
-    public static URL productEinzelnachweisStichtagsbezogenUrl(final String objectID,
+    public URL productEinzelnachweisStichtagsbezogenUrl(final String objectID,
             final String productCode,
             final Date stichtag,
             final User user) throws MalformedURLException {
@@ -159,7 +164,7 @@ public final class ServerAlkisProducts extends AlkisProducts {
      *
      * @return  DOCUMENT ME!
      */
-    private static String generateFabricationNotices(final String fertigungsVermerk) {
+    private String generateFabricationNotices(final String fertigungsVermerk) {
         if (fertigungsVermerk != null) {
             try {
                 final String notice1 = URLEncoder.encode(
@@ -187,7 +192,7 @@ public final class ServerAlkisProducts extends AlkisProducts {
      *
      * @return  DOCUMENT ME!
      */
-    private static String generateFabricationNotice(final String fertigungsVermerk) {
+    private String generateFabricationNotice(final String fertigungsVermerk) {
         if (fertigungsVermerk != null) {
             try {
                 final String note = URLEncoder.encode(
@@ -214,8 +219,7 @@ public final class ServerAlkisProducts extends AlkisProducts {
      *
      * @throws  MalformedURLException  DOCUMENT ME!
      */
-    public static URL productKarteUrl(final String parcelCode, final String fertigungsVermerk)
-            throws MalformedURLException {
+    public URL productKarteUrl(final String parcelCode, final String fertigungsVermerk) throws MalformedURLException {
         final String fabricationNotices = generateFabricationNotices(fertigungsVermerk);
         return new URL(new StringBuffer(ServerAlkisConf.getInstance().getLiegenschaftskarteService()).append(
                     "?landparcel=").append(parcelCode).append(getIdentification()).append(getMore()).append(
@@ -242,7 +246,7 @@ public final class ServerAlkisProducts extends AlkisProducts {
      *
      * @throws  MalformedURLException  DOCUMENT ME!
      */
-    public static URL productKarteUrl(final String parcelCode,
+    public URL productKarteUrl(final String parcelCode,
             final String produkt,
             final int winkel,
             final int centerX,
@@ -291,7 +295,7 @@ public final class ServerAlkisProducts extends AlkisProducts {
      *
      * @throws  MalformedURLException  DOCUMENT ME!
      */
-    public static URL productListenNachweisUrl(final String punktliste, final String productCode)
+    public URL productListenNachweisUrl(final String punktliste, final String productCode)
             throws MalformedURLException {
         return new URL(new StringBuffer(ServerAlkisConf.getInstance().getListenNachweisService()).append("?product=")
                         .append(productCode).append("&ids=").append(punktliste).append(getIdentification()).append(
@@ -303,11 +307,8 @@ public final class ServerAlkisProducts extends AlkisProducts {
      *
      * @return  DOCUMENT ME!
      */
-    private static String getIdentification() {
-        return new StringBuffer("&user=").append(ServerAlkisConf.getInstance().getCreds().getUser())
-                    .append("&password=")
-                    .append(ServerAlkisConf.getInstance().getCreds().getPassword())
-                    .toString();
+    private SOAPAccessProvider getSoapAccessProvider() {
+        return soapAccessProvider;
     }
 
     /**
@@ -315,7 +316,17 @@ public final class ServerAlkisProducts extends AlkisProducts {
      *
      * @return  DOCUMENT ME!
      */
-    private static String getMore() {
+    private String getIdentification() {
+        final String token = getSoapAccessProvider().login();
+        return new StringBuffer("&token=").append(token).toString();
+    }
+
+    /**
+     * DOCUMENT ME!
+     *
+     * @return  DOCUMENT ME!
+     */
+    private String getMore() {
         return new StringBuffer("&service=").append(ServerAlkisConf.getInstance().getService())
                     .append("&script=")
                     .append(ServerAlkisProducts.getInstance().getNachverarbeitungScript())

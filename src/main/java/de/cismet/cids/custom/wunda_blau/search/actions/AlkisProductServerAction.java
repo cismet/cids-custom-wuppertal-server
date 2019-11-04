@@ -168,43 +168,46 @@ public class AlkisProductServerAction implements ConnectionContextStore, UserAwa
 
             switch ((Body)body) {
                 case KARTE: {
-                    url = ServerAlkisProducts.productKarteUrl(alkisCode, fertigungsVermerk);
+                    url = ServerAlkisProducts.getInstance().productKarteUrl(alkisCode, fertigungsVermerk);
                 }
                 break;
                 case KARTE_CUSTOM: {
-                    url = ServerAlkisProducts.productKarteUrl(
-                            alkisCode,
-                            produkt,
-                            winkel,
-                            x,
-                            y,
-                            massstab,
-                            massstabMin,
-                            massstabMax,
-                            zusatz,
-                            auftragsnummer,
-                            true,
-                            fertigungsVermerk);
+                    url = ServerAlkisProducts.getInstance()
+                                .productKarteUrl(
+                                        alkisCode,
+                                        produkt,
+                                        winkel,
+                                        x,
+                                        y,
+                                        massstab,
+                                        massstabMin,
+                                        massstabMax,
+                                        zusatz,
+                                        auftragsnummer,
+                                        true,
+                                        fertigungsVermerk);
                 }
                 break;
                 case EINZELNACHWEIS: {
-                    url = ServerAlkisProducts.productEinzelNachweisUrl(
-                            alkisCode,
-                            produkt,
-                            getUser(),
-                            fertigungsVermerk);
+                    url = ServerAlkisProducts.getInstance()
+                                .productEinzelNachweisUrl(
+                                        alkisCode,
+                                        produkt,
+                                        getUser(),
+                                        fertigungsVermerk);
                 }
                 break;
                 case EINZELNACHWEIS_STICHTAG: {
-                    url = ServerAlkisProducts.productEinzelnachweisStichtagsbezogenUrl(
-                            alkisCode,
-                            produkt,
-                            stichtag,
-                            getUser());
+                    url = ServerAlkisProducts.getInstance()
+                                .productEinzelnachweisStichtagsbezogenUrl(
+                                        alkisCode,
+                                        produkt,
+                                        stichtag,
+                                        getUser());
                 }
                 break;
                 case LISTENNACHWEIS: {
-                    url = ServerAlkisProducts.productListenNachweisUrl(alkisCode, produkt);
+                    url = ServerAlkisProducts.getInstance().productListenNachweisUrl(alkisCode, produkt);
                 }
                 break;
                 default: {
