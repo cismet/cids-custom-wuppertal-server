@@ -139,6 +139,7 @@ public class FormSolutionsBestellungHandler implements ConnectionContextProvider
     public static final int GUTSCHEIN_NO = 2;
 
     private static final Logger LOG = Logger.getLogger(FormSolutionsBestellungHandler.class);
+
     private static final String TEST_CISMET00_PREFIX = "TEST_CISMET00-";
     private static final String GUTSCHEIN_ADDITIONAL_TEXT = "TESTAUSZUG - nur zur Demonstration (%s)";
     private static final ObjectMapper MAPPER = new ObjectMapper();
@@ -149,6 +150,9 @@ public class FormSolutionsBestellungHandler implements ConnectionContextProvider
     private static final String PRODUKT_QUERY_TEMPLATE = "SELECT DISTINCT %d, %s FROM %s WHERE %s LIMIT 1;";
     private static final String BESTELLUNG_BY_TRANSID_QUERY_TEMPLATE =
         "SELECT DISTINCT %d, %s FROM %s WHERE transid LIKE '%s';";
+
+    private static final String PDF_START = "%PDF";
+    private static final String PDF_END = "%%EOF";
 
     //~ Enums ------------------------------------------------------------------
 
@@ -1601,17 +1605,101 @@ public class FormSolutionsBestellungHandler implements ConnectionContextProvider
     /**
      * DOCUMENT ME!
      *
-     * @param   in               DOCUMENT ME!
-     * @param   destinationPath  DOCUMENT ME!
+     * @param   in        DOCUMENT ME!
+     * @param   fileName  DOCUMENT ME!
      *
      * @throws  Exception  DOCUMENT ME!
      */
-    private void uploadProduktToFtp(final InputStream in, final String destinationPath) throws Exception {
-        FormSolutionsFtpClient.getInstance()
-                .upload(
-                    in,
-                    FormSolutionsProperties.getInstance().getProduktBasepath()
-                    + destinationPath);
+    private void uploadProduktToFtp(final InputStream in, final String fileName) throws Exception {
+        final File tmpFile = writeProduktToTmp(in, fileName);
+
+        // test requested Produkt
+        try(final InputStream Test = new FileInputStream(tmpFile)) {
+            testPdfValidity(Test);
+        }
+
+        // upload Produkt to FTP
+        final String ftpFilePath = FormSolutionsProperties.getInstance().getProduktBasepath()
+                    + ensureCorrectDirectorySeparator(fileName);
+        FormSolutionsFtpClient.getInstance().upload(in, ftpFilePath);
+
+        // no errors until here => tmpFile can now be deleted
+        if (tmpFile != null) {
+            tmpFile.delete();
+        }
+
+        // Download Produkt from FTP and test it
+        try(final ByteArrayOutputStream out = new ByteArrayOutputStream()) {
+            FormSolutionsFtpClient.getInstance().download(ftpFilePath, out);
+            try(final InputStream inTest = new ByteArrayInputStream(out.toByteArray())) {
+                testPdfValidity(inTest);
+            }
+        }
+    }
+
+    /**
+     * DOCUMENT ME!
+     *
+     * @param   filePath  DOCUMENT ME!
+     *
+     * @return  DOCUMENT ME!
+     */
+    private static String ensureCorrectDirectorySeparator(final String filePath) {
+        final String s = DomainServerImpl.getServerProperties().getFileSeparator();
+        return "/".equals(s) ? filePath : filePath.replace("/", s);
+    }
+
+    /**
+     * DOCUMENT ME!
+     *
+     * @param   in        DOCUMENT ME!
+     * @param   fileName  DOCUMENT ME!
+     *
+     * @return  DOCUMENT ME!
+     *
+     * @throws  Exception  DOCUMENT ME!
+     */
+    private File writeProduktToTmp(final InputStream in, final String fileName) throws Exception {
+        final File tmpFile = new File(FormSolutionsProperties.getInstance().getTmpBrokenpdfsAbsPath()
+                        + DomainServerImpl.getServerProperties().getFileSeparator() + fileName);
+        try(final OutputStream out = new FileOutputStream(tmpFile)) {
+            IOUtils.copy(in, out);
+        }
+        return tmpFile;
+    }
+
+    /**
+     * DOCUMENT ME!
+     *
+     * @param   in  DOCUMENT ME!
+     *
+     * @throws  Exception  DOCUMENT ME!
+     */
+    private static void testPdfValidity(final InputStream in) throws Exception {
+        try(final InputStreamReader ir = new InputStreamReader(in);
+                    final BufferedReader rd = new BufferedReader(ir)) {
+            String firstLine = null;
+            String lastLine = null;
+            {
+                String line;
+                while ((line = rd.readLine()) != null) {
+                    if (firstLine == null) {
+                        firstLine = line;
+                    }
+                    lastLine = line;
+                }
+            }
+
+            if (firstLine == null) {
+                throw new Exception("PDF broken: first line is null");
+            }
+            if (!firstLine.startsWith(PDF_START)) {
+                throw new Exception("PDF broken: first line doesn't start with " + PDF_START);
+            }
+            if (!PDF_END.equals(lastLine)) {
+                throw new Exception("PDF broken: last line equals " + PDF_END);
+            }
+        }
     }
 
     /**
@@ -2261,6 +2349,7 @@ public class FormSolutionsBestellungHandler implements ConnectionContextProvider
                                         ((String)bestellungBean.getProperty("landparcelcode")).split(",")[0].replace(
                                             "/",
                                             "--"));
+
                                 try(final InputStream in = downloadProduct(productUrl)) {
                                     uploadAndFillProduktFields(fileNameOrig, in, bestellungBean);
                                 }
