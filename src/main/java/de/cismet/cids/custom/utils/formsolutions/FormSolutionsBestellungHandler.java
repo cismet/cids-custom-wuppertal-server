@@ -1622,7 +1622,7 @@ public class FormSolutionsBestellungHandler implements ConnectionContextProvider
         // upload Produkt to FTP
         final String ftpFilePath = FormSolutionsProperties.getInstance().getProduktBasepath()
                     + ensureCorrectDirectorySeparator(fileName);
-        FormSolutionsFtpClient.getInstance().upload(in, ftpFilePath);
+        FormSolutionsFtpClient.getInstance().upload(new FileInputStream(tmpFile), ftpFilePath);
 
         // no errors until here => tmpFile can now be deleted
         if (tmpFile != null) {
@@ -2322,7 +2322,7 @@ public class FormSolutionsBestellungHandler implements ConnectionContextProvider
             final Collection<String> transids = new ArrayList<>(fsBeanMap.keySet());
             for (final String transid : transids) {
                 final CidsBean bestellungBean = fsBeanMap.get(transid);
-                if ((bestellungBean != null) && (bestellungBean.getProperty("fehler") == null)) {
+                if ((bestellungBean != null)) {
                     try {
                         bestellungBean.setProperty("erledigt", false);
                         bestellungBean.setProperty("fehler", null);
