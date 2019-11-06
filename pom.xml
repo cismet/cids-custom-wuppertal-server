@@ -89,7 +89,14 @@
                 <scope>compile</scope>
                 <type>jar</type>
             </dependency>
-
+    <dependency>
+                <groupId>io.socket</groupId>
+                <artifactId>socket.io-client</artifactId>
+                <version>1.0.0</version>
+                <scope>compile</scope>                
+        </dependency>
+        
+         
             <!-- END: managed cids-dependencies -->    
         </dependencies>
     </dependencyManagement>
@@ -124,6 +131,11 @@
         <!-- END: cids-dependencies -->
 
         <!-- BEGIN: managed dependencies -->
+         <dependency>
+                <groupId>io.socket</groupId>
+                <artifactId>socket.io-client</artifactId>
+        </dependency>
+       
         <dependency>
             <groupId>com.sun.jersey.contribs</groupId>
             <artifactId>jersey-multipart</artifactId>

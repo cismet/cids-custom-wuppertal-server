@@ -81,8 +81,8 @@ public class GetOrbitAuthAction implements ServerAction {
                 // 24h
                 offset = 24 * 60 * 60 * 1000;
             } else {
-                // 10min
-                offset = 10 * 60 * 1000;
+                // 10h
+                offset = 10 * 60 * 60 * 1000;
             }
 
             if ((stacEntry.getTimestamp() + offset) > ts) {
