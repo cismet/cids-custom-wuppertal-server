@@ -51,6 +51,7 @@ public class AlkisSOAPSearch {
      */
     public static void main(final String[] args) throws RemoteException {
         final SOAPAccessProvider access = new SOAPAccessProvider(ServerAlkisConf.getInstance());
+        final String aToken = access.login();
         final ALKISSearchServices search = access.getAlkisSearchService();
         final ALKISCatalogServices catalog = access.getAlkisCatalogServices();
         final ALKISInfoServices info = access.getAlkisInfoService();
@@ -59,7 +60,8 @@ public class AlkisSOAPSearch {
         // searchService.searchOwnersWithAttributes(accessProvider.getIdentityCard(), accessProvider.getService(),
         // salutation, vorname, name, geburtsname, geburtstag, null, null, TIMEOUT);
         final long l = System.currentTimeMillis();
-        final String[] ownersIds = search.searchOwnersWithAttributes(access.getIdentityCard(),
+        final String[] ownersIds = search.searchOwnersWithAttributes(
+                aToken,
                 access.getService(),
                 null,
                 null,
@@ -100,5 +102,6 @@ public class AlkisSOAPSearch {
 //        Buchungsblatt b=access.getAlkisInfoService().getBuchungsblatt(access.getIdentityCard(), access.getService(),"053135-047669 ");
 //        System.out.println(b.getBuchungsblattCode());
 
+        access.logout();
     }
 }

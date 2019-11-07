@@ -13,7 +13,7 @@
 
     <groupId>de.cismet.cids.custom.wupp.server</groupId>
     <artifactId>cids-custom-server-wuppertal</artifactId>
-    <version>6.15-SNAPSHOT</version>
+    <version>6.17-SNAPSHOT</version>
     <packaging>jar</packaging>
     
     <name>${names.cids.custom-wuppertal-server} [${project.version}]</name>
@@ -23,7 +23,7 @@
         <connection>https://github.com/cismet/cids-custom-wuppertal-server.git</connection>
         <developerConnection>scm:git:git@github.com:cismet/cids-custom-wuppertal-server.git</developerConnection>
         <url>https://github.com/cismet/cids-custom-wuppertal-server</url>
-        <tag>v6.13</tag>
+        <tag>HEAD</tag>
     </scm>
 
     <properties>
@@ -251,12 +251,12 @@
             <scope>compile</scope>
             <type>jar</type>
         </dependency>
-         <dependency>
+        <dependency>
             <groupId>commons-codec</groupId>
             <artifactId>commons-codec</artifactId>
             <scope>compile</scope>
-        </dependency>
-                
+            <type>jar</type>
+        </dependency>        
         <!-- END: managed dependencies -->
         
         <!-- BEGIN: Runtime dependencies -->
@@ -306,7 +306,7 @@
         <dependency>
             <groupId>de.aedsicad</groupId>
             <artifactId>aaaweb-soap-connector</artifactId>
-            <version>6.3.16.1-2</version>
+            <version>6.4.7.1-1</version>
         </dependency>        
         <dependency>
             <groupId>de.aedsicad</groupId>
@@ -324,8 +324,21 @@
             <artifactId>jsoup</artifactId>
             <version>1.8.3</version>
         </dependency>
-        
-        
+
+        <dependency>
+            <groupId>com.drewnoakes</groupId>
+            <artifactId>metadata-extractor</artifactId>
+            <version>2.8.1</version>
+            <scope>compile</scope>
+            <type>jar</type>
+        </dependency>
+        <dependency>
+            <groupId>com.twelvemonkeys.imageio</groupId>
+            <artifactId>imageio-metadata</artifactId>
+            <version>3.0</version>
+            <scope>compile</scope>
+            <type>jar</type>
+        </dependency>                        
         <!-- BEGIN: Test dependencies -->
 
         <!-- END: Test dependencies -->

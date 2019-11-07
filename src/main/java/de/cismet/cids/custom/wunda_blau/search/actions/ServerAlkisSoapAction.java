@@ -17,6 +17,7 @@ import de.aedsicad.aaaweb.service.util.Point;
 
 import java.rmi.RemoteException;
 
+import de.cismet.cids.custom.utils.alkis.AlkisProducts;
 import de.cismet.cids.custom.utils.alkis.SOAPAccessProvider;
 import de.cismet.cids.custom.utils.alkis.ServerAlkisConf;
 
@@ -61,36 +62,62 @@ public class ServerAlkisSoapAction implements ServerAction {
             throw new IllegalArgumentException("Body has to be either POINT or BUCHUNGSBLATT");
         }
 
-        if (body.toString().equals(RETURN_VALUE.POINT.toString())) {
-            // POINT
-            try {
-                final String pointCode = params[0].getValue().toString();
-                final Point point = getALKISInfoServices().getPoint(getSOAPAccessProvider().getIdentityCard(),
-                        getSOAPAccessProvider().getService(),
-                        pointCode);
-                return point;
-            } catch (RemoteException remoteException) {
-                LOG.error("Error in ServerAlkisSoapAction", remoteException);
-                throw new RuntimeException("Error in ServerAlkisSoapAction", remoteException);
+        try {
+            final String aToken = getSOAPAccessProvider().login();
+            if (body.toString().equals(RETURN_VALUE.POINT.toString())) {
+                // POINT
+                try {
+                    final String pointCode = params[0].getValue().toString();
+                    final Point point = getALKISInfoServices().getPoint(
+                            aToken,
+                            getSOAPAccessProvider().getService(),
+                            pointCode);
+                    return point;
+                } catch (RemoteException remoteException) {
+                    LOG.error("Error in ServerAlkisSoapAction", remoteException);
+                    throw new RuntimeException("Error in ServerAlkisSoapAction", remoteException);
+                }
+            } else {
+                // BUCHUNGSBLATT
+                try {
+                    final String buchungsblattCode = fixBuchungslattCode(params[0].getValue().toString());
+                    final String[] uuids = getALKISInfoServices().translateBuchungsblattCodeIntoUUIds(
+                            aToken,
+                            getSOAPAccessProvider().getService(),
+                            buchungsblattCode);
+                    final Buchungsblatt[] buchungsblaetter = getALKISInfoServices().getBuchungsblaetter(
+                            aToken,
+                            getSOAPAccessProvider().getService(),
+                            uuids,
+                            true);
+                    return buchungsblaetter[0];
+                } catch (RemoteException remoteException) {
+                    LOG.error("Error in ServerAlkisSoapAction", remoteException);
+                    throw new RuntimeException("Error in ServerAlkisSoapAction", remoteException);
+                }
             }
+        } finally {
+            getSOAPAccessProvider().logout();
+        }
+    }
+
+    /**
+     * DOCUMENT ME!
+     *
+     * @param   buchungsblattCode  DOCUMENT ME!
+     *
+     * @return  DOCUMENT ME!
+     */
+    public static String fixBuchungslattCode(final String buchungsblattCode) {
+        if (buchungsblattCode != null) {
+            final StringBuffer buchungsblattCodeSB = new StringBuffer(buchungsblattCode);
+            // Fix SICAD-API-strangeness...
+            while (buchungsblattCodeSB.length() < 14) {
+                buchungsblattCodeSB.append(" ");
+            }
+            return buchungsblattCodeSB.toString();
         } else {
-            // BUCHUNGSBLATT
-            try {
-                final String buchungsblattCode = params[0].getValue().toString();
-                final String[] uuids = getALKISInfoServices().translateBuchungsblattCodeIntoUUIds(
-                        getSOAPAccessProvider().getIdentityCard(),
-                        getSOAPAccessProvider().getService(),
-                        buchungsblattCode);
-                final Buchungsblatt buchungsblatt = getALKISInfoServices().getBuchungsblattWithUUID(
-                        getSOAPAccessProvider().getIdentityCard(),
-                        getSOAPAccessProvider().getService(),
-                        uuids[0],
-                        true);
-                return buchungsblatt;
-            } catch (RemoteException remoteException) {
-                LOG.error("Error in ServerAlkisSoapAction", remoteException);
-                throw new RuntimeException("Error in ServerAlkisSoapAction", remoteException);
-            }
+            return "";
         }
     }
 

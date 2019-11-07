@@ -29,6 +29,8 @@ public enum WundaBlauServerResources {
 
     //~ Enum constants ---------------------------------------------------------
 
+    BAULASTBESCHEINIGUNG_JASPER(new JasperReportServerResource("/reports/baulastbescheinigung.jasper")),
+    BAULASTEN_JASPER(new JasperReportServerResource("/reports/baulasten.jasper")),
     VERMESSUNGSRISSE_JASPER(new JasperReportServerResource("/reports/vermessungsrisse.jasper")),
     VERMESSUNGSRISSE_DOCUMENT_JASPER(new JasperReportServerResource("/reports/vermessungsrisse_document.jasper")),
     VERMESSUNGSRISSE_OVERVIEW_JASPER(new JasperReportServerResource("/reports/vermessungsrisse_overview.jasper")),
@@ -41,6 +43,8 @@ public enum WundaBlauServerResources {
     NIVP_OVERVIEW_JASPER(new JasperReportServerResource("/reports/nivp_overview.jasper")),
     FS_RECHNUNG_JASPER(new JasperReportServerResource("/reports/bestellung_rechnung.jasper")),
     FS_RECHNUNG_RUECKSEITE_JASPER(new JasperReportServerResource("/reports/bestellung_rechnung_rueckseite.jasper")),
+
+    POTENZIALFLAECHEN_JASPER(new JasperReportServerResource("/potenzialflaechen/potenzialflaechen_full.jasper")),
     FS_TEST_XML(new TextServerResource("/formsolutions/TEST_CISMET00.xml")),
     FS_IGNORE_TRANSID_TXT(new TextServerResource("/formsolutions/ignoreTransids.txt")),
     FORMSOLUTIONS_PROPERTIES(new TextServerResource("/formsolutions/fs_conf.properties")),
@@ -52,6 +56,8 @@ public enum WundaBlauServerResources {
     VCM_PROPERTIES(new TextServerResource("/virtualcitymap/vcm.properties")),
     IMAGE_ANNOTATOR_FONT(new BinaryServerResource("/tiffer/Calibri_Bold.ttf")),
     STADTBILDER_CONF_PROPERTIES(new TextServerResource("/stadtbilder/sb_conf.properties")),
+
+    URLCONFIG_PROPERTIES(new TextServerResource("/urlconfig.properties")),
     ALKIS_CONF(new TextServerResource("/alkis/alkis_conf.properties")),
     ALKIS_PRODUCTS_PROPERTIES(new TextServerResource("/alkis/alkis_products.properties")),
     ALKIS_BUCHUNTSBLATTBEZIRKE_JSON(new TextServerResource("/alkis/buchungsblattbezirke.json")),
@@ -59,6 +65,9 @@ public enum WundaBlauServerResources {
     ALKIS_PRODUKTBESCHREIBUNG_XML(new TextServerResource("/alkis/Produktbeschreibung_ALKIS.xml")),
     BERECHTIGUNGSPRUEFUNG_PROPERTIES(new TextServerResource("/berechtigungspruefung/berechtigungspruefung.properties")),
     BERECHTIGUNGSPRUEFUNG_CONF_JSON(new TextServerResource("/berechtigungspruefung/berechtigungspruefung_conf.json")),
+
+    BILLING_JSON(new TextServerResource("/billing/billing.json")),
+
     GRUNDWASSERMESSSTELLEN_PROPERTIES(new TextServerResource("/grundwassermessstellen/gwm_conf.properties")),
     VERMESSUNGSUNTERLAGENPORTAL_PROPERTIES(new TextServerResource("/vermessungsunterlagenportal/vup_conf.properties")),
     QSGEB_PROPERTIES(new TextServerResource("/qsgeb/qsgeb_conf.properties")),

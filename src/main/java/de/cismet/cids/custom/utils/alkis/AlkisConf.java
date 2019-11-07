@@ -37,6 +37,7 @@ public abstract class AlkisConf {
     private final String credentialsFile;
     private final String service;
     private final String server;
+    private final String tokenService;
     private final String catalogService;
     private final String infoService;
     private final String searchService;
@@ -75,6 +76,7 @@ public abstract class AlkisConf {
         service = serviceProperties.getProperty("SERVICE");
         server = serviceProperties.getProperty("SERVER");
         demoServiceUrl = serviceProperties.getProperty("DEMOSERVICEURL");
+        tokenService = serviceProperties.getProperty("TOKEN_SERVICE");
         catalogService = serviceProperties.getProperty("CATALOG_SERVICE");
         infoService = serviceProperties.getProperty("INFO_SERVICE");
         searchService = serviceProperties.getProperty("SEARCH_SERVICE");
