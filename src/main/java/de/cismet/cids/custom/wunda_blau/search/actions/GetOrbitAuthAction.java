@@ -92,7 +92,7 @@ public class GetOrbitAuthAction implements ServerAction {
                     ret = ret.replaceAll("###socketChannelId###", stacEntry.getSocketChannelId());
                     return ret;
                 } catch (Exception ex) {
-                    Exceptions.printStackTrace(ex);
+                    LOG.error("Error during GetOrbitAuthAction", ex);
                 }
             } else {
                 OrbitStacTools.getInstance().removeStac(stac);

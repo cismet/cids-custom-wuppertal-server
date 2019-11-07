@@ -175,8 +175,8 @@ public class SchraegluftbilderForGeomSearchAction implements UserAwareServerActi
             throw new IllegalArgumentException("no search geometry given");
         }
 
-        final Geometry offsetSearchGeometry = searchGeometry;    // AffineTransformation.translationInstance(0,
-                                                                 // -50).transform(searchGeometry);
+        final Geometry offsetSearchGeometry = searchGeometry; // AffineTransformation.translationInstance(0,
+                                                              // -50).transform(searchGeometry);
 
         final Collection<String> directions = new ArrayList<>();
         if (saps != null) {

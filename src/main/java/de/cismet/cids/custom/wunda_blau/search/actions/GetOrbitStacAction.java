@@ -16,17 +16,21 @@ import Sirius.server.newuser.User;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
 
-import io.socket.client.Ack;
 import io.socket.client.IO;
 import io.socket.client.Socket;
 
 import org.apache.log4j.Logger;
 
+import java.util.Properties;
+
+import de.cismet.cids.custom.utils.WundaBlauServerResources;
 import de.cismet.cids.custom.wunda_blau.search.actions.orbit.OrbitStacTools;
 
 import de.cismet.cids.server.actions.ServerAction;
 import de.cismet.cids.server.actions.ServerActionParameter;
 import de.cismet.cids.server.actions.UserAwareServerAction;
+
+import de.cismet.cids.utils.serverresources.ServerResourcesLoader;
 
 /**
  * DOCUMENT ME!
@@ -42,10 +46,6 @@ public class GetOrbitStacAction implements ServerAction, UserAwareServerAction {
     private static final Logger LOG = Logger.getLogger(StamperServerAction.class);
 
     public static final String TASK_NAME = "getOrbitStac";
-
-    public static final String OPEN_CHANNELS_SECRET = "abracadabra";
-    public static final String SOCKET_BROADCASTER = "http://localhost:3001";
-    public static final int OPEN_CHANNEL_TIMEOUT = 24 * 60 * 60; // 24h
 
     //~ Enums ------------------------------------------------------------------
 
@@ -72,22 +72,30 @@ public class GetOrbitStacAction implements ServerAction, UserAwareServerAction {
         String ipAddress = null;
         String stacOptions = null;
         final ObjectMapper mapper = new ObjectMapper();
-        for (final ServerActionParameter sap : saps) {
-            if (sap.getKey().equals(PARAMETER_TYPE.IP.toString())) {
-                ipAddress = (String)sap.getValue();
-            } else if (sap.getKey().equals(PARAMETER_TYPE.STAC_OPTIONS.toString())) {
-                stacOptions = (String)sap.getValue();
-            }
-        }
-
         final String stac = OrbitStacTools.getInstance().createStac(user.getName(), ipAddress, stacOptions);
-        final String socketChannelId = OrbitStacTools.getInstance().getEntry(stac).getSocketChannelId();
 
         try {
-            openChannels(socketChannelId);
+            final Properties settings = ServerResourcesLoader.getInstance()
+                        .loadProperties(WundaBlauServerResources.ORBIT_SETTINGS_PROPERTIES.getValue());
+            final String OPEN_CHANNELS_SECRET = settings.getProperty("openChannelsSecret");
+            final String SOCKET_BROADCASTER = settings.getProperty("socketBroadcaster");
+            final int OPEN_CHANNEL_TIMEOUT = Integer.parseInt(settings.getProperty("openChannelTimeout"));
+
+            for (final ServerActionParameter sap : saps) {
+                if (sap.getKey().equals(PARAMETER_TYPE.IP.toString())) {
+                    ipAddress = (String)sap.getValue();
+                } else if (sap.getKey().equals(PARAMETER_TYPE.STAC_OPTIONS.toString())) {
+                    stacOptions = (String)sap.getValue();
+                }
+            }
+
+            final String socketChannelId = OrbitStacTools.getInstance().getEntry(stac).getSocketChannelId();
+
+            openChannels(socketChannelId, OPEN_CHANNELS_SECRET, OPEN_CHANNEL_TIMEOUT);
             return "{\"stac\":\"" + stac + "\",\"socketChannelId\":\"" + socketChannelId + "\"}";
         } catch (Exception e) {
             // no Connection to the broadcaster possible don't return a socketchanellid
+            LOG.error("Error during GetOrbitStacAction. Will send STAC only. (No Socket-Functionality available.)", e);
             return "{\"stac\":\"" + stac + "\"}";
         }
     }
@@ -95,11 +103,15 @@ public class GetOrbitStacAction implements ServerAction, UserAwareServerAction {
     /**
      * DOCUMENT ME!
      *
-     * @param   socketChannelId  DOCUMENT ME!
+     * @param   socketChannelId       DOCUMENT ME!
+     * @param   OPEN_CHANNELS_SECRET  DOCUMENT ME!
+     * @param   OPEN_CHANNEL_TIMEOUT  DOCUMENT ME!
      *
      * @throws  Exception  DOCUMENT ME!
      */
-    private static void openChannels(final String socketChannelId) throws Exception {
+    private static void openChannels(final String socketChannelId,
+            final String OPEN_CHANNELS_SECRET,
+            final int OPEN_CHANNEL_TIMEOUT) throws Exception {
         final ObjectMapper mapper = new ObjectMapper();
 
         final OpenChannelInfo info = new OpenChannelInfo();
@@ -125,18 +137,6 @@ public class GetOrbitStacAction implements ServerAction, UserAwareServerAction {
     @Override
     public void setUser(final User user) {
         this.user = user;
-    }
-
-    /**
-     * DOCUMENT ME!
-     *
-     * @param   args  DOCUMENT ME!
-     *
-     * @throws  Exception  DOCUMENT ME!
-     */
-    public static void main(final String[] args) throws Exception {
-        openChannels("XXXY");
-        System.exit(0);
     }
 }
 
@@ -231,7 +231,10 @@ class SocketIOSocketProvider {
     private SocketIOSocketProvider() throws Exception {
         final IO.Options opts = new IO.Options();
         opts.transports = new String[] { "websocket" };
-        socket = IO.socket(GetOrbitStacAction.SOCKET_BROADCASTER).connect();
+        final Properties settings = ServerResourcesLoader.getInstance()
+                    .loadProperties(WundaBlauServerResources.ORBIT_SETTINGS_PROPERTIES.getValue());
+        final String SOCKET_BROADCASTER = settings.getProperty("socketBroadcaster");
+        socket = IO.socket(SOCKET_BROADCASTER).connect();
     }
 
     //~ Methods ----------------------------------------------------------------
