@@ -13,7 +13,7 @@
 
     <groupId>de.cismet.cids.custom.wupp.server</groupId>
     <artifactId>cids-custom-server-wuppertal</artifactId>
-    <version>6.17-SNAPSHOT</version>
+    <version>6.18-SNAPSHOT</version>
     <packaging>jar</packaging>
     
     <name>${names.cids.custom-wuppertal-server} [${project.version}]</name>
@@ -89,7 +89,14 @@
                 <scope>compile</scope>
                 <type>jar</type>
             </dependency>
-
+    <dependency>
+                <groupId>io.socket</groupId>
+                <artifactId>socket.io-client</artifactId>
+                <version>1.0.0</version>
+                <scope>compile</scope>                
+        </dependency>
+        
+         
             <!-- END: managed cids-dependencies -->    
         </dependencies>
     </dependencyManagement>
@@ -124,6 +131,11 @@
         <!-- END: cids-dependencies -->
 
         <!-- BEGIN: managed dependencies -->
+         <dependency>
+                <groupId>io.socket</groupId>
+                <artifactId>socket.io-client</artifactId>
+        </dependency>
+       
         <dependency>
             <groupId>com.sun.jersey.contribs</groupId>
             <artifactId>jersey-multipart</artifactId>
