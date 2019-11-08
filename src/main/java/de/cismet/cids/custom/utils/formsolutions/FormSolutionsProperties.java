@@ -72,6 +72,7 @@ public class FormSolutionsProperties {
     private final String urlCreateCacheid;
     private final String cidsActionHttpRedirectorUrl;
     private final boolean mysqlDisabled;
+    private final boolean deleteTmpProductAfterSuccessfulUploadDisabled;
 
     //~ Constructors -----------------------------------------------------------
 
@@ -109,14 +110,16 @@ public class FormSolutionsProperties {
         billingVerwendungszweckPostweg = properties.getProperty("BILLING_VERWENDUNGSZWECK_POSTWEG");
         billingVerwendungskeyDownload = properties.getProperty("BILLING_VERWENDUNGSKEY_DOWNLOAD");
         billingVerwendungskeyPostweg = properties.getProperty("BILLING_VERWENDUNGSKEY_POSTWEG");
-        mysqlDisabled = (properties.getProperty("MYSQL_DISABLED") != null)
-                    && "true".equals(properties.getProperty("MYSQL_DISABLED").trim().toLowerCase());
+        mysqlDisabled = Boolean.getBoolean(
+                properties.getProperty("MYSQL_DISABLED").trim().toLowerCase());
         rechnungBerechnugsgGrundlage = properties.getProperty("RECHNUNG_BERECHNUNGSGRUNDLAGE");
         tmpBrokenpdfsAbsPath = properties.getProperty("TMP_BROKENPDFS_ABS_PATH");
         transidHashpepper = properties.getProperty("TRANSID_HASHPEPPER");
         redirectionFormat = properties.getProperty("REDIRECTION_FORMAT");
         urlCreateCacheid = properties.getProperty("URL_CREATE_CACHEID");
         cidsActionHttpRedirectorUrl = properties.getProperty("CIDS_ACTION_HTTP_REDIRECTOR_URL");
+        deleteTmpProductAfterSuccessfulUploadDisabled = Boolean.getBoolean(
+                properties.getProperty("DELETE_TMP_PRODUCT_AFTER_SUCCESSFUL_UPLOAD").trim().toLowerCase());
     }
 
     //~ Methods ----------------------------------------------------------------
@@ -153,7 +156,8 @@ public class FormSolutionsProperties {
             } catch (final Throwable ex) {
                 if ("WUNDA_BLAU".equals(DomainServerImpl.getServerProperties().getServerName())) {
                     LOG.error(
-                        "FormSolutionsConstants Initialization Error. All FormSolutions related features will not work.",
+                        "FormSolutionsConstants Initialization Error. "
+                                + "All FormSolutions related features will not work.",
                         ex);
                 }
                 fsprop = null;

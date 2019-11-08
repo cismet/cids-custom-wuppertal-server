@@ -217,8 +217,8 @@ public class Redirect2FormsolutionsAction implements UserAwareServerAction, Meta
                     final HashMap<String, String> headerMap = new HashMap<>();
                     headerMap.put("Content-Type", "application/x-www-form-urlencoded");
                     final InputStream in =
-                        new SimpleHttpAccessHandler().doRequest(
-                            new URL(FormSolutionsProperties.getInstance().getUrlCreateCacheid()),
+                        new SimpleHttpAccessHandler().doRequest(new URL(
+                                FormSolutionsProperties.getInstance().getUrlCreateCacheid()),
                             new StringReader(urlEncodeUTF8(form)),
                             AccessHandler.ACCESS_METHODS.POST_REQUEST,
                             headerMap);

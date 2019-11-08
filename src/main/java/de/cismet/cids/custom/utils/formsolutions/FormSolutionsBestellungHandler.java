@@ -144,12 +144,26 @@ public class FormSolutionsBestellungHandler implements ConnectionContextProvider
     private static final String GUTSCHEIN_ADDITIONAL_TEXT = "TESTAUSZUG - nur zur Demonstration (%s)";
     private static final ObjectMapper MAPPER = new ObjectMapper();
     private static final Map<String, MetaClass> METACLASS_CACHE = new HashMap();
-    private static final String EXTERNAL_USER_QUERY_TEMPLATE = "SELECT %d, %s FROM %s WHERE name = '%s';";
-    private static final String UNFINISHED_BESTELLUNGEN_QUERY_TEMPLATE =
-        "SELECT %d, %s FROM %s WHERE test IS NOT TRUE AND duplicate IS NOT TRUE AND postweg IS NOT TRUE AND fehler IS NULL AND erledigt IS NOT TRUE;";
-    private static final String PRODUKT_QUERY_TEMPLATE = "SELECT DISTINCT %d, %s FROM %s WHERE %s LIMIT 1;";
-    private static final String BESTELLUNG_BY_TRANSID_QUERY_TEMPLATE =
-        "SELECT DISTINCT %d, %s FROM %s WHERE transid LIKE '%s';";
+    private static final String EXTERNAL_USER_QUERY_TEMPLATE = ""
+                + "SELECT %d, %s "
+                + "FROM %s "
+                + "WHERE name = '%s';";
+    private static final String UNFINISHED_BESTELLUNGEN_QUERY_TEMPLATE = ""
+                + "SELECT %d, %s "
+                + "FROM %s "
+                + "WHERE test IS NOT TRUE "
+                + "AND duplicate IS NOT TRUE "
+                + "AND postweg IS NOT TRUE "
+                + "AND fehler IS NULL "
+                + "AND erledigt IS NOT TRUE;";
+    private static final String PRODUKT_QUERY_TEMPLATE = ""
+                + "SELECT DISTINCT %d, %s "
+                + "FROM %s WHERE %s "
+                + "LIMIT 1;";
+    private static final String BESTELLUNG_BY_TRANSID_QUERY_TEMPLATE = ""
+                + "SELECT DISTINCT %d, %s "
+                + "FROM %s WHERE transid "
+                + "LIKE '%s';";
 
     private static final String PDF_START = "%PDF";
     private static final String PDF_END = "%%EOF";
@@ -215,15 +229,17 @@ public class FormSolutionsBestellungHandler implements ConnectionContextProvider
         if ((DomainServerImpl.getServerProperties() != null)
                     && "WUNDA_BLAU".equals(DomainServerImpl.getServerProperties().getServerName())) {
             try {
-                creds = new UsernamePasswordCredentials(FormSolutionsProperties.getInstance().getUser(),
-                        FormSolutionsProperties.getInstance().getPassword());
+                creds = new UsernamePasswordCredentials(
+                        getProperties().getUser(),
+                        getProperties().getPassword());
             } catch (final Exception ex) {
-                LOG.error(
-                    "UsernamePasswordCredentials couldn't be created. FormSolutionServerNewStuffAvailableAction will not work at all !",
+                LOG.error(""
+                            + "UsernamePasswordCredentials couldn't be created. "
+                            + "FormSolutionServerNewStuffAvailableAction will not work at all !",
                     ex);
             }
             try {
-                testCismet00Type = parseProductType(FormSolutionsProperties.getInstance().getTestCismet00());
+                testCismet00Type = parseProductType(getProperties().getTestCismet00());
             } catch (final Exception ex) {
                 LOG.error("could not read FormSolutionsConstants.TEST_CISMET00. TEST_CISMET00 stays disabled", ex);
             }
@@ -305,15 +321,13 @@ public class FormSolutionsBestellungHandler implements ConnectionContextProvider
                         + (String)bestellungBean.getProperty("fk_adresse_rechnung.vorname");
             final String request_url = (String)bestellungBean.getProperty("request_url");
 
-            final String kunde_login = FormSolutionsProperties.getInstance().getBillingKundeLogin();
-            final String modus = FormSolutionsProperties.getInstance().getBillingModus();
-            final String modusbezeichnung = FormSolutionsProperties.getInstance().getBillingModusbezeichnung();
-            final String verwendungszweck = isPostweg
-                ? FormSolutionsProperties.getInstance().getBillingVerwendungskeyPostweg()
-                : FormSolutionsProperties.getInstance().getBillingVerwendungszweckDownload();
-            final String verwendungskey = isPostweg
-                ? FormSolutionsProperties.getInstance().getBillingVerwendungskeyPostweg()
-                : FormSolutionsProperties.getInstance().getBillingVerwendungskeyDownload();
+            final String kunde_login = getProperties().getBillingKundeLogin();
+            final String modus = getProperties().getBillingModus();
+            final String modusbezeichnung = getProperties().getBillingModusbezeichnung();
+            final String verwendungszweck = isPostweg ? getProperties().getBillingVerwendungskeyPostweg()
+                                                      : getProperties().getBillingVerwendungszweckDownload();
+            final String verwendungskey = isPostweg ? getProperties().getBillingVerwendungskeyPostweg()
+                                                    : getProperties().getBillingVerwendungskeyDownload();
             final String produktkey = (String)bestellungBean.getProperty("fk_produkt.billing_key");
             final String produktbezeichnung = (String)bestellungBean.getProperty("fk_produkt.billing_desc");
 
@@ -379,8 +393,9 @@ public class FormSolutionsBestellungHandler implements ConnectionContextProvider
                 getConnectionContext());
         if (mc == null) {
             if (LOG.isDebugEnabled()) {
-                LOG.debug(
-                    "The metaclass for billing_kunden_logins is null. The current user has probably not the needed rights.");
+                LOG.debug(""
+                            + "The metaclass for billing_kunden_logins is null. "
+                            + "The current user has probably not the needed rights.");
             }
             return null;
         }
@@ -586,7 +601,7 @@ public class FormSolutionsBestellungHandler implements ConnectionContextProvider
      * @return  DOCUMENT ME!
      */
     private Map<String, CidsBean> loadCidsEntries(final Collection<MetaObjectNode> mons) {
-        FormSolutionBestellungSpecialLogger.getInstance().log("start fetching from DB. Numof objects: " + mons.size());
+        specialLog("start fetching from DB. Numof objects: " + mons.size());
         final Map<String, CidsBean> fsBeanMap = new HashMap();
         for (final MetaObjectNode mon : mons) {
             final CidsBean bestellungBean;
@@ -604,7 +619,7 @@ public class FormSolutionsBestellungHandler implements ConnectionContextProvider
                 LOG.error(ex, ex);
             }
         }
-        FormSolutionBestellungSpecialLogger.getInstance().log("objects fetched from DB");
+        specialLog("objects fetched from DB");
         return fsBeanMap;
     }
 
@@ -637,7 +652,7 @@ public class FormSolutionsBestellungHandler implements ConnectionContextProvider
      * @throws  Exception  DOCUMENT ME!
      */
     private Map<String, ProductType> step0FetchTransIds() throws Exception {
-        FormSolutionBestellungSpecialLogger.getInstance().log("fetched from FS");
+        specialLog("fetched from FS");
 
         final Map<String, ProductType> transIdProductTypeMap = new HashMap<>();
 
@@ -730,7 +745,7 @@ public class FormSolutionsBestellungHandler implements ConnectionContextProvider
      * @throws  Exception  DOCUMENT ME!
      */
     private Collection<String> getOpenExtendedTransids(final ProductType productType) throws Exception {
-        FormSolutionBestellungSpecialLogger.getInstance().log("fetching open transids from FS");
+        specialLog("fetching open transids from FS");
 
         final Collection<String> transIds = new ArrayList<>();
         try {
@@ -738,19 +753,19 @@ public class FormSolutionsBestellungHandler implements ConnectionContextProvider
             final URL auftragsListeUrl;
             switch (productType) {
                 case SGK: {
-                    auftragsListeUrl = new URL(FormSolutionsProperties.getInstance().getUrlAuftragslisteSgkFs());
+                    auftragsListeUrl = new URL(getProperties().getUrlAuftragslisteSgkFs());
                 }
                 break;
                 case ABK: {
-                    auftragsListeUrl = new URL(FormSolutionsProperties.getInstance().getUrlAuftragslisteAbkFs());
+                    auftragsListeUrl = new URL(getProperties().getUrlAuftragslisteAbkFs());
                 }
                 break;
                 case BAB_WEITERLEITUNG: {
-                    auftragsListeUrl = new URL(FormSolutionsProperties.getInstance().getUrlAuftragslisteBb1Fs());
+                    auftragsListeUrl = new URL(getProperties().getUrlAuftragslisteBb1Fs());
                 }
                 break;
                 case BAB_ABSCHLUSS: {
-                    auftragsListeUrl = new URL(FormSolutionsProperties.getInstance().getUrlAuftragslisteBb2Fs());
+                    auftragsListeUrl = new URL(getProperties().getUrlAuftragslisteBb2Fs());
                 }
                 break;
                 default: {
@@ -771,7 +786,7 @@ public class FormSolutionsBestellungHandler implements ConnectionContextProvider
                 }
             }
 
-            FormSolutionBestellungSpecialLogger.getInstance().log("open transids fetched: " + stringBuilder.toString());
+            specialLog("open transids fetched: " + stringBuilder.toString());
 
             final Map<String, Object> map = getObjectMapper().readValue("{ \"list\" : " + stringBuilder.toString()
                             + "}",
@@ -811,9 +826,7 @@ public class FormSolutionsBestellungHandler implements ConnectionContextProvider
                                 okStatus = STATUS_DONE;
                             }
                             try {
-                                if (!FormSolutionsProperties.getInstance().isMysqlDisabled()) {
-                                    FormSolutionsMySqlHelper.getInstance().updateStatus(transid, okStatus);
-                                }
+                                getMySqlHelper().updateStatus(transid, okStatus);
                                 doStatusChangedRequest(transid);
                             } catch (final Exception ex) {
                                 setErrorStatus(
@@ -894,9 +907,7 @@ public class FormSolutionsBestellungHandler implements ConnectionContextProvider
             }
         }
         try {
-            if (!FormSolutionsProperties.getInstance().isMysqlDisabled()) {
-                FormSolutionsMySqlHelper.getInstance().updateStatus(transid, -status);
-            }
+            getMySqlHelper().updateStatus(transid, -status);
             doStatusChangedRequest(transid);
         } catch (final Exception ex2) {
             LOG.error("Fehler beim Aktualisieren des MySQL-Datensatzes", ex2);
@@ -913,14 +924,13 @@ public class FormSolutionsBestellungHandler implements ConnectionContextProvider
      * @throws  Exception  DOCUMENT ME!
      */
     private String getAuftrag(final String transid) throws Exception {
-        FormSolutionBestellungSpecialLogger.getInstance().log("getting auftrag from FS for: " + transid);
+        specialLog("getting auftrag from FS for: " + transid);
         if ((transid != null) && transid.startsWith(TEST_CISMET00_PREFIX)) {
             return (testCismet00Xml != null) ? testCismet00Xml.replace("${TRANSID}", transid) : null;
         } else {
             final Map<String, Object> map;
             try(final InputStream in = getHttpAccessHandler().doRequest(
-                                new URL(
-                                    String.format(FormSolutionsProperties.getInstance().getUrlAuftragFs(), transid)),
+                                new URL(String.format(getProperties().getUrlAuftragFs(), transid)),
                                 new StringReader(""),
                                 AccessHandler.ACCESS_METHODS.GET_REQUEST,
                                 null,
@@ -933,7 +943,7 @@ public class FormSolutionsBestellungHandler implements ConnectionContextProvider
                 final byte[] attachements = DatatypeConverter.parseBase64Binary((String)map.get("attachments"));
                 final File attachementsFile = new File(String.format(
                             "%s/%s.zip",
-                            FormSolutionsProperties.getInstance().getAnhangTmpAbsPath(),
+                            getProperties().getAnhangTmpAbsPath(),
                             transid));
                 try(final OutputStream out = new FileOutputStream(attachementsFile)) {
                     IOUtils.write(attachements, out);
@@ -961,7 +971,7 @@ public class FormSolutionsBestellungHandler implements ConnectionContextProvider
                 convertedXml = xml;
             }
 
-            FormSolutionBestellungSpecialLogger.getInstance().log("auftrag returned from FS: " + convertedXml);
+            specialLog("auftrag returned from FS: " + convertedXml);
 
             return convertedXml;
         }
@@ -974,10 +984,10 @@ public class FormSolutionsBestellungHandler implements ConnectionContextProvider
      */
     private void doStatusChangedRequest(final String transid) {
         try {
-            FormSolutionBestellungSpecialLogger.getInstance().log("doing status changed request for: " + transid);
+            specialLog("doing status changed request for: " + transid);
 
             getHttpAccessHandler().doRequest(new URL(
-                    String.format(FormSolutionsProperties.getInstance().getUrlStatusUpdate(), transid)),
+                    String.format(getProperties().getUrlStatusUpdate(), transid)),
                 new StringReader(""),
                 AccessHandler.ACCESS_METHODS.GET_REQUEST);
         } catch (final Exception ex) {
@@ -1620,18 +1630,18 @@ public class FormSolutionsBestellungHandler implements ConnectionContextProvider
         }
 
         // upload Produkt to FTP
-        final String ftpFilePath = FormSolutionsProperties.getInstance().getProduktBasepath()
+        final String ftpFilePath = getProperties().getProduktBasepath()
                     + ensureCorrectDirectorySeparator(fileName);
-        FormSolutionsFtpClient.getInstance().upload(new FileInputStream(tmpFile), ftpFilePath);
+        getFtpClient().upload(new FileInputStream(tmpFile), ftpFilePath);
 
         // no errors until here => tmpFile can now be deleted
-        if (tmpFile != null) {
+        if (!getProperties().isDeleteTmpProductAfterSuccessfulUploadDisabled() && (tmpFile != null)) {
             tmpFile.delete();
         }
 
         // Download Produkt from FTP and test it
         try(final ByteArrayOutputStream out = new ByteArrayOutputStream()) {
-            FormSolutionsFtpClient.getInstance().download(ftpFilePath, out);
+            getFtpClient().download(ftpFilePath, out);
             try(final InputStream inTest = new ByteArrayInputStream(out.toByteArray())) {
                 testPdfValidity(inTest);
             }
@@ -1661,7 +1671,7 @@ public class FormSolutionsBestellungHandler implements ConnectionContextProvider
      * @throws  Exception  DOCUMENT ME!
      */
     private File writeProduktToTmp(final InputStream in, final String fileName) throws Exception {
-        final File tmpFile = new File(FormSolutionsProperties.getInstance().getTmpBrokenpdfsAbsPath()
+        final File tmpFile = new File(getProperties().getTmpBrokenpdfsAbsPath()
                         + DomainServerImpl.getServerProperties().getFileSeparator() + fileName);
         try(final OutputStream out = new FileOutputStream(tmpFile)) {
             IOUtils.copy(in, out);
@@ -1711,8 +1721,7 @@ public class FormSolutionsBestellungHandler implements ConnectionContextProvider
      * @return  DOCUMENT ME!
      */
     private Map<String, String> step2ExtractXmlParts(final Collection<String> transids) {
-        FormSolutionBestellungSpecialLogger.getInstance()
-                .log("extracting xml parts for num of objects: " + transids.size());
+        specialLog("extracting xml parts for num of objects: " + transids.size());
 
         final Map<String, String> fsXmlMap = new HashMap<>(transids.size());
 
@@ -1720,10 +1729,7 @@ public class FormSolutionsBestellungHandler implements ConnectionContextProvider
             try {
                 final String auftragXml = getAuftrag(transid);
                 fsXmlMap.put(transid, auftragXml);
-                FormSolutionBestellungSpecialLogger.getInstance().log("updating mysql entry for: " + transid);
-                if (!FormSolutionsProperties.getInstance().isMysqlDisabled()) {
-                    FormSolutionsMySqlHelper.getInstance().updateStatus(transid, STATUS_FETCH);
-                }
+                getMySqlHelper().updateStatus(transid, STATUS_FETCH);
                 doStatusChangedRequest(transid);
             } catch (final Exception ex) {
                 setErrorStatus(transid, STATUS_FETCH, null, "Fehler beim Abholen FormSolution", ex);
@@ -1743,40 +1749,33 @@ public class FormSolutionsBestellungHandler implements ConnectionContextProvider
     private Map<String, FormSolutionsBestellung> step3CreateBestellungMap(final Map<String, String> fsXmlMap,
             final Map<String, ProductType> typeMap) {
         final Collection<String> transids = new ArrayList<>(fsXmlMap.keySet());
-
-        FormSolutionBestellungSpecialLogger.getInstance()
-                .log("creating simple bestellung bean for num of objects: " + transids.size());
+        specialLog("creating simple bestellung bean for num of objects: " + transids.size());
 
         final Map<String, FormSolutionsBestellung> fsBestellungMap = new HashMap<>(
                 transids.size());
         for (final String transid : transids) {
             final String auftragXml = fsXmlMap.get(transid);
             try(final InputStream in = IOUtils.toInputStream(auftragXml, "UTF-8")) {
-                FormSolutionBestellungSpecialLogger.getInstance()
-                        .log("creating simple bestellung bean for: " + transid);
+                specialLog("creating simple bestellung bean for: " + transid);
 
                 final FormSolutionsBestellung formSolutionsBestellung = createFormSolutionsBestellung(in);
                 fsBestellungMap.put(transid, formSolutionsBestellung);
 
-                FormSolutionBestellungSpecialLogger.getInstance()
-                        .log("simple bestellung bean created for: " + transids.size());
+                specialLog("simple bestellung bean created for: " + transids.size());
 
                 final boolean downloadOnly = !"Kartenausdruck".equals(formSolutionsBestellung.getBezugsweg());
                 final String email = downloadOnly ? trimedNotEmpty(formSolutionsBestellung.getEMailadresse())
                                                   : trimedNotEmpty(formSolutionsBestellung.getEMailadresse()); // 1
 
-                FormSolutionBestellungSpecialLogger.getInstance().log("updating mysql email entry for: " + transid);
+                specialLog("updating mysql email entry for: " + transid);
 
-                if (!FormSolutionsProperties.getInstance().isMysqlDisabled()) {
-                    FormSolutionsMySqlHelper.getInstance()
-                            .updateRequest(
-                                transid,
-                                STATUS_PARSE,
-                                extractLandparcelcode(formSolutionsBestellung),
-                                extractProduct(formSolutionsBestellung, typeMap.get(transid)),
-                                downloadOnly,
-                                email);
-                }
+                getMySqlHelper().updateRequest(
+                    transid,
+                    STATUS_PARSE,
+                    extractLandparcelcode(formSolutionsBestellung),
+                    extractProduct(formSolutionsBestellung, typeMap.get(transid)),
+                    downloadOnly,
+                    email);
                 doStatusChangedRequest(transid);
             } catch (final Exception ex) {
                 setErrorStatus(transid, STATUS_PARSE, null, "Fehler beim Parsen FormSolution", ex);
@@ -1803,12 +1802,11 @@ public class FormSolutionsBestellungHandler implements ConnectionContextProvider
         // nur die transids bearbeiten, bei denen das Parsen auch geklappt hat
         final Collection<String> transids = new ArrayList<>(fsBestellungMap.keySet());
 
-        FormSolutionBestellungSpecialLogger.getInstance()
-                .log("creating cids entries for num of objects: " + transids.size());
+        specialLog("creating cids entries for num of objects: " + transids.size());
 
         final Map<String, CidsBean> fsBeanMap = new HashMap<>(transids.size());
         for (final String transid : transids) {
-            FormSolutionBestellungSpecialLogger.getInstance().log("creating cids entry for: " + transid);
+            specialLog("creating cids entry for: " + transid);
 
             final String auftragXml = fsXmlMap.get(transid);
             final FormSolutionsBestellung formSolutionBestellung = fsBestellungMap.get(transid);
@@ -1831,7 +1829,7 @@ public class FormSolutionsBestellungHandler implements ConnectionContextProvider
             } catch (final Exception ex) {
                 final String message = "error while search for duplicates for " + transid;
                 LOG.error(message, ex);
-                FormSolutionBestellungSpecialLogger.getInstance().log(message);
+                specialLog(message);
             }
 
             try {
@@ -1881,7 +1879,7 @@ public class FormSolutionsBestellungHandler implements ConnectionContextProvider
                         false);
                 }
 
-                FormSolutionBestellungSpecialLogger.getInstance().log("persisting cids entry for: " + transid);
+                specialLog("persisting cids entry for: " + transid);
 
                 final MetaObject persistedMo = getMetaService().insertMetaObject(
                         getUser(),
@@ -1891,10 +1889,7 @@ public class FormSolutionsBestellungHandler implements ConnectionContextProvider
                 final CidsBean persistedBestellungBean = persistedMo.getBean();
                 fsBeanMap.put(transid, persistedBestellungBean);
 
-                if (!FormSolutionsProperties.getInstance().isMysqlDisabled()) {
-                    FormSolutionBestellungSpecialLogger.getInstance().log("updating mysql entry for: " + transid);
-                    FormSolutionsMySqlHelper.getInstance().updateStatus(transid, STATUS_SAVE);
-                }
+                getMySqlHelper().updateStatus(transid, STATUS_SAVE);
                 doStatusChangedRequest(transid);
             } catch (final Exception ex) {
                 setErrorStatus(transid, STATUS_SAVE, null, "Fehler beim Erstellen des Bestellungs-Objektes", ex);
@@ -1935,17 +1930,14 @@ public class FormSolutionsBestellungHandler implements ConnectionContextProvider
     private Map<String, Exception> step1CreateMySqlEntries(final Collection<String> transids) {
         final Map<String, Exception> insertExceptionMap = new HashMap<>(transids.size());
 
-        if (!FormSolutionsProperties.getInstance().isMysqlDisabled()) {
-            for (final String transid : transids) {
-                try {
-                    FormSolutionBestellungSpecialLogger.getInstance()
-                            .log("updating or inserting mySQL entry for: " + transid);
-                    FormSolutionsMySqlHelper.getInstance().insertOrUpdateStatus(transid, STATUS_CREATE);
-                    doStatusChangedRequest(transid);
-                } catch (final Exception ex) {
-                    LOG.error("Fehler beim Erzeugen/Aktualisieren des MySQL-Datensatzes.", ex);
-                    insertExceptionMap.put(transid, ex);
-                }
+        for (final String transid : transids) {
+            try {
+                specialLog("updating or inserting mySQL entry for: " + transid);
+                getMySqlHelper().insertOrUpdateStatus(transid, STATUS_CREATE);
+                doStatusChangedRequest(transid);
+            } catch (final Exception ex) {
+                LOG.error("Fehler beim Erzeugen/Aktualisieren des MySQL-Datensatzes.", ex);
+                insertExceptionMap.put(transid, ex);
             }
         }
 
@@ -1960,32 +1952,26 @@ public class FormSolutionsBestellungHandler implements ConnectionContextProvider
     private void step5CloseTransactions(final Map<String, CidsBean> fsBeanMap) {
         if (fsBeanMap != null) {
             final Collection<String> transids = new ArrayList<>(fsBeanMap.keySet());
-            FormSolutionBestellungSpecialLogger.getInstance()
-                    .log("closing transactions for num of objects: " + transids.size());
+            specialLog("closing transactions for num of objects: " + transids.size());
 
             for (final String transid : transids) {
                 final CidsBean bestellungBean = fsBeanMap.get(transid);
                 if ((bestellungBean != null)) {
                     try {
-                        FormSolutionBestellungSpecialLogger.getInstance().log("closing transaction for: " + transid);
+                        specialLog("closing transaction for: " + transid);
                         final boolean closeVeto = (transid == null) || transid.startsWith(TEST_CISMET00_PREFIX)
                                     || DomainServerImpl.getServerInstance()
                                     .hasConfigAttr(getUser(), "custom.formsolutions.noclose", getConnectionContext());
                         if (!closeVeto) {
-                            getHttpAccessHandler().doRequest(new URL(
-                                    String.format(
-                                        FormSolutionsProperties.getInstance().getUrlAuftragDeleteFs(),
-                                        transid)),
+                            getHttpAccessHandler().doRequest(
+                                new URL(String.format(getProperties().getUrlAuftragDeleteFs(), transid)),
                                 new StringReader(""),
                                 AccessHandler.ACCESS_METHODS.POST_REQUEST,
                                 null,
                                 creds);
                         }
 
-                        FormSolutionBestellungSpecialLogger.getInstance().log("updating mysql entry for: " + transid);
-                        if (!FormSolutionsProperties.getInstance().isMysqlDisabled()) {
-                            FormSolutionsMySqlHelper.getInstance().updateStatus(transid, STATUS_CLOSE);
-                        }
+                        getMySqlHelper().updateStatus(transid, STATUS_CLOSE);
                         doStatusChangedRequest(transid);
                     } catch (final Exception ex) {
                         setErrorStatus(
@@ -2126,9 +2112,7 @@ public class FormSolutionsBestellungHandler implements ConnectionContextProvider
         parameters.put("RECHNUNG_GES_BETRAG", gebuehr);
         parameters.put("RECHNUNG_EINZELPREIS", gebuehr);
         parameters.put("RECHNUNG_GESAMMTPREIS", gebuehr);
-        parameters.put(
-            "RECHNUNG_BERECH_GRUNDLAGE",
-            FormSolutionsProperties.getInstance().getRechnungBerechnugsgGrundlage());
+        parameters.put("RECHNUNG_BERECH_GRUNDLAGE", getProperties().getRechnungBerechnugsgGrundlage());
         parameters.put("RECHNUNG_ANZAHL", 1);
         parameters.put("RECHNUNG_RABATT", 0.0f);
         parameters.put("RECHNUNG_UST", 0.0f);
@@ -2195,8 +2179,8 @@ public class FormSolutionsBestellungHandler implements ConnectionContextProvider
 
                             final boolean isPostweg = Boolean.TRUE.equals(bestellungBean.getProperty("postweg"));
                             final String verwendungskey = isPostweg
-                                ? FormSolutionsProperties.getInstance().getBillingVerwendungskeyPostweg()
-                                : FormSolutionsProperties.getInstance().getBillingVerwendungskeyDownload();
+                                ? getProperties().getBillingVerwendungskeyPostweg()
+                                : getProperties().getBillingVerwendungskeyDownload();
 
                             final String productKey = (String)bestellungBean.getProperty("fk_produkt.billing_key");
                             final Double gebuehr = calculateBabGebuehr(productKey, verwendungskey, downloadInfo);
@@ -2206,7 +2190,7 @@ public class FormSolutionsBestellungHandler implements ConnectionContextProvider
 
                             final File attachementsFile = new File(String.format(
                                         "%s/%s.zip",
-                                        FormSolutionsProperties.getInstance().getAnhangTmpAbsPath(),
+                                        getProperties().getAnhangTmpAbsPath(),
                                         transid));
                             final String dateiName;
                             final byte[] data;
@@ -2241,9 +2225,7 @@ public class FormSolutionsBestellungHandler implements ConnectionContextProvider
                                 getUser(),
                                 bestellungBean.getMetaObject(),
                                 getConnectionContext());
-                            if (!FormSolutionsProperties.getInstance().isMysqlDisabled()) {
-                                FormSolutionsMySqlHelper.getInstance().updateStatus(transid, STATUS_PRUEFUNG);
-                            }
+                            getMySqlHelper().updateStatus(transid, STATUS_PRUEFUNG);
                         }
                     }
                 } catch (final Exception ex) {
@@ -2267,7 +2249,7 @@ public class FormSolutionsBestellungHandler implements ConnectionContextProvider
      * @return  DOCUMENT ME!
      */
     private static String createTransidHash(final String transid) {
-        return DigestUtils.md5Hex(FormSolutionsProperties.getInstance().getTransidHashpepper() + transid);
+        return DigestUtils.md5Hex(getProperties().getTransidHashpepper() + transid);
     }
 
     /**
@@ -2359,19 +2341,16 @@ public class FormSolutionsBestellungHandler implements ConnectionContextProvider
                                     getUser(),
                                     bestellungBean.getMetaObject(),
                                     getConnectionContext());
-                                if (!FormSolutionsProperties.getInstance().isMysqlDisabled()) {
-                                    FormSolutionsMySqlHelper.getInstance()
-                                            .insertOrUpdateProduct(
-                                                transid,
-                                                STATUS_PRODUKT,
-                                                (String)bestellungBean.getProperty("landparcelcode"),
-                                                (String)bestellungBean.getProperty("fk_product.fk_typ.name"),
-                                                Boolean.TRUE.equals((Boolean)bestellungBean.getProperty("postweg")),
-                                                (String)bestellungBean.getProperty("email"),
-                                                (String)bestellungBean.getProperty("produkt_dateipfad"),
-                                                (String)bestellungBean.getProperty("produkt_dateiname_orig"));
-                                    doStatusChangedRequest(transid);
-                                }
+                                getMySqlHelper().insertOrUpdateProduct(
+                                    transid,
+                                    STATUS_PRODUKT,
+                                    (String)bestellungBean.getProperty("landparcelcode"),
+                                    (String)bestellungBean.getProperty("fk_product.fk_typ.name"),
+                                    Boolean.TRUE.equals((Boolean)bestellungBean.getProperty("postweg")),
+                                    (String)bestellungBean.getProperty("email"),
+                                    (String)bestellungBean.getProperty("produkt_dateipfad"),
+                                    (String)bestellungBean.getProperty("produkt_dateiname_orig"));
+                                doStatusChangedRequest(transid);
                             }
                             break;
                             case BAB_WEITERLEITUNG: {
@@ -2379,7 +2358,7 @@ public class FormSolutionsBestellungHandler implements ConnectionContextProvider
                                         "berechtigungspruefung");
                                 if (Boolean.TRUE.equals(berechtigungspruefung.getProperty("pruefstatus"))) {
                                     final String transidHash = createTransidHash(transid);
-                                    final String redirectorUrlTemplate = FormSolutionsProperties.getInstance()
+                                    final String redirectorUrlTemplate = getProperties()
                                                 .getCidsActionHttpRedirectorUrl();
                                     final String redirect2formsolutions = String.format(
                                             redirectorUrlTemplate,
@@ -2393,22 +2372,16 @@ public class FormSolutionsBestellungHandler implements ConnectionContextProvider
                                         getConnectionContext());
 
                                     LOG.info(redirect2formsolutions);
-                                    if (!FormSolutionsProperties.getInstance().isMysqlDisabled()) {
-                                        FormSolutionsMySqlHelper.getInstance()
-                                                .updatePruefungFreigabe(
-                                                    transid,
-                                                    STATUS_WEITERLEITUNG_ABSCHLUSSFORMULAR,
-                                                    redirect2formsolutions);
-                                    }
+                                    getMySqlHelper().updatePruefungFreigabe(
+                                        transid,
+                                        STATUS_WEITERLEITUNG_ABSCHLUSSFORMULAR,
+                                        redirect2formsolutions);
                                     doStatusChangedRequest(transid);
                                 } else if (Boolean.FALSE.equals(berechtigungspruefung.getProperty("pruefstatus"))) {
-                                    if (!FormSolutionsProperties.getInstance().isMysqlDisabled()) {
-                                        FormSolutionsMySqlHelper.getInstance()
-                                                .updatePruefungAblehnung(
-                                                    transid,
-                                                    -STATUS_PRUEFUNG,
-                                                    (String)berechtigungspruefung.getProperty("pruefkommentar"));
-                                    }
+                                    getMySqlHelper().updatePruefungAblehnung(
+                                        transid,
+                                        -STATUS_PRUEFUNG,
+                                        (String)berechtigungspruefung.getProperty("pruefkommentar"));
                                     doStatusChangedRequest(transid);
                                 }
                             }
@@ -2426,7 +2399,7 @@ public class FormSolutionsBestellungHandler implements ConnectionContextProvider
                                     final String fileNameOrig = "baulastbescheinigung.zip";
                                     final File tmpFile = new File(String.format(
                                                 "%s/%s.%s",
-                                                FormSolutionsProperties.getInstance().getProduktTmpAbsPath(),
+                                                getProperties().getProduktTmpAbsPath(),
                                                 transid,
                                                 FilenameUtils.getExtension(fileNameOrig)));
 
@@ -2438,21 +2411,20 @@ public class FormSolutionsBestellungHandler implements ConnectionContextProvider
                                     try(final InputStream in = new FileInputStream(tmpFile)) {
                                         uploadAndFillProduktFields(fileNameOrig, in, bestellungBean);
                                     }
-                                    tmpFile.delete();
-
-                                    if (!FormSolutionsProperties.getInstance().isMysqlDisabled()) {
-                                        FormSolutionsMySqlHelper.getInstance()
-                                                .insertOrUpdateProduct(
-                                                    transid,
-                                                    STATUS_PRODUKT,
-                                                    (String)bestellungBean.getProperty("landparcelcode"),
-                                                    (String)bestellungBean.getProperty("fk_product.fk_typ.name"),
-                                                    Boolean.TRUE.equals((Boolean)bestellungBean.getProperty("postweg")),
-                                                    (String)bestellungBean.getProperty("email"),
-                                                    (String)bestellungBean.getProperty("produkt_dateipfad"),
-                                                    (String)bestellungBean.getProperty("produkt_dateiname_orig"));
-                                        doStatusChangedRequest(transid);
+                                    if (!getProperties().isDeleteTmpProductAfterSuccessfulUploadDisabled()) {
+                                        tmpFile.delete();
                                     }
+
+                                    getMySqlHelper().insertOrUpdateProduct(
+                                        transid,
+                                        STATUS_PRODUKT,
+                                        (String)bestellungBean.getProperty("landparcelcode"),
+                                        (String)bestellungBean.getProperty("fk_product.fk_typ.name"),
+                                        Boolean.TRUE.equals((Boolean)bestellungBean.getProperty("postweg")),
+                                        (String)bestellungBean.getProperty("email"),
+                                        (String)bestellungBean.getProperty("produkt_dateipfad"),
+                                        (String)bestellungBean.getProperty("produkt_dateiname_orig"));
+                                    doStatusChangedRequest(transid);
                                 } else {
                                     throw new Exception("Daten des vorgelagerten Formulars wurden nicht gefunden.");
                                 }
@@ -2480,9 +2452,8 @@ public class FormSolutionsBestellungHandler implements ConnectionContextProvider
      * @return  DOCUMENT ME!
      */
     private ProductType determineProductType(final CidsBean bestellungBean) {
-        final boolean hasTypKey = (bestellungBean != null)
-                    && (bestellungBean.getProperty("fk_produkt.fk_typ.key") != null);
-        final String type = hasTypKey ? (String)bestellungBean.getProperty("fk_produkt.fk_typ.key") : null;
+        final String type = ((bestellungBean != null) && (bestellungBean.getProperty("fk_produkt.fk_typ.key") != null))
+            ? (String)bestellungBean.getProperty("fk_produkt.fk_typ.key") : null;
         if (type != null) {
             switch (type) {
                 case "LK.NRW.K.BF":
@@ -2507,6 +2478,15 @@ public class FormSolutionsBestellungHandler implements ConnectionContextProvider
     /**
      * DOCUMENT ME!
      *
+     * @param  message  DOCUMENT ME!
+     */
+    private void specialLog(final String message) {
+        FormSolutionBestellungSpecialLogger.getInstance().log(message);
+    }
+
+    /**
+     * DOCUMENT ME!
+     *
      * @return  DOCUMENT ME!
      */
     private SimpleHttpAccessHandler getHttpAccessHandler() {
@@ -2520,5 +2500,32 @@ public class FormSolutionsBestellungHandler implements ConnectionContextProvider
      */
     private ObjectMapper getObjectMapper() {
         return MAPPER;
+    }
+
+    /**
+     * DOCUMENT ME!
+     *
+     * @return  DOCUMENT ME!
+     */
+    private static FormSolutionsProperties getProperties() {
+        return FormSolutionsProperties.getInstance();
+    }
+
+    /**
+     * DOCUMENT ME!
+     *
+     * @return  DOCUMENT ME!
+     */
+    private static FormSolutionsMySqlHelper getMySqlHelper() {
+        return FormSolutionsMySqlHelper.getInstance();
+    }
+
+    /**
+     * DOCUMENT ME!
+     *
+     * @return  DOCUMENT ME!
+     */
+    private static FormSolutionsFtpClient getFtpClient() {
+        return FormSolutionsFtpClient.getInstance();
     }
 }

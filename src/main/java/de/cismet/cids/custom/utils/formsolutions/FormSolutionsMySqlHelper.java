@@ -95,10 +95,12 @@ public class FormSolutionsMySqlHelper {
      * @throws  SQLException  DOCUMENT ME!
      */
     public void insertOrUpdateStatus(final String transid, final int status) throws SQLException {
-        if (checkMysqlEntry(transid)) {
-            updateStatus(transid, status);
-        } else {
-            insertStatus(transid, status);
+        if (isEnabled()) {
+            if (checkMysqlEntry(transid)) {
+                updateStatus(transid, status);
+            } else {
+                insertStatus(transid, status);
+            }
         }
     }
 
@@ -111,12 +113,14 @@ public class FormSolutionsMySqlHelper {
      * @throws  SQLException  DOCUMENT ME!
      */
     public void insertStatus(final String transid, final int status) throws SQLException {
-        connect();
+        if (isEnabled()) {
+            connect();
 
-        int index = 1;
-        preparedInsertStatement.setString(index++, transid);
-        preparedInsertStatement.setInt(index++, status);
-        preparedInsertStatement.executeUpdate();
+            int index = 1;
+            preparedInsertStatement.setString(index++, transid);
+            preparedInsertStatement.setInt(index++, status);
+            preparedInsertStatement.executeUpdate();
+        }
     }
 
     /**
@@ -128,7 +132,7 @@ public class FormSolutionsMySqlHelper {
      *
      * @throws  SQLException  DOCUMENT ME!
      */
-    public boolean checkMysqlEntry(final String transid) throws SQLException {
+    private boolean checkMysqlEntry(final String transid) throws SQLException {
         boolean mysqlEntryAlreadyExists = false;
         try(final ResultSet resultSet = select(transid)) {
             mysqlEntryAlreadyExists = (resultSet != null) && resultSet.next();
@@ -161,14 +165,14 @@ public class FormSolutionsMySqlHelper {
             final String email,
             final String filePath,
             final String origName) throws SQLException {
-        if (checkMysqlEntry(transid)) {
-            updateProduct(
-                transid,
-                status,
-                filePath,
-                origName);
-        } else {
-            if (!FormSolutionsProperties.getInstance().isMysqlDisabled()) {
+        if (isEnabled()) {
+            if (checkMysqlEntry(transid)) {
+                updateProduct(
+                    transid,
+                    status,
+                    filePath,
+                    origName);
+            } else {
                 insertProduct(
                     transid,
                     status,
@@ -204,18 +208,20 @@ public class FormSolutionsMySqlHelper {
             final String email,
             final String filePath,
             final String origName) throws SQLException {
-        connect();
+        if (isEnabled()) {
+            connect();
 
-        int index = 1;
-        preparedInsertCompleteStatement.setString(index++, transid);
-        preparedInsertCompleteStatement.setInt(index++, status);
-        preparedInsertCompleteStatement.setString(index++, landparcelcode);
-        preparedInsertCompleteStatement.setString(index++, product);
-        preparedInsertCompleteStatement.setBoolean(index++, downloadOnly);
-        preparedInsertCompleteStatement.setString(index++, email);
-        preparedInsertCompleteStatement.setString(index++, filePath);
-        preparedInsertCompleteStatement.setString(index++, origName);
-        preparedInsertCompleteStatement.executeUpdate();
+            int index = 1;
+            preparedInsertCompleteStatement.setString(index++, transid);
+            preparedInsertCompleteStatement.setInt(index++, status);
+            preparedInsertCompleteStatement.setString(index++, landparcelcode);
+            preparedInsertCompleteStatement.setString(index++, product);
+            preparedInsertCompleteStatement.setBoolean(index++, downloadOnly);
+            preparedInsertCompleteStatement.setString(index++, email);
+            preparedInsertCompleteStatement.setString(index++, filePath);
+            preparedInsertCompleteStatement.setString(index++, origName);
+            preparedInsertCompleteStatement.executeUpdate();
+        }
     }
 
     /**
@@ -227,12 +233,15 @@ public class FormSolutionsMySqlHelper {
      * @throws  SQLException  DOCUMENT ME!
      */
     public void updateStatus(final String transid, final int status) throws SQLException {
-        connect();
+        if (isEnabled()) {
+            FormSolutionBestellungSpecialLogger.getInstance().log("updating mysql entry for: " + transid);
+            connect();
 
-        int index = 1;
-        preparedUpdateStatusStatement.setInt(index++, status);
-        preparedUpdateStatusStatement.setString(index++, transid);
-        preparedUpdateStatusStatement.executeUpdate();
+            int index = 1;
+            preparedUpdateStatusStatement.setInt(index++, status);
+            preparedUpdateStatusStatement.setString(index++, transid);
+            preparedUpdateStatusStatement.executeUpdate();
+        }
     }
 
     /**
@@ -246,13 +255,15 @@ public class FormSolutionsMySqlHelper {
      */
     public void updatePruefungFreigabe(final String transid, final int status, final String abschlussformular)
             throws SQLException {
-        connect();
+        if (isEnabled()) {
+            connect();
 
-        int index = 1;
-        preparedUpdatePruefungFreigabeStatement.setInt(index++, status);
-        preparedUpdatePruefungFreigabeStatement.setString(index++, abschlussformular);
-        preparedUpdatePruefungFreigabeStatement.setString(index++, transid);
-        preparedUpdatePruefungFreigabeStatement.executeUpdate();
+            int index = 1;
+            preparedUpdatePruefungFreigabeStatement.setInt(index++, status);
+            preparedUpdatePruefungFreigabeStatement.setString(index++, abschlussformular);
+            preparedUpdatePruefungFreigabeStatement.setString(index++, transid);
+            preparedUpdatePruefungFreigabeStatement.executeUpdate();
+        }
     }
 
     /**
@@ -266,13 +277,15 @@ public class FormSolutionsMySqlHelper {
      */
     public void updatePruefungAblehnung(final String transid, final int status, final String ablehnungsgrund)
             throws SQLException {
-        connect();
+        if (isEnabled()) {
+            connect();
 
-        int index = 1;
-        preparedUpdatePruefungAblehnungStatement.setInt(index++, status);
-        preparedUpdatePruefungAblehnungStatement.setString(index++, ablehnungsgrund);
-        preparedUpdatePruefungAblehnungStatement.setString(index++, transid);
-        preparedUpdatePruefungAblehnungStatement.executeUpdate();
+            int index = 1;
+            preparedUpdatePruefungAblehnungStatement.setInt(index++, status);
+            preparedUpdatePruefungAblehnungStatement.setString(index++, ablehnungsgrund);
+            preparedUpdatePruefungAblehnungStatement.setString(index++, transid);
+            preparedUpdatePruefungAblehnungStatement.executeUpdate();
+        }
     }
 
     /**
@@ -293,16 +306,18 @@ public class FormSolutionsMySqlHelper {
             final String product,
             final boolean downloadOnly,
             final String email) throws SQLException {
-        connect();
+        if (isEnabled()) {
+            connect();
 
-        int index = 1;
-        preparedUpdateInfoStatement.setInt(index++, status);
-        preparedUpdateInfoStatement.setString(index++, landparcelcode);
-        preparedUpdateInfoStatement.setString(index++, product);
-        preparedUpdateInfoStatement.setBoolean(index++, downloadOnly);
-        preparedUpdateInfoStatement.setString(index++, email);
-        preparedUpdateInfoStatement.setString(index++, transid);
-        preparedUpdateInfoStatement.executeUpdate();
+            int index = 1;
+            preparedUpdateInfoStatement.setInt(index++, status);
+            preparedUpdateInfoStatement.setString(index++, landparcelcode);
+            preparedUpdateInfoStatement.setString(index++, product);
+            preparedUpdateInfoStatement.setBoolean(index++, downloadOnly);
+            preparedUpdateInfoStatement.setString(index++, email);
+            preparedUpdateInfoStatement.setString(index++, transid);
+            preparedUpdateInfoStatement.executeUpdate();
+        }
     }
 
     /**
@@ -317,14 +332,16 @@ public class FormSolutionsMySqlHelper {
      */
     public void updateProduct(final String transid, final int status, final String filePath, final String origName)
             throws SQLException {
-        connect();
+        if (isEnabled()) {
+            connect();
 
-        int index = 1;
-        preparedUpdateProductStatement.setInt(index++, status);
-        preparedUpdateProductStatement.setString(index++, filePath);
-        preparedUpdateProductStatement.setString(index++, origName);
-        preparedUpdateProductStatement.setString(index++, transid);
-        preparedUpdateProductStatement.executeUpdate();
+            int index = 1;
+            preparedUpdateProductStatement.setInt(index++, status);
+            preparedUpdateProductStatement.setString(index++, filePath);
+            preparedUpdateProductStatement.setString(index++, origName);
+            preparedUpdateProductStatement.setString(index++, transid);
+            preparedUpdateProductStatement.executeUpdate();
+        }
     }
 
     /**
@@ -336,7 +353,7 @@ public class FormSolutionsMySqlHelper {
      *
      * @throws  SQLException  DOCUMENT ME!
      */
-    public ResultSet select(final String transid) throws SQLException {
+    private ResultSet select(final String transid) throws SQLException {
         connect();
 
         preparedSelectStatement.setString(1, transid);
@@ -351,6 +368,15 @@ public class FormSolutionsMySqlHelper {
      */
     public static FormSolutionsMySqlHelper getInstance() {
         return LazyInitialiser.INSTANCE;
+    }
+
+    /**
+     * DOCUMENT ME!
+     *
+     * @return  DOCUMENT ME!
+     */
+    public boolean isEnabled() {
+        return !FormSolutionsProperties.getInstance().isMysqlDisabled();
     }
 
     //~ Inner Classes ----------------------------------------------------------
