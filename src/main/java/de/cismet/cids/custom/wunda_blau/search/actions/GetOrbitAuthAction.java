@@ -14,8 +14,6 @@ package de.cismet.cids.custom.wunda_blau.search.actions;
 
 import org.apache.log4j.Logger;
 
-import org.openide.util.Exceptions;
-
 import de.cismet.cids.custom.utils.WundaBlauServerResources;
 import de.cismet.cids.custom.wunda_blau.search.actions.orbit.OrbitStacTools;
 import de.cismet.cids.custom.wunda_blau.search.actions.orbit.StacEntry;
@@ -36,7 +34,7 @@ public class GetOrbitAuthAction implements ServerAction {
 
     //~ Static fields/initializers ---------------------------------------------
 
-    private static final Logger LOG = Logger.getLogger(StamperServerAction.class);
+    private static final Logger LOG = Logger.getLogger(GetOrbitAuthAction.class);
 
     public static final String TASK_NAME = "getOrbitAuth";
 
