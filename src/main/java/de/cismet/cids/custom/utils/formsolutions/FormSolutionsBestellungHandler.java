@@ -1634,17 +1634,17 @@ public class FormSolutionsBestellungHandler implements ConnectionContextProvider
                     + ensureCorrectDirectorySeparator(fileName);
         getFtpClient().upload(new FileInputStream(tmpFile), ftpFilePath);
 
-        // no errors until here => tmpFile can now be deleted
-        if (!getProperties().isDeleteTmpProductAfterSuccessfulUploadDisabled() && (tmpFile != null)) {
-            tmpFile.delete();
-        }
-
         // Download Produkt from FTP and test it
         try(final ByteArrayOutputStream out = new ByteArrayOutputStream()) {
             getFtpClient().download(ftpFilePath, out);
             try(final InputStream inTest = new ByteArrayInputStream(out.toByteArray())) {
                 testPdfValidity(inTest);
             }
+        }
+
+        // no errors until here => tmpFile can now be deleted
+        if (!getProperties().isDeleteTmpProductAfterSuccessfulUploadDisabled() && (tmpFile != null)) {
+            tmpFile.delete();
         }
     }
 
