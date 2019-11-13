@@ -1622,7 +1622,11 @@ public class FormSolutionsBestellungHandler implements ConnectionContextProvider
      * @throws  Exception  DOCUMENT ME!
      */
     private void uploadProduktToFtp(final InputStream in, final String fileName) throws Exception {
-        final File tmpFile = writeProduktToTmp(in, fileName);
+        final File tmpFile = writeProduktToFile(
+                in,
+                getProperties().getTmpBrokenpdfsAbsPath()
+                        + DomainServerImpl.getServerProperties().getFileSeparator()
+                        + fileName);
 
         // test requested Produkt
         try(final InputStream Test = new FileInputStream(tmpFile)) {
@@ -1630,8 +1634,7 @@ public class FormSolutionsBestellungHandler implements ConnectionContextProvider
         }
 
         // upload Produkt to FTP
-        final String ftpFilePath = getProperties().getProduktBasepath()
-                    + ensureCorrectDirectorySeparator(fileName);
+        final String ftpFilePath = getProperties().getProduktBasepath() + "/" + fileName;
         getFtpClient().upload(new FileInputStream(tmpFile), ftpFilePath);
 
         // Download Produkt from FTP and test it
@@ -1666,13 +1669,32 @@ public class FormSolutionsBestellungHandler implements ConnectionContextProvider
      * @param   in        DOCUMENT ME!
      * @param   fileName  DOCUMENT ME!
      *
+     * @throws  Exception  DOCUMENT ME!
+     */
+    private void saveProduktInFtpMount(final InputStream in, final String fileName) throws Exception {
+        final File mntFile = writeProduktToFile(
+                in,
+                getProperties().getFtpMountAbsPath()
+                        + ensureCorrectDirectorySeparator("/" + fileName));
+
+        // test requested Produkt
+        try(final InputStream Test = new FileInputStream(mntFile)) {
+            testPdfValidity(Test);
+        }
+    }
+
+    /**
+     * DOCUMENT ME!
+     *
+     * @param   in        DOCUMENT ME!
+     * @param   fileName  DOCUMENT ME!
+     *
      * @return  DOCUMENT ME!
      *
      * @throws  Exception  DOCUMENT ME!
      */
-    private File writeProduktToTmp(final InputStream in, final String fileName) throws Exception {
-        final File tmpFile = new File(getProperties().getTmpBrokenpdfsAbsPath()
-                        + DomainServerImpl.getServerProperties().getFileSeparator() + fileName);
+    private File writeProduktToFile(final InputStream in, final String fileName) throws Exception {
+        final File tmpFile = new File(DomainServerImpl.getServerProperties().getFileSeparator() + fileName);
         try(final OutputStream out = new FileOutputStream(tmpFile)) {
             IOUtils.copy(in, out);
         }
@@ -2265,8 +2287,13 @@ public class FormSolutionsBestellungHandler implements ConnectionContextProvider
             final InputStream in,
             final CidsBean bestellungBean) throws Exception {
         final String transid = (String)bestellungBean.getProperty("transid");
+
         final String fileNameFtp = transid + "." + FilenameUtils.getExtension(fileNameOrig);
-        uploadProduktToFtp(in, fileNameFtp);
+        if (getProperties().isFtpEnabled()) {
+            uploadProduktToFtp(in, fileNameFtp);
+        } else {
+            saveProduktInFtpMount(in, fileNameFtp);
+        }
 
         bestellungBean.setProperty("produkt_dateipfad", fileNameFtp);
         bestellungBean.setProperty("produkt_dateiname_orig", fileNameOrig);
@@ -2290,7 +2317,11 @@ public class FormSolutionsBestellungHandler implements ConnectionContextProvider
         bestellungBean.setProperty("rechnung_dateiname_orig", "Rechnung - Produktbestellung " + transid + ".pdf");
 
         try(final InputStream in = createRechnung(bestellungBean)) {
-            uploadProduktToFtp(in, fileNameRechnung);
+            if (getProperties().isFtpEnabled()) {
+                uploadProduktToFtp(in, fileNameRechnung);
+            } else {
+                saveProduktInFtpMount(in, fileNameRechnung);
+            }
         }
     }
 

@@ -12,18 +12,20 @@
  */
 package de.cismet.cids.custom.utils.formsolutions;
 
-import java.io.FileInputStream;
 import org.apache.commons.net.ftp.FTPClient;
+import org.apache.commons.net.ftp.FTPFile;
 import org.apache.commons.net.ftp.FTPReply;
 import org.apache.commons.net.ftp.FTPSClient;
 
+import org.openide.util.Exceptions;
+
+import java.io.FileInputStream;
 import java.io.InputStream;
 import java.io.OutputStream;
+
 import java.util.Properties;
 
 import static org.apache.commons.net.ftp.FTP.BINARY_FILE_TYPE;
-import org.apache.commons.net.ftp.FTPFile;
-import org.openide.util.Exceptions;
 
 /**
  * DOCUMENT ME!
@@ -33,21 +35,31 @@ import org.openide.util.Exceptions;
  */
 public class FormSolutionsFtpClient {
 
+    //~ Instance fields --------------------------------------------------------
+
     private final FormSolutionsProperties properties;
+
     //~ Constructors -----------------------------------------------------------
 
     /**
      * Creates a new FormSolutionBestellungFtpClient object.
+     *
+     * @param  properties  DOCUMENT ME!
      */
     private FormSolutionsFtpClient(final FormSolutionsProperties properties) {
         this.properties = properties;
     }
 
+    //~ Methods ----------------------------------------------------------------
+
+    /**
+     * DOCUMENT ME!
+     *
+     * @return  DOCUMENT ME!
+     */
     public FormSolutionsProperties getProperties() {
         return properties;
     }
-    
-    //~ Methods ----------------------------------------------------------------
 
     /**
      * DOCUMENT ME!
@@ -64,11 +76,16 @@ public class FormSolutionsFtpClient {
         ftpClient.disconnect();
     }
 
+    /**
+     * DOCUMENT ME!
+     *
+     * @throws  Exception  DOCUMENT ME!
+     */
     public void test() throws Exception {
         final FTPClient ftpClient = getConnectedFTPClient();
         System.out.println(ftpClient.printWorkingDirectory());
         for (final FTPFile ftpFile : ftpClient.listFiles()) {
-            System.out.println(ftpFile.getName());            
+            System.out.println(ftpFile.getName());
         }
         ftpClient.disconnect();
     }
@@ -90,17 +107,22 @@ public class FormSolutionsFtpClient {
         ftpClient.disconnect();
     }
 
-    public static void main(String[] args) {
+    /**
+     * DOCUMENT ME!
+     *
+     * @param  args  DOCUMENT ME!
+     */
+    public static void main(final String[] args) {
         try {
             final Properties props = new Properties();
-            props.load(new FileInputStream("/home/jruiz/cidsDistribution/server/040_wunda_live/server_resources/formsolutions/fs_conf.properties"));
+            props.load(new FileInputStream(
+                    "/home/jruiz/cidsDistribution/server/040_wunda_live/server_resources/formsolutions/fs_conf.properties"));
             final FormSolutionsProperties fsProps = new FormSolutionsProperties(props);
             final FormSolutionsFtpClient ftpClient = new FormSolutionsFtpClient(fsProps);
             ftpClient.test();
         } catch (final Exception ex) {
             Exceptions.printStackTrace(ex);
         }
-        
     }
     /**
      * DOCUMENT ME!
@@ -125,7 +147,8 @@ public class FormSolutionsFtpClient {
         ftpClient.enterLocalPassiveMode();
         if (!ftpClient.login(username, password)) {
             throw new Exception("Login failed");
-        };
+        }
+        ;
 
         return ftpClient;
     }
@@ -150,7 +173,8 @@ public class FormSolutionsFtpClient {
 
         //~ Static fields/initializers -----------------------------------------
 
-        private static final FormSolutionsFtpClient INSTANCE = new FormSolutionsFtpClient(FormSolutionsProperties.getInstance());
+        private static final FormSolutionsFtpClient INSTANCE = new FormSolutionsFtpClient(FormSolutionsProperties
+                        .getInstance());
 
         //~ Constructors -------------------------------------------------------
 
