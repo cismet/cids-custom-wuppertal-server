@@ -51,9 +51,12 @@ public class FormSolutionsProperties {
     private final String urlAuftragFs;
     private final String urlAuftragDeleteFs;
     private final String urlStatusUpdate;
+    private final boolean ftpEnabled;
     private final String ftpHost;
     private final String ftpLogin;
     private final String ftpPass;
+    private final boolean ftpOverTls;
+    private final String ftpMountAbsPath;
     private final String testCismet00;
     private final String specialLogAbsPath;
     private final String produktTmpAbsPath;
@@ -81,7 +84,7 @@ public class FormSolutionsProperties {
      *
      * @param  properties  DOCUMENT ME!
      */
-    private FormSolutionsProperties(final Properties properties) {
+    public FormSolutionsProperties(final Properties properties) {
         user = properties.getProperty("USER");
         password = properties.getProperty("PASSWORD");
         mysqlJdbc = properties.getProperty("MYSQL_JDBC");
@@ -96,9 +99,12 @@ public class FormSolutionsProperties {
         urlAuftragFs = properties.getProperty("URL_AUFTRAG_FS");
         urlAuftragDeleteFs = properties.getProperty("URL_AUFTRAG_DELETE_FS");
         urlStatusUpdate = properties.getProperty("URL_STATUS_UPDATE");
+        ftpEnabled = Boolean.valueOf(properties.getProperty("FTP_ENABLED"));
         ftpHost = properties.getProperty("FTP_HOST");
         ftpLogin = properties.getProperty("FTP_LOGIN");
         ftpPass = properties.getProperty("FTP_PASS");
+        ftpMountAbsPath = properties.getProperty("FTP_MOUNT_ABS_PATH");
+        ftpOverTls = Boolean.valueOf(properties.getProperty("FTP_OVER_TLS"));
         testCismet00 = properties.getProperty("TEST_CISMET00");
         specialLogAbsPath = properties.getProperty("SPECIAL_LOG_ABS_PATH");
         produktTmpAbsPath = properties.getProperty("PRODUKT_TMP_ABS_PATH");
@@ -110,16 +116,15 @@ public class FormSolutionsProperties {
         billingVerwendungszweckPostweg = properties.getProperty("BILLING_VERWENDUNGSZWECK_POSTWEG");
         billingVerwendungskeyDownload = properties.getProperty("BILLING_VERWENDUNGSKEY_DOWNLOAD");
         billingVerwendungskeyPostweg = properties.getProperty("BILLING_VERWENDUNGSKEY_POSTWEG");
-        mysqlDisabled = Boolean.getBoolean(
-                properties.getProperty("MYSQL_DISABLED").trim().toLowerCase());
+        mysqlDisabled = Boolean.valueOf(properties.getProperty("MYSQL_DISABLED"));
         rechnungBerechnugsgGrundlage = properties.getProperty("RECHNUNG_BERECHNUNGSGRUNDLAGE");
         tmpBrokenpdfsAbsPath = properties.getProperty("TMP_BROKENPDFS_ABS_PATH");
         transidHashpepper = properties.getProperty("TRANSID_HASHPEPPER");
         redirectionFormat = properties.getProperty("REDIRECTION_FORMAT");
         urlCreateCacheid = properties.getProperty("URL_CREATE_CACHEID");
         cidsActionHttpRedirectorUrl = properties.getProperty("CIDS_ACTION_HTTP_REDIRECTOR_URL");
-        deleteTmpProductAfterSuccessfulUploadDisabled = Boolean.getBoolean(
-                properties.getProperty("DELETE_TMP_PRODUCT_AFTER_SUCCESSFUL_UPLOAD").trim().toLowerCase());
+        deleteTmpProductAfterSuccessfulUploadDisabled = Boolean.valueOf(
+                properties.getProperty("DELETE_TMP_PRODUCT_AFTER_SUCCESSFUL_UPLOAD_DISABLED"));
     }
 
     //~ Methods ----------------------------------------------------------------

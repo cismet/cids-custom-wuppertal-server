@@ -12,9 +12,12 @@ import Sirius.server.middleware.types.MetaObjectNode;
 import Sirius.server.newuser.User;
 import Sirius.server.property.ServerProperties;
 
+import org.apache.commons.io.IOUtils;
 import org.apache.log4j.Logger;
 
 import java.io.ByteArrayOutputStream;
+import java.io.FileInputStream;
+import java.io.InputStream;
 
 import de.cismet.cids.custom.utils.formsolutions.FormSolutionsFtpClient;
 import de.cismet.cids.custom.utils.formsolutions.FormSolutionsProperties;
@@ -112,23 +115,23 @@ public class FormSolutionDownloadBestellungAction implements ServerAction,
                 final CidsBean bestellungBean = DomainServerImpl.getServerInstance()
                             .getMetaObject(getUser(), mon.getObjectId(), mon.getClassId(), getConnectionContext())
                             .getBean();
-                final String filePath = rechung ? (String)bestellungBean.getProperty("rechnung_dateipfad")
+                final String fileName = rechung ? (String)bestellungBean.getProperty("rechnung_dateipfad")
                                                 : (String)bestellungBean.getProperty("produkt_dateipfad");
 
-                final ServerProperties serverProps = DomainServerImpl.getServerProperties();
-                final String s = serverProps.getFileSeparator();
-                final String fullFilePath = (rechung ? FormSolutionsProperties.getInstance().getRechnungBasepath()
-                                                     : FormSolutionsProperties.getInstance().getProduktBasepath()) + s
-                            + filePath;
+                final String ftpSubDir = (rechung ? FormSolutionsProperties.getInstance().getRechnungBasepath()
+                                                  : FormSolutionsProperties.getInstance().getProduktBasepath());
 
+                final String ftpFilePath = (ftpSubDir.endsWith("/") ? ftpSubDir : (ftpSubDir + "/")) + fileName;
                 final ByteArrayOutputStream out = new ByteArrayOutputStream();
-
-                if ("/".equals(s)) {
-                    FormSolutionsFtpClient.getInstance().download(fullFilePath, out);
+                if (FormSolutionsProperties.getInstance().isFtpEnabled()) {
+                    FormSolutionsFtpClient.getInstance().download(ftpFilePath, out);
                 } else {
-                    FormSolutionsFtpClient.getInstance().download(fullFilePath.replace("/", s), out);
+                    final String mntFile = FormSolutionsProperties.getInstance().getFtpMountAbsPath() + "/"
+                                + ftpFilePath;
+                    try(final InputStream in = new FileInputStream(mntFile)) {
+                        IOUtils.copy(in, out);
+                    }
                 }
-
                 return out.toByteArray();
             } catch (final Exception ex) {
                 LOG.error(ex, ex);
