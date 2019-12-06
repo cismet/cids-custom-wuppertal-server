@@ -1618,30 +1618,36 @@ public class FormSolutionsBestellungHandler implements ConnectionContextProvider
      *
      * @param   in        DOCUMENT ME!
      * @param   fileName  DOCUMENT ME!
+     * @param   testPdf   DOCUMENT ME!
      *
      * @throws  Exception  DOCUMENT ME!
      */
-    private void uploadProduktToFtp(final InputStream in, final String fileName) throws Exception {
+    private void uploadProduktToFtp(final InputStream in, final String fileName, final boolean testPdf)
+            throws Exception {
         final File tmpFile = writeProduktToFile(
                 in,
                 getProperties().getTmpBrokenpdfsAbsPath()
                         + DomainServerImpl.getServerProperties().getFileSeparator()
                         + fileName);
 
-        // test requested Produkt
-        try(final InputStream Test = new FileInputStream(tmpFile)) {
-            testPdfValidity(Test);
+        if (testPdf) {
+            // test requested Produkt
+            try(final InputStream Test = new FileInputStream(tmpFile)) {
+                testPdfValidity(Test);
+            }
         }
 
         // upload Produkt to FTP
         final String ftpFilePath = getProperties().getProduktBasepath() + "/" + fileName;
         getFtpClient().upload(new FileInputStream(tmpFile), ftpFilePath);
 
-        // Download Produkt from FTP and test it
-        try(final ByteArrayOutputStream out = new ByteArrayOutputStream()) {
-            getFtpClient().download(ftpFilePath, out);
-            try(final InputStream inTest = new ByteArrayInputStream(out.toByteArray())) {
-                testPdfValidity(inTest);
+        if (testPdf) {
+            // Download Produkt from FTP and test it
+            try(final ByteArrayOutputStream out = new ByteArrayOutputStream()) {
+                getFtpClient().download(ftpFilePath, out);
+                try(final InputStream inTest = new ByteArrayInputStream(out.toByteArray())) {
+                    testPdfValidity(inTest);
+                }
             }
         }
 
@@ -1668,18 +1674,22 @@ public class FormSolutionsBestellungHandler implements ConnectionContextProvider
      *
      * @param   in        DOCUMENT ME!
      * @param   fileName  DOCUMENT ME!
+     * @param   testPdf   DOCUMENT ME!
      *
      * @throws  Exception  DOCUMENT ME!
      */
-    private void saveProduktInFtpMount(final InputStream in, final String fileName) throws Exception {
+    private void saveProduktInFtpMount(final InputStream in, final String fileName, final boolean testPdf)
+            throws Exception {
         final File mntFile = writeProduktToFile(
                 in,
                 getProperties().getFtpMountAbsPath()
                         + ensureCorrectDirectorySeparator("/" + fileName));
 
-        // test requested Produkt
-        try(final InputStream Test = new FileInputStream(mntFile)) {
-            testPdfValidity(Test);
+        if (testPdf) {
+            // test requested Produkt
+            try(final InputStream Test = new FileInputStream(mntFile)) {
+                testPdfValidity(Test);
+            }
         }
     }
 
@@ -2280,19 +2290,21 @@ public class FormSolutionsBestellungHandler implements ConnectionContextProvider
      * @param   fileNameOrig    DOCUMENT ME!
      * @param   in              DOCUMENT ME!
      * @param   bestellungBean  DOCUMENT ME!
+     * @param   testPdf         DOCUMENT ME!
      *
      * @throws  Exception  DOCUMENT ME!
      */
     private void uploadAndFillProduktFields(final String fileNameOrig,
             final InputStream in,
-            final CidsBean bestellungBean) throws Exception {
+            final CidsBean bestellungBean,
+            final boolean testPdf) throws Exception {
         final String transid = (String)bestellungBean.getProperty("transid");
 
         final String fileNameFtp = transid + "." + FilenameUtils.getExtension(fileNameOrig);
         if (getProperties().isFtpEnabled()) {
-            uploadProduktToFtp(in, fileNameFtp);
+            uploadProduktToFtp(in, fileNameFtp, testPdf);
         } else {
-            saveProduktInFtpMount(in, fileNameFtp);
+            saveProduktInFtpMount(in, fileNameFtp, testPdf);
         }
 
         bestellungBean.setProperty("produkt_dateipfad", fileNameFtp);
@@ -2318,9 +2330,9 @@ public class FormSolutionsBestellungHandler implements ConnectionContextProvider
 
         try(final InputStream in = createRechnung(bestellungBean)) {
             if (getProperties().isFtpEnabled()) {
-                uploadProduktToFtp(in, fileNameRechnung);
+                uploadProduktToFtp(in, fileNameRechnung, true);
             } else {
-                saveProduktInFtpMount(in, fileNameRechnung);
+                saveProduktInFtpMount(in, fileNameRechnung, true);
             }
         }
     }
@@ -2365,7 +2377,7 @@ public class FormSolutionsBestellungHandler implements ConnectionContextProvider
                                             "--"));
 
                                 try(final InputStream in = downloadProduct(productUrl)) {
-                                    uploadAndFillProduktFields(fileNameOrig, in, bestellungBean);
+                                    uploadAndFillProduktFields(fileNameOrig, in, bestellungBean, true);
                                 }
 
                                 getMetaService().updateMetaObject(
@@ -2440,7 +2452,7 @@ public class FormSolutionsBestellungHandler implements ConnectionContextProvider
                                             BerechtigungspruefungBescheinigungDownloadInfo.class);
                                     getBaulastBescheinigungHelper().writeFullBescheinigung(downloadInfo, tmpFile);
                                     try(final InputStream in = new FileInputStream(tmpFile)) {
-                                        uploadAndFillProduktFields(fileNameOrig, in, bestellungBean);
+                                        uploadAndFillProduktFields(fileNameOrig, in, bestellungBean, false);
                                     }
                                     if (!getProperties().isDeleteTmpProductAfterSuccessfulUploadDisabled()) {
                                         tmpFile.delete();
