@@ -59,7 +59,6 @@ public class BaulastBescheinigungReportServerAction extends StampedJasperReportS
     private static final Logger LOG = Logger.getLogger(BaulastBescheinigungReportServerAction.class);
     private static final String PARAMETER_JOBNUMBER = "JOBNUMBER";
     private static final String PARAMETER_PROJECTNAME = "PROJECTNAME";
-    private static final String PARAMETER_PRUEFKEY = "PRUEFKEY";
     private static final String PARAMETER_HAS_BELASTET = "HAS_BELASTET";
     private static final String PARAMETER_HAS_BEGUENSTIGT = "HAS_BEGUENSTIGT";
     private static final String PARAMETER_FABRICATIONNOTICE = "FABRICATIONNOTICE";
@@ -79,7 +78,7 @@ public class BaulastBescheinigungReportServerAction extends StampedJasperReportS
 
         //~ Enum constants -----------------------------------------------------
 
-        BESCHEINIGUNGGRUPPE_INFO, FABRICATION_DATE, FERTIGUNGS_VERMERK, JOB_NUMBER, PROJECT_NAME, ANFRAGE_SCHLUESSEL,
+        BESCHEINIGUNGGRUPPE_INFO, FABRICATION_DATE, FERTIGUNGS_VERMERK, JOB_NUMBER, PROJECT_NAME
     }
 
     //~ Instance fields --------------------------------------------------------
@@ -101,7 +100,7 @@ public class BaulastBescheinigungReportServerAction extends StampedJasperReportS
             String fertigungsVermerk = null;
             String jobNumber = null;
             String projectName = null;
-            String anfrageSchluessel = null;
+            final String anfrageSchluessel = null;
 
             if (params != null) {
                 for (final ServerActionParameter sap : params) {
@@ -116,8 +115,6 @@ public class BaulastBescheinigungReportServerAction extends StampedJasperReportS
                         jobNumber = (String)sap.getValue();
                     } else if (sap.getKey().equals(Parameter.PROJECT_NAME.toString())) {
                         projectName = (String)sap.getValue();
-                    } else if (sap.getKey().equals(Parameter.ANFRAGE_SCHLUESSEL.toString())) {
-                        anfrageSchluessel = (String)sap.getValue();
                     }
                 }
             }
@@ -130,7 +127,6 @@ public class BaulastBescheinigungReportServerAction extends StampedJasperReportS
                 final HashMap parameters = new HashMap();
                 parameters.put(PARAMETER_JOBNUMBER, jobNumber);
                 parameters.put(PARAMETER_PROJECTNAME, projectName);
-                parameters.put(PARAMETER_PRUEFKEY, anfrageSchluessel);
 
                 parameters.put(PARAMETER_HAS_BELASTET, !bescheinigungGruppeInfo.getBaulastenBelastet().isEmpty());
                 parameters.put(
