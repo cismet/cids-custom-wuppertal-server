@@ -2420,6 +2420,16 @@ public class FormSolutionsBestellungHandler implements ConnectionContextProvider
                                         STATUS_WEITERLEITUNG_ABSCHLUSSFORMULAR,
                                         redirect2formsolutions);
                                     doStatusChangedRequest(transid);
+
+                                    try {
+                                        berechtigungspruefung.setProperty("abgeholt", true);
+                                        getMetaService().updateMetaObject(
+                                            getUser(),
+                                            berechtigungspruefung.getMetaObject(),
+                                            getConnectionContext());
+                                    } catch (final Exception ex) {
+                                        LOG.error(ex, ex);
+                                    }
                                 } else if (Boolean.FALSE.equals(berechtigungspruefung.getProperty("pruefstatus"))) {
                                     getMySqlHelper().updatePruefungAblehnung(
                                         transid,
