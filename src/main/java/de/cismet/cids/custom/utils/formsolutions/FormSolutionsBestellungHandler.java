@@ -2182,7 +2182,6 @@ public class FormSolutionsBestellungHandler implements ConnectionContextProvider
                         case BAB_WEITERLEITUNG: {
                             final String flurstueckKennzeichen = ((String)bestellungBean.getProperty("landparcelcode"));
                             final String auftragsNummer = transid;
-                            final String produktBezeichnung = (String)bestellungBean.getProperty("landparcelcode");
                             final List<CidsBean> flurstuecke = new ArrayList<>();
                             if (flurstueckKennzeichen != null) {
                                 for (final String einzelFSKennzeichen : flurstueckKennzeichen.split(",")) {
@@ -2204,7 +2203,7 @@ public class FormSolutionsBestellungHandler implements ConnectionContextProvider
                             final BerechtigungspruefungBescheinigungDownloadInfo downloadInfo =
                                 getBaulastBescheinigungHelper().calculateDownloadInfo(
                                     auftragsNummer,
-                                    produktBezeichnung,
+                                    null,
                                     flurstuecke,
                                     protocolBuffer,
                                     statusHolder);
@@ -2238,6 +2237,7 @@ public class FormSolutionsBestellungHandler implements ConnectionContextProvider
 
                             final String schluessel = BerechtigungspruefungHandler.getInstance()
                                         .createNewSchluessel(getUser(), downloadInfo);
+                            downloadInfo.setProduktbezeichnung(schluessel);
                             final CidsBean pruefung = BerechtigungspruefungHandler.getInstance()
                                         .addNewAnfrage(
                                             getUser(),
@@ -2420,6 +2420,16 @@ public class FormSolutionsBestellungHandler implements ConnectionContextProvider
                                         STATUS_WEITERLEITUNG_ABSCHLUSSFORMULAR,
                                         redirect2formsolutions);
                                     doStatusChangedRequest(transid);
+
+                                    try {
+                                        berechtigungspruefung.setProperty("abgeholt", true);
+                                        getMetaService().updateMetaObject(
+                                            getUser(),
+                                            berechtigungspruefung.getMetaObject(),
+                                            getConnectionContext());
+                                    } catch (final Exception ex) {
+                                        LOG.error(ex, ex);
+                                    }
                                 } else if (Boolean.FALSE.equals(berechtigungspruefung.getProperty("pruefstatus"))) {
                                     getMySqlHelper().updatePruefungAblehnung(
                                         transid,
