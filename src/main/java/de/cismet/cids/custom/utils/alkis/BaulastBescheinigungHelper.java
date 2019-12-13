@@ -764,7 +764,6 @@ public class BaulastBescheinigungHelper {
                     writeBescheinigungReport(
                         bescheinigungsGruppeInfo,
                         downloadInfo.getAuftragsnummer(),
-                        downloadInfo.getAuftragsnummer(),
                         downloadInfo.getProduktbezeichnung(),
                         ++number,
                         zipOut);
@@ -838,7 +837,6 @@ public class BaulastBescheinigungHelper {
      * @param   bescheinigungsGruppeInfo  DOCUMENT ME!
      * @param   auftragsNummer            DOCUMENT ME!
      * @param   projectName               DOCUMENT ME!
-     * @param   anfrageSchluessel         DOCUMENT ME!
      * @param   number                    DOCUMENT ME!
      * @param   zipOut                    DOCUMENT ME!
      *
@@ -848,7 +846,6 @@ public class BaulastBescheinigungHelper {
     private void writeBescheinigungReport(final BerechtigungspruefungBescheinigungGruppeInfo bescheinigungsGruppeInfo,
             final String auftragsNummer,
             final String projectName,
-            final String anfrageSchluessel,
             final int number,
             final ZipOutputStream zipOut) throws JsonProcessingException, IOException {
         final Collection<BerechtigungspruefungBescheinigungFlurstueckInfo> fls =
@@ -868,9 +865,6 @@ public class BaulastBescheinigungHelper {
                 new ServerActionParameter<>(
                     BaulastBescheinigungReportServerAction.Parameter.PROJECT_NAME.toString(),
                     projectName),
-                new ServerActionParameter<>(
-                    BaulastBescheinigungReportServerAction.Parameter.ANFRAGE_SCHLUESSEL.toString(),
-                    anfrageSchluessel),
             };
 
         final BaulastBescheinigungReportServerAction serverAction = new BaulastBescheinigungReportServerAction();
