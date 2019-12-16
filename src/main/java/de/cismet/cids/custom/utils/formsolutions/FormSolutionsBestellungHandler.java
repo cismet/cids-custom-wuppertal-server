@@ -307,6 +307,8 @@ public class FormSolutionsBestellungHandler implements ConnectionContextProvider
      */
     private CidsBean doBilling(final CidsBean bestellungBean, final String transid) {
         try {
+            final ProductType productType = determineProductType(bestellungBean);
+
             final CidsBean billingBean = CidsBean.createNewCidsBeanFromTableName(
                     "WUNDA_BLAU",
                     "Billing_Billing",
@@ -321,7 +323,23 @@ public class FormSolutionsBestellungHandler implements ConnectionContextProvider
                         + (String)bestellungBean.getProperty("fk_adresse_rechnung.vorname");
             final String request_url = (String)bestellungBean.getProperty("request_url");
 
-            final String kunde_login = getProperties().getBillingKundeLogin();
+            final String kunde_login;
+            switch (productType) {
+                case ABK:
+                case SGK: {
+                    kunde_login = getProperties().getBillingKundeLoginKarte();
+                }
+                break;
+                case BAB_ABSCHLUSS: {
+                    kunde_login = getProperties().getBillingKundeLoginBB();
+                }
+                break;
+                default: {
+                    // should not be possible
+                    kunde_login = null;
+                }
+            }
+
             final String modus = getProperties().getBillingModus();
             final String modusbezeichnung = getProperties().getBillingModusbezeichnung();
             final String verwendungszweck = isPostweg ? getProperties().getBillingVerwendungskeyPostweg()
@@ -681,23 +699,16 @@ public class FormSolutionsBestellungHandler implements ConnectionContextProvider
                 final CidsBean bestellungBean = fsBeanMap.get(transid);
                 if (bestellungBean != null) {
                     try {
-                        final ProductType productType = determineProductType(bestellungBean);
-                        switch (productType) {
-                            case ABK:
-                            case SGK:
-                            case BAB_ABSCHLUSS: {
-                                if (!Boolean.TRUE.equals(bestellungBean.getProperty("duplicate"))
-                                            && (bestellungBean.getProperty("gutschein_code") == null)) {
-                                    if (bestellungBean.getProperty("fk_billing") == null) {
-                                        final CidsBean billingBean = doBilling(bestellungBean, transid);
-                                        if (billingBean != null) {
-                                            bestellungBean.setProperty("fk_billing", billingBean);
-                                            getMetaService().updateMetaObject(
-                                                getUser(),
-                                                bestellungBean.getMetaObject(),
-                                                getConnectionContext());
-                                        }
-                                    }
+                        if (!Boolean.TRUE.equals(bestellungBean.getProperty("duplicate"))
+                                    && (bestellungBean.getProperty("gutschein_code") == null)) {
+                            if (bestellungBean.getProperty("fk_billing") == null) {
+                                final CidsBean billingBean = doBilling(bestellungBean, transid);
+                                if (billingBean != null) {
+                                    bestellungBean.setProperty("fk_billing", billingBean);
+                                    getMetaService().updateMetaObject(
+                                        getUser(),
+                                        bestellungBean.getMetaObject(),
+                                        getConnectionContext());
                                 }
                             }
                         }
