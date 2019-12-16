@@ -62,6 +62,8 @@ public class FormSolutionsProperties {
     private final String produktTmpAbsPath;
     private final String anhangTmpAbsPath;
     private final String billingKundeLogin;
+    private final String billingKundeLoginBB;
+    private final String billingKundeLoginKarte;
     private final String billingModus;
     private final String billingModusbezeichnung;
     private final String billingVerwendungszweckDownload;
@@ -110,6 +112,8 @@ public class FormSolutionsProperties {
         produktTmpAbsPath = properties.getProperty("PRODUKT_TMP_ABS_PATH");
         anhangTmpAbsPath = properties.getProperty("ANHANG_TMP_ABS_PATH");
         billingKundeLogin = properties.getProperty("BILLING_KUNDE_LOGIN");
+        billingKundeLoginBB = properties.getProperty("BILLING_KUNDE_LOGIN_BB");
+        billingKundeLoginKarte = properties.getProperty("BILLING_KUNDE_LOGIN_KARTE");
         billingModus = properties.getProperty("BILLING_MODUS");
         billingModusbezeichnung = properties.getProperty("BILLING_MODUSBEZEICHNUNG");
         billingVerwendungszweckDownload = properties.getProperty("BILLING_VERWENDUNGSZWECK_DOWNLOAD");
