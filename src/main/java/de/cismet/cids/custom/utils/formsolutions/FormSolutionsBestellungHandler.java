@@ -2192,7 +2192,7 @@ public class FormSolutionsBestellungHandler implements ConnectionContextProvider
                     switch (productType) {
                         case BAB_WEITERLEITUNG: {
                             final String flurstueckKennzeichen = ((String)bestellungBean.getProperty("landparcelcode"));
-                            final String auftragsNummer = transid;
+                            final String produktbezeichnung = transid;
                             final List<CidsBean> flurstuecke = new ArrayList<>();
                             if (flurstueckKennzeichen != null) {
                                 for (final String einzelFSKennzeichen : flurstueckKennzeichen.split(",")) {
@@ -2213,8 +2213,8 @@ public class FormSolutionsBestellungHandler implements ConnectionContextProvider
 
                             final BerechtigungspruefungBescheinigungDownloadInfo downloadInfo =
                                 getBaulastBescheinigungHelper().calculateDownloadInfo(
-                                    auftragsNummer,
                                     null,
+                                    produktbezeichnung,
                                     flurstuecke,
                                     protocolBuffer,
                                     statusHolder);
@@ -2248,7 +2248,7 @@ public class FormSolutionsBestellungHandler implements ConnectionContextProvider
 
                             final String schluessel = BerechtigungspruefungHandler.getInstance()
                                         .createNewSchluessel(getUser(), downloadInfo);
-                            downloadInfo.setProduktbezeichnung(schluessel);
+                            downloadInfo.setAuftragsnummer(schluessel);
                             final CidsBean pruefung = BerechtigungspruefungHandler.getInstance()
                                         .addNewAnfrage(
                                             getUser(),
