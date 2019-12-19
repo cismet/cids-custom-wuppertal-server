@@ -187,7 +187,9 @@ public class FormSolutionsBestellungHandler implements ConnectionContextProvider
     private final User user;
     private final MetaService metaService;
     private final ConnectionContext connectionContext;
-    private final SimpleHttpAccessHandler httpHandler = new SimpleHttpAccessHandler();
+    private final SimpleHttpAccessHandler httpHandler = new SimpleHttpAccessHandler(
+            (getProperties().getConnectionTimeout() != null) ? getProperties().getConnectionTimeout() : 0,
+            (getProperties().getSoTimeout() != null) ? getProperties().getSoTimeout() : 0);
     private final UsernamePasswordCredentials creds;
     private final String testCismet00Xml;
     private final ProductType testCismet00Type;
