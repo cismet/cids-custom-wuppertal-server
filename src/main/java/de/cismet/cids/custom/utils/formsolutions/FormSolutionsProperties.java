@@ -78,6 +78,8 @@ public class FormSolutionsProperties {
     private final String cidsActionHttpRedirectorUrl;
     private final boolean mysqlDisabled;
     private final boolean deleteTmpProductAfterSuccessfulUploadDisabled;
+    private final Integer connectionTimeout;
+    private final Integer soTimeout;
 
     //~ Constructors -----------------------------------------------------------
 
@@ -129,6 +131,22 @@ public class FormSolutionsProperties {
         cidsActionHttpRedirectorUrl = properties.getProperty("CIDS_ACTION_HTTP_REDIRECTOR_URL");
         deleteTmpProductAfterSuccessfulUploadDisabled = Boolean.valueOf(
                 properties.getProperty("DELETE_TMP_PRODUCT_AFTER_SUCCESSFUL_UPLOAD_DISABLED"));
+
+        Integer soTimeout = null;
+        try {
+            soTimeout = Integer.valueOf(properties.getProperty("SO_TIMEOUT"));
+        } catch (final Exception ex) {
+            LOG.warn("SO_TIMEOUT=" + properties.getProperty("SO_TIMEOUT"), ex);
+        }
+        this.soTimeout = soTimeout;
+
+        Integer connectionTimeout = null;
+        try {
+            connectionTimeout = Integer.valueOf(properties.getProperty("CONNECTION_TIMEOUT"));
+        } catch (final Exception ex) {
+            LOG.warn("CONNECTION_TIMEOUT=" + properties.getProperty("CONNECTION_TIMEOUT"), ex);
+        }
+        this.connectionTimeout = connectionTimeout;
     }
 
     //~ Methods ----------------------------------------------------------------
