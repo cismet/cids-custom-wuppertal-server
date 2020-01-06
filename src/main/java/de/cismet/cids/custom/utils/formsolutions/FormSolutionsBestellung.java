@@ -82,7 +82,10 @@ public class FormSolutionsBestellung {
 
     @XmlElement(name = "Flurstück")
     private String flurstueck;
-
+    
+    @XmlElement(name = "Ausgewählte_Flurstücke")
+    private String ausgewaehlteFlurstuecke;            
+            
     @XmlElement(name = "Flurstückskennzeichen.1")
     private String flurstueckskennzeichen1;
 
