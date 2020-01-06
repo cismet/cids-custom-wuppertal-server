@@ -1247,15 +1247,25 @@ public class FormSolutionsBestellungHandler implements ConnectionContextProvider
      */
     private static String extractLandparcelcode(final FormSolutionsBestellung formSolutionsBestellung) {
         final Set<String> fskz = new LinkedHashSet<>();
-        final String flurstueckskennzeichen = trimedNotEmpty(formSolutionsBestellung.getFlurstueckskennzeichen());
-        if (flurstueckskennzeichen != null) {
-            fskz.add(flurstueckskennzeichen);
-        }
-        if ("Anschrift".equals(formSolutionsBestellung.getAuswahlUeber())) {
-            final String flurstueckskennzeichen1 = trimedNotEmpty(formSolutionsBestellung.getFlurstueckskennzeichen1());
-            if (flurstueckskennzeichen1 != null) {
-                for (final String tmp : flurstueckskennzeichen1.split(",")) {
+        final String ausgewaehlteFlurstuecke = trimedNotEmpty(formSolutionsBestellung.getAusgewaehlteFlurstuecke());
+        if (ausgewaehlteFlurstuecke != null) {
+            for (final String tmp : ausgewaehlteFlurstuecke.split(",")) {
+                fskz.add(tmp);
+            }
+        } else {
+            final String flurstueckskennzeichen = trimedNotEmpty(formSolutionsBestellung.getFlurstueckskennzeichen());
+            if (flurstueckskennzeichen != null) {
+                for (final String tmp : flurstueckskennzeichen.split(",")) {
                     fskz.add(tmp);
+                }
+                fskz.add(flurstueckskennzeichen);
+            }
+            if ("Anschrift".equals(formSolutionsBestellung.getAuswahlUeber())) {
+                final String flurstueckskennzeichen1 = trimedNotEmpty(formSolutionsBestellung.getFlurstueckskennzeichen1());
+                if (flurstueckskennzeichen1 != null) {
+                    for (final String tmp : flurstueckskennzeichen1.split(",")) {
+                        fskz.add(tmp);
+                    }
                 }
             }
         }
