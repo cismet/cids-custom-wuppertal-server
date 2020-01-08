@@ -72,17 +72,17 @@ public class FormSolutionsMySqlHelper {
             this.preparedInsertStatement = connection.prepareStatement(
                     "INSERT INTO bestellung (id, transid, status, flurstueck, produkt, nur_download, email, dokument_dateipfad, dokument_dateiname, last_update) VALUES (default, ?, ?, null, null, null, null, null, null, now());");
             this.preparedInsertCompleteStatement = connection.prepareStatement(
-                    "INSERT INTO bestellung (id, transid, status, flurstueck, produkt, nur_download, email, dokument_dateipfad, dokument_dateiname, last_update) VALUES (default, ?, ?, ?, ?, ?, ?, ?, ?, now());");
+                    "INSERT INTO bestellung (id, transid, bpruefnr, status, flurstueck, produkt, nur_download, email, dokument_dateipfad, dokument_dateiname, last_update) VALUES (default, ?, ?, ?, ?, ?, ?, ?, ?, ?, now());");
             this.preparedUpdateProductStatement = connection.prepareStatement(
-                    "UPDATE bestellung SET status = ?, last_update = now(), dokument_dateipfad = ?, dokument_dateiname = ? WHERE transid = ?;");
+                    "UPDATE bestellung SET bpruefnr = ?, status = ?, last_update = now(), dokument_dateipfad = ?, dokument_dateiname = ? WHERE transid = ?;");
             this.preparedUpdateInfoStatement = connection.prepareStatement(
                     "UPDATE bestellung SET status = ?, last_update = now(), flurstueck = ?, produkt = ?, nur_download = ?, email = ? WHERE transid = ?;");
             this.preparedUpdateStatusStatement = connection.prepareStatement(
                     "UPDATE bestellung SET status = ?, last_update = now() WHERE transid = ?;");
             this.preparedUpdatePruefungFreigabeStatement = connection.prepareStatement(
-                    "UPDATE bestellung SET status = ?, last_update = now(), abschlussformular = ? WHERE transid = ?;");
+                    "UPDATE bestellung SET bpruefnr = ?, status = ?, last_update = now(), abschlussformular = ? WHERE transid = ?;");
             this.preparedUpdatePruefungAblehnungStatement = connection.prepareStatement(
-                    "UPDATE bestellung SET status = ?, last_update = now(), ablehnungsgrund = ? WHERE transid = ?;");
+                    "UPDATE bestellung SET bpruefnr = ?, status = ?, last_update = now(), ablehnungsgrund = ? WHERE transid = ?;");
         }
     }
 
@@ -152,6 +152,7 @@ public class FormSolutionsMySqlHelper {
      * @param   product         DOCUMENT ME!
      * @param   downloadOnly    DOCUMENT ME!
      * @param   email           DOCUMENT ME!
+     * @param   schluessel      DOCUMENT ME!
      * @param   filePath        DOCUMENT ME!
      * @param   origName        DOCUMENT ME!
      *
@@ -163,18 +164,21 @@ public class FormSolutionsMySqlHelper {
             final String product,
             final boolean downloadOnly,
             final String email,
+            final String schluessel,
             final String filePath,
             final String origName) throws SQLException {
         if (isEnabled()) {
             if (checkMysqlEntry(transid)) {
                 updateProduct(
                     transid,
+                    schluessel,
                     status,
                     filePath,
                     origName);
             } else {
                 insertProduct(
                     transid,
+                    schluessel,
                     status,
                     landparcelcode,
                     product,
@@ -190,6 +194,7 @@ public class FormSolutionsMySqlHelper {
      * DOCUMENT ME!
      *
      * @param   transid         DOCUMENT ME!
+     * @param   schluessel      DOCUMENT ME!
      * @param   status          DOCUMENT ME!
      * @param   landparcelcode  DOCUMENT ME!
      * @param   product         DOCUMENT ME!
@@ -201,6 +206,7 @@ public class FormSolutionsMySqlHelper {
      * @throws  SQLException  DOCUMENT ME!
      */
     public void insertProduct(final String transid,
+            final String schluessel,
             final int status,
             final String landparcelcode,
             final String product,
@@ -213,6 +219,7 @@ public class FormSolutionsMySqlHelper {
 
             int index = 1;
             preparedInsertCompleteStatement.setString(index++, transid);
+            preparedInsertCompleteStatement.setString(index++, schluessel);
             preparedInsertCompleteStatement.setInt(index++, status);
             preparedInsertCompleteStatement.setString(index++, landparcelcode);
             preparedInsertCompleteStatement.setString(index++, product);
@@ -247,18 +254,22 @@ public class FormSolutionsMySqlHelper {
     /**
      * DOCUMENT ME!
      *
+     * @param   schluessel         DOCUMENT ME!
      * @param   transid            DOCUMENT ME!
      * @param   status             DOCUMENT ME!
      * @param   abschlussformular  DOCUMENT ME!
      *
      * @throws  SQLException  DOCUMENT ME!
      */
-    public void updatePruefungFreigabe(final String transid, final int status, final String abschlussformular)
-            throws SQLException {
+    public void updatePruefungFreigabe(final String schluessel,
+            final String transid,
+            final int status,
+            final String abschlussformular) throws SQLException {
         if (isEnabled()) {
             connect();
 
             int index = 1;
+            preparedUpdatePruefungFreigabeStatement.setString(index++, schluessel);
             preparedUpdatePruefungFreigabeStatement.setInt(index++, status);
             preparedUpdatePruefungFreigabeStatement.setString(index++, abschlussformular);
             preparedUpdatePruefungFreigabeStatement.setString(index++, transid);
@@ -269,18 +280,22 @@ public class FormSolutionsMySqlHelper {
     /**
      * DOCUMENT ME!
      *
+     * @param   schluessel       DOCUMENT ME!
      * @param   transid          DOCUMENT ME!
      * @param   status           DOCUMENT ME!
      * @param   ablehnungsgrund  DOCUMENT ME!
      *
      * @throws  SQLException  DOCUMENT ME!
      */
-    public void updatePruefungAblehnung(final String transid, final int status, final String ablehnungsgrund)
-            throws SQLException {
+    public void updatePruefungAblehnung(final String schluessel,
+            final String transid,
+            final int status,
+            final String ablehnungsgrund) throws SQLException {
         if (isEnabled()) {
             connect();
 
             int index = 1;
+            preparedUpdatePruefungAblehnungStatement.setString(index++, schluessel);
             preparedUpdatePruefungAblehnungStatement.setInt(index++, status);
             preparedUpdatePruefungAblehnungStatement.setString(index++, ablehnungsgrund);
             preparedUpdatePruefungAblehnungStatement.setString(index++, transid);
@@ -323,19 +338,24 @@ public class FormSolutionsMySqlHelper {
     /**
      * DOCUMENT ME!
      *
-     * @param   transid   DOCUMENT ME!
-     * @param   status    DOCUMENT ME!
-     * @param   filePath  DOCUMENT ME!
-     * @param   origName  DOCUMENT ME!
+     * @param   transid     DOCUMENT ME!
+     * @param   schluessel  DOCUMENT ME!
+     * @param   status      DOCUMENT ME!
+     * @param   filePath    DOCUMENT ME!
+     * @param   origName    DOCUMENT ME!
      *
      * @throws  SQLException  DOCUMENT ME!
      */
-    public void updateProduct(final String transid, final int status, final String filePath, final String origName)
-            throws SQLException {
+    public void updateProduct(final String transid,
+            final String schluessel,
+            final int status,
+            final String filePath,
+            final String origName) throws SQLException {
         if (isEnabled()) {
             connect();
 
             int index = 1;
+            preparedUpdateProductStatement.setString(index++, schluessel);
             preparedUpdateProductStatement.setInt(index++, status);
             preparedUpdateProductStatement.setString(index++, filePath);
             preparedUpdateProductStatement.setString(index++, origName);

@@ -1261,7 +1261,8 @@ public class FormSolutionsBestellungHandler implements ConnectionContextProvider
                 fskz.add(flurstueckskennzeichen);
             }
             if ("Anschrift".equals(formSolutionsBestellung.getAuswahlUeber())) {
-                final String flurstueckskennzeichen1 = trimedNotEmpty(formSolutionsBestellung.getFlurstueckskennzeichen1());
+                final String flurstueckskennzeichen1 = trimedNotEmpty(
+                        formSolutionsBestellung.getFlurstueckskennzeichen1());
                 if (flurstueckskennzeichen1 != null) {
                     for (final String tmp : flurstueckskennzeichen1.split(",")) {
                         fskz.add(tmp);
@@ -2280,7 +2281,8 @@ public class FormSolutionsBestellungHandler implements ConnectionContextProvider
                                 getUser(),
                                 bestellungBean.getMetaObject(),
                                 getConnectionContext());
-                            getMySqlHelper().updateStatus(transid, STATUS_PRUEFUNG);
+
+                            getMySqlHelper().updatePruefungFreigabe(schluessel, transid, STATUS_PRUEFUNG, null);
                         }
                     }
                 } catch (final Exception ex) {
@@ -2414,6 +2416,7 @@ public class FormSolutionsBestellungHandler implements ConnectionContextProvider
                                     (String)bestellungBean.getProperty("fk_product.fk_typ.name"),
                                     Boolean.TRUE.equals((Boolean)bestellungBean.getProperty("postweg")),
                                     (String)bestellungBean.getProperty("email"),
+                                    null,
                                     (String)bestellungBean.getProperty("produkt_dateipfad"),
                                     (String)bestellungBean.getProperty("produkt_dateiname_orig"));
                                 doStatusChangedRequest(transid);
@@ -2422,43 +2425,47 @@ public class FormSolutionsBestellungHandler implements ConnectionContextProvider
                             case BAB_WEITERLEITUNG: {
                                 final CidsBean berechtigungspruefung = (CidsBean)bestellungBean.getProperty(
                                         "berechtigungspruefung");
-                                if (Boolean.TRUE.equals(berechtigungspruefung.getProperty("pruefstatus"))) {
-                                    final String transidHash = createTransidHash(transid);
-                                    final String redirectorUrlTemplate = getProperties()
-                                                .getCidsActionHttpRedirectorUrl();
-                                    final String redirect2formsolutions = String.format(
-                                            redirectorUrlTemplate,
-                                            transidHash);
+                                if (berechtigungspruefung != null) {
+                                    if (Boolean.TRUE.equals(berechtigungspruefung.getProperty("pruefstatus"))) {
+                                        final String transidHash = createTransidHash(transid);
+                                        final String redirectorUrlTemplate = getProperties()
+                                                    .getCidsActionHttpRedirectorUrl();
+                                        final String redirect2formsolutions = String.format(
+                                                redirectorUrlTemplate,
+                                                transidHash);
 
-                                    bestellungBean.setProperty("request_url", new URL(redirect2formsolutions));
-                                    bestellungBean.setProperty("produkt_ts", new Timestamp(new Date().getTime()));
-                                    getMetaService().updateMetaObject(
-                                        getUser(),
-                                        bestellungBean.getMetaObject(),
-                                        getConnectionContext());
-
-                                    LOG.info(redirect2formsolutions);
-                                    getMySqlHelper().updatePruefungFreigabe(
-                                        transid,
-                                        STATUS_WEITERLEITUNG_ABSCHLUSSFORMULAR,
-                                        redirect2formsolutions);
-                                    doStatusChangedRequest(transid);
-
-                                    try {
-                                        berechtigungspruefung.setProperty("abgeholt", true);
+                                        bestellungBean.setProperty("request_url", new URL(redirect2formsolutions));
+                                        bestellungBean.setProperty("produkt_ts", new Timestamp(new Date().getTime()));
                                         getMetaService().updateMetaObject(
                                             getUser(),
-                                            berechtigungspruefung.getMetaObject(),
+                                            bestellungBean.getMetaObject(),
                                             getConnectionContext());
-                                    } catch (final Exception ex) {
-                                        LOG.error(ex, ex);
+
+                                        LOG.info(redirect2formsolutions);
+                                        getMySqlHelper().updatePruefungFreigabe((String)
+                                            berechtigungspruefung.getProperty("schluessel"),
+                                            transid,
+                                            STATUS_WEITERLEITUNG_ABSCHLUSSFORMULAR,
+                                            redirect2formsolutions);
+                                        doStatusChangedRequest(transid);
+
+                                        try {
+                                            berechtigungspruefung.setProperty("abgeholt", true);
+                                            getMetaService().updateMetaObject(
+                                                getUser(),
+                                                berechtigungspruefung.getMetaObject(),
+                                                getConnectionContext());
+                                        } catch (final Exception ex) {
+                                            LOG.error(ex, ex);
+                                        }
+                                    } else if (Boolean.FALSE.equals(berechtigungspruefung.getProperty("pruefstatus"))) {
+                                        getMySqlHelper().updatePruefungAblehnung((String)
+                                            berechtigungspruefung.getProperty("schluessel"),
+                                            transid,
+                                            -STATUS_PRUEFUNG,
+                                            (String)berechtigungspruefung.getProperty("pruefkommentar"));
+                                        doStatusChangedRequest(transid);
                                     }
-                                } else if (Boolean.FALSE.equals(berechtigungspruefung.getProperty("pruefstatus"))) {
-                                    getMySqlHelper().updatePruefungAblehnung(
-                                        transid,
-                                        -STATUS_PRUEFUNG,
-                                        (String)berechtigungspruefung.getProperty("pruefkommentar"));
-                                    doStatusChangedRequest(transid);
                                 }
                             }
                             break;
@@ -2498,6 +2505,7 @@ public class FormSolutionsBestellungHandler implements ConnectionContextProvider
                                         (String)bestellungBean.getProperty("fk_product.fk_typ.name"),
                                         Boolean.TRUE.equals((Boolean)bestellungBean.getProperty("postweg")),
                                         (String)bestellungBean.getProperty("email"),
+                                        (String)berechtigungspruefung.getProperty("schluessel"),
                                         (String)bestellungBean.getProperty("produkt_dateipfad"),
                                         (String)bestellungBean.getProperty("produkt_dateiname_orig"));
                                     doStatusChangedRequest(transid);
