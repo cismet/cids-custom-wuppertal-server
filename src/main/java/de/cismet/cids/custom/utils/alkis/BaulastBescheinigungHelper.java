@@ -765,6 +765,7 @@ public class BaulastBescheinigungHelper {
                         bescheinigungsGruppeInfo,
                         downloadInfo.getAuftragsnummer(),
                         downloadInfo.getProduktbezeichnung(),
+                        downloadInfo.getFertigungsVermerk(),
                         ++number,
                         zipOut);
 
@@ -837,6 +838,7 @@ public class BaulastBescheinigungHelper {
      * @param   bescheinigungsGruppeInfo  DOCUMENT ME!
      * @param   auftragsNummer            DOCUMENT ME!
      * @param   projectName               DOCUMENT ME!
+     * @param   fertigungsVermerk         DOCUMENT ME!
      * @param   number                    DOCUMENT ME!
      * @param   zipOut                    DOCUMENT ME!
      *
@@ -846,6 +848,7 @@ public class BaulastBescheinigungHelper {
     private void writeBescheinigungReport(final BerechtigungspruefungBescheinigungGruppeInfo bescheinigungsGruppeInfo,
             final String auftragsNummer,
             final String projectName,
+            final String fertigungsVermerk,
             final int number,
             final ZipOutputStream zipOut) throws JsonProcessingException, IOException {
         final Collection<BerechtigungspruefungBescheinigungFlurstueckInfo> fls =
@@ -857,8 +860,9 @@ public class BaulastBescheinigungHelper {
                 new ServerActionParameter<>(
                     BaulastBescheinigungReportServerAction.Parameter.FABRICATION_DATE.toString(),
                     new Date().getTime()),
-                /*new ServerActionParameter<>(
-                 *  BaulastBescheinigungReportServerAction.Parameter.FERTIGUNGS_VERMERK.toString(), ""),*/
+                new ServerActionParameter<>(
+                    BaulastBescheinigungReportServerAction.Parameter.FERTIGUNGS_VERMERK.toString(),
+                    fertigungsVermerk),
                 new ServerActionParameter<>(
                     BaulastBescheinigungReportServerAction.Parameter.JOB_NUMBER.toString(),
                     auftragsNummer),
@@ -954,6 +958,7 @@ public class BaulastBescheinigungHelper {
      *
      * @param   auftragsnummer      DOCUMENT ME!
      * @param   produktBezeichnung  DOCUMENT ME!
+     * @param   fertigungsVermerk   DOCUMENT ME!
      * @param   flurstuecke         DOCUMENT ME!
      * @param   protocolBuffer      DOCUMENT ME!
      * @param   statusHolder        DOCUMENT ME!
@@ -964,6 +969,7 @@ public class BaulastBescheinigungHelper {
      */
     public BerechtigungspruefungBescheinigungDownloadInfo calculateDownloadInfo(final String auftragsnummer,
             final String produktBezeichnung,
+            final String fertigungsVermerk,
             final List<CidsBean> flurstuecke,
             final BaulastBescheinigungHelper.ProtocolBuffer protocolBuffer,
             final BaulastBescheinigungHelper.StatusHolder statusHolder) throws Exception {
@@ -1003,6 +1009,7 @@ public class BaulastBescheinigungHelper {
         return new BerechtigungspruefungBescheinigungDownloadInfo(
                 auftragsnummer,
                 produktBezeichnung,
+                fertigungsVermerk,
                 protocolBuffer.toString(),
                 bescheinigungInfo,
                 prodAmounts);

@@ -1931,7 +1931,7 @@ public class FormSolutionsBestellungHandler implements ConnectionContextProvider
                         STATUS_GETFLURSTUECK,
                         bestellungBean,
                         "Fehler beim Laden des Flurstücks",
-                        getObjectMapper().readValue((String)bestellungBean.getProperty("exception"), Exception.class),
+                        ex,
                         false);
                 }
 
@@ -2087,6 +2087,7 @@ public class FormSolutionsBestellungHandler implements ConnectionContextProvider
      */
     private InputStream createRechnung(final CidsBean bestellungBean) throws Exception {
         final Map parameters = new HashMap();
+        final ProductType productType = determineProductType(bestellungBean);
 
         parameters.put("DATUM_HEUTE", new SimpleDateFormat("dd.MM.yyyy").format(new Date()));
         final String datumEingang = (bestellungBean.getProperty("eingang_ts") != null)
@@ -2168,7 +2169,14 @@ public class FormSolutionsBestellungHandler implements ConnectionContextProvider
         parameters.put("RECHNUNG_GES_BETRAG", gebuehr);
         parameters.put("RECHNUNG_EINZELPREIS", gebuehr);
         parameters.put("RECHNUNG_GESAMMTPREIS", gebuehr);
-        parameters.put("RECHNUNG_BERECH_GRUNDLAGE", getProperties().getRechnungBerechnugsgGrundlage());
+        parameters.put(
+            "RECHNUNG_BERECH_GRUNDLAGE",
+            ProductType.BAB_ABSCHLUSS.equals(productType) ? getProperties().getRechnungBerechnugsgGrundlageBaulasten()
+                                                          : getProperties().getRechnungBerechnugsgGrundlageKarte());
+        parameters.put(
+            "RECHNUNG_AUFTRAGSART",
+            ProductType.BAB_ABSCHLUSS.equals(productType) ? getProperties().getRechnungAuftragsartBaulasten()
+                                                          : getProperties().getRechnungAuftragsartKarte());
         parameters.put("RECHNUNG_ANZAHL", 1);
         parameters.put("RECHNUNG_RABATT", 0.0f);
         parameters.put("RECHNUNG_UST", 0.0f);
@@ -2228,6 +2236,7 @@ public class FormSolutionsBestellungHandler implements ConnectionContextProvider
                                 getBaulastBescheinigungHelper().calculateDownloadInfo(
                                     null,
                                     produktbezeichnung,
+                                    null,
                                     flurstuecke,
                                     protocolBuffer,
                                     statusHolder);
