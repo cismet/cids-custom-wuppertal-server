@@ -1931,7 +1931,7 @@ public class FormSolutionsBestellungHandler implements ConnectionContextProvider
                         STATUS_GETFLURSTUECK,
                         bestellungBean,
                         "Fehler beim Laden des Flurstücks",
-                        getObjectMapper().readValue((String)bestellungBean.getProperty("exception"), Exception.class),
+                        ex,
                         false);
                 }
 
