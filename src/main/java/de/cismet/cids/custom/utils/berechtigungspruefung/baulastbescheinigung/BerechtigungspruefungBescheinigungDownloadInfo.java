@@ -54,16 +54,16 @@ public class BerechtigungspruefungBescheinigungDownloadInfo extends Berechtigung
      *
      * @param  auftragsnummer      DOCUMENT ME!
      * @param  produktbezeichnung  DOCUMENT ME!
-     * @param  protokoll           DOCUMENT ME!
      * @param  fertigungsVermerk   DOCUMENT ME!
+     * @param  protokoll           DOCUMENT ME!
      * @param  bescheinigungsInfo  DOCUMENT ME!
      * @param  amounts             DOCUMENT ME!
      */
     public BerechtigungspruefungBescheinigungDownloadInfo(
             final String auftragsnummer,
             final String produktbezeichnung,
-            final String protokoll,
             final String fertigungsVermerk,
+            final String protokoll,
             final BerechtigungspruefungBescheinigungInfo bescheinigungsInfo,
             final HashMap<String, Integer> amounts) {
         this(
