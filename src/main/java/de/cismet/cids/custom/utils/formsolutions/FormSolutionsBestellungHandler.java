@@ -2236,6 +2236,7 @@ public class FormSolutionsBestellungHandler implements ConnectionContextProvider
                                 getBaulastBescheinigungHelper().calculateDownloadInfo(
                                     null,
                                     produktbezeichnung,
+                                    null,
                                     flurstuecke,
                                     protocolBuffer,
                                     statusHolder);
