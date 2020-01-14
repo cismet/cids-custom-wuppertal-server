@@ -2267,7 +2267,9 @@ public class FormSolutionsBestellungHandler implements ConnectionContextProvider
                                 : getProperties().getBillingVerwendungskeyDownload();
 
                             final String productKey = (String)bestellungBean.getProperty("fk_produkt.billing_key");
-                            final Double gebuehr = calculateBabGebuehr(productKey, verwendungskey, downloadInfo);
+
+                            final Double gebuehr = (bestellungBean.getProperty("gutschein_code") != null)
+                                ? calculateBabGebuehr(productKey, verwendungskey, downloadInfo) : 0;
                             bestellungBean.setProperty("gebuehr", gebuehr);
 
                             final FormSolutionsBestellung formSolutionBestellung = fsBestellungMap.get(transid);
