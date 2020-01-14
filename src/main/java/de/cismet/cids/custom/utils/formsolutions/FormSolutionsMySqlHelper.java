@@ -162,7 +162,7 @@ public class FormSolutionsMySqlHelper {
             final int status,
             final String landparcelcode,
             final String product,
-            final boolean downloadOnly,
+            final Boolean downloadOnly,
             final String email,
             final String schluessel,
             final String filePath,
@@ -210,7 +210,7 @@ public class FormSolutionsMySqlHelper {
             final int status,
             final String landparcelcode,
             final String product,
-            final boolean downloadOnly,
+            final Boolean downloadOnly,
             final String email,
             final String filePath,
             final String origName) throws SQLException {
@@ -319,7 +319,7 @@ public class FormSolutionsMySqlHelper {
             final int status,
             final String landparcelcode,
             final String product,
-            final boolean downloadOnly,
+            final Boolean downloadOnly,
             final String email) throws SQLException {
         if (isEnabled()) {
             connect();
