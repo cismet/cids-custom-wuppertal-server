@@ -1415,7 +1415,18 @@ public class FormSolutionsBestellungHandler implements ConnectionContextProvider
             adresseVersandBean.setProperty("alternativ", trimedNotEmpty(formSolutionsBestellung.getAltAdresse1()));
         }
 
-        bestellungBean.setProperty("postweg", "Kartenausdruck".equals(formSolutionsBestellung.getBezugsweg()));
+        final Boolean postweg;
+        if ("Kartenausdruck".equals(formSolutionsBestellung.getBezugsweg())) {      // Karten
+            postweg = Boolean.TRUE;
+        } else if ("PDF-Download".equals(formSolutionsBestellung.getBezugsweg())) { // Baulasten
+            postweg = Boolean.TRUE;
+        } else if ("Post".equals(formSolutionsBestellung.getBezugsweg())) {
+            postweg = Boolean.FALSE;
+        } else {
+            postweg = null;
+        }
+
+        bestellungBean.setProperty("postweg", postweg);
         bestellungBean.setProperty("transid", transid);
         bestellungBean.setProperty("landparcelcode", landparcelcode);
         bestellungBean.setProperty("fk_produkt", produktBean);
@@ -2089,11 +2100,20 @@ public class FormSolutionsBestellungHandler implements ConnectionContextProvider
         final Map parameters = new HashMap();
         final ProductType productType = determineProductType(bestellungBean);
 
+        final String landparcelcodesString = noNullAndTrimed((String)bestellungBean.getProperty("landparcelcode"));
+        final String landparcelcode;
+        if ((landparcelcodesString != null) && !landparcelcodesString.isEmpty()) {
+            final String[] landparcelcodes = landparcelcodesString.split(",");
+            landparcelcode = landparcelcodes[0] + ((landparcelcodes.length > 1) ? " u.a." : "");
+        } else {
+            landparcelcode = null;
+        }
+
         parameters.put("DATUM_HEUTE", new SimpleDateFormat("dd.MM.yyyy").format(new Date()));
         final String datumEingang = (bestellungBean.getProperty("eingang_ts") != null)
             ? new SimpleDateFormat("dd.MM.yyyy").format(bestellungBean.getProperty("eingang_ts")) : "";
         parameters.put("DATUM_EINGANG", noNullAndTrimed(datumEingang));
-        parameters.put("FLURSTUECKSKENNZEICHEN", noNullAndTrimed((String)bestellungBean.getProperty("landparcelcode")));
+        parameters.put("FLURSTUECKSKENNZEICHEN", landparcelcode);
         parameters.put("TRANSAKTIONSID", noNullAndTrimed((String)bestellungBean.getProperty("transid")));
         parameters.put("LIEFER_FIRMA", noNullAndTrimed((String)bestellungBean.getProperty("fk_adresse_versand.firma")));
         parameters.put(
@@ -2247,7 +2267,9 @@ public class FormSolutionsBestellungHandler implements ConnectionContextProvider
                                 : getProperties().getBillingVerwendungskeyDownload();
 
                             final String productKey = (String)bestellungBean.getProperty("fk_produkt.billing_key");
-                            final Double gebuehr = calculateBabGebuehr(productKey, verwendungskey, downloadInfo);
+
+                            final Double gebuehr = (bestellungBean.getProperty("gutschein_code") != null)
+                                ? calculateBabGebuehr(productKey, verwendungskey, downloadInfo) : 0;
                             bestellungBean.setProperty("gebuehr", gebuehr);
 
                             final FormSolutionsBestellung formSolutionBestellung = fsBestellungMap.get(transid);
@@ -2423,7 +2445,7 @@ public class FormSolutionsBestellungHandler implements ConnectionContextProvider
                                     STATUS_PRODUKT,
                                     (String)bestellungBean.getProperty("landparcelcode"),
                                     (String)bestellungBean.getProperty("fk_product.fk_typ.name"),
-                                    Boolean.TRUE.equals((Boolean)bestellungBean.getProperty("postweg")),
+                                    (Boolean)bestellungBean.getProperty("postweg"),
                                     (String)bestellungBean.getProperty("email"),
                                     null,
                                     (String)bestellungBean.getProperty("produkt_dateipfad"),
@@ -2487,6 +2509,13 @@ public class FormSolutionsBestellungHandler implements ConnectionContextProvider
                                             "berechtigungspruefung");
                                     final String downloadinfoJson = (String)berechtigungspruefung.getProperty(
                                             "downloadinfo_json");
+                                    bestellungBean.setProperty(
+                                        "berechtigungspruefung",
+                                        vorgaengerBestellungBean.getProperty("berechtigungspruefung"));
+                                    getMetaService().updateMetaObject(
+                                        getUser(),
+                                        bestellungBean.getMetaObject(),
+                                        getConnectionContext());
 
                                     final String fileNameOrig = "baulastbescheinigung.zip";
                                     final File tmpFile = new File(String.format(
@@ -2512,7 +2541,7 @@ public class FormSolutionsBestellungHandler implements ConnectionContextProvider
                                         STATUS_PRODUKT,
                                         (String)bestellungBean.getProperty("landparcelcode"),
                                         (String)bestellungBean.getProperty("fk_product.fk_typ.name"),
-                                        Boolean.TRUE.equals((Boolean)bestellungBean.getProperty("postweg")),
+                                        (Boolean)bestellungBean.getProperty("postweg"),
                                         (String)bestellungBean.getProperty("email"),
                                         (String)berechtigungspruefung.getProperty("schluessel"),
                                         (String)bestellungBean.getProperty("produkt_dateipfad"),
