@@ -189,7 +189,7 @@ public class Redirect2FormsolutionsAction implements UserAwareServerAction, Meta
                     form.put("Antragsteller.Daten.Email bei Download.E-Mailadresse", email);
                     form.put("Street", rechnungStrasse);
                     form.put("StreetNumber", rechnungHausnummer);
-                    form.put("ZipCode", Integer.toString(rechnungPlz));
+                    form.put("ZipCode", (rechnungPlz != null) ? Integer.toString(rechnungPlz) : null);
                     form.put("City", rechnungOrt);
 
                     form.put(
@@ -216,10 +216,12 @@ public class Redirect2FormsolutionsAction implements UserAwareServerAction, Meta
 
                     final HashMap<String, String> headerMap = new HashMap<>();
                     headerMap.put("Content-Type", "application/x-www-form-urlencoded");
+                    final String urlParams = urlEncodeUTF8(form);
+                    LOG.info(FormSolutionsProperties.getInstance().getUrlCreateCacheid() + " | " + urlParams);
                     final InputStream in =
                         new SimpleHttpAccessHandler().doRequest(new URL(
                                 FormSolutionsProperties.getInstance().getUrlCreateCacheid()),
-                            new StringReader(urlEncodeUTF8(form)),
+                            new StringReader(urlParams),
                             AccessHandler.ACCESS_METHODS.POST_REQUEST,
                             headerMap);
                     final String cacheID = IOUtils.toString(in, "UTF-8");
