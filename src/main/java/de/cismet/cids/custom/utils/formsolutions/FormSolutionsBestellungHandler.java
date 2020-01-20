@@ -1247,15 +1247,26 @@ public class FormSolutionsBestellungHandler implements ConnectionContextProvider
      */
     private static String extractLandparcelcode(final FormSolutionsBestellung formSolutionsBestellung) {
         final Set<String> fskz = new LinkedHashSet<>();
-        final String flurstueckskennzeichen = trimedNotEmpty(formSolutionsBestellung.getFlurstueckskennzeichen());
-        if (flurstueckskennzeichen != null) {
-            fskz.add(flurstueckskennzeichen);
-        }
-        if ("Anschrift".equals(formSolutionsBestellung.getAuswahlUeber())) {
-            final String flurstueckskennzeichen1 = trimedNotEmpty(formSolutionsBestellung.getFlurstueckskennzeichen1());
-            if (flurstueckskennzeichen1 != null) {
-                for (final String tmp : flurstueckskennzeichen1.split(",")) {
+        final String ausgewaehlteFlurstuecke = trimedNotEmpty(formSolutionsBestellung.getAusgewaehlteFlurstuecke());
+        if (ausgewaehlteFlurstuecke != null) {
+            for (final String tmp : ausgewaehlteFlurstuecke.split(",")) {
+                fskz.add(tmp);
+            }
+        } else {
+            final String flurstueckskennzeichen = trimedNotEmpty(formSolutionsBestellung.getFlurstueckskennzeichen());
+            if (flurstueckskennzeichen != null) {
+                for (final String tmp : flurstueckskennzeichen.split(",")) {
                     fskz.add(tmp);
+                }
+                fskz.add(flurstueckskennzeichen);
+            }
+            if ("Anschrift".equals(formSolutionsBestellung.getAuswahlUeber())) {
+                final String flurstueckskennzeichen1 = trimedNotEmpty(
+                        formSolutionsBestellung.getFlurstueckskennzeichen1());
+                if (flurstueckskennzeichen1 != null) {
+                    for (final String tmp : flurstueckskennzeichen1.split(",")) {
+                        fskz.add(tmp);
+                    }
                 }
             }
         }
@@ -1404,7 +1415,18 @@ public class FormSolutionsBestellungHandler implements ConnectionContextProvider
             adresseVersandBean.setProperty("alternativ", trimedNotEmpty(formSolutionsBestellung.getAltAdresse1()));
         }
 
-        bestellungBean.setProperty("postweg", "Kartenausdruck".equals(formSolutionsBestellung.getBezugsweg()));
+        final Boolean postweg;
+        if ("Kartenausdruck".equals(formSolutionsBestellung.getBezugsweg())) {      // Karten
+            postweg = Boolean.TRUE;
+        } else if ("PDF-Download".equals(formSolutionsBestellung.getBezugsweg())) { // Baulasten
+            postweg = Boolean.TRUE;
+        } else if ("Post".equals(formSolutionsBestellung.getBezugsweg())) {
+            postweg = Boolean.FALSE;
+        } else {
+            postweg = null;
+        }
+
+        bestellungBean.setProperty("postweg", postweg);
         bestellungBean.setProperty("transid", transid);
         bestellungBean.setProperty("landparcelcode", landparcelcode);
         bestellungBean.setProperty("fk_produkt", produktBean);
@@ -1920,7 +1942,7 @@ public class FormSolutionsBestellungHandler implements ConnectionContextProvider
                         STATUS_GETFLURSTUECK,
                         bestellungBean,
                         "Fehler beim Laden des Flurstücks",
-                        getObjectMapper().readValue((String)bestellungBean.getProperty("exception"), Exception.class),
+                        ex,
                         false);
                 }
 
@@ -2076,12 +2098,22 @@ public class FormSolutionsBestellungHandler implements ConnectionContextProvider
      */
     private InputStream createRechnung(final CidsBean bestellungBean) throws Exception {
         final Map parameters = new HashMap();
+        final ProductType productType = determineProductType(bestellungBean);
+
+        final String landparcelcodesString = noNullAndTrimed((String)bestellungBean.getProperty("landparcelcode"));
+        final String landparcelcode;
+        if ((landparcelcodesString != null) && !landparcelcodesString.isEmpty()) {
+            final String[] landparcelcodes = landparcelcodesString.split(",");
+            landparcelcode = landparcelcodes[0] + ((landparcelcodes.length > 1) ? " u.a." : "");
+        } else {
+            landparcelcode = null;
+        }
 
         parameters.put("DATUM_HEUTE", new SimpleDateFormat("dd.MM.yyyy").format(new Date()));
         final String datumEingang = (bestellungBean.getProperty("eingang_ts") != null)
             ? new SimpleDateFormat("dd.MM.yyyy").format(bestellungBean.getProperty("eingang_ts")) : "";
         parameters.put("DATUM_EINGANG", noNullAndTrimed(datumEingang));
-        parameters.put("FLURSTUECKSKENNZEICHEN", noNullAndTrimed((String)bestellungBean.getProperty("landparcelcode")));
+        parameters.put("FLURSTUECKSKENNZEICHEN", landparcelcode);
         parameters.put("TRANSAKTIONSID", noNullAndTrimed((String)bestellungBean.getProperty("transid")));
         parameters.put("LIEFER_FIRMA", noNullAndTrimed((String)bestellungBean.getProperty("fk_adresse_versand.firma")));
         parameters.put(
@@ -2157,7 +2189,14 @@ public class FormSolutionsBestellungHandler implements ConnectionContextProvider
         parameters.put("RECHNUNG_GES_BETRAG", gebuehr);
         parameters.put("RECHNUNG_EINZELPREIS", gebuehr);
         parameters.put("RECHNUNG_GESAMMTPREIS", gebuehr);
-        parameters.put("RECHNUNG_BERECH_GRUNDLAGE", getProperties().getRechnungBerechnugsgGrundlage());
+        parameters.put(
+            "RECHNUNG_BERECH_GRUNDLAGE",
+            ProductType.BAB_ABSCHLUSS.equals(productType) ? getProperties().getRechnungBerechnugsgGrundlageBaulasten()
+                                                          : getProperties().getRechnungBerechnugsgGrundlageKarte());
+        parameters.put(
+            "RECHNUNG_AUFTRAGSART",
+            ProductType.BAB_ABSCHLUSS.equals(productType) ? getProperties().getRechnungAuftragsartBaulasten()
+                                                          : getProperties().getRechnungAuftragsartKarte());
         parameters.put("RECHNUNG_ANZAHL", 1);
         parameters.put("RECHNUNG_RABATT", 0.0f);
         parameters.put("RECHNUNG_UST", 0.0f);
@@ -2217,6 +2256,7 @@ public class FormSolutionsBestellungHandler implements ConnectionContextProvider
                                 getBaulastBescheinigungHelper().calculateDownloadInfo(
                                     null,
                                     produktbezeichnung,
+                                    null,
                                     flurstuecke,
                                     protocolBuffer,
                                     statusHolder);
@@ -2227,7 +2267,9 @@ public class FormSolutionsBestellungHandler implements ConnectionContextProvider
                                 : getProperties().getBillingVerwendungskeyDownload();
 
                             final String productKey = (String)bestellungBean.getProperty("fk_produkt.billing_key");
-                            final Double gebuehr = calculateBabGebuehr(productKey, verwendungskey, downloadInfo);
+
+                            final Double gebuehr = (bestellungBean.getProperty("gutschein_code") != null)
+                                ? calculateBabGebuehr(productKey, verwendungskey, downloadInfo) : 0;
                             bestellungBean.setProperty("gebuehr", gebuehr);
 
                             final FormSolutionsBestellung formSolutionBestellung = fsBestellungMap.get(transid);
@@ -2270,7 +2312,8 @@ public class FormSolutionsBestellungHandler implements ConnectionContextProvider
                                 getUser(),
                                 bestellungBean.getMetaObject(),
                                 getConnectionContext());
-                            getMySqlHelper().updateStatus(transid, STATUS_PRUEFUNG);
+
+                            getMySqlHelper().updatePruefungFreigabe(schluessel, transid, STATUS_PRUEFUNG, null);
                         }
                     }
                 } catch (final Exception ex) {
@@ -2402,8 +2445,9 @@ public class FormSolutionsBestellungHandler implements ConnectionContextProvider
                                     STATUS_PRODUKT,
                                     (String)bestellungBean.getProperty("landparcelcode"),
                                     (String)bestellungBean.getProperty("fk_product.fk_typ.name"),
-                                    Boolean.TRUE.equals((Boolean)bestellungBean.getProperty("postweg")),
+                                    (Boolean)bestellungBean.getProperty("postweg"),
                                     (String)bestellungBean.getProperty("email"),
+                                    null,
                                     (String)bestellungBean.getProperty("produkt_dateipfad"),
                                     (String)bestellungBean.getProperty("produkt_dateiname_orig"));
                                 doStatusChangedRequest(transid);
@@ -2412,43 +2456,47 @@ public class FormSolutionsBestellungHandler implements ConnectionContextProvider
                             case BAB_WEITERLEITUNG: {
                                 final CidsBean berechtigungspruefung = (CidsBean)bestellungBean.getProperty(
                                         "berechtigungspruefung");
-                                if (Boolean.TRUE.equals(berechtigungspruefung.getProperty("pruefstatus"))) {
-                                    final String transidHash = createTransidHash(transid);
-                                    final String redirectorUrlTemplate = getProperties()
-                                                .getCidsActionHttpRedirectorUrl();
-                                    final String redirect2formsolutions = String.format(
-                                            redirectorUrlTemplate,
-                                            transidHash);
+                                if (berechtigungspruefung != null) {
+                                    if (Boolean.TRUE.equals(berechtigungspruefung.getProperty("pruefstatus"))) {
+                                        final String transidHash = createTransidHash(transid);
+                                        final String redirectorUrlTemplate = getProperties()
+                                                    .getCidsActionHttpRedirectorUrl();
+                                        final String redirect2formsolutions = String.format(
+                                                redirectorUrlTemplate,
+                                                transidHash);
 
-                                    bestellungBean.setProperty("request_url", new URL(redirect2formsolutions));
-                                    bestellungBean.setProperty("produkt_ts", new Timestamp(new Date().getTime()));
-                                    getMetaService().updateMetaObject(
-                                        getUser(),
-                                        bestellungBean.getMetaObject(),
-                                        getConnectionContext());
-
-                                    LOG.info(redirect2formsolutions);
-                                    getMySqlHelper().updatePruefungFreigabe(
-                                        transid,
-                                        STATUS_WEITERLEITUNG_ABSCHLUSSFORMULAR,
-                                        redirect2formsolutions);
-                                    doStatusChangedRequest(transid);
-
-                                    try {
-                                        berechtigungspruefung.setProperty("abgeholt", true);
+                                        bestellungBean.setProperty("request_url", new URL(redirect2formsolutions));
+                                        bestellungBean.setProperty("produkt_ts", new Timestamp(new Date().getTime()));
                                         getMetaService().updateMetaObject(
                                             getUser(),
-                                            berechtigungspruefung.getMetaObject(),
+                                            bestellungBean.getMetaObject(),
                                             getConnectionContext());
-                                    } catch (final Exception ex) {
-                                        LOG.error(ex, ex);
+
+                                        LOG.info(redirect2formsolutions);
+                                        getMySqlHelper().updatePruefungFreigabe((String)
+                                            berechtigungspruefung.getProperty("schluessel"),
+                                            transid,
+                                            STATUS_WEITERLEITUNG_ABSCHLUSSFORMULAR,
+                                            redirect2formsolutions);
+                                        doStatusChangedRequest(transid);
+
+                                        try {
+                                            berechtigungspruefung.setProperty("abgeholt", true);
+                                            getMetaService().updateMetaObject(
+                                                getUser(),
+                                                berechtigungspruefung.getMetaObject(),
+                                                getConnectionContext());
+                                        } catch (final Exception ex) {
+                                            LOG.error(ex, ex);
+                                        }
+                                    } else if (Boolean.FALSE.equals(berechtigungspruefung.getProperty("pruefstatus"))) {
+                                        getMySqlHelper().updatePruefungAblehnung((String)
+                                            berechtigungspruefung.getProperty("schluessel"),
+                                            transid,
+                                            -STATUS_PRUEFUNG,
+                                            (String)berechtigungspruefung.getProperty("pruefkommentar"));
+                                        doStatusChangedRequest(transid);
                                     }
-                                } else if (Boolean.FALSE.equals(berechtigungspruefung.getProperty("pruefstatus"))) {
-                                    getMySqlHelper().updatePruefungAblehnung(
-                                        transid,
-                                        -STATUS_PRUEFUNG,
-                                        (String)berechtigungspruefung.getProperty("pruefkommentar"));
-                                    doStatusChangedRequest(transid);
                                 }
                             }
                             break;
@@ -2461,6 +2509,13 @@ public class FormSolutionsBestellungHandler implements ConnectionContextProvider
                                             "berechtigungspruefung");
                                     final String downloadinfoJson = (String)berechtigungspruefung.getProperty(
                                             "downloadinfo_json");
+                                    bestellungBean.setProperty(
+                                        "berechtigungspruefung",
+                                        vorgaengerBestellungBean.getProperty("berechtigungspruefung"));
+                                    getMetaService().updateMetaObject(
+                                        getUser(),
+                                        bestellungBean.getMetaObject(),
+                                        getConnectionContext());
 
                                     final String fileNameOrig = "baulastbescheinigung.zip";
                                     final File tmpFile = new File(String.format(
@@ -2486,8 +2541,9 @@ public class FormSolutionsBestellungHandler implements ConnectionContextProvider
                                         STATUS_PRODUKT,
                                         (String)bestellungBean.getProperty("landparcelcode"),
                                         (String)bestellungBean.getProperty("fk_product.fk_typ.name"),
-                                        Boolean.TRUE.equals((Boolean)bestellungBean.getProperty("postweg")),
+                                        (Boolean)bestellungBean.getProperty("postweg"),
                                         (String)bestellungBean.getProperty("email"),
+                                        (String)berechtigungspruefung.getProperty("schluessel"),
                                         (String)bestellungBean.getProperty("produkt_dateipfad"),
                                         (String)bestellungBean.getProperty("produkt_dateiname_orig"));
                                     doStatusChangedRequest(transid);

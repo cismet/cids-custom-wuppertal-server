@@ -328,22 +328,22 @@ public class BaulastBescheinigungHelper {
     /**
      * DOCUMENT ME!
      *
-     * @param   bescheinigungInfo  grundstueckeToFlurstueckeMap flurstuecke flurstueckeToBaulastengrundstueckMap
-     *                             DOCUMENT ME!
-     * @param   protocolBuffer     DOCUMENT ME!
+     * @param   grundstueckeToFlurstueckeMap          bescheinigungInfo grundstueckeToFlurstueckeMap flurstuecke
+     *                                                flurstueckeToBaulastengrundstueckMap DOCUMENT ME!
+     * @param   flurstueckeToBaulastenBelastetMap     DOCUMENT ME!
+     * @param   flurstueckeToBaulastenBeguenstigtMap  DOCUMENT ME!
+     * @param   protocolBuffer                        DOCUMENT ME!
      *
      * @return  DOCUMENT ME!
      */
-    public HashMap<String, Integer> createBilling(final BerechtigungspruefungBescheinigungInfo bescheinigungInfo,
+    public HashMap<String, Integer> createBilling(final Map<String, Collection<CidsBean>> grundstueckeToFlurstueckeMap,
+            final Map<CidsBean, Collection<CidsBean>> flurstueckeToBaulastenBelastetMap,
+            final Map<CidsBean, Collection<CidsBean>> flurstueckeToBaulastenBeguenstigtMap,
             final ProtocolBuffer protocolBuffer) {
-        final List<String> keys = new ArrayList<>();
-        for (final BerechtigungspruefungBescheinigungGruppeInfo gruppeInfo
-                    : bescheinigungInfo.getBescheinigungsgruppen()) {
-            keys.add(gruppeInfo.getName());
-        }
+        final List<String> keys = new ArrayList<>(grundstueckeToFlurstueckeMap.keySet());
         Collections.sort(keys);
 
-        final int anzahlGrundstuecke = bescheinigungInfo.getBescheinigungsgruppen().size();
+        final int anzahlGrundstuecke = grundstueckeToFlurstueckeMap.size();
         if (anzahlGrundstuecke == 1) {
             protocolBuffer.appendLine("\n===\n\nBescheinigungsart des Grundstücks:");
         } else {
@@ -356,51 +356,58 @@ public class BaulastBescheinigungHelper {
         int anzahlPositiv2 = 0;
         int anzahlPositiv3 = 0;
 
-        for (final BerechtigungspruefungBescheinigungGruppeInfo gruppeInfo
-                    : bescheinigungInfo.getBescheinigungsgruppen()) {
-            final Set<BerechtigungspruefungBescheinigungBaulastInfo> baulastInfos = new HashSet<>();
-            baulastInfos.addAll(gruppeInfo.getBaulastenBelastet());
-            baulastInfos.addAll(gruppeInfo.getBaulastenBeguenstigt());
+        for (final String key : keys) {
+            if (grundstueckeToFlurstueckeMap.containsKey(key)) {
+                boolean first = true;
+                final Collection<CidsBean> flurstuecke = grundstueckeToFlurstueckeMap.get(key);
 
-            final StringBuffer sb = new StringBuffer();
-            boolean first = true;
-            for (final BerechtigungspruefungBescheinigungBaulastInfo baulastInfo : baulastInfos) {
-                if (first) {
-                    first = false;
-                } else {
-                    sb.append(", ");
+                final Set<CidsBean> baulasten = new HashSet<>();
+                for (final CidsBean flurstueck : flurstuecke) {
+                    final Collection<CidsBean> baulastenBelastet = flurstueckeToBaulastenBelastetMap.get(flurstueck);
+                    final Collection<CidsBean> baulastenBeguenstigt = flurstueckeToBaulastenBeguenstigtMap.get(
+                            flurstueck);
+                    baulasten.addAll(baulastenBelastet);
+                    baulasten.addAll(baulastenBeguenstigt);
                 }
-                sb.append(baulastInfo);
-            }
 
-            final String baulastenString = sb.toString();
-            final int numOfBaulasten = gruppeInfo.getBaulastenBelastet().size()
-                        + gruppeInfo.getBaulastenBeguenstigt().size();
-            switch (numOfBaulasten) {
-                case 0: {
-                    protocolBuffer.appendLine(" * Grundstück " + gruppeInfo.getName()
-                                + " => Negativ-Bescheinigung");
-                    anzahlNegativ++;
+                final StringBuffer sb = new StringBuffer();
+                for (final CidsBean baulast : baulasten) {
+                    if (first) {
+                        first = false;
+                    } else {
+                        sb.append(", ");
+                    }
+                    sb.append(baulast);
                 }
-                break;
-                case 1: {
-                    protocolBuffer.appendLine(" * Grundstück " + gruppeInfo.getName()
-                                + " => Positiv-Bescheinigung für eine Baulast (" + baulastenString + ")");
-                    anzahlPositiv1++;
+                final String baulastenString = sb.toString();
+
+                final int numOfBaulasten = baulasten.size();
+                switch (numOfBaulasten) {
+                    case 0: {
+                        protocolBuffer.appendLine(" * Grundstück " + key + " => Negativ-Bescheinigung");
+                        anzahlNegativ++;
+                    }
+                    break;
+                    case 1: {
+                        protocolBuffer.appendLine(" * Grundstück " + key
+                                    + " => Positiv-Bescheinigung für eine Baulast (" + baulastenString + ")");
+                        anzahlPositiv1++;
+                    }
+                    break;
+                    case 2: {
+                        protocolBuffer.appendLine(" * Grundstück " + key
+                                    + " => Positiv-Bescheinigung für zwei Baulasten (" + baulastenString + ")");
+                        anzahlPositiv2++;
+                    }
+                    break;
+                    default: {
+                        protocolBuffer.appendLine(" * Grundstück " + key
+                                    + " => Positiv-Bescheinigung für drei oder mehr Baulasten (" + baulastenString
+                                    + ")");
+                        anzahlPositiv3++;
+                    }
+                    break;
                 }
-                break;
-                case 2: {
-                    protocolBuffer.appendLine(" * Grundstück " + gruppeInfo.getName()
-                                + " => Positiv-Bescheinigung für zwei Baulasten (" + baulastenString + ")");
-                    anzahlPositiv2++;
-                }
-                break;
-                default: {
-                    protocolBuffer.appendLine(" * Grundstück " + gruppeInfo.getName()
-                                + " => Positiv-Bescheinigung für drei oder mehr Baulasten (" + baulastenString + ")");
-                    anzahlPositiv3++;
-                }
-                break;
             }
         }
 
@@ -765,6 +772,7 @@ public class BaulastBescheinigungHelper {
                         bescheinigungsGruppeInfo,
                         downloadInfo.getAuftragsnummer(),
                         downloadInfo.getProduktbezeichnung(),
+                        downloadInfo.getFertigungsVermerk(),
                         ++number,
                         zipOut);
 
@@ -837,6 +845,7 @@ public class BaulastBescheinigungHelper {
      * @param   bescheinigungsGruppeInfo  DOCUMENT ME!
      * @param   auftragsNummer            DOCUMENT ME!
      * @param   projectName               DOCUMENT ME!
+     * @param   fertigungsVermerk         DOCUMENT ME!
      * @param   number                    DOCUMENT ME!
      * @param   zipOut                    DOCUMENT ME!
      *
@@ -846,6 +855,7 @@ public class BaulastBescheinigungHelper {
     private void writeBescheinigungReport(final BerechtigungspruefungBescheinigungGruppeInfo bescheinigungsGruppeInfo,
             final String auftragsNummer,
             final String projectName,
+            final String fertigungsVermerk,
             final int number,
             final ZipOutputStream zipOut) throws JsonProcessingException, IOException {
         final Collection<BerechtigungspruefungBescheinigungFlurstueckInfo> fls =
@@ -857,8 +867,9 @@ public class BaulastBescheinigungHelper {
                 new ServerActionParameter<>(
                     BaulastBescheinigungReportServerAction.Parameter.FABRICATION_DATE.toString(),
                     new Date().getTime()),
-                /*new ServerActionParameter<>(
-                 *  BaulastBescheinigungReportServerAction.Parameter.FERTIGUNGS_VERMERK.toString(), ""),*/
+                new ServerActionParameter<>(
+                    BaulastBescheinigungReportServerAction.Parameter.FERTIGUNGS_VERMERK.toString(),
+                    fertigungsVermerk),
                 new ServerActionParameter<>(
                     BaulastBescheinigungReportServerAction.Parameter.JOB_NUMBER.toString(),
                     auftragsNummer),
@@ -954,6 +965,7 @@ public class BaulastBescheinigungHelper {
      *
      * @param   auftragsnummer      DOCUMENT ME!
      * @param   produktBezeichnung  DOCUMENT ME!
+     * @param   fertigungsVermerk   DOCUMENT ME!
      * @param   flurstuecke         DOCUMENT ME!
      * @param   protocolBuffer      DOCUMENT ME!
      * @param   statusHolder        DOCUMENT ME!
@@ -964,6 +976,7 @@ public class BaulastBescheinigungHelper {
      */
     public BerechtigungspruefungBescheinigungDownloadInfo calculateDownloadInfo(final String auftragsnummer,
             final String produktBezeichnung,
+            final String fertigungsVermerk,
             final List<CidsBean> flurstuecke,
             final BaulastBescheinigungHelper.ProtocolBuffer protocolBuffer,
             final BaulastBescheinigungHelper.StatusHolder statusHolder) throws Exception {
@@ -984,6 +997,13 @@ public class BaulastBescheinigungHelper {
             flurstueckeToBaulastenBeguenstigtMap,
             protocolBuffer);
 
+        statusHolder.setMessage("Gebühr wird berechnet...");
+        final HashMap<String, Integer> prodAmounts = createBilling(
+                grundstueckeToFlurstueckeMap,
+                flurstueckeToBaulastenBelastetMap,
+                flurstueckeToBaulastenBeguenstigtMap,
+                protocolBuffer);
+
         statusHolder.setMessage("Bescheinigungsgruppen werden identifiziert...");
         final Collection<BerechtigungspruefungBescheinigungGruppeInfo> bescheinigungsgruppen =
             createBescheinigungsGruppen(
@@ -994,15 +1014,14 @@ public class BaulastBescheinigungHelper {
                 flurstueckeToBaulastenBelastetMap,
                 protocolBuffer);
 
-        statusHolder.setMessage("Gebühr wird berechnet...");
         final BerechtigungspruefungBescheinigungInfo bescheinigungInfo = new BerechtigungspruefungBescheinigungInfo(
                 new Date(),
                 new HashSet<>(bescheinigungsgruppen));
-        final HashMap<String, Integer> prodAmounts = createBilling(bescheinigungInfo, protocolBuffer);
 
         return new BerechtigungspruefungBescheinigungDownloadInfo(
                 auftragsnummer,
                 produktBezeichnung,
+                fertigungsVermerk,
                 protocolBuffer.toString(),
                 bescheinigungInfo,
                 prodAmounts);

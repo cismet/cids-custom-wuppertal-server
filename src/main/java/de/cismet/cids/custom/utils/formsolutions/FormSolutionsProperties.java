@@ -70,7 +70,10 @@ public class FormSolutionsProperties {
     private final String billingVerwendungszweckPostweg;
     private final String billingVerwendungskeyDownload;
     private final String billingVerwendungskeyPostweg;
-    private final String rechnungBerechnugsgGrundlage;
+    private final String rechnungAuftragsartKarte;
+    private final String rechnungAuftragsartBaulasten;
+    private final String rechnungBerechnugsgGrundlageKarte;
+    private final String rechnungBerechnugsgGrundlageBaulasten;
     private final String tmpBrokenpdfsAbsPath;
     private final String transidHashpepper;
     private final String redirectionFormat;
@@ -123,7 +126,10 @@ public class FormSolutionsProperties {
         billingVerwendungskeyDownload = properties.getProperty("BILLING_VERWENDUNGSKEY_DOWNLOAD");
         billingVerwendungskeyPostweg = properties.getProperty("BILLING_VERWENDUNGSKEY_POSTWEG");
         mysqlDisabled = Boolean.valueOf(properties.getProperty("MYSQL_DISABLED"));
-        rechnungBerechnugsgGrundlage = properties.getProperty("RECHNUNG_BERECHNUNGSGRUNDLAGE");
+        rechnungAuftragsartKarte = properties.getProperty("RECHNUNG_AUFTRAGSART_KARTE");
+        rechnungAuftragsartBaulasten = properties.getProperty("RECHNUNG_AUFTRAGSART_BAULASTEN");
+        rechnungBerechnugsgGrundlageKarte = properties.getProperty("RECHNUNG_BERECHNUNGSGRUNDLAGE_KARTE");
+        rechnungBerechnugsgGrundlageBaulasten = properties.getProperty("RECHNUNG_BERECHNUNGSGRUNDLAGE_BAULASTEN");
         tmpBrokenpdfsAbsPath = properties.getProperty("TMP_BROKENPDFS_ABS_PATH");
         transidHashpepper = properties.getProperty("TRANSID_HASHPEPPER");
         redirectionFormat = properties.getProperty("REDIRECTION_FORMAT");
