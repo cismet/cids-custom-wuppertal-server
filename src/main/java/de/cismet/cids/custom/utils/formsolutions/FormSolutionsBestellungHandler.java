@@ -298,7 +298,7 @@ public class FormSolutionsBestellungHandler implements ConnectionContextProvider
     private BaulastBescheinigungHelper getBaulastBescheinigungHelper() {
         return baulastBescheinigungHelper;
     }
-
+    
     /**
      * DOCUMENT ME!
      *
@@ -1417,11 +1417,11 @@ public class FormSolutionsBestellungHandler implements ConnectionContextProvider
 
         final Boolean postweg;
         if ("Kartenausdruck".equals(formSolutionsBestellung.getBezugsweg())) {      // Karten
-            postweg = Boolean.TRUE;
-        } else if ("PDF-Download".equals(formSolutionsBestellung.getBezugsweg())) { // Baulasten
-            postweg = Boolean.TRUE;
-        } else if ("Post".equals(formSolutionsBestellung.getBezugsweg())) {
             postweg = Boolean.FALSE;
+        } else if ("PDF-Download".equals(formSolutionsBestellung.getBezugsweg())) { // Baulasten
+            postweg = Boolean.FALSE;
+        } else if ("Post".equals(formSolutionsBestellung.getBezugsweg())) {
+            postweg = Boolean.TRUE;
         } else {
             postweg = null;
         }
