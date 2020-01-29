@@ -111,21 +111,21 @@ public class BerechtigungspruefungFreigabeServerAction implements UserAwareServe
             }
 
             final boolean pruefungsAbschluss;
-            final Boolean pruefstatus;
+            final Boolean pruefStatus;
             if (MODUS_PRUEFUNG.equals(modus)) {
-                pruefstatus = null;
+                pruefStatus = null;
                 pruefungsAbschluss = false;
             } else if (MODUS_FREIGABE.equals(modus)) {
-                pruefstatus = true;
+                pruefStatus = true;
                 pruefungsAbschluss = true;
             } else if (MODUS_STORNO.equals(modus)) {
-                pruefstatus = false;
+                pruefStatus = false;
                 pruefungsAbschluss = true;
             } else {
                 throw new Exception("weder Freigabe noch Storno");
             }
 
-            BerechtigungspruefungHandler.getInstance().setMetaService(metaService);
+            BerechtigungspruefungHandler.getInstance().setMetaService(getMetaService());
 
             synchronized (this) {
                 final String pruefer = getUser().getName();
@@ -148,7 +148,7 @@ public class BerechtigungspruefungFreigabeServerAction implements UserAwareServe
                 final Timestamp now = new Timestamp(new Date().getTime());
                 pruefungBean.setProperty("abgeholt", null);
                 pruefungBean.setProperty("pruefer", pruefer);
-                pruefungBean.setProperty("pruefstatus", pruefstatus);
+                pruefungBean.setProperty("pruefstatus", pruefStatus);
                 if (pruefungsAbschluss) {
                     pruefungBean.setProperty("freigabe_timestamp", now);
                     pruefungBean.setProperty("pruefkommentar", begruendung);
@@ -162,27 +162,35 @@ public class BerechtigungspruefungFreigabeServerAction implements UserAwareServe
                     getConnectionContext());
 
                 if (pruefungsAbschluss) {
-                    if (!pruefstatus && (downloadInfo instanceof BerechtigungspruefungBillingDownloadInfo)) { // storno
+                    if (downloadInfo instanceof BerechtigungspruefungBillingDownloadInfo) {
                         final BerechtigungspruefungBillingDownloadInfo billingDownloadinfo =
                             (BerechtigungspruefungBillingDownloadInfo)downloadInfo;
                         final Integer billingId = billingDownloadinfo.getBillingId();
+                        final CidsBean billingBean = BerechtigungspruefungHandler.getInstance()
+                                    .loadBillingBean(getUser(), billingId);
                         if (billingId != null) {
-                            final CidsBean billingBean = BerechtigungspruefungHandler.getInstance()
-                                        .loadBillingBean(user, billingId);
-                            final CidsBean billingStornogrundBean = BerechtigungspruefungHandler.getInstance()
-                                        .loadBillingStornogrundBean(user);
-
-                            try {
-                                billingBean.setProperty("storniert", Boolean.TRUE);
-                                billingBean.setProperty("stornogrund", billingStornogrundBean);
-                                billingBean.setProperty("storniert_durch", getUser().toString());
-
+                            if (pruefStatus) {
+                                billingBean.setProperty("request", pruefungBean.getProperty("downloadinfo_json"));
                                 getMetaService().updateMetaObject(
                                     getUser(),
                                     billingBean.getMetaObject(),
                                     getConnectionContext());
-                            } catch (Exception ex) {
-                                LOG.error("Error while setting 'storniert' of billing", ex);
+                            } else { // storno
+                                final CidsBean billingStornogrundBean = BerechtigungspruefungHandler.getInstance()
+                                            .loadBillingStornogrundBean(getUser());
+
+                                try {
+                                    billingBean.setProperty("storniert", Boolean.TRUE);
+                                    billingBean.setProperty("stornogrund", billingStornogrundBean);
+                                    billingBean.setProperty("storniert_durch", getUser().toString());
+
+                                    getMetaService().updateMetaObject(
+                                        getUser(),
+                                        billingBean.getMetaObject(),
+                                        getConnectionContext());
+                                } catch (Exception ex) {
+                                    LOG.error("Error while setting 'storniert' of billing", ex);
+                                }
                             }
                         }
                     }

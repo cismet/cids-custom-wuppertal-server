@@ -7,6 +7,8 @@
 ****************************************************/
 package de.cismet.cids.custom.utils.billing;
 
+import java.io.Serializable;
+
 import java.util.HashMap;
 
 /**
@@ -16,7 +18,7 @@ import java.util.HashMap;
  * @version  $Revision$, $Date$
  */
 
-public class BillingProduct {
+public class BillingProduct implements Serializable {
 
     //~ Instance fields --------------------------------------------------------
 

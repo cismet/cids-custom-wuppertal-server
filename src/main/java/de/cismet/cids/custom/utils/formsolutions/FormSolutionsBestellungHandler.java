@@ -298,7 +298,7 @@ public class FormSolutionsBestellungHandler implements ConnectionContextProvider
     private BaulastBescheinigungHelper getBaulastBescheinigungHelper() {
         return baulastBescheinigungHelper;
     }
-    
+
     /**
      * DOCUMENT ME!
      *
