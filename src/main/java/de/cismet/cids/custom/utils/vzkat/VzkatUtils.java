@@ -87,9 +87,13 @@ public class VzkatUtils {
      * @return  DOCUMENT ME!
      */
     public static String createZeichenKey(final CidsBean cidsBean) {
-        return String.format(
-                "%s_%s",
-                (String)cidsBean.getProperty("fk_stvo.schluessel"),
-                (String)cidsBean.getProperty("schluessel"));
+        if (cidsBean != null) {
+            return String.format(
+                    "%s_%s",
+                    (String)cidsBean.getProperty("fk_stvo.schluessel"),
+                    (String)cidsBean.getProperty("schluessel"));
+        } else {
+            return null;
+        }
     }
 }
