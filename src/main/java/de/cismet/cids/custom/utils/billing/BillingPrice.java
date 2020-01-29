@@ -15,6 +15,8 @@ package de.cismet.cids.custom.utils.billing;
 import lombok.AllArgsConstructor;
 import lombok.Getter;
 
+import java.io.Serializable;
+
 /**
  * DOCUMENT ME!
  *
@@ -23,7 +25,7 @@ import lombok.Getter;
  */
 @Getter
 @AllArgsConstructor
-public class BillingPrice {
+public class BillingPrice implements Serializable {
 
     //~ Instance fields --------------------------------------------------------
 
