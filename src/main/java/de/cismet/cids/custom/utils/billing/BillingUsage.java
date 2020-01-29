@@ -7,6 +7,8 @@
 ****************************************************/
 package de.cismet.cids.custom.utils.billing;
 
+import java.io.Serializable;
+
 /**
  * DOCUMENT ME!
  *
@@ -14,7 +16,7 @@ package de.cismet.cids.custom.utils.billing;
  * @version  $Revision$, $Date$
  */
 
-public class BillingUsage {
+public class BillingUsage implements Serializable {
 
     //~ Instance fields --------------------------------------------------------
 
