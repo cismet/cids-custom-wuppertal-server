@@ -85,7 +85,8 @@ public enum WundaBlauServerResources {
     STAMPER_CONF_PROPERTIES(new TextServerResource("/stamper/stamper_conf.properties")),
     ORBIT_AUTH_JSON(new TextServerResource("/orbit/auth.json")),
     ORBIT_SETTINGS_PROPERTIES(new TextServerResource("/orbit/settings.properties")),
-
+    
+    EMOB_CONF_PROPERTIES(new TextServerResource("/emob/emob_conf.properties")),
     PRBR_CONF_PROPERTIES(new TextServerResource("/prbr/prbr_conf.properties"));
 
     //~ Instance fields --------------------------------------------------------
