@@ -69,9 +69,24 @@ public class VzkatSchilderSearch extends AbstractCidsServerSearch implements Res
         AND, OR,
     }
 
+    /**
+     * DOCUMENT ME!
+     *
+     * @version  $Revision$, $Date$
+     */
+    public enum SearchFor {
+
+        //~ Enum constants -----------------------------------------------------
+
+        SCHILD, STANDORT
+    }
+
     //~ Instance fields --------------------------------------------------------
 
+    private SearchMode searchMode;
+    private SearchFor searchFor = SearchFor.SCHILD;
     private Integer standortId = null;
+    private Integer zeichenId = null;
     private Timestamp activeTimestamp = null;
     private Geometry geom = null;
     private final SearchInfo searchInfo;
@@ -91,22 +106,6 @@ public class VzkatSchilderSearch extends AbstractCidsServerSearch implements Res
                 Arrays.asList(
                     new SearchParameterInfo[] { new MySearchParameterInfo("standortId", Type.INTEGER) }),
                 new MySearchParameterInfo("return", Type.ENTITY_REFERENCE, true));
-    }
-
-    /**
-     * Creates a new PotenzialflaecheSearch object.
-     *
-     * @param  standortId       searchMode DOCUMENT ME!
-     * @param  activeTimestamp  DOCUMENT ME!
-     * @param  geom             DOCUMENT ME!
-     */
-    public VzkatSchilderSearch(final Integer standortId,
-            final Timestamp activeTimestamp,
-            final Geometry geom) {
-        this();
-        this.standortId = standortId;
-        this.activeTimestamp = activeTimestamp;
-        this.geom = geom;
     }
 
     //~ Methods ----------------------------------------------------------------
@@ -130,6 +129,11 @@ public class VzkatSchilderSearch extends AbstractCidsServerSearch implements Res
 
             if (standortId != null) {
                 wheres.add("vzkat_schild.fk_standort = " + standortId + "");
+            }
+
+            if (zeichenId != null) {
+                wheres.add("vzkat_zeichen.id = " + zeichenId + "");
+                leftJoins.add("vzkat_zeichen ON vzkat_zeichen.id = vzkat_schild.fk_zeichen");
             }
 
             if (geom != null) {
@@ -161,10 +165,13 @@ public class VzkatSchilderSearch extends AbstractCidsServerSearch implements Res
             final String where = (!wheres.isEmpty()) ? (" WHERE (" + String.join(") AND (", wheres)) : ")";
             final String leftJoin = (!leftJoins.isEmpty()) ? (" LEFT JOIN " + String.join(" LEFT JOIN ", leftJoins))
                                                            : "";
+
+            final String d = SearchFor.STANDORT.equals(searchFor)
+                ? "(SELECT id FROM cs_class WHERE table_name ILIKE 'vzkat_standort') AS class_id, vzkat_schild.fk_standort AS object_id, vzkat_schild.fk_standort::text AS object_name"
+                : "(SELECT id FROM cs_class WHERE table_name ILIKE 'vzkat_schild') AS class_id, vzkat_schild.id AS object_id, vzkat_schild.position AS object_name";
+
             final String query = "SELECT \n"
-                        + "	(SELECT id FROM cs_class WHERE table_name ILIKE 'vzkat_schild') AS class_id, "
-                        + "	vzkat_schild.id AS object_id, "
-                        + "	vzkat_schild.position AS object_name "
+                        + "	" + d + " "
                         + "FROM vzkat_schild "
                         + leftJoin + " "
                         + where;
