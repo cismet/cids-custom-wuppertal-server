@@ -15,20 +15,27 @@ package de.cismet.cids.custom.tostringconverter.wunda_blau;
 import de.cismet.cids.tools.CustomToStringConverter;
 
 /**
+ * DOCUMENT ME!
  *
- * @author sandra
+ * @author   sandra
+ * @version  $Revision$, $Date$
  */
-public class EmobZugangsartToStringConverter extends CustomToStringConverter{
-    
-    public static final String FIELD__NAME = "name";                             // emob_zugangsart   
-    public static final String FIELD__ID = "id";                                 // emob_zugangsart 
+public class EmobZugangsartToStringConverter extends CustomToStringConverter {
+
+    //~ Static fields/initializers ---------------------------------------------
+
+    public static final String FIELD__NAME = "name"; // emob_zugangsart
+    public static final String FIELD__ID = "id";     // emob_zugangsart
+
+    //~ Methods ----------------------------------------------------------------
+
     @Override
-      public String createString() {
-          final String myid = String.valueOf(cidsBean.getProperty(FIELD__ID));
-          if ("-1".equals(myid)) {
-              return "Neue Zugangsart anlegen";
-          } else {
-              return String.valueOf(cidsBean.getProperty(FIELD__NAME));
-          }
-      }  
+    public String createString() {
+        final String myid = String.valueOf(cidsBean.getProperty(FIELD__ID));
+        if ("-1".equals(myid)) {
+            return "Neue Zugangsart anlegen";
+        } else {
+            return String.valueOf(cidsBean.getProperty(FIELD__NAME));
+        }
+    }
 }

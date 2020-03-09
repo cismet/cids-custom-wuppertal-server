@@ -21,9 +21,13 @@ import de.cismet.cids.tools.CustomToStringConverter;
  * @version  $Revision$, $Date$
  */
 public class InfraKitaToStringConverter extends CustomToStringConverter {
+
+    //~ Static fields/initializers ---------------------------------------------
+
     public static final String FIELD__NAME = "name";
-    public static final String FIELD__ADRESSE = "adresse";                               
-    public static final String FIELD__ID = "id"; 
+    public static final String FIELD__ADRESSE = "adresse";
+    public static final String FIELD__ID = "id";
+
     //~ Methods ----------------------------------------------------------------
 
     /**
