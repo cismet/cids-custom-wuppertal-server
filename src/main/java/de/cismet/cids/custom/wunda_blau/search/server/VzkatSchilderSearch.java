@@ -127,6 +127,8 @@ public class VzkatSchilderSearch extends AbstractCidsServerSearch implements Res
             final List<String> wheres = new ArrayList<>();
             final List<String> leftJoins = new ArrayList<>();
 
+            leftJoins.add("vzkat_richtung ON vzkat_richtung.id = vzkat_schild.fk_richtung");
+
             if (standortId != null) {
                 wheres.add("vzkat_schild.fk_standort = " + standortId + "");
             }
@@ -151,24 +153,22 @@ public class VzkatSchilderSearch extends AbstractCidsServerSearch implements Res
                 activeTimestamp = new Timestamp(new Date().getTime());
             }
 
-            wheres.add("("
-                        + "vzkat_schild.gueltig_von IS NOT NULL AND vzkat_schild.gueltig_bis IS NOT NULL AND '"
-                        + activeTimestamp + "' BETWEEN gueltig_von AND gueltig_bis)"
-                        + " OR "
-                        + "vzkat_schild.gueltig_von IS NOT NULL AND '" + activeTimestamp + "' >= gueltig_von"
-                        + " OR "
-                        + "vzkat_schild.gueltig_bis IS NOT NULL AND '" + activeTimestamp + "' <= gueltig_bis"
-                        + " OR "
-                        + "false"
-                        + ")");
+            wheres.add("  ("
+                        + "  vzkat_schild.gueltig_von IS NOT NULL AND vzkat_schild.gueltig_bis IS NOT NULL AND "
+                        + "  '" + activeTimestamp + "' >= gueltig_von AND '" + activeTimestamp + "' <= gueltig_bis "
+                        + ") OR ( "
+                        + "  vzkat_schild.gueltig_von IS NOT NULL AND '" + activeTimestamp + "' >= gueltig_von "
+                        + ") OR ( "
+                        + "  vzkat_schild.gueltig_bis IS NOT NULL AND '" + activeTimestamp + "' <= gueltig_bis "
+                        + ") OR false ");
 
-            final String where = (!wheres.isEmpty()) ? (" WHERE (" + String.join(") AND (", wheres)) : ")";
+            final String where = (!wheres.isEmpty()) ? (" WHERE (" + String.join(") AND (", wheres) + ")") : ")";
             final String leftJoin = (!leftJoins.isEmpty()) ? (" LEFT JOIN " + String.join(" LEFT JOIN ", leftJoins))
                                                            : "";
 
             final String d = SearchFor.STANDORT.equals(searchFor)
                 ? "(SELECT id FROM cs_class WHERE table_name ILIKE 'vzkat_standort') AS class_id, vzkat_schild.fk_standort AS object_id, vzkat_schild.fk_standort::text AS object_name"
-                : "(SELECT id FROM cs_class WHERE table_name ILIKE 'vzkat_schild') AS class_id, vzkat_schild.id AS object_id, vzkat_schild.position AS object_name";
+                : "(SELECT id FROM cs_class WHERE table_name ILIKE 'vzkat_schild') AS class_id, vzkat_schild.id AS object_id, 'Standort ' || vzkat_schild.fk_standort::text || ', ' || vzkat_richtung.schluessel || ' ' || vzkat_schild.reihenfolge AS object_name";
 
             final String query = "SELECT \n"
                         + "	" + d + " "

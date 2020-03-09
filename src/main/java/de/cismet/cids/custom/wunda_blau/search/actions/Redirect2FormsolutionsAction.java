@@ -144,31 +144,25 @@ public class Redirect2FormsolutionsAction implements UserAwareServerAction, Meta
                     final CidsBean bestellungBean = mo.getBean();
 
                     final String transid = (String)bestellungBean.getProperty("transid");
-                    final Double gebuehr = (Double)bestellungBean.getProperty("gebuehr");
+                    final Double gebuehrDownload = (Double)bestellungBean.getProperty("gebuehr");
+                    final Double gebuehrPostweg = gebuehrDownload + 20;
                     final String email = (String)bestellungBean.getProperty("email");
 
-                    final String rechnungFirma = (String)bestellungBean.getProperty(
-                            "fk_adresse_rechnung.firma");
-                    final String rechnungVorname = (String)bestellungBean.getProperty(
-                            "fk_adresse_rechnung.vorname");
+                    final String rechnungFirma = (String)bestellungBean.getProperty("fk_adresse_rechnung.firma");
+                    final String rechnungVorname = (String)bestellungBean.getProperty("fk_adresse_rechnung.vorname");
                     final String rechnungName = (String)bestellungBean.getProperty("fk_adresse_rechnung.name");
-                    final String rechnungStrasse = (String)bestellungBean.getProperty(
-                            "fk_adresse_rechnung.strasse");
+                    final String rechnungStrasse = (String)bestellungBean.getProperty("fk_adresse_rechnung.strasse");
                     final String rechnungHausnummer = (String)bestellungBean.getProperty(
                             "fk_adresse_rechnung.hausnummer");
                     final Integer rechnungPlz = (Integer)bestellungBean.getProperty("fk_adresse_rechnung.plz");
                     final String rechnungOrt = (String)bestellungBean.getProperty("fk_adresse_rechnung.ort");
-                    final String rechnungStaat = (String)bestellungBean.getProperty(
-                            "fk_adresse_rechnung.staat");
+                    final String rechnungStaat = (String)bestellungBean.getProperty("fk_adresse_rechnung.staat");
 
                     final String lieferFirma = (String)bestellungBean.getProperty("fk_adresse_versand.firma");
-                    final String lieferVorname = (String)bestellungBean.getProperty(
-                            "fk_adresse_versand.vorname");
+                    final String lieferVorname = (String)bestellungBean.getProperty("fk_adresse_versand.vorname");
                     final String lieferName = (String)bestellungBean.getProperty("fk_adresse_versand.name");
-                    final String lieferStrasse = (String)bestellungBean.getProperty(
-                            "fk_adresse_versand.strasse");
-                    final String lieferHausnummer = (String)bestellungBean.getProperty(
-                            "fk_adresse_versand.hausnummer");
+                    final String lieferStrasse = (String)bestellungBean.getProperty("fk_adresse_versand.strasse");
+                    final String lieferHausnummer = (String)bestellungBean.getProperty("fk_adresse_versand.hausnummer");
                     final Integer lieferPlz = (Integer)bestellungBean.getProperty("fk_adresse_versand.plz");
                     final String lieferOrt = (String)bestellungBean.getProperty("fk_adresse_versand.ort");
                     final String lieferStaat = (String)bestellungBean.getProperty("fk_adresse_versand.staat");
@@ -178,26 +172,42 @@ public class Redirect2FormsolutionsAction implements UserAwareServerAction, Meta
                     form.put(
                         "Antragsteller.Daten.Flurstueckskennzeichen",
                         (String)bestellungBean.getProperty("landparcelcode"));
-                    form.put("Antragsteller.Daten.betrag", gebuehr);
+                    form.put("Antragsteller.Daten.betrag", gebuehrDownload);
+                    form.put("Antragsteller.Daten.betrag[0]", gebuehrPostweg);
 
                     form.put("Antragsteller.Daten.Email bei Postversand.E-Mailadresse.E-Mailadresse", email);
                     form.put("Antragsteller.Daten.AS_Adresse.AS_Adresse.Adresse.staat.staat", rechnungStaat);
 
+//                    "Antragsteller.Daten.RechnungsanschriftistLieferanschrift";
+//
+//                    "Antragsteller.Daten.AS_Adresse.AS_Adresse.Adresse.AS_Bundesland";
+//                    "Antragsteller.Daten.Alt_Adresse";
+//                    "Antragsteller.Daten.Firma_Abweichende_Lieferanschrift";
+//                    "Antragsteller.Daten.AS_Adresse_Abweichende_Lieferanschrift.AS_Adresse.Adresse.AS_Bundesland";
+//                    "Antragsteller.Daten.Alt_Adresse_Abweichende_Lieferanschrift";
+
                     form.put("Antragsteller.Daten.Firma", rechnungFirma);
                     form.put("Antragsteller.Daten.AS_Name1.AS_Name1.AS_Vorname", rechnungVorname);
                     form.put("Antragsteller.Daten.AS_Name1.AS_Name1.AS_Name", rechnungName);
+
                     form.put("Antragsteller.Daten.Email bei Download.E-Mailadresse", email);
                     form.put("Street", rechnungStrasse);
                     form.put("StreetNumber", rechnungHausnummer);
                     form.put("ZipCode", (rechnungPlz != null) ? Integer.toString(rechnungPlz) : null);
                     form.put("City", rechnungOrt);
 
+                    form.put("Antragsteller.Daten.Email bei Download.E-Mailadresse", email);
+                    form.put("Antragsteller.Daten.AS_Adresse.AS_Adresse.Adresse.AS_Strasse", rechnungStrasse);
+                    form.put("Antragsteller.Daten.AS_Adresse.AS_Adresse.Adresse.AS_Hausnummer", rechnungHausnummer);
+                    form.put(
+                        "Antragsteller.Daten.AS_Adresse.AS_Adresse.Adresse.AS_PLZ",
+                        (rechnungPlz != null) ? Integer.toString(rechnungPlz) : null);
+                    form.put("Antragsteller.Daten.AS_Adresse.AS_Adresse.Adresse.AS_Ort", rechnungOrt);
+
                     form.put(
                         "Antragsteller.Daten.AS_Name1_Abweichende_Lieferanschrift.AS_Name1.AS_Vorname",
                         lieferVorname);
-                    form.put(
-                        "Antragsteller.Daten.AS_Name1_Abweichende_Lieferanschrift.AS_Name1.AS_Name",
-                        lieferName);
+                    form.put("Antragsteller.Daten.AS_Name1_Abweichende_Lieferanschrift.AS_Name1.AS_Name", lieferName);
                     form.put(
                         "Antragsteller.Daten.AS_Adresse_Abweichende_Lieferanschrift.AS_Adresse.Adresse.staat.staat",
                         lieferStaat);
