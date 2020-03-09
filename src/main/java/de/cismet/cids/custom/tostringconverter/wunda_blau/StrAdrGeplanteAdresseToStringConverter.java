@@ -21,10 +21,13 @@ import de.cismet.cids.tools.CustomToStringConverter;
  * @version  $Revision$, $Date$
  */
 public class StrAdrGeplanteAdresseToStringConverter extends CustomToStringConverter {
+
+    //~ Static fields/initializers ---------------------------------------------
+
     public static final String FIELD__NAME = "fk_strasse_id.name";
     public static final String FIELD__ADRESSZUSATZ = "adr_zusatz";
-    public static final String FIELD__HNR = "hausnr";                               
-    public static final String FIELD__ID = "id"; 
+    public static final String FIELD__HNR = "hausnr";
+    public static final String FIELD__ID = "id";
 
     //~ Methods ----------------------------------------------------------------
 
@@ -38,7 +41,7 @@ public class StrAdrGeplanteAdresseToStringConverter extends CustomToStringConver
         final String myname = String.valueOf(cidsBean.getProperty(FIELD__NAME));
         final String hausnr = String.valueOf(cidsBean.getProperty(FIELD__HNR));
         final String adr_zusatz = String.valueOf(cidsBean.getProperty(FIELD__ADRESSZUSATZ));
-        if ( "null".equals(adr_zusatz)) {
+        if ("null".equals(adr_zusatz)) {
             myadress = myname + " " + hausnr;
         } else {
             myadress = myname + " " + hausnr + " " + adr_zusatz.trim();
@@ -48,7 +51,8 @@ public class StrAdrGeplanteAdresseToStringConverter extends CustomToStringConver
     }
 
     @Override
-    public String createString() {final String myid = String.valueOf(cidsBean.getProperty(FIELD__ID));
+    public String createString() {
+        final String myid = String.valueOf(cidsBean.getProperty(FIELD__ID));
         if ("-1".equals(myid)) {
             return "neue Adresse anlegen";
         }

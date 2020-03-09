@@ -21,10 +21,13 @@ import de.cismet.cids.tools.CustomToStringConverter;
  * @version  $Revision$, $Date$
  */
 public class PflegeStFlurstueckeToStringConverter extends CustomToStringConverter {
+
+    //~ Static fields/initializers ---------------------------------------------
+
     public static final String FIELD__STRASSE = "strasse";
-    public static final String FIELD__VON = "von";  
-    public static final String FIELD__BIS = "bis";                               
-    public static final String FIELD__ID = "id"; 
+    public static final String FIELD__VON = "von";
+    public static final String FIELD__BIS = "bis";
+    public static final String FIELD__ID = "id";
 
     //~ Methods ----------------------------------------------------------------
 
@@ -35,18 +38,18 @@ public class PflegeStFlurstueckeToStringConverter extends CustomToStringConverte
      */
     public String myString() {
         String myname;
-        String von;
-        String bis;
+        final String von;
+        final String bis;
         von = String.valueOf(cidsBean.getProperty(FIELD__VON));
         bis = String.valueOf(cidsBean.getProperty(FIELD__BIS));
-        if (("null".equals(von)) && ( "null".equals(bis))) {
+        if (("null".equals(von)) && ("null".equals(bis))) {
             myname = String.valueOf(cidsBean.getProperty(FIELD__STRASSE));
         } else {
             if ("null".equals(von)) {
                 myname = String.valueOf(cidsBean.getProperty(FIELD__STRASSE)) + " ("
                             + String.valueOf(cidsBean.getProperty(FIELD__BIS)) + ")";
             } else {
-                if ( "null".equals(bis)) {
+                if ("null".equals(bis)) {
                     myname = String.valueOf(cidsBean.getProperty(FIELD__STRASSE)) + " ("
                                 + String.valueOf(cidsBean.getProperty(FIELD__VON)) + ")";
                 } else {
@@ -66,7 +69,7 @@ public class PflegeStFlurstueckeToStringConverter extends CustomToStringConverte
          *
          */
 
-       final String myid = String.valueOf(cidsBean.getProperty(FIELD__ID));
+        final String myid = String.valueOf(cidsBean.getProperty(FIELD__ID));
         if ("-1".equals(myid)) {
             return "neue Pflegepfläche anlegen";
         }

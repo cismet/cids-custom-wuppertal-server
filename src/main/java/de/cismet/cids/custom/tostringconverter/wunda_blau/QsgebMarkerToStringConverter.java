@@ -18,8 +18,6 @@ import java.util.Date;
 
 import de.cismet.cids.tools.CustomToStringConverter;
 
-
-
 /**
  * DOCUMENT ME!
  *
@@ -27,10 +25,14 @@ import de.cismet.cids.tools.CustomToStringConverter;
  * @version  $1.0$, $30.05.2018$
  */
 public class QsgebMarkerToStringConverter extends CustomToStringConverter {
+
+    //~ Static fields/initializers ---------------------------------------------
+
     public static final String FIELD__DATUM_ANGELEGT = "datum_angelegt";
     public static final String FIELD__ID = "id";
     public static final String FIELD__LAGE = "lage";
     public static final String FIELD__FLURSTUECK = "flurstueck";
+
     //~ Methods ----------------------------------------------------------------
 
     /**

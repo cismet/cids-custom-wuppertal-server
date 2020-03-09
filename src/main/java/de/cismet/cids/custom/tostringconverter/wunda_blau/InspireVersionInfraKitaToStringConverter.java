@@ -21,9 +21,12 @@ import de.cismet.cids.tools.CustomToStringConverter;
  * @version  $Revision$, $Date$
  */
 public class InspireVersionInfraKitaToStringConverter extends CustomToStringConverter {
+
+    //~ Static fields/initializers ---------------------------------------------
+
     public static final String FIELD__REF = "infra_kita_reference";
-    public static final String FIELD__NR = "versionnr";                               
-    public static final String FIELD__ID = "id"; 
+    public static final String FIELD__NR = "versionnr";
+    public static final String FIELD__ID = "id";
 
     //~ Methods ----------------------------------------------------------------
 

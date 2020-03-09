@@ -61,7 +61,7 @@ public class VzkatUtils {
      * @return  DOCUMENT ME!
      */
     public static String createSchildToString(final CidsBean cidsBean) {
-        final String position = (String)cidsBean.getProperty("position");
+        final String position = (String)cidsBean.getProperty("reihenfolge");
         final String zeichenSchluessel = (String)cidsBean.getProperty("fk_zeichen.schluessel");
         final String stvoName = (String)cidsBean.getProperty("fk_zeichen.fk_stvo.name");
         return String.format("%s: %s (%s)", position, zeichenSchluessel, (stvoName != null) ? stvoName : "?");

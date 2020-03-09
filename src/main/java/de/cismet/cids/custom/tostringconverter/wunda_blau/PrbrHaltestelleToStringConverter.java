@@ -15,15 +15,21 @@ package de.cismet.cids.custom.tostringconverter.wunda_blau;
 import de.cismet.cids.tools.CustomToStringConverter;
 
 /**
+ * DOCUMENT ME!
  *
- * @author sandra
+ * @author   sandra
+ * @version  $Revision$, $Date$
  */
-public class PrbrHaltestelleToStringConverter extends CustomToStringConverter{
-    
-    public static final String FIELD__NAME = "name";                                  
+public class PrbrHaltestelleToStringConverter extends CustomToStringConverter {
+
+    //~ Static fields/initializers ---------------------------------------------
+
+    public static final String FIELD__NAME = "name";
+
+    //~ Methods ----------------------------------------------------------------
+
     @Override
-      public String createString() {
-         
+    public String createString() {
         String myname;
         myname = String.valueOf(cidsBean.getProperty(FIELD__NAME));
         if ("null".equals(myname)) {
@@ -31,5 +37,5 @@ public class PrbrHaltestelleToStringConverter extends CustomToStringConverter{
         }
 
         return myname;
-      }  
+    }
 }
