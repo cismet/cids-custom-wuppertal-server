@@ -27,13 +27,12 @@ public class VzkatUtils {
     public static final String ZEICHEN_TOSTRING_QUERY = ""
                 + "SELECT "
                 + " vzkat_zeichen.*, "
-                + " vzkat_stvo.name AS vzkat_stvo__name, "
-                + " vzkat_stvo.schluessel AS vzkat_stvo__schluessel "
+                + " CASE WHEN vzkat_stvo.id IS NOT NULL THEN vzkat_stvo.name ELSE '?' END AS vzkat_stvo__name "
                 + "FROM "
                 + " vzkat_zeichen "
                 + " LEFT JOIN vzkat_stvo ON vzkat_zeichen.fk_stvo = vzkat_stvo.id "
                 + "%s "
-                + "ORDER BY schluessel";
+                + "ORDER BY schluessel ASC";
     public static final String ZEICHEN_TOSTRING_TEMPLATE = "%s (%s) - %s";
     public static final String[] ZEICHEN_TOSTRING_FIELDS = { "schluessel", "vzkat_stvo__name", "name" };
 
@@ -61,10 +60,13 @@ public class VzkatUtils {
      * @return  DOCUMENT ME!
      */
     public static String createSchildToString(final CidsBean cidsBean) {
-        final String position = (String)cidsBean.getProperty("reihenfolge");
+        final String standort = createStandortToString((CidsBean)cidsBean.getProperty("fk_standort"));
+        final String richtung = (String)cidsBean.getProperty("fk_richtung.name");
+        final Integer position = (Integer)cidsBean.getProperty("reihenfolge");
         final String zeichenSchluessel = (String)cidsBean.getProperty("fk_zeichen.schluessel");
         final String stvoName = (String)cidsBean.getProperty("fk_zeichen.fk_stvo.name");
-        return String.format("%s: %s (%s)", position, zeichenSchluessel, (stvoName != null) ? stvoName : "?");
+
+        return String.format("%s (%s), %s, %s %s", zeichenSchluessel, stvoName, standort, richtung, position);
     }
 
     /**
@@ -75,7 +77,7 @@ public class VzkatUtils {
      * @return  DOCUMENT ME!
      */
     public static String createStandortToString(final CidsBean cidsBean) {
-        final String importId = String.valueOf(cidsBean.getProperty("import_id"));
+        final String importId = "Standort " + String.valueOf(cidsBean.getProperty("import_id"));
         return importId;
     }
 
