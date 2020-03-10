@@ -66,7 +66,13 @@ public class VzkatUtils {
         final String zeichenSchluessel = (String)cidsBean.getProperty("fk_zeichen.schluessel");
         final String stvoName = (String)cidsBean.getProperty("fk_zeichen.fk_stvo.name");
 
-        return String.format("%s (%s), %s, %s %s", zeichenSchluessel, stvoName, standort, richtung, position);
+        return String.format(
+                "%s, %s %s, %s (%s)",
+                standort,
+                richtung,
+                position,
+                zeichenSchluessel,
+                (stvoName != null) ? stvoName : "?");
     }
 
     /**
