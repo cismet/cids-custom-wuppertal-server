@@ -95,8 +95,8 @@ public class VzkatStandortExtensionFactory extends ObjectExtensionFactory implem
              * String url = "jdbc:postgresql://localhost:5432/wunda_demo"; final Connection conn =
              * DriverManager.getConnection(url, "postgres", "x"); final Statement stmnt = conn.createStatement(); final
              * ResultSet rs = stmnt.executeQuery("select leiter from kigaeinrichtung where id="                 +
-             * bean.getProperty("number").toString()); rs.next(); final String s = rs.getString(1); if (s != null) {
-             * val = s; } conn.close();
+             * bean.getProperty("number").toString()); rs.next(); final String s = rs.getString(1); if (s != null) { val
+             * = s; } conn.close();
              *
              * bean.setProperty("firstextensiontest", val + " (" + System.currentTimeMillis() + ")"); } catch (Exception
              * ex) { log.error("Error during extension", ex); }
