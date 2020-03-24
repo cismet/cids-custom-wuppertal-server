@@ -128,6 +128,7 @@ public class VzkatSchilderSearch extends AbstractCidsServerSearch implements Res
             final List<String> leftJoins = new ArrayList<>();
 
             leftJoins.add("vzkat_richtung ON vzkat_richtung.id = vzkat_schild.fk_richtung");
+            leftJoins.add("vzkat_standort ON vzkat_standort.id = vzkat_schild.fk_standort");
 
             if (standortId != null) {
                 wheres.add("vzkat_schild.fk_standort = " + standortId + "");
@@ -145,7 +146,6 @@ public class VzkatSchilderSearch extends AbstractCidsServerSearch implements Res
                             + "GeometryFromText('"
                             + geomString
                             + "')))");
-                leftJoins.add("vzkat_standort ON vzkat_standort.id = vzkat_schild.fk_standort");
                 leftJoins.add("geom ON vzkat_standort.fk_geom = geom.id");
             }
 
@@ -167,8 +167,8 @@ public class VzkatSchilderSearch extends AbstractCidsServerSearch implements Res
                                                            : "";
 
             final String d = SearchFor.STANDORT.equals(searchFor)
-                ? "(SELECT id FROM cs_class WHERE table_name ILIKE 'vzkat_standort') AS class_id, vzkat_schild.fk_standort AS object_id, vzkat_schild.fk_standort::text AS object_name"
-                : "(SELECT id FROM cs_class WHERE table_name ILIKE 'vzkat_schild') AS class_id, vzkat_schild.id AS object_id, 'Standort ' || vzkat_schild.fk_standort::text || ', ' || vzkat_richtung.schluessel || ' ' || vzkat_schild.reihenfolge AS object_name";
+                ? "(SELECT id FROM cs_class WHERE table_name ILIKE 'vzkat_standort') AS class_id, vzkat_schild.fk_standort AS object_id, vzkat_standort.import_id::text AS object_name"
+                : "(SELECT id FROM cs_class WHERE table_name ILIKE 'vzkat_schild') AS class_id, vzkat_schild.id AS object_id, 'Standort ' || vzkat_standort.import_id::text || ', ' || vzkat_richtung.schluessel || ' ' || vzkat_schild.reihenfolge AS object_name";
 
             final String query = "SELECT \n"
                         + "	" + d + " "
