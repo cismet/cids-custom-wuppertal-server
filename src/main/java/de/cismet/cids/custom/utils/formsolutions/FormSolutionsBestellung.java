@@ -158,6 +158,9 @@ public class FormSolutionsBestellung {
     @XmlElement(name = "Firma.1")
     private String firma1;
 
+    @XmlElement(name = "Firma_Abweichende_Lieferanschrift")
+    private String firmaAbweichendeLieferanschrift;
+    
     @XmlElement(name = "AS_Name.1")
     private String asName1;
 

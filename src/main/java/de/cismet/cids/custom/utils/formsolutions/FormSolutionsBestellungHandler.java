@@ -1403,7 +1403,13 @@ public class FormSolutionsBestellungHandler implements ConnectionContextProvider
             adresseVersandBean = adresseRechnungBean;
         } else {
             adresseVersandBean = adresseMc.getEmptyInstance(getConnectionContext()).getBean();
-            adresseVersandBean.setProperty("firma", trimedNotEmpty(formSolutionsBestellung.getFirma1()));
+            
+            adresseVersandBean.setProperty("firma", 
+                ProductType.BAB_ABSCHLUSS.equals(productType) || ProductType.BAB_WEITERLEITUNG.equals(productType) ?
+                trimedNotEmpty(formSolutionsBestellung.getFirmaAbweichendeLieferanschrift()) :
+                trimedNotEmpty(formSolutionsBestellung.getFirma1())
+            );
+            
             adresseVersandBean.setProperty("name", trimedNotEmpty(formSolutionsBestellung.getAsName1()));
             adresseVersandBean.setProperty("vorname", trimedNotEmpty(formSolutionsBestellung.getAsVorname1()));
             adresseVersandBean.setProperty("strasse", trimedNotEmpty(formSolutionsBestellung.getAsStrasse1()));
