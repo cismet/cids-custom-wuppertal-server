@@ -318,7 +318,8 @@ public class FormSolutionsBestellungHandler implements ConnectionContextProvider
 
             final boolean isPostweg = Boolean.TRUE.equals(bestellungBean.getProperty("postweg"));
             final Timestamp abrechnungsdatum = (Timestamp)bestellungBean.getProperty("eingang_ts");
-            final Double gebuehr = (Double)bestellungBean.getProperty("gebuehr");
+            final Double gebuehr = isPostweg ? (Double)bestellungBean.getProperty("gebuehr_postweg")
+                                             : (Double)bestellungBean.getProperty("gebuehr");
             final String projektBezeichnung = ((bestellungBean.getProperty("fk_adresse_rechnung.firma") != null)
                     ? ((String)bestellungBean.getProperty("fk_adresse_rechnung.firma") + ", ") : "")
                         + (String)bestellungBean.getProperty("fk_adresse_rechnung.name") + " "
@@ -1319,9 +1320,156 @@ public class FormSolutionsBestellungHandler implements ConnectionContextProvider
         final MetaClass bestellungMc = getMetaClass("fs_bestellung", getConnectionContext());
         final MetaClass adresseMc = getMetaClass("fs_bestellung_adresse", getConnectionContext());
 
+        // setting Bean properties
+
+        final Integer plz;
+        {
+            Integer tmpPlz = null;
+            try {
+                tmpPlz = Integer.parseInt(formSolutionsBestellung.getAsPlz());
+            } catch (final Exception ex) {
+                LOG.warn("Exception while parsing PLZ", ex);
+            }
+            plz = tmpPlz;
+        }
+
+        final Integer plz1;
+        {
+            Integer tmpPlz1 = null;
+            try {
+                tmpPlz1 = Integer.parseInt(formSolutionsBestellung.getAsPlz1());
+            } catch (final Exception ex) {
+                LOG.warn("Exception while parsing PLZ1", ex);
+            }
+            plz1 = tmpPlz1;
+        }
+
+        final boolean isLieferEqualsRechnungAnschrift = "ja".equalsIgnoreCase(
+                formSolutionsBestellung.getDieRechnungsanschriftAuchDieLieferanschrift())
+                    || "ja".equalsIgnoreCase(formSolutionsBestellung.getRechnungsanschriftistLieferanschrift());
+
         final CidsBean bestellungBean = bestellungMc.getEmptyInstance(getConnectionContext()).getBean();
         final CidsBean adresseRechnungBean = adresseMc.getEmptyInstance(getConnectionContext()).getBean();
-        final CidsBean adresseVersandBean;
+        final CidsBean adresseVersandBean = (isLieferEqualsRechnungAnschrift)
+            ? adresseRechnungBean : adresseMc.getEmptyInstance(getConnectionContext()).getBean();
+
+        // https://github.com/cismet/wupp/issues/1896#issuecomment-603776307
+        final boolean isBaulast = ProductType.BAB_ABSCHLUSS.equals(productType)
+                    || ProductType.BAB_WEITERLEITUNG.equals(productType);
+        final boolean isAdresseAlternativRechnung = formSolutionsBestellung.getAltAdresse() != null;
+        final boolean isAdresseAlternativVersand = (formSolutionsBestellung.getAltAdresseAbweichendeLieferanschrift()
+                        != null) || (formSolutionsBestellung.getAltAdresse1() != null);
+        if (isBaulast && !isAdresseAlternativVersand && !isAdresseAlternativRechnung) {
+            adresseVersandBean.setProperty("firma", trimedNotEmpty(formSolutionsBestellung.getFirmaAbweichendeLieferanschrift()));
+            adresseVersandBean.setProperty("vorname", trimedNotEmpty(formSolutionsBestellung.getAsVorname1()));
+            adresseVersandBean.setProperty("name", trimedNotEmpty(formSolutionsBestellung.getAsName1()));
+            adresseVersandBean.setProperty("alternativ", null);
+            adresseVersandBean.setProperty("strasse", trimedNotEmpty(formSolutionsBestellung.getAsStrasse1()));
+            adresseVersandBean.setProperty("hausnummer", trimedNotEmpty(formSolutionsBestellung.getAsHausnummer1()));
+            adresseVersandBean.setProperty("plz", plz1);
+            adresseVersandBean.setProperty("ort", trimedNotEmpty(formSolutionsBestellung.getAsOrt1()));
+            adresseVersandBean.setProperty("staat", trimedNotEmpty(formSolutionsBestellung.getStaat1()));
+            //
+            adresseRechnungBean.setProperty("firma", trimedNotEmpty(formSolutionsBestellung.getFirma()));
+            adresseRechnungBean.setProperty("vorname", trimedNotEmpty(formSolutionsBestellung.getAsVorname()));
+            adresseRechnungBean.setProperty("name", trimedNotEmpty(formSolutionsBestellung.getAsName()));
+            adresseRechnungBean.setProperty("alternativ", null);
+            adresseRechnungBean.setProperty("strasse", trimedNotEmpty(formSolutionsBestellung.getAsStrasse()));
+            adresseRechnungBean.setProperty("hausnummer", trimedNotEmpty(formSolutionsBestellung.getAsHausnummer()));
+            adresseRechnungBean.setProperty("plz", plz);
+            adresseRechnungBean.setProperty("ort", trimedNotEmpty(formSolutionsBestellung.getAsOrt()));
+            adresseRechnungBean.setProperty("staat", trimedNotEmpty(formSolutionsBestellung.getStaat()));
+        } else if (isBaulast && isAdresseAlternativVersand && !isAdresseAlternativRechnung) {
+            adresseVersandBean.setProperty(
+                "firma",
+                trimedNotEmpty(formSolutionsBestellung.getFirmaAbweichendeLieferanschrift()));
+            adresseVersandBean.setProperty("vorname", trimedNotEmpty(formSolutionsBestellung.getAsVorname1()));
+            adresseVersandBean.setProperty("name", trimedNotEmpty(formSolutionsBestellung.getAsName1()));
+            adresseVersandBean.setProperty(
+                "alternativ",
+                trimedNotEmpty(formSolutionsBestellung.getAltAdresseAbweichendeLieferanschrift()));
+            adresseVersandBean.setProperty("strasse", null);
+            adresseVersandBean.setProperty("hausnummer", null);
+            adresseVersandBean.setProperty("plz", null);
+            adresseVersandBean.setProperty("ort", null);
+            adresseVersandBean.setProperty("staat", trimedNotEmpty(formSolutionsBestellung.getStaat1()));
+            //
+            adresseRechnungBean.setProperty("firma", trimedNotEmpty(formSolutionsBestellung.getFirma()));
+            adresseRechnungBean.setProperty("vorname", trimedNotEmpty(formSolutionsBestellung.getAsVorname()));
+            adresseRechnungBean.setProperty("name", trimedNotEmpty(formSolutionsBestellung.getAsName()));
+            adresseRechnungBean.setProperty("alternativ", null);
+            adresseRechnungBean.setProperty("strasse", trimedNotEmpty(formSolutionsBestellung.getAsStrasse()));
+            adresseRechnungBean.setProperty("hausnummer", trimedNotEmpty(formSolutionsBestellung.getAsHausnummer()));
+            adresseRechnungBean.setProperty("plz", plz);
+            adresseRechnungBean.setProperty("ort", trimedNotEmpty(formSolutionsBestellung.getAsOrt()));
+            adresseRechnungBean.setProperty("staat", trimedNotEmpty(formSolutionsBestellung.getStaat()));
+        } else if (isBaulast && !isAdresseAlternativVersand && isAdresseAlternativRechnung) {
+            adresseVersandBean.setProperty(
+                "firma",
+                trimedNotEmpty(formSolutionsBestellung.getFirmaAbweichendeLieferanschrift()));
+            adresseVersandBean.setProperty("vorname", trimedNotEmpty(formSolutionsBestellung.getAsVorname1()));
+            adresseVersandBean.setProperty("name", trimedNotEmpty(formSolutionsBestellung.getAsName1()));
+            adresseVersandBean.setProperty("alternativ", null);
+            adresseVersandBean.setProperty("strasse", trimedNotEmpty(formSolutionsBestellung.getAsStrasse()));
+            adresseVersandBean.setProperty("hausnummer", trimedNotEmpty(formSolutionsBestellung.getAsHausnummer()));
+            adresseVersandBean.setProperty("plz", plz);
+            adresseVersandBean.setProperty("ort", trimedNotEmpty(formSolutionsBestellung.getAsOrt()));
+            adresseVersandBean.setProperty("staat", trimedNotEmpty(formSolutionsBestellung.getStaat1()));
+            //
+            adresseRechnungBean.setProperty("firma", trimedNotEmpty(formSolutionsBestellung.getFirma()));
+            adresseRechnungBean.setProperty("vorname", trimedNotEmpty(formSolutionsBestellung.getAsVorname()));
+            adresseRechnungBean.setProperty("name", trimedNotEmpty(formSolutionsBestellung.getAsName()));
+            adresseRechnungBean.setProperty("alternativ", trimedNotEmpty(formSolutionsBestellung.getAltAdresse()));
+            adresseRechnungBean.setProperty("strasse", null);
+            adresseRechnungBean.setProperty("hausnummer", null);
+            adresseRechnungBean.setProperty("plz", null);
+            adresseRechnungBean.setProperty("ort", null);
+            adresseRechnungBean.setProperty("staat", trimedNotEmpty(formSolutionsBestellung.getStaat()));
+        } else if (isBaulast && isAdresseAlternativVersand && isAdresseAlternativRechnung) {
+            adresseVersandBean.setProperty(
+                "firma",
+                trimedNotEmpty(formSolutionsBestellung.getFirmaAbweichendeLieferanschrift()));
+            adresseVersandBean.setProperty("vorname", trimedNotEmpty(formSolutionsBestellung.getAsVorname1()));
+            adresseVersandBean.setProperty("name", trimedNotEmpty(formSolutionsBestellung.getAsName1()));
+            adresseVersandBean.setProperty(
+                "alternativ",
+                trimedNotEmpty(formSolutionsBestellung.getAltAdresseAbweichendeLieferanschrift()));
+            adresseVersandBean.setProperty("strasse", null);
+            adresseVersandBean.setProperty("hausnummer", null);
+            adresseVersandBean.setProperty("plz", null);
+            adresseVersandBean.setProperty("ort", null);
+            adresseVersandBean.setProperty("staat", trimedNotEmpty(formSolutionsBestellung.getStaat1()));
+            //
+            adresseRechnungBean.setProperty("firma", trimedNotEmpty(formSolutionsBestellung.getFirma()));
+            adresseRechnungBean.setProperty("vorname", trimedNotEmpty(formSolutionsBestellung.getAsVorname()));
+            adresseRechnungBean.setProperty("name", trimedNotEmpty(formSolutionsBestellung.getAsName()));
+            adresseRechnungBean.setProperty("alternativ", trimedNotEmpty(formSolutionsBestellung.getAltAdresse()));
+            adresseRechnungBean.setProperty("strasse", null);
+            adresseRechnungBean.setProperty("hausnummer", null);
+            adresseRechnungBean.setProperty("plz", null);
+            adresseRechnungBean.setProperty("ort", null);
+            adresseRechnungBean.setProperty("staat", trimedNotEmpty(formSolutionsBestellung.getStaat()));
+        } else if (!isBaulast) {
+            adresseVersandBean.setProperty("firma", trimedNotEmpty(formSolutionsBestellung.getFirma1()));
+            adresseVersandBean.setProperty("vorname", trimedNotEmpty(formSolutionsBestellung.getAsVorname1()));
+            adresseVersandBean.setProperty("name", trimedNotEmpty(formSolutionsBestellung.getAsName1()));
+            adresseVersandBean.setProperty("alternativ", trimedNotEmpty(formSolutionsBestellung.getAltAdresse1()));
+            adresseVersandBean.setProperty("strasse", trimedNotEmpty(formSolutionsBestellung.getAsStrasse1()));
+            adresseVersandBean.setProperty("hausnummer", trimedNotEmpty(formSolutionsBestellung.getAsHausnummer1()));
+            adresseVersandBean.setProperty("plz", plz1);
+            adresseVersandBean.setProperty("ort", trimedNotEmpty(formSolutionsBestellung.getAsOrt1()));
+            adresseVersandBean.setProperty("staat", trimedNotEmpty(formSolutionsBestellung.getStaat1()));
+            //
+            adresseRechnungBean.setProperty("firma", trimedNotEmpty(formSolutionsBestellung.getFirma()));
+            adresseRechnungBean.setProperty("vorname", trimedNotEmpty(formSolutionsBestellung.getAsVorname()));
+            adresseRechnungBean.setProperty("name", trimedNotEmpty(formSolutionsBestellung.getAsName()));
+            adresseRechnungBean.setProperty("alternativ", trimedNotEmpty(formSolutionsBestellung.getAltAdresse()));
+            adresseRechnungBean.setProperty("strasse", trimedNotEmpty(formSolutionsBestellung.getAsStrasse()));
+            adresseRechnungBean.setProperty("hausnummer", trimedNotEmpty(formSolutionsBestellung.getAsHausnummer()));
+            adresseRechnungBean.setProperty("plz", plz);
+            adresseRechnungBean.setProperty("ort", trimedNotEmpty(formSolutionsBestellung.getAsOrt()));
+            adresseRechnungBean.setProperty("staat", trimedNotEmpty(formSolutionsBestellung.getStaat()));
+        }
 
         final String transid = formSolutionsBestellung.getTransId();
 
@@ -1352,74 +1500,14 @@ public class FormSolutionsBestellungHandler implements ConnectionContextProvider
             }
             gebuehr = tmpGebuehr;
         }
-        final boolean isGutschein = ((formSolutionsBestellung.getGutschein() != null)
-                        && (GUTSCHEIN_YES == Integer.parseInt(formSolutionsBestellung.getGutschein())));
-        final String gutscheinCode = isGutschein ? formSolutionsBestellung.getGutscheinCode() : null;
-
-        final boolean isTest = ((gutscheinCode != null) && gutscheinCode.startsWith("T"))
-                    || ((transid != null) && transid.startsWith(TEST_CISMET00_PREFIX));
 
         final String landparcelcode = (nachfolgerVonBean != null)
             ? (String)nachfolgerVonBean.getProperty("landparcelcode") : extractLandparcelcode(formSolutionsBestellung);
-
-        final boolean isLieferEqualsRechnungAnschrift = "ja".equalsIgnoreCase(
-                formSolutionsBestellung.getRechnungsanschriftLieferanschrift());
-
-        final Integer plz1;
-        {
-            Integer tmpPlz1 = null;
-            if (!isLieferEqualsRechnungAnschrift) {
-                try {
-                    tmpPlz1 = Integer.parseInt(formSolutionsBestellung.getAsPlz1());
-                } catch (final Exception ex) {
-                    LOG.warn("Exception while parsing PLZ1", ex);
-                }
-            }
-            plz1 = tmpPlz1;
-        }
-
-        // setting Bean properties
-
-        final CidsBean produktBean = getProduktBean(formSolutionsBestellung, productType);
-
-        adresseRechnungBean.setProperty("firma", trimedNotEmpty(formSolutionsBestellung.getFirma()));
-        adresseRechnungBean.setProperty("name", trimedNotEmpty(formSolutionsBestellung.getAsName()));
-        adresseRechnungBean.setProperty("vorname", trimedNotEmpty(formSolutionsBestellung.getAsVorname()));
-        adresseRechnungBean.setProperty("strasse", trimedNotEmpty(formSolutionsBestellung.getAsStrasse()));
-        adresseRechnungBean.setProperty("hausnummer", trimedNotEmpty(formSolutionsBestellung.getAsHausnummer()));
-        Integer plz;
-        try {
-            plz = Integer.parseInt(formSolutionsBestellung.getAsPlz());
-        } catch (final Exception ex) {
-            LOG.warn("Exception while parsing PLZ", ex);
-            plz = null;
-        }
-        adresseRechnungBean.setProperty("plz", plz);
-        adresseRechnungBean.setProperty("ort", trimedNotEmpty(formSolutionsBestellung.getAsOrt()));
-        adresseRechnungBean.setProperty("staat", trimedNotEmpty(formSolutionsBestellung.getStaat()));
-        adresseRechnungBean.setProperty("alternativ", trimedNotEmpty(formSolutionsBestellung.getAltAdresse()));
-
-        if (isLieferEqualsRechnungAnschrift) {
-            adresseVersandBean = adresseRechnungBean;
-        } else {
-            adresseVersandBean = adresseMc.getEmptyInstance(getConnectionContext()).getBean();
-            
-            adresseVersandBean.setProperty("firma", 
-                ProductType.BAB_ABSCHLUSS.equals(productType) || ProductType.BAB_WEITERLEITUNG.equals(productType) ?
-                trimedNotEmpty(formSolutionsBestellung.getFirmaAbweichendeLieferanschrift()) :
-                trimedNotEmpty(formSolutionsBestellung.getFirma1())
-            );
-            
-            adresseVersandBean.setProperty("name", trimedNotEmpty(formSolutionsBestellung.getAsName1()));
-            adresseVersandBean.setProperty("vorname", trimedNotEmpty(formSolutionsBestellung.getAsVorname1()));
-            adresseVersandBean.setProperty("strasse", trimedNotEmpty(formSolutionsBestellung.getAsStrasse1()));
-            adresseVersandBean.setProperty("hausnummer", trimedNotEmpty(formSolutionsBestellung.getAsHausnummer1()));
-
-            adresseVersandBean.setProperty("plz", plz1);
-            adresseVersandBean.setProperty("ort", trimedNotEmpty(formSolutionsBestellung.getAsOrt1()));
-            adresseVersandBean.setProperty("staat", trimedNotEmpty(formSolutionsBestellung.getStaat1()));
-            adresseVersandBean.setProperty("alternativ", trimedNotEmpty(formSolutionsBestellung.getAltAdresse1()));
-        }
+        final boolean isGutschein = ((formSolutionsBestellung.getGutschein() != null)
+                        && (GUTSCHEIN_YES == Integer.parseInt(formSolutionsBestellung.getGutschein())));
+        final String gutscheinCode = isGutschein ? formSolutionsBestellung.getGutscheinCode() : null;
+        final boolean isTest = ((gutscheinCode != null) && gutscheinCode.startsWith("T"))
+                    || ((transid != null) && transid.startsWith(TEST_CISMET00_PREFIX));
 
         final Boolean postweg;
         if ("Kartenausdruck".equals(formSolutionsBestellung.getBezugsweg())) {      // Karten
@@ -1431,6 +1519,8 @@ public class FormSolutionsBestellungHandler implements ConnectionContextProvider
         } else {
             postweg = null;
         }
+
+        final CidsBean produktBean = getProduktBean(formSolutionsBestellung, productType);
 
         bestellungBean.setProperty("postweg", postweg);
         bestellungBean.setProperty("transid", transid);

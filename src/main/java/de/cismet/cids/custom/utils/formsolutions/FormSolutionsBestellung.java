@@ -153,14 +153,17 @@ public class FormSolutionsBestellung {
     private String altAdresse;
 
     @XmlElement(name = "Die_Rechnungsanschrift_ist_auch_die_Lieferanschrift")
-    private String rechnungsanschriftLieferanschrift;
+    private String dieRechnungsanschriftAuchDieLieferanschrift;
+
+    @XmlElement(name = "RechnungsanschriftistLieferanschrift")
+    private String rechnungsanschriftistLieferanschrift;
 
     @XmlElement(name = "Firma.1")
     private String firma1;
 
     @XmlElement(name = "Firma_Abweichende_Lieferanschrift")
     private String firmaAbweichendeLieferanschrift;
-    
+
     @XmlElement(name = "AS_Name.1")
     private String asName1;
 
@@ -187,6 +190,9 @@ public class FormSolutionsBestellung {
 
     @XmlElement(name = "Alt_Adresse.1")
     private String altAdresse1;
+
+    @XmlElement(name = "Alt_Adresse_Abweichende_Lieferanschrift")
+    private String altAdresseAbweichendeLieferanschrift;
 
     @XmlElement(name = "E-Mailadresse")
     private String eMailadresse;
