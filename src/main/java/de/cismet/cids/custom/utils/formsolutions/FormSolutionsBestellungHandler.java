@@ -89,6 +89,7 @@ import de.cismet.cids.custom.utils.WundaBlauServerResources;
 import de.cismet.cids.custom.utils.alkis.AlkisProductDescription;
 import de.cismet.cids.custom.utils.alkis.BaulastBescheinigungHelper;
 import de.cismet.cids.custom.utils.alkis.ServerAlkisProducts;
+import de.cismet.cids.custom.utils.berechtigungspruefung.BerechtigungspruefungDownloadInfo;
 import de.cismet.cids.custom.utils.berechtigungspruefung.BerechtigungspruefungHandler;
 import de.cismet.cids.custom.utils.berechtigungspruefung.baulastbescheinigung.BerechtigungspruefungBescheinigungDownloadInfo;
 import de.cismet.cids.custom.utils.billing.BillingInfo;
@@ -303,11 +304,14 @@ public class FormSolutionsBestellungHandler implements ConnectionContextProvider
      * DOCUMENT ME!
      *
      * @param   bestellungBean  DOCUMENT ME!
+     * @param   downloadinfo    DOCUMENT ME!
      * @param   transid         DOCUMENT ME!
      *
      * @return  DOCUMENT ME!
      */
-    private CidsBean doBilling(final CidsBean bestellungBean, final String transid) {
+    private CidsBean doBilling(final CidsBean bestellungBean,
+            final BerechtigungspruefungDownloadInfo downloadinfo,
+            final String transid) {
         try {
             final ProductType productType = determineProductType(bestellungBean);
 
@@ -318,7 +322,6 @@ public class FormSolutionsBestellungHandler implements ConnectionContextProvider
 
             final boolean isPostweg = Boolean.TRUE.equals(bestellungBean.getProperty("postweg"));
             final Timestamp abrechnungsdatum = (Timestamp)bestellungBean.getProperty("eingang_ts");
-            final Double gebuehr = (Double)bestellungBean.getProperty("gebuehr");
             final String projektBezeichnung = ((bestellungBean.getProperty("fk_adresse_rechnung.firma") != null)
                     ? ((String)bestellungBean.getProperty("fk_adresse_rechnung.firma") + ", ") : "")
                         + (String)bestellungBean.getProperty("fk_adresse_rechnung.name") + " "
@@ -342,8 +345,13 @@ public class FormSolutionsBestellungHandler implements ConnectionContextProvider
                 }
             }
 
+            final boolean isGutschein = bestellungBean.getProperty("gutschein_code") != null;
             final String modus = getProperties().getBillingModus();
             final String modusbezeichnung = getProperties().getBillingModusbezeichnung();
+            final Double gebuehr = isGutschein
+                ? 0d
+                : (isPostweg ? (Double)bestellungBean.getProperty("gebuehr_postweg")
+                             : (Double)bestellungBean.getProperty("gebuehr"));
             final String verwendungszweck = isPostweg ? getProperties().getBillingVerwendungskeyPostweg()
                                                       : getProperties().getBillingVerwendungszweckDownload();
             final String verwendungskey = isPostweg ? getProperties().getBillingVerwendungskeyPostweg()
@@ -373,6 +381,7 @@ public class FormSolutionsBestellungHandler implements ConnectionContextProvider
             billingBean.setProperty("mwst_satz", 0d);
             billingBean.setProperty("angeschaeftsbuch", Boolean.FALSE);
             billingBean.setProperty("abgerechnet", Boolean.TRUE);
+            billingBean.setProperty("request", (downloadinfo != null) ? MAPPER.writeValueAsString(downloadinfo) : null);
             if ((transid != null) && transid.startsWith(TEST_CISMET00_PREFIX)) {
                 LOG.info("Test-Object would have created this Billing-Entry: " + billingBean.getMOString());
                 return null;
@@ -449,7 +458,7 @@ public class FormSolutionsBestellungHandler implements ConnectionContextProvider
      * @return  DOCUMENT ME!
      */
     public Collection fetchEndExecuteAllOpen() {
-        return fetchEndExecuteAllOpen(false);
+        return fetchEndExecuteAllOpen(true);
     }
 
     /**
@@ -552,6 +561,7 @@ public class FormSolutionsBestellungHandler implements ConnectionContextProvider
         }
 
         Map<String, FormSolutionsBestellung> fsBestellungMap = null;
+        Map<String, BerechtigungspruefungDownloadInfo> downloadInfoMap = null;
 
         switch (startStep) {
             case STATUS_FETCH:
@@ -591,13 +601,13 @@ public class FormSolutionsBestellungHandler implements ConnectionContextProvider
                 }
             }
             case STATUS_PRODUKT: {
-                step7CreateProducts(fsBeanMap);
+                downloadInfoMap = step7CreateProducts(fsBeanMap);
                 if (singleStep) {
                     break;
                 }
             }
             case STATUS_BILLING: {
-                step8Billing(fsBeanMap);
+                step8Billing(fsBeanMap, downloadInfoMap);
                 if (singleStep) {
                     break;
                 }
@@ -693,9 +703,11 @@ public class FormSolutionsBestellungHandler implements ConnectionContextProvider
     /**
      * DOCUMENT ME!
      *
-     * @param  fsBeanMap  DOCUMENT ME!
+     * @param  fsBeanMap        DOCUMENT ME!
+     * @param  downloadInfoMap  DOCUMENT ME!
      */
-    private void step8Billing(final Map<String, CidsBean> fsBeanMap) {
+    private void step8Billing(final Map<String, CidsBean> fsBeanMap,
+            final Map<String, BerechtigungspruefungDownloadInfo> downloadInfoMap) {
         if (fsBeanMap != null) {
             for (final String transid : new ArrayList<>(fsBeanMap.keySet())) {
                 final CidsBean bestellungBean = fsBeanMap.get(transid);
@@ -704,7 +716,10 @@ public class FormSolutionsBestellungHandler implements ConnectionContextProvider
                         if (!Boolean.TRUE.equals(bestellungBean.getProperty("duplicate"))
                                     && (bestellungBean.getProperty("gutschein_code") == null)) {
                             if (bestellungBean.getProperty("fk_billing") == null) {
-                                final CidsBean billingBean = doBilling(bestellungBean, transid);
+                                final CidsBean billingBean = doBilling(
+                                        bestellungBean,
+                                        downloadInfoMap.get(transid),
+                                        transid);
                                 if (billingBean != null) {
                                     bestellungBean.setProperty("fk_billing", billingBean);
                                     getMetaService().updateMetaObject(
@@ -1319,9 +1334,158 @@ public class FormSolutionsBestellungHandler implements ConnectionContextProvider
         final MetaClass bestellungMc = getMetaClass("fs_bestellung", getConnectionContext());
         final MetaClass adresseMc = getMetaClass("fs_bestellung_adresse", getConnectionContext());
 
+        // setting Bean properties
+
+        final Integer plz;
+        {
+            Integer tmpPlz = null;
+            try {
+                tmpPlz = Integer.parseInt(formSolutionsBestellung.getAsPlz());
+            } catch (final Exception ex) {
+                LOG.warn("Exception while parsing PLZ", ex);
+            }
+            plz = tmpPlz;
+        }
+
+        final Integer plz1;
+        {
+            Integer tmpPlz1 = null;
+            try {
+                tmpPlz1 = Integer.parseInt(formSolutionsBestellung.getAsPlz1());
+            } catch (final Exception ex) {
+                LOG.warn("Exception while parsing PLZ1", ex);
+            }
+            plz1 = tmpPlz1;
+        }
+
+        final boolean isLieferEqualsRechnungAnschrift = "ja".equalsIgnoreCase(
+                formSolutionsBestellung.getDieRechnungsanschriftAuchDieLieferanschrift())
+                    || "ja".equalsIgnoreCase(formSolutionsBestellung.getRechnungsanschriftistLieferanschrift());
+
         final CidsBean bestellungBean = bestellungMc.getEmptyInstance(getConnectionContext()).getBean();
         final CidsBean adresseRechnungBean = adresseMc.getEmptyInstance(getConnectionContext()).getBean();
-        final CidsBean adresseVersandBean;
+        final CidsBean adresseVersandBean = (isLieferEqualsRechnungAnschrift)
+            ? adresseRechnungBean : adresseMc.getEmptyInstance(getConnectionContext()).getBean();
+
+        // https://github.com/cismet/wupp/issues/1896#issuecomment-603776307
+        final boolean isBaulast = ProductType.BAB_ABSCHLUSS.equals(productType)
+                    || ProductType.BAB_WEITERLEITUNG.equals(productType);
+        final boolean isAdresseAlternativRechnung = formSolutionsBestellung.getAltAdresse() != null;
+        final boolean isAdresseAlternativVersand = (formSolutionsBestellung.getAltAdresseAbweichendeLieferanschrift()
+                        != null) || (formSolutionsBestellung.getAltAdresse1() != null);
+        if (isBaulast && !isAdresseAlternativVersand && !isAdresseAlternativRechnung) {
+            adresseVersandBean.setProperty(
+                "firma",
+                trimedNotEmpty(formSolutionsBestellung.getFirmaAbweichendeLieferanschrift()));
+            adresseVersandBean.setProperty("vorname", trimedNotEmpty(formSolutionsBestellung.getAsVorname1()));
+            adresseVersandBean.setProperty("name", trimedNotEmpty(formSolutionsBestellung.getAsName1()));
+            adresseVersandBean.setProperty("alternativ", null);
+            adresseVersandBean.setProperty("strasse", trimedNotEmpty(formSolutionsBestellung.getAsStrasse1()));
+            adresseVersandBean.setProperty("hausnummer", trimedNotEmpty(formSolutionsBestellung.getAsHausnummer1()));
+            adresseVersandBean.setProperty("plz", plz1);
+            adresseVersandBean.setProperty("ort", trimedNotEmpty(formSolutionsBestellung.getAsOrt1()));
+            adresseVersandBean.setProperty("staat", trimedNotEmpty(formSolutionsBestellung.getStaat1()));
+            //
+            adresseRechnungBean.setProperty("firma", trimedNotEmpty(formSolutionsBestellung.getFirma()));
+            adresseRechnungBean.setProperty("vorname", trimedNotEmpty(formSolutionsBestellung.getAsVorname()));
+            adresseRechnungBean.setProperty("name", trimedNotEmpty(formSolutionsBestellung.getAsName()));
+            adresseRechnungBean.setProperty("alternativ", null);
+            adresseRechnungBean.setProperty("strasse", trimedNotEmpty(formSolutionsBestellung.getAsStrasse()));
+            adresseRechnungBean.setProperty("hausnummer", trimedNotEmpty(formSolutionsBestellung.getAsHausnummer()));
+            adresseRechnungBean.setProperty("plz", plz);
+            adresseRechnungBean.setProperty("ort", trimedNotEmpty(formSolutionsBestellung.getAsOrt()));
+            adresseRechnungBean.setProperty("staat", trimedNotEmpty(formSolutionsBestellung.getStaat()));
+        } else if (isBaulast && isAdresseAlternativVersand && !isAdresseAlternativRechnung) {
+            adresseVersandBean.setProperty(
+                "firma",
+                trimedNotEmpty(formSolutionsBestellung.getFirmaAbweichendeLieferanschrift()));
+            adresseVersandBean.setProperty("vorname", trimedNotEmpty(formSolutionsBestellung.getAsVorname1()));
+            adresseVersandBean.setProperty("name", trimedNotEmpty(formSolutionsBestellung.getAsName1()));
+            adresseVersandBean.setProperty(
+                "alternativ",
+                trimedNotEmpty(formSolutionsBestellung.getAltAdresseAbweichendeLieferanschrift()));
+            adresseVersandBean.setProperty("strasse", null);
+            adresseVersandBean.setProperty("hausnummer", null);
+            adresseVersandBean.setProperty("plz", null);
+            adresseVersandBean.setProperty("ort", null);
+            adresseVersandBean.setProperty("staat", trimedNotEmpty(formSolutionsBestellung.getStaat1()));
+            //
+            adresseRechnungBean.setProperty("firma", trimedNotEmpty(formSolutionsBestellung.getFirma()));
+            adresseRechnungBean.setProperty("vorname", trimedNotEmpty(formSolutionsBestellung.getAsVorname()));
+            adresseRechnungBean.setProperty("name", trimedNotEmpty(formSolutionsBestellung.getAsName()));
+            adresseRechnungBean.setProperty("alternativ", null);
+            adresseRechnungBean.setProperty("strasse", trimedNotEmpty(formSolutionsBestellung.getAsStrasse()));
+            adresseRechnungBean.setProperty("hausnummer", trimedNotEmpty(formSolutionsBestellung.getAsHausnummer()));
+            adresseRechnungBean.setProperty("plz", plz);
+            adresseRechnungBean.setProperty("ort", trimedNotEmpty(formSolutionsBestellung.getAsOrt()));
+            adresseRechnungBean.setProperty("staat", trimedNotEmpty(formSolutionsBestellung.getStaat()));
+        } else if (isBaulast && !isAdresseAlternativVersand && isAdresseAlternativRechnung) {
+            adresseVersandBean.setProperty(
+                "firma",
+                trimedNotEmpty(formSolutionsBestellung.getFirmaAbweichendeLieferanschrift()));
+            adresseVersandBean.setProperty("vorname", trimedNotEmpty(formSolutionsBestellung.getAsVorname1()));
+            adresseVersandBean.setProperty("name", trimedNotEmpty(formSolutionsBestellung.getAsName1()));
+            adresseVersandBean.setProperty("alternativ", null);
+            adresseVersandBean.setProperty("strasse", trimedNotEmpty(formSolutionsBestellung.getAsStrasse()));
+            adresseVersandBean.setProperty("hausnummer", trimedNotEmpty(formSolutionsBestellung.getAsHausnummer()));
+            adresseVersandBean.setProperty("plz", plz);
+            adresseVersandBean.setProperty("ort", trimedNotEmpty(formSolutionsBestellung.getAsOrt()));
+            adresseVersandBean.setProperty("staat", trimedNotEmpty(formSolutionsBestellung.getStaat1()));
+            //
+            adresseRechnungBean.setProperty("firma", trimedNotEmpty(formSolutionsBestellung.getFirma()));
+            adresseRechnungBean.setProperty("vorname", trimedNotEmpty(formSolutionsBestellung.getAsVorname()));
+            adresseRechnungBean.setProperty("name", trimedNotEmpty(formSolutionsBestellung.getAsName()));
+            adresseRechnungBean.setProperty("alternativ", trimedNotEmpty(formSolutionsBestellung.getAltAdresse()));
+            adresseRechnungBean.setProperty("strasse", null);
+            adresseRechnungBean.setProperty("hausnummer", null);
+            adresseRechnungBean.setProperty("plz", null);
+            adresseRechnungBean.setProperty("ort", null);
+            adresseRechnungBean.setProperty("staat", trimedNotEmpty(formSolutionsBestellung.getStaat()));
+        } else if (isBaulast && isAdresseAlternativVersand && isAdresseAlternativRechnung) {
+            adresseVersandBean.setProperty(
+                "firma",
+                trimedNotEmpty(formSolutionsBestellung.getFirmaAbweichendeLieferanschrift()));
+            adresseVersandBean.setProperty("vorname", trimedNotEmpty(formSolutionsBestellung.getAsVorname1()));
+            adresseVersandBean.setProperty("name", trimedNotEmpty(formSolutionsBestellung.getAsName1()));
+            adresseVersandBean.setProperty(
+                "alternativ",
+                trimedNotEmpty(formSolutionsBestellung.getAltAdresseAbweichendeLieferanschrift()));
+            adresseVersandBean.setProperty("strasse", null);
+            adresseVersandBean.setProperty("hausnummer", null);
+            adresseVersandBean.setProperty("plz", null);
+            adresseVersandBean.setProperty("ort", null);
+            adresseVersandBean.setProperty("staat", trimedNotEmpty(formSolutionsBestellung.getStaat1()));
+            //
+            adresseRechnungBean.setProperty("firma", trimedNotEmpty(formSolutionsBestellung.getFirma()));
+            adresseRechnungBean.setProperty("vorname", trimedNotEmpty(formSolutionsBestellung.getAsVorname()));
+            adresseRechnungBean.setProperty("name", trimedNotEmpty(formSolutionsBestellung.getAsName()));
+            adresseRechnungBean.setProperty("alternativ", trimedNotEmpty(formSolutionsBestellung.getAltAdresse()));
+            adresseRechnungBean.setProperty("strasse", null);
+            adresseRechnungBean.setProperty("hausnummer", null);
+            adresseRechnungBean.setProperty("plz", null);
+            adresseRechnungBean.setProperty("ort", null);
+            adresseRechnungBean.setProperty("staat", trimedNotEmpty(formSolutionsBestellung.getStaat()));
+        } else if (!isBaulast) {
+            adresseVersandBean.setProperty("firma", trimedNotEmpty(formSolutionsBestellung.getFirma1()));
+            adresseVersandBean.setProperty("vorname", trimedNotEmpty(formSolutionsBestellung.getAsVorname1()));
+            adresseVersandBean.setProperty("name", trimedNotEmpty(formSolutionsBestellung.getAsName1()));
+            adresseVersandBean.setProperty("alternativ", trimedNotEmpty(formSolutionsBestellung.getAltAdresse1()));
+            adresseVersandBean.setProperty("strasse", trimedNotEmpty(formSolutionsBestellung.getAsStrasse1()));
+            adresseVersandBean.setProperty("hausnummer", trimedNotEmpty(formSolutionsBestellung.getAsHausnummer1()));
+            adresseVersandBean.setProperty("plz", plz1);
+            adresseVersandBean.setProperty("ort", trimedNotEmpty(formSolutionsBestellung.getAsOrt1()));
+            adresseVersandBean.setProperty("staat", trimedNotEmpty(formSolutionsBestellung.getStaat1()));
+            //
+            adresseRechnungBean.setProperty("firma", trimedNotEmpty(formSolutionsBestellung.getFirma()));
+            adresseRechnungBean.setProperty("vorname", trimedNotEmpty(formSolutionsBestellung.getAsVorname()));
+            adresseRechnungBean.setProperty("name", trimedNotEmpty(formSolutionsBestellung.getAsName()));
+            adresseRechnungBean.setProperty("alternativ", trimedNotEmpty(formSolutionsBestellung.getAltAdresse()));
+            adresseRechnungBean.setProperty("strasse", trimedNotEmpty(formSolutionsBestellung.getAsStrasse()));
+            adresseRechnungBean.setProperty("hausnummer", trimedNotEmpty(formSolutionsBestellung.getAsHausnummer()));
+            adresseRechnungBean.setProperty("plz", plz);
+            adresseRechnungBean.setProperty("ort", trimedNotEmpty(formSolutionsBestellung.getAsOrt()));
+            adresseRechnungBean.setProperty("staat", trimedNotEmpty(formSolutionsBestellung.getStaat()));
+        }
 
         final String transid = formSolutionsBestellung.getTransId();
 
@@ -1342,8 +1506,18 @@ public class FormSolutionsBestellungHandler implements ConnectionContextProvider
             ((formSolutionsBestellung.getMassstab() != null) && formSolutionsBestellung.getMassstab().contains(":"))
             ? Integer.parseInt(formSolutionsBestellung.getMassstab().split(":")[1]) : null;
 
+        final String landparcelcode = (nachfolgerVonBean != null)
+            ? (String)nachfolgerVonBean.getProperty("landparcelcode") : extractLandparcelcode(formSolutionsBestellung);
+        final boolean isGutschein = ((formSolutionsBestellung.getGutschein() != null)
+                        && (GUTSCHEIN_YES == Integer.parseInt(formSolutionsBestellung.getGutschein())));
+        final String gutscheinCode = isGutschein ? formSolutionsBestellung.getGutscheinCode() : null;
+        final boolean isTest = ((gutscheinCode != null) && gutscheinCode.startsWith("T"))
+                    || ((transid != null) && transid.startsWith(TEST_CISMET00_PREFIX));
+
         final Double gebuehr;
-        {
+        if (isGutschein) {
+            gebuehr = 0d;
+        } else {
             Double tmpGebuehr = null;
             try {
                 tmpGebuehr = Double.parseDouble(formSolutionsBestellung.getBetrag().replaceAll(",", "."));
@@ -1351,68 +1525,6 @@ public class FormSolutionsBestellungHandler implements ConnectionContextProvider
                 LOG.warn("Exception while parsing Gebuehr", ex);
             }
             gebuehr = tmpGebuehr;
-        }
-        final boolean isGutschein = ((formSolutionsBestellung.getGutschein() != null)
-                        && (GUTSCHEIN_YES == Integer.parseInt(formSolutionsBestellung.getGutschein())));
-        final String gutscheinCode = isGutschein ? formSolutionsBestellung.getGutscheinCode() : null;
-
-        final boolean isTest = ((gutscheinCode != null) && gutscheinCode.startsWith("T"))
-                    || ((transid != null) && transid.startsWith(TEST_CISMET00_PREFIX));
-
-        final String landparcelcode = (nachfolgerVonBean != null)
-            ? (String)nachfolgerVonBean.getProperty("landparcelcode") : extractLandparcelcode(formSolutionsBestellung);
-
-        final boolean isLieferEqualsRechnungAnschrift = "ja".equalsIgnoreCase(
-                formSolutionsBestellung.getRechnungsanschriftLieferanschrift());
-
-        final Integer plz1;
-        {
-            Integer tmpPlz1 = null;
-            if (!isLieferEqualsRechnungAnschrift) {
-                try {
-                    tmpPlz1 = Integer.parseInt(formSolutionsBestellung.getAsPlz1());
-                } catch (final Exception ex) {
-                    LOG.warn("Exception while parsing PLZ1", ex);
-                }
-            }
-            plz1 = tmpPlz1;
-        }
-
-        // setting Bean properties
-
-        final CidsBean produktBean = getProduktBean(formSolutionsBestellung, productType);
-
-        adresseRechnungBean.setProperty("firma", trimedNotEmpty(formSolutionsBestellung.getFirma()));
-        adresseRechnungBean.setProperty("name", trimedNotEmpty(formSolutionsBestellung.getAsName()));
-        adresseRechnungBean.setProperty("vorname", trimedNotEmpty(formSolutionsBestellung.getAsVorname()));
-        adresseRechnungBean.setProperty("strasse", trimedNotEmpty(formSolutionsBestellung.getAsStrasse()));
-        adresseRechnungBean.setProperty("hausnummer", trimedNotEmpty(formSolutionsBestellung.getAsHausnummer()));
-        Integer plz;
-        try {
-            plz = Integer.parseInt(formSolutionsBestellung.getAsPlz());
-        } catch (final Exception ex) {
-            LOG.warn("Exception while parsing PLZ", ex);
-            plz = null;
-        }
-        adresseRechnungBean.setProperty("plz", plz);
-        adresseRechnungBean.setProperty("ort", trimedNotEmpty(formSolutionsBestellung.getAsOrt()));
-        adresseRechnungBean.setProperty("staat", trimedNotEmpty(formSolutionsBestellung.getStaat()));
-        adresseRechnungBean.setProperty("alternativ", trimedNotEmpty(formSolutionsBestellung.getAltAdresse()));
-
-        if (isLieferEqualsRechnungAnschrift) {
-            adresseVersandBean = adresseRechnungBean;
-        } else {
-            adresseVersandBean = adresseMc.getEmptyInstance(getConnectionContext()).getBean();
-            adresseVersandBean.setProperty("firma", trimedNotEmpty(formSolutionsBestellung.getFirma1()));
-            adresseVersandBean.setProperty("name", trimedNotEmpty(formSolutionsBestellung.getAsName1()));
-            adresseVersandBean.setProperty("vorname", trimedNotEmpty(formSolutionsBestellung.getAsVorname1()));
-            adresseVersandBean.setProperty("strasse", trimedNotEmpty(formSolutionsBestellung.getAsStrasse1()));
-            adresseVersandBean.setProperty("hausnummer", trimedNotEmpty(formSolutionsBestellung.getAsHausnummer1()));
-
-            adresseVersandBean.setProperty("plz", plz1);
-            adresseVersandBean.setProperty("ort", trimedNotEmpty(formSolutionsBestellung.getAsOrt1()));
-            adresseVersandBean.setProperty("staat", trimedNotEmpty(formSolutionsBestellung.getStaat1()));
-            adresseVersandBean.setProperty("alternativ", trimedNotEmpty(formSolutionsBestellung.getAltAdresse1()));
         }
 
         final Boolean postweg;
@@ -1425,6 +1537,8 @@ public class FormSolutionsBestellungHandler implements ConnectionContextProvider
         } else {
             postweg = null;
         }
+
+        final CidsBean produktBean = getProduktBean(formSolutionsBestellung, productType);
 
         bestellungBean.setProperty("postweg", postweg);
         bestellungBean.setProperty("transid", transid);
@@ -1625,7 +1739,9 @@ public class FormSolutionsBestellungHandler implements ConnectionContextProvider
             final Geometry geom = (Geometry)bestellungBean.getProperty("geometrie.geo_field");
             final Point center = geom.getEnvelope().getCentroid();
 
-            final String gutscheincodeAdditionalText = (bestellungBean.getProperty("gutschein_code") != null)
+            final boolean isGutschein = bestellungBean.getProperty("gutschein_code") != null;
+
+            final String gutscheincodeAdditionalText = isGutschein
                 ? String.format(GUTSCHEIN_ADDITIONAL_TEXT, bestellungBean.getProperty("gutschein_code")) : null;
 
             final URL url = ServerAlkisProducts.getInstance()
@@ -2184,11 +2300,18 @@ public class FormSolutionsBestellungHandler implements ConnectionContextProvider
                     + "\n"
                     + bestellungBean.getProperty("transid"));
 
-        final float gebuehr = (bestellungBean.getProperty("gebuehr") != null)
-            ? ((Double)bestellungBean.getProperty("gebuehr")).floatValue() : 0f;
-        parameters.put("RECHNUNG_GES_BETRAG", gebuehr);
-        parameters.put("RECHNUNG_EINZELPREIS", gebuehr);
-        parameters.put("RECHNUNG_GESAMMTPREIS", gebuehr);
+        final boolean isPostweg = Boolean.TRUE.equals(bestellungBean.getProperty("postweg"));
+        final boolean isGutschein = bestellungBean.getProperty("gutschein_code") != null;
+
+        final Double gebuehr = (Double)(isGutschein
+                ? 0
+                : (isPostweg ? bestellungBean.getProperty("gebuehr_postweg") : bestellungBean.getProperty("gebuehr")));
+
+        final float gebuehrFloat = (gebuehr != null) ? gebuehr.floatValue() : 0f;
+
+        parameters.put("RECHNUNG_GES_BETRAG", gebuehrFloat);
+        parameters.put("RECHNUNG_EINZELPREIS", gebuehrFloat);
+        parameters.put("RECHNUNG_GESAMMTPREIS", gebuehrFloat);
         parameters.put(
             "RECHNUNG_BERECH_GRUNDLAGE",
             ProductType.BAB_ABSCHLUSS.equals(productType) ? getProperties().getRechnungBerechnugsgGrundlageBaulasten()
@@ -2261,16 +2384,19 @@ public class FormSolutionsBestellungHandler implements ConnectionContextProvider
                                     protocolBuffer,
                                     statusHolder);
 
-                            final boolean isPostweg = Boolean.TRUE.equals(bestellungBean.getProperty("postweg"));
-                            final String verwendungskey = isPostweg
-                                ? getProperties().getBillingVerwendungskeyPostweg()
-                                : getProperties().getBillingVerwendungskeyDownload();
+                            final String verwendungskeyDownload = getProperties().getBillingVerwendungskeyDownload();
+                            final String verwendungskeyPostweg = getProperties().getBillingVerwendungskeyPostweg();
+                            final String productKeyDownload = getProperties().getBillingProduktkeyBBDownload();
+                            final String productKeyPostweg = getProperties().getBillingProduktkeyBBPostweg();
 
-                            final String productKey = (String)bestellungBean.getProperty("fk_produkt.billing_key");
+                            final boolean isGutschein = bestellungBean.getProperty("gutschein_code") != null;
+                            final Double gebuehr = isGutschein
+                                ? 0 : calculateBabGebuehr(productKeyDownload, verwendungskeyDownload, downloadInfo);
+                            final Double gebuehrPostweg = isGutschein
+                                ? 0 : calculateBabGebuehr(productKeyPostweg, verwendungskeyPostweg, downloadInfo);
 
-                            final Double gebuehr = (bestellungBean.getProperty("gutschein_code") != null)
-                                ? calculateBabGebuehr(productKey, verwendungskey, downloadInfo) : 0;
                             bestellungBean.setProperty("gebuehr", gebuehr);
+                            bestellungBean.setProperty("gebuehr_postweg", gebuehrPostweg);
 
                             final FormSolutionsBestellung formSolutionBestellung = fsBestellungMap.get(transid);
 
@@ -2396,9 +2522,12 @@ public class FormSolutionsBestellungHandler implements ConnectionContextProvider
     /**
      * DOCUMENT ME!
      *
-     * @param  fsBeanMap  DOCUMENT ME!
+     * @param   fsBeanMap  DOCUMENT ME!
+     *
+     * @return  DOCUMENT ME!
      */
-    private void step7CreateProducts(final Map<String, CidsBean> fsBeanMap) {
+    private Map<String, BerechtigungspruefungDownloadInfo> step7CreateProducts(final Map<String, CidsBean> fsBeanMap) {
+        final Map<String, BerechtigungspruefungDownloadInfo> downloadInfoMap = new HashMap<>();
         if (fsBeanMap != null) {
             final Collection<String> transids = new ArrayList<>(fsBeanMap.keySet());
             for (final String transid : transids) {
@@ -2535,6 +2664,7 @@ public class FormSolutionsBestellungHandler implements ConnectionContextProvider
                                     if (!getProperties().isDeleteTmpProductAfterSuccessfulUploadDisabled()) {
                                         tmpFile.delete();
                                     }
+                                    downloadInfoMap.put(transid, downloadInfo);
 
                                     getMySqlHelper().insertOrUpdateProduct(
                                         transid,
@@ -2564,6 +2694,7 @@ public class FormSolutionsBestellungHandler implements ConnectionContextProvider
                 }
             }
         }
+        return downloadInfoMap;
     }
 
     /**

@@ -258,6 +258,10 @@ public final class ServerAlkisProducts extends AlkisProducts {
             final String auftragsNr,
             final boolean moreThanOneParcel,
             final String fertigungsVermerk) throws MalformedURLException {
+        final boolean nachverarbeitung = !"WUP.KOM.FFF.01".equals(produkt)
+                    && !"WUP.KOM.FFF.02".equals(produkt)
+                    && !"WUP.KOM.FFS.01".equals(produkt)
+                    && !"WUP.KOM.FFS.02".equals(produkt);
         final StringBuilder url = new StringBuilder(ServerAlkisConf.getInstance().getLiegenschaftskarteService());
         url.append("?landparcel=").append(parcelCode);
         url.append("&product=").append(produkt);
@@ -273,7 +277,7 @@ public final class ServerAlkisProducts extends AlkisProducts {
         if (moreThanOneParcel) {
             url.append("&additionalLandparcel=true");
         }
-        url.append(getIdentification()).append(getMore());
+        url.append(getIdentification()).append(nachverarbeitung ? getMore() : getLess());
         final String fabricationNotices = generateFabricationNotices(fertigungsVermerk);
         if ((massstabMin != null) && (massstabMax != null)) {
             url.append("&scale=");
@@ -331,5 +335,14 @@ public final class ServerAlkisProducts extends AlkisProducts {
                     .append("&script=")
                     .append(ServerAlkisProducts.getInstance().getNachverarbeitungScript())
                     .toString();
+    }
+
+    /**
+     * DOCUMENT ME!
+     *
+     * @return  DOCUMENT ME!
+     */
+    private String getLess() {
+        return new StringBuffer("&service=").append(ServerAlkisConf.getInstance().getService()).toString();
     }
 }

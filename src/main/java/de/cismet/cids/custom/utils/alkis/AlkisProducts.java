@@ -120,7 +120,6 @@ public abstract class AlkisProducts {
 
     //~ Instance fields --------------------------------------------------------
 
-    private final Map<String, Point> alkisFormats;
     private final List<AlkisProductDescription> alkisMapProducts;
     private final String nachverarbeitungScript;
 
@@ -150,7 +149,6 @@ public abstract class AlkisProducts {
 
         final List<AlkisProductDescription> mapProducts = new ArrayList<>();
         final Map<String, Point> formatMap = new HashMap<>();
-        alkisFormats = Collections.unmodifiableMap(formatMap);
         alkisMapProducts = Collections.unmodifiableList(mapProducts);
         nachverarbeitungScript = productProperties.getProperty("NACHVERARBEITUNG_SCRIPT");
         productMap.put(Type.FLURSTUECKSNACHWEIS_PDF, productProperties.getProperty("FLURSTUECKSNACHWEIS_PDF"));
@@ -312,15 +310,6 @@ public abstract class AlkisProducts {
     }
 
     //~ Methods ----------------------------------------------------------------
-
-    /**
-     * DOCUMENT ME!
-     *
-     * @return  DOCUMENT ME!
-     */
-    public Map<String, Point> getAlkisFormats() {
-        return alkisFormats;
-    }
 
     /**
      * DOCUMENT ME!
