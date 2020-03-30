@@ -17,7 +17,6 @@ import Sirius.server.middleware.types.MetaObject;
 import Sirius.server.middleware.types.MetaObjectNode;
 import Sirius.server.newuser.User;
 
-
 import org.apache.commons.io.IOUtils;
 
 import java.io.InputStream;
