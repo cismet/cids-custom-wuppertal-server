@@ -2384,14 +2384,16 @@ public class FormSolutionsBestellungHandler implements ConnectionContextProvider
                                     protocolBuffer,
                                     statusHolder);
 
-                            final String verwendungskey = getProperties().getBillingVerwendungskeyDownload();
+                            final String verwendungskeyDownload = getProperties().getBillingVerwendungskeyDownload();
                             final String verwendungskeyPostweg = getProperties().getBillingVerwendungskeyPostweg();
-                            final String productKey = (String)bestellungBean.getProperty("fk_produkt.billing_key");
+                            final String productKeyDownload = getProperties().getBillingProduktkeyBBDownload();
+                            final String productKeyPostweg = getProperties().getBillingProduktkeyBBPostweg();
+
                             final boolean isGutschein = bestellungBean.getProperty("gutschein_code") != null;
                             final Double gebuehr = isGutschein
-                                ? 0 : calculateBabGebuehr(productKey, verwendungskey, downloadInfo);
+                                ? 0 : calculateBabGebuehr(productKeyDownload, verwendungskeyDownload, downloadInfo);
                             final Double gebuehrPostweg = isGutschein
-                                ? 0 : calculateBabGebuehr(productKey, verwendungskeyPostweg, downloadInfo);
+                                ? 0 : calculateBabGebuehr(productKeyPostweg, verwendungskeyPostweg, downloadInfo);
 
                             bestellungBean.setProperty("gebuehr", gebuehr);
                             bestellungBean.setProperty("gebuehr_postweg", gebuehrPostweg);

@@ -70,6 +70,8 @@ public class FormSolutionsProperties {
     private final String billingVerwendungszweckPostweg;
     private final String billingVerwendungskeyDownload;
     private final String billingVerwendungskeyPostweg;
+    private final String billingProduktkeyBBDownload;
+    private final String billingProduktkeyBBPostweg;
     private final String rechnungAuftragsartKarte;
     private final String rechnungAuftragsartBaulasten;
     private final String rechnungBerechnugsgGrundlageKarte;
@@ -125,6 +127,8 @@ public class FormSolutionsProperties {
         billingVerwendungszweckPostweg = properties.getProperty("BILLING_VERWENDUNGSZWECK_POSTWEG");
         billingVerwendungskeyDownload = properties.getProperty("BILLING_VERWENDUNGSKEY_DOWNLOAD");
         billingVerwendungskeyPostweg = properties.getProperty("BILLING_VERWENDUNGSKEY_POSTWEG");
+        billingProduktkeyBBDownload = properties.getProperty("BILLING_PRODUKTKEY_BB_DOWNLOAD");
+        billingProduktkeyBBPostweg = properties.getProperty("BILLING_PRODUKTKEY_BB_POSTWEG");
         mysqlDisabled = Boolean.valueOf(properties.getProperty("MYSQL_DISABLED"));
         rechnungAuftragsartKarte = properties.getProperty("RECHNUNG_AUFTRAGSART_KARTE");
         rechnungAuftragsartBaulasten = properties.getProperty("RECHNUNG_AUFTRAGSART_BAULASTEN");
