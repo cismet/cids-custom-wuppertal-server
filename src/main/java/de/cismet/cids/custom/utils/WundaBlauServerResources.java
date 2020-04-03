@@ -87,7 +87,9 @@ public enum WundaBlauServerResources {
     ORBIT_SETTINGS_PROPERTIES(new TextServerResource("/orbit/settings.properties")),
 
     EMOB_CONF_PROPERTIES(new TextServerResource("/emob/emob_conf.properties")),
-    PRBR_CONF_PROPERTIES(new TextServerResource("/prbr/prbr_conf.properties"));
+    PRBR_CONF_PROPERTIES(new TextServerResource("/prbr/prbr_conf.properties")),
+
+    VZKAT_PROPERTIES(new TextServerResource("/vzkat/vzkat.properties"));
 
     //~ Instance fields --------------------------------------------------------
 
