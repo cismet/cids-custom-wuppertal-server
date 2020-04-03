@@ -154,12 +154,14 @@ public class VzkatSchilderSearch extends AbstractCidsServerSearch implements Res
             }
 
             wheres.add("  ("
-                        + "  vzkat_schild.gueltig_von IS NOT NULL AND vzkat_schild.gueltig_bis IS NOT NULL AND "
-                        + "  '" + activeTimestamp + "' >= gueltig_von AND '" + activeTimestamp + "' <= gueltig_bis "
+                        + "  vzkat_schild.gueltig_von IS NOT NULL AND vzkat_schild.gueltig_bis IS NOT NULL AND '"
+                        + activeTimestamp + "' >= gueltig_von AND '" + activeTimestamp + "' <= gueltig_bis "
                         + ") OR ( "
-                        + "  vzkat_schild.gueltig_von IS NOT NULL AND '" + activeTimestamp + "' >= gueltig_von "
+                        + "  vzkat_schild.gueltig_von IS NOT NULL AND vzkat_schild.gueltig_bis IS     NULL AND '"
+                        + activeTimestamp + "' >= gueltig_von "
                         + ") OR ( "
-                        + "  vzkat_schild.gueltig_bis IS NOT NULL AND '" + activeTimestamp + "' <= gueltig_bis "
+                        + "  vzkat_schild.gueltig_von IS     NULL AND vzkat_schild.gueltig_bis IS NOT NULL AND '"
+                        + activeTimestamp + "' <= gueltig_bis "
                         + ") OR false ");
 
             final String where = (!wheres.isEmpty()) ? (" WHERE (" + String.join(") AND (", wheres) + ")") : ")";
