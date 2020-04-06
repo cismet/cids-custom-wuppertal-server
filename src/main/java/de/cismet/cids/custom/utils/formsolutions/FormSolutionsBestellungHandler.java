@@ -1339,10 +1339,12 @@ public class FormSolutionsBestellungHandler implements ConnectionContextProvider
         final Integer plz;
         {
             Integer tmpPlz = null;
-            try {
-                tmpPlz = Integer.parseInt(formSolutionsBestellung.getAsPlz());
-            } catch (final Exception ex) {
-                LOG.warn("Exception while parsing PLZ", ex);
+            if (formSolutionsBestellung.getAsPlz() != null) {
+                try {
+                    tmpPlz = Integer.parseInt(formSolutionsBestellung.getAsPlz());
+                } catch (final Exception ex) {
+                    LOG.warn("Exception while parsing PLZ", ex);
+                }
             }
             plz = tmpPlz;
         }
@@ -1350,10 +1352,12 @@ public class FormSolutionsBestellungHandler implements ConnectionContextProvider
         final Integer plz1;
         {
             Integer tmpPlz1 = null;
-            try {
-                tmpPlz1 = Integer.parseInt(formSolutionsBestellung.getAsPlz1());
-            } catch (final Exception ex) {
-                LOG.warn("Exception while parsing PLZ1", ex);
+            if (formSolutionsBestellung.getAsPlz1() != null) {
+                try {
+                    tmpPlz1 = Integer.parseInt(formSolutionsBestellung.getAsPlz1());
+                } catch (final Exception ex) {
+                    LOG.warn("Exception while parsing PLZ1", ex);
+                }
             }
             plz1 = tmpPlz1;
         }
@@ -2303,9 +2307,10 @@ public class FormSolutionsBestellungHandler implements ConnectionContextProvider
         final boolean isPostweg = Boolean.TRUE.equals(bestellungBean.getProperty("postweg"));
         final boolean isGutschein = bestellungBean.getProperty("gutschein_code") != null;
 
-        final Double gebuehr = (Double)(isGutschein
-                ? 0
-                : (isPostweg ? bestellungBean.getProperty("gebuehr_postweg") : bestellungBean.getProperty("gebuehr")));
+        final Double gebuehr = (isGutschein
+                ? 0d
+                : (isPostweg ? (Double)bestellungBean.getProperty("gebuehr_postweg")
+                             : (Double)bestellungBean.getProperty("gebuehr")));
 
         final float gebuehrFloat = (gebuehr != null) ? gebuehr.floatValue() : 0f;
 
@@ -2390,10 +2395,10 @@ public class FormSolutionsBestellungHandler implements ConnectionContextProvider
                             final String productKeyPostweg = getProperties().getBillingProduktkeyBBPostweg();
 
                             final boolean isGutschein = bestellungBean.getProperty("gutschein_code") != null;
-                            final Double gebuehr = isGutschein
-                                ? 0 : calculateBabGebuehr(productKeyDownload, verwendungskeyDownload, downloadInfo);
+                            final double gebuehr = isGutschein
+                                ? 0d : calculateBabGebuehr(productKeyDownload, verwendungskeyDownload, downloadInfo);
                             final Double gebuehrPostweg = isGutschein
-                                ? 0 : calculateBabGebuehr(productKeyPostweg, verwendungskeyPostweg, downloadInfo);
+                                ? 0d : calculateBabGebuehr(productKeyPostweg, verwendungskeyPostweg, downloadInfo);
 
                             bestellungBean.setProperty("gebuehr", gebuehr);
                             bestellungBean.setProperty("gebuehr_postweg", gebuehrPostweg);
