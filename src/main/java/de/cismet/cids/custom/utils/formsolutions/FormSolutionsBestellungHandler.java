@@ -313,8 +313,6 @@ public class FormSolutionsBestellungHandler implements ConnectionContextProvider
             final BerechtigungspruefungDownloadInfo downloadinfo,
             final String transid) {
         try {
-            final ProductType productType = determineProductType(bestellungBean);
-
             final CidsBean billingBean = CidsBean.createNewCidsBeanFromTableName(
                     "WUNDA_BLAU",
                     "Billing_Billing",
@@ -326,32 +324,11 @@ public class FormSolutionsBestellungHandler implements ConnectionContextProvider
                     ? ((String)bestellungBean.getProperty("fk_adresse_rechnung.firma") + ", ") : "")
                         + (String)bestellungBean.getProperty("fk_adresse_rechnung.name") + " "
                         + (String)bestellungBean.getProperty("fk_adresse_rechnung.vorname");
-            final String request_url = (String)bestellungBean.getProperty("request_url");
 
-            final String kunde_login;
-            switch (productType) {
-                case ABK:
-                case SGK: {
-                    kunde_login = getProperties().getBillingKundeLoginKarte();
-                }
-                break;
-                case BAB_ABSCHLUSS: {
-                    kunde_login = getProperties().getBillingKundeLoginBB();
-                }
-                break;
-                default: {
-                    // should not be possible
-                    kunde_login = null;
-                }
-            }
-
-            final boolean isGutschein = bestellungBean.getProperty("gutschein_code") != null;
+            final String kundeLogin = extractKundenLogin(bestellungBean);
             final String modus = getProperties().getBillingModus();
             final String modusbezeichnung = getProperties().getBillingModusbezeichnung();
-            final Double gebuehr = isGutschein
-                ? 0d
-                : (isPostweg ? (Double)bestellungBean.getProperty("gebuehr_postweg")
-                             : (Double)bestellungBean.getProperty("gebuehr"));
+            final Double gebuehr = extractGebuehr(bestellungBean);
             final String verwendungszweck = isPostweg ? getProperties().getBillingVerwendungskeyPostweg()
                                                       : getProperties().getBillingVerwendungszweckDownload();
             final String verwendungskey = isPostweg ? getProperties().getBillingVerwendungskeyPostweg()
@@ -359,13 +336,12 @@ public class FormSolutionsBestellungHandler implements ConnectionContextProvider
             final String produktkey = (String)bestellungBean.getProperty("fk_produkt.billing_key");
             final String produktbezeichnung = (String)bestellungBean.getProperty("fk_produkt.billing_desc");
 
-            billingBean.setProperty("request", request_url);
             billingBean.setProperty(
                 "geometrie",
                 (CidsBean)bestellungBean.getProperty("geometrie"));
 
-            billingBean.setProperty("username", kunde_login);
-            billingBean.setProperty("angelegt_durch", getExternalUser(kunde_login));
+            billingBean.setProperty("username", kundeLogin);
+            billingBean.setProperty("angelegt_durch", getExternalUser(kundeLogin));
             billingBean.setProperty("ts", abrechnungsdatum);
             billingBean.setProperty("abrechnungsdatum", abrechnungsdatum);
             billingBean.setProperty("modus", modus);
@@ -381,7 +357,10 @@ public class FormSolutionsBestellungHandler implements ConnectionContextProvider
             billingBean.setProperty("mwst_satz", 0d);
             billingBean.setProperty("angeschaeftsbuch", Boolean.FALSE);
             billingBean.setProperty("abgerechnet", Boolean.TRUE);
-            billingBean.setProperty("request", (downloadinfo != null) ? MAPPER.writeValueAsString(downloadinfo) : null);
+            billingBean.setProperty(
+                "request",
+                (downloadinfo != null) ? MAPPER.writeValueAsString(downloadinfo)
+                                       : (String)bestellungBean.getProperty("request_url"));
             if ((transid != null) && transid.startsWith(TEST_CISMET00_PREFIX)) {
                 LOG.info("Test-Object would have created this Billing-Entry: " + billingBean.getMOString());
                 return null;
@@ -718,7 +697,7 @@ public class FormSolutionsBestellungHandler implements ConnectionContextProvider
                             if (bestellungBean.getProperty("fk_billing") == null) {
                                 final CidsBean billingBean = doBilling(
                                         bestellungBean,
-                                        downloadInfoMap.get(transid),
+                                        (downloadInfoMap != null) ? downloadInfoMap.get(transid) : null,
                                         transid);
                                 if (billingBean != null) {
                                     bestellungBean.setProperty("fk_billing", billingBean);
@@ -2213,6 +2192,76 @@ public class FormSolutionsBestellungHandler implements ConnectionContextProvider
      * @param   bestellungBean  DOCUMENT ME!
      *
      * @return  DOCUMENT ME!
+     */
+    private String extractKundenLogin(final CidsBean bestellungBean) {
+        if (bestellungBean == null) {
+            return null;
+        }
+
+        final ProductType productType = determineProductType(bestellungBean);
+        if (productType == null) {
+            return null;
+        }
+
+        switch (productType) {
+            case ABK:
+            case SGK: {
+                return getProperties().getBillingKundeLoginKarte();
+            }
+            case BAB_ABSCHLUSS: {
+                return getProperties().getBillingKundeLoginBB();
+            }
+            default: {
+                // should not be possible
+                return null;
+            }
+        }
+    }
+
+    /**
+     * DOCUMENT ME!
+     *
+     * @param   bestellungBean  DOCUMENT ME!
+     *
+     * @return  DOCUMENT ME!
+     */
+    private Double extractGebuehr(final CidsBean bestellungBean) {
+        if (bestellungBean == null) {
+            return null;
+        }
+
+        if (bestellungBean.getProperty("gutschein_code") != null) { // gutschein
+            return 0d;
+        }
+
+        final ProductType productType = determineProductType(bestellungBean);
+        if (productType == null) {
+            return null;
+        }
+
+        switch (productType) {
+            case ABK:
+            case SGK: {
+                return (Double)bestellungBean.getProperty("gebuehr");
+            }
+            case BAB_ABSCHLUSS: {
+                final boolean isPostweg = Boolean.TRUE.equals(bestellungBean.getProperty("postweg"));
+                return (isPostweg ? (Double)bestellungBean.getProperty("gebuehr_postweg")
+                                  : (Double)bestellungBean.getProperty("gebuehr"));
+            }
+            default: {
+                // should not be possible
+                return null;
+            }
+        }
+    }
+
+    /**
+     * DOCUMENT ME!
+     *
+     * @param   bestellungBean  DOCUMENT ME!
+     *
+     * @return  DOCUMENT ME!
      *
      * @throws  Exception  DOCUMENT ME!
      */
@@ -2304,14 +2353,7 @@ public class FormSolutionsBestellungHandler implements ConnectionContextProvider
                     + "\n"
                     + bestellungBean.getProperty("transid"));
 
-        final boolean isPostweg = Boolean.TRUE.equals(bestellungBean.getProperty("postweg"));
-        final boolean isGutschein = bestellungBean.getProperty("gutschein_code") != null;
-
-        final Double gebuehr = (isGutschein
-                ? 0d
-                : (isPostweg ? (Double)bestellungBean.getProperty("gebuehr_postweg")
-                             : (Double)bestellungBean.getProperty("gebuehr")));
-
+        final Double gebuehr = extractGebuehr(bestellungBean);
         final float gebuehrFloat = (gebuehr != null) ? gebuehr.floatValue() : 0f;
 
         parameters.put("RECHNUNG_GES_BETRAG", gebuehrFloat);
