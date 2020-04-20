@@ -2229,31 +2229,10 @@ public class FormSolutionsBestellungHandler implements ConnectionContextProvider
         if (bestellungBean == null) {
             return null;
         }
-
         if (bestellungBean.getProperty("gutschein_code") != null) { // gutschein
             return 0d;
         }
-
-        final ProductType productType = determineProductType(bestellungBean);
-        if (productType == null) {
-            return null;
-        }
-
-        switch (productType) {
-            case ABK:
-            case SGK: {
-                return (Double)bestellungBean.getProperty("gebuehr");
-            }
-            case BAB_ABSCHLUSS: {
-                final boolean isPostweg = Boolean.TRUE.equals(bestellungBean.getProperty("postweg"));
-                return (isPostweg ? (Double)bestellungBean.getProperty("gebuehr_postweg")
-                                  : (Double)bestellungBean.getProperty("gebuehr"));
-            }
-            default: {
-                // should not be possible
-                return null;
-            }
-        }
+        return (Double)bestellungBean.getProperty("gebuehr");
     }
 
     /**
