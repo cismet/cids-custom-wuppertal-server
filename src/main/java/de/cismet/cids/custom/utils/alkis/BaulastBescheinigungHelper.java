@@ -772,6 +772,7 @@ public class BaulastBescheinigungHelper {
                         bescheinigungsGruppeInfo,
                         downloadInfo.getAuftragsnummer(),
                         downloadInfo.getProduktbezeichnung(),
+                        downloadInfo.getBescheinigungsInfo().getDatum(),
                         downloadInfo.getFertigungsVermerk(),
                         ++number,
                         zipOut);
@@ -845,6 +846,7 @@ public class BaulastBescheinigungHelper {
      * @param   bescheinigungsGruppeInfo  DOCUMENT ME!
      * @param   auftragsNummer            DOCUMENT ME!
      * @param   projectName               DOCUMENT ME!
+     * @param   fertigungsDatum           DOCUMENT ME!
      * @param   fertigungsVermerk         DOCUMENT ME!
      * @param   number                    DOCUMENT ME!
      * @param   zipOut                    DOCUMENT ME!
@@ -855,6 +857,7 @@ public class BaulastBescheinigungHelper {
     private void writeBescheinigungReport(final BerechtigungspruefungBescheinigungGruppeInfo bescheinigungsGruppeInfo,
             final String auftragsNummer,
             final String projectName,
+            final Date fertigungsDatum,
             final String fertigungsVermerk,
             final int number,
             final ZipOutputStream zipOut) throws JsonProcessingException, IOException {
@@ -866,7 +869,7 @@ public class BaulastBescheinigungHelper {
                     new ObjectMapper().writeValueAsString(bescheinigungsGruppeInfo)),
                 new ServerActionParameter<>(
                     BaulastBescheinigungReportServerAction.Parameter.FABRICATION_DATE.toString(),
-                    new Date().getTime()),
+                    ((fertigungsDatum != null) ? fertigungsDatum : new Date()).getTime()),
                 new ServerActionParameter<>(
                     BaulastBescheinigungReportServerAction.Parameter.FERTIGUNGS_VERMERK.toString(),
                     fertigungsVermerk),
