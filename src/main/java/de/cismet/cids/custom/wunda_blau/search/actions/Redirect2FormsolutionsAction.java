@@ -153,8 +153,8 @@ public class Redirect2FormsolutionsAction implements UserAwareServerAction, Meta
                         "Antragsteller.Daten.Flurstueckskennzeichen",
                         (String)bestellungBean.getProperty("landparcelcode"));
 
-                    form.put("Antragsteller.Daten.betrag", gebuehrDownload);
-                    form.put("Antragsteller.Daten.betrag[0]", gebuehrPostweg);
+                    form.put("Antragsteller.Daten.betragDL", gebuehrDownload);
+                    form.put("Antragsteller.Daten.betragPost", gebuehrPostweg);
 
                     form.put("Antragsteller.Daten.Email bei Postversand.E-Mailadresse.E-Mailadresse", email);
                     form.put("Antragsteller.Daten.Email bei Download.E-Mailadresse", email);
