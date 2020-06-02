@@ -25,7 +25,7 @@ public class EmobradSteckerToStringConverter extends CustomToStringConverter {
     //~ Static fields/initializers ---------------------------------------------
 
     public static final String FIELD__SCHLUESSEL = "schluessel"; // emob_stecker
-    public static final String FIELD__ID = "id";     // emob_stecer
+    public static final String FIELD__ID = "id";                 // emob_stecer
 
     //~ Methods ----------------------------------------------------------------
 

@@ -25,7 +25,7 @@ public class EmobrentStationToStringConverter extends CustomToStringConverter {
     //~ Static fields/initializers ---------------------------------------------
 
     public static final String FIELD__NAME = "station"; // emobrent_station
-    public static final String FIELD__ID = "id";         // emobrent_station
+    public static final String FIELD__ID = "id";        // emobrent_station
 
     //~ Methods ----------------------------------------------------------------
 
