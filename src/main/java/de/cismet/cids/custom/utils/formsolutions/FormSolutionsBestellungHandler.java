@@ -437,7 +437,7 @@ public class FormSolutionsBestellungHandler implements ConnectionContextProvider
      * @return  DOCUMENT ME!
      */
     public Collection fetchEndExecuteAllOpen() {
-        return fetchEndExecuteAllOpen(true);
+        return fetchEndExecuteAllOpen(false);
     }
 
     /**
@@ -2599,7 +2599,7 @@ public class FormSolutionsBestellungHandler implements ConnectionContextProvider
                                     transid,
                                     STATUS_PRODUKT,
                                     (String)bestellungBean.getProperty("landparcelcode"),
-                                    (String)bestellungBean.getProperty("fk_product.fk_typ.name"),
+                                    (String)bestellungBean.getProperty("fk_produkt.fk_typ.name"),
                                     (Boolean)bestellungBean.getProperty("postweg"),
                                     (String)bestellungBean.getProperty("email"),
                                     null,
