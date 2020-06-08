@@ -691,35 +691,43 @@ public class FormSolutionsBestellungHandler implements ConnectionContextProvider
             for (final String transid : new ArrayList<>(fsBeanMap.keySet())) {
                 final CidsBean bestellungBean = fsBeanMap.get(transid);
                 if (bestellungBean != null) {
-                    try {
-                        if (!Boolean.TRUE.equals(bestellungBean.getProperty("duplicate"))
-                                    && (bestellungBean.getProperty("gutschein_code") == null)) {
-                            if (bestellungBean.getProperty("fk_billing") == null) {
-                                final CidsBean billingBean = doBilling(
-                                        bestellungBean,
-                                        (downloadInfoMap != null) ? downloadInfoMap.get(transid) : null,
-                                        transid);
-                                if (billingBean != null) {
-                                    bestellungBean.setProperty("fk_billing", billingBean);
-                                    getMetaService().updateMetaObject(
-                                        getUser(),
-                                        bestellungBean.getMetaObject(),
-                                        getConnectionContext());
+                    final ProductType productType = determineProductType(bestellungBean);
+                    switch (productType) {
+                        case SGK:
+                        case ABK:
+                        case BAB_ABSCHLUSS: {
+                            try {
+                                if (!Boolean.TRUE.equals(bestellungBean.getProperty("duplicate"))
+                                            && (bestellungBean.getProperty("gutschein_code") == null)) {
+                                    if (bestellungBean.getProperty("fk_billing") == null) {
+                                        final CidsBean billingBean = doBilling(
+                                                bestellungBean,
+                                                (downloadInfoMap != null) ? downloadInfoMap.get(transid) : null,
+                                                transid);
+                                        if (billingBean != null) {
+                                            bestellungBean.setProperty("fk_billing", billingBean);
+                                            getMetaService().updateMetaObject(
+                                                getUser(),
+                                                bestellungBean.getMetaObject(),
+                                                getConnectionContext());
+                                        }
+                                    }
                                 }
+                            } catch (final Exception ex) {
+                                setErrorStatus(
+                                    transid,
+                                    STATUS_BILLING,
+                                    bestellungBean,
+                                    "Fehler beim Erzeugen des Billings",
+                                    ex);
                             }
                         }
-                    } catch (final Exception ex) {
-                        setErrorStatus(
-                            transid,
-                            STATUS_BILLING,
-                            bestellungBean,
-                            "Fehler beim Erzeugen des Billings",
-                            ex);
                     }
                 }
             }
         }
     }
+    
     /**
      * DOCUMENT ME!
      *
