@@ -61,7 +61,7 @@
             <dependency>
                 <groupId>de.cismet.commons</groupId>
                 <artifactId>cismet-commons</artifactId>
-                <version>6.5.3</version>
+                <version>6.5.5</version>
                 <type>jar</type>
                 <scope>compile</scope>
             </dependency>
@@ -361,6 +361,12 @@
             <scope>compile</scope>
             <type>jar</type>
         </dependency>
+<!--        <dependency>
+            <groupId>de.cismet.verdis</groupId>
+            <artifactId>verdis-server</artifactId>
+            <version>6.11-SNAPSHOT</version>
+            <scope>runtime</scope>
+        </dependency>-->
     </dependencies>
 
     <build>
