@@ -291,7 +291,8 @@ public class BaulastBescheinigungHelper {
             for (final MetaObjectNode mon : mons) {
                 final MetaObject mo = getMetaObject(mon.getObjectId(), mon.getClassId());
                 if ((mo.getBean() != null) && (mo.getBean() != null)
-                            && (mo.getBean().getProperty("loeschungsdatum") != null)) {
+                            && ((mo.getBean().getProperty("loeschungsdatum") != null)
+                                || (mo.getBean().getProperty("geschlossen_am") != null))) {
                     continue;
                 }
                 if (mon.getName().startsWith("indirekt: ")) {
