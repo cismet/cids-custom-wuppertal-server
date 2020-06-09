@@ -18,14 +18,10 @@ import Sirius.server.middleware.interfaces.domainserver.MetaService;
 import Sirius.server.middleware.types.MetaObject;
 import Sirius.server.middleware.types.MetaObjectNode;
 import Sirius.server.newuser.User;
-import Sirius.server.newuser.UserServer;
-
-import java.rmi.Naming;
 
 import java.util.Arrays;
 
 import de.cismet.cids.custom.utils.formsolutions.FormSolutionsBestellungHandler;
-import de.cismet.cids.custom.utils.formsolutions.FormSolutionsProperties;
 
 import de.cismet.connectioncontext.ConnectionContext;
 import de.cismet.connectioncontext.ConnectionContextStore;
@@ -114,15 +110,7 @@ public class FormSolutionBestellungStartupHook implements DomainServerStartupHoo
                             }
                         }
                         setMetaService(metaService);
-
-                        final Object userServer = Naming.lookup("rmi://localhost/userServer");
-                        setUser(
-                            ((UserServer)userServer).getUser(
-                                null,
-                                null,
-                                "WUNDA_BLAU",
-                                FormSolutionsProperties.getInstance().getCidsLogin(),
-                                FormSolutionsProperties.getInstance().getCidsPassword()));
+                        setUser(FormSolutionsBestellungHandler.getFsUser());
 
                         final FormSolutionsBestellungHandler handler = new FormSolutionsBestellungHandler(
                                 true,
