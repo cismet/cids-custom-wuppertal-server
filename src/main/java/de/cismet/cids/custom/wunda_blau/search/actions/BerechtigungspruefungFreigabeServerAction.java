@@ -166,9 +166,9 @@ public class BerechtigungspruefungFreigabeServerAction implements UserAwareServe
                         final BerechtigungspruefungBillingDownloadInfo billingDownloadinfo =
                             (BerechtigungspruefungBillingDownloadInfo)downloadInfo;
                         final Integer billingId = billingDownloadinfo.getBillingId();
-                        final CidsBean billingBean = BerechtigungspruefungHandler.getInstance()
-                                    .loadBillingBean(getUser(), billingId);
                         if (billingId != null) {
+                            final CidsBean billingBean = BerechtigungspruefungHandler.getInstance()
+                                        .loadBillingBean(getUser(), billingId);
                             if (pruefStatus) {
                                 billingBean.setProperty("request", pruefungBean.getProperty("downloadinfo_json"));
                                 getMetaService().updateMetaObject(
