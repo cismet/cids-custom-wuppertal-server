@@ -122,6 +122,9 @@ public class FormSolutionsBestellung {
     @XmlElement(name = "betrag")
     private String betrag;
 
+    @XmlElement(name = "betragDL")
+    private String betragDL;
+
     @XmlElement(name = "Firma")
     private String firma;
 

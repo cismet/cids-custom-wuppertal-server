@@ -18,6 +18,7 @@ import Sirius.server.middleware.types.MetaClass;
 import Sirius.server.middleware.types.MetaObject;
 import Sirius.server.middleware.types.MetaObjectNode;
 import Sirius.server.newuser.User;
+import Sirius.server.newuser.UserServer;
 
 import com.fasterxml.jackson.core.type.TypeReference;
 import com.fasterxml.jackson.databind.ObjectMapper;
@@ -60,6 +61,7 @@ import java.nio.ByteBuffer;
 import java.nio.CharBuffer;
 import java.nio.charset.Charset;
 
+import java.rmi.Naming;
 import java.rmi.RemoteException;
 
 import java.sql.Timestamp;
@@ -436,6 +438,26 @@ public class FormSolutionsBestellungHandler implements ConnectionContextProvider
      *
      * @return  DOCUMENT ME!
      */
+    public static User getFsUser() {
+        try {
+            final Object userServer = Naming.lookup("rmi://localhost/userServer");
+            return ((UserServer)userServer).getUser(
+                    null,
+                    null,
+                    "WUNDA_BLAU",
+                    FormSolutionsProperties.getInstance().getCidsLogin(),
+                    FormSolutionsProperties.getInstance().getCidsPassword());
+        } catch (final Exception ex) {
+            LOG.error(ex, ex);
+            return null;
+        }
+    }
+
+    /**
+     * DOCUMENT ME!
+     *
+     * @return  DOCUMENT ME!
+     */
     public Collection fetchEndExecuteAllOpen() {
         return fetchEndExecuteAllOpen(false);
     }
@@ -690,7 +712,7 @@ public class FormSolutionsBestellungHandler implements ConnectionContextProvider
         if (fsBeanMap != null) {
             for (final String transid : new ArrayList<>(fsBeanMap.keySet())) {
                 final CidsBean bestellungBean = fsBeanMap.get(transid);
-                if (bestellungBean != null) {
+                if ((bestellungBean != null) && (bestellungBean.getProperty("fehler") == null)) {
                     final ProductType productType = determineProductType(bestellungBean);
                     switch (productType) {
                         case SGK:
@@ -727,7 +749,7 @@ public class FormSolutionsBestellungHandler implements ConnectionContextProvider
             }
         }
     }
-    
+
     /**
      * DOCUMENT ME!
      *
@@ -1505,19 +1527,6 @@ public class FormSolutionsBestellungHandler implements ConnectionContextProvider
         final boolean isTest = ((gutscheinCode != null) && gutscheinCode.startsWith("T"))
                     || ((transid != null) && transid.startsWith(TEST_CISMET00_PREFIX));
 
-        final Double gebuehr;
-        if (isGutschein) {
-            gebuehr = 0d;
-        } else {
-            Double tmpGebuehr = null;
-            try {
-                tmpGebuehr = Double.parseDouble(formSolutionsBestellung.getBetrag().replaceAll(",", "."));
-            } catch (final Exception ex) {
-                LOG.warn("Exception while parsing Gebuehr", ex);
-            }
-            gebuehr = tmpGebuehr;
-        }
-
         final Boolean postweg;
         if ("Kartenausdruck".equals(formSolutionsBestellung.getBezugsweg())) {      // Karten
             postweg = Boolean.TRUE;
@@ -1527,6 +1536,23 @@ public class FormSolutionsBestellungHandler implements ConnectionContextProvider
             postweg = Boolean.FALSE;
         } else {
             postweg = null;
+        }
+
+        final Double gebuehr;
+        if (isGutschein) {
+            gebuehr = 0d;
+        } else {
+            Double tmpGebuehr = null;
+            try {
+                tmpGebuehr = Double.parseDouble(
+                        ((ProductType.BAB_ABSCHLUSS.equals(productType) && Boolean.FALSE.equals(postweg))
+                            ? formSolutionsBestellung.getBetragDL() : formSolutionsBestellung.getBetrag()).replaceAll(
+                            ",",
+                            "."));
+            } catch (final Exception ex) {
+                LOG.warn("Exception while parsing Gebuehr", ex);
+            }
+            gebuehr = tmpGebuehr;
         }
 
         final CidsBean produktBean = getProduktBean(formSolutionsBestellung, productType);
@@ -2628,7 +2654,9 @@ public class FormSolutionsBestellungHandler implements ConnectionContextProvider
                                                 redirectorUrlTemplate,
                                                 transidHash);
 
-                                        bestellungBean.setProperty("request_url", new URL(redirect2formsolutions));
+                                        bestellungBean.setProperty(
+                                            "request_url",
+                                            new URL(redirect2formsolutions).toExternalForm());
                                         bestellungBean.setProperty("produkt_ts", new Timestamp(new Date().getTime()));
                                         getMetaService().updateMetaObject(
                                             getUser(),
@@ -2672,12 +2700,19 @@ public class FormSolutionsBestellungHandler implements ConnectionContextProvider
                                             "berechtigungspruefung");
                                     final String downloadinfoJson = (String)berechtigungspruefung.getProperty(
                                             "downloadinfo_json");
+                                    bestellungBean.setProperty("request_url", downloadinfoJson);
                                     bestellungBean.setProperty(
                                         "berechtigungspruefung",
                                         vorgaengerBestellungBean.getProperty("berechtigungspruefung"));
                                     getMetaService().updateMetaObject(
                                         getUser(),
                                         bestellungBean.getMetaObject(),
+                                        getConnectionContext());
+
+                                    vorgaengerBestellungBean.setProperty("erledigt", Boolean.TRUE);
+                                    getMetaService().updateMetaObject(
+                                        getUser(),
+                                        vorgaengerBestellungBean.getMetaObject(),
                                         getConnectionContext());
 
                                     final String fileNameOrig = "baulastbescheinigung.zip";

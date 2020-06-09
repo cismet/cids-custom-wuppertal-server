@@ -535,24 +535,21 @@ public class BerechtigungspruefungHandler implements ConnectionContextStore {
      * @param   id    DOCUMENT ME!
      *
      * @return  DOCUMENT ME!
+     *
+     * @throws  Exception  DOCUMENT ME!
      */
-    public CidsBean loadBillingBean(final User user, final Integer id) {
-        try {
-            final MetaClass mcBillingBilling = CidsBean.getMetaClassFromTableName(
-                    "WUNDA_BLAU",
-                    "billing_billing",
-                    getConnectionContext());
+    public CidsBean loadBillingBean(final User user, final int id) throws Exception {
+        final MetaClass mcBillingBilling = CidsBean.getMetaClassFromTableName(
+                "WUNDA_BLAU",
+                "billing_billing",
+                getConnectionContext());
 
-            final MetaObject mo = metaService.getMetaObject(
-                    user,
-                    id,
-                    mcBillingBilling.getID(),
-                    getConnectionContext());
-            return mo.getBean();
-        } catch (final Exception ex) {
-            LOG.error("error while loading billing_billing bean", ex);
-        }
-        return null;
+        final MetaObject mo = metaService.getMetaObject(
+                user,
+                id,
+                mcBillingBilling.getID(),
+                getConnectionContext());
+        return mo.getBean();
     }
 
     /**
