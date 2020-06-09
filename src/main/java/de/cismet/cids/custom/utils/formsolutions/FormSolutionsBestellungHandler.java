@@ -2159,7 +2159,9 @@ public class FormSolutionsBestellungHandler implements ConnectionContextProvider
                 if ((bestellungBean != null)) {
                     try {
                         specialLog("closing transaction for: " + transid);
-                        final boolean closeVeto = true;
+                        final boolean closeVeto = (transid == null) || transid.startsWith(TEST_CISMET00_PREFIX)
+                                    || DomainServerImpl.getServerInstance()
+                                    .hasConfigAttr(getUser(), "custom.formsolutions.noclose", getConnectionContext());
                         if (!closeVeto) {
                             getHttpAccessHandler().doRequest(
                                 new URL(String.format(getProperties().getUrlAuftragDeleteFs(), transid)),
