@@ -13,6 +13,8 @@ import Sirius.server.middleware.types.MetaObjectNode;
 import lombok.Getter;
 import lombok.Setter;
 
+import okhttp3.HttpUrl;
+
 import org.apache.log4j.Logger;
 
 import java.util.ArrayList;
@@ -81,8 +83,10 @@ public class FormSolutionsBestellungSearch extends AbstractCidsServerSearch impl
                         FormSolutionsProperties.getInstance().getTransidHashpepper()),
                     getTransidHash());
             }
+
             if (getRequestUrl() != null) {
-                filter.put("fs_bestellung.request_url", getRequestUrl());
+                final String cacheId = HttpUrl.parse(getRequestUrl()).queryParameter("cacheID");
+                filter.put("fs_bestellung_cacheid.cache_id", cacheId);
             }
             final Collection<String> filterStrings = new ArrayList<>();
             for (final Map.Entry<String, Object> entry : filter.entrySet()) {
@@ -92,7 +96,9 @@ public class FormSolutionsBestellungSearch extends AbstractCidsServerSearch impl
             }
             final String query =
                 "SELECT (SELECT c.id FROM cs_class c WHERE table_name ilike 'fs_bestellung') AS class_id, fs_bestellung.id, max(fs_bestellung.transid) AS name "
-                        + "FROM fs_bestellung LEFT JOIN berechtigungspruefung ON fs_bestellung.berechtigungspruefung = berechtigungspruefung.id "
+                        + "FROM fs_bestellung "
+                        + "LEFT JOIN berechtigungspruefung ON fs_bestellung.berechtigungspruefung = berechtigungspruefung.id "
+                        + "LEFT JOIN fs_bestellung_cacheid ON fs_bestellung_cacheid.fk_bestellung = fs_bestellung.id "
                         + "WHERE "
                         + String.join(" AND ", filterStrings)
                         + " "

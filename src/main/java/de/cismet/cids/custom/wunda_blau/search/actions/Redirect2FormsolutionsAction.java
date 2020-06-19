@@ -244,7 +244,12 @@ public class Redirect2FormsolutionsAction implements UserAwareServerAction, Meta
                                     .getRedirectionFormat(),
                             cacheID);
 
-                    bestellungBean.setProperty("request_url", redirectionLink);
+                    final CidsBean cacheIdBean = CidsBean.createNewCidsBeanFromTableName(
+                            "WUNDA_BLAU",
+                            "fs_bestellung_cacheid",
+                            getConnectionContext());
+                    cacheIdBean.setProperty("cache_id", cacheID);
+                    bestellungBean.getBeanCollectionProperty("n_cacheids").add(cacheIdBean);
                     getMetaService().updateMetaObject(
                         getUser(),
                         bestellungBean.getMetaObject(),
