@@ -13,7 +13,7 @@
 
     <groupId>de.cismet.cids.custom.wupp.server</groupId>
     <artifactId>cids-custom-server-wuppertal</artifactId>
-    <version>6.20.17</version>
+    <version>6.20.18</version>
     <packaging>jar</packaging>
     
     <name>${names.cids.custom-wuppertal-server} [${project.version}]</name>
@@ -23,7 +23,7 @@
         <connection>https://github.com/cismet/cids-custom-wuppertal-server.git</connection>
         <developerConnection>scm:git:git@github.com:cismet/cids-custom-wuppertal-server.git</developerConnection>
         <url>https://github.com/cismet/cids-custom-wuppertal-server</url>
-        <tag>v6.20.17</tag>
+        <tag>v6.20.18</tag>
     </scm>
 
     <properties>
@@ -256,6 +256,13 @@
             <artifactId>commons-codec</artifactId>
             <scope>compile</scope>
             <type>jar</type>
+        </dependency>        
+        <dependency>
+            <groupId>com.squareup.okhttp3</groupId>
+            <artifactId>okhttp</artifactId>
+            <scope>compile</scope>
+            <type>jar</type>
+            <version>3.8.1</version>
         </dependency>        
         <!-- END: managed dependencies -->
         
