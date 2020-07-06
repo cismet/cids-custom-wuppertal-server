@@ -51,13 +51,13 @@ public class PointNumberReserverationServerAction implements UserAwareServerActi
      *
      * @version  $Revision$, $Date$
      */
-    public enum ACTION_TYPE {
+    public enum Action {
 
         //~ Enum constants -----------------------------------------------------
 
         // PROLONG_RESERVATION should be renamed to DO_COMPLETION, because it is what it realy does.
-        GET_ALL_RESERVATIONS, IS_ANTRAG_EXISTING, DO_RESERVATION, PROLONG_RESERVATION, GET_POINT_NUMBERS, DO_STORNO,
-        DO_PROLONG
+        GET_ALL_RESERVATIONS, IS_ANTRAG_EXISTING, DO_RESERVATION, DO_ADDITION, GET_POINT_NUMBERS, DO_STORNO,
+        DO_PROLONGATION
     }
 
     /**
@@ -65,7 +65,7 @@ public class PointNumberReserverationServerAction implements UserAwareServerActi
      *
      * @version  $Revision$, $Date$
      */
-    public enum PARAMETER_TYPE {
+    public enum Parameter {
 
         //~ Enum constants -----------------------------------------------------
 
@@ -238,7 +238,7 @@ public class PointNumberReserverationServerAction implements UserAwareServerActi
      */
     private PointNumberReservationRequest doVerlaengern(final String aPrefix,
             final String aNummer,
-            final Collection<Integer> ps,
+            final Collection<Long> ps,
             final Date date) {
         final String anr = aPrefix + ANR_SEPERATOR + aNummer;
         if (!isAuftragsNummerValid(anr)) {
@@ -260,7 +260,7 @@ public class PointNumberReserverationServerAction implements UserAwareServerActi
 
     @Override
     public Object execute(final Object body, final ServerActionParameter... params) {
-        ACTION_TYPE method = null;
+        Action method = null;
         String prefix = null;
         String auftragsNummer = null;
         String nbz = null;
@@ -269,75 +269,100 @@ public class PointNumberReserverationServerAction implements UserAwareServerActi
         int on1 = 0;
         int on2 = 0;
         Date prolongDate = null;
-        final Collection<Integer> pointnumbers = new ArrayList<Integer>();
+        final Collection<Long> pointnumbers = new ArrayList<>();
         for (final ServerActionParameter sap : params) {
-            if (sap.getKey().equals(PARAMETER_TYPE.ACTION.toString())) {
-                method = (ACTION_TYPE)sap.getValue();
-            } else if (sap.getKey().equals(PARAMETER_TYPE.AUFTRAG_NUMMER.toString())) {
+            if (sap.getKey().equals(Parameter.ACTION.toString())) {
+                method = (Action)sap.getValue();
+            } else if (sap.getKey().equals(Parameter.AUFTRAG_NUMMER.toString())) {
                 auftragsNummer = (String)sap.getValue();
-            } else if (sap.getKey().equals(PARAMETER_TYPE.PREFIX.toString())) {
+            } else if (sap.getKey().equals(Parameter.PREFIX.toString())) {
                 prefix = (String)sap.getValue();
-            } else if (sap.getKey().equals(PARAMETER_TYPE.NBZ.toString())) {
+            } else if (sap.getKey().equals(Parameter.NBZ.toString())) {
                 nbz = (String)sap.getValue();
-            } else if (sap.getKey().equals(PARAMETER_TYPE.ANZAHL.toString())) {
+            } else if (sap.getKey().equals(Parameter.ANZAHL.toString())) {
                 anzahl = (Integer)sap.getValue();
-            } else if (sap.getKey().equals(PARAMETER_TYPE.STARTWERT.toString())) {
+            } else if (sap.getKey().equals(Parameter.STARTWERT.toString())) {
                 startwert = (Integer)sap.getValue();
-            } else if (sap.getKey().equals(PARAMETER_TYPE.ON1.toString())) {
+            } else if (sap.getKey().equals(Parameter.ON1.toString())) {
                 on1 = (Integer)sap.getValue();
-            } else if (sap.getKey().equals(PARAMETER_TYPE.ON2.toString())) {
+            } else if (sap.getKey().equals(Parameter.ON2.toString())) {
                 on2 = (Integer)sap.getValue();
-            } else if (sap.getKey().equals(PARAMETER_TYPE.POINT_NUMBER.toString())) {
-                pointnumbers.add((Integer)sap.getValue());
-            } else if (sap.getKey().equals(PARAMETER_TYPE.PROLONG_DATE.toString())) {
+            } else if (sap.getKey().equals(Parameter.POINT_NUMBER.toString())) {
+                pointnumbers.add((Long)sap.getValue());
+            } else if (sap.getKey().equals(Parameter.PROLONG_DATE.toString())) {
                 prolongDate = (Date)sap.getValue();
             }
         }
 
-        if (method == ACTION_TYPE.DO_RESERVATION) {
-            // check if antragsNummer does not exists
-            if ((prefix != null) && (auftragsNummer != null) && (nbz != null) && (anzahl > 0)) {
-                if (!isAntragsNummerAlreadyExisting(prefix, auftragsNummer)) {
-                    return doReservierung(prefix, auftragsNummer, nbz, anzahl, startwert);
-                } else {
-                    // ToDo: LOG the error...
-                    throw new IllegalStateException("Antragsnummer " + prefix + ANR_SEPERATOR + auftragsNummer
-                                + " existiert bereits");
+        if (method != null) {
+            switch (method) {
+                case DO_RESERVATION: {
+                    // check if antragsNummer does not exists
+                    if ((prefix != null) && (auftragsNummer != null) && (nbz != null) && (anzahl > 0)) {
+                        if (!isAntragsNummerAlreadyExisting(prefix, auftragsNummer)) {
+                            return doReservierung(prefix, auftragsNummer, nbz, anzahl, startwert);
+                        } else {
+                            // ToDo: LOG the error...
+                            throw new IllegalStateException("Antragsnummer " + prefix + ANR_SEPERATOR + auftragsNummer
+                                        + " existiert bereits");
+                        }
+                    } else {
+                        return null;
+                    }
+                }
+                case DO_STORNO: {
+                    if ((prefix != null) && (auftragsNummer != null) && (nbz != null) && (on1 > 0) && (on2 > 0)
+                                && (on1 <= on2)) {
+                        return doStorno(prefix, auftragsNummer, nbz, on1, on2);
+                    } else {
+                        return null;
+                    }
+                }
+                case DO_PROLONGATION: {
+                    if ((prefix != null) && (auftragsNummer != null) && (prolongDate != null)
+                                && !pointnumbers.isEmpty()) {
+                        return doVerlaengern(prefix, auftragsNummer, pointnumbers, prolongDate);
+                    } else {
+                        return null;
+                    }
+                }
+                case DO_ADDITION: {
+                    // check if antragsNummer exists
+                    if ((prefix != null) && (auftragsNummer != null) && (nbz != null) && (anzahl > 0)
+                                && isAntragsNummerAlreadyExisting(prefix, auftragsNummer)) {
+                        return doReservierung(prefix, auftragsNummer, nbz, anzahl, startwert);
+                    } else {
+                        return null;
+                    }
+                }
+                case GET_ALL_RESERVATIONS: {
+                    if (prefix == null) {
+                        return getAllAntragsNummern();
+                    } else {
+                        return getAllAntragsNummern(prefix);
+                    }
+                }
+                case GET_POINT_NUMBERS: {
+                    if ((prefix != null) && (auftragsNummer != null)) {
+                        return getReserviertePunkte(prefix, auftragsNummer);
+                    } else {
+                        return null;
+                    }
+                }
+                case IS_ANTRAG_EXISTING: {
+                    if ((prefix != null) && (auftragsNummer != null)) {
+                        return isAntragsNummerAlreadyExisting(prefix, auftragsNummer);
+                    } else {
+                        return null;
+                    }
+                }
+                default: {
+                    return null;
                 }
             }
-        } else if (method == ACTION_TYPE.DO_STORNO) {
-            if ((prefix != null) && (auftragsNummer != null) && (nbz != null)) {
-                if ((on1 > 0) && (on2 > 0) && (on1 <= on2)) {
-                    return doStorno(prefix, auftragsNummer, nbz, on1, on2);
-                }
-            }
-        } else if (method == ACTION_TYPE.DO_PROLONG) {
-            if ((prefix != null) && (auftragsNummer != null) && (prolongDate != null) && !pointnumbers.isEmpty()) {
-                return doVerlaengern(prefix, auftragsNummer, pointnumbers, prolongDate);
-            }
-        } else if (method == ACTION_TYPE.PROLONG_RESERVATION) {
-            // check if antragsNummer exists
-            if ((prefix != null) && (auftragsNummer != null) && (nbz != null) && (anzahl > 0)) {
-                if (isAntragsNummerAlreadyExisting(prefix, auftragsNummer)) {
-                    return doReservierung(prefix, auftragsNummer, nbz, anzahl, startwert);
-                }
-            }
-        } else if (method == ACTION_TYPE.GET_ALL_RESERVATIONS) {
-            if (prefix == null) {
-                return getAllAntragsNummern();
-            } else {
-                return getAllAntragsNummern(prefix);
-            }
-        } else if (method == ACTION_TYPE.GET_POINT_NUMBERS) {
-            if ((prefix != null) && (auftragsNummer != null)) {
-                return getReserviertePunkte(prefix, auftragsNummer);
-            }
-        } else if (method == ACTION_TYPE.IS_ANTRAG_EXISTING) {
-            if ((prefix != null) && (auftragsNummer != null)) {
-                return isAntragsNummerAlreadyExisting(prefix, auftragsNummer);
-            }
+        } else {
+            return null;
         }
-        return null;
     }
 
     @Override

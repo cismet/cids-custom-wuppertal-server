@@ -14,7 +14,6 @@ import de.aed_sicad.www.namespaces.svr.AuftragsManagerSoap;
 import java.io.BufferedReader;
 import java.io.ByteArrayInputStream;
 import java.io.ByteArrayOutputStream;
-import java.io.FileInputStream;
 import java.io.FileNotFoundException;
 import java.io.IOException;
 import java.io.InputStream;
@@ -26,13 +25,12 @@ import java.net.URL;
 import java.text.DecimalFormat;
 import java.text.SimpleDateFormat;
 
+import java.util.ArrayList;
 import java.util.Collection;
 import java.util.Collections;
 import java.util.Date;
 import java.util.GregorianCalendar;
-import java.util.HashMap;
 import java.util.List;
-import java.util.Map;
 import java.util.Properties;
 import java.util.zip.GZIPInputStream;
 import java.util.zip.GZIPOutputStream;
@@ -530,7 +528,7 @@ public class PointNumberReservationService {
      */
     public PointNumberReservationRequest prolongReservation(final String prefix,
             final String anr,
-            final Collection<Integer> points,
+            final Collection<Long> points,
             final Date date,
             final String profilKennung) {
         if (initError) {
@@ -547,22 +545,17 @@ public class PointNumberReservationService {
         if (result != null) {
             // for having the pnrs in the right sort order, first push them in HM
             // then getting them from the HM in the right points order.
-            final Map<Integer, PointNumberReservation> pnrMap = new HashMap<Integer, PointNumberReservation>();
+            final List<PointNumberReservation> pnrList = new ArrayList<>();
             for (final PointNumberReservation pointNumberReserveration : result.getPointNumbers()) {
-                final Integer tmp = Integer.parseInt(pointNumberReserveration.getPunktnummer().substring(
-                            pointNumberReserveration.getPunktnummer().length()
-                                    - 6,
-                            pointNumberReserveration.getPunktnummer().length()));
-                if (points.contains(tmp)) {
-                    pnrMap.put(tmp, pointNumberReserveration);
+                if (points.contains(Long.parseLong(pointNumberReserveration.getPunktnummer()))) {
+                    pnrList.add(pointNumberReserveration);
                 }
             }
 
             final String requestSub = TEMPLATE_PROLONG_SUB;
             final StringBuffer subs = new StringBuffer();
 
-            for (final Integer point : points) {
-                final PointNumberReservation pointNumberReserveration = pnrMap.get(point);
+            for (final PointNumberReservation pointNumberReserveration : pnrList) {
                 final SimpleDateFormat sdf = new SimpleDateFormat("yyyy-MM-dd");
 
                 final String requestSubTmp = requestSub.replaceAll(
