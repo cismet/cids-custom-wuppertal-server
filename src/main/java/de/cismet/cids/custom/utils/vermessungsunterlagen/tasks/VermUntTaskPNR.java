@@ -221,14 +221,14 @@ public class VermUntTaskPNR extends VermessungsunterlagenTask {
      */
     private Collection<PointNumberReservation> getReservations() {
         final ServerActionParameter sapPrefix = new ServerActionParameter(
-                PointNumberReserverationServerAction.PARAMETER_TYPE.PREFIX.toString(),
+                PointNumberReserverationServerAction.Parameter.PREFIX.toString(),
                 vermessungsstelle.substring(2));
         final ServerActionParameter sapAuftragsnummer = new ServerActionParameter(
-                PointNumberReserverationServerAction.PARAMETER_TYPE.AUFTRAG_NUMMER.toString(),
+                PointNumberReserverationServerAction.Parameter.AUFTRAG_NUMMER.toString(),
                 auftragsnummer);
         final ServerActionParameter sapAction = new ServerActionParameter(
-                PointNumberReserverationServerAction.PARAMETER_TYPE.ACTION.toString(),
-                PointNumberReserverationServerAction.ACTION_TYPE.GET_POINT_NUMBERS);
+                PointNumberReserverationServerAction.Parameter.ACTION.toString(),
+                PointNumberReserverationServerAction.Action.GET_POINT_NUMBERS);
         final PointNumberReserverationServerAction action = new PointNumberReserverationServerAction();
         action.setUser(VermessungsunterlagenHelper.getInstance().getUser());
         action.setMetaService(VermessungsunterlagenHelper.getInstance().getMetaService());
@@ -254,27 +254,27 @@ public class VermUntTaskPNR extends VermessungsunterlagenTask {
         final ServerActionParameter sapAction;
         if (ergaenzen) {
             sapAction = new ServerActionParameter(
-                    PointNumberReserverationServerAction.PARAMETER_TYPE.ACTION.toString(),
-                    PointNumberReserverationServerAction.ACTION_TYPE.PROLONG_RESERVATION);
+                    PointNumberReserverationServerAction.Parameter.ACTION.toString(),
+                    PointNumberReserverationServerAction.Action.DO_ADDITION);
         } else {
             sapAction = new ServerActionParameter(
-                    PointNumberReserverationServerAction.PARAMETER_TYPE.ACTION.toString(),
-                    PointNumberReserverationServerAction.ACTION_TYPE.DO_RESERVATION);
+                    PointNumberReserverationServerAction.Parameter.ACTION.toString(),
+                    PointNumberReserverationServerAction.Action.DO_RESERVATION);
         }
         final ServerActionParameter sapPrefix = new ServerActionParameter(
-                PointNumberReserverationServerAction.PARAMETER_TYPE.PREFIX.toString(),
+                PointNumberReserverationServerAction.Parameter.PREFIX.toString(),
                 vermessungsstelle.substring(2));
         final ServerActionParameter sapAuftragsnummer = new ServerActionParameter(
-                PointNumberReserverationServerAction.PARAMETER_TYPE.AUFTRAG_NUMMER.toString(),
+                PointNumberReserverationServerAction.Parameter.AUFTRAG_NUMMER.toString(),
                 auftragsnummer);
         final ServerActionParameter sapNummerierungsbezirk = new ServerActionParameter(
-                PointNumberReserverationServerAction.PARAMETER_TYPE.NBZ.toString(),
+                PointNumberReserverationServerAction.Parameter.NBZ.toString(),
                 bean.getUtmKilometerQuadrat());
         final ServerActionParameter sapAnzahl = new ServerActionParameter(
-                PointNumberReserverationServerAction.PARAMETER_TYPE.ANZAHL.toString(),
+                PointNumberReserverationServerAction.Parameter.ANZAHL.toString(),
                 bean.getAnzahlPunktnummern());
         final ServerActionParameter sapStartwert = new ServerActionParameter(
-                PointNumberReserverationServerAction.PARAMETER_TYPE.STARTWERT.toString(),
+                PointNumberReserverationServerAction.Parameter.STARTWERT.toString(),
                 0);
 
         final PointNumberReserverationServerAction action = new PointNumberReserverationServerAction();
