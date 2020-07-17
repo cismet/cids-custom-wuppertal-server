@@ -88,6 +88,7 @@ public enum WundaBlauServerResources {
 
     EMOB_CONF_PROPERTIES(new TextServerResource("/emob/emob_conf.properties")),
     PRBR_CONF_PROPERTIES(new TextServerResource("/prbr/prbr_conf.properties")),
+    STRADR_CONF_PROPERTIES(new TextServerResource("/stradr/stradr_conf.properties")),
 
     VZKAT_PROPERTIES(new TextServerResource("/vzkat/vzkat.properties"));
 
