@@ -2592,7 +2592,7 @@ public class FormSolutionsBestellungHandler implements ConnectionContextProvider
             final Collection<String> transids = new ArrayList<>(fsBeanMap.keySet());
             for (final String transid : transids) {
                 final CidsBean bestellungBean = fsBeanMap.get(transid);
-                if ((bestellungBean != null)) {
+                if ((bestellungBean != null) && (bestellungBean.getProperty("fehler") == null)) {
                     try {
                         bestellungBean.setProperty("erledigt", false);
                         bestellungBean.setProperty("fehler", null);
