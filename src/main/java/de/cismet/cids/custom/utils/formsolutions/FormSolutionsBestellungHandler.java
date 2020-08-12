@@ -596,26 +596,26 @@ public class FormSolutionsBestellungHandler implements ConnectionContextProvider
                 }
             }
             case STATUS_PRUEFUNG: {
-                step6PruefungProdukt(fsBeanMap, fsBestellungMap);
+                step6PruefungProdukt(fsBeanMap, fsBestellungMap, singleStep);
                 if (singleStep) {
                     break;
                 }
             }
             case STATUS_PRODUKT: {
-                downloadInfoMap = step7CreateProducts(fsBeanMap);
+                downloadInfoMap = step7CreateProducts(fsBeanMap, singleStep);
                 if (singleStep) {
                     break;
                 }
             }
             case STATUS_BILLING: {
-                step8Billing(fsBeanMap, downloadInfoMap);
+                step8Billing(fsBeanMap, downloadInfoMap, singleStep);
                 if (singleStep) {
                     break;
                 }
             }
             case STATUS_PENDING:
             case STATUS_DONE: {
-                step9FinalizeEntries(fsBeanMap);
+                step9FinalizeEntries(fsBeanMap, singleStep);
                 if (singleStep) {
                     break;
                 }
@@ -706,13 +706,15 @@ public class FormSolutionsBestellungHandler implements ConnectionContextProvider
      *
      * @param  fsBeanMap        DOCUMENT ME!
      * @param  downloadInfoMap  DOCUMENT ME!
+     * @param  ignoreError      DOCUMENT ME!
      */
     private void step8Billing(final Map<String, CidsBean> fsBeanMap,
-            final Map<String, BerechtigungspruefungDownloadInfo> downloadInfoMap) {
+            final Map<String, BerechtigungspruefungDownloadInfo> downloadInfoMap,
+            final boolean ignoreError) {
         if (fsBeanMap != null) {
             for (final String transid : new ArrayList<>(fsBeanMap.keySet())) {
                 final CidsBean bestellungBean = fsBeanMap.get(transid);
-                if ((bestellungBean != null) && (bestellungBean.getProperty("fehler") == null)) {
+                if ((bestellungBean != null) && (ignoreError || (bestellungBean.getProperty("fehler") == null))) {
                     final ProductType productType = determineProductType(bestellungBean);
                     switch (productType) {
                         case SGK:
@@ -842,14 +844,15 @@ public class FormSolutionsBestellungHandler implements ConnectionContextProvider
     /**
      * DOCUMENT ME!
      *
-     * @param  fsBeanMap  DOCUMENT ME!
+     * @param  fsBeanMap    DOCUMENT ME!
+     * @param  ignoreError  DOCUMENT ME!
      */
-    private void step9FinalizeEntries(final Map<String, CidsBean> fsBeanMap) {
+    private void step9FinalizeEntries(final Map<String, CidsBean> fsBeanMap, final boolean ignoreError) {
         if (fsBeanMap != null) {
             final Collection<String> transids = new ArrayList<>(fsBeanMap.keySet());
             for (final String transid : transids) {
                 final CidsBean bestellungBean = fsBeanMap.get(transid);
-                if ((bestellungBean != null) && (bestellungBean.getProperty("fehler") == null)) {
+                if ((bestellungBean != null) && (ignoreError || (bestellungBean.getProperty("fehler") == null))) {
                     final ProductType productType = determineProductType(bestellungBean);
                     switch (productType) {
                         case ABK:
@@ -1735,15 +1738,16 @@ public class FormSolutionsBestellungHandler implements ConnectionContextProvider
      * DOCUMENT ME!
      *
      * @param   bestellungBean  DOCUMENT ME!
+     * @param   ignoreError     DOCUMENT ME!
      *
      * @return  DOCUMENT ME!
      *
      * @throws  Exception  DOCUMENT ME!
      */
-    private URL createProductUrl(final CidsBean bestellungBean) throws Exception {
+    private URL createProductUrl(final CidsBean bestellungBean, final boolean ignoreError) throws Exception {
         if ((bestellungBean != null)
                     && !Boolean.TRUE.equals(bestellungBean.getProperty("duplicate"))
-                    && (bestellungBean.getProperty("fehler") == null)) {
+                    && (ignoreError || (bestellungBean.getProperty("fehler") == null))) {
             final String code = (String)bestellungBean.getProperty("fk_produkt.fk_typ.key");
             final String dinFormat = (String)bestellungBean.getProperty("fk_produkt.fk_format.format");
             final Integer scale = (Integer)bestellungBean.getProperty("massstab");
@@ -2403,14 +2407,16 @@ public class FormSolutionsBestellungHandler implements ConnectionContextProvider
      *
      * @param  fsBeanMap        DOCUMENT ME!
      * @param  fsBestellungMap  DOCUMENT ME!
+     * @param  ignoreError      DOCUMENT ME!
      */
     private void step6PruefungProdukt(final Map<String, CidsBean> fsBeanMap,
-            final Map<String, FormSolutionsBestellung> fsBestellungMap) {
+            final Map<String, FormSolutionsBestellung> fsBestellungMap,
+            final boolean ignoreError) {
         final Collection<String> transids = new ArrayList<>(fsBestellungMap.keySet());
 
         for (final String transid : transids) {
             final CidsBean bestellungBean = fsBeanMap.get(transid);
-            if ((bestellungBean != null) && (bestellungBean.getProperty("fehler") == null)) {
+            if ((bestellungBean != null) && (ignoreError || (bestellungBean.getProperty("fehler") == null))) {
                 try {
                     final ProductType productType = determineProductType(bestellungBean);
                     switch (productType) {
@@ -2582,17 +2588,19 @@ public class FormSolutionsBestellungHandler implements ConnectionContextProvider
     /**
      * DOCUMENT ME!
      *
-     * @param   fsBeanMap  DOCUMENT ME!
+     * @param   fsBeanMap    DOCUMENT ME!
+     * @param   ignoreError  DOCUMENT ME!
      *
      * @return  DOCUMENT ME!
      */
-    private Map<String, BerechtigungspruefungDownloadInfo> step7CreateProducts(final Map<String, CidsBean> fsBeanMap) {
+    private Map<String, BerechtigungspruefungDownloadInfo> step7CreateProducts(final Map<String, CidsBean> fsBeanMap,
+            final boolean ignoreError) {
         final Map<String, BerechtigungspruefungDownloadInfo> downloadInfoMap = new HashMap<>();
         if (fsBeanMap != null) {
             final Collection<String> transids = new ArrayList<>(fsBeanMap.keySet());
             for (final String transid : transids) {
                 final CidsBean bestellungBean = fsBeanMap.get(transid);
-                if ((bestellungBean != null) && (bestellungBean.getProperty("fehler") == null)) {
+                if ((bestellungBean != null) && (ignoreError || (bestellungBean.getProperty("fehler") == null))) {
                     try {
                         bestellungBean.setProperty("erledigt", false);
                         bestellungBean.setProperty("fehler", null);
@@ -2611,7 +2619,7 @@ public class FormSolutionsBestellungHandler implements ConnectionContextProvider
                         switch (productType) {
                             case SGK:
                             case ABK: {
-                                final URL productUrl = createProductUrl(bestellungBean);
+                                final URL productUrl = createProductUrl(bestellungBean, ignoreError);
                                 bestellungBean.setProperty("request_url", productUrl.toString());
 
                                 final String fileNameOrig = String.format(
