@@ -99,13 +99,18 @@ public class VermUntTaskPNR extends VermessungsunterlagenTask {
                             : punktnummernreservierungBeans) {
                     if (bean.getAnzahlPunktnummern() > 0) {
                         try {
-                            final PointNumberReservationRequest result = doReservation(bean, !first);
-                            if (result != null) {
-                                final String protokoll = getProtokoll(result);
+                            final Object[] result = doReservation(bean, !first);
 
-                                final String filename = getPath() + "/" + auftragsnummer + "_"
-                                            + bean.getUtmKilometerQuadrat() + ".txt";
-                                FileUtils.writeStringToFile(new File(filename), protokoll, "ISO-8859-1");
+                            if (result != null) {
+                                final String filebasename = getPath() + "/" + auftragsnummer + "_"
+                                            + bean.getUtmKilometerQuadrat();
+
+                                FileUtils.writeStringToFile(new File(filebasename + ".xml"),
+                                    (String)result[0],
+                                    "ISO-8859-1");
+                                FileUtils.writeStringToFile(new File(filebasename + ".txt"),
+                                    getProtokoll((PointNumberReservationRequest)result[1]),
+                                    "ISO-8859-1");
                             }
                             first = false;
                         } catch (final Exception ex) {
@@ -248,7 +253,7 @@ public class VermUntTaskPNR extends VermessungsunterlagenTask {
      *
      * @return  DOCUMENT ME!
      */
-    protected PointNumberReservationRequest doReservation(
+    protected Object[] doReservation(
             final VermessungsunterlagenAnfrageBean.PunktnummernreservierungBean bean,
             final boolean ergaenzen) {
         final ServerActionParameter sapAction;
@@ -276,18 +281,21 @@ public class VermUntTaskPNR extends VermessungsunterlagenTask {
         final ServerActionParameter sapStartwert = new ServerActionParameter(
                 PointNumberReserverationServerAction.Parameter.STARTWERT.toString(),
                 0);
+        final ServerActionParameter sapResultType = new ServerActionParameter(
+                PointNumberReserverationServerAction.Parameter.RESULT_TYPE.toString(),
+                PointNumberReserverationServerAction.ResultType.BOTH);
 
         final PointNumberReserverationServerAction action = new PointNumberReserverationServerAction();
         action.setUser(VermessungsunterlagenHelper.getInstance().getUser());
         action.setMetaService(VermessungsunterlagenHelper.getInstance().getMetaService());
-        final PointNumberReservationRequest request = (PointNumberReservationRequest)action.execute(
+        return (Object[])action.execute(
                 null,
                 sapAction,
                 sapPrefix,
                 sapAuftragsnummer,
                 sapNummerierungsbezirk,
                 sapAnzahl,
-                sapStartwert);
-        return request;
+                sapStartwert,
+                sapResultType);
     }
 }
