@@ -16,18 +16,13 @@ import org.apache.commons.io.FileUtils;
 
 import java.io.File;
 
-import java.text.ParseException;
-import java.text.SimpleDateFormat;
-
 import java.util.Collection;
-import java.util.GregorianCalendar;
 
 import de.cismet.cids.custom.utils.pointnumberreservation.PointNumberReservation;
 import de.cismet.cids.custom.utils.pointnumberreservation.PointNumberReservationRequest;
 import de.cismet.cids.custom.utils.vermessungsunterlagen.VermessungsunterlagenAnfrageBean;
 import de.cismet.cids.custom.utils.vermessungsunterlagen.VermessungsunterlagenHelper;
 import de.cismet.cids.custom.utils.vermessungsunterlagen.VermessungsunterlagenTask;
-import de.cismet.cids.custom.utils.vermessungsunterlagen.exceptions.VermessungsunterlagenException;
 import de.cismet.cids.custom.utils.vermessungsunterlagen.exceptions.VermessungsunterlagenTaskException;
 import de.cismet.cids.custom.wunda_blau.search.actions.PointNumberReserverationServerAction;
 
@@ -99,18 +94,34 @@ public class VermUntTaskPNR extends VermessungsunterlagenTask {
                             : punktnummernreservierungBeans) {
                     if (bean.getAnzahlPunktnummern() > 0) {
                         try {
-                            final Object[] result = doReservation(bean, !first);
+                            final PointNumberReservationRequest result = doReservation(bean, !first);
 
                             if (result != null) {
                                 final String filebasename = getPath() + "/" + auftragsnummer + "_"
                                             + bean.getUtmKilometerQuadrat();
 
-                                FileUtils.writeStringToFile(new File(filebasename + ".xml"),
-                                    (String)result[0],
-                                    "ISO-8859-1");
-                                FileUtils.writeStringToFile(new File(filebasename + ".txt"),
-                                    getProtokoll((PointNumberReservationRequest)result[1]),
-                                    "ISO-8859-1");
+                                if (result.isSuccessfull()) {
+                                    if (!isPointNumberBeanValid(result)) {
+                                        throw new VermessungsunterlagenTaskException(
+                                            getType(),
+                                            "Ungültige Antwort des Punktnummernreservierungsdienstes.");
+                                    }
+
+                                    FileUtils.writeStringToFile(new File(filebasename + ".xml"),
+                                        result.getRawResult(),
+                                        "ISO-8859-1");
+                                    FileUtils.writeStringToFile(new File(filebasename + ".txt"),
+                                        result.createTxtProtokoll(),
+                                        "ISO-8859-1");
+                                } else {
+                                    FileUtils.writeStringToFile(new File(filebasename + ".txt"),
+                                        result.getProtokoll(),
+                                        "ISO-8859-1");
+                                }
+                            } else {
+                                throw new VermessungsunterlagenTaskException(
+                                    getType(),
+                                    "Ungültige Antwort des Punktnummernreservierungsdienstes.");
                             }
                             first = false;
                         } catch (final Exception ex) {
@@ -121,77 +132,6 @@ public class VermUntTaskPNR extends VermessungsunterlagenTask {
                     }
                 }
             }
-        }
-    }
-
-    /**
-     * DOCUMENT ME!
-     *
-     * @param   content  DOCUMENT ME!
-     *
-     * @return  DOCUMENT ME!
-     *
-     * @throws  VermessungsunterlagenException      DOCUMENT ME!
-     * @throws  VermessungsunterlagenTaskException  DOCUMENT ME!
-     */
-    private String getProtokoll(final PointNumberReservationRequest content) throws VermessungsunterlagenException {
-        boolean isFreigabeMode = false;
-        if ((content != null) && content.isSuccessfull() && (content.getPointNumbers() != null)) {
-            for (final PointNumberReservation pnr : content.getPointNumbers()) {
-                if ((pnr.getAblaufDatum() == null) || pnr.getAblaufDatum().isEmpty()) {
-                    isFreigabeMode = true;
-                    break;
-                }
-            }
-        }
-
-        final StringBuffer contentBuilder = new StringBuffer();
-        if ((content == null) || content.isSuccessfull()) {
-            if (!isPointNumberBeanValid(content)) {
-                throw new VermessungsunterlagenTaskException(
-                    getType(),
-                    "Ungültige Antwort des Punktnummernreservierungsdienstes.");
-            }
-            String header = "Antragsnummer: " + content.getAntragsnummer() + " erstellt am: ";
-            final GregorianCalendar cal = new GregorianCalendar();
-            header += new SimpleDateFormat("yyyy-MM-dd").format(cal.getTime());
-            header += " Anzahl ";
-            if (isFreigabeMode) {
-                header += "freigegebener";
-            } else {
-                header += "reservierter";
-            }
-
-            header += " Punktnummern: " + content.getPointNumbers().size();
-            contentBuilder.append(header).append("\r\n");
-            if (isFreigabeMode) {
-                contentBuilder.append("freigegebene Punktnummern").append("\r\n");
-            } else {
-                contentBuilder.append("reservierte Punktnummern (gültig bis)").append("\r\n");
-            }
-            contentBuilder.append("\r\n");
-
-            for (final PointNumberReservation pnr : content.getPointNumbers()) {
-                contentBuilder.append(pnr.getPunktnummer());
-                if (!isFreigabeMode) {
-                    contentBuilder.append(" (");
-                    try {
-                        contentBuilder.append(
-                            new SimpleDateFormat("dd-MM-yyyy").format(
-                                new SimpleDateFormat("yyyy-MM-dd").parse(pnr.getAblaufDatum())));
-                    } catch (final ParseException ex) {
-                        LOG.info(
-                            "Could not parse the expiration date of a reservation. Using the string representation return by server");
-                        contentBuilder.append(pnr.getAblaufDatum());
-                    }
-                    contentBuilder.append(")");
-                }
-                contentBuilder.append("\r\n");
-            }
-
-            return contentBuilder.toString();
-        } else {
-            return content.getProtokoll();
         }
     }
 
@@ -214,6 +154,7 @@ public class VermUntTaskPNR extends VermessungsunterlagenTask {
         }
         return true;
     }
+
     @Override
     protected String getSubPath() {
         return "/PNR";
@@ -253,7 +194,7 @@ public class VermUntTaskPNR extends VermessungsunterlagenTask {
      *
      * @return  DOCUMENT ME!
      */
-    protected Object[] doReservation(
+    protected PointNumberReservationRequest doReservation(
             final VermessungsunterlagenAnfrageBean.PunktnummernreservierungBean bean,
             final boolean ergaenzen) {
         final ServerActionParameter sapAction;
@@ -281,21 +222,17 @@ public class VermUntTaskPNR extends VermessungsunterlagenTask {
         final ServerActionParameter sapStartwert = new ServerActionParameter(
                 PointNumberReserverationServerAction.Parameter.STARTWERT.toString(),
                 0);
-        final ServerActionParameter sapResultType = new ServerActionParameter(
-                PointNumberReserverationServerAction.Parameter.RESULT_TYPE.toString(),
-                PointNumberReserverationServerAction.ResultType.BOTH);
 
         final PointNumberReserverationServerAction action = new PointNumberReserverationServerAction();
         action.setUser(VermessungsunterlagenHelper.getInstance().getUser());
         action.setMetaService(VermessungsunterlagenHelper.getInstance().getMetaService());
-        return (Object[])action.execute(
+        return (PointNumberReservationRequest)action.execute(
                 null,
                 sapAction,
                 sapPrefix,
                 sapAuftragsnummer,
                 sapNummerierungsbezirk,
                 sapAnzahl,
-                sapStartwert,
-                sapResultType);
+                sapStartwert);
     }
 }
