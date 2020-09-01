@@ -65,23 +65,11 @@ public class PointNumberReserverationServerAction implements UserAwareServerActi
      *
      * @version  $Revision$, $Date$
      */
-    public enum ResultType {
-
-        //~ Enum constants -----------------------------------------------------
-
-        RAW, PARSED, BOTH
-    }
-
-    /**
-     * DOCUMENT ME!
-     *
-     * @version  $Revision$, $Date$
-     */
     public enum Parameter {
 
         //~ Enum constants -----------------------------------------------------
 
-        ACTION, PREFIX, AUFTRAG_NUMMER, NBZ, ANZAHL, STARTWERT, ON1, ON2, POINT_NUMBER, PROLONG_DATE, RESULT_TYPE
+        ACTION, PREFIX, AUFTRAG_NUMMER, NBZ, ANZAHL, STARTWERT, ON1, ON2, POINT_NUMBER, PROLONG_DATE
     }
 
     //~ Instance fields --------------------------------------------------------
@@ -104,9 +92,8 @@ public class PointNumberReserverationServerAction implements UserAwareServerActi
      * @return  DOCUMENT ME!
      */
     private Collection<String> getAllAntragsNummern() {
-        final String raw = PointNumberReservationService.instance().getAllBenAuftr(getProfilKennung());
         final Collection<PointNumberReservationRequest> requests = PointNumberReservationService.instance()
-                    .parseAllBenAuftr(raw);
+                    .getAllBenAuftr(getProfilKennung());
         final ArrayList<String> antragsNummern = new ArrayList<String>();
         if (requests != null) {
             for (final PointNumberReservationRequest r : requests) {
@@ -155,12 +142,11 @@ public class PointNumberReserverationServerAction implements UserAwareServerActi
     /**
      * DOCUMENT ME!
      *
-     * @param   aPrefix     DOCUMENT ME!
-     * @param   aNummer     DOCUMENT ME!
-     * @param   nbz         DOCUMENT ME!
-     * @param   anzahl      DOCUMENT ME!
-     * @param   startwert   DOCUMENT ME!
-     * @param   resultType  DOCUMENT ME!
+     * @param   aPrefix    DOCUMENT ME!
+     * @param   aNummer    DOCUMENT ME!
+     * @param   nbz        DOCUMENT ME!
+     * @param   anzahl     DOCUMENT ME!
+     * @param   startwert  DOCUMENT ME!
      *
      * @return  DOCUMENT ME!
      */
@@ -168,28 +154,14 @@ public class PointNumberReserverationServerAction implements UserAwareServerActi
             final String aNummer,
             final String nbz,
             final int anzahl,
-            final int startwert,
-            final ResultType resultType) {
+            final int startwert) {
         final String anr = aPrefix + ANR_SEPERATOR + aNummer;
         if (!isAuftragsNummerValid(anr)) {
             return null;
         }
 
-        final String profilKennung = getProfilKennung();
-        final String raw = PointNumberReservationService.instance()
-                    .doReservation(aPrefix, anr, nbz, anzahl, startwert, profilKennung);
-        final PointNumberReservationRequest parsed = PointNumberReservationService.instance()
-                    .parseReservationResult(anr, profilKennung, raw);
-
-        if (ResultType.RAW.equals(resultType)) {
-            return raw;
-        } else if (ResultType.PARSED.equals(resultType)) {
-            return parsed;
-        } else if (ResultType.BOTH.equals(resultType)) {
-            return (raw != null) ? new Object[] { raw, parsed } : null;
-        } else {
-            return null;
-        }
+        return PointNumberReservationService.instance()
+                    .doReservation(aPrefix, anr, nbz, anzahl, startwert, getProfilKennung());
     }
 
     /**
@@ -203,7 +175,7 @@ public class PointNumberReserverationServerAction implements UserAwareServerActi
     private Collection<PointNumberReservation> getReserviertePunkte(final String aPrefix, final String aNummer) {
         final String anr = aPrefix + ANR_SEPERATOR + aNummer;
         final PointNumberReservationRequest result = PointNumberReservationService.instance()
-                    .parseBenAuftr(PointNumberReservationService.instance().getBenAuftr(anr, getProfilKennung()));
+                    .getBenAuftr(anr, getProfilKennung());
         if (result != null) {
             return result.getPointNumbers();
         }
@@ -213,40 +185,26 @@ public class PointNumberReserverationServerAction implements UserAwareServerActi
     /**
      * DOCUMENT ME!
      *
-     * @param   aPrefix     DOCUMENT ME!
-     * @param   aNummer     DOCUMENT ME!
-     * @param   nbz         DOCUMENT ME!
-     * @param   on1         DOCUMENT ME!
-     * @param   on2         DOCUMENT ME!
-     * @param   resultType  DOCUMENT ME!
+     * @param   aPrefix  DOCUMENT ME!
+     * @param   aNummer  DOCUMENT ME!
+     * @param   nbz      DOCUMENT ME!
+     * @param   on1      DOCUMENT ME!
+     * @param   on2      DOCUMENT ME!
      *
      * @return  DOCUMENT ME!
      */
-    private Object doStorno(final String aPrefix,
+    private PointNumberReservationRequest doStorno(final String aPrefix,
             final String aNummer,
             final String nbz,
             final int on1,
-            final int on2,
-            final ResultType resultType) {
+            final int on2) {
         final String anr = aPrefix + ANR_SEPERATOR + aNummer;
         if (!isAuftragsNummerValid(anr)) {
             return null;
         }
 
-        final String profilKennung = getProfilKennung();
-        final String raw = PointNumberReservationService.instance()
-                    .doReleaseReservation(aPrefix, anr, nbz, on1, on2, profilKennung);
-        final PointNumberReservationRequest parsed = PointNumberReservationService.instance()
-                    .parseReleaseReservation(raw);
-        if (ResultType.RAW.equals(resultType)) {
-            return raw;
-        } else if (ResultType.PARSED.equals(resultType)) {
-            return parsed;
-        } else if (ResultType.BOTH.equals(resultType)) {
-            return (raw != null) ? new Object[] { raw, parsed } : null;
-        } else {
-            return null;
-        }
+        return PointNumberReservationService.instance()
+                    .doReleaseReservation(aPrefix, anr, nbz, on1, on2, getProfilKennung());
     }
 
     /**
@@ -271,39 +229,24 @@ public class PointNumberReserverationServerAction implements UserAwareServerActi
     /**
      * DOCUMENT ME!
      *
-     * @param   aPrefix     DOCUMENT ME!
-     * @param   aNummer     DOCUMENT ME!
-     * @param   ps          on1 DOCUMENT ME!
-     * @param   date        DOCUMENT ME!
-     * @param   resultType  DOCUMENT ME!
+     * @param   aPrefix  DOCUMENT ME!
+     * @param   aNummer  DOCUMENT ME!
+     * @param   ps       on1 DOCUMENT ME!
+     * @param   date     DOCUMENT ME!
      *
      * @return  DOCUMENT ME!
      */
     private Object doVerlaengern(final String aPrefix,
             final String aNummer,
             final Collection<Long> ps,
-            final Date date,
-            final ResultType resultType) {
+            final Date date) {
         final String anr = aPrefix + ANR_SEPERATOR + aNummer;
         if (!isAuftragsNummerValid(anr)) {
             return null;
         }
 
-        final String profilKennung = getProfilKennung();
-        final String raw = PointNumberReservationService.instance()
-                    .doProlongReservation(aPrefix, anr, ps, date, profilKennung);
-        final PointNumberReservationRequest parsed = PointNumberReservationService.instance()
-                    .parseProlongReservation(raw);
-
-        if (ResultType.RAW.equals(resultType)) {
-            return raw;
-        } else if (ResultType.PARSED.equals(resultType)) {
-            return parsed;
-        } else if (ResultType.BOTH.equals(resultType)) {
-            return (raw != null) ? new Object[] { raw, parsed } : parsed;
-        } else {
-            return null;
-        }
+        return PointNumberReservationService.instance()
+                    .doProlongReservation(aPrefix, anr, ps, date, getProfilKennung());
     }
 
     /**
@@ -328,7 +271,6 @@ public class PointNumberReserverationServerAction implements UserAwareServerActi
         int on1 = 0;
         int on2 = 0;
         Date prolongDate = null;
-        ResultType resultType = ResultType.PARSED;
         final Collection<Long> pointnumbers = new ArrayList<>();
         for (final ServerActionParameter sap : params) {
             if (sap.getKey().equals(Parameter.ACTION.toString())) {
@@ -351,8 +293,6 @@ public class PointNumberReserverationServerAction implements UserAwareServerActi
                 pointnumbers.add((Long)sap.getValue());
             } else if (sap.getKey().equals(Parameter.PROLONG_DATE.toString())) {
                 prolongDate = (Date)sap.getValue();
-            } else if (sap.getKey().equals(Parameter.RESULT_TYPE.toString())) {
-                resultType = (ResultType)sap.getValue();
             }
         }
 
@@ -362,7 +302,7 @@ public class PointNumberReserverationServerAction implements UserAwareServerActi
                     // check if antragsNummer does not exists
                     if ((prefix != null) && (auftragsNummer != null) && (nbz != null) && (anzahl > 0)) {
                         if (!isAntragsNummerAlreadyExisting(prefix, auftragsNummer)) {
-                            return doReservierung(prefix, auftragsNummer, nbz, anzahl, startwert, resultType);
+                            return doReservierung(prefix, auftragsNummer, nbz, anzahl, startwert);
                         } else {
                             // ToDo: LOG the error...
                             throw new IllegalStateException("Antragsnummer " + prefix + ANR_SEPERATOR + auftragsNummer
@@ -375,7 +315,7 @@ public class PointNumberReserverationServerAction implements UserAwareServerActi
                 case DO_STORNO: {
                     if ((prefix != null) && (auftragsNummer != null) && (nbz != null) && (on1 > 0) && (on2 > 0)
                                 && (on1 <= on2)) {
-                        return doStorno(prefix, auftragsNummer, nbz, on1, on2, resultType);
+                        return doStorno(prefix, auftragsNummer, nbz, on1, on2);
                     } else {
                         return null;
                     }
@@ -383,7 +323,7 @@ public class PointNumberReserverationServerAction implements UserAwareServerActi
                 case DO_PROLONGATION: {
                     if ((prefix != null) && (auftragsNummer != null) && (prolongDate != null)
                                 && !pointnumbers.isEmpty()) {
-                        return doVerlaengern(prefix, auftragsNummer, pointnumbers, prolongDate, resultType);
+                        return doVerlaengern(prefix, auftragsNummer, pointnumbers, prolongDate);
                     } else {
                         return null;
                     }
@@ -392,7 +332,7 @@ public class PointNumberReserverationServerAction implements UserAwareServerActi
                     // check if antragsNummer exists
                     if ((prefix != null) && (auftragsNummer != null) && (nbz != null) && (anzahl > 0)
                                 && isAntragsNummerAlreadyExisting(prefix, auftragsNummer)) {
-                        return doReservierung(prefix, auftragsNummer, nbz, anzahl, startwert, resultType);
+                        return doReservierung(prefix, auftragsNummer, nbz, anzahl, startwert);
                     } else {
                         return null;
                     }
