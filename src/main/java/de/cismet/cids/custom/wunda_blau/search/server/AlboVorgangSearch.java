@@ -36,7 +36,7 @@ public class AlboVorgangSearch extends AbstractCidsServerSearch implements MetaO
     private static final transient Logger LOG = Logger.getLogger(AlboVorgangSearch.class);
 
     private static final String QUERY = "SELECT "
-                + "(SELECT c.id FROM cs_class c WHERE table_name ILIKE 'albo_vorgang') AS class_id, albo_vorgang.id, albo_vorgang.import_id AS name "
+                + "(SELECT c.id FROM cs_class c WHERE table_name ILIKE 'albo_vorgang') AS class_id, albo_vorgang.id, albo_vorgang.schluessel AS name "
                 + "FROM albo_vorgang "
                 + "LEFT JOIN albo_vorgang_flaeche ON albo_vorgang.arr_flaechen = albo_vorgang_flaeche.vorgang_reference "
                 + "WHERE albo_vorgang_flaeche.fk_flaeche = %d";
