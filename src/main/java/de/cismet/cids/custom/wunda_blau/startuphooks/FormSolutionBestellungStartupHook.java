@@ -17,7 +17,6 @@ import Sirius.server.middleware.interfaces.domainserver.DomainServerStartupHook;
 import Sirius.server.middleware.interfaces.domainserver.MetaService;
 import Sirius.server.middleware.types.MetaObject;
 import Sirius.server.middleware.types.MetaObjectNode;
-import Sirius.server.newuser.User;
 
 import java.util.Arrays;
 
@@ -43,7 +42,6 @@ public class FormSolutionBestellungStartupHook implements DomainServerStartupHoo
     //~ Instance fields --------------------------------------------------------
 
     private MetaService metaService;
-    private User user;
     private ConnectionContext connectionContext = ConnectionContext.createDummy();
 
     //~ Methods ----------------------------------------------------------------
@@ -56,24 +54,6 @@ public class FormSolutionBestellungStartupHook implements DomainServerStartupHoo
     @Override
     public void initWithConnectionContext(final ConnectionContext connectionContext) {
         this.connectionContext = connectionContext;
-    }
-
-    /**
-     * DOCUMENT ME!
-     *
-     * @param  user  DOCUMENT ME!
-     */
-    private void setUser(final User user) {
-        this.user = user;
-    }
-
-    /**
-     * DOCUMENT ME!
-     *
-     * @return  DOCUMENT ME!
-     */
-    public User getUser() {
-        return user;
     }
 
     /**
@@ -110,11 +90,9 @@ public class FormSolutionBestellungStartupHook implements DomainServerStartupHoo
                             }
                         }
                         setMetaService(metaService);
-                        setUser(FormSolutionsBestellungHandler.getFsUser());
 
                         final FormSolutionsBestellungHandler handler = new FormSolutionsBestellungHandler(
                                 true,
-                                getUser(),
                                 getMetaService(),
                                 getConnectionContext());
                         final MetaObject[] mos = handler.getUnfinishedBestellungen();

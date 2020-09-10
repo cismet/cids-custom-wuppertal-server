@@ -85,7 +85,6 @@ public class BerechtigungspruefungStartupHook implements DomainServerStartupHook
                             FormSolutionsBestellungBerechtigungspruefungHandler.getInstance();
                         fsbbh.initWithConnectionContext(getConnectionContext());
                         fsbbh.setMetaService(metaService);
-                        fsbbh.setUser(user);
                     } catch (final Exception ex) {
                         LOG.warn("Error while initializing the BerechtigungspruefungHandler !", ex);
                     }

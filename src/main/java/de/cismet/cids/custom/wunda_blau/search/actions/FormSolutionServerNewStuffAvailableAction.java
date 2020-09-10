@@ -101,7 +101,6 @@ public class FormSolutionServerNewStuffAvailableAction implements UserAwareServe
         }
 
         final FormSolutionsBestellungHandler handler = new FormSolutionsBestellungHandler(
-                getUser(),
                 getMetaService(),
                 getConnectionContext());
         if (mons == null) {
