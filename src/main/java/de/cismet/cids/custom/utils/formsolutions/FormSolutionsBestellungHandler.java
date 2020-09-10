@@ -205,26 +205,23 @@ public class FormSolutionsBestellungHandler implements ConnectionContextProvider
     /**
      * Creates a new FormSolutionsBestellungHandler object.
      *
-     * @param  user               DOCUMENT ME!
      * @param  metaService        DOCUMENT ME!
      * @param  connectionContext  DOCUMENT ME!
      */
-    public FormSolutionsBestellungHandler(final User user,
+    public FormSolutionsBestellungHandler(
             final MetaService metaService,
             final ConnectionContext connectionContext) {
-        this(false, user, metaService, connectionContext);
+        this(false, metaService, connectionContext);
     }
 
     /**
      * Creates a new FormSolutionsBestellungHandler object.
      *
      * @param  fromStartupHook    DOCUMENT ME!
-     * @param  user               DOCUMENT ME!
      * @param  metaService        DOCUMENT ME!
      * @param  connectionContext  DOCUMENT ME!
      */
     public FormSolutionsBestellungHandler(final boolean fromStartupHook,
-            final User user,
             final MetaService metaService,
             final ConnectionContext connectionContext) {
         UsernamePasswordCredentials creds = null;
@@ -281,12 +278,12 @@ public class FormSolutionsBestellungHandler implements ConnectionContextProvider
         } catch (final Exception ex) {
             LOG.error(ex, ex);
         }
+        this.user = FormSolutionsBestellungHandler.getFsUser();
         this.billingInfoHander = billingInfoHander;
         this.baulastBescheinigungHelper = new BaulastBescheinigungHelper(user, metaService, connectionContext);
         this.testCismet00Type = testCismet00Type;
         this.testCismet00Xml = testCismet00Xml;
         this.creds = creds;
-        this.user = user;
         this.metaService = metaService;
         this.connectionContext = connectionContext;
     }
@@ -854,7 +851,7 @@ public class FormSolutionsBestellungHandler implements ConnectionContextProvider
                             final Boolean propDuplicate = (Boolean)bestellungBean.getProperty("duplicate");
                             try {
                                 if (!Boolean.TRUE.equals(propDuplicate) && !Boolean.TRUE.equals(propPostweg)) {
-                                    bestellungBean.setProperty("erledigt", true);
+                                    bestellungBean.setProperty("erledigt", Boolean.TRUE);
                                 }
                                 getMetaService().updateMetaObject(
                                     getUser(),
@@ -907,7 +904,7 @@ public class FormSolutionsBestellungHandler implements ConnectionContextProvider
         LOG.error(message, exception);
         if (bestellungBean != null) {
             try {
-                bestellungBean.setProperty("erledigt", false);
+                bestellungBean.setProperty("erledigt", Boolean.FALSE);
                 bestellungBean.setProperty("fehler", message);
                 bestellungBean.setProperty("fehler_ts", new Timestamp(new Date().getTime()));
                 bestellungBean.setProperty("exception", getObjectMapper().writeValueAsString(exception));
@@ -1543,7 +1540,7 @@ public class FormSolutionsBestellungHandler implements ConnectionContextProvider
         bestellungBean.setProperty("fk_adresse_versand", adresseVersandBean);
         bestellungBean.setProperty("fk_adresse_rechnung", adresseRechnungBean);
         bestellungBean.setProperty("email", trimedNotEmpty(formSolutionsBestellung.getEMailadresse()));
-        bestellungBean.setProperty("erledigt", false);
+        bestellungBean.setProperty("erledigt", Boolean.FALSE);
         bestellungBean.setProperty("eingang_ts", new Timestamp(new Date().getTime()));
         bestellungBean.setProperty("gebuehr", gebuehr);
         bestellungBean.setProperty("gutschein_code", gutscheinCode);
@@ -2577,7 +2574,7 @@ public class FormSolutionsBestellungHandler implements ConnectionContextProvider
                 final CidsBean bestellungBean = fsBeanMap.get(transid);
                 if ((bestellungBean != null) && (repairErrors || (bestellungBean.getProperty("fehler") == null))) {
                     try {
-                        bestellungBean.setProperty("erledigt", false);
+                        bestellungBean.setProperty("erledigt", Boolean.FALSE);
                         bestellungBean.setProperty("fehler", null);
                         bestellungBean.setProperty("fehler_ts", null);
                         bestellungBean.setProperty("exception", null);
@@ -2641,6 +2638,8 @@ public class FormSolutionsBestellungHandler implements ConnectionContextProvider
                                             "request_url",
                                             new URL(redirect2formsolutions).toExternalForm());
                                         bestellungBean.setProperty("produkt_ts", new Timestamp(new Date().getTime()));
+                                        bestellungBean.setProperty("erledigt", Boolean.TRUE);
+
                                         getMetaService().updateMetaObject(
                                             getUser(),
                                             bestellungBean.getMetaObject(),
@@ -2692,7 +2691,6 @@ public class FormSolutionsBestellungHandler implements ConnectionContextProvider
                                         bestellungBean.getMetaObject(),
                                         getConnectionContext());
 
-                                    vorgaengerBestellungBean.setProperty("erledigt", Boolean.TRUE);
                                     getMetaService().updateMetaObject(
                                         getUser(),
                                         vorgaengerBestellungBean.getMetaObject(),

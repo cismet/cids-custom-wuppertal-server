@@ -14,7 +14,6 @@ package de.cismet.cids.custom.utils.formsolutions;
 
 import Sirius.server.middleware.interfaces.domainserver.MetaService;
 import Sirius.server.middleware.interfaces.domainserver.MetaServiceStore;
-import Sirius.server.middleware.interfaces.domainserver.UserStore;
 import Sirius.server.middleware.types.MetaObjectNode;
 import Sirius.server.newuser.User;
 
@@ -39,9 +38,7 @@ import de.cismet.connectioncontext.ConnectionContextStore;
  * @author   jruiz
  * @version  $Revision$, $Date$
  */
-public class FormSolutionsBestellungBerechtigungspruefungHandler implements ConnectionContextStore,
-    MetaServiceStore,
-    UserStore {
+public class FormSolutionsBestellungBerechtigungspruefungHandler implements ConnectionContextStore, MetaServiceStore {
 
     //~ Static fields/initializers ---------------------------------------------
 
@@ -50,7 +47,6 @@ public class FormSolutionsBestellungBerechtigungspruefungHandler implements Conn
 
     //~ Instance fields --------------------------------------------------------
 
-    private User user;
     private MetaService metaService;
     private ConnectionContext connectionContext;
 
@@ -76,8 +72,8 @@ public class FormSolutionsBestellungBerechtigungspruefungHandler implements Conn
     }
 
     @Override
-    public void initWithConnectionContext(final ConnectionContext cc) {
-        this.connectionContext = cc;
+    public void initWithConnectionContext(final ConnectionContext connectionContext) {
+        this.connectionContext = connectionContext;
     }
 
     @Override
@@ -86,23 +82,13 @@ public class FormSolutionsBestellungBerechtigungspruefungHandler implements Conn
     }
 
     @Override
-    public void setMetaService(final MetaService ms) {
-        this.metaService = ms;
+    public void setMetaService(final MetaService metaService) {
+        this.metaService = metaService;
     }
 
     @Override
     public MetaService getMetaService() {
         return metaService;
-    }
-
-    @Override
-    public User getUser() {
-        return user;
-    }
-
-    @Override
-    public void setUser(final User user) {
-        this.user = user;
     }
 
     //~ Inner Classes ----------------------------------------------------------
@@ -135,7 +121,20 @@ public class FormSolutionsBestellungBerechtigungspruefungHandler implements Conn
      */
     private class BerechtigungspruefungServerMessageListener implements CidsServerMessageManagerListener {
 
+        //~ Instance fields ----------------------------------------------------
+
+        private final User user = FormSolutionsBestellungHandler.getFsUser();
+
         //~ Methods ------------------------------------------------------------
+
+        /**
+         * DOCUMENT ME!
+         *
+         * @return  DOCUMENT ME!
+         */
+        public User getUser() {
+            return user;
+        }
 
         @Override
         public void messagePublished(final CidsServerMessageManagerListenerEvent csmmle) {
@@ -155,7 +154,7 @@ public class FormSolutionsBestellungBerechtigungspruefungHandler implements Conn
                     search.setBerechtigungspruefungSchluessel(schluessel);
                     final Collection<MetaObjectNode> mons = search.performServerSearch();
 
-                    new FormSolutionsBestellungHandler(FormSolutionsBestellungHandler.getFsUser(),
+                    new FormSolutionsBestellungHandler(
                         getMetaService(),
                         getConnectionContext()).executeSingleStep(FormSolutionsBestellungHandler.STATUS_PRODUKT, mons);
                 }

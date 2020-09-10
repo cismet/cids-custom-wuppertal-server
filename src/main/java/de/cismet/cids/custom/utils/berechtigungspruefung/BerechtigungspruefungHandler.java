@@ -184,12 +184,12 @@ public class BerechtigungspruefungHandler implements ConnectionContextStore {
     public void sendMessagesForAllOpenFreigaben(final User user) {
         final Collection<CidsBean> allOpenDownloads = loadOpenFreigabeBeans(user);
         if (allOpenDownloads != null) {
-            final Map<String, Collection> dm = new HashMap<String, Collection>();
+            final Map<String, Collection> dm = new HashMap<>();
             for (final CidsBean openDownload : allOpenDownloads) {
                 final String userKey = (String)openDownload.getProperty("benutzer");
                 if (userKey != null) {
                     if (!dm.containsKey(userKey)) {
-                        dm.put(userKey, new ArrayList<CidsBean>());
+                        dm.put(userKey, new ArrayList<>());
                     }
                     dm.get(userKey).add(openDownload);
                 }
@@ -215,7 +215,7 @@ public class BerechtigungspruefungHandler implements ConnectionContextStore {
      * @param  anfrageBeans  schluessel openPruefung DOCUMENT ME!
      */
     private void sendAnfrageMessages(final Collection<CidsBean> anfrageBeans) {
-        final Collection<String> schluesselList = new ArrayList<String>();
+        final Collection<String> schluesselList = new ArrayList<>();
         if (anfrageBeans != null) {
             for (final CidsBean anfrageBean : anfrageBeans) {
                 schluesselList.add((String)anfrageBean.getProperty("schluessel"));
@@ -336,7 +336,7 @@ public class BerechtigungspruefungHandler implements ConnectionContextStore {
      *
      * @param   user                DOCUMENT ME!
      * @param   schluessel          DOCUMENT ME!
-     * @param   downloadInfo        produktbezeichnung DOCUMENT ME!
+     * @param   downloadInfo        DOCUMENT ME!
      * @param   berechtigungsgrund  DOCUMENT ME!
      * @param   begruendung         DOCUMENT ME!
      * @param   dateiname           DOCUMENT ME!
@@ -399,7 +399,7 @@ public class BerechtigungspruefungHandler implements ConnectionContextStore {
     public List<CidsBean> loadOpenAnfrageBeans(final User user) {
         final MetaObject[] mos;
         try {
-            final List<CidsBean> beans = new ArrayList<CidsBean>();
+            final List<CidsBean> beans = new ArrayList<>();
             final MetaClass mcBerechtigungspruefung = CidsBean.getMetaClassFromTableName(
                     "WUNDA_BLAU",
                     "berechtigungspruefung",
@@ -471,7 +471,7 @@ public class BerechtigungspruefungHandler implements ConnectionContextStore {
     public List<CidsBean> loadOpenFreigabeBeans(final User user) {
         final MetaObject[] mos;
         try {
-            final List<CidsBean> beans = new ArrayList<CidsBean>();
+            final List<CidsBean> beans = new ArrayList<>();
             final MetaClass mcBerechtigungspruefung = CidsBean.getMetaClassFromTableName(
                     "WUNDA_BLAU",
                     "berechtigungspruefung",
