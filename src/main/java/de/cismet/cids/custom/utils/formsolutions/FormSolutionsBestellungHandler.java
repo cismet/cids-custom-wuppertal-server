@@ -904,7 +904,6 @@ public class FormSolutionsBestellungHandler implements ConnectionContextProvider
         LOG.error(message, exception);
         if (bestellungBean != null) {
             try {
-                bestellungBean.setProperty("erledigt", Boolean.FALSE);
                 bestellungBean.setProperty("fehler", message);
                 bestellungBean.setProperty("fehler_ts", new Timestamp(new Date().getTime()));
                 bestellungBean.setProperty("exception", getObjectMapper().writeValueAsString(exception));
@@ -1960,6 +1959,32 @@ public class FormSolutionsBestellungHandler implements ConnectionContextProvider
 
         return fsBestellungMap;
     }
+    
+    private void createGeom(final CidsBean bestellungBean) throws Exception {
+        final MetaClass geomMc = getMetaClass("geom", getConnectionContext());
+                    final CidsBean geomBean = geomMc.getEmptyInstance(getConnectionContext()).getBean();
+                    Geometry geom = null;
+                    if (bestellungBean.getProperty("landparcelcode") != null) {
+                        final String[] landparcelcodes = ((String)bestellungBean.getProperty("landparcelcode")).split(
+                                ",");
+                        for (final String landparcelcode : landparcelcodes) {
+                            final CidsBean flurstueck = getFlurstueck(landparcelcode);
+                            if (flurstueck == null) {
+                                throw new Exception("ALKIS Flurstück wurde nicht gefunden (" + landparcelcode + ")");
+                            }
+                            final Geometry flurgeom = (Geometry)flurstueck.getProperty("geometrie.geo_field");
+                            if (geom == null) {
+                                geom = flurgeom;
+                            } else {
+                                geom = flurgeom.union(geom);
+                            }
+                        }
+                    }
+                    if (geom != null) {
+                        geomBean.setProperty("geo_field", geom);
+                        bestellungBean.setProperty("geometrie", geomBean);
+                    }
+    }
 
     /**
      * DOCUMENT ME!
@@ -2022,29 +2047,7 @@ public class FormSolutionsBestellungHandler implements ConnectionContextProvider
                 }
 
                 try {
-                    final MetaClass geomMc = getMetaClass("geom", getConnectionContext());
-                    final CidsBean geomBean = geomMc.getEmptyInstance(getConnectionContext()).getBean();
-                    Geometry geom = null;
-                    if (bestellungBean.getProperty("landparcelcode") != null) {
-                        final String[] landparcelcodes = ((String)bestellungBean.getProperty("landparcelcode")).split(
-                                ",");
-                        for (final String landparcelcode : landparcelcodes) {
-                            final CidsBean flurstueck = getFlurstueck(landparcelcode);
-                            if (flurstueck == null) {
-                                throw new Exception("ALKIS Flurstück wurde nicht gefunden (" + landparcelcode + ")");
-                            }
-                            final Geometry flurgeom = (Geometry)flurstueck.getProperty("geometrie.geo_field");
-                            if (geom == null) {
-                                geom = flurgeom;
-                            } else {
-                                geom = flurgeom.union(geom);
-                            }
-                        }
-                    }
-                    if (geom != null) {
-                        geomBean.setProperty("geo_field", geom);
-                        bestellungBean.setProperty("geometrie", geomBean);
-                    }
+                    createGeom(bestellungBean);
                 } catch (final Exception ex) {
                     setErrorStatus(
                         transid,
@@ -2472,6 +2475,7 @@ public class FormSolutionsBestellungHandler implements ConnectionContextProvider
                             }
 
                             bestellungBean.setProperty("berechtigungspruefung", pruefung);
+                            bestellungBean.setProperty("erledigt", Boolean.TRUE);
                             getMetaService().updateMetaObject(
                                 getUser(),
                                 bestellungBean.getMetaObject(),
@@ -2502,6 +2506,12 @@ public class FormSolutionsBestellungHandler implements ConnectionContextProvider
      */
     private static String createTransidHash(final String transid) {
         return DigestUtils.md5Hex(getProperties().getTransidHashpepper() + transid);
+    }
+    public static void main(String[] args) {
+        System.out.println("KFAS_KF600202-48Yw8wJP : https://redirect2formsolutions.cismet.de/" + DigestUtils.md5Hex("b8faD9ssEz" + "KFAS_KF600202-48Yw8wJP"));
+        System.out.println("KFAS_KF600202-hME5e8bb : https://redirect2formsolutions.cismet.de/" + DigestUtils.md5Hex("b8faD9ssEz" + "KFAS_KF600202-hME5e8bb"));
+        System.out.println("KFAS_KF600202-BKMe6LQM : https://redirect2formsolutions.cismet.de/" + DigestUtils.md5Hex("b8faD9ssEz" + "KFAS_KF600202-BKMe6LQM"));
+        System.out.println("KFAS_KF600202-F6rkfLRt : https://redirect2formsolutions.cismet.de/" + DigestUtils.md5Hex("b8faD9ssEz" + "KFAS_KF600202-F6rkfLRt"));
     }
 
     /**
@@ -2582,6 +2592,9 @@ public class FormSolutionsBestellungHandler implements ConnectionContextProvider
                         bestellungBean.setProperty("produkt_dateiname_orig", null);
                         bestellungBean.setProperty("produkt_ts", null);
 
+                        if (bestellungBean.getProperty("geometrie.geo_field") == null) {
+                            createGeom(bestellungBean);
+                        }                        
                         getMetaService().updateMetaObject(
                             getUser(),
                             bestellungBean.getMetaObject(),
