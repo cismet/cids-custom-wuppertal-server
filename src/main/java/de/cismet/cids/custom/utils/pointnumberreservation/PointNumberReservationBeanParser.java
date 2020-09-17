@@ -31,12 +31,6 @@ import java.util.List;
 import javax.xml.parsers.DocumentBuilder;
 import javax.xml.parsers.DocumentBuilderFactory;
 import javax.xml.parsers.ParserConfigurationException;
-import javax.xml.transform.Transformer;
-import javax.xml.transform.TransformerConfigurationException;
-import javax.xml.transform.TransformerException;
-import javax.xml.transform.TransformerFactory;
-import javax.xml.transform.dom.DOMSource;
-import javax.xml.transform.stream.StreamResult;
 
 /**
  * DOCUMENT ME!
@@ -139,11 +133,12 @@ public class PointNumberReservationBeanParser {
             final Document doc = dBuilder.parse(is);
             final String anr = parseAuftragsnummer(doc.getLastChild());
             final PointNumberReservationRequest requestBean = new PointNumberReservationRequest();
+            requestBean.setRawResult(resultString);
             requestBean.setAntragsnummer(anr);
             final boolean wasSuccessFull = parseSuccessfull(doc.getLastChild());
             requestBean.setSuccessful(wasSuccessFull);
             if (wasSuccessFull) {
-                final ArrayList<PointNumberReservation> pointNumbers = new ArrayList<PointNumberReservation>();
+                final ArrayList<PointNumberReservation> pointNumbers = new ArrayList<>();
                 final NodeList pointNumberNodes = doc.getElementsByTagName("reservierteNummern");
                 for (int i = 0; i < pointNumberNodes.getLength(); i++) {
                     final Node resNumNode = pointNumberNodes.item(i);
@@ -159,11 +154,7 @@ public class PointNumberReservationBeanParser {
                 requestBean.setErrorMessages(errorMsg);
             }
             return requestBean;
-        } catch (ParserConfigurationException ex) {
-            LOG.error("Could not parse 3A server Result", ex);
-        } catch (SAXException ex) {
-            LOG.error("Could not parse 3A server Result", ex);
-        } catch (IOException ex) {
+        } catch (final Exception ex) {
             LOG.error("Could not parse 3A server Result", ex);
         }
         return null;
@@ -179,8 +170,7 @@ public class PointNumberReservationBeanParser {
     public static Collection<PointNumberReservationRequest> parseBestandsdatenauszug(final String resultString) {
         final DocumentBuilderFactory dbFactory = DocumentBuilderFactory.newInstance();
         final DocumentBuilder dBuilder;
-        final HashMap<String, PointNumberReservationRequest> requests =
-            new HashMap<String, PointNumberReservationRequest>();
+        final HashMap<String, PointNumberReservationRequest> requests = new HashMap<>();
         try {
             final byte[] res = resultString.getBytes("UTF-8");
             byte[] b;

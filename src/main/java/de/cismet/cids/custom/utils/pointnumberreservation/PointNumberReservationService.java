@@ -330,7 +330,6 @@ public class PointNumberReservationService {
         final InputStream preparedQuery = new ByteArrayInputStream(request.getBytes());
 
         final String result = sendRequestAndAwaitResult(preparedQuery);
-
         if (result == null) {
             return null;
         }
@@ -345,7 +344,7 @@ public class PointNumberReservationService {
      *
      * @return  DOCUMENT ME!
      */
-    public PointNumberReservationRequest getAllBenAuftr(final String anr, final String profilKennung) {
+    public PointNumberReservationRequest getBenAuftr(final String anr, final String profilKennung) {
         if (initError) {
             LOG.info("PointNumberReservationService initialisation error");
             return null;
@@ -369,16 +368,13 @@ public class PointNumberReservationService {
                     .parseBestandsdatenauszug(result);
         // should only contain one element
         if (requests.isEmpty()) {
-            LOG.info("Could not find a result for Auftragsnummer " + anr);
             return null;
         }
         if (requests.size() > 1) {
             LOG.warn(
                 "There should be exact one Auftragsnummer but the result contains multiple one. Returning only the first one");
         }
-        final PointNumberReservationRequest r = requests.toArray(new PointNumberReservationRequest[1])[0];
-
-        return r;
+        return requests.toArray(new PointNumberReservationRequest[1])[0];
     }
 
     /**
@@ -443,7 +439,7 @@ public class PointNumberReservationService {
             LOG.info("PointNumberReservationService initialisation error");
             return false;
         }
-        final PointNumberReservationRequest auftrag = getAllBenAuftr(anr, profilKennung);
+        final PointNumberReservationRequest auftrag = getBenAuftr(anr, profilKennung);
         if ((auftrag == null) || (auftrag.getAntragsnummer() == null)) {
             return false;
         }
@@ -463,7 +459,7 @@ public class PointNumberReservationService {
             LOG.info("PointNumberReservationService initialisation error");
             return null;
         }
-        final PointNumberReservationRequest request = getAllBenAuftr(requestId, profilKennung);
+        final PointNumberReservationRequest request = getBenAuftr(requestId, profilKennung);
         if (request != null) {
             return request.getPointNumbers();
         }
@@ -482,7 +478,7 @@ public class PointNumberReservationService {
      *
      * @return  DOCUMENT ME!
      */
-    public PointNumberReservationRequest releaseReservation(final String prefix,
+    public PointNumberReservationRequest doReleaseReservation(final String prefix,
             final String anr,
             final String nummerierungsbezirk,
             final int firstPointNumber,
@@ -509,9 +505,11 @@ public class PointNumberReservationService {
         final InputStream preparedQuery = new ByteArrayInputStream(request.getBytes());
 
         final String result = sendRequestAndAwaitResult(preparedQuery);
+
         if (result == null) {
             return null;
         }
+
         return PointNumberReservationBeanParser.parseReservierungsErgebnis(result);
     }
 
@@ -526,7 +524,7 @@ public class PointNumberReservationService {
      *
      * @return  DOCUMENT ME!
      */
-    public PointNumberReservationRequest prolongReservation(final String prefix,
+    public PointNumberReservationRequest doProlongReservation(final String prefix,
             final String anr,
             final Collection<Long> points,
             final Date date,
@@ -540,8 +538,7 @@ public class PointNumberReservationService {
             return null;
         }
 
-        final PointNumberReservationRequest result = PointNumberReservationService.instance()
-                    .getAllBenAuftr(anr, profilKennung);
+        final PointNumberReservationRequest result = getBenAuftr(anr, profilKennung);
         if (result != null) {
             // for having the pnrs in the right sort order, first push them in HM
             // then getting them from the HM in the right points order.
@@ -633,13 +630,14 @@ public class PointNumberReservationService {
         final String result = sendRequestAndAwaitResult(preparedQuery);
         if (result == null) {
             return null;
+        } else {
+            final PointNumberReservationRequest tmpResult = PointNumberReservationBeanParser.parseReservierungsErgebnis(
+                    result);
+            if (tmpResult.isSuccessfull()) {
+                fillWithAblaufDatum(requestId, tmpResult, profilKennung);
+            }
+            return tmpResult;
         }
-        final PointNumberReservationRequest tmpResult = PointNumberReservationBeanParser.parseReservierungsErgebnis(
-                result);
-        if (tmpResult.isSuccessfull()) {
-            fillWithAblaufDatum(requestId, tmpResult, profilKennung);
-        }
-        return tmpResult;
     }
 
     /**
@@ -652,7 +650,7 @@ public class PointNumberReservationService {
     private void fillWithAblaufDatum(final String requestId,
             final PointNumberReservationRequest resultWithoutDate,
             final String profilKennung) {
-        final List<PointNumberReservation> tmp = getAllBenAuftr(requestId, profilKennung).getPointNumbers();
+        final List<PointNumberReservation> tmp = getBenAuftr(requestId, profilKennung).getPointNumbers();
         final List<PointNumberReservation> pnrWithoutDate = resultWithoutDate.getPointNumbers();
         tmp.retainAll(resultWithoutDate.getPointNumbers());
         Collections.sort(tmp);

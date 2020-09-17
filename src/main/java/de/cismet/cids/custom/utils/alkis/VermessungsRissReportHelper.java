@@ -84,7 +84,6 @@ public class VermessungsRissReportHelper {
             final String host,
             final Class<? extends MultiPagePictureReader> multiPageReaderClass) {
         final Collection<VermessungRissImageReportBean> imageBeans = new LinkedList<VermessungRissImageReportBean>();
-        final Collection<URL> additionalFilesToDownload = new LinkedList<URL>();
 // Not the most elegant way, but it works. We have to calculate on which page an image will
         // appear. This can't be easily done with JasperReports. In order to let JasperReports calculate
         // which page an image appears on, we have to know how many pages the overview will take. And
@@ -223,7 +222,85 @@ public class VermessungsRissReportHelper {
         final Collection<VermessungRissReportBean> reportBeans = new LinkedList<VermessungRissReportBean>();
         reportBeans.add(new VermessungRissReportBean(selectedVermessungsrisse, imageBeans));
 
-        return new Object[] { reportBeans, parameters, additionalFilesToDownload };
+        return new Object[] { reportBeans, parameters, identifyAdditionalFiles(selectedVermessungsrisse, host) };
+    }
+
+    /**
+     * DOCUMENT ME!
+     *
+     * @param   selectedVermessungsrisse  DOCUMENT ME!
+     * @param   host                      DOCUMENT ME!
+     *
+     * @return  DOCUMENT ME!
+     */
+    private Collection<URL> identifyAdditionalFiles(final Collection<CidsBean> selectedVermessungsrisse,
+            final String host) {
+        final Collection<URL> additionalFilesToDownload = new LinkedList<>();
+        for (final CidsBean vermessungsriss : selectedVermessungsrisse) {
+            final String schluessel;
+            final Integer gemarkung;
+            final String flur;
+            final String blatt;
+
+            try {
+                schluessel = vermessungsriss.getProperty("schluessel").toString();
+                gemarkung = (Integer)vermessungsriss.getProperty("gemarkung.id");
+                flur = vermessungsriss.getProperty("flur").toString();
+                blatt = vermessungsriss.getProperty("blatt").toString();
+            } catch (final Exception ex) {
+                // TODO: User feedback?
+                LOG.warn("Could not include raster document for vermessungsriss '"
+                            + vermessungsriss.toJSONString(true)
+                            + "'.",
+                    ex);
+                continue;
+            }
+
+            final List<String> documents;
+            // we search for reduced size images, since we need the reduced size image for the report
+            if (host.equals(ServerAlkisConf.getInstance().getVermessungHostGrenzniederschriften())) {
+                documents = VermessungsrissPictureFinder.getInstance()
+                            .findGrenzniederschriftPicture(
+                                    schluessel,
+                                    gemarkung,
+                                    flur,
+                                    blatt);
+            } else {
+                documents = VermessungsrissPictureFinder.getInstance()
+                            .findVermessungsrissPicture(
+                                    schluessel,
+                                    gemarkung,
+                                    flur,
+                                    blatt);
+            }
+
+            if ((documents == null) || documents.isEmpty()) {
+                LOG.info("No document URLS found for the Vermessungsriss report");
+            }
+            boolean isOfReducedSize = false;
+            if (documents != null) {
+                for (final String document : documents) {
+                    try {
+                        final URL url = ServerAlkisConf.getInstance().getDownloadUrlForDocument(document);
+                        if (url.toString().contains("_rs")) {
+                            isOfReducedSize = true;
+                        }
+
+                        // when a reduced size image was found we download the original file as jpg also
+                        if (isOfReducedSize) {
+                            additionalFilesToDownload.add(new URL(
+                                    url.toString().replaceAll("_rs", "")));
+                        }
+                        break;
+                    } catch (final Exception ex) {
+                        LOG.warn("Could not read document from URL '" + document
+                                    + "'. Skipping this url.",
+                            ex);
+                    }
+                }
+            }
+        }
+        return additionalFilesToDownload;
     }
 
     /**

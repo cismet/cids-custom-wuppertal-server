@@ -150,7 +150,7 @@ public class PointNumberReserverationServerAction implements UserAwareServerActi
      *
      * @return  DOCUMENT ME!
      */
-    private PointNumberReservationRequest doReservierung(final String aPrefix,
+    private Object doReservierung(final String aPrefix,
             final String aNummer,
             final String nbz,
             final int anzahl,
@@ -175,7 +175,7 @@ public class PointNumberReserverationServerAction implements UserAwareServerActi
     private Collection<PointNumberReservation> getReserviertePunkte(final String aPrefix, final String aNummer) {
         final String anr = aPrefix + ANR_SEPERATOR + aNummer;
         final PointNumberReservationRequest result = PointNumberReservationService.instance()
-                    .getAllBenAuftr(anr, getProfilKennung());
+                    .getBenAuftr(anr, getProfilKennung());
         if (result != null) {
             return result.getPointNumbers();
         }
@@ -204,7 +204,7 @@ public class PointNumberReserverationServerAction implements UserAwareServerActi
         }
 
         return PointNumberReservationService.instance()
-                    .releaseReservation(aPrefix, anr, nbz, on1, on2, getProfilKennung());
+                    .doReleaseReservation(aPrefix, anr, nbz, on1, on2, getProfilKennung());
     }
 
     /**
@@ -236,7 +236,7 @@ public class PointNumberReserverationServerAction implements UserAwareServerActi
      *
      * @return  DOCUMENT ME!
      */
-    private PointNumberReservationRequest doVerlaengern(final String aPrefix,
+    private Object doVerlaengern(final String aPrefix,
             final String aNummer,
             final Collection<Long> ps,
             final Date date) {
@@ -244,7 +244,9 @@ public class PointNumberReserverationServerAction implements UserAwareServerActi
         if (!isAuftragsNummerValid(anr)) {
             return null;
         }
-        return PointNumberReservationService.instance().prolongReservation(aPrefix, anr, ps, date, getProfilKennung());
+
+        return PointNumberReservationService.instance()
+                    .doProlongReservation(aPrefix, anr, ps, date, getProfilKennung());
     }
 
     /**
