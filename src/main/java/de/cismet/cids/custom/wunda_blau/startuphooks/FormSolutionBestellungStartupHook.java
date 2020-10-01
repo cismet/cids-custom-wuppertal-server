@@ -121,7 +121,7 @@ public class FormSolutionBestellungStartupHook implements DomainServerStartupHoo
      */
     private void redoBestellung(final MetaObject mo, final FormSolutionsBestellungHandler handler) {
         final MetaObjectNode mon = new MetaObjectNode(mo.getDomain(), mo.getId(), mo.getClassID());
-        handler.execute(FormSolutionsBestellungHandler.STATUS_CLOSE, false, false, false, Arrays.asList(mon));
+        handler.execute(FormSolutionsBestellungHandler.STATUS_CLOSE, false, false, Arrays.asList(mon));
     }
 
     /**
