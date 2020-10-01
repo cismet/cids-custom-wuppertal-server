@@ -156,7 +156,11 @@ public class FormSolutionsBestellungBerechtigungspruefungHandler implements Conn
 
                     new FormSolutionsBestellungHandler(
                         getMetaService(),
-                        getConnectionContext()).executeSingleStep(FormSolutionsBestellungHandler.STATUS_PRODUKT, mons);
+                        getConnectionContext()).execute(
+                        FormSolutionsBestellungHandler.STATUS_PRODUKT,
+                        false,
+                        false,
+                        mons);
                 }
             }
         }

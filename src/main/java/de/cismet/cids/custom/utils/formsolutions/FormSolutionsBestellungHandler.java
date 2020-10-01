@@ -467,41 +467,13 @@ public class FormSolutionsBestellungHandler implements ConnectionContextProvider
      * @return  DOCUMENT ME!
      */
     public Collection fetchEndExecuteAllOpen(final boolean test) {
-        return execute(STATUS_FETCH, false, false, test, null);
-    }
-
-    /**
-     * DOCUMENT ME!
-     *
-     * @param   startStep  DOCUMENT ME!
-     * @param   mons       DOCUMENT ME!
-     *
-     * @return  DOCUMENT ME!
-     */
-    public Collection executeSingleStep(final Integer startStep, final Collection<MetaObjectNode> mons) {
-        return executeSingleStep(startStep, false, mons);
-    }
-
-    /**
-     * DOCUMENT ME!
-     *
-     * @param   startStep  DOCUMENT ME!
-     * @param   test       DOCUMENT ME!
-     * @param   mons       DOCUMENT ME!
-     *
-     * @return  DOCUMENT ME!
-     */
-    public Collection executeSingleStep(final Integer startStep,
-            final boolean test,
-            final Collection<MetaObjectNode> mons) {
-        return execute(startStep, true, false, test, mons);
+        return execute(STATUS_FETCH, false, test, null);
     }
 
     /**
      * DOCUMENT ME!
      *
      * @param   startStep     DOCUMENT ME!
-     * @param   _singleStep   DOCUMENT ME!
      * @param   repairErrors  DOCUMENT ME!
      * @param   test          DOCUMENT ME!
      * @param   mons          DOCUMENT ME!
@@ -511,21 +483,11 @@ public class FormSolutionsBestellungHandler implements ConnectionContextProvider
      * @throws  IllegalStateException  DOCUMENT ME!
      */
     public Collection execute(final int startStep,
-            final boolean _singleStep,
             final boolean repairErrors,
             final boolean test,
             final Collection<MetaObjectNode> mons) {
-        final boolean singleStep;
-        if (mons == null) {
-            singleStep = false;
-        } else {
-            singleStep = _singleStep;
-            if (startStep >= FormSolutionsBestellungHandler.STATUS_SAVE) {
-                throw new IllegalStateException("fetch not allowed with metaobjectnodes");
-            }
-            if (mons == null) {
-                throw new IllegalStateException("metaobjectnodes are null");
-            }
+        if ((mons != null) && (startStep >= FormSolutionsBestellungHandler.STATUS_SAVE)) {
+            throw new IllegalStateException("fetch not allowed with metaobjectnodes");
         }
 
         Map<String, CidsBean> fsBeanMap = null;
@@ -563,34 +525,22 @@ public class FormSolutionsBestellungHandler implements ConnectionContextProvider
             }
             case STATUS_CLOSE: {
                 step5CloseTransactions(fsBeanMap);
-                if (singleStep) {
-                    break;
-                }
             }
             case STATUS_PRUEFUNG: {
                 step6PruefungProdukt(fsBeanMap, repairErrors);
-                if (singleStep) {
-                    break;
-                }
             }
             case STATUS_PRODUKT: {
                 downloadInfoMap = step7CreateProducts(fsBeanMap, repairErrors);
-                if (singleStep) {
-                    break;
-                }
             }
             case STATUS_BILLING: {
                 step8Billing(fsBeanMap, downloadInfoMap, repairErrors);
-                if (singleStep) {
+                if (STATUS_BILLING == startStep) {
                     break;
                 }
             }
             case STATUS_PENDING:
             case STATUS_DONE: {
                 step9FinalizeEntries(fsBeanMap, repairErrors);
-                if (singleStep) {
-                    break;
-                }
             }
         }
         return null;
