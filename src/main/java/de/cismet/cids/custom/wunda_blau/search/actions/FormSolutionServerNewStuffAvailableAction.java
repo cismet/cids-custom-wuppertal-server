@@ -58,7 +58,9 @@ public class FormSolutionServerNewStuffAvailableAction implements UserAwareServe
 
         //~ Enum constants -----------------------------------------------------
 
-        STEP_TO_EXECUTE, SINGLE_STEP, REPAIR_ERRORS, METAOBJECTNODES, TEST
+        STEP_TO_EXECUTE,
+        @Deprecated
+        SINGLE_STEP, REPAIR_ERRORS, METAOBJECTNODES, TEST
     }
 
     //~ Instance fields --------------------------------------------------------
@@ -78,7 +80,6 @@ public class FormSolutionServerNewStuffAvailableAction implements UserAwareServe
     public Object execute(final Object body, final ServerActionParameter... params) {
         FormSolutionBestellungSpecialLogger.getInstance().log("execute by: " + getUser().getName());
 
-        boolean singleStep = false;
         boolean repairErrors = false;
         int startStep = FormSolutionsBestellungHandler.STATUS_FETCH;
         boolean test = false;
@@ -90,8 +91,6 @@ public class FormSolutionServerNewStuffAvailableAction implements UserAwareServe
                     mons.addAll((Collection)sap.getValue());
                 } else if (sap.getKey().equals(PARAMETER_TYPE.STEP_TO_EXECUTE.toString())) {
                     startStep = (Integer)sap.getValue();
-                } else if (sap.getKey().equals(PARAMETER_TYPE.SINGLE_STEP.toString())) {
-                    singleStep = (Boolean)sap.getValue();
                 } else if (sap.getKey().equals(PARAMETER_TYPE.REPAIR_ERRORS.toString())) {
                     repairErrors = (Boolean)sap.getValue();
                 } else if (sap.getKey().equals(PARAMETER_TYPE.TEST.toString())) {
@@ -106,7 +105,7 @@ public class FormSolutionServerNewStuffAvailableAction implements UserAwareServe
         if (mons == null) {
             return handler.fetchEndExecuteAllOpen(test);
         } else {
-            return handler.execute(startStep, singleStep, repairErrors, test, mons);
+            return handler.execute(startStep, repairErrors, test, mons);
         }
     }
 
