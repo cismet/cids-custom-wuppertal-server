@@ -109,7 +109,7 @@ public class VermUntTaskPNR extends VermessungsunterlagenTask {
 
                                     FileUtils.writeStringToFile(new File(filebasename + ".xml"),
                                         result.getRawResult(),
-                                        "ISO-8859-1");
+                                        "UTF-8");
                                     FileUtils.writeStringToFile(new File(filebasename + ".txt"),
                                         result.createTxtProtokoll(),
                                         "ISO-8859-1");
