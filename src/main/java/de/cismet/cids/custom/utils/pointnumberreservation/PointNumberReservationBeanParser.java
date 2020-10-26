@@ -133,7 +133,7 @@ public class PointNumberReservationBeanParser {
             final Document doc = dBuilder.parse(is);
             final String anr = parseAuftragsnummer(doc.getLastChild());
             final PointNumberReservationRequest requestBean = new PointNumberReservationRequest();
-            requestBean.setRawResult(resultString);
+            requestBean.setRawResult(new String(b));
             requestBean.setAntragsnummer(anr);
             final boolean wasSuccessFull = parseSuccessfull(doc.getLastChild());
             requestBean.setSuccessful(wasSuccessFull);
