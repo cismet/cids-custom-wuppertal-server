@@ -20,13 +20,12 @@ import de.cismet.cids.tools.CustomToStringConverter;
  * @author   sandra
  * @version  $Revision$, $Date$
  */
-public class BaumArtToStringConverter extends CustomToStringConverter {
+public class BaumOrtsterminToStringConverter extends CustomToStringConverter {
 
     //~ Static fields/initializers ---------------------------------------------
 
-    public static final String FIELD__NAME = "name";                // baum_Art
-    public static final String FIELD__HAUPTART = "fk_hauptart.name";  // baum_Hauptart
-    public static final String FIELD__ID = "id";                    // baum_Art
+    public static final String FIELD__NAME = "datum"; // baum_meldung
+    public static final String FIELD__ID = "id";         // baum_meldung
 
     //~ Methods ----------------------------------------------------------------
 
@@ -34,11 +33,9 @@ public class BaumArtToStringConverter extends CustomToStringConverter {
     public String createString() {
         final String myid = String.valueOf(cidsBean.getProperty(FIELD__ID));
         if ("-1".equals(myid)) {
-            return "Neue Art anlegen";
+            return "--";
         } else {
-            String myName = String.valueOf(cidsBean.getProperty(FIELD__HAUPTART));
-            String myMain = String.valueOf(cidsBean.getProperty(FIELD__NAME));
-            return myName + " - " + myMain;
+            return String.valueOf(cidsBean.getProperty(FIELD__NAME));
         }
     }
 }

@@ -20,13 +20,13 @@ import de.cismet.cids.tools.CustomToStringConverter;
  * @author   sandra
  * @version  $Revision$, $Date$
  */
-public class BaumArtToStringConverter extends CustomToStringConverter {
+public class BaumAnsprechpartnerToStringConverter extends CustomToStringConverter {
 
     //~ Static fields/initializers ---------------------------------------------
 
-    public static final String FIELD__NAME = "name";                // baum_Art
-    public static final String FIELD__HAUPTART = "fk_hauptart.name";  // baum_Hauptart
-    public static final String FIELD__ID = "id";                    // baum_Art
+    public static final String FIELD__NAME = "name"; // baum_ansprechpartner
+    public static final String FIELD__BEM = "bemerkung"; // baum_ansprechpartner
+    public static final String FIELD__ID = "id";         // baum_ansprechpartner
 
     //~ Methods ----------------------------------------------------------------
 
@@ -34,11 +34,14 @@ public class BaumArtToStringConverter extends CustomToStringConverter {
     public String createString() {
         final String myid = String.valueOf(cidsBean.getProperty(FIELD__ID));
         if ("-1".equals(myid)) {
-            return "Neue Art anlegen";
+            return "--";
         } else {
-            String myName = String.valueOf(cidsBean.getProperty(FIELD__HAUPTART));
-            String myMain = String.valueOf(cidsBean.getProperty(FIELD__NAME));
-            return myName + " - " + myMain;
+            final String myBem = String.valueOf(cidsBean.getProperty(FIELD__BEM));
+            if (myBem.trim().isEmpty()){
+                return String.valueOf(cidsBean.getProperty(FIELD__NAME));
+            } else {
+                return String.valueOf(cidsBean.getProperty(FIELD__NAME)) + ", " + myBem.trim();
+            }
         }
     }
 }
