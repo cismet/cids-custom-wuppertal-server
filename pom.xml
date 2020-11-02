@@ -13,7 +13,7 @@
 
     <groupId>de.cismet.cids.custom.wupp.server</groupId>
     <artifactId>cids-custom-server-wuppertal</artifactId>
-    <version>6.21-SNAPSHOT</version>
+    <version>6.23-SNAPSHOT</version>
     <packaging>jar</packaging>
     
     <name>${names.cids.custom-wuppertal-server} [${project.version}]</name>
@@ -61,7 +61,7 @@
             <dependency>
                 <groupId>de.cismet.commons</groupId>
                 <artifactId>cismet-commons</artifactId>
-                <version>6.5.5</version>
+                <version>6.5.6</version>
                 <type>jar</type>
                 <scope>compile</scope>
             </dependency>
@@ -69,7 +69,7 @@
             <dependency>
                 <groupId>de.cismet.cids</groupId>
                 <artifactId>cids-server</artifactId>
-                <version>6.3.9</version>
+                <version>6.4</version>
                 <type>jar</type>
                 <scope>compile</scope>
             </dependency>
@@ -279,13 +279,18 @@
             <version>1.0.3</version>
             <scope>runtime</scope>
         </dependency>
+        <dependency>
+            <groupId>de.cismet.custom</groupId>
+            <artifactId>cismet-deegree</artifactId>
+            <scope>runtime</scope>
+        </dependency>        
         <!--
             FIXME: Clarify if this dependency is really needed!
         -->
         <dependency>
             <groupId>mysql</groupId>
             <artifactId>mysql-connector-java</artifactId>
-            <version>3.1.14</version>
+            <version>8.0.21</version>
             <scope>runtime</scope>
         </dependency>
         <!-- END: runtime dependencies -->
@@ -371,7 +376,7 @@
 <!--        <dependency>
             <groupId>de.cismet.verdis</groupId>
             <artifactId>verdis-server</artifactId>
-            <version>6.11-SNAPSHOT</version>
+            <version>6.12-SNAPSHOT</version>
             <scope>runtime</scope>
         </dependency>-->
     </dependencies>

@@ -43,8 +43,10 @@ public enum WundaBlauServerResources {
     NIVP_OVERVIEW_JASPER(new JasperReportServerResource("/reports/nivp_overview.jasper")),
     FS_RECHNUNG_JASPER(new JasperReportServerResource("/reports/bestellung_rechnung.jasper")),
     FS_RECHNUNG_RUECKSEITE_JASPER(new JasperReportServerResource("/reports/bestellung_rechnung_rueckseite.jasper")),
-
     POTENZIALFLAECHEN_JASPER(new JasperReportServerResource("/potenzialflaechen/potenzialflaechen_full.jasper")),
+    ALBO_VORGANG_JASPER(new JasperReportServerResource("/reports/albo_flaeche.jasper")),
+    ALBO_FLAECHE_JASPER(new JasperReportServerResource("/reports/albo_flaeche.jasper")),
+
     FS_TEST_XML(new TextServerResource("/formsolutions/TEST_CISMET00.xml")),
     FS_IGNORE_TRANSID_TXT(new TextServerResource("/formsolutions/ignoreTransids.txt")),
     FORMSOLUTIONS_PROPERTIES(new TextServerResource("/formsolutions/fs_conf.properties")),
@@ -90,7 +92,13 @@ public enum WundaBlauServerResources {
     PRBR_CONF_PROPERTIES(new TextServerResource("/prbr/prbr_conf.properties")),
     STRADR_CONF_PROPERTIES(new TextServerResource("/stradr/stradr_conf.properties")),
 
-    VZKAT_PROPERTIES(new TextServerResource("/vzkat/vzkat.properties"));
+    DATASOURCES_CAPABILITYLIST_TEXT(new TextServerResource("/datasources/capabilities.xml")),
+    DATASOURCES_CREDENTIALS_PROPERTIES(new TextServerResource("/datasources/credentials.properties")),
+    DATASOURCES_GENERAL_PROPERTIES(new TextServerResource("/datasources/general.properties")),
+
+    VZKAT_PROPERTIES(new TextServerResource("/vzkat/vzkat.properties")),
+
+    ALBO_PROPERTIES(new TextServerResource("/albo/albo.properties"));
 
     //~ Instance fields --------------------------------------------------------
 

@@ -58,7 +58,9 @@ public class FormSolutionServerNewStuffAvailableAction implements UserAwareServe
 
         //~ Enum constants -----------------------------------------------------
 
-        STEP_TO_EXECUTE, SINGLE_STEP, METAOBJECTNODES, TEST
+        STEP_TO_EXECUTE,
+        @Deprecated
+        SINGLE_STEP, REPAIR_ERRORS, METAOBJECTNODES, TEST
     }
 
     //~ Instance fields --------------------------------------------------------
@@ -78,7 +80,7 @@ public class FormSolutionServerNewStuffAvailableAction implements UserAwareServe
     public Object execute(final Object body, final ServerActionParameter... params) {
         FormSolutionBestellungSpecialLogger.getInstance().log("execute by: " + getUser().getName());
 
-        boolean singleStep = false;
+        boolean repairErrors = false;
         int startStep = FormSolutionsBestellungHandler.STATUS_FETCH;
         boolean test = false;
         Collection<MetaObjectNode> mons = null;
@@ -89,8 +91,8 @@ public class FormSolutionServerNewStuffAvailableAction implements UserAwareServe
                     mons.addAll((Collection)sap.getValue());
                 } else if (sap.getKey().equals(PARAMETER_TYPE.STEP_TO_EXECUTE.toString())) {
                     startStep = (Integer)sap.getValue();
-                } else if (sap.getKey().equals(PARAMETER_TYPE.SINGLE_STEP.toString())) {
-                    singleStep = (Boolean)sap.getValue();
+                } else if (sap.getKey().equals(PARAMETER_TYPE.REPAIR_ERRORS.toString())) {
+                    repairErrors = (Boolean)sap.getValue();
                 } else if (sap.getKey().equals(PARAMETER_TYPE.TEST.toString())) {
                     test = (Boolean)sap.getValue();
                 }
@@ -98,13 +100,12 @@ public class FormSolutionServerNewStuffAvailableAction implements UserAwareServe
         }
 
         final FormSolutionsBestellungHandler handler = new FormSolutionsBestellungHandler(
-                getUser(),
                 getMetaService(),
                 getConnectionContext());
         if (mons == null) {
             return handler.fetchEndExecuteAllOpen(test);
         } else {
-            return handler.execute(startStep, singleStep, test, mons);
+            return handler.execute(startStep, repairErrors, test, mons);
         }
     }
 
