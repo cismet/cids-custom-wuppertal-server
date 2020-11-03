@@ -373,12 +373,6 @@
             <scope>compile</scope>
             <type>jar</type>
         </dependency>
-<!--        <dependency>
-            <groupId>de.cismet.verdis</groupId>
-            <artifactId>verdis-server</artifactId>
-            <version>6.12-SNAPSHOT</version>
-            <scope>runtime</scope>
-        </dependency>-->
     </dependencies>
 
     <build>
@@ -447,11 +441,3 @@
         <finalName>cidsCustomServerStuff</finalName>
     </build>
 </project>
-
-
-
-
-
-
-
-
