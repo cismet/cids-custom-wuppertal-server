@@ -42,11 +42,18 @@ public class ObjectsPermissionsSearch extends AbstractCidsServerSearch implement
 
     private static final transient Logger LOG = Logger.getLogger(ObjectsPermissionsSearch.class);
     private static final String CLASSNAME__OBJECTPERMISSIONS = "cs_objectpermissions";
-    private static final String QUERY_TEMPLATE = ""
+    private static final String QUERY_TEMPLATE_ALL = ""
+                + "SELECT (SELECT id from cs_class WHERE table_name ILIKE '%1$s'), id "
+                + "FROM %1$s";
+    private static final String QUERY_TEMPLATE_OBJECT = ""
                 + "SELECT (SELECT id from cs_class WHERE table_name ILIKE '%1$s'), id "
                 + "FROM %1$s "
                 + "WHERE class_id = %2$d"
                 + "AND (object_id IS NULL OR object_id = %3$d)";
+    private static final String QUERY_TEMPLATE_CLASS = ""
+                + "SELECT (SELECT id from cs_class WHERE table_name ILIKE '%1$s'), id "
+                + "FROM %1$s "
+                + "WHERE class_id = %2$d";
     private static final SearchInfo SEARCH_INFO = createSearchInfo();
 
     //~ Instance fields --------------------------------------------------------
@@ -62,8 +69,8 @@ public class ObjectsPermissionsSearch extends AbstractCidsServerSearch implement
      *
      * @param  objectMons  DOCUMENT ME!
      */
-    public ObjectsPermissionsSearch(final Collection<MetaObjectNode> objectMons) {
-        this.objectMons = objectMons;
+    public ObjectsPermissionsSearch(final MetaObjectNode... objectMons) {
+        this.objectMons = (objectMons != null) ? Arrays.asList(objectMons) : null;
     }
 
     //~ Methods ----------------------------------------------------------------
@@ -112,9 +119,9 @@ public class ObjectsPermissionsSearch extends AbstractCidsServerSearch implement
 
             final Collection<MetaObjectNode> objectMonsAllDomains = getObjectMons();
 
-            // seperating MONS by their domain
-            final Map<String, Collection<MetaObjectNode>> objectMonsPerDomain = new HashMap<>();
             if (objectMonsAllDomains != null) {
+                final Map<String, Collection<MetaObjectNode>> objectMonsPerDomain = new HashMap<>();
+                // seperating MONS by their domain
                 for (final MetaObjectNode objectMon : objectMonsAllDomains) {
                     if (objectMon != null) {
                         final String domain = objectMon.getDomain();
@@ -128,32 +135,54 @@ public class ObjectsPermissionsSearch extends AbstractCidsServerSearch implement
                         objectMonsSingleDomain.add(objectMon);
                     }
                 }
-            }
 
-            // searching objectspermissions for each domain
-            for (final String domain : objectMonsPerDomain.keySet()) {
-                final Collection<MetaObjectNode> objectMonsSingleDomain = objectMonsPerDomain.get(domain);
-                final Collection<String> subQuery = new ArrayList<>();
-                if (objectMonsSingleDomain != null) {
-                    for (final MetaObjectNode objectMon : objectMonsSingleDomain) {
-                        if (objectMon != null) {
-                            subQuery.add(String.format(
-                                    QUERY_TEMPLATE,
-                                    CLASSNAME__OBJECTPERMISSIONS,
-                                    objectMon.getClassId(),
-                                    objectMon.getObjectId()));
+                // searching objectspermissions for each domain
+                for (final String domain : objectMonsPerDomain.keySet()) {
+                    final Collection<MetaObjectNode> objectMonsSingleDomain = objectMonsPerDomain.get(domain);
+                    final Collection<String> subQuery = new ArrayList<>();
+                    if (objectMonsSingleDomain != null) {
+                        for (final MetaObjectNode objectMon : objectMonsSingleDomain) {
+                            if (objectMon != null) {
+                                if (objectMon.getObjectId() < 0) {
+                                    subQuery.add(String.format(
+                                            QUERY_TEMPLATE_CLASS,
+                                            CLASSNAME__OBJECTPERMISSIONS,
+                                            objectMon.getClassId()));
+                                } else {
+                                    subQuery.add(String.format(
+                                            QUERY_TEMPLATE_OBJECT,
+                                            CLASSNAME__OBJECTPERMISSIONS,
+                                            objectMon.getClassId(),
+                                            objectMon.getObjectId()));
+                                }
+                            }
+                        }
+
+                        final String query = String.format("%s;", String.join(" UNION ", subQuery));
+                        final MetaService metaService = (MetaService)getActiveLocalServers().get(domain);
+
+                        final List<ArrayList> resultList = metaService.performCustomSearch(
+                                query,
+                                getConnectionContext());
+                        for (final ArrayList al : resultList) {
+                            final int cid = (Integer)al.get(0);
+                            final int oid = (Integer)al.get(1);
+                            final MetaObjectNode mon = new MetaObjectNode(domain, oid, cid);
+
+                            result.add(mon);
                         }
                     }
                 }
-
-                final String query = String.format("%s;", String.join(" UNION ", subQuery));
-                final MetaService metaService = (MetaService)getActiveLocalServers().get(domain);
-
+            } else {
+                final MetaService metaService = (MetaService)getActiveLocalServers().get("?");
+                final String query = String.format(
+                        "%s;",
+                        String.format(QUERY_TEMPLATE_ALL, CLASSNAME__OBJECTPERMISSIONS));
                 final List<ArrayList> resultList = metaService.performCustomSearch(query, getConnectionContext());
                 for (final ArrayList al : resultList) {
                     final int cid = (Integer)al.get(0);
                     final int oid = (Integer)al.get(1);
-                    final MetaObjectNode mon = new MetaObjectNode(domain, oid, cid);
+                    final MetaObjectNode mon = new MetaObjectNode("*", oid, cid);
 
                     result.add(mon);
                 }
