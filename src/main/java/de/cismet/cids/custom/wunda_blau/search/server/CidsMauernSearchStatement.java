@@ -28,6 +28,7 @@ import java.util.Date;
 import java.util.HashMap;
 import java.util.LinkedHashSet;
 import java.util.List;
+import java.util.Locale;
 import java.util.Set;
 import java.util.function.Function;
 import java.util.stream.Collectors;
@@ -408,13 +409,13 @@ public class CidsMauernSearchStatement extends AbstractCidsServerSearch implemen
             final Double bis) {
         final List<String> conditions = new ArrayList<>();
         if (von != null) {
-            conditions.add(String.format("%s >= %f", property, von));
+            conditions.add(String.format(Locale.US, "%s >= %f", property, von));
         }
         if (bis != null) {
-            conditions.add(String.format("%s <= %f", property, bis));
+            conditions.add(String.format(Locale.US, "%s <= %f", property, bis));
         }
         if (!conditions.isEmpty()) {
-            return String.format("(%s)", String.join(" AND ", conditions));
+            return String.format(Locale.US, "(%s)", String.join(" AND ", conditions));
         } else {
             return null;
         }
