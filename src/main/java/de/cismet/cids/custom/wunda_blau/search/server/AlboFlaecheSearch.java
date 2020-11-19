@@ -104,7 +104,7 @@ public class AlboFlaecheSearch extends AbstractCidsServerSearch implements MetaO
             leftJoins.add("albo_vorgang_flaeche AS arr ON flaeche.id = arr.fk_flaeche");
 
             if (getErhebungsNummer() != null) {
-                wheres.add(String.format("flaeche.erhebungsnummer LIKE '%%%s%%'", getErhebungsNummer()));
+                wheres.add(String.format("flaeche.erhebungsnummer ILIKE '%%%s%%'", getErhebungsNummer()));
             }
             if (getArtId() != null) {
                 wheres.add(String.format("flaeche.fk_art = %d", getArtId()));
