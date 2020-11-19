@@ -31,7 +31,7 @@ public class StrAdrStrasseDeletionProvider extends AbstractCustomDeletionProvide
 
     private static final Logger LOG = Logger.getLogger(StrAdrStrasseDeletionProvider.class);
     public static final String TABLE_NAME = "str_adr_strasse";
-    public static final String FIELD__KEY = "strasse";
+    public static final String FIELD__KEY = "schluessel.name";
     private static final String amtlStrGrenze = "04000";
     private static final String DELETE_KLEINER = "Diese Straße darf nicht gelöscht werden, sie muss historisiert werden.";
 
