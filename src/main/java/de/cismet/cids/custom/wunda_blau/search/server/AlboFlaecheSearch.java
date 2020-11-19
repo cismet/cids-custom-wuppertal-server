@@ -39,13 +39,13 @@ public class AlboFlaecheSearch extends AbstractCidsServerSearch implements MetaO
 
     private static final transient Logger LOG = Logger.getLogger(AlboFlaecheSearch.class);
 
-    private static final String QUERY_TEMPLATE = "SELECT "
+    private static final String QUERY_TEMPLATE = "SELECT DISTINCT ON (flaeche.erhebungsnummer) "
                 + "(SELECT c.id FROM cs_class c WHERE table_name ILIKE 'albo_flaeche') AS class_id, flaeche.id, 'Fläche: ' || flaeche.erhebungsnummer || ' [' || art.schluessel || ']' AS name "
                 + "FROM albo_flaeche AS flaeche "
                 + "LEFT JOIN albo_flaechenart AS art ON flaeche.fk_art = art.id "
                 + "%s "
                 + "%s "
-                + "ORDER BY flaeche.erhebungsnummer";
+                + "ORDER BY flaeche.erhebungsnummer;";
 
     //~ Enums ------------------------------------------------------------------
 
@@ -104,7 +104,7 @@ public class AlboFlaecheSearch extends AbstractCidsServerSearch implements MetaO
             leftJoins.add("albo_vorgang_flaeche AS arr ON flaeche.id = arr.fk_flaeche");
 
             if (getErhebungsNummer() != null) {
-                wheres.add(String.format("flaeche.erhebungsnummer LIKE '%%%s%%'", getErhebungsNummer()));
+                wheres.add(String.format("flaeche.erhebungsnummer ILIKE '%%%s%%'", getErhebungsNummer()));
             }
             if (getArtId() != null) {
                 wheres.add(String.format("flaeche.fk_art = %d", getArtId()));
