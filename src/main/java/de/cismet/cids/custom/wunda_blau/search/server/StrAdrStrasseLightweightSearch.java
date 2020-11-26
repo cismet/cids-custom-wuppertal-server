@@ -82,7 +82,7 @@ public class StrAdrStrasseLightweightSearch extends AbstractCidsServerSearch imp
 
             @Override
             public String toString() {
-                return "strasse";
+                return "schluessel";
             }
         }
     }
@@ -160,12 +160,12 @@ public class StrAdrStrasseLightweightSearch extends AbstractCidsServerSearch imp
         final List<String> queries = new ArrayList<>();
         if (geom != null) {
             queries.add(String.format(
-                    "SELECT id, CASE WHEN distance IS NOT NULL THEN name || ' [' || distance::int || 'm]' ELSE name END AS name, strasse, distance FROM (\n%s\n) AS queryA",
+                    "SELECT id, CASE WHEN distance IS NOT NULL THEN name || ' [' || distance::int || 'm]' ELSE name END AS name, schluessel, distance FROM (\n%s\n) AS queryA",
                     createQuery(subject, geom, limitCount)));
         }
         if ((geom == null) || (limitCount != null)) {
             queries.add(String.format(
-                    "SELECT id, name, strasse, 99999999 AS distance FROM (\n%s\n) AS queryB",
+                    "SELECT id, name, schluessel, 99999999 AS distance FROM (\n%s\n) AS queryB",
                     createQuery(subject, null, null)));
         }
         return String.format("%s\nORDER BY distance, name", String.join("\nUNION\n", queries));
@@ -188,18 +188,20 @@ public class StrAdrStrasseLightweightSearch extends AbstractCidsServerSearch imp
         final List<String> orderBys = new ArrayList<>();
 
         final String name = String.format("str_adr_strasse.%s", subject.toString());
-        selectFields.add("str_adr_strasse.id");
-        selectFields.add(String.format("%s AS name", name));
-        selectFields.add("str_adr_strasse.strasse");
+        selectFields.add("str_adr_strasse.id AS id");
+        selectFields.add(Subject.NAME.equals(subject) ? "str_adr_strasse.name AS name"
+                                                      : "str_adr_strasse_schluessel AS name");
+        selectFields.add("str_adr_strasse_schluessel.schluessel AS schluessel");
+        leftJoins.add("str_adr_strasse_schluessel ON str_adr_strasse.schluessel = str_adr_strasse_schluessel.id");
 
         if (geom != null) {
             selectFields.add(String.format(
                     "min(st_distance(geom.geo_field, GeomFromEWKT('%s'))) AS distance",
                     PostGisGeometryFactory.getPostGisCompliantDbString(geom)));
-            leftJoins.add("kst_segment ON strassenschluessel = str_adr_strasse.strasse");
+            leftJoins.add("kst_segment ON strassenschluessel = str_adr_strasse_schluessel.schluessel");
             leftJoins.add("geom ON kst_segment.geom = geom.id");
             groupBys.add("str_adr_strasse.id");
-            groupBys.add("str_adr_strasse.strasse");
+            groupBys.add("str_adr_strasse_schluessel.schluessel");
             groupBys.add(name);
             orderBys.add("distance ASC");
         }
