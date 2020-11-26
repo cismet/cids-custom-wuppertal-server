@@ -14,9 +14,11 @@ import Sirius.server.middleware.types.MetaObject;
 import Sirius.server.newuser.User;
 
 import org.apache.log4j.Logger;
-import org.openide.util.lookup.ServiceProvider;
-import de.cismet.cids.dynamics.CidsBean;
+
 import org.openide.util.NbBundle;
+import org.openide.util.lookup.ServiceProvider;
+
+import de.cismet.cids.dynamics.CidsBean;
 
 /**
  * DOCUMENT ME!
@@ -33,7 +35,8 @@ public class StrAdrStrasseDeletionProvider extends AbstractCustomDeletionProvide
     public static final String TABLE_NAME = "str_adr_strasse";
     public static final String FIELD__KEY = "schluessel.name";
     private static final String amtlStrGrenze = "04000";
-    private static final String DELETE_KLEINER = "Diese Straße darf nicht gelöscht werden, sie muss historisiert werden.";
+    private static final String DELETE_KLEINER =
+        "Diese Straße darf nicht gelöscht werden, sie muss historisiert werden.";
 
     //~ Methods ----------------------------------------------------------------
 
@@ -61,11 +64,10 @@ public class StrAdrStrasseDeletionProvider extends AbstractCustomDeletionProvide
             final String strasse = strBean.getProperty(FIELD__KEY).toString();
 
             // finde amtliche (historische) Straßen
-            
+
             if (strasse.compareTo(amtlStrGrenze) < 0) {
                 throw new DeletionProviderClientException(
-                        DELETE_KLEINER);
-             
+                    DELETE_KLEINER);
             }
         }
     }

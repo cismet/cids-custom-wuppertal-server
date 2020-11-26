@@ -36,22 +36,25 @@ public class StrAdrStrasseMotivToStringConverter extends CustomToStringConverter
      */
     public String myString() {
         String mynummer = String.valueOf(cidsBean.getProperty(FIELD__NUMMER));
-        String myname;
+        final String myname;
         mynummer = mynummer.trim();
-        switch (mynummer.length()){
-            case 2:
+        switch (mynummer.length()) {
+            case 2: {
                 mynummer = mynummer + "      ";
                 break;
-            case 3:
+            }
+            case 3: {
                 mynummer = mynummer + "    ";
                 break;
-            case 4:
+            }
+            case 4: {
                 mynummer = mynummer + "  ";
                 break;
+            }
         }
         myname = String.valueOf(cidsBean.getProperty(FIELD__NAME));
-        String test= myname+ "\u0009"  + mynummer ;
-        return mynummer + "\u0009" + "\t" + (char)9 + "  "  + myname;
+        final String test = myname + "\u0009" + mynummer;
+        return mynummer + "\u0009" + "\t" + (char)9 + "  " + myname;
     }
 
     @Override
