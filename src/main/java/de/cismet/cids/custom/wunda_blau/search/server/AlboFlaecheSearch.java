@@ -40,7 +40,7 @@ public class AlboFlaecheSearch extends AbstractCidsServerSearch implements MetaO
     private static final transient Logger LOG = Logger.getLogger(AlboFlaecheSearch.class);
 
     private static final String QUERY_TEMPLATE = "SELECT DISTINCT ON (flaeche.erhebungsnummer) "
-                + "(SELECT c.id FROM cs_class c WHERE table_name ILIKE 'albo_flaeche') AS class_id, flaeche.id, 'Fläche: ' || flaeche.erhebungsnummer || ' [' || art.schluessel || ']' AS name "
+                + "(SELECT c.id FROM cs_class c WHERE table_name ILIKE 'albo_flaeche') AS class_id, flaeche.id, flaeche.erhebungsnummer || ' [' || art.schluessel || ']' AS name "
                 + "FROM albo_flaeche AS flaeche "
                 + "LEFT JOIN albo_flaechenart AS art ON flaeche.fk_art = art.id "
                 + "%s "
@@ -67,6 +67,7 @@ public class AlboFlaecheSearch extends AbstractCidsServerSearch implements MetaO
     @Setter @Getter private String vorgangSchluessel;
     @Setter @Getter private Integer artId;
     @Setter @Getter private String erhebungsNummer;
+    @Setter @Getter private Boolean loeschen;
     @Setter @Getter private Geometry geometry;
     @Getter private final SearchMode searchMode;
 
@@ -94,6 +95,15 @@ public class AlboFlaecheSearch extends AbstractCidsServerSearch implements MetaO
         this.connectionContext = connectionContext;
     }
 
+    /**
+     * DOCUMENT ME!
+     *
+     * @return  DOCUMENT ME!
+     */
+    public AlboFlaecheLightweightSearch getLightweightSearch() {
+        return new AlboFlaecheLightweightSearch(this);
+    }
+
     @Override
     public Collection<MetaObjectNode> performServerSearch() {
         try {
@@ -108,6 +118,10 @@ public class AlboFlaecheSearch extends AbstractCidsServerSearch implements MetaO
             }
             if (getArtId() != null) {
                 wheres.add(String.format("flaeche.fk_art = %d", getArtId()));
+            }
+
+            if (getLoeschen() != null) {
+                wheres.add(String.format("flaeche.loeschen = %s", getLoeschen() ? "TRUE" : "FALSE"));
             }
 
             if (getVorgangId() != null) {
@@ -137,22 +151,26 @@ public class AlboFlaecheSearch extends AbstractCidsServerSearch implements MetaO
                     if (geomWhere != null) {
                         wheres.add(geomWhere);
                     }
-                    where = "WHERE " + String.join(" AND ", wheres);
+                    where = (!wheres.isEmpty()) ? String.format("WHERE %s", String.join(" AND ", wheres)) : "";
                     break;
                 }
                 case OR: {
-                    where = "WHERE (" + String.join(" OR ", wheres) + ")"
-                                + ((geomWhere != null) ? (" AND " + geomWhere) : "");
+                    final String joinedWheresOrTrue = (!wheres.isEmpty())
+                        ? String.format("(%s)", String.join(" OR ", wheres)) : "TRUE";
+                    final String geomWhereOrTrue = (geomWhere != null) ? geomWhere : "TRUE";
+                    final boolean hasAnyWheres = !wheres.isEmpty() || (geomWhere != null);
+                    where = hasAnyWheres
+                        ? String.format("WHERE %s", String.join(" AND ", joinedWheresOrTrue, geomWhereOrTrue)) : "";
                     break;
                 }
                 default: {
-                    where = ((geomWhere != null) ? ("WHERE " + geomWhere) : "");
+                    where = ((geomWhere != null) ? String.format("WHERE %s", geomWhere) : "");
                     break;
                 }
             }
-            final String leftJoin = (!leftJoins.isEmpty()) ? (" LEFT JOIN " + String.join(" LEFT JOIN ", leftJoins))
-                                                           : "";
-            final String query = String.format(QUERY_TEMPLATE, leftJoin, where.isEmpty() ? "" : where);
+            final String leftJoin = (!leftJoins.isEmpty())
+                ? String.format(" LEFT JOIN %s", String.join(" LEFT JOIN ", leftJoins)) : "";
+            final String query = String.format(QUERY_TEMPLATE, leftJoin, where);
 
             final List<MetaObjectNode> mons = new ArrayList<>();
             final MetaService ms = (MetaService)getActiveLocalServers().get("WUNDA_BLAU");
