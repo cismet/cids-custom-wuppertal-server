@@ -26,7 +26,12 @@ import java.util.ArrayList;
 import java.util.Collection;
 import java.util.Date;
 import java.util.HashMap;
+import java.util.LinkedHashSet;
 import java.util.List;
+import java.util.Locale;
+import java.util.Set;
+import java.util.function.Function;
+import java.util.stream.Collectors;
 
 import de.cismet.cids.server.search.AbstractCidsServerSearch;
 import de.cismet.cids.server.search.MetaObjectNodeServerSearch;
@@ -49,13 +54,11 @@ public class CidsMauernSearchStatement extends AbstractCidsServerSearch implemen
     //~ Static fields/initializers ---------------------------------------------
 
     private static final Logger LOG = Logger.getLogger(CidsMauernSearchStatement.class);
-    private static final String CIDSCLASS = "mauer";
-    private static final String SQL_STMT = "SELECT DISTINCT (SELECT c.id FROM cs_class c WHERE table_name ilike '"
-                + CIDSCLASS + "') as class_id, m.id,m.lagebezeichnung as name FROM <fromClause> <whereClause>";
-    private static final String FROM = CIDSCLASS + " m";
-    private static final String JOIN_GEOM = " LEFT OUTER JOIN geom g ON m.georeferenz = g.id";
-    private static final String JOIN_LASTKLASSE = " LEFT OUTER JOIN mauer_lastklasse l ON l.id=m.lastklasse";
-    private static final String JOIN_EIGENTUEMER = " LEFT OUTER JOIN mauer_eigentuemer e ON e.id=m.eigentuemer";
+    private static final String SQL_STMT =
+        "SELECT DISTINCT (SELECT c.id FROM cs_class c WHERE table_name ilike 'mauer') as class_id, m.id,m.lagebezeichnung as name FROM %s WHERE %s";
+    private static final String JOIN_GEOM = "geom g ON m.georeferenz = g.id";
+    private static final String JOIN_LASTKLASSE = "mauer_lastklasse l ON l.id = m.lastklasse";
+    private static final String JOIN_EIGENTUEMER = "mauer_eigentuemer e ON e.id = m.eigentuemer";
     private static final String DOMAIN = "WUNDA_BLAU";
     private static final String INTERSECTS_BUFFER = SearchProperties.getInstance().getIntersectsBuffer();
 
@@ -82,34 +85,25 @@ public class CidsMauernSearchStatement extends AbstractCidsServerSearch implemen
 
         //~ Enum constants -----------------------------------------------------
 
-        HOEHE_VON, HOEHE_BIS, GELAENDER_VON, GELAENDER_BIS, ANSICHT_VON, ANSICHT_BIS, WANDKOPF_VON, WANDKOPF_BIS,
-        GRUENDUNG_VON, GRUENDUNG_BIS, VERFORMUNG_VON, VERFORMUNG_BIS, GELAENDE_VON, GELAENDE_BIS, BAUSUBSTANZ_VON,
-        BAUSUBSTANZ_BIS, SANIERUNG_VON, SANIERUNG_BIS;
+        ZUSTAND_HOEHE_VON, ZUSTAND_HOEHE_BIS, ZUSTAND_GELAENDER_VON, ZUSTAND_GELAENDER_BIS, ZUSTAND_ANSICHT_VON,
+        ZUSTAND_ANSICHT_BIS, ZUSTAND_WANDKOPF_VON, ZUSTAND_WANDKOPF_BIS, ZUSTAND_GRUENDUNG_VON, ZUSTAND_GRUENDUNG_BIS,
+        ZUSTAND_VERFORMUNG_VON, ZUSTAND_VERFORMUNG_BIS, ZUSTAND_GELAENDE_VON, ZUSTAND_GELAENDE_BIS,
+        ZUSTAND_BAUSUBSTANZ_VON, ZUSTAND_BAUSUBSTANZ_BIS, ZUSTAND_SANIERUNG_VON, ZUSTAND_SANIERUNG_BIS,
+        MASSNAHME_PRUEFUNG_VON, MASSNAHME_PRUEFUNG_BIS, MASSNAHME_SANIERUNG_DURCHGEFUEHRT_VON,
+        MASSNAHME_SANIERUNG_DURCHGEFUEHRT_BIS, MASSNAHME_SANIERUNG_GEPLANT_VON, MASSNAHME_SANIERUNG_GEPLANT_BIS,
+        MASSNAHME_BAUWERKSBEGEHUNG_VON, MASSNAHME_BAUWERKSBEGEHUNG_BIS, MASSNAHME_BAUWERKSBESICHTIGUNG_VON,
+        MASSNAHME_BAUWERKSBESICHTIGUNG_BIS, MASSNAHME_GEWERK_DURCHZU, MASSNAHME_GEWERK_DURCHGE
     }
 
     //~ Instance fields --------------------------------------------------------
 
-    private boolean leadingConjucjtionNeeded = false;
-    private boolean whereNeeded = true;
-    private boolean lastBraceNeeded = false;
-    private boolean hoeheHandled = false;
-    private boolean gelaenderHandled = false;
-    private boolean kopfHandled = false;
-    private boolean ansichtHandled = false;
-    private boolean gruendungHandled = false;
-    private boolean verformungHandled = false;
-    private boolean gelaendeHandled = false;
-    private boolean bausubstanzHandled = false;
-    private boolean sanierungHandled = false;
-    private String CONJUNCTION;
-    private Geometry geom;
-    private List<Integer> eigentuemer;
-    private List<Integer> lastKlasseIds;
-    private Date pruefungFrom;
-    private Date pruefungTil;
-    private HashMap<PropertyKeys, Double> filter;
-    private final StringBuilder fromBuilder = new StringBuilder(FROM);
-    private final StringBuilder whereBuilder = new StringBuilder();
+    private final Geometry geom;
+    private final List<Integer> eigentuemer;
+    private final List<Integer> lastKlasseIds;
+    private final HashMap<PropertyKeys, Object> filter;
+    private final Set<String> joins = new LinkedHashSet<>();
+    private final Set<String> wheres = new LinkedHashSet<>();
+    private final SearchMode searchMode;
 
     private ConnectionContext connectionContext = ConnectionContext.createDummy();
 
@@ -119,27 +113,21 @@ public class CidsMauernSearchStatement extends AbstractCidsServerSearch implemen
      * Creates a new CidsMauernSearchStatement object.
      *
      * @param  eigentuemerIds  DOCUMENT ME!
-     * @param  pruefFrom       DOCUMENT ME!
-     * @param  pruefTil        DOCUMENT ME!
      * @param  lastKlasseIds   DOCUMENT ME!
      * @param  geom            DOCUMENT ME!
      * @param  searchMode      DOCUMENT ME!
      * @param  filterProps     DOCUMENT ME!
      */
     public CidsMauernSearchStatement(final List<Integer> eigentuemerIds,
-            final Date pruefFrom,
-            final Date pruefTil,
             final List<Integer> lastKlasseIds,
             final Geometry geom,
             final SearchMode searchMode,
-            final HashMap<PropertyKeys, Double> filterProps) {
+            final HashMap<PropertyKeys, Object> filterProps) {
         this.geom = geom;
         this.eigentuemer = eigentuemerIds;
         this.lastKlasseIds = lastKlasseIds;
-        this.pruefungFrom = pruefFrom;
-        this.pruefungTil = pruefTil;
         this.filter = filterProps;
-        CONJUNCTION = (searchMode == SearchMode.AND_SEARCH) ? " AND " : " OR ";
+        this.searchMode = searchMode;
     }
 
     //~ Methods ----------------------------------------------------------------
@@ -153,7 +141,6 @@ public class CidsMauernSearchStatement extends AbstractCidsServerSearch implemen
     public Collection<MetaObjectNode> performServerSearch() throws SearchException {
         try {
             final ArrayList result = new ArrayList();
-            final StringBuilder sqlBuilder = new StringBuilder();
             final MetaService metaService = (MetaService)getActiveLocalServers().get(DOMAIN);
             if (metaService == null) {
                 LOG.error("Could not retrieve MetaService '" + DOMAIN + "'.");
@@ -162,22 +149,210 @@ public class CidsMauernSearchStatement extends AbstractCidsServerSearch implemen
 
             if ((geom == null) && ((eigentuemer == null) || eigentuemer.isEmpty())
                         && ((lastKlasseIds == null) || lastKlasseIds.isEmpty())
-                        && (pruefungFrom == null)
-                        && (pruefungTil == null)
                         && ((filter == null) || filter.isEmpty())) {
                 LOG.warn("No filters provided. Cancel search.");
                 return result;
             }
 
-            sqlBuilder.append(SQL_STMT.replace("<fromClause>", generateFromClause()).replace(
-                    "<whereClause>",
-                    generateWhereClause()));
+            joins.add("mauer m");
+            if ((geom != null)) {
+                joins.add(JOIN_GEOM);
+                final String geostring = PostGisGeometryFactory.getPostGisCompliantDbString(geom);
+
+                final List<String> conditions = new ArrayList<>();
+                conditions.add(String.format("g.geo_field && GeometryFromText('%s')", geostring));
+                if ((geom instanceof Polygon) || (geom instanceof MultiPolygon)) { // with buffer for geostring
+                    conditions.add(String.format(
+                            " intersects("
+                                    + "st_buffer(geo_field, "
+                                    + INTERSECTS_BUFFER
+                                    + "),"
+                                    + "st_buffer(GeometryFromText('%s'), "
+                                    + INTERSECTS_BUFFER
+                                    + "))",
+                            geostring));
+                } else {                                                           // without buffer for
+                    // geostring
+                    conditions.add(String.format(
+                            " and intersects("
+                                    + "st_buffer(geo_field, "
+                                    + INTERSECTS_BUFFER
+                                    + "),"
+                                    + "GeometryFromText('%s'))",
+                            geostring));
+                }
+                wheres.add(String.join(" AND ", conditions));
+            }
+
+            if ((eigentuemer != null) && !eigentuemer.isEmpty()) {
+                joins.add(JOIN_EIGENTUEMER);
+                wheres.add(String.format(
+                        " m.eigentuemer in (%s)",
+                        String.join(
+                            ", ",
+                            (List)eigentuemer.stream().map(new Function<Integer, String>() {
+
+                                    @Override
+                                    public String apply(final Integer value) {
+                                        return (value != null) ? Integer.toString(value) : null;
+                                    }
+                                }).collect(Collectors.toList()))));
+            }
+
+            if ((lastKlasseIds != null) && !lastKlasseIds.isEmpty()) {
+                joins.add(JOIN_LASTKLASSE);
+                wheres.add(String.format(
+                        "m.lastklasse in (%s)",
+                        String.join(
+                            "'",
+                            (List)lastKlasseIds.stream().map(new Function<Integer, String>() {
+
+                                    @Override
+                                    public String apply(final Integer value) {
+                                        return (value != null) ? Integer.toString(value) : null;
+                                    }
+                                }).collect(Collectors.toList()))));
+            }
+
+            if ((filter.get(PropertyKeys.MASSNAHME_PRUEFUNG_VON) != null)
+                        || (filter.get(PropertyKeys.MASSNAHME_PRUEFUNG_BIS) != null)) {
+                wheres.add(createWhereFor(
+                        "m.datum_naechste_pruefung",
+                        (Date)filter.get(PropertyKeys.MASSNAHME_PRUEFUNG_VON),
+                        (Date)filter.get(PropertyKeys.MASSNAHME_PRUEFUNG_BIS)));
+            }
+
+            if ((filter.get(PropertyKeys.MASSNAHME_SANIERUNG_DURCHGEFUEHRT_VON) != null)
+                        || (filter.get(PropertyKeys.MASSNAHME_SANIERUNG_DURCHGEFUEHRT_BIS) != null)) {
+                joins.add("mauer_massnahme mm1 ON m.id = mm1.fk_mauer");
+                joins.add("mauer_massnahme_art mma1 ON mm1.fk_art = mma1.id");
+                wheres.add(String.format(
+                        "(mma1.schluessel LIKE 'durchgefuehrte_sanierung' AND %s)",
+                        createWhereFor(
+                            "mm1.ziel",
+                            (Date)filter.get(PropertyKeys.MASSNAHME_SANIERUNG_DURCHGEFUEHRT_VON),
+                            (Date)filter.get(PropertyKeys.MASSNAHME_SANIERUNG_DURCHGEFUEHRT_BIS))));
+            }
+            if ((filter.get(PropertyKeys.MASSNAHME_SANIERUNG_GEPLANT_VON) != null)
+                        || (filter.get(PropertyKeys.MASSNAHME_SANIERUNG_GEPLANT_BIS) != null)) {
+                joins.add("mauer_massnahme mm2 ON m.id = mm2.fk_mauer");
+                joins.add("mauer_massnahme_art mma2 ON mm2.fk_art = mma2.id");
+                wheres.add(String.format(
+                        "(mma2.schluessel LIKE 'durchzufuehrende_sanierung' AND %s)",
+                        createWhereFor(
+                            "mm2.ziel",
+                            (Date)filter.get(PropertyKeys.MASSNAHME_SANIERUNG_GEPLANT_VON),
+                            (Date)filter.get(PropertyKeys.MASSNAHME_SANIERUNG_GEPLANT_BIS))));
+            }
+            if ((filter.get(PropertyKeys.MASSNAHME_BAUWERKSBESICHTIGUNG_VON) != null)
+                        || (filter.get(PropertyKeys.MASSNAHME_BAUWERKSBESICHTIGUNG_BIS) != null)) {
+                joins.add("mauer_massnahme mm3 ON m.id = mm3.fk_mauer");
+                joins.add(
+                    "mauer_massnahme_art mma3 ON mm3.fk_art = mma3.id AND mma3.schluessel LIKE 'bauwerksbesichtigung'");
+                wheres.add(createWhereFor(
+                        "mm3.ziel",
+                        (Date)filter.get(PropertyKeys.MASSNAHME_BAUWERKSBESICHTIGUNG_VON),
+                        (Date)filter.get(PropertyKeys.MASSNAHME_BAUWERKSBESICHTIGUNG_BIS)));
+            }
+            if ((filter.get(PropertyKeys.MASSNAHME_BAUWERKSBEGEHUNG_VON) != null)
+                        || (filter.get(PropertyKeys.MASSNAHME_BAUWERKSBEGEHUNG_BIS) != null)) {
+                joins.add("mauer_massnahme mm4 ON m.id = mm4.fk_mauer");
+                joins.add(
+                    "mauer_massnahme_art mma4 ON mm4.fk_art = mma4.id AND mma4.schluessel LIKE 'bauwerksbegehung'");
+                wheres.add(createWhereFor(
+                        "mm4.ziel",
+                        (Date)filter.get(PropertyKeys.MASSNAHME_BAUWERKSBEGEHUNG_VON),
+                        (Date)filter.get(PropertyKeys.MASSNAHME_BAUWERKSBEGEHUNG_BIS)));
+            }
+
+            if ((filter.get(PropertyKeys.ZUSTAND_HOEHE_VON) != null)
+                        || (filter.get(PropertyKeys.ZUSTAND_HOEHE_BIS) != null)) {
+                wheres.add(createWhereFor(
+                        "m.hoehe_max",
+                        (Double)filter.get(PropertyKeys.ZUSTAND_HOEHE_VON),
+                        (Double)filter.get(PropertyKeys.ZUSTAND_HOEHE_BIS)));
+            }
+            if ((filter.get(PropertyKeys.ZUSTAND_ANSICHT_VON) != null)
+                        || (filter.get(PropertyKeys.ZUSTAND_ANSICHT_BIS) != null)) {
+                wheres.add(createWhereFor(
+                        "m.zustand_ansicht",
+                        (Double)filter.get(PropertyKeys.ZUSTAND_ANSICHT_VON),
+                        (Double)filter.get(PropertyKeys.ZUSTAND_ANSICHT_BIS)));
+            }
+            if ((filter.get(PropertyKeys.ZUSTAND_GELAENDER_VON) != null)
+                        || (filter.get(PropertyKeys.ZUSTAND_GELAENDER_BIS) != null)) {
+                wheres.add(createWhereFor(
+                        "m.zustand_gelaender",
+                        (Double)filter.get(PropertyKeys.ZUSTAND_GELAENDER_VON),
+                        (Double)filter.get(PropertyKeys.ZUSTAND_GELAENDER_BIS)));
+            }
+            if ((filter.get(PropertyKeys.ZUSTAND_WANDKOPF_VON) != null)
+                        || (filter.get(PropertyKeys.ZUSTAND_WANDKOPF_BIS) != null)) {
+                wheres.add(createWhereFor(
+                        "m.zustand_kopf",
+                        (Double)filter.get(PropertyKeys.ZUSTAND_WANDKOPF_VON),
+                        (Double)filter.get(PropertyKeys.ZUSTAND_WANDKOPF_BIS)));
+            }
+            if ((filter.get(PropertyKeys.ZUSTAND_GRUENDUNG_VON) != null)
+                        || (filter.get(PropertyKeys.ZUSTAND_GRUENDUNG_BIS) != null)) {
+                wheres.add(createWhereFor(
+                        "m.zustand_gruendung",
+                        (Double)filter.get(PropertyKeys.ZUSTAND_GRUENDUNG_VON),
+                        (Double)filter.get(PropertyKeys.ZUSTAND_GRUENDUNG_BIS)));
+            }
+            if ((filter.get(PropertyKeys.ZUSTAND_VERFORMUNG_VON) != null)
+                        || (filter.get(PropertyKeys.ZUSTAND_VERFORMUNG_BIS) != null)) {
+                wheres.add(createWhereFor(
+                        "m.zustand_verformung",
+                        (Double)filter.get(PropertyKeys.ZUSTAND_VERFORMUNG_VON),
+                        (Double)filter.get(PropertyKeys.ZUSTAND_VERFORMUNG_BIS)));
+            }
+            if ((filter.get(PropertyKeys.ZUSTAND_GELAENDE_VON) != null)
+                        || (filter.get(PropertyKeys.ZUSTAND_GELAENDE_BIS) != null)) {
+                wheres.add(createWhereFor(
+                        "m.zustand_gelaende",
+                        (Double)filter.get(PropertyKeys.ZUSTAND_GELAENDE_VON),
+                        (Double)filter.get(PropertyKeys.ZUSTAND_GELAENDE_BIS)));
+            }
+            if ((filter.get(PropertyKeys.ZUSTAND_SANIERUNG_VON) != null)
+                        || (filter.get(PropertyKeys.ZUSTAND_SANIERUNG_BIS) != null)) {
+                wheres.add(createWhereFor(
+                        "m.sanierung",
+                        (Double)filter.get(PropertyKeys.ZUSTAND_SANIERUNG_VON),
+                        (Double)filter.get(PropertyKeys.ZUSTAND_SANIERUNG_BIS)));
+            }
+            if ((filter.get(PropertyKeys.ZUSTAND_BAUSUBSTANZ_VON) != null)
+                        || (filter.get(PropertyKeys.ZUSTAND_BAUSUBSTANZ_BIS) != null)) {
+                wheres.add(createWhereFor(
+                        "(zustand_kopf+ zustand_gelaender+zustand_ansicht+zustand_gruendung+ zustand_verformung+zustand_gelaende)",
+                        (Double)filter.get(PropertyKeys.ZUSTAND_BAUSUBSTANZ_VON),
+                        (Double)filter.get(PropertyKeys.ZUSTAND_BAUSUBSTANZ_BIS)));
+            }
+
+            if ((filter.get(PropertyKeys.MASSNAHME_GEWERK_DURCHGE) != null)) {
+                joins.add("mauer_massnahme mm1 ON m.id = mm1.fk_mauer");
+                joins.add("mauer_massnahme_art mma1 ON mm1.fk_art = mma1.id");
+                wheres.add(String.format(
+                        "(mma1.schluessel LIKE 'durchgefuehrte_sanierung' AND mm1.fk_objekt = %d)",
+                        (Integer)filter.get(PropertyKeys.MASSNAHME_GEWERK_DURCHGE)));
+            }
+            if ((filter.get(PropertyKeys.MASSNAHME_GEWERK_DURCHZU) != null)) {
+                joins.add("mauer_massnahme mm2 ON m.id = mm2.fk_mauer");
+                joins.add("mauer_massnahme_art mma2 ON mm2.fk_art = mma2.id");
+                wheres.add(String.format(
+                        "(mma2.schluessel LIKE 'durchzufuehrende_sanierung' AND mm2.fk_objekt = %d)",
+                        (Integer)filter.get(PropertyKeys.MASSNAHME_GEWERK_DURCHZU)));
+            }
+            final String sql = (String.format(
+                        SQL_STMT,
+                        String.join(" LEFT OUTER JOIN ", joins),
+                        String.join((searchMode == SearchMode.AND_SEARCH) ? " AND " : " OR ", wheres)));
 
             final ArrayList<ArrayList> resultset;
             if (LOG.isDebugEnabled()) {
-                LOG.debug("Executing SQL statement '" + sqlBuilder.toString() + "'.");
+                LOG.debug(String.format("Executing SQL statement '%s'.", sql));
             }
-            resultset = metaService.performCustomSearch(sqlBuilder.toString(), getConnectionContext());
+            resultset = metaService.performCustomSearch(sql, getConnectionContext());
 
             for (final ArrayList mauer : resultset) {
                 final int classID = (Integer)mauer.get(0);
@@ -198,414 +373,51 @@ public class CidsMauernSearchStatement extends AbstractCidsServerSearch implemen
     /**
      * DOCUMENT ME!
      *
+     * @param   property  DOCUMENT ME!
+     * @param   von       DOCUMENT ME!
+     * @param   bis       DOCUMENT ME!
+     *
      * @return  DOCUMENT ME!
      */
-    private String generateFromClause() {
-        if ((geom != null)) {
-            fromBuilder.append(JOIN_GEOM);
+    private static String createWhereFor(final String property, final Date von, final Date bis) {
+        final List<String> conditions = new ArrayList<>();
+        final SimpleDateFormat df = new SimpleDateFormat("yyyy-MM-dd");
+        if (von != null) {
+            conditions.add(String.format("%s >= '%s'", property, df.format(von)));
         }
-
-        if ((eigentuemer != null) && !eigentuemer.isEmpty()) {
-            fromBuilder.append(JOIN_EIGENTUEMER);
-            if (whereNeeded) {
-                whereBuilder.append("WHERE (");
-                lastBraceNeeded = true;
-                whereNeeded = false;
-            }
-            if (leadingConjucjtionNeeded) {
-                whereBuilder.append(CONJUNCTION);
-            } else {
-                leadingConjucjtionNeeded = true;
-            }
-            whereBuilder.append(" m.eigentuemer in (");
-            for (final Integer eigentuemerID : eigentuemer) {
-                if (eigentuemer.indexOf(eigentuemerID) == (eigentuemer.size() - 1)) {
-                    whereBuilder.append(eigentuemerID);
-                } else {
-                    whereBuilder.append(eigentuemerID + ",");
-                }
-            }
-            whereBuilder.append(") ");
+        if (bis != null) {
+            conditions.add(String.format("%s <= '%s'", property, df.format(bis)));
         }
-
-        if ((lastKlasseIds != null) && !lastKlasseIds.isEmpty()) {
-            fromBuilder.append(JOIN_LASTKLASSE);
-            if (whereNeeded) {
-                whereBuilder.append("WHERE (");
-                whereNeeded = false;
-                lastBraceNeeded = true;
-            }
-            if (leadingConjucjtionNeeded) {
-                whereBuilder.append(CONJUNCTION);
-            } else {
-                leadingConjucjtionNeeded = true;
-            }
-            whereBuilder.append(" m.lastklasse in (");
-            for (final Integer lastklasseId : lastKlasseIds) {
-                if (lastKlasseIds.indexOf(lastklasseId) == (lastKlasseIds.size() - 1)) {
-                    whereBuilder.append(lastklasseId);
-                } else {
-                    whereBuilder.append(lastklasseId + ",");
-                }
-            }
-            whereBuilder.append(") ");
+        if (!conditions.isEmpty()) {
+            return String.format("(%s)", String.join(" AND ", conditions));
+        } else {
+            return null;
         }
-
-        return fromBuilder.toString();
     }
 
     /**
      * DOCUMENT ME!
      *
+     * @param   property  DOCUMENT ME!
+     * @param   von       DOCUMENT ME!
+     * @param   bis       DOCUMENT ME!
+     *
      * @return  DOCUMENT ME!
      */
-    private String generateWhereClause() {
-        if ((pruefungFrom != null) || (pruefungTil != null)) {
-            final SimpleDateFormat df = new SimpleDateFormat("yyyy-MM-dd");
-            if (whereNeeded) {
-                whereBuilder.append("WHERE (");
-                lastBraceNeeded = true;
-                whereNeeded = false;
-            }
-            if (leadingConjucjtionNeeded) {
-                whereBuilder.append(CONJUNCTION);
-            } else {
-                leadingConjucjtionNeeded = true;
-            }
-            whereBuilder.append(" (");
-            boolean flag = false;
-            if (pruefungFrom != null) {
-                whereBuilder.append("m.datum_naechste_pruefung >='" + df.format(pruefungFrom) + "'");
-                flag = true;
-            }
-            if (pruefungTil != null) {
-                if (flag) {
-                    whereBuilder.append(" and ");
-                }
-                whereBuilder.append(" m.datum_naechste_pruefung <='" + df.format(pruefungTil) + "'");
-            }
-            whereBuilder.append(") ");
+    private static String createWhereFor(final String property,
+            final Double von,
+            final Double bis) {
+        final List<String> conditions = new ArrayList<>();
+        if (von != null) {
+            conditions.add(String.format(Locale.US, "%s >= %f", property, von));
         }
-
-        for (final PropertyKeys pKey : filter.keySet()) {
-            generateWhereConditionForProperty(pKey);
+        if (bis != null) {
+            conditions.add(String.format(Locale.US, "%s <= %f", property, bis));
         }
-
-        if (geom != null) {
-            if (whereNeeded) {
-                whereBuilder.append("WHERE");
-                whereNeeded = false;
-            } else {
-                whereBuilder.append(") AND ");
-                lastBraceNeeded = false;
-            }
-            final String geostring = PostGisGeometryFactory.getPostGisCompliantDbString(geom);
-//            whereBuilder.append(CONJUNCTION);
-
-            whereBuilder.append(" g.geo_field && GeometryFromText('").append(geostring).append("')");
-
-            whereBuilder.append("AND");
-
-            if ((geom instanceof Polygon) || (geom instanceof MultiPolygon)) { // with buffer for geostring
-                whereBuilder.append(" intersects("
-                            + "st_buffer(geo_field, " + INTERSECTS_BUFFER + "),"
-                            + "st_buffer(GeometryFromText('"
-                            + geostring
-                            + "'), " + INTERSECTS_BUFFER + "))");
-            } else {                                                           // without buffer for
-                // geostring
-                whereBuilder.append(" and intersects("
-                            + "st_buffer(geo_field, " + INTERSECTS_BUFFER + "),"
-                            + "GeometryFromText('"
-                            + geostring
-                            + "'))");
-            }
-        }
-        if (lastBraceNeeded) {
-            whereBuilder.append(")");
-        }
-        return whereBuilder.toString();
-    }
-
-    /**
-     * DOCUMENT ME!
-     *
-     * @param  pKey  DOCUMENT ME!
-     */
-    private void generateWhereConditionForProperty(final PropertyKeys pKey) {
-        if ((!hoeheHandled) && ((pKey == PropertyKeys.HOEHE_VON) || (pKey == PropertyKeys.HOEHE_BIS))) {
-            hoeheHandled = true;
-            final Double hoeheVon = filter.get(PropertyKeys.HOEHE_VON);
-            final Double hoeheBis = filter.get(PropertyKeys.HOEHE_BIS);
-            if ((hoeheVon != null) || (hoeheBis != null)) {
-                if (whereNeeded) {
-                    whereBuilder.append("WHERE (");
-                    lastBraceNeeded = true;
-                    whereNeeded = false;
-                }
-                if (leadingConjucjtionNeeded) {
-                    whereBuilder.append(CONJUNCTION);
-                } else {
-                    leadingConjucjtionNeeded = true;
-                }
-                whereBuilder.append(" (");
-                boolean flag = false;
-                if (hoeheVon != null) {
-                    whereBuilder.append("m.hoehe_max >=").append(hoeheVon);
-                    flag = true;
-                }
-                if (hoeheBis != null) {
-                    if (flag) {
-                        whereBuilder.append(" and ");
-                    }
-                    whereBuilder.append(" m.hoehe_max <=").append(hoeheBis);
-                }
-                whereBuilder.append(") ");
-            }
-        } else if ((!ansichtHandled) && ((pKey == PropertyKeys.ANSICHT_VON) || (pKey == PropertyKeys.ANSICHT_BIS))) {
-            ansichtHandled = true;
-            final Double vonValue = filter.get(PropertyKeys.ANSICHT_VON);
-            final Double bisValue = filter.get(PropertyKeys.ANSICHT_BIS);
-            if ((vonValue != null) || (bisValue != null)) {
-                if (whereNeeded) {
-                    whereBuilder.append("WHERE (");
-                    lastBraceNeeded = true;
-                    whereNeeded = false;
-                }
-                if (leadingConjucjtionNeeded) {
-                    whereBuilder.append(CONJUNCTION);
-                } else {
-                    leadingConjucjtionNeeded = true;
-                }
-                whereBuilder.append(" (");
-                boolean flag = false;
-                if (vonValue != null) {
-                    whereBuilder.append("m.zustand_ansicht >=").append(vonValue);
-                    flag = true;
-                }
-                if (bisValue != null) {
-                    if (flag) {
-                        whereBuilder.append(" and ");
-                    }
-                    whereBuilder.append(" m.zustand_ansicht <=").append(bisValue);
-                }
-                whereBuilder.append(") ");
-            }
-        } else if ((!gelaenderHandled)
-                    && ((pKey == PropertyKeys.GELAENDER_VON)
-                        || (pKey == PropertyKeys.GELAENDER_BIS))) {
-            gelaenderHandled = true;
-            final Double vonValue = filter.get(PropertyKeys.GELAENDER_VON);
-            final Double bisValue = filter.get(PropertyKeys.GELAENDER_BIS);
-            if ((vonValue != null) || (bisValue != null)) {
-                if (whereNeeded) {
-                    whereBuilder.append("WHERE (");
-                    lastBraceNeeded = true;
-                    whereNeeded = false;
-                }
-                if (leadingConjucjtionNeeded) {
-                    whereBuilder.append(CONJUNCTION);
-                } else {
-                    leadingConjucjtionNeeded = true;
-                }
-                whereBuilder.append(" (");
-                boolean flag = false;
-                if (vonValue != null) {
-                    whereBuilder.append("m.zustand_gelaender >=").append(vonValue);
-                    flag = true;
-                }
-                if (bisValue != null) {
-                    if (flag) {
-                        whereBuilder.append(" and ");
-                    }
-                    whereBuilder.append(" m.zustand_gelaender <=").append(bisValue);
-                }
-                whereBuilder.append(") ");
-            }
-        } else if ((!kopfHandled) && ((pKey == PropertyKeys.WANDKOPF_VON) || (pKey == PropertyKeys.WANDKOPF_BIS))) {
-            kopfHandled = true;
-            final Double vonValue = filter.get(PropertyKeys.WANDKOPF_VON);
-            final Double bisValue = filter.get(PropertyKeys.WANDKOPF_BIS);
-            if ((vonValue != null) || (bisValue != null)) {
-                if (whereNeeded) {
-                    whereBuilder.append("WHERE (");
-                    lastBraceNeeded = true;
-                    whereNeeded = false;
-                }
-                if (leadingConjucjtionNeeded) {
-                    whereBuilder.append(CONJUNCTION);
-                } else {
-                    leadingConjucjtionNeeded = true;
-                }
-                whereBuilder.append(" (");
-                boolean flag = false;
-                if (vonValue != null) {
-                    whereBuilder.append("m.zustand_kopf >=").append(vonValue);
-                    flag = true;
-                }
-                if (bisValue != null) {
-                    if (flag) {
-                        whereBuilder.append(" and ");
-                    }
-                    whereBuilder.append(" m.zustand_kopf <=").append(bisValue);
-                }
-                whereBuilder.append(") ");
-            }
-        } else if ((!gruendungHandled)
-                    && ((pKey == PropertyKeys.GRUENDUNG_VON)
-                        || (pKey == PropertyKeys.GRUENDUNG_BIS))) {
-            gruendungHandled = true;
-            final Double vonValue = filter.get(PropertyKeys.GRUENDUNG_VON);
-            final Double bisValue = filter.get(PropertyKeys.GRUENDUNG_BIS);
-            if ((vonValue != null) || (bisValue != null)) {
-                if (whereNeeded) {
-                    whereBuilder.append("WHERE (");
-                    lastBraceNeeded = true;
-                    whereNeeded = false;
-                }
-                if (leadingConjucjtionNeeded) {
-                    whereBuilder.append(CONJUNCTION);
-                } else {
-                    leadingConjucjtionNeeded = true;
-                }
-                whereBuilder.append(" (");
-                boolean flag = false;
-                if (vonValue != null) {
-                    whereBuilder.append("m.zustand_gruendung >=").append(vonValue);
-                    flag = true;
-                }
-                if (bisValue != null) {
-                    if (flag) {
-                        whereBuilder.append(" and ");
-                    }
-                    whereBuilder.append(" m.zustand_gruendung <=").append(bisValue);
-                }
-                whereBuilder.append(") ");
-            }
-        } else if (!verformungHandled
-                    && ((pKey == PropertyKeys.VERFORMUNG_VON)
-                        || (pKey == PropertyKeys.VERFORMUNG_BIS))) {
-            verformungHandled = true;
-            final Double vonValue = filter.get(PropertyKeys.VERFORMUNG_VON);
-            final Double bisValue = filter.get(PropertyKeys.VERFORMUNG_BIS);
-            if ((vonValue != null) || (bisValue != null)) {
-                if (whereNeeded) {
-                    whereBuilder.append("WHERE (");
-                    lastBraceNeeded = true;
-                    whereNeeded = false;
-                }
-                if (leadingConjucjtionNeeded) {
-                    whereBuilder.append(CONJUNCTION);
-                } else {
-                    leadingConjucjtionNeeded = true;
-                }
-                whereBuilder.append(" (");
-                boolean flag = false;
-                if (vonValue != null) {
-                    whereBuilder.append("m.zustand_verformung >=").append(vonValue);
-                    flag = true;
-                }
-                if (bisValue != null) {
-                    if (flag) {
-                        whereBuilder.append(" and ");
-                    }
-                    whereBuilder.append(" m.zustand_verformung <=").append(bisValue);
-                }
-                whereBuilder.append(") ");
-            }
-        } else if (!gelaendeHandled && ((pKey == PropertyKeys.GELAENDE_VON) || (pKey == PropertyKeys.GELAENDE_BIS))) {
-            gelaendeHandled = true;
-            final Double vonValue = filter.get(PropertyKeys.GELAENDE_VON);
-            final Double bisValue = filter.get(PropertyKeys.GELAENDE_BIS);
-            if ((vonValue != null) || (bisValue != null)) {
-                if (whereNeeded) {
-                    whereBuilder.append("WHERE (");
-                    lastBraceNeeded = true;
-                    whereNeeded = false;
-                }
-                if (leadingConjucjtionNeeded) {
-                    whereBuilder.append(CONJUNCTION);
-                } else {
-                    leadingConjucjtionNeeded = true;
-                }
-                whereBuilder.append(" (");
-                boolean flag = false;
-                if (vonValue != null) {
-                    whereBuilder.append("m.zustand_gelaende >=").append(vonValue);
-                    flag = true;
-                }
-                if (bisValue != null) {
-                    if (flag) {
-                        whereBuilder.append(" and ");
-                    }
-                    whereBuilder.append(" m.zustand_gelaende <=").append(bisValue);
-                }
-                whereBuilder.append(") ");
-            }
-        } else if (((pKey == PropertyKeys.BAUSUBSTANZ_VON)
-                        || (pKey == PropertyKeys.BAUSUBSTANZ_BIS)) && !bausubstanzHandled) {
-            bausubstanzHandled = true;
-            final Double vonValue = filter.get(PropertyKeys.BAUSUBSTANZ_VON);
-            final Double bisValue = filter.get(PropertyKeys.BAUSUBSTANZ_BIS);
-            if ((vonValue != null) || (bisValue != null)) {
-                if (whereNeeded) {
-                    whereBuilder.append("WHERE (");
-                    lastBraceNeeded = true;
-                    whereNeeded = false;
-                }
-                if (leadingConjucjtionNeeded) {
-                    whereBuilder.append(CONJUNCTION);
-                } else {
-                    leadingConjucjtionNeeded = true;
-                }
-                whereBuilder.append(" (");
-                boolean flag = false;
-                if (vonValue != null) {
-                    whereBuilder.append(
-                            "(zustand_kopf+ zustand_gelaender+zustand_ansicht+zustand_gruendung+ zustand_verformung+zustand_gelaende)/6 >=")
-                            .append(vonValue);
-                    flag = true;
-                }
-                if (bisValue != null) {
-                    if (flag) {
-                        whereBuilder.append(" and ");
-                    }
-                    whereBuilder.append(
-                            "(zustand_kopf+ zustand_gelaender+zustand_ansicht+zustand_gruendung+ zustand_verformung+zustand_gelaende)/6 <=")
-                            .append(bisValue);
-                }
-                whereBuilder.append(") ");
-            }
-        } else if (((pKey == PropertyKeys.SANIERUNG_VON)
-                        || (pKey == PropertyKeys.SANIERUNG_BIS)) && !sanierungHandled) {
-            sanierungHandled = true;
-            final Double vonValue = filter.get(PropertyKeys.SANIERUNG_VON);
-            final Double bisValue = filter.get(PropertyKeys.GELAENDE_BIS);
-            if ((vonValue != null) || (bisValue != null)) {
-                if (whereNeeded) {
-                    whereBuilder.append("WHERE (");
-                    lastBraceNeeded = true;
-                    whereNeeded = false;
-                }
-                if (leadingConjucjtionNeeded) {
-                    whereBuilder.append(CONJUNCTION);
-                } else {
-                    leadingConjucjtionNeeded = true;
-                }
-                whereBuilder.append(" (");
-                boolean flag = false;
-                if (vonValue != null) {
-                    whereBuilder.append("m.sanierung >=").append(vonValue);
-                    flag = true;
-                }
-                if (bisValue != null) {
-                    if (flag) {
-                        whereBuilder.append(" and ");
-                    }
-                    whereBuilder.append(" m.sanierung <=").append(bisValue);
-                }
-                whereBuilder.append(") ");
-            }
+        if (!conditions.isEmpty()) {
+            return String.format(Locale.US, "(%s)", String.join(" AND ", conditions));
+        } else {
+            return null;
         }
     }
 
