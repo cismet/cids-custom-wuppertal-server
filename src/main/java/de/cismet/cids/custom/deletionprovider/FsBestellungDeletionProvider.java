@@ -9,6 +9,7 @@ package de.cismet.cids.custom.deletionprovider;
 
 import Sirius.server.localserver.object.AbstractCustomDeletionProvider;
 import Sirius.server.localserver.object.CustomDeletionProvider;
+import Sirius.server.localserver.object.DeletionProviderClientException;
 import Sirius.server.middleware.types.MetaObject;
 import Sirius.server.newuser.User;
 
@@ -44,6 +45,6 @@ public class FsBestellungDeletionProvider extends AbstractCustomDeletionProvider
 
     @Override
     public void customDeleteMetaObject(final User user, final MetaObject metaObject) throws Exception {
-        throw new Exception("Das Löschen von Produktbestellungen ist nicht erlaubt.");
+        throw new DeletionProviderClientException("Das Löschen von Produktbestellungen ist nicht erlaubt.");
     }
 }
