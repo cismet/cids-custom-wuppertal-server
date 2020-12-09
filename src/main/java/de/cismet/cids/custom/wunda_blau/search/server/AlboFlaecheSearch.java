@@ -10,6 +10,17 @@ package de.cismet.cids.custom.wunda_blau.search.server;
 import Sirius.server.middleware.interfaces.domainserver.MetaService;
 import Sirius.server.middleware.types.MetaObjectNode;
 
+import com.fasterxml.jackson.annotation.JsonAutoDetect;
+import com.fasterxml.jackson.annotation.JsonProperty;
+import com.fasterxml.jackson.core.JsonParser;
+import com.fasterxml.jackson.core.JsonProcessingException;
+import com.fasterxml.jackson.databind.DeserializationContext;
+import com.fasterxml.jackson.databind.DeserializationFeature;
+import com.fasterxml.jackson.databind.ObjectMapper;
+import com.fasterxml.jackson.databind.deser.std.StdDeserializer;
+import com.fasterxml.jackson.databind.module.SimpleModule;
+import com.fasterxml.jackson.databind.node.ObjectNode;
+
 import com.vividsolutions.jts.geom.Geometry;
 
 import lombok.Getter;
@@ -17,9 +28,13 @@ import lombok.Setter;
 
 import org.apache.log4j.Logger;
 
+import java.io.IOException;
+
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.List;
+
+import de.cismet.cids.custom.utils.vermessungsunterlagen.exceptions.VermessungsunterlagenException;
 
 import de.cismet.cids.server.search.AbstractCidsServerSearch;
 import de.cismet.cids.server.search.MetaObjectNodeServerSearch;
@@ -38,8 +53,15 @@ public class AlboFlaecheSearch extends AbstractCidsServerSearch implements MetaO
 
     //~ Static fields/initializers ---------------------------------------------
 
-    private static final transient Logger LOG = Logger.getLogger(AlboFlaecheSearch.class);
+    public static final ObjectMapper OBJECT_MAPPER = new ObjectMapper();
 
+    static {
+        final SimpleModule module = new SimpleModule();
+        module.addDeserializer(ArtInfo.class, new ArtInfoDeserializer());
+        OBJECT_MAPPER.registerModule(module);
+    }
+
+    private static final transient Logger LOG = Logger.getLogger(AlboFlaecheSearch.class);
     private static final String QUERY_TEMPLATE = "SELECT DISTINCT ON (flaeche.erhebungsnummer) "
                 + "(SELECT c.id FROM cs_class c WHERE table_name ILIKE 'albo_flaeche') AS class_id, flaeche.id, flaeche.erhebungsnummer || ' [' || art.schluessel || ']' AS name "
                 + "FROM albo_flaeche AS flaeche "
@@ -66,7 +88,8 @@ public class AlboFlaecheSearch extends AbstractCidsServerSearch implements MetaO
 
     private ConnectionContext connectionContext = ConnectionContext.createDummy();
 
-    private FlaecheSearchInfo searchInfo;
+    @Getter private FlaecheSearchInfo searchInfo;
+    @Getter @Setter private Geometry geometry;
 
     //~ Constructors -----------------------------------------------------------
 
@@ -104,11 +127,6 @@ public class AlboFlaecheSearch extends AbstractCidsServerSearch implements MetaO
      */
     public AlboFlaecheLightweightSearch getLightweightSearch() {
         return new AlboFlaecheLightweightSearch(this);
-    }
-
-    @Override
-    public FlaecheSearchInfo getSearchInfo() {
-        return searchInfo;
     }
 
     @Override
@@ -168,10 +186,6 @@ public class AlboFlaecheSearch extends AbstractCidsServerSearch implements MetaO
 
             if (searchInfo.getLoeschen() != null) {
                 wheresMain.add(String.format("flaeche.loeschen = %s", searchInfo.getLoeschen() ? "TRUE" : "FALSE"));
-            }
-
-            if (searchInfo.getVorgangId() != null) {
-                wheresMain.add(String.format("arr.vorgang_reference = %d", searchInfo.getVorgangId()));
             }
 
             if (searchInfo.getArtInfos() != null) {
@@ -325,8 +339,8 @@ public class AlboFlaecheSearch extends AbstractCidsServerSearch implements MetaO
                 }
             }
 
-            if (searchInfo.getGeometry() != null) {
-                final String geomString = PostGisGeometryFactory.getPostGisCompliantDbString(searchInfo.getGeometry());
+            if (getGeometry() != null) {
+                final String geomString = PostGisGeometryFactory.getPostGisCompliantDbString(getGeometry());
                 leftJoins.add("geom ON flaeche.fk_geom = geom.id");
                 wheres.add(String.format("geom.geo_field && GeometryFromText('%s')", geomString));
                 wheres.add(String.format(
@@ -411,21 +425,25 @@ public class AlboFlaecheSearch extends AbstractCidsServerSearch implements MetaO
      */
     @Getter
     @Setter
+    @JsonAutoDetect(
+        fieldVisibility = JsonAutoDetect.Visibility.NONE,
+        isGetterVisibility = JsonAutoDetect.Visibility.NONE,
+        getterVisibility = JsonAutoDetect.Visibility.NONE,
+        setterVisibility = JsonAutoDetect.Visibility.NONE
+    )
     public static class FlaecheSearchInfo extends StorableSearch.Info {
 
         //~ Instance fields ----------------------------------------------------
 
-        private Integer vorgangId;
-        private String vorgangSchluessel;
-        private String erhebungsNummer;
-        private String statusSchluessel;
-        private String typSchluessel;
-        private String zuordnungSchluessel;
-        private Boolean loeschen;
-        private Geometry geometry;
-        private SearchMode searchModeMain;
-        private SearchMode searchModeArt;
-        private Collection<ArtInfo> artInfos;
+        @JsonProperty private String vorgangSchluessel;
+        @JsonProperty private String erhebungsNummer;
+        @JsonProperty private String statusSchluessel;
+        @JsonProperty private String typSchluessel;
+        @JsonProperty private String zuordnungSchluessel;
+        @JsonProperty private Boolean loeschen;
+        @JsonProperty private SearchMode searchModeMain;
+        @JsonProperty private SearchMode searchModeArt;
+        @JsonProperty private Collection<ArtInfo> artInfos;
     }
 
     /**
@@ -435,11 +453,17 @@ public class AlboFlaecheSearch extends AbstractCidsServerSearch implements MetaO
      */
     @Getter
     @Setter
+    @JsonAutoDetect(
+        fieldVisibility = JsonAutoDetect.Visibility.NONE,
+        isGetterVisibility = JsonAutoDetect.Visibility.NONE,
+        getterVisibility = JsonAutoDetect.Visibility.NONE,
+        setterVisibility = JsonAutoDetect.Visibility.NONE
+    )
     public abstract static class ArtInfo extends StorableSearch.Info {
 
         //~ Instance fields ----------------------------------------------------
 
-        private final String flaechenartSchluessel;
+        @JsonProperty private final String flaechenartSchluessel;
 
         //~ Constructors -------------------------------------------------------
 
@@ -460,11 +484,17 @@ public class AlboFlaecheSearch extends AbstractCidsServerSearch implements MetaO
      */
     @Getter
     @Setter
+    @JsonAutoDetect(
+        fieldVisibility = JsonAutoDetect.Visibility.NONE,
+        isGetterVisibility = JsonAutoDetect.Visibility.NONE,
+        getterVisibility = JsonAutoDetect.Visibility.NONE,
+        setterVisibility = JsonAutoDetect.Visibility.NONE
+    )
     public abstract static class StandortInfo extends ArtInfo {
 
         //~ Instance fields ----------------------------------------------------
 
-        private String wzSchluessel;
+        @JsonProperty private String wzSchluessel;
 
         //~ Constructors -------------------------------------------------------
 
@@ -485,6 +515,12 @@ public class AlboFlaecheSearch extends AbstractCidsServerSearch implements MetaO
      */
     @Getter
     @Setter
+    @JsonAutoDetect(
+        fieldVisibility = JsonAutoDetect.Visibility.NONE,
+        isGetterVisibility = JsonAutoDetect.Visibility.NONE,
+        getterVisibility = JsonAutoDetect.Visibility.NONE,
+        setterVisibility = JsonAutoDetect.Visibility.NONE
+    )
     public static class AltstandortInfo extends StandortInfo {
 
         //~ Constructors -------------------------------------------------------
@@ -504,6 +540,12 @@ public class AlboFlaecheSearch extends AbstractCidsServerSearch implements MetaO
      */
     @Getter
     @Setter
+    @JsonAutoDetect(
+        fieldVisibility = JsonAutoDetect.Visibility.NONE,
+        isGetterVisibility = JsonAutoDetect.Visibility.NONE,
+        getterVisibility = JsonAutoDetect.Visibility.NONE,
+        setterVisibility = JsonAutoDetect.Visibility.NONE
+    )
     public static class OhneVerdachtInfo extends ArtInfo {
 
         //~ Constructors -------------------------------------------------------
@@ -523,11 +565,17 @@ public class AlboFlaecheSearch extends AbstractCidsServerSearch implements MetaO
      */
     @Getter
     @Setter
+    @JsonAutoDetect(
+        fieldVisibility = JsonAutoDetect.Visibility.NONE,
+        isGetterVisibility = JsonAutoDetect.Visibility.NONE,
+        getterVisibility = JsonAutoDetect.Visibility.NONE,
+        setterVisibility = JsonAutoDetect.Visibility.NONE
+    )
     public static class BewirtschaftungsschadenInfo extends ArtInfo {
 
         //~ Instance fields ----------------------------------------------------
 
-        private String bewirtschaftungsschadensartSchluessel;
+        @JsonProperty private String bewirtschaftungsschadensartSchluessel;
 
         //~ Constructors -------------------------------------------------------
 
@@ -556,11 +604,17 @@ public class AlboFlaecheSearch extends AbstractCidsServerSearch implements MetaO
      */
     @Getter
     @Setter
+    @JsonAutoDetect(
+        fieldVisibility = JsonAutoDetect.Visibility.NONE,
+        isGetterVisibility = JsonAutoDetect.Visibility.NONE,
+        getterVisibility = JsonAutoDetect.Visibility.NONE,
+        setterVisibility = JsonAutoDetect.Visibility.NONE
+    )
     public static class MaterialaufbringungInfo extends ArtInfo {
 
         //~ Instance fields ----------------------------------------------------
 
-        private String materialaufbringungsartSchluessel;
+        @JsonProperty private String materialaufbringungsartSchluessel;
 
         //~ Constructors -------------------------------------------------------
 
@@ -589,11 +643,17 @@ public class AlboFlaecheSearch extends AbstractCidsServerSearch implements MetaO
      */
     @Getter
     @Setter
+    @JsonAutoDetect(
+        fieldVisibility = JsonAutoDetect.Visibility.NONE,
+        isGetterVisibility = JsonAutoDetect.Visibility.NONE,
+        getterVisibility = JsonAutoDetect.Visibility.NONE,
+        setterVisibility = JsonAutoDetect.Visibility.NONE
+    )
     public static class ImmissionInfo extends ArtInfo {
 
         //~ Instance fields ----------------------------------------------------
 
-        private String immissionsartSchluessel;
+        @JsonProperty private String immissionsartSchluessel;
 
         //~ Constructors -------------------------------------------------------
 
@@ -622,11 +682,17 @@ public class AlboFlaecheSearch extends AbstractCidsServerSearch implements MetaO
      */
     @Getter
     @Setter
+    @JsonAutoDetect(
+        fieldVisibility = JsonAutoDetect.Visibility.NONE,
+        isGetterVisibility = JsonAutoDetect.Visibility.NONE,
+        getterVisibility = JsonAutoDetect.Visibility.NONE,
+        setterVisibility = JsonAutoDetect.Visibility.NONE
+    )
     public static class SchadensfallInfo extends ArtInfo {
 
         //~ Instance fields ----------------------------------------------------
 
-        private String schadensfallartSchluessel;
+        @JsonProperty private String schadensfallartSchluessel;
 
         //~ Constructors -------------------------------------------------------
 
@@ -655,13 +721,19 @@ public class AlboFlaecheSearch extends AbstractCidsServerSearch implements MetaO
      */
     @Getter
     @Setter
+    @JsonAutoDetect(
+        fieldVisibility = JsonAutoDetect.Visibility.NONE,
+        isGetterVisibility = JsonAutoDetect.Visibility.NONE,
+        getterVisibility = JsonAutoDetect.Visibility.NONE,
+        setterVisibility = JsonAutoDetect.Visibility.NONE
+    )
     public static class AltablagerungInfo extends ArtInfo {
 
         //~ Instance fields ----------------------------------------------------
 
-        private String stilllegungSchluessel;
-        private String verfuellkategorieSchluessel;
-        private String erhebungsklasseSchluessel;
+        @JsonProperty private String stilllegungSchluessel;
+        @JsonProperty private String verfuellkategorieSchluessel;
+        @JsonProperty private String erhebungsklasseSchluessel;
 
         //~ Constructors -------------------------------------------------------
 
@@ -680,15 +752,83 @@ public class AlboFlaecheSearch extends AbstractCidsServerSearch implements MetaO
      */
     @Getter
     @Setter
-    public static class BetrienbsstandortInfo extends StandortInfo {
+    @JsonAutoDetect(
+        fieldVisibility = JsonAutoDetect.Visibility.NONE,
+        isGetterVisibility = JsonAutoDetect.Visibility.NONE,
+        getterVisibility = JsonAutoDetect.Visibility.NONE,
+        setterVisibility = JsonAutoDetect.Visibility.NONE
+    )
+    public static class BetriebsstandortInfo extends StandortInfo {
 
         //~ Constructors -------------------------------------------------------
 
         /**
          * Creates a new BetrienbsstandortInfo object.
          */
-        public BetrienbsstandortInfo() {
+        public BetriebsstandortInfo() {
             super("betriebsstandort");
+        }
+    }
+
+    /**
+     * DOCUMENT ME!
+     *
+     * @version  $Revision$, $Date$
+     */
+    public static class ArtInfoDeserializer extends StdDeserializer<ArtInfo> {
+
+        //~ Instance fields ----------------------------------------------------
+
+        private final ObjectMapper defaultMapper = new ObjectMapper();
+
+        //~ Constructors -------------------------------------------------------
+
+        /**
+         * Creates a new CidsBeanJsonDeserializer object.
+         */
+        public ArtInfoDeserializer() {
+            super(VermessungsunterlagenException.class);
+
+            defaultMapper.configure(DeserializationFeature.FAIL_ON_UNKNOWN_PROPERTIES, false);
+        }
+
+        //~ Methods ------------------------------------------------------------
+
+        @Override
+        public ArtInfo deserialize(final JsonParser jp, final DeserializationContext dc) throws IOException,
+            JsonProcessingException {
+            final ObjectNode on = jp.readValueAsTree();
+            if (on.has("flaechenartSchluessel")) {
+                final String flaechenartSchluessel = (String)defaultMapper.treeToValue(on.get("flaechenartSchluessel"),
+                        String.class);
+                switch (flaechenartSchluessel) {
+                    case "betriebsstandort": {
+                        return defaultMapper.treeToValue(on, BetriebsstandortInfo.class);
+                    }
+                    case "altstandort": {
+                        return defaultMapper.treeToValue(on, AltstandortInfo.class);
+                    }
+                    case "altablagerung": {
+                        return defaultMapper.treeToValue(on, AltablagerungInfo.class);
+                    }
+                    case "immission": {
+                        return defaultMapper.treeToValue(on, ImmissionInfo.class);
+                    }
+                    case "materialaufbringung": {
+                        return defaultMapper.treeToValue(on, MaterialaufbringungInfo.class);
+                    }
+                    case "bewirtschaftungsschaden": {
+                        return defaultMapper.treeToValue(on, BewirtschaftungsschadenInfo.class);
+                    }
+                    case "schadensfall": {
+                        return defaultMapper.treeToValue(on, SchadensfallInfo.class);
+                    }
+                    case "ohne_verdacht": {
+                        return defaultMapper.treeToValue(on, OhneVerdachtInfo.class);
+                    }
+                }
+            }
+            throw new RuntimeException("invalid ArtInfo");
         }
     }
 }
