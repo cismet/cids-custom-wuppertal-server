@@ -42,7 +42,7 @@ public class AlboFlaecheLightweightSearch extends AbstractMonToLwmoSearch {
      * Creates a new AlboFlaecheLightweightSearch object.
      */
     public AlboFlaecheLightweightSearch() {
-        this(new AlboFlaecheSearch(AlboFlaecheSearch.SearchMode.AND));
+        this(new AlboFlaecheSearch());
     }
 
     /**
