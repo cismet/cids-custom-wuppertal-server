@@ -39,11 +39,6 @@ public class FsBestellungDeletionProvider extends AbstractCustomDeletionProvider
     }
 
     @Override
-    public boolean isMatching(final User user, final MetaObject metaObject) {
-        return true;
-    }
-
-    @Override
     public void customDeleteMetaObject(final User user, final MetaObject metaObject) throws Exception {
         throw new DeletionProviderClientException("Das Löschen von Produktbestellungen ist nicht erlaubt.");
     }
