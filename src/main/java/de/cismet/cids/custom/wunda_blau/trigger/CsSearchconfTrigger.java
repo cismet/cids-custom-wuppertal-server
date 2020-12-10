@@ -64,7 +64,8 @@ public class CsSearchconfTrigger extends AbstractDBAwareCidsTrigger {
     private void storeQuery(final CidsBean cidsBean) {
         if (isForMe(cidsBean)) {
             try {
-                final StorableSearch search = new AlboFlaecheSearch(((String)cidsBean.getProperty("conf_json")));
+                final String conf_json = (String)cidsBean.getProperty("conf_json");
+                final StorableSearch search = new AlboFlaecheSearch(conf_json);
                 cidsBean.setProperty("children_query", search.createQuery());
             } catch (final Exception ex) {
                 LOG.error(ex, ex);

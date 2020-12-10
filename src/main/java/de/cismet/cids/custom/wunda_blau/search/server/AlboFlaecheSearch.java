@@ -117,7 +117,7 @@ public class AlboFlaecheSearch extends AbstractCidsServerSearch implements MetaO
      * @throws  Exception  DOCUMENT ME!
      */
     public AlboFlaecheSearch(final String searchInfo) throws Exception {
-        this(OBJECT_MAPPER.readValue(searchInfo, FlaecheSearchInfo.class));
+        this(searchInfo != null ? OBJECT_MAPPER.readValue(searchInfo, FlaecheSearchInfo.class) : null);
     }
 
     //~ Methods ----------------------------------------------------------------
