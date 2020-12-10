@@ -266,7 +266,7 @@ public class AlboFlaecheSearch extends AbstractCidsServerSearch implements MetaO
                                         "albo_bewirtschaftungsschadensart AS bewirtschaftungsschadensart%1$s ON bewirtschaftungsschaden%1$s.fk_art = bewirtschaftungsschadensart%1$s.id",
                                         alias));
                                 subAndWheres.add(String.format(
-                                        "bewirtschaftungsschaden%s.schluessel LIKE '%s'",
+                                        "bewirtschaftungsschadensart%s.schluessel LIKE '%s'",
                                         alias,
                                         bewirtschaftungsschadensart));
                             }
@@ -284,7 +284,7 @@ public class AlboFlaecheSearch extends AbstractCidsServerSearch implements MetaO
                                         "albo_schadensfallart AS schadensfallart%1$s ON schadensfall%1$s.fk_art = schadensfallart%1$s.id",
                                         alias));
                                 subAndWheres.add(String.format(
-                                        "schadensfall%s.schluessel LIKE '%s'",
+                                        "schadensfallart%s.schluessel LIKE '%s'",
                                         alias,
                                         schadensfallart));
                             }
@@ -303,7 +303,7 @@ public class AlboFlaecheSearch extends AbstractCidsServerSearch implements MetaO
                                         "albo_materialaufbringungsart AS materialaufbringungsart%1$s ON materialaufbringung%1$s.fk_art = materialaufbringungsart%1$s.id",
                                         alias));
                                 subAndWheres.add(String.format(
-                                        "materialaufbringung%s.schluessel LIKE '%s'",
+                                        "materialaufbringungsart%s.schluessel LIKE '%s'",
                                         alias,
                                         materialaufbringungsart));
                             }
@@ -321,7 +321,7 @@ public class AlboFlaecheSearch extends AbstractCidsServerSearch implements MetaO
                                         "albo_immissionsart AS immissionsart%1$s ON immission%1$s.fk_art = immissionsart%1$s.id",
                                         alias));
                                 subAndWheres.add(String.format(
-                                        "immission%s.schluessel LIKE '%s'",
+                                        "immissionsart%s.schluessel LIKE '%s'",
                                         alias,
                                         immissionsart));
                             }
