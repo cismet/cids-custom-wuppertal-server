@@ -63,12 +63,12 @@ public class AlboFlaecheSearch extends AbstractCidsServerSearch implements MetaO
 
     private static final transient Logger LOG = Logger.getLogger(AlboFlaecheSearch.class);
     private static final String QUERY_TEMPLATE = "SELECT DISTINCT ON (flaeche.erhebungsnummer) "
-                + "(SELECT c.id FROM cs_class c WHERE table_name ILIKE 'albo_flaeche') AS class_id, flaeche.id, flaeche.erhebungsnummer || ' [' || art.schluessel || ']' AS name "
+                + "(SELECT c.id FROM cs_class c WHERE table_name ILIKE 'albo_flaeche') AS class_id, flaeche.id AS object_id, flaeche.erhebungsnummer || ' [' || art.schluessel || ']' AS name "
                 + "FROM albo_flaeche AS flaeche "
                 + "LEFT JOIN albo_flaechenart AS art ON flaeche.fk_art = art.id "
                 + "%s "
                 + "WHERE %s "
-                + "ORDER BY flaeche.erhebungsnummer;";
+                + "ORDER BY flaeche.erhebungsnummer";
 
     //~ Enums ------------------------------------------------------------------
 
@@ -107,6 +107,17 @@ public class AlboFlaecheSearch extends AbstractCidsServerSearch implements MetaO
      */
     public AlboFlaecheSearch(final FlaecheSearchInfo searchInfo) {
         this.searchInfo = searchInfo;
+    }
+
+    /**
+     * Creates a new AlboFlaecheSearch object.
+     *
+     * @param   searchInfo  DOCUMENT ME!
+     *
+     * @throws  Exception  DOCUMENT ME!
+     */
+    public AlboFlaecheSearch(final String searchInfo) throws Exception {
+        this(OBJECT_MAPPER.readValue(searchInfo, FlaecheSearchInfo.class));
     }
 
     //~ Methods ----------------------------------------------------------------
