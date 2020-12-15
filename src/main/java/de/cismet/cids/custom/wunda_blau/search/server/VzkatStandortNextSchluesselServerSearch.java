@@ -28,7 +28,7 @@ public class VzkatStandortNextSchluesselServerSearch extends AbstractCidsServerS
 
     //~ Static fields/initializers ---------------------------------------------
 
-    private static final String QUERY = "SELECT max(import_id) FROM vzkat_standort WHERE import_id IS NOT NULL;";
+    private static final String QUERY = "SELECT max(import_id) + 1 FROM vzkat_standort WHERE import_id IS NOT NULL;";
 
     //~ Instance fields --------------------------------------------------------
 
