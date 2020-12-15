@@ -63,12 +63,12 @@ public class AlboFlaecheSearch extends AbstractCidsServerSearch implements MetaO
 
     private static final transient Logger LOG = Logger.getLogger(AlboFlaecheSearch.class);
     private static final String QUERY_TEMPLATE = "SELECT DISTINCT ON (flaeche.erhebungsnummer) "
-                + "(SELECT c.id FROM cs_class c WHERE table_name ILIKE 'albo_flaeche') AS class_id, flaeche.id, flaeche.erhebungsnummer || ' [' || art.schluessel || ']' AS name "
+                + "(SELECT c.id FROM cs_class c WHERE table_name ILIKE 'albo_flaeche') AS class_id, flaeche.id AS object_id, flaeche.erhebungsnummer || ' [' || art.schluessel || ']' AS name "
                 + "FROM albo_flaeche AS flaeche "
                 + "LEFT JOIN albo_flaechenart AS art ON flaeche.fk_art = art.id "
                 + "%s "
                 + "WHERE %s "
-                + "ORDER BY flaeche.erhebungsnummer;";
+                + "ORDER BY flaeche.erhebungsnummer";
 
     //~ Enums ------------------------------------------------------------------
 
@@ -107,6 +107,17 @@ public class AlboFlaecheSearch extends AbstractCidsServerSearch implements MetaO
      */
     public AlboFlaecheSearch(final FlaecheSearchInfo searchInfo) {
         this.searchInfo = searchInfo;
+    }
+
+    /**
+     * Creates a new AlboFlaecheSearch object.
+     *
+     * @param   searchInfo  DOCUMENT ME!
+     *
+     * @throws  Exception  DOCUMENT ME!
+     */
+    public AlboFlaecheSearch(final String searchInfo) throws Exception {
+        this((searchInfo != null) ? OBJECT_MAPPER.readValue(searchInfo, FlaecheSearchInfo.class) : null);
     }
 
     //~ Methods ----------------------------------------------------------------
@@ -202,6 +213,10 @@ public class AlboFlaecheSearch extends AbstractCidsServerSearch implements MetaO
                         if (artInfo instanceof StandortInfo) {
                             final List<String> subLeftJoins = new ArrayList<>();
                             final String wirtschaftszweig = ((StandortInfo)artInfo).getWzSchluessel();
+                            final Integer jahr = ((StandortInfo)artInfo).getJahr();
+                            final Boolean jahrModus = ((StandortInfo)artInfo).getJahrModus();
+                            final Integer dauer = ((StandortInfo)artInfo).getDauer();
+                            final Boolean dauerModus = ((StandortInfo)artInfo).getDauerModus();
                             if (wirtschaftszweig != null) {
                                 subLeftJoins.add(String.format(
                                         "albo_standort_wirtschaftszweig AS stwz%1$s ON stwz%1$s.standort_reference = standort%1$s.id",
@@ -211,8 +226,51 @@ public class AlboFlaecheSearch extends AbstractCidsServerSearch implements MetaO
                                         alias));
                                 subAndWheres.add(String.format("wz%s.schluessel LIKE '%s'", alias, wirtschaftszweig));
                             }
+                            if (jahr != null) {
+                                if (jahrModus == null) {                     // exakt jahr
+                                    subAndWheres.add(String.format(
+                                            "CASE WHEN standort%1$s.jahr_von IS NOT NULL THEN standort%1$s.jahr_von <= %2$d ELSE TRUE END AND CASE WHEN standort%1$s.jahr_bis IS NOT NULL THEN standort%1$s.jahr_bis >= %2$d ELSE TRUE END",
+                                            alias,
+                                            jahr));
+                                } else if (Boolean.TRUE.equals(jahrModus)) { // nach jahr
+                                    subAndWheres.add(String.format(
+                                            "CASE WHEN standort%1$s.jahr_bis IS NOT NULL THEN standort%1$s.jahr_bis > %2$d ELSE TRUE END",
+                                            alias,
+                                            jahr));
+                                } else {                                     // vor jahr
+                                    subAndWheres.add(String.format(
+                                            "CASE WHEN standort%1$s.jahr_von IS NOT NULL THEN standort%1$s.jahr_von < %2$d ELSE TRUE END",
+                                            alias,
+                                            jahr));
+                                }
+                            }
 
-                            if (!subLeftJoins.isEmpty()) {
+                            if (dauer != null) {
+                                if (dauerModus == null) {                     // exakt dauer
+                                    subAndWheres.add(String.format(
+                                            "CASE "
+                                                    + "WHEN standort%1$s.jahr_von IS NOT NULL AND standort%1$s.jahr_bis IS NOT NULL "
+                                                    + "THEN standort%1$s.jahr_bis - standort%1$s.jahr_von = %2$d ELSE FALSE END",
+                                            alias,
+                                            dauer));
+                                } else if (Boolean.TRUE.equals(dauerModus)) { // länger als dauer
+                                    subAndWheres.add(String.format(
+                                            "CASE "
+                                                    + "WHEN standort%1$s.jahr_von IS NOT NULL AND standort%1$s.jahr_bis IS NOT NULL "
+                                                    + "THEN standort%1$s.jahr_bis - standort%1$s.jahr_von >= %2$d ELSE FALSE END",
+                                            alias,
+                                            dauer));
+                                } else {                                      // kürzer als dauer
+                                    subAndWheres.add(String.format(
+                                            "CASE "
+                                                    + "WHEN standort%1$s.jahr_von IS NOT NULL AND standort%1$s.jahr_bis IS NOT NULL "
+                                                    + "THEN standort%1$s.jahr_bis - standort%1$s.jahr_von < %2$d ELSE FALSE END",
+                                            alias,
+                                            dauer));
+                                }
+                            }
+
+                            if (!subAndWheres.isEmpty()) {
                                 leftJoins.add(String.format(
                                         "albo_standort AS standort%1$s ON standort%1$s.fk_flaeche = flaeche.id",
                                         alias));
@@ -251,7 +309,7 @@ public class AlboFlaecheSearch extends AbstractCidsServerSearch implements MetaO
                                         alias,
                                         verfuellkategorie));
                             }
-                            if (!subLeftJoins.isEmpty()) {
+                            if (!subAndWheres.isEmpty()) {
                                 leftJoins.add(String.format(
                                         "albo_altablagerung AS altablagerung%1$s ON flaeche.fk_altablagerung = altablagerung%1$s.id",
                                         alias));
@@ -270,7 +328,7 @@ public class AlboFlaecheSearch extends AbstractCidsServerSearch implements MetaO
                                         alias,
                                         bewirtschaftungsschadensart));
                             }
-                            if (!subLeftJoins.isEmpty()) {
+                            if (!subAndWheres.isEmpty()) {
                                 leftJoins.add(String.format(
                                         "albo_bewirtschaftungsschaden AS bewirtschaftungsschaden%1$s ON flaeche.fk_bewirtschaftungsschaden = bewirtschaftungsschaden%1$s.id",
                                         alias));
@@ -288,7 +346,7 @@ public class AlboFlaecheSearch extends AbstractCidsServerSearch implements MetaO
                                         alias,
                                         schadensfallart));
                             }
-                            if (!subLeftJoins.isEmpty()) {
+                            if (!subAndWheres.isEmpty()) {
                                 leftJoins.add(String.format(
                                         "albo_schadensfall AS schadensfall%1$s ON flaeche.fk_schadensfall = schadensfall%1$s.id",
                                         alias));
@@ -307,7 +365,7 @@ public class AlboFlaecheSearch extends AbstractCidsServerSearch implements MetaO
                                         alias,
                                         materialaufbringungsart));
                             }
-                            if (!subLeftJoins.isEmpty()) {
+                            if (!subAndWheres.isEmpty()) {
                                 leftJoins.add(String.format(
                                         "albo_materialaufbringung AS materialaufbringung%1$s ON flaeche.fk_materialaufbringung = materialaufbringung%1$s.id",
                                         alias));
@@ -325,7 +383,7 @@ public class AlboFlaecheSearch extends AbstractCidsServerSearch implements MetaO
                                         alias,
                                         immissionsart));
                             }
-                            if (!subLeftJoins.isEmpty()) {
+                            if (!subAndWheres.isEmpty()) {
                                 leftJoins.add(String.format(
                                         "albo_immission AS immission%1$s ON flaeche.fk_immission = immission%1$s.id",
                                         alias));
@@ -495,6 +553,10 @@ public class AlboFlaecheSearch extends AbstractCidsServerSearch implements MetaO
         //~ Instance fields ----------------------------------------------------
 
         @JsonProperty private String wzSchluessel;
+        @JsonProperty private Integer jahr;
+        @JsonProperty private Boolean jahrModus;
+        @JsonProperty private Integer dauer;
+        @JsonProperty private Boolean dauerModus;
 
         //~ Constructors -------------------------------------------------------
 
