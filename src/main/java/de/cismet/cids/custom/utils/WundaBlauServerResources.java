@@ -90,6 +90,7 @@ public enum WundaBlauServerResources {
 
     EMOB_CONF_PROPERTIES(new TextServerResource("/emob/emob_conf.properties")),
     PRBR_CONF_PROPERTIES(new TextServerResource("/prbr/prbr_conf.properties")),
+    BAUM_CONF_PROPERTIES(new TextServerResource("/baum/baum_conf.properties")),
 
     DATASOURCES_CAPABILITYLIST_TEXT(new TextServerResource("/datasources/capabilities.xml")),
     DATASOURCES_CREDENTIALS_PROPERTIES(new TextServerResource("/datasources/credentials.properties")),
