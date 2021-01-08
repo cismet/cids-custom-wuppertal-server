@@ -59,6 +59,15 @@ public class BaumGebietLightweightSearch extends AbstractCidsServerSearch implem
 
     public static final String TOSTRING_TEMPLATE = "%1$s (%2$s)";
     public static final String[] TOSTRING_FIELDS = { Subject.NAME.toString(), Subject.AKTENZEICHEN.toString() };
+    public static final String TABLE_NAME = "baum_gebiet";
+    public static final String TABLE_NAME_MELDUNG = "baum_meldung";
+    public static final String FIELD__NAME = "name";
+    public static final String FIELD__ID = "id";
+    public static final String FIELD__AZ = "aktenzeichen";
+    public static final String FIELD__MELDUNG_DATUM = "datum";
+    public static final String FIELD__MELDUNG_FK = "fk_gebiet";
+
+    
 
     //~ Enums ------------------------------------------------------------------
 
@@ -75,14 +84,21 @@ public class BaumGebietLightweightSearch extends AbstractCidsServerSearch implem
 
             @Override
             public String toString() {
-                return "name";
+                return FIELD__NAME;
             }
         },
         AKTENZEICHEN {
 
             @Override
             public String toString() {
-                return "aktenzeichen";
+                return FIELD__AZ;
+            }
+        },
+        DATUM{
+
+            @Override
+            public String toString() {
+                return FIELD__MELDUNG_DATUM;
             }
         }
     }
@@ -154,12 +170,23 @@ public class BaumGebietLightweightSearch extends AbstractCidsServerSearch implem
      */
     private static String createUnionQuery(final Subject subject) {
         final List<String> queries = new ArrayList<>();
-        
+        /*
             queries.add(String.format(
-                    "SELECT id, name, aktenzeichen FROM (\n%s\n) AS queryB",
+                    "SELECT " + FIELD__ID + ", " + FIELD__AZ + ", " + FIELD__NAME + ", '('" + FIELD__MELDUNG_DATUM + "')'"
+                    +" FROM (\n%s\n) AS query",
                     createQuery(subject, null, null)));
         
-        return String.format("%s\nORDER BY aktenzeichen, name", String.join("\nUNION\n", queries));
+        return String.format("%s\nORDER BY " + FIELD__AZ + ", " + FIELD__NAME, String.join("\nUNION\n", queries));*/
+        String query = "SELECT " + TABLE_NAME + "." + FIELD__ID + ", " 
+                                 + TABLE_NAME + "." + FIELD__AZ + ", " 
+                                 + TABLE_NAME + "." + FIELD__NAME + ", " 
+                                 + "'[' || " + TABLE_NAME_MELDUNG + "."  + FIELD__MELDUNG_DATUM + " || ']' AS datum"
+                    + " FROM " + TABLE_NAME_MELDUNG
+                    + " LEFT JOIN " + TABLE_NAME 
+                            + " ON " + TABLE_NAME_MELDUNG + "." + FIELD__MELDUNG_FK + " = " 
+                            + TABLE_NAME + "." + FIELD__ID
+                    + " ORDER BY " + TABLE_NAME + "." + FIELD__AZ + ", " + TABLE_NAME_MELDUNG + "."  + FIELD__MELDUNG_DATUM;
+        return query;
     }
 
     /**
@@ -222,7 +249,7 @@ public class BaumGebietLightweightSearch extends AbstractCidsServerSearch implem
         try {
             final MetaClass mc = CidsBean.getMetaClassFromTableName(
                     "WUNDA_BLAU",
-                    "baum_gebiet",
+                    TABLE_NAME,
                     getConnectionContext());
             if (getRepresentationPattern() != null) {
                 return Arrays.asList(metaService.getLightweightMetaObjectsByQuery(
