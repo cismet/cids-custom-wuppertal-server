@@ -45,7 +45,7 @@ public class AlboProperties {
     private final String schadensfall_color;
     private final String immission_color;
     private final String materialaufbringung_color;
-    private final String bewirtschaftungsschaden_color;
+    private final String sonstige_color;
     private final String ohne_verdacht_color;
 
     private final String wz_klassifikation_link;
@@ -98,7 +98,7 @@ public class AlboProperties {
         schadensfall_color = readProperty(properties, "schadensfall_color", null);
         immission_color = readProperty(properties, "immission_color", null);
         materialaufbringung_color = readProperty(properties, "materialaufbringung_color", null);
-        bewirtschaftungsschaden_color = readProperty(properties, "bewirtschaftungsschaden_color", null);
+        sonstige_color = readProperty(properties, "sonstige_color", null);
         ohne_verdacht_color = readProperty(properties, "ohne_verdacht_color", null);
 
         wz_klassifikation_link = readProperty(properties, "wz_klassifikation_link", null);
