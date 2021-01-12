@@ -87,7 +87,7 @@ public class CidsMauernSearchStatement extends AbstractCidsServerSearch implemen
 
         ZUSTAND_HOEHE_VON, ZUSTAND_HOEHE_BIS, ZUSTAND_GELAENDER_VON, ZUSTAND_GELAENDER_BIS, ZUSTAND_ANSICHT_VON,
         ZUSTAND_ANSICHT_BIS, ZUSTAND_WANDKOPF_VON, ZUSTAND_WANDKOPF_BIS, ZUSTAND_GRUENDUNG_VON, ZUSTAND_GRUENDUNG_BIS,
-        ZUSTAND_VERFORMUNG_VON, ZUSTAND_VERFORMUNG_BIS, ZUSTAND_GELAENDE_VON, ZUSTAND_GELAENDE_BIS,
+        ZUSTAND_GELAENDE_OBEN_VON, ZUSTAND_GELAENDE_OBEN_BIS, ZUSTAND_GELAENDE_VON, ZUSTAND_GELAENDE_BIS,
         ZUSTAND_BAUSUBSTANZ_VON, ZUSTAND_BAUSUBSTANZ_BIS, ZUSTAND_SANIERUNG_VON, ZUSTAND_SANIERUNG_BIS,
         MASSNAHME_PRUEFUNG_VON, MASSNAHME_PRUEFUNG_BIS, MASSNAHME_SANIERUNG_DURCHGEFUEHRT_VON,
         MASSNAHME_SANIERUNG_DURCHGEFUEHRT_BIS, MASSNAHME_SANIERUNG_GEPLANT_VON, MASSNAHME_SANIERUNG_GEPLANT_BIS,
@@ -154,7 +154,7 @@ public class CidsMauernSearchStatement extends AbstractCidsServerSearch implemen
                 return result;
             }
 
-            joins.add("mauer m");
+            joins.add("mauer AS m");
             if ((geom != null)) {
                 joins.add(JOIN_GEOM);
                 final String geostring = PostGisGeometryFactory.getPostGisCompliantDbString(geom);
@@ -224,8 +224,8 @@ public class CidsMauernSearchStatement extends AbstractCidsServerSearch implemen
 
             if ((filter.get(PropertyKeys.MASSNAHME_SANIERUNG_DURCHGEFUEHRT_VON) != null)
                         || (filter.get(PropertyKeys.MASSNAHME_SANIERUNG_DURCHGEFUEHRT_BIS) != null)) {
-                joins.add("mauer_massnahme mm1 ON m.id = mm1.fk_mauer");
-                joins.add("mauer_massnahme_art mma1 ON mm1.fk_art = mma1.id");
+                joins.add("mauer_massnahme AS mm1 ON m.id = mm1.fk_mauer");
+                joins.add("mauer_massnahme_art AS mma1 ON mm1.fk_art = mma1.id");
                 wheres.add(String.format(
                         "(mma1.schluessel LIKE 'durchgefuehrte_sanierung' AND %s)",
                         createWhereFor(
@@ -235,8 +235,8 @@ public class CidsMauernSearchStatement extends AbstractCidsServerSearch implemen
             }
             if ((filter.get(PropertyKeys.MASSNAHME_SANIERUNG_GEPLANT_VON) != null)
                         || (filter.get(PropertyKeys.MASSNAHME_SANIERUNG_GEPLANT_BIS) != null)) {
-                joins.add("mauer_massnahme mm2 ON m.id = mm2.fk_mauer");
-                joins.add("mauer_massnahme_art mma2 ON mm2.fk_art = mma2.id");
+                joins.add("mauer_massnahme AS mm2 ON m.id = mm2.fk_mauer");
+                joins.add("mauer_massnahme_art AS mma2 ON mm2.fk_art = mma2.id");
                 wheres.add(String.format(
                         "(mma2.schluessel LIKE 'durchzufuehrende_sanierung' AND %s)",
                         createWhereFor(
@@ -246,9 +246,9 @@ public class CidsMauernSearchStatement extends AbstractCidsServerSearch implemen
             }
             if ((filter.get(PropertyKeys.MASSNAHME_BAUWERKSBESICHTIGUNG_VON) != null)
                         || (filter.get(PropertyKeys.MASSNAHME_BAUWERKSBESICHTIGUNG_BIS) != null)) {
-                joins.add("mauer_massnahme mm3 ON m.id = mm3.fk_mauer");
+                joins.add("mauer_massnahme AS mm3 ON m.id = mm3.fk_mauer");
                 joins.add(
-                    "mauer_massnahme_art mma3 ON mm3.fk_art = mma3.id AND mma3.schluessel LIKE 'bauwerksbesichtigung'");
+                    "mauer_massnahme_art AS mma3 ON mm3.fk_art = mma3.id AND mma3.schluessel LIKE 'bauwerksbesichtigung'");
                 wheres.add(createWhereFor(
                         "mm3.ziel",
                         (Date)filter.get(PropertyKeys.MASSNAHME_BAUWERKSBESICHTIGUNG_VON),
@@ -256,9 +256,9 @@ public class CidsMauernSearchStatement extends AbstractCidsServerSearch implemen
             }
             if ((filter.get(PropertyKeys.MASSNAHME_BAUWERKSBEGEHUNG_VON) != null)
                         || (filter.get(PropertyKeys.MASSNAHME_BAUWERKSBEGEHUNG_BIS) != null)) {
-                joins.add("mauer_massnahme mm4 ON m.id = mm4.fk_mauer");
+                joins.add("mauer_massnahme AS mm4 ON m.id = mm4.fk_mauer");
                 joins.add(
-                    "mauer_massnahme_art mma4 ON mm4.fk_art = mma4.id AND mma4.schluessel LIKE 'bauwerksbegehung'");
+                    "mauer_massnahme_art AS mma4 ON mm4.fk_art = mma4.id AND mma4.schluessel LIKE 'bauwerksbegehung'");
                 wheres.add(createWhereFor(
                         "mm4.ziel",
                         (Date)filter.get(PropertyKeys.MASSNAHME_BAUWERKSBEGEHUNG_VON),
@@ -272,48 +272,55 @@ public class CidsMauernSearchStatement extends AbstractCidsServerSearch implemen
                         (Double)filter.get(PropertyKeys.ZUSTAND_HOEHE_VON),
                         (Double)filter.get(PropertyKeys.ZUSTAND_HOEHE_BIS)));
             }
+            if ((filter.get(PropertyKeys.ZUSTAND_GELAENDE_VON) != null)
+                        || (filter.get(PropertyKeys.ZUSTAND_GELAENDE_BIS) != null)) {
+                joins.add("mauer_zustand AS z_gelaende ON m.fk_zustand_gelaende = z_gelaende.id");
+                wheres.add(createWhereFor(
+                        "z_gelaende.gesamt",
+                        (Double)filter.get(PropertyKeys.ZUSTAND_GELAENDE_VON),
+                        (Double)filter.get(PropertyKeys.ZUSTAND_GELAENDE_BIS)));
+            }
             if ((filter.get(PropertyKeys.ZUSTAND_ANSICHT_VON) != null)
                         || (filter.get(PropertyKeys.ZUSTAND_ANSICHT_BIS) != null)) {
+                joins.add("mauer_zustand AS z_ansicht ON m.fk_zustand_ansicht = z_ansicht.id");
                 wheres.add(createWhereFor(
-                        "m.zustand_ansicht",
+                        "z_ansicht.gesamt",
                         (Double)filter.get(PropertyKeys.ZUSTAND_ANSICHT_VON),
                         (Double)filter.get(PropertyKeys.ZUSTAND_ANSICHT_BIS)));
             }
             if ((filter.get(PropertyKeys.ZUSTAND_GELAENDER_VON) != null)
                         || (filter.get(PropertyKeys.ZUSTAND_GELAENDER_BIS) != null)) {
+                joins.add("mauer_zustand AS z_gelaender ON m.fk_zustand_gelaender = z_gelaender.id");
                 wheres.add(createWhereFor(
-                        "m.zustand_gelaender",
+                        "z_gelaender.gesamt",
                         (Double)filter.get(PropertyKeys.ZUSTAND_GELAENDER_VON),
                         (Double)filter.get(PropertyKeys.ZUSTAND_GELAENDER_BIS)));
             }
             if ((filter.get(PropertyKeys.ZUSTAND_WANDKOPF_VON) != null)
                         || (filter.get(PropertyKeys.ZUSTAND_WANDKOPF_BIS) != null)) {
+                joins.add("mauer_zustand AS z_kopf ON m.fk_zustand_kopf = z_kopf.id");
                 wheres.add(createWhereFor(
-                        "m.zustand_kopf",
+                        "z_kopf.gesamt",
                         (Double)filter.get(PropertyKeys.ZUSTAND_WANDKOPF_VON),
                         (Double)filter.get(PropertyKeys.ZUSTAND_WANDKOPF_BIS)));
             }
             if ((filter.get(PropertyKeys.ZUSTAND_GRUENDUNG_VON) != null)
                         || (filter.get(PropertyKeys.ZUSTAND_GRUENDUNG_BIS) != null)) {
+                joins.add("mauer_zustand AS z_gruendung ON m.fk_zustand_gruendung = z_gruendung.id");
                 wheres.add(createWhereFor(
-                        "m.zustand_gruendung",
+                        "z_gruendung.gesamt",
                         (Double)filter.get(PropertyKeys.ZUSTAND_GRUENDUNG_VON),
                         (Double)filter.get(PropertyKeys.ZUSTAND_GRUENDUNG_BIS)));
             }
-            if ((filter.get(PropertyKeys.ZUSTAND_VERFORMUNG_VON) != null)
-                        || (filter.get(PropertyKeys.ZUSTAND_VERFORMUNG_BIS) != null)) {
+            if ((filter.get(PropertyKeys.ZUSTAND_GELAENDE_OBEN_VON) != null)
+                        || (filter.get(PropertyKeys.ZUSTAND_GELAENDE_OBEN_BIS) != null)) {
+                joins.add("mauer_zustand AS z_gelaende_oben ON m.fk_zustand_gelaende_oben = z_gelaende_oben.id");
                 wheres.add(createWhereFor(
-                        "m.zustand_verformung",
-                        (Double)filter.get(PropertyKeys.ZUSTAND_VERFORMUNG_VON),
-                        (Double)filter.get(PropertyKeys.ZUSTAND_VERFORMUNG_BIS)));
+                        "z_gelaende_oben.gesamt",
+                        (Double)filter.get(PropertyKeys.ZUSTAND_GELAENDE_OBEN_VON),
+                        (Double)filter.get(PropertyKeys.ZUSTAND_GELAENDE_OBEN_BIS)));
             }
-            if ((filter.get(PropertyKeys.ZUSTAND_GELAENDE_VON) != null)
-                        || (filter.get(PropertyKeys.ZUSTAND_GELAENDE_BIS) != null)) {
-                wheres.add(createWhereFor(
-                        "m.zustand_gelaende",
-                        (Double)filter.get(PropertyKeys.ZUSTAND_GELAENDE_VON),
-                        (Double)filter.get(PropertyKeys.ZUSTAND_GELAENDE_BIS)));
-            }
+
             if ((filter.get(PropertyKeys.ZUSTAND_SANIERUNG_VON) != null)
                         || (filter.get(PropertyKeys.ZUSTAND_SANIERUNG_BIS) != null)) {
                 wheres.add(createWhereFor(
@@ -324,7 +331,7 @@ public class CidsMauernSearchStatement extends AbstractCidsServerSearch implemen
             if ((filter.get(PropertyKeys.ZUSTAND_BAUSUBSTANZ_VON) != null)
                         || (filter.get(PropertyKeys.ZUSTAND_BAUSUBSTANZ_BIS) != null)) {
                 wheres.add(createWhereFor(
-                        "(zustand_kopf+ zustand_gelaender+zustand_ansicht+zustand_gruendung+ zustand_verformung+zustand_gelaende)",
+                        "(+z_gelaende_oben.gesamt+z_kopf.gesamt+ z_gelaender.gesamt+z_ansicht.gesamt+z_gruendung.gesamtz_gelaende.gesamt)",
                         (Double)filter.get(PropertyKeys.ZUSTAND_BAUSUBSTANZ_VON),
                         (Double)filter.get(PropertyKeys.ZUSTAND_BAUSUBSTANZ_BIS)));
             }
