@@ -315,25 +315,6 @@ public class AlboFlaecheSearch extends AbstractCidsServerSearch implements MetaO
                                         alias));
                                 leftJoins.addAll(subLeftJoins);
                             }
-                        } else if (artInfo instanceof BewirtschaftungsschadenInfo) {
-                            final List<String> subLeftJoins = new ArrayList<>();
-                            final String bewirtschaftungsschadensart = ((BewirtschaftungsschadenInfo)artInfo)
-                                        .getBewirtschaftungsschadensartSchluessel();
-                            if (bewirtschaftungsschadensart != null) {
-                                subLeftJoins.add(String.format(
-                                        "albo_bewirtschaftungsschadensart AS bewirtschaftungsschadensart%1$s ON bewirtschaftungsschaden%1$s.fk_art = bewirtschaftungsschadensart%1$s.id",
-                                        alias));
-                                subAndWheres.add(String.format(
-                                        "bewirtschaftungsschadensart%s.schluessel LIKE '%s'",
-                                        alias,
-                                        bewirtschaftungsschadensart));
-                            }
-                            if (!subAndWheres.isEmpty()) {
-                                leftJoins.add(String.format(
-                                        "albo_bewirtschaftungsschaden AS bewirtschaftungsschaden%1$s ON flaeche.fk_bewirtschaftungsschaden = bewirtschaftungsschaden%1$s.id",
-                                        alias));
-                                leftJoins.addAll(subLeftJoins);
-                            }
                         } else if (artInfo instanceof SchadensfallInfo) {
                             final List<String> subLeftJoins = new ArrayList<>();
                             final String schadensfallart = ((SchadensfallInfo)artInfo).getSchadensfallartSchluessel();
@@ -633,29 +614,15 @@ public class AlboFlaecheSearch extends AbstractCidsServerSearch implements MetaO
         getterVisibility = JsonAutoDetect.Visibility.NONE,
         setterVisibility = JsonAutoDetect.Visibility.NONE
     )
-    public static class BewirtschaftungsschadenInfo extends ArtInfo {
-
-        //~ Instance fields ----------------------------------------------------
-
-        @JsonProperty private String bewirtschaftungsschadensartSchluessel;
+    public static class SonstigeInfo extends ArtInfo {
 
         //~ Constructors -------------------------------------------------------
 
         /**
-         * Creates a new BewirtschaftungsschadenInfo object.
+         * Creates a new SonstigeInfo object.
          */
-        public BewirtschaftungsschadenInfo() {
-            this(null);
-        }
-
-        /**
-         * Creates a new BewirtschaftungsschadenInfo object.
-         *
-         * @param  bewirtschaftungsschadensartSchluessel  DOCUMENT ME!
-         */
-        public BewirtschaftungsschadenInfo(final String bewirtschaftungsschadensartSchluessel) {
-            super("bewirtschaftungsschaden");
-            this.bewirtschaftungsschadensartSchluessel = bewirtschaftungsschadensartSchluessel;
+        public SonstigeInfo() {
+            super("sonstige");
         }
     }
 
@@ -879,8 +846,8 @@ public class AlboFlaecheSearch extends AbstractCidsServerSearch implements MetaO
                     case "materialaufbringung": {
                         return defaultMapper.treeToValue(on, MaterialaufbringungInfo.class);
                     }
-                    case "bewirtschaftungsschaden": {
-                        return defaultMapper.treeToValue(on, BewirtschaftungsschadenInfo.class);
+                    case "sonstige": {
+                        return defaultMapper.treeToValue(on, SonstigeInfo.class);
                     }
                     case "schadensfall": {
                         return defaultMapper.treeToValue(on, SchadensfallInfo.class);
