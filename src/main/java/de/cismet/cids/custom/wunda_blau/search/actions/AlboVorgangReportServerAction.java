@@ -24,6 +24,7 @@ import java.util.Map;
 
 import de.cismet.cids.custom.utils.StampedJasperReportServerAction;
 import de.cismet.cids.custom.utils.WundaBlauServerResources;
+import de.cismet.cids.server.actions.ServerAction;
 
 import de.cismet.cids.server.actions.ServerActionParameter;
 
@@ -37,6 +38,7 @@ import de.cismet.connectioncontext.ConnectionContextStore;
  * @author   jruiz
  * @version  $Revision$, $Date$
  */
+@org.openide.util.lookup.ServiceProvider(service = ServerAction.class)
 public class AlboVorgangReportServerAction extends StampedJasperReportServerAction implements ConnectionContextStore {
 
     //~ Static fields/initializers ---------------------------------------------
