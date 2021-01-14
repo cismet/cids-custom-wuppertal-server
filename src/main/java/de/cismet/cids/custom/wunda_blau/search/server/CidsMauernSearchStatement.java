@@ -88,11 +88,11 @@ public class CidsMauernSearchStatement extends AbstractCidsServerSearch implemen
         ZUSTAND_HOEHE_VON, ZUSTAND_HOEHE_BIS, ZUSTAND_GELAENDER_VON, ZUSTAND_GELAENDER_BIS, ZUSTAND_ANSICHT_VON,
         ZUSTAND_ANSICHT_BIS, ZUSTAND_WANDKOPF_VON, ZUSTAND_WANDKOPF_BIS, ZUSTAND_GRUENDUNG_VON, ZUSTAND_GRUENDUNG_BIS,
         ZUSTAND_GELAENDE_OBEN_VON, ZUSTAND_GELAENDE_OBEN_BIS, ZUSTAND_GELAENDE_VON, ZUSTAND_GELAENDE_BIS,
-        ZUSTAND_BAUSUBSTANZ_VON, ZUSTAND_BAUSUBSTANZ_BIS, ZUSTAND_SANIERUNG_VON, ZUSTAND_SANIERUNG_BIS,
-        MASSNAHME_PRUEFUNG_VON, MASSNAHME_PRUEFUNG_BIS, MASSNAHME_SANIERUNG_DURCHGEFUEHRT_VON,
-        MASSNAHME_SANIERUNG_DURCHGEFUEHRT_BIS, MASSNAHME_SANIERUNG_GEPLANT_VON, MASSNAHME_SANIERUNG_GEPLANT_BIS,
-        MASSNAHME_BAUWERKSBEGEHUNG_VON, MASSNAHME_BAUWERKSBEGEHUNG_BIS, MASSNAHME_BAUWERKSBESICHTIGUNG_VON,
-        MASSNAHME_BAUWERKSBESICHTIGUNG_BIS, MASSNAHME_GEWERK_DURCHZU, MASSNAHME_GEWERK_DURCHGE
+        ZUSTAND_BAUSUBSTANZ_VON, ZUSTAND_BAUSUBSTANZ_BIS, SANIERUNG, MASSNAHME_PRUEFUNG_VON, MASSNAHME_PRUEFUNG_BIS,
+        MASSNAHME_SANIERUNG_DURCHGEFUEHRT_VON, MASSNAHME_SANIERUNG_DURCHGEFUEHRT_BIS, MASSNAHME_SANIERUNG_GEPLANT_VON,
+        MASSNAHME_SANIERUNG_GEPLANT_BIS, MASSNAHME_BAUWERKSBEGEHUNG_VON, MASSNAHME_BAUWERKSBEGEHUNG_BIS,
+        MASSNAHME_BAUWERKSBESICHTIGUNG_VON, MASSNAHME_BAUWERKSBESICHTIGUNG_BIS, MASSNAHME_GEWERK_DURCHZU,
+        MASSNAHME_GEWERK_DURCHGE
     }
 
     //~ Instance fields --------------------------------------------------------
@@ -320,20 +320,18 @@ public class CidsMauernSearchStatement extends AbstractCidsServerSearch implemen
                         (Double)filter.get(PropertyKeys.ZUSTAND_GELAENDE_OBEN_VON),
                         (Double)filter.get(PropertyKeys.ZUSTAND_GELAENDE_OBEN_BIS)));
             }
-
-            if ((filter.get(PropertyKeys.ZUSTAND_SANIERUNG_VON) != null)
-                        || (filter.get(PropertyKeys.ZUSTAND_SANIERUNG_BIS) != null)) {
-                wheres.add(createWhereFor(
-                        "m.sanierung",
-                        (Double)filter.get(PropertyKeys.ZUSTAND_SANIERUNG_VON),
-                        (Double)filter.get(PropertyKeys.ZUSTAND_SANIERUNG_BIS)));
-            }
             if ((filter.get(PropertyKeys.ZUSTAND_BAUSUBSTANZ_VON) != null)
                         || (filter.get(PropertyKeys.ZUSTAND_BAUSUBSTANZ_BIS) != null)) {
                 wheres.add(createWhereFor(
-                        "(+z_gelaende_oben.gesamt+z_kopf.gesamt+ z_gelaender.gesamt+z_ansicht.gesamt+z_gruendung.gesamtz_gelaende.gesamt)",
+                        "(m.zustand_gesamt)",
                         (Double)filter.get(PropertyKeys.ZUSTAND_BAUSUBSTANZ_VON),
                         (Double)filter.get(PropertyKeys.ZUSTAND_BAUSUBSTANZ_BIS)));
+            }
+
+            if (filter.get(PropertyKeys.SANIERUNG) != null) {
+                wheres.add(String.format(
+                        "m.sanierung = %d",
+                        (Integer)filter.get(PropertyKeys.SANIERUNG)));
             }
 
             if ((filter.get(PropertyKeys.MASSNAHME_GEWERK_DURCHGE) != null)) {
