@@ -50,6 +50,11 @@ public class AlboProperties {
 
     private final String wz_klassifikation_link;
 
+    private final String vorgangMapUrl;
+    private final Integer vorgangMapWidth;
+    private final Integer vorgangMapHeight;
+    private final Integer vorgangMapDpi;
+
     // private final String xxx_color;
 
     //~ Constructors -----------------------------------------------------------
@@ -102,6 +107,28 @@ public class AlboProperties {
         ohne_verdacht_color = readProperty(properties, "ohne_verdacht_color", null);
 
         wz_klassifikation_link = readProperty(properties, "wz_klassifikation_link", null);
+        vorgangMapUrl = readProperty(properties, "vorgang_map_url", null);
+
+        Integer vorgangMapDpi = null;
+        try {
+            vorgangMapDpi = Integer.parseInt(readProperty(properties, "vorgang_map_dpi", "300"));
+        } catch (final Exception ex) {
+        }
+        this.vorgangMapDpi = vorgangMapDpi;
+
+        Integer vorgangMapWidth = null;
+        try {
+            vorgangMapWidth = Integer.parseInt(readProperty(properties, "vorgang_map_width", "275"));
+        } catch (final Exception ex) {
+        }
+        this.vorgangMapWidth = vorgangMapWidth;
+
+        Integer vorgangMapHeight = null;
+        try {
+            vorgangMapHeight = Integer.parseInt(readProperty(properties, "vorgang_map_height", "130"));
+        } catch (final Exception ex) {
+        }
+        this.vorgangMapHeight = vorgangMapHeight;
     }
 
     //~ Methods ----------------------------------------------------------------
