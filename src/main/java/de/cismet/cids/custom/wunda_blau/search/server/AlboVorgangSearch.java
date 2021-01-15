@@ -44,6 +44,7 @@ public class AlboVorgangSearch extends AbstractCidsServerSearch implements MetaO
     //~ Instance fields --------------------------------------------------------
 
     @Setter @Getter private Integer flaecheId;
+    @Setter @Getter private Boolean loeschen = Boolean.FALSE;
 
     private ConnectionContext connectionContext = ConnectionContext.createDummy();
 
@@ -75,6 +76,9 @@ public class AlboVorgangSearch extends AbstractCidsServerSearch implements MetaO
                 leftJoins.add(
                     "albo_vorgang_flaeche ON albo_vorgang.arr_flaechen = albo_vorgang_flaeche.vorgang_reference");
                 wheres.add(String.format("albo_vorgang_flaeche.fk_flaeche = %d", getFlaecheId()));
+            }
+            if (getLoeschen() != null) {
+                wheres.add(String.format("albo_vorgang.loeschen = %s", getLoeschen() ? "TRUE" : "FALSE"));
             }
 
             final String leftJoin = (!leftJoins.isEmpty())
