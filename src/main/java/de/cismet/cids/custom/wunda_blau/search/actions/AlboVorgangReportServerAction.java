@@ -18,9 +18,13 @@ import Sirius.server.middleware.types.MetaObjectNode;
 import net.sf.jasperreports.engine.JasperReport;
 import net.sf.jasperreports.engine.data.JRBeanCollectionDataSource;
 
+import java.io.ByteArrayInputStream;
+
 import java.util.Arrays;
 import java.util.HashMap;
 import java.util.Map;
+
+import javax.imageio.ImageIO;
 
 import de.cismet.cids.custom.utils.StampedJasperReportServerAction;
 import de.cismet.cids.custom.utils.WundaBlauServerResources;
@@ -45,6 +49,20 @@ public class AlboVorgangReportServerAction extends StampedJasperReportServerActi
 
     public static final String TASK_NAME = "alboVorgangReport";
 
+    //~ Enums ------------------------------------------------------------------
+
+    /**
+     * DOCUMENT ME!
+     *
+     * @version  $Revision$, $Date$
+     */
+    public enum Parameter {
+
+        //~ Enum constants -----------------------------------------------------
+
+        MAP_IMAGE_BYTES
+    }
+
     //~ Methods ----------------------------------------------------------------
 
     @Override
@@ -54,12 +72,27 @@ public class AlboVorgangReportServerAction extends StampedJasperReportServerActi
     }
 
     @Override
-    public Object execute(final Object o, final ServerActionParameter... saps) {
+    public Object execute(final Object o, final ServerActionParameter... params) {
         try {
+            byte[] imageBytes = null;
+            if (params != null) {
+                for (final ServerActionParameter sap : params) {
+                    if (sap.getKey().equals(Parameter.MAP_IMAGE_BYTES.toString())) {
+                        imageBytes = (byte[])sap.getValue();
+                    }
+                }
+            }
+
             final MetaObjectNode vorgangMon = (MetaObjectNode)o;
 
             final Map<String, Object> parameters = new HashMap<>();
             parameters.put("SUBREPORT_DIR", DomainServerImpl.getServerProperties().getServerResourcesBasePath() + "/");
+
+            if (imageBytes != null) {
+                try(final ByteArrayInputStream bis = new ByteArrayInputStream(imageBytes)) {
+                    parameters.put("MAP_IMAGE", ImageIO.read(bis));
+                }
+            }
 
             final JRBeanCollectionDataSource dataSource = new JRBeanCollectionDataSource(Arrays.asList(
                         getMetaService().getMetaObject(
