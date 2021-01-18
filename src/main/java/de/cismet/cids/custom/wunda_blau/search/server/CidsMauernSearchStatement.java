@@ -247,22 +247,24 @@ public class CidsMauernSearchStatement extends AbstractCidsServerSearch implemen
             if ((filter.get(PropertyKeys.MASSNAHME_BAUWERKSBESICHTIGUNG_VON) != null)
                         || (filter.get(PropertyKeys.MASSNAHME_BAUWERKSBESICHTIGUNG_BIS) != null)) {
                 joins.add("mauer_massnahme AS mm3 ON m.id = mm3.fk_mauer");
-                joins.add(
-                    "mauer_massnahme_art AS mma3 ON mm3.fk_art = mma3.id AND mma3.schluessel LIKE 'bauwerksbesichtigung'");
-                wheres.add(createWhereFor(
-                        "mm3.ziel",
-                        (Date)filter.get(PropertyKeys.MASSNAHME_BAUWERKSBESICHTIGUNG_VON),
-                        (Date)filter.get(PropertyKeys.MASSNAHME_BAUWERKSBESICHTIGUNG_BIS)));
+                joins.add("mauer_massnahme_art AS mma3 ON mm3.fk_art = mma3.id");
+                wheres.add(String.format(
+                        "mma3.schluessel LIKE 'bauwerksbesichtigung' AND %s",
+                        createWhereFor(
+                            "mm3.ziel",
+                            (Date)filter.get(PropertyKeys.MASSNAHME_BAUWERKSBESICHTIGUNG_VON),
+                            (Date)filter.get(PropertyKeys.MASSNAHME_BAUWERKSBESICHTIGUNG_BIS))));
             }
             if ((filter.get(PropertyKeys.MASSNAHME_BAUWERKSBEGEHUNG_VON) != null)
                         || (filter.get(PropertyKeys.MASSNAHME_BAUWERKSBEGEHUNG_BIS) != null)) {
                 joins.add("mauer_massnahme AS mm4 ON m.id = mm4.fk_mauer");
-                joins.add(
-                    "mauer_massnahme_art AS mma4 ON mm4.fk_art = mma4.id AND mma4.schluessel LIKE 'bauwerksbegehung'");
-                wheres.add(createWhereFor(
-                        "mm4.ziel",
-                        (Date)filter.get(PropertyKeys.MASSNAHME_BAUWERKSBEGEHUNG_VON),
-                        (Date)filter.get(PropertyKeys.MASSNAHME_BAUWERKSBEGEHUNG_BIS)));
+                joins.add("mauer_massnahme_art AS mma4 ON mm4.fk_art = mma4.id");
+                wheres.add(String.format(
+                        "mma4.schluessel LIKE 'bauwerksbegehung' AND %s",
+                        createWhereFor(
+                            "mm4.ziel",
+                            (Date)filter.get(PropertyKeys.MASSNAHME_BAUWERKSBEGEHUNG_VON),
+                            (Date)filter.get(PropertyKeys.MASSNAHME_BAUWERKSBEGEHUNG_BIS))));
             }
 
             if ((filter.get(PropertyKeys.ZUSTAND_HOEHE_VON) != null)
