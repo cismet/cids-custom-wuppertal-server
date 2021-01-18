@@ -42,8 +42,6 @@ public class AlboProperties {
     private final String altstandort_color;
     private final String altablagerung_color;
     private final String betriebsstandort_color;
-    private final String schadensfall_color;
-    private final String immission_color;
     private final String materialaufbringung_color;
     private final String sonstige_color;
     private final String ohne_verdacht_color;
@@ -100,8 +98,6 @@ public class AlboProperties {
         altstandort_color = readProperty(properties, "altstandort_color", null);
         altablagerung_color = readProperty(properties, "altablagerung_color", null);
         betriebsstandort_color = readProperty(properties, "betriebsstandort_color", null);
-        schadensfall_color = readProperty(properties, "schadensfall_color", null);
-        immission_color = readProperty(properties, "immission_color", null);
         materialaufbringung_color = readProperty(properties, "materialaufbringung_color", null);
         sonstige_color = readProperty(properties, "sonstige_color", null);
         ohne_verdacht_color = readProperty(properties, "ohne_verdacht_color", null);
