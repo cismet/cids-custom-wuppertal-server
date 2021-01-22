@@ -42,13 +42,16 @@ public class AlboProperties {
     private final String altstandort_color;
     private final String altablagerung_color;
     private final String betriebsstandort_color;
-    private final String schadensfall_color;
-    private final String immission_color;
     private final String materialaufbringung_color;
-    private final String bewirtschaftungsschaden_color;
+    private final String sonstige_color;
     private final String ohne_verdacht_color;
 
     private final String wz_klassifikation_link;
+
+    private final String vorgangMapUrl;
+    private final Integer vorgangMapWidth;
+    private final Integer vorgangMapHeight;
+    private final Integer vorgangMapDpi;
 
     // private final String xxx_color;
 
@@ -95,13 +98,33 @@ public class AlboProperties {
         altstandort_color = readProperty(properties, "altstandort_color", null);
         altablagerung_color = readProperty(properties, "altablagerung_color", null);
         betriebsstandort_color = readProperty(properties, "betriebsstandort_color", null);
-        schadensfall_color = readProperty(properties, "schadensfall_color", null);
-        immission_color = readProperty(properties, "immission_color", null);
         materialaufbringung_color = readProperty(properties, "materialaufbringung_color", null);
-        bewirtschaftungsschaden_color = readProperty(properties, "bewirtschaftungsschaden_color", null);
+        sonstige_color = readProperty(properties, "sonstige_color", null);
         ohne_verdacht_color = readProperty(properties, "ohne_verdacht_color", null);
 
         wz_klassifikation_link = readProperty(properties, "wz_klassifikation_link", null);
+        vorgangMapUrl = readProperty(properties, "vorgang_map_url", null);
+
+        Integer vorgangMapDpi = null;
+        try {
+            vorgangMapDpi = Integer.parseInt(readProperty(properties, "vorgang_map_dpi", "300"));
+        } catch (final Exception ex) {
+        }
+        this.vorgangMapDpi = vorgangMapDpi;
+
+        Integer vorgangMapWidth = null;
+        try {
+            vorgangMapWidth = Integer.parseInt(readProperty(properties, "vorgang_map_width", "275"));
+        } catch (final Exception ex) {
+        }
+        this.vorgangMapWidth = vorgangMapWidth;
+
+        Integer vorgangMapHeight = null;
+        try {
+            vorgangMapHeight = Integer.parseInt(readProperty(properties, "vorgang_map_height", "130"));
+        } catch (final Exception ex) {
+        }
+        this.vorgangMapHeight = vorgangMapHeight;
     }
 
     //~ Methods ----------------------------------------------------------------

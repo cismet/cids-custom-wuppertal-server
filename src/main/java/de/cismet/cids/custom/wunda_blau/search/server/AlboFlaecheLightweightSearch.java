@@ -63,10 +63,11 @@ public class AlboFlaecheLightweightSearch extends AbstractMonToLwmoSearch {
      * @return  DOCUMENT ME!
      */
     private static SearchInfo createSearchInfo() {
-        return new SearchInfo(AlboVorgangLightweightSearch.class.getName(),
+        final SearchInfo searchInfo = new SearchInfo(AlboVorgangLightweightSearch.class.getName(),
                 AlboVorgangLightweightSearch.class.getSimpleName(),
                 "TODO",
                 Arrays.asList(new SearchParameterInfo[0]),
                 new SearchParameterInfo());
+        return searchInfo;
     }
 }
