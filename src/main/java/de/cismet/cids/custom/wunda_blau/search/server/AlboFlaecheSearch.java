@@ -444,8 +444,8 @@ public class AlboFlaecheSearch extends AbstractCidsServerSearch implements MetaO
         @JsonProperty private String typSchluessel;
         @JsonProperty private String zuordnungSchluessel;
         @JsonProperty private Boolean loeschen = Boolean.FALSE;
-        @JsonProperty private SearchMode searchModeMain;
-        @JsonProperty private SearchMode searchModeArt;
+        @JsonProperty private SearchMode searchModeMain = SearchMode.AND;
+        @JsonProperty private SearchMode searchModeArt = SearchMode.AND;
         @JsonProperty private Collection<ArtInfo> artInfos;
     }
 
