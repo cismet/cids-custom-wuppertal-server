@@ -11,7 +11,6 @@ import Sirius.server.middleware.interfaces.domainserver.MetaService;
 import Sirius.server.middleware.types.MetaClass;
 
 import com.vividsolutions.jts.geom.Geometry;
-import com.vividsolutions.jts.io.ParseException;
 
 import lombok.Getter;
 import lombok.Setter;
@@ -20,10 +19,8 @@ import org.apache.log4j.Logger;
 
 import org.openide.util.lookup.ServiceProvider;
 
-import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collection;
-import java.util.List;
 
 import de.cismet.cids.dynamics.CidsBean;
 
@@ -36,7 +33,6 @@ import de.cismet.cidsx.server.api.types.SearchInfo;
 import de.cismet.cidsx.server.api.types.SearchParameterInfo;
 import de.cismet.cidsx.server.search.RestApiCidsServerSearch;
 import de.cismet.cidsx.server.search.builtin.legacy.LightweightMetaObjectsSearch;
-
 
 import de.cismet.connectioncontext.ConnectionContext;
 import de.cismet.connectioncontext.ConnectionContextStore;
@@ -147,57 +143,25 @@ public class PoiKategorienLightweightSearch extends AbstractCidsServerSearch imp
     /**
      * DOCUMENT ME!
      *
-     * @param   subject     DOCUMENT ME!
-     * @param   geom        DOCUMENT ME!
-     * @param   limitCount  DOCUMENT ME!
-     *
-     * @return  DOCUMENT ME!
-     */
-    private static String createUnionQuery(final Subject subject) {
-        final List<String> queries = new ArrayList<>();
-        queries.add(String.format(
-                "SELECT id, name, nummer FROM (\n%s\n) AS queryB",
-                createQuery()));
-        return String.format("%s\nORDER BY name", String.join("\nUNION\n", queries));
-    }
-
-    /**
-     * DOCUMENT ME!
-     *
-     * @param   subject     DOCUMENT ME!
-     * @param   geom        DOCUMENT ME!
-     * @param   limitCount  DOCUMENT ME!
-     *
      * @return  DOCUMENT ME!
      */
     private static String createQuery() {
-        final String query = "with recursive list(id, name, fk_kategorie, nummer, text_kombi, ebene, level) as \n" +
-                            "( \n" +
-                                "select id, name, fk_kategorie, nummer, name as text_kombi, ebene, 1 as level \n" +
-                                "from poi_kategorien \n" +
-                            "union \n" +
-                                "select a.id, a.name, a.fk_kategorie,  a.nummer,  \n" +
-                                        "list.text_kombi || ' - ' || a.name as text_kombi, \n" +
-                                        "a.ebene, list.level + 1 \n" +
-                                "from poi_kategorien a \n" +
-                                "join list on list.id = a.fk_kategorie \n" +
-                            ") \n" +
-                            "select l.id, l.name AS kat_name, l.nummer, l.text_kombi AS name \n" +
-                            "from (select list.*, max(level) over (partition by id) as maxlevel from list) as l \n" +
-                            "where l.id not in (select fk_kategorie from poi_kategorien where fk_kategorie is not null) \n" +
-                            "and level = maxlevel";
+        final String query = "with recursive list(id, name, fk_kategorie, nummer, text_kombi, ebene, level) as \n"
+                    + "( \n"
+                    + "select id, name, fk_kategorie, nummer, name as text_kombi, ebene, 1 as level \n"
+                    + "from poi_kategorien \n"
+                    + "union \n"
+                    + "select a.id, a.name, a.fk_kategorie,  a.nummer,  \n"
+                    + "list.text_kombi || ' - ' || a.name as text_kombi, \n"
+                    + "a.ebene, list.level + 1 \n"
+                    + "from poi_kategorien a \n"
+                    + "join list on list.id = a.fk_kategorie \n"
+                    + ") \n"
+                    + "select l.id, l.name AS kat_name, l.nummer, l.text_kombi AS name \n"
+                    + "from (select list.*, max(level) over (partition by id) as maxlevel from list) as l \n"
+                    + "where l.id not in (select fk_kategorie from poi_kategorien where fk_kategorie is not null) \n"
+                    + "and level = maxlevel";
         return query;
-    }
-
-    /**
-     * DOCUMENT ME!
-     *
-     * @param   args  DOCUMENT ME!
-     *
-     * @throws  ParseException  DOCUMENT ME!
-     */
-    public static void main(final String[] args) throws ParseException {
-        System.out.println(PoiKategorienLightweightSearch.createUnionQuery(Subject.NAME));
     }
 
     @Override

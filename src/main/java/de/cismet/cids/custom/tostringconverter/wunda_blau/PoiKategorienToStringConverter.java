@@ -24,19 +24,19 @@ public class PoiKategorienToStringConverter extends CustomToStringConverter {
 
     //~ Static fields/initializers ---------------------------------------------
 
-    public static final String FIELD__NAME = "name"; 
-    public static final String FIELD__NUMMER = "nummer"; 
-    public static final String FIELD__ID = "id";                 
+    public static final String FIELD__NAME = "name";
+    public static final String FIELD__NUMMER = "nummer";
+    public static final String FIELD__ID = "id";
 
     //~ Methods ----------------------------------------------------------------
 
     @Override
     public String createString() {
-        final String myid = String.valueOf(cidsBean.getProperty(FIELD__ID));
-        if ("-1".equals(myid)) {
+        if (cidsBean.getMetaObject().getId() == -1) {
             return String.valueOf(cidsBean.getProperty(FIELD__NAME));
         } else {
-            return String.valueOf(cidsBean.getProperty(FIELD__NUMMER)) + "  "  + String.valueOf(cidsBean.getProperty(FIELD__NAME));
+            return String.valueOf(cidsBean.getProperty(FIELD__NUMMER)) + "  "
+                        + String.valueOf(cidsBean.getProperty(FIELD__NAME));
         }
     }
 }
