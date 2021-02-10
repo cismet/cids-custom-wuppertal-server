@@ -15,9 +15,6 @@ package de.cismet.cids.custom.utils.vermessungsunterlagen;
 import Sirius.server.middleware.types.MetaObjectNode;
 
 import com.vividsolutions.jts.geom.Geometry;
-import com.vividsolutions.jts.geom.GeometryCollection;
-import com.vividsolutions.jts.geom.GeometryFactory;
-import com.vividsolutions.jts.geom.Polygon;
 
 import lombok.Getter;
 import lombok.Setter;
@@ -29,7 +26,6 @@ import java.io.FileInputStream;
 import java.io.FileOutputStream;
 import java.io.InputStream;
 
-import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collection;
 import java.util.HashMap;
@@ -301,19 +297,19 @@ public class VermessungsunterlagenJob implements Runnable, ConnectionContextProv
      */
     private Geometry createGeometryFrom(final Collection<CidsBean> cidsBeans, final Geometry intersectionGeometry)
             throws Exception {
-        final Collection<Polygon> polygons = new ArrayList<>(cidsBeans.size());
+        Geometry geometry = null;
         for (final CidsBean cidsBean : cidsBeans) {
-            final Polygon polygon = (Polygon)cidsBean.getProperty("geometrie.geo_field");
-            polygons.add(polygon);
+            final Geometry fsGeometry = (Geometry)cidsBean.getProperty("geometrie.geo_field");
+            geometry = (geometry == null) ? fsGeometry : geometry.union(fsGeometry);
         }
-        final GeometryCollection gc = new GeometryFactory().createGeometryCollection(polygons.toArray(new Polygon[0]));
-        Geometry geometry = gc.union();
 
-        if (intersectionGeometry != null) {
+        if ((geometry != null) && (intersectionGeometry != null)) {
             geometry = geometry.intersection(intersectionGeometry);
         }
 
-        geometry.setSRID(VermessungsunterlagenHelper.SRID);
+        if (geometry != null) {
+            geometry.setSRID(VermessungsunterlagenHelper.SRID);
+        }
         return geometry;
     }
 
@@ -329,9 +325,18 @@ public class VermessungsunterlagenJob implements Runnable, ConnectionContextProv
                     new File(getPath()).mkdirs();
 
                     final int saum = Integer.parseInt(anfrageBean.getSaumAPSuche());
-                    final Geometry vermessungsGeometrie = getAnfrageBean().getAnfragepolygonArray()[0];
-                    final Geometry vermessungsGeometrieSaum = vermessungsGeometrie.buffer(saum);
-                    vermessungsGeometrieSaum.setSRID(vermessungsGeometrie.getSRID());
+                    final Geometry vermessungsGeometrie =
+                        ((anfrageBean.getAnfragepolygonArray() != null)
+                                    && (anfrageBean.getAnfragepolygonArray()[0] != null))
+                        ? anfrageBean.getAnfragepolygonArray()[0] : null;
+
+                    final Geometry vermessungsGeometrieSaum;
+                    if (vermessungsGeometrie != null) {
+                        vermessungsGeometrieSaum = vermessungsGeometrie.buffer(saum);
+                        vermessungsGeometrieSaum.setSRID(vermessungsGeometrie.getSRID());
+                    } else {
+                        vermessungsGeometrieSaum = null;
+                    }
 
                     final Geometry geometryFlurstuecke = createGeometryFrom(validator.getFlurstuecke(),
                             validator.isGeometryFromFlurstuecke() ? null : vermessungsGeometrie);
@@ -348,43 +353,51 @@ public class VermessungsunterlagenJob implements Runnable, ConnectionContextProv
                     if (!anfrageBean.getNurPunktnummernreservierung()) {
                         if (isTaskAllowed(VermUntTaskAPMap.TYPE) || isTaskAllowed(VermUntTaskAPList.TYPE)
                                     || isTaskAllowed(VermUntTaskAPUebersicht.TYPE)) {
-                            final Collection<CidsBean> aPs = searchAPs(vermessungsGeometrieSaum);
-                            if (!aPs.isEmpty()) {
-                                submitTask(new VermUntTaskAPMap(getKey(), aPs));
-                                submitTask(new VermUntTaskAPList(getKey(), aPs));
-                                submitTask(new VermUntTaskAPUebersicht(
-                                        getKey(),
-                                        aPs,
-                                        validator.getFlurstuecke(),
-                                        anfrageBean.getGeschaeftsbuchnummer()));
+                            if (vermessungsGeometrieSaum != null) {
+                                final Collection<CidsBean> aPs = searchAPs(vermessungsGeometrieSaum);
+                                if (!aPs.isEmpty()) {
+                                    submitTask(new VermUntTaskAPMap(getKey(), aPs));
+                                    submitTask(new VermUntTaskAPList(getKey(), aPs));
+                                    submitTask(new VermUntTaskAPUebersicht(
+                                            getKey(),
+                                            aPs,
+                                            validator.getFlurstuecke(),
+                                            anfrageBean.getGeschaeftsbuchnummer()));
+                                }
                             }
                         }
 
                         if (isTaskAllowed(VermUntTaskNivPBeschreibungen.TYPE)
                                     || isTaskAllowed(VermUntTaskNivPUebersicht.TYPE)) {
-                            final Collection<CidsBean> nivPs = searchNivPs(vermessungsGeometrieSaum);
-                            if (!nivPs.isEmpty()) {
-                                submitTask(new VermUntTaskNivPBeschreibungen(getKey(), nivPs));
-                                submitTask(new VermUntTaskNivPUebersicht(
-                                        getKey(),
-                                        nivPs,
-                                        validator.getFlurstuecke(),
-                                        anfrageBean.getGeschaeftsbuchnummer()));
+                            if (vermessungsGeometrieSaum != null) {
+                                final Collection<CidsBean> nivPs = searchNivPs(vermessungsGeometrieSaum);
+                                if (!nivPs.isEmpty()) {
+                                    submitTask(new VermUntTaskNivPBeschreibungen(getKey(), nivPs));
+                                    submitTask(new VermUntTaskNivPUebersicht(
+                                            getKey(),
+                                            nivPs,
+                                            validator.getFlurstuecke(),
+                                            anfrageBean.getGeschaeftsbuchnummer()));
+                                }
                             }
                         }
 
                         if (isTaskAllowed(VermUntTaskNasKomplett.TYPE) || isTaskAllowed(VermUntTaskNasPunkte.TYPE)) {
                             final String requestId = getKey();
-                            submitTask(new VermUntTaskNasKomplett(
-                                    getKey(),
-                                    helper.getUser(),
-                                    requestId,
-                                    vermessungsGeometrie));
-                            submitTask(new VermUntTaskNasPunkte(
-                                    getKey(),
-                                    helper.getUser(),
-                                    requestId,
-                                    vermessungsGeometrieSaum));
+                            if (vermessungsGeometrie != null) {
+                                submitTask(new VermUntTaskNasKomplett(
+                                        getKey(),
+                                        helper.getUser(),
+                                        requestId,
+                                        vermessungsGeometrie));
+                            }
+                            if (vermessungsGeometrieSaum != null) {
+                                submitTask(new VermUntTaskNasPunkte(
+                                        getKey(),
+                                        helper.getUser(),
+                                        requestId,
+                                        vermessungsGeometrieSaum));
+                            }
                         }
 
                         if (isTaskAllowed(VermUntTaskRisseBilder.TYPE)
