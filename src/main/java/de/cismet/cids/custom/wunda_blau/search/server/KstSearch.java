@@ -58,7 +58,7 @@ public class KstSearch extends AbstractCidsServerSearch implements RestApiCidsSe
 
         //~ Enum constants -----------------------------------------------------
 
-        BEZIRK
+        BEZIRK, QUARTIER
     }
 
     //~ Instance fields --------------------------------------------------------
@@ -75,18 +75,20 @@ public class KstSearch extends AbstractCidsServerSearch implements RestApiCidsSe
      * Creates a new KstSearch object.
      *
      * @param  searchFor  DOCUMENT ME!
-     * @param  geom       DOCUMENT ME!
      */
-    public KstSearch(final SearchFor searchFor, final Geometry geom) {
-        this();
-        this.searchFor = searchFor;
-        this.geom = geom;
+    public KstSearch(final SearchFor searchFor) {
+        this(searchFor, null);
     }
 
     /**
      * Creates a new KstSearch object.
+     *
+     * @param  searchFor  DOCUMENT ME!
+     * @param  geom       DOCUMENT ME!
      */
-    private KstSearch() {
+    public KstSearch(final SearchFor searchFor, final Geometry geom) {
+        this.searchFor = searchFor;
+        this.geom = geom;
         this.searchInfo = new SearchInfo(
                 this.getClass().getName(),
                 this.getClass().getSimpleName(),
@@ -99,7 +101,23 @@ public class KstSearch extends AbstractCidsServerSearch implements RestApiCidsSe
                 new MySearchParameterInfo("return", Type.ENTITY_REFERENCE, true));
     }
 
+    /**
+     * Creates a new KstSearch object.
+     */
+    private KstSearch() {
+        this(null);
+    }
+
     //~ Methods ----------------------------------------------------------------
+
+    /**
+     * DOCUMENT ME!
+     *
+     * @param  geom  DOCUMENT ME!
+     */
+    public void setGeom(final Geometry geom) {
+        this.geom = geom;
+    }
 
     @Override
     public SearchInfo getSearchInfo() {
@@ -120,8 +138,12 @@ public class KstSearch extends AbstractCidsServerSearch implements RestApiCidsSe
             switch (searchFor) {
                 case BEZIRK: {
                     kst = "kst_stadtbezirk";
-                    break;
                 }
+                break;
+                case QUARTIER: {
+                    kst = "kst_quartier";
+                }
+                break;
                 default:
             }
 
