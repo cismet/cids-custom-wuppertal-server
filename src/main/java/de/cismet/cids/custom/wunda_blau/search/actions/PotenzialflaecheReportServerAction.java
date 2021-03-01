@@ -27,16 +27,21 @@ import java.awt.image.BufferedImage;
 
 import java.io.ByteArrayInputStream;
 
+import java.text.SimpleDateFormat;
+
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collection;
+import java.util.Date;
 import java.util.HashMap;
 import java.util.Map;
 
 import javax.imageio.ImageIO;
 
 import de.cismet.cids.custom.utils.StampedJasperReportServerAction;
+import de.cismet.cids.custom.wunda_blau.search.server.BplanSearch;
 import de.cismet.cids.custom.wunda_blau.search.server.KstSearch;
+import de.cismet.cids.custom.wunda_blau.search.server.StadtraumtypSearch;
 import de.cismet.cids.custom.wunda_blau.search.server.WohnlagenKategorisierungSearch;
 
 import de.cismet.cids.dynamics.CidsBean;
@@ -68,6 +73,8 @@ public class PotenzialflaecheReportServerAction extends StampedJasperReportServe
     private static final Map<String, JasperReportServerResource> BEAN_RESOURCE_MAP = new HashMap<>();
     private static String CURRENT_TEMPLATE = "";
 
+    private static final SimpleDateFormat SDF = new SimpleDateFormat("dd.MM.yyyy");
+
     //~ Enums ------------------------------------------------------------------
 
     /**
@@ -82,9 +89,10 @@ public class PotenzialflaecheReportServerAction extends StampedJasperReportServe
         BEZEICHNUNG(new SingleFieldReportProperty("bezeichnung")), NUMMER(new SingleFieldReportProperty("nummer")),
         BESCHREIBUNG_FLAECHE(new SingleFieldReportProperty("beschreibung_flaeche")),
         NOTWENDIGE_MASSNAHMEN(new SingleFieldReportProperty("notwendige_massnahmen")),
-        QUELLE(new SingleFieldReportProperty("fk_quelle")), STAND(new SingleFieldReportProperty("stand", true)),
+        QUELLE(new SingleFieldReportProperty("quelle")), STAND(new SingleFieldReportProperty("stand")),
         FLAECHENNUTZUNGSPLAN(new SingleFieldReportProperty("flaechennutzungsplan")),
-        LAGETYP(new SingleFieldReportProperty("lagetyp")),
+        LAGEBEWERTUNG_VERKEHR(new SingleFieldReportProperty("lagebewertung_verkehr")),
+        SIEDLUNGSRAEUMLICHE_LAGE(new SingleFieldReportProperty("fk_siedlungsraeumliche_lage")),
         VORHANDENE_BEBAUUNG(new SingleFieldReportProperty("vorhandene_bebauung")),
         TOPOGRAFIE(new SingleFieldReportProperty("topografie")), HANG(new SingleFieldReportProperty("fk_ausrichtung")),
         VERWERTBARKEIT(new SingleFieldReportProperty("aktivierbarkeit")),
@@ -96,12 +104,12 @@ public class PotenzialflaecheReportServerAction extends StampedJasperReportServe
         POTENZIALART(new SingleFieldReportProperty("fk_potenzialart")),
         WOHNEINHEITEN(new SingleFieldReportProperty("fk_wohneinheiten")),
         WOHNEINHEITEN_ANZAHL(new SingleFieldReportProperty("anzahl_wohneinheiten")),
-        JAHR_NUTZUNGSAUFGABE(new SingleFieldReportProperty("bk_jahr_nutzungsaufgabe")),
-
+        JAHR_NUTZUNGSAUFGABE(new SingleFieldReportProperty("jahr_brachflaeche")),
         OEPNV_ANBINDUNG(new SingleFieldReportProperty("fk_oepnv")),
-
         BISHERIGE_NUTZUNG(new SingleFieldReportProperty("bisherige_nutzung")),
+        EIGENTUEMER(new SingleFieldReportProperty("eigentuemer")),
 
+        NAEHE_ZU(new MultifieldReportProperty("arr_naehen_zu")),
         BRACHFLAECHENKATEGORIE(new MultifieldReportProperty("arr_brachflaechen")),
         UMGEBUNGSNUTZUNG(new MultifieldReportProperty("umgebungsnutzung")),
         EMPFOHLENE_NUTZUNGEN(new MultifieldReportProperty("arr_empfohlene_nutzungen")),
@@ -109,13 +117,6 @@ public class PotenzialflaecheReportServerAction extends StampedJasperReportServe
         RESTRIKTIONEN(new MultifieldReportProperty("arr_restriktionen")),
         HANDLUNGSDRUCK(new MultifieldReportProperty("handlungsdruck")),
 
-        EIGENTUEMER(new VirtualReportProperty() {
-
-                @Override
-                protected Object calculateProperty(final PotenzialflaecheReportServerAction serverAction) {
-                    return "PLATZHALTER";
-                }
-            }),
         KARTE_ORTHO(new VirtualReportProperty() {
 
                 @Override
@@ -133,7 +134,7 @@ public class PotenzialflaecheReportServerAction extends StampedJasperReportServe
         GROESSE(new VirtualReportProperty() {
 
                 @Override
-                protected Object calculateProperty(final PotenzialflaecheReportServerAction serverAction) {
+                protected String calculateProperty(final PotenzialflaecheReportServerAction serverAction) {
                     final CidsBean flaecheBean = serverAction.getFlaecheBean();
                     final Object geo = flaecheBean.getProperty("geometrie.geo_field");
                     double area = 0.0;
@@ -142,14 +143,20 @@ public class PotenzialflaecheReportServerAction extends StampedJasperReportServe
                         area = ((Geometry)geo).getArea();
                     }
 
-                    return Math.round(area * 100) / 100.0;
+                    final double m2 = Math.round(area * 100) / 100.0;
+                    final double ha = Math.round(area / 1000) / 10.0;
+                    return String.format("%.2f m² (circa %.1f ha)", m2, ha);
                 }
             }),
-        BEBAUUNGSPLAN(new VirtualReportProperty() {
+        BEBAUUNGSPLAN(new MonSearchReportProperty() {
 
                 @Override
-                protected Object calculateProperty(final PotenzialflaecheReportServerAction serverAction) {
-                    return null;
+                protected MetaObjectNodeServerSearch createMonServerSearch(
+                        final PotenzialflaecheReportServerAction serverAction) {
+                    final CidsBean flaecheBean = serverAction.getFlaecheBean();
+                    final BplanSearch serverSearch = new BplanSearch(
+                            (Geometry)flaecheBean.getProperty("geometrie.geo_field"));
+                    return serverSearch;
                 }
             }),
         STADTBEZIRK(new MonSearchReportProperty() {
@@ -187,11 +194,15 @@ public class PotenzialflaecheReportServerAction extends StampedJasperReportServe
                     return serverSearch;
                 }
             }),
-        STADTRAUMTYPEN(new VirtualReportProperty() {
+        STADTRAUMTYPEN(new MonSearchReportProperty() {
 
                 @Override
-                protected Object calculateProperty(final PotenzialflaecheReportServerAction serverAction) {
-                    return "PLATZHALTER";
+                protected MetaObjectNodeServerSearch createMonServerSearch(
+                        final PotenzialflaecheReportServerAction serverAction) {
+                    final CidsBean flaecheBean = serverAction.getFlaecheBean();
+                    final StadtraumtypSearch serverSearch = new StadtraumtypSearch(
+                            (Geometry)flaecheBean.getProperty("geometrie.geo_field"));
+                    return serverSearch;
                 }
             });
 
@@ -334,10 +345,15 @@ public class PotenzialflaecheReportServerAction extends StampedJasperReportServe
             } else if (reportProperty instanceof SingleFieldReportProperty) {
                 final SingleFieldReportProperty fieldReportProperty = (SingleFieldReportProperty)reportProperty;
                 final Object object = flaecheBean.getProperty(fieldReportProperty.getPath());
-                params.put(
-                    parameterName,
-                    (object != null)
-                        ? (((SingleFieldReportProperty)reportProperty).isRaw() ? object : object.toString()) : null);
+                final String value;
+                if (object == null) {
+                    value = null;
+                } else if (object instanceof Date) {
+                    value = SDF.format((Date)object);
+                } else {
+                    value = object.toString();
+                }
+                params.put(parameterName, value);
             } else if (reportProperty instanceof MonSearchReportProperty) {
                 params.put(parameterName, "UNBEKANNTE PROPERTY");
             }
@@ -375,7 +391,6 @@ public class PotenzialflaecheReportServerAction extends StampedJasperReportServe
         //~ Instance fields ----------------------------------------------------
 
         private final String path;
-        private final boolean raw;
 
         //~ Constructors -------------------------------------------------------
 
@@ -385,18 +400,7 @@ public class PotenzialflaecheReportServerAction extends StampedJasperReportServe
          * @param  path  DOCUMENT ME!
          */
         public SingleFieldReportProperty(final String path) {
-            this(path, false);
-        }
-
-        /**
-         * Creates a new SingleFieldReportProperty object.
-         *
-         * @param  path  DOCUMENT ME!
-         * @param  raw   DOCUMENT ME!
-         */
-        public SingleFieldReportProperty(final String path, final boolean raw) {
             this.path = path;
-            this.raw = raw;
         }
     }
 
@@ -474,7 +478,7 @@ public class PotenzialflaecheReportServerAction extends StampedJasperReportServe
                 final PotenzialflaecheReportServerAction serverAction);
 
         @Override
-        protected Object calculateProperty(final PotenzialflaecheReportServerAction serverAction) {
+        protected String calculateProperty(final PotenzialflaecheReportServerAction serverAction) {
             final MetaObjectNodeServerSearch serverSearch = createMonServerSearch(serverAction);
             serverSearch.setUser(serverAction.getUser());
             if (serverSearch instanceof ConnectionContextStore) {
