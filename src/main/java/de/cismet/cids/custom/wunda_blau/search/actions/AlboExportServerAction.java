@@ -119,7 +119,7 @@ public class AlboExportServerAction implements ConnectionContextStore, UserAware
                 + "  '?' AS unterart, "
                 + "  albo_flaeche.erhebungsnummer AS verw_kennz, "
                 + "  albo_flaechenstatus.schluessel AS statusfl, "
-                + "  '?' AS ortsbez, "
+                + "  ortsuebliche_bezeichnung AS ortsbez, "
                 + "  FALSE AS bergaufs,  "
                 + "  CASE WHEN 'teilflaeche' = albo_flaechentyp.schluessel THEN TRUE ELSE FALSE END AS teilflae, "
                 + "  NULL AS schwerp_e, "
