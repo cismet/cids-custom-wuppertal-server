@@ -35,15 +35,16 @@ public class AlboVorgangSearch extends AbstractCidsServerSearch implements MetaO
 
     private static final transient Logger LOG = Logger.getLogger(AlboVorgangSearch.class);
 
-    private static final String QUERY = "SELECT "
+    private static final String QUERY_TEMPLATE = "SELECT "
                 + "(SELECT c.id FROM cs_class c WHERE table_name ILIKE 'albo_vorgang') AS class_id, albo_vorgang.id, albo_vorgang.schluessel AS name "
                 + "FROM albo_vorgang "
-                + "LEFT JOIN albo_vorgang_flaeche ON albo_vorgang.arr_flaechen = albo_vorgang_flaeche.vorgang_reference "
-                + "WHERE albo_vorgang_flaeche.fk_flaeche = %d";
+                + "%s "
+                + "%s";
 
     //~ Instance fields --------------------------------------------------------
 
     @Setter @Getter private Integer flaecheId;
+    @Setter @Getter private Boolean loeschen = Boolean.FALSE;
 
     private ConnectionContext connectionContext = ConnectionContext.createDummy();
 
@@ -69,13 +70,24 @@ public class AlboVorgangSearch extends AbstractCidsServerSearch implements MetaO
     @Override
     public Collection<MetaObjectNode> performServerSearch() {
         try {
-            if (getFlaecheId() == null) {
-                return null;
+            final List<String> leftJoins = new ArrayList<>();
+            final List<String> wheres = new ArrayList<>();
+            if (getFlaecheId() != null) {
+                leftJoins.add(
+                    "albo_vorgang_flaeche ON albo_vorgang.arr_flaechen = albo_vorgang_flaeche.vorgang_reference");
+                wheres.add(String.format("albo_vorgang_flaeche.fk_flaeche = %d", getFlaecheId()));
             }
-            final List<MetaObjectNode> mons = new ArrayList<>();
-            final String query = String.format(QUERY, getFlaecheId());
-            final MetaService ms = (MetaService)getActiveLocalServers().get("WUNDA_BLAU");
+            if (getLoeschen() != null) {
+                wheres.add(String.format("albo_vorgang.loeschen = %s", getLoeschen() ? "TRUE" : "FALSE"));
+            }
 
+            final String leftJoin = (!leftJoins.isEmpty())
+                ? String.format("LEFT JOIN %s", String.join(" LEFT JOIN ", leftJoins)) : "";
+            final String where = (!wheres.isEmpty()) ? String.format("WHERE %s", String.join(" AND ", wheres)) : "";
+            final String query = String.format(QUERY_TEMPLATE, leftJoin, where);
+
+            final MetaService ms = (MetaService)getActiveLocalServers().get("WUNDA_BLAU");
+            final List<MetaObjectNode> mons = new ArrayList<>();
             final List<ArrayList> resultList = ms.performCustomSearch(query, getConnectionContext());
             for (final ArrayList al : resultList) {
                 final int cid = (Integer)al.get(0);

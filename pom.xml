@@ -13,7 +13,7 @@
 
     <groupId>de.cismet.cids.custom.wupp.server</groupId>
     <artifactId>cids-custom-server-wuppertal</artifactId>
-    <version>6.23-SNAPSHOT</version>
+    <version>6.27-SNAPSHOT</version>
     <packaging>jar</packaging>
     
     <name>${names.cids.custom-wuppertal-server} [${project.version}]</name>
@@ -61,7 +61,7 @@
             <dependency>
                 <groupId>de.cismet.commons</groupId>
                 <artifactId>cismet-commons</artifactId>
-                <version>6.5.6</version>
+                <version>6.5.7</version>
                 <type>jar</type>
                 <scope>compile</scope>
             </dependency>
@@ -69,7 +69,7 @@
             <dependency>
                 <groupId>de.cismet.cids</groupId>
                 <artifactId>cids-server</artifactId>
-                <version>6.4</version>
+                <version>6.5</version>
                 <type>jar</type>
                 <scope>compile</scope>
             </dependency>
@@ -77,7 +77,7 @@
             <dependency>
                 <groupId>de.cismet.cids</groupId>
                 <artifactId>cids-server-rest-types</artifactId>
-                <version>6.0</version>
+                <version>6.1</version>
                 <scope>compile</scope>
                 <type>jar</type>
             </dependency>
@@ -373,12 +373,6 @@
             <scope>compile</scope>
             <type>jar</type>
         </dependency>
-<!--        <dependency>
-            <groupId>de.cismet.verdis</groupId>
-            <artifactId>verdis-server</artifactId>
-            <version>6.12-SNAPSHOT</version>
-            <scope>runtime</scope>
-        </dependency>-->
     </dependencies>
 
     <build>
@@ -447,11 +441,3 @@
         <finalName>cidsCustomServerStuff</finalName>
     </build>
 </project>
-
-
-
-
-
-
-
-
