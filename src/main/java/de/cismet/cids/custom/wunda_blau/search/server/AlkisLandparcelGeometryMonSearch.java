@@ -12,6 +12,9 @@ import Sirius.server.middleware.types.MetaObjectNode;
 
 import com.vividsolutions.jts.geom.Geometry;
 
+import lombok.Getter;
+import lombok.Setter;
+
 import org.apache.log4j.Logger;
 
 import java.util.ArrayList;
@@ -38,42 +41,43 @@ import de.cismet.connectioncontext.ConnectionContextStore;
  *
  * @version  $Revision$, $Date$
  */
-public class FnpHauptnutzungenSearch extends AbstractCidsServerSearch implements RestApiCidsServerSearch,
+public class AlkisLandparcelGeometryMonSearch extends AbstractCidsServerSearch implements GeometrySearch,
+    RestApiCidsServerSearch,
     MetaObjectNodeServerSearch,
     ConnectionContextStore {
 
     //~ Static fields/initializers ---------------------------------------------
 
-    private static final transient Logger LOG = Logger.getLogger(FnpHauptnutzungenSearch.class);
+    private static final transient Logger LOG = Logger.getLogger(AlkisLandparcelGeometryMonSearch.class);
     private static final String INTERSECTS_BUFFER = SearchProperties.getInstance().getIntersectsBuffer();
 
     //~ Instance fields --------------------------------------------------------
 
-    private Geometry geom = null;
-    private final SearchInfo searchInfo;
+    @Getter @Setter private Geometry geometry = null;
 
-    private ConnectionContext connectionContext = ConnectionContext.createDummy();
+    @Getter private final SearchInfo searchInfo;
+    @Getter private ConnectionContext connectionContext = ConnectionContext.createDummy();
 
     //~ Constructors -----------------------------------------------------------
 
     /**
-     * Creates a new FnpHauptnutzungenSearch object.
+     * Creates a new AlkisLandparcelGeometryMonSearch object.
      */
-    public FnpHauptnutzungenSearch() {
+    public AlkisLandparcelGeometryMonSearch() {
         this(null);
     }
 
     /**
-     * Creates a new FnpHauptnutzungenSearch object.
+     * Creates a new AlkisLandparcelGeometryMonSearch object.
      *
-     * @param  geom  DOCUMENT ME!
+     * @param  geometry  DOCUMENT ME!
      */
-    public FnpHauptnutzungenSearch(final Geometry geom) {
-        this.geom = geom;
+    public AlkisLandparcelGeometryMonSearch(final Geometry geometry) {
+        this.geometry = geometry;
         this.searchInfo = new SearchInfo(
                 this.getClass().getName(),
                 this.getClass().getSimpleName(),
-                "Builtin Legacy Search to delegate the operation FnpHauptnutzungen to the cids Pure REST Search API.",
+                "Builtin Legacy Search to delegate the operation AlkisLandparcel to the cids Pure REST Search API.",
                 Arrays.asList(
                     new SearchParameterInfo[] {
                         new MySearchParameterInfo("searchFor", Type.STRING),
@@ -83,20 +87,6 @@ public class FnpHauptnutzungenSearch extends AbstractCidsServerSearch implements
     }
 
     //~ Methods ----------------------------------------------------------------
-
-    /**
-     * DOCUMENT ME!
-     *
-     * @param  geom  DOCUMENT ME!
-     */
-    public void setGeom(final Geometry geom) {
-        this.geom = geom;
-    }
-
-    @Override
-    public SearchInfo getSearchInfo() {
-        return searchInfo;
-    }
 
     @Override
     public void initWithConnectionContext(final ConnectionContext connectionContext) {
@@ -108,9 +98,10 @@ public class FnpHauptnutzungenSearch extends AbstractCidsServerSearch implements
         try {
             final List<MetaObjectNode> result = new ArrayList<>();
 
+            final Geometry geometry = getGeometry();
             final String geomCondition;
-            if (geom != null) {
-                final String geomString = PostGisGeometryFactory.getPostGisCompliantDbString(geom);
+            if (geometry != null) {
+                final String geomString = PostGisGeometryFactory.getPostGisCompliantDbString(geometry);
                 geomCondition = "(geom.geo_field && GeometryFromText('" + geomString + "') AND intersects("
                             + "st_buffer(geo_field, " + INTERSECTS_BUFFER + "),"
                             + "GeometryFromText('"
@@ -121,12 +112,11 @@ public class FnpHauptnutzungenSearch extends AbstractCidsServerSearch implements
             }
             final String query = ""
                         + "SELECT DISTINCT \n"
-                        + "  (SELECT id FROM cs_class WHERE table_name ILIKE 'fnp_hn_kategorie') AS class_id, \n"
-                        + "  fnp_hn_kategorie.id AS object_id, \n"
-                        + "  fnp_hn_kategorie.nutzung AS object_name \n"
-                        + "FROM fnp_hn_kategorie \n"
-                        + "LEFT JOIN fnp_hn_flaeche ON fnp_hn_flaeche.fk_fnp_hn_kategorie = fnp_hn_kategorie.id \n"
-                        + ((geomCondition != null) ? "LEFT JOIN geom ON geom.id = fnp_hn_flaeche.fk_geom " : " ")
+                        + "  (SELECT id FROM cs_class WHERE table_name ILIKE 'alkis_landparcel') AS class_id, \n"
+                        + "  alkis_landparcel.id AS object_id, \n"
+                        + "  alkis_landparcel.alkis_id AS object_name \n"
+                        + "FROM alkis_landparcel \n"
+                        + ((geomCondition != null) ? "LEFT JOIN geom ON geom.id = alkis_landparcel.geometrie " : " ")
                         + ((geomCondition != null) ? ("WHERE " + geomCondition) : " ")
                         + ";";
 
@@ -145,14 +135,9 @@ public class FnpHauptnutzungenSearch extends AbstractCidsServerSearch implements
             }
             return result;
         } catch (final Exception ex) {
-            LOG.error("error while searching for FnpHauptnutzungen object", ex);
+            LOG.error("error while searching for AlkisLandparcel object", ex);
             throw new RuntimeException(ex);
         }
-    }
-
-    @Override
-    public ConnectionContext getConnectionContext() {
-        return connectionContext;
     }
 
     //~ Inner Classes ----------------------------------------------------------
