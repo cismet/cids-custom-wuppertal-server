@@ -12,6 +12,9 @@ import Sirius.server.middleware.types.MetaObjectNode;
 
 import com.vividsolutions.jts.geom.Geometry;
 
+import lombok.Getter;
+import lombok.Setter;
+
 import org.apache.log4j.Logger;
 
 import java.util.ArrayList;
@@ -38,42 +41,42 @@ import de.cismet.connectioncontext.ConnectionContextStore;
  *
  * @version  $Revision$, $Date$
  */
-public class StadtraumtypSearch extends AbstractCidsServerSearch implements RestApiCidsServerSearch,
+public class FnpHauptnutzungenMonSearch extends AbstractCidsServerSearch implements RestApiCidsServerSearch,
     MetaObjectNodeServerSearch,
     ConnectionContextStore {
 
     //~ Static fields/initializers ---------------------------------------------
 
-    private static final transient Logger LOG = Logger.getLogger(StadtraumtypSearch.class);
+    private static final transient Logger LOG = Logger.getLogger(FnpHauptnutzungenMonSearch.class);
     private static final String INTERSECTS_BUFFER = SearchProperties.getInstance().getIntersectsBuffer();
 
     //~ Instance fields --------------------------------------------------------
 
-    private Geometry geom = null;
-    private final SearchInfo searchInfo;
+    @Getter @Setter private Geometry geometry = null;
 
-    private ConnectionContext connectionContext = ConnectionContext.createDummy();
+    @Getter private final SearchInfo searchInfo;
+    @Getter private ConnectionContext connectionContext = ConnectionContext.createDummy();
 
     //~ Constructors -----------------------------------------------------------
 
     /**
-     * Creates a new StadtraumtypSearch object.
+     * Creates a new FnpHauptnutzungenSearch object.
      */
-    public StadtraumtypSearch() {
+    public FnpHauptnutzungenMonSearch() {
         this(null);
     }
 
     /**
-     * Creates a new StadtraumtypSearch object.
+     * Creates a new FnpHauptnutzungenSearch object.
      *
-     * @param  geom  DOCUMENT ME!
+     * @param  geometry  DOCUMENT ME!
      */
-    public StadtraumtypSearch(final Geometry geom) {
-        this.geom = geom;
+    public FnpHauptnutzungenMonSearch(final Geometry geometry) {
+        this.geometry = geometry;
         this.searchInfo = new SearchInfo(
                 this.getClass().getName(),
                 this.getClass().getSimpleName(),
-                "Builtin Legacy Search to delegate the operation Stadtraumtyp to the cids Pure REST Search API.",
+                "Builtin Legacy Search to delegate the operation FnpHauptnutzungen to the cids Pure REST Search API.",
                 Arrays.asList(
                     new SearchParameterInfo[] {
                         new MySearchParameterInfo("searchFor", Type.STRING),
@@ -83,20 +86,6 @@ public class StadtraumtypSearch extends AbstractCidsServerSearch implements Rest
     }
 
     //~ Methods ----------------------------------------------------------------
-
-    /**
-     * DOCUMENT ME!
-     *
-     * @param  geom  DOCUMENT ME!
-     */
-    public void setGeom(final Geometry geom) {
-        this.geom = geom;
-    }
-
-    @Override
-    public SearchInfo getSearchInfo() {
-        return searchInfo;
-    }
 
     @Override
     public void initWithConnectionContext(final ConnectionContext connectionContext) {
@@ -108,9 +97,10 @@ public class StadtraumtypSearch extends AbstractCidsServerSearch implements Rest
         try {
             final List<MetaObjectNode> result = new ArrayList<>();
 
+            final Geometry geometry = getGeometry();
             final String geomCondition;
-            if (geom != null) {
-                final String geomString = PostGisGeometryFactory.getPostGisCompliantDbString(geom);
+            if (geometry != null) {
+                final String geomString = PostGisGeometryFactory.getPostGisCompliantDbString(geometry);
                 geomCondition = "(geom.geo_field && GeometryFromText('" + geomString + "') AND intersects("
                             + "st_buffer(geo_field, " + INTERSECTS_BUFFER + "),"
                             + "GeometryFromText('"
@@ -121,12 +111,12 @@ public class StadtraumtypSearch extends AbstractCidsServerSearch implements Rest
             }
             final String query = ""
                         + "SELECT DISTINCT \n"
-                        + "  (SELECT id FROM cs_class WHERE table_name ILIKE 'srt_kategorie') AS class_id, \n"
-                        + "  srt_kategorie.id AS object_id, \n"
-                        + "  srt_kategorie.bezeichnung AS object_name \n"
-                        + "FROM srt_kategorie \n"
-                        + "LEFT JOIN srt_flaeche ON srt_flaeche.fk_kategorie = srt_kategorie.id \n"
-                        + ((geomCondition != null) ? "LEFT JOIN geom ON geom.id = srt_flaeche.fk_geom " : " ")
+                        + "  (SELECT id FROM cs_class WHERE table_name ILIKE 'fnp_hn_kategorie') AS class_id, \n"
+                        + "  fnp_hn_kategorie.id AS object_id, \n"
+                        + "  fnp_hn_kategorie.nutzung AS object_name \n"
+                        + "FROM fnp_hn_kategorie \n"
+                        + "LEFT JOIN fnp_hn_flaeche ON fnp_hn_flaeche.fk_fnp_hn_kategorie = fnp_hn_kategorie.id \n"
+                        + ((geomCondition != null) ? "LEFT JOIN geom ON geom.id = fnp_hn_flaeche.fk_geom " : " ")
                         + ((geomCondition != null) ? ("WHERE " + geomCondition) : " ")
                         + ";";
 
@@ -145,14 +135,9 @@ public class StadtraumtypSearch extends AbstractCidsServerSearch implements Rest
             }
             return result;
         } catch (final Exception ex) {
-            LOG.error("error while searching for Stadtraumtyp object", ex);
+            LOG.error("error while searching for FnpHauptnutzungen object", ex);
             throw new RuntimeException(ex);
         }
-    }
-
-    @Override
-    public ConnectionContext getConnectionContext() {
-        return connectionContext;
     }
 
     //~ Inner Classes ----------------------------------------------------------

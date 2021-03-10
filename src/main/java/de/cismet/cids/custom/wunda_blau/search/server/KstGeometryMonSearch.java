@@ -12,6 +12,9 @@ import Sirius.server.middleware.types.MetaObjectNode;
 
 import com.vividsolutions.jts.geom.Geometry;
 
+import lombok.Getter;
+import lombok.Setter;
+
 import org.apache.log4j.Logger;
 
 import java.util.ArrayList;
@@ -38,42 +41,62 @@ import de.cismet.connectioncontext.ConnectionContextStore;
  *
  * @version  $Revision$, $Date$
  */
-public class BplanSearch extends AbstractCidsServerSearch implements RestApiCidsServerSearch,
+public class KstGeometryMonSearch extends AbstractCidsServerSearch implements RestApiCidsServerSearch,
+    GeometrySearch,
     MetaObjectNodeServerSearch,
     ConnectionContextStore {
 
     //~ Static fields/initializers ---------------------------------------------
 
-    private static final transient Logger LOG = Logger.getLogger(BplanSearch.class);
+    private static final transient Logger LOG = Logger.getLogger(KstGeometryMonSearch.class);
     private static final String INTERSECTS_BUFFER = SearchProperties.getInstance().getIntersectsBuffer();
+
+    //~ Enums ------------------------------------------------------------------
+
+    /**
+     * DOCUMENT ME!
+     *
+     * @version  $Revision$, $Date$
+     */
+    public enum SearchFor {
+
+        //~ Enum constants -----------------------------------------------------
+
+        BEZIRK, QUARTIER
+    }
 
     //~ Instance fields --------------------------------------------------------
 
-    private Geometry geom = null;
-    private final SearchInfo searchInfo;
+    @Getter @Setter private SearchFor searchFor = null;
+    @Getter @Setter private Geometry geometry = null;
 
-    private ConnectionContext connectionContext = ConnectionContext.createDummy();
+    @Getter private final SearchInfo searchInfo;
+    @Getter private ConnectionContext connectionContext = ConnectionContext.createDummy();
 
     //~ Constructors -----------------------------------------------------------
 
     /**
-     * Creates a new WohnlagenKategorisierungSearch object.
+     * Creates a new KstSearch object.
+     *
+     * @param  searchFor  DOCUMENT ME!
      */
-    public BplanSearch() {
-        this(null);
+    public KstGeometryMonSearch(final SearchFor searchFor) {
+        this(searchFor, null);
     }
 
     /**
-     * Creates a new WohnlagenKategorisierungSearch object.
+     * Creates a new KstSearch object.
      *
-     * @param  geom  DOCUMENT ME!
+     * @param  searchFor  DOCUMENT ME!
+     * @param  geometry   DOCUMENT ME!
      */
-    public BplanSearch(final Geometry geom) {
-        this.geom = geom;
+    public KstGeometryMonSearch(final SearchFor searchFor, final Geometry geometry) {
+        this.searchFor = searchFor;
+        this.geometry = geometry;
         this.searchInfo = new SearchInfo(
                 this.getClass().getName(),
                 this.getClass().getSimpleName(),
-                "Builtin Legacy Search to delegate the operation Bplan to the cids Pure REST Search API.",
+                "Builtin Legacy Search to delegate the operation KstSearch to the cids Pure REST Search API.",
                 Arrays.asList(
                     new SearchParameterInfo[] {
                         new MySearchParameterInfo("searchFor", Type.STRING),
@@ -82,21 +105,14 @@ public class BplanSearch extends AbstractCidsServerSearch implements RestApiCids
                 new MySearchParameterInfo("return", Type.ENTITY_REFERENCE, true));
     }
 
-    //~ Methods ----------------------------------------------------------------
-
     /**
-     * DOCUMENT ME!
-     *
-     * @param  geom  DOCUMENT ME!
+     * Creates a new KstSearch object.
      */
-    public void setGeom(final Geometry geom) {
-        this.geom = geom;
+    private KstGeometryMonSearch() {
+        this(null);
     }
 
-    @Override
-    public SearchInfo getSearchInfo() {
-        return searchInfo;
-    }
+    //~ Methods ----------------------------------------------------------------
 
     @Override
     public void initWithConnectionContext(final ConnectionContext connectionContext) {
@@ -108,6 +124,20 @@ public class BplanSearch extends AbstractCidsServerSearch implements RestApiCids
         try {
             final List<MetaObjectNode> result = new ArrayList<>();
 
+            String kst = null;
+            switch (searchFor) {
+                case BEZIRK: {
+                    kst = "kst_stadtbezirk";
+                }
+                break;
+                case QUARTIER: {
+                    kst = "kst_quartier";
+                }
+                break;
+                default:
+            }
+
+            final Geometry geom = getGeometry();
             final String geomCondition;
             if (geom != null) {
                 final String geomString = PostGisGeometryFactory.getPostGisCompliantDbString(geom);
@@ -119,15 +149,13 @@ public class BplanSearch extends AbstractCidsServerSearch implements RestApiCids
             } else {
                 geomCondition = null;
             }
-            final String query = ""
-                        + "SELECT DISTINCT \n"
-                        + "  (SELECT id FROM cs_class WHERE table_name ILIKE 'bplan_verfahren') AS class_id, \n"
-                        + "  bplan_verfahren.id AS object_id, \n"
-                        + "  bplan_verfahren.nummer AS object_name \n"
-                        + "FROM bplan_verfahren \n"
-                        + ((geomCondition != null) ? "LEFT JOIN geom ON geom.id = bplan_verfahren.geometrie " : " ")
-                        + ((geomCondition != null) ? ("WHERE " + geomCondition) : " ")
-                        + ";";
+            final String query = "SELECT \n"
+                        + "	(SELECT id FROM cs_class WHERE table_name ILIKE '" + kst + "') AS class_id, "
+                        + "	kst.id AS object_id, "
+                        + "	kst.name AS object_name "
+                        + "FROM " + kst + " AS kst "
+                        + ((geomCondition != null) ? "LEFT JOIN geom ON kst.georeferenz = geom.id " : " ")
+                        + ((geomCondition != null) ? ("WHERE " + geomCondition) : " ");
 
             if (query != null) {
                 final MetaService ms = (MetaService)getActiveLocalServers().get("WUNDA_BLAU");
@@ -144,14 +172,9 @@ public class BplanSearch extends AbstractCidsServerSearch implements RestApiCids
             }
             return result;
         } catch (final Exception ex) {
-            LOG.error("error while searching for Bplan object", ex);
+            LOG.error("error while searching for kst object", ex);
             throw new RuntimeException(ex);
         }
-    }
-
-    @Override
-    public ConnectionContext getConnectionContext() {
-        return connectionContext;
     }
 
     //~ Inner Classes ----------------------------------------------------------
@@ -174,7 +197,6 @@ public class BplanSearch extends AbstractCidsServerSearch implements RestApiCids
         private MySearchParameterInfo(final String key, final Type type) {
             this(key, type, null);
         }
-
         /**
          * Creates a new MySearchParameterInfo object.
          *

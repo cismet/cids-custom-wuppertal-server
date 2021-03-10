@@ -39,10 +39,11 @@ import java.util.Map;
 import javax.imageio.ImageIO;
 
 import de.cismet.cids.custom.utils.StampedJasperReportServerAction;
-import de.cismet.cids.custom.wunda_blau.search.server.BplanSearch;
-import de.cismet.cids.custom.wunda_blau.search.server.KstSearch;
-import de.cismet.cids.custom.wunda_blau.search.server.StadtraumtypSearch;
-import de.cismet.cids.custom.wunda_blau.search.server.WohnlagenKategorisierungSearch;
+import de.cismet.cids.custom.wunda_blau.search.server.AlkisLandparcelGeometryMonSearch;
+import de.cismet.cids.custom.wunda_blau.search.server.BplaeneMonSearch;
+import de.cismet.cids.custom.wunda_blau.search.server.KstGeometryMonSearch;
+import de.cismet.cids.custom.wunda_blau.search.server.StadtraumtypMonSearch;
+import de.cismet.cids.custom.wunda_blau.search.server.WohnlagenKategorisierungMonSearch;
 
 import de.cismet.cids.dynamics.CidsBean;
 
@@ -108,6 +109,13 @@ public class PotenzialflaecheReportServerAction extends StampedJasperReportServe
         OEPNV_ANBINDUNG(new SingleFieldReportProperty("fk_oepnv")),
         BISHERIGE_NUTZUNG(new SingleFieldReportProperty("bisherige_nutzung")),
         EIGENTUEMER(new SingleFieldReportProperty("eigentuemer")),
+        KLIMAINFORMATIONEN(new SingleFieldReportProperty("fk_klimainformationen")),
+        BAULUECKENART(new SingleFieldReportProperty("fk_baulueckenart")),
+        VERSIEGELUNG(new SingleFieldReportProperty("fk_versiegelung")),
+        BAUORDNUNGSRECHT_GENEHMIGUNG(new SingleFieldReportProperty("fk_bauordnungsrecht_genehmigung")),
+        BAUORDNUNGSRECHT_BAULAST(new SingleFieldReportProperty("fk_bauordnungsrecht_baulast")),
+        FESTSETZUNGEN_BPLAN(new SingleFieldReportProperty("fk_festsetzungen_bplan")),
+        FESTSETZUNGEN_BPLAN_STAND(new SingleFieldReportProperty("stand_festsetzungen_bplan")),
 
         NAEHE_ZU(new MultifieldReportProperty("arr_naehen_zu")),
         BRACHFLAECHENKATEGORIE(new MultifieldReportProperty("arr_brachflaechen")),
@@ -154,7 +162,7 @@ public class PotenzialflaecheReportServerAction extends StampedJasperReportServe
                 protected MetaObjectNodeServerSearch createMonServerSearch(
                         final PotenzialflaecheReportServerAction serverAction) {
                     final CidsBean flaecheBean = serverAction.getFlaecheBean();
-                    final BplanSearch serverSearch = new BplanSearch(
+                    final BplaeneMonSearch serverSearch = new BplaeneMonSearch(
                             (Geometry)flaecheBean.getProperty("geometrie.geo_field"));
                     return serverSearch;
                 }
@@ -165,8 +173,8 @@ public class PotenzialflaecheReportServerAction extends StampedJasperReportServe
                 protected MetaObjectNodeServerSearch createMonServerSearch(
                         final PotenzialflaecheReportServerAction serverAction) {
                     final CidsBean flaecheBean = serverAction.getFlaecheBean();
-                    final KstSearch serverSearch = new KstSearch(
-                            KstSearch.SearchFor.BEZIRK,
+                    final KstGeometryMonSearch serverSearch = new KstGeometryMonSearch(
+                            KstGeometryMonSearch.SearchFor.BEZIRK,
                             (Geometry)flaecheBean.getProperty("geometrie.geo_field"));
                     return serverSearch;
                 }
@@ -177,8 +185,19 @@ public class PotenzialflaecheReportServerAction extends StampedJasperReportServe
                 protected MetaObjectNodeServerSearch createMonServerSearch(
                         final PotenzialflaecheReportServerAction serverAction) {
                     final CidsBean flaecheBean = serverAction.getFlaecheBean();
-                    final KstSearch serverSearch = new KstSearch(
-                            KstSearch.SearchFor.QUARTIER,
+                    final KstGeometryMonSearch serverSearch = new KstGeometryMonSearch(
+                            KstGeometryMonSearch.SearchFor.QUARTIER,
+                            (Geometry)flaecheBean.getProperty("geometrie.geo_field"));
+                    return serverSearch;
+                }
+            }),
+        FLURSTUECKE(new MonSearchReportProperty() {
+
+                @Override
+                protected MetaObjectNodeServerSearch createMonServerSearch(
+                        final PotenzialflaecheReportServerAction serverAction) {
+                    final CidsBean flaecheBean = serverAction.getFlaecheBean();
+                    final AlkisLandparcelGeometryMonSearch serverSearch = new AlkisLandparcelGeometryMonSearch(
                             (Geometry)flaecheBean.getProperty("geometrie.geo_field"));
                     return serverSearch;
                 }
@@ -189,7 +208,7 @@ public class PotenzialflaecheReportServerAction extends StampedJasperReportServe
                 protected MetaObjectNodeServerSearch createMonServerSearch(
                         final PotenzialflaecheReportServerAction serverAction) {
                     final CidsBean flaecheBean = serverAction.getFlaecheBean();
-                    final WohnlagenKategorisierungSearch serverSearch = new WohnlagenKategorisierungSearch(
+                    final WohnlagenKategorisierungMonSearch serverSearch = new WohnlagenKategorisierungMonSearch(
                             (Geometry)flaecheBean.getProperty("geometrie.geo_field"));
                     return serverSearch;
                 }
@@ -200,7 +219,7 @@ public class PotenzialflaecheReportServerAction extends StampedJasperReportServe
                 protected MetaObjectNodeServerSearch createMonServerSearch(
                         final PotenzialflaecheReportServerAction serverAction) {
                     final CidsBean flaecheBean = serverAction.getFlaecheBean();
-                    final StadtraumtypSearch serverSearch = new StadtraumtypSearch(
+                    final StadtraumtypMonSearch serverSearch = new StadtraumtypMonSearch(
                             (Geometry)flaecheBean.getProperty("geometrie.geo_field"));
                     return serverSearch;
                 }
