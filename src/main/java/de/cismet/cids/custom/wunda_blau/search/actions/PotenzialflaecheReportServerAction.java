@@ -114,7 +114,7 @@ public class PotenzialflaecheReportServerAction extends StampedJasperReportServe
         VERSIEGELUNG(new SingleFieldReportProperty("fk_versiegelung")),
         BAUORDNUNGSRECHT_GENEHMIGUNG(new SingleFieldReportProperty("fk_bauordnungsrecht_genehmigung")),
         BAUORDNUNGSRECHT_BAULAST(new SingleFieldReportProperty("fk_bauordnungsrecht_baulast")),
-        FESTSETZUNGEN_BPLAN(new SingleFieldReportProperty("fk_festsetzungen_bplan")),
+        FESTSETZUNGEN_BPLAN(new SingleFieldReportProperty("festsetzungen_bplan")),
         FESTSETZUNGEN_BPLAN_STAND(new SingleFieldReportProperty("stand_festsetzungen_bplan")),
 
         NAEHE_ZU(new MultifieldReportProperty("arr_naehen_zu")),
