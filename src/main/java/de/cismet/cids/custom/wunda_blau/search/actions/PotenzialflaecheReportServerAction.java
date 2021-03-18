@@ -41,6 +41,7 @@ import javax.imageio.ImageIO;
 import de.cismet.cids.custom.utils.StampedJasperReportServerAction;
 import de.cismet.cids.custom.wunda_blau.search.server.AlkisLandparcelGeometryMonSearch;
 import de.cismet.cids.custom.wunda_blau.search.server.BplaeneMonSearch;
+import de.cismet.cids.custom.wunda_blau.search.server.FnpHauptnutzungenMonSearch;
 import de.cismet.cids.custom.wunda_blau.search.server.KstGeometryMonSearch;
 import de.cismet.cids.custom.wunda_blau.search.server.StadtraumtypMonSearch;
 import de.cismet.cids.custom.wunda_blau.search.server.WohnlagenKategorisierungMonSearch;
@@ -91,8 +92,7 @@ public class PotenzialflaecheReportServerAction extends StampedJasperReportServe
         BESCHREIBUNG_FLAECHE(new SingleFieldReportProperty("beschreibung_flaeche")),
         NOTWENDIGE_MASSNAHMEN(new SingleFieldReportProperty("notwendige_massnahmen")),
         QUELLE(new SingleFieldReportProperty("quelle")), STAND(new SingleFieldReportProperty("stand")),
-        FLAECHENNUTZUNGSPLAN(new SingleFieldReportProperty("flaechennutzungsplan")),
-        LAGEBEWERTUNG_VERKEHR(new SingleFieldReportProperty("lagebewertung_verkehr")),
+        LAGEBEWERTUNG_VERKEHR(new SingleFieldReportProperty("fk_lagebewertung_verkehr")),
         SIEDLUNGSRAEUMLICHE_LAGE(new SingleFieldReportProperty("fk_siedlungsraeumliche_lage")),
         VORHANDENE_BEBAUUNG(new SingleFieldReportProperty("vorhandene_bebauung")),
         TOPOGRAFIE(new SingleFieldReportProperty("topografie")), HANG(new SingleFieldReportProperty("fk_ausrichtung")),
@@ -108,7 +108,7 @@ public class PotenzialflaecheReportServerAction extends StampedJasperReportServe
         JAHR_NUTZUNGSAUFGABE(new SingleFieldReportProperty("jahr_brachflaeche")),
         OEPNV_ANBINDUNG(new SingleFieldReportProperty("fk_oepnv")),
         BISHERIGE_NUTZUNG(new SingleFieldReportProperty("bisherige_nutzung")),
-        EIGENTUEMER(new SingleFieldReportProperty("eigentuemer")),
+        EIGENTUEMER(new SingleFieldReportProperty("arr_eigentuemer")),
         KLIMAINFORMATIONEN(new SingleFieldReportProperty("fk_klimainformationen")),
         BAULUECKENART(new SingleFieldReportProperty("fk_baulueckenart")),
         VERSIEGELUNG(new SingleFieldReportProperty("fk_versiegelung")),
@@ -222,6 +222,25 @@ public class PotenzialflaecheReportServerAction extends StampedJasperReportServe
                     final StadtraumtypMonSearch serverSearch = new StadtraumtypMonSearch(
                             (Geometry)flaecheBean.getProperty("geometrie.geo_field"));
                     return serverSearch;
+                }
+            }),
+        FLAECHENNUTZUNGSPLAN(new MonSearchReportProperty() {
+
+                @Override
+                protected MetaObjectNodeServerSearch createMonServerSearch(
+                        final PotenzialflaecheReportServerAction serverAction) {
+                    final CidsBean flaecheBean = serverAction.getFlaecheBean();
+                    final FnpHauptnutzungenMonSearch serverSearch = new FnpHauptnutzungenMonSearch(
+                            (Geometry)flaecheBean.getProperty("geometrie.geo_field"));
+                    return serverSearch;
+                }
+            }),
+        BODENRICHTWERTE(new MonSearchReportProperty() {
+
+                @Override
+                protected MetaObjectNodeServerSearch createMonServerSearch(
+                        final PotenzialflaecheReportServerAction serverAction) {
+                    return null;
                 }
             });
 
