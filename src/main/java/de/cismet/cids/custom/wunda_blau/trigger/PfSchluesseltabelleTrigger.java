@@ -7,14 +7,15 @@
 ****************************************************/
 package de.cismet.cids.custom.wunda_blau.trigger;
 
+import Sirius.server.localserver.DBServer;
 import Sirius.server.newuser.User;
 import Sirius.server.sql.DBConnection;
 
 import org.openide.util.lookup.ServiceProvider;
 
+import java.sql.ResultSet;
 import java.sql.Statement;
 
-import java.util.Arrays;
 import java.util.Collection;
 
 import de.cismet.cids.dynamics.CidsBean;
@@ -22,6 +23,7 @@ import de.cismet.cids.dynamics.CidsBean;
 import de.cismet.cids.trigger.AbstractDBAwareCidsTrigger;
 import de.cismet.cids.trigger.CidsTrigger;
 import de.cismet.cids.trigger.CidsTriggerKey;
+import java.util.HashSet;
 
 /**
  * DOCUMENT ME!
@@ -36,43 +38,54 @@ public class PfSchluesseltabelleTrigger extends AbstractDBAwareCidsTrigger {
     private static final transient org.apache.log4j.Logger LOG = org.apache.log4j.Logger.getLogger(
             PfSchluesseltabelleTrigger.class);
 
+    private static final String DOMAIN = "WUNDA_BLAU";
+    private static final String TABLE = "pf_schluesseltabelle";
     private static final String ORDER_BY_FIELD = "order_by";
-    private static final String UPDATE_ORDER_TEMPLATE = "UPDATE %1$s AS outter "
+    private static final String TABLE_NAME_FIELD = "table_name";
+
+    private static final String UPDATE_ORDER_QUERY_TEMPLATE = "UPDATE %1$s AS outter "
                 + "SET %2$s = sub.row_number "
                 + "FROM (SELECT id, row_number() over(ORDER BY %2$s, id != %3$d) AS row_number FROM %1$s) AS sub "
                 + "WHERE sub.id = outter.id;";
+    private static final String SELECT_TABLENAMES_QUERY_TEMPLATE = "SELECT %2$s FROM %1$s";
 
-    private static final Collection<String> TABLE_NAMES = Arrays.asList(
-            new String[] {
-                "PF_AEUSSERE_ERSCHLIESSUNG",
-                "PF_AKTIVIERBARKEIT",
-                "PF_AUSRICHTUNG",
-                "PF_BAULUECKENART",
-                "PF_BEBAUUNG",
-                "PF_BRACHFLAECHE",
-                "PF_EIGENTUEMER",
-                "PF_EMPFOHLENE_NUTZUNG",
-                "PF_ENTWICKLUNGSAUSSICHTEN",
-                "PF_ENTWICKLUNGSSTAND",
-                "PF_HANDLUNGSDRUCK",
-                "PF_HANDLUNGSPRIORITAET",
-                "PF_LAGEBEWERTUNG_VERKEHR",
-                "PF_NACHFOLGENUTZUNG",
-                "PF_NAEHE_ZU",
-                "PF_NUTZUNG",
-                "PF_OEPNV",
-                "PF_POTENZIALART",
-                "PF_RESTRIKTION",
-                "PF_REVITALISIERUNG",
-                "PF_SIEDLUNGSRAEUMLICHE_LAGE",
-                "PF_TOPOGRAFIE",
-                "PF_VERFUEGBARKEIT",
-                "PF_VEROEFFENTLICHKEITSSTATUS",
-                "PF_VERWERTBARKEIT",
-                "PF_WOHNEINHEITEN"
-            });
+    //~ Instance fields --------------------------------------------------------
+
+    private final Collection<String> triggeringTableNames = new HashSet<>();
 
     //~ Methods ----------------------------------------------------------------
+
+    @Override
+    public void setDbServer(final DBServer dbServer) {
+        super.setDbServer(dbServer);
+
+        Statement stmt = null;
+        try {
+            stmt = dbServer.getConnectionPool().getConnection().createStatement();
+
+            final String query = String.format(
+                    SELECT_TABLENAMES_QUERY_TEMPLATE,
+                    TABLE,
+                    TABLE_NAME_FIELD);
+            final ResultSet resultSet = stmt.executeQuery(query);
+            while (resultSet.next()) {
+                getTriggeringTableNames().add(resultSet.getObject(TABLE_NAME_FIELD).toString());
+            }
+        } catch (final Throwable ex) {
+            LOG.error(ex, ex);
+        } finally {
+            DBConnection.closeStatements(stmt);
+        }
+    }
+
+    /**
+     * DOCUMENT ME!
+     *
+     * @return  DOCUMENT ME!
+     */
+    public final Collection<String> getTriggeringTableNames() {
+        return triggeringTableNames;
+    }
 
     /**
      * DOCUMENT ME!
@@ -85,7 +98,7 @@ public class PfSchluesseltabelleTrigger extends AbstractDBAwareCidsTrigger {
         if ((cidsBean != null)
                     && (cidsBean.getMetaObject() != null)
                     && (cidsBean.getMetaObject().getMetaClass() != null)
-                    && TABLE_NAMES.contains(cidsBean.getMetaObject().getMetaClass().getTableName())) {
+                    && getTriggeringTableNames().contains(cidsBean.getMetaObject().getMetaClass().getTableName())) {
             return cidsBean.getMetaObject().getMetaClass().getTableName();
         } else {
             return null;
@@ -101,7 +114,7 @@ public class PfSchluesseltabelleTrigger extends AbstractDBAwareCidsTrigger {
         final String tableName = identifyRelevantTableName(cidsBean);
         if (tableName != null) {
             final String query = String.format(
-                    UPDATE_ORDER_TEMPLATE,
+                    UPDATE_ORDER_QUERY_TEMPLATE,
                     tableName,
                     ORDER_BY_FIELD,
                     cidsBean.getMetaObject().getId());
@@ -158,7 +171,7 @@ public class PfSchluesseltabelleTrigger extends AbstractDBAwareCidsTrigger {
 
     @Override
     public CidsTriggerKey getTriggerKey() {
-        return new CidsTriggerKey("WUNDA_BLAU", CidsTriggerKey.ALL);
+        return new CidsTriggerKey(DOMAIN, CidsTriggerKey.ALL);
     }
 
     @Override

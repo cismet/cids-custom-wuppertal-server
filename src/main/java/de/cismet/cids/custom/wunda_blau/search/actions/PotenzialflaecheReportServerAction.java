@@ -96,7 +96,7 @@ public class PotenzialflaecheReportServerAction extends StampedJasperReportServe
         SIEDLUNGSRAEUMLICHE_LAGE(new SingleFieldReportProperty("fk_siedlungsraeumliche_lage")),
         VORHANDENE_BEBAUUNG(new SingleFieldReportProperty("vorhandene_bebauung")),
         TOPOGRAFIE(new SingleFieldReportProperty("topografie")), HANG(new SingleFieldReportProperty("fk_ausrichtung")),
-        VERWERTBARKEIT(new SingleFieldReportProperty("aktivierbarkeit")),
+        VERWERTBARKEIT(new SingleFieldReportProperty("fk_verwertbarkeit")),
         VERFUEGBBARKEIT(new SingleFieldReportProperty("verfuegbarkeit")),
         ENTWICKLUNGSAUSSSICHTEN(new SingleFieldReportProperty("fk_entwicklungsaussichten")),
         ENTWICKLUNGSSTAND(new SingleFieldReportProperty("fk_entwicklungsstand")),
@@ -124,6 +124,7 @@ public class PotenzialflaecheReportServerAction extends StampedJasperReportServe
         REGIONALPLAN(new MultifieldReportProperty("regionalplan")),
         RESTRIKTIONEN(new MultifieldReportProperty("arr_restriktionen")),
         HANDLUNGSDRUCK(new MultifieldReportProperty("handlungsdruck")),
+        HANDLUNGSPRIORITAET(new MultifieldReportProperty("fk_handlungsprioritaet")),
 
         KARTE_ORTHO(new VirtualReportProperty() {
 
