@@ -11,8 +11,6 @@ import Sirius.server.middleware.interfaces.domainserver.MetaService;
 import Sirius.server.middleware.types.MetaClass;
 
 import com.vividsolutions.jts.geom.Geometry;
-import com.vividsolutions.jts.io.ParseException;
-import com.vividsolutions.jts.io.WKTReader;
 
 import lombok.Getter;
 import lombok.Setter;
@@ -21,10 +19,8 @@ import org.apache.log4j.Logger;
 
 import org.openide.util.lookup.ServiceProvider;
 
-import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collection;
-import java.util.List;
 
 import de.cismet.cids.dynamics.CidsBean;
 
@@ -38,8 +34,6 @@ import de.cismet.cidsx.server.api.types.SearchParameterInfo;
 import de.cismet.cidsx.server.search.RestApiCidsServerSearch;
 import de.cismet.cidsx.server.search.builtin.legacy.LightweightMetaObjectsSearch;
 
-import de.cismet.cismap.commons.jtsgeometryfactories.PostGisGeometryFactory;
-
 import de.cismet.connectioncontext.ConnectionContext;
 import de.cismet.connectioncontext.ConnectionContextStore;
 
@@ -49,16 +43,16 @@ import de.cismet.connectioncontext.ConnectionContextStore;
  * @version  $Revision$, $Date$
  */
 @ServiceProvider(service = RestApiCidsServerSearch.class)
-public class StrAdrStrasseLightweightSearch extends AbstractCidsServerSearch implements RestApiCidsServerSearch,
+public class PoiKategorienLightweightSearch extends AbstractCidsServerSearch implements RestApiCidsServerSearch,
     LightweightMetaObjectsSearch,
     ConnectionContextStore {
 
     //~ Static fields/initializers ---------------------------------------------
 
-    private static final Logger LOG = Logger.getLogger(StrAdrStrasseLightweightSearch.class);
+    private static final Logger LOG = Logger.getLogger(PoiKategorienLightweightSearch.class);
 
     public static final String TOSTRING_TEMPLATE = "%1$s (%2$s)";
-    public static final String[] TOSTRING_FIELDS = { Subject.NAME.toString(), Subject.SCHLUESSEL.toString() };
+    public static final String[] TOSTRING_FIELDS = { Subject.NAME.toString(), Subject.NUMMER.toString() };
 
     //~ Enums ------------------------------------------------------------------
 
@@ -78,11 +72,11 @@ public class StrAdrStrasseLightweightSearch extends AbstractCidsServerSearch imp
                 return "name";
             }
         },
-        SCHLUESSEL {
+        NUMMER {
 
             @Override
             public String toString() {
-                return "schluessel";
+                return "nummer";
             }
         }
     }
@@ -103,18 +97,18 @@ public class StrAdrStrasseLightweightSearch extends AbstractCidsServerSearch imp
     /**
      * Creates a new LightweightMetaObjectsByQuerySearch object.
      */
-    public StrAdrStrasseLightweightSearch() {
+    public PoiKategorienLightweightSearch() {
         this(Subject.NAME, TOSTRING_TEMPLATE, TOSTRING_FIELDS);
     }
 
     /**
-     * Creates a new StrAdrStrasseLightweightSearch object.
+     * Creates a new PoiKategorienLightweightSearch object.
      *
      * @param  subject                DOCUMENT ME!
      * @param  representationPattern  DOCUMENT ME!
      * @param  representationFields   DOCUMENT ME!
      */
-    public StrAdrStrasseLightweightSearch(
+    public PoiKategorienLightweightSearch(
             final Subject subject,
             final String representationPattern,
             final String[] representationFields) {
@@ -132,7 +126,6 @@ public class StrAdrStrasseLightweightSearch extends AbstractCidsServerSearch imp
         setRepresentationPattern(representationPattern);
         setRepresentationFields(representationFields);
         setSubject(subject);
-        setGeom(geom);
     }
 
     //~ Methods ----------------------------------------------------------------
@@ -150,86 +143,25 @@ public class StrAdrStrasseLightweightSearch extends AbstractCidsServerSearch imp
     /**
      * DOCUMENT ME!
      *
-     * @param   subject     DOCUMENT ME!
-     * @param   geom        DOCUMENT ME!
-     * @param   limitCount  DOCUMENT ME!
-     *
      * @return  DOCUMENT ME!
      */
-    private static String createUnionQuery(final Subject subject, final Geometry geom, final Integer limitCount) {
-        final List<String> queries = new ArrayList<>();
-        if (geom != null) {
-            queries.add(String.format(
-                    "SELECT id, CASE WHEN distance IS NOT NULL THEN name || ' [' || distance::int || 'm]' ELSE name END AS name, schluessel, distance FROM (\n%s\n) AS queryA",
-                    createQuery(subject, geom, limitCount)));
-        }
-        if ((geom == null) || (limitCount != null)) {
-            queries.add(String.format(
-                    "SELECT id, name, schluessel, 99999999 AS distance FROM (\n%s\n) AS queryB",
-                    createQuery(subject, null, null)));
-        }
-        return String.format("%s\nORDER BY distance, name", String.join("\nUNION\n", queries));
-    }
-
-    /**
-     * DOCUMENT ME!
-     *
-     * @param   subject     DOCUMENT ME!
-     * @param   geom        DOCUMENT ME!
-     * @param   limitCount  DOCUMENT ME!
-     *
-     * @return  DOCUMENT ME!
-     */
-    private static String createQuery(final Subject subject, final Geometry geom, final Integer limitCount) {
-        final Collection<String> selectFields = new ArrayList<>();
-        final List<String> leftJoins = new ArrayList<>();
-        final List<String> whereConditions = new ArrayList<>();
-        final List<String> groupBys = new ArrayList<>();
-        final List<String> orderBys = new ArrayList<>();
-
-        final String name = String.format("str_adr_strasse.%s", subject.toString());
-        selectFields.add("str_adr_strasse.id AS id");
-        selectFields.add(Subject.NAME.equals(subject) ? "str_adr_strasse.name AS name"
-                                                      : "str_adr_strasse_schluessel AS name");
-        selectFields.add("str_adr_strasse_schluessel.schluessel AS schluessel");
-        leftJoins.add("str_adr_strasse_schluessel ON str_adr_strasse.schluessel = str_adr_strasse_schluessel.id");
-
-        if (geom != null) {
-            selectFields.add(String.format(
-                    "min(st_distance(geom.geo_field, GeomFromEWKT('%s'))) AS distance",
-                    PostGisGeometryFactory.getPostGisCompliantDbString(geom)));
-            leftJoins.add("kst_segment ON strassenschluessel = str_adr_strasse_schluessel.schluessel");
-            leftJoins.add("geom ON kst_segment.geom = geom.id");
-            groupBys.add("str_adr_strasse.id");
-            groupBys.add("str_adr_strasse_schluessel.schluessel");
-            groupBys.add(name);
-            orderBys.add("distance ASC");
-        }
-
-        orderBys.add(String.format("str_adr_strasse.%s", subject.toString()));
-
-        final String select = "SELECT " + String.join(", ", selectFields);
-        final String from = "FROM str_adr_strasse"
-                    + (leftJoins.isEmpty() ? "" : ("\nLEFT JOIN " + String.join("\nLEFT JOIN ", leftJoins)));
-        final String where = whereConditions.isEmpty() ? "" : (" WHERE " + String.join(" AND ", whereConditions));
-        final String groupBy = groupBys.isEmpty() ? "" : ("GROUP BY " + String.join(", ", groupBys));
-        final String orderBy = orderBys.isEmpty() ? "" : ("ORDER BY " + String.join(", ", orderBys));
-        final String limit = (limitCount != null) ? String.format("LIMIT %s", Integer.toString(limitCount)) : "";
-
-        return String.format("%s\n%s\n%s\n%s\n%s\n%s", select, from, where, groupBy, orderBy, limit);
-    }
-
-    /**
-     * DOCUMENT ME!
-     *
-     * @param   args  DOCUMENT ME!
-     *
-     * @throws  ParseException  DOCUMENT ME!
-     */
-    public static void main(final String[] args) throws ParseException {
-        final Geometry searchGeometry = new WKTReader().read("POINT(369087.00 5681046.50)");
-        searchGeometry.setSRID(25832);
-        System.out.println(StrAdrStrasseLightweightSearch.createUnionQuery(Subject.NAME, searchGeometry, 17));
+    private static String createQuery() {
+        final String query = "with recursive list(id, name, fk_kategorie, nummer, text_kombi, ebene, level) as \n"
+                    + "( \n"
+                    + "select id, name, fk_kategorie, nummer, name as text_kombi, ebene, 1 as level \n"
+                    + "from poi_kategorien \n"
+                    + "union \n"
+                    + "select a.id, a.name, a.fk_kategorie,  a.nummer,  \n"
+                    + "list.text_kombi || ' - ' || a.name as text_kombi, \n"
+                    + "a.ebene, list.level + 1 \n"
+                    + "from poi_kategorien a \n"
+                    + "join list on list.id = a.fk_kategorie \n"
+                    + ") \n"
+                    + "select l.id, l.name AS kat_name, l.nummer, l.text_kombi AS name \n"
+                    + "from (select list.*, max(level) over (partition by id) as maxlevel from list) as l \n"
+                    + "where l.id not in (select fk_kategorie from poi_kategorien where fk_kategorie is not null) \n"
+                    + "and level = maxlevel";
+        return query;
     }
 
     @Override
@@ -242,12 +174,11 @@ public class StrAdrStrasseLightweightSearch extends AbstractCidsServerSearch imp
             throw new SearchException(message);
         }
 
-        final String query = createUnionQuery(subject, geom, sortDistanceLimit);
-
+        final String query = createQuery();
         try {
             final MetaClass mc = CidsBean.getMetaClassFromTableName(
                     "WUNDA_BLAU",
-                    "str_adr_strasse",
+                    "poi_kategorien",
                     getConnectionContext());
             if (getRepresentationPattern() != null) {
                 return Arrays.asList(metaService.getLightweightMetaObjectsByQuery(

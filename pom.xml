@@ -8,12 +8,12 @@
     <parent>
         <groupId>de.cismet.cids</groupId>
         <artifactId>cids-parent</artifactId>
-        <version>6.0</version>
+        <version>7.0</version>
     </parent>
 
     <groupId>de.cismet.cids.custom.wupp.server</groupId>
     <artifactId>cids-custom-server-wuppertal</artifactId>
-    <version>6.25-SNAPSHOT</version>
+    <version>7.1-SNAPSHOT</version>
     <packaging>jar</packaging>
     
     <name>${names.cids.custom-wuppertal-server} [${project.version}]</name>
@@ -52,7 +52,7 @@
             <dependency>
                 <groupId>de.cismet</groupId>
                 <artifactId>cismet-ext-bom</artifactId>
-                <version>6.0</version>
+                <version>7.0</version>
                 <type>pom</type>
                 <scope>import</scope>
             </dependency>
@@ -61,7 +61,7 @@
             <dependency>
                 <groupId>de.cismet.commons</groupId>
                 <artifactId>cismet-commons</artifactId>
-                <version>6.5.7</version>
+                <version>7.0</version>
                 <type>jar</type>
                 <scope>compile</scope>
             </dependency>
@@ -69,14 +69,14 @@
             <dependency>
                 <groupId>de.cismet.cids</groupId>
                 <artifactId>cids-server</artifactId>
-                <version>6.4</version>
+                <version>7.0</version>
                 <type>jar</type>
             </dependency>
 
             <dependency>
                 <groupId>de.cismet.cids</groupId>
                 <artifactId>cids-server-rest-types</artifactId>
-                <version>6.0</version>
+                <version>7.0</version>
                 <scope>compile</scope>
                 <type>jar</type>
             </dependency>
@@ -84,18 +84,10 @@
             <dependency>
                 <groupId>de.cismet.custom</groupId>
                 <artifactId>beansbinding</artifactId>
-                <version>6.0</version>
+                <version>7.0</version>
                 <scope>compile</scope>
                 <type>jar</type>
             </dependency>
-    <dependency>
-                <groupId>io.socket</groupId>
-                <artifactId>socket.io-client</artifactId>
-                <version>1.0.0</version>
-                <scope>compile</scope>                
-        </dependency>
-        
-         
             <!-- END: managed cids-dependencies -->    
         </dependencies>
     </dependencyManagement>
@@ -280,7 +272,7 @@
         </dependency>
         <dependency>
             <groupId>de.cismet.custom</groupId>
-            <artifactId>cismet-deegree</artifactId>
+            <artifactId>cismet-deegree2.3</artifactId>
             <scope>runtime</scope>
         </dependency>        
         <!--
@@ -315,14 +307,20 @@
             <!--<scope>runtime</scope>-->
         </dependency>
         <dependency>
+            <groupId>io.socket</groupId>
+            <artifactId>socket.io-client</artifactId>
+            <version>1.0.0</version>
+            <scope>compile</scope>                
+        </dependency>                 
+        <dependency>
             <groupId>de.aedsicad</groupId>
             <artifactId>aaaweb-soap-connector</artifactId>
-            <version>6.4.7.1-1</version>
+            <version>6.4.7.1-2</version>
         </dependency>        
         <dependency>
             <groupId>de.aedsicad</groupId>
             <artifactId>auftragsmanager-soap-connector</artifactId>
-            <version>6.4.12.3-1</version>
+            <version>6.4.12.3-2</version>
         </dependency>        
         <dependency>
             <groupId>commons-net</groupId>
