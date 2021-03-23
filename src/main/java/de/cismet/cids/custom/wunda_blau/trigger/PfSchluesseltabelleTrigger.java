@@ -17,13 +17,13 @@ import java.sql.ResultSet;
 import java.sql.Statement;
 
 import java.util.Collection;
+import java.util.HashSet;
 
 import de.cismet.cids.dynamics.CidsBean;
 
 import de.cismet.cids.trigger.AbstractDBAwareCidsTrigger;
 import de.cismet.cids.trigger.CidsTrigger;
 import de.cismet.cids.trigger.CidsTriggerKey;
-import java.util.HashSet;
 
 /**
  * DOCUMENT ME!
