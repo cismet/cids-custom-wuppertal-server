@@ -519,29 +519,34 @@ public class PotenzialflaecheReportServerAction extends StampedJasperReportServe
         @Override
         protected String calculateProperty(final PotenzialflaecheReportServerAction serverAction) {
             final MetaObjectNodeServerSearch serverSearch = createMonServerSearch(serverAction);
-            serverSearch.setUser(serverAction.getUser());
-            if (serverSearch instanceof ConnectionContextStore) {
-                ((ConnectionContextStore)serverSearch).initWithConnectionContext(serverAction.getConnectionContext());
-            }
-            final Map localServers = new HashMap<>();
-            localServers.put("WUNDA_BLAU", serverAction.getMetaService());
-            serverSearch.setActiveLocalServers(localServers);
-            final Collection<String> names = new ArrayList<>();
-            try {
-                for (final MetaObjectNode mon : serverSearch.performServerSearch()) {
-                    final MetaObject mo = serverAction.getMetaService()
-                                .getMetaObject(
-                                    serverAction.getUser(),
-                                    mon.getObjectId(),
-                                    mon.getClassId(),
-                                    serverAction.getConnectionContext());
-                    names.add((String)mo.getBean().getProperty("name"));
+            if (serverSearch != null) {
+                serverSearch.setUser(serverAction.getUser());
+                if (serverSearch instanceof ConnectionContextStore) {
+                    ((ConnectionContextStore)serverSearch).initWithConnectionContext(
+                        serverAction.getConnectionContext());
                 }
-            } catch (final Exception ex) {
-                LOG.error(ex, ex);
+                final Map localServers = new HashMap<>();
+                localServers.put("WUNDA_BLAU", serverAction.getMetaService());
+                serverSearch.setActiveLocalServers(localServers);
+                final Collection<String> names = new ArrayList<>();
+                try {
+                    for (final MetaObjectNode mon : serverSearch.performServerSearch()) {
+                        final MetaObject mo = serverAction.getMetaService()
+                                    .getMetaObject(
+                                        serverAction.getUser(),
+                                        mon.getObjectId(),
+                                        mon.getClassId(),
+                                        serverAction.getConnectionContext());
+                        names.add((String)mo.getBean().getProperty("name"));
+                    }
+                } catch (final Exception ex) {
+                    LOG.error(ex, ex);
+                    return null;
+                }
+                return String.join(", ", names);
+            } else {
                 return null;
             }
-            return String.join(", ", names);
         }
     }
 }
