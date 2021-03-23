@@ -13,6 +13,9 @@ import Sirius.server.middleware.types.MetaObjectNode;
 
 import com.vividsolutions.jts.geom.Geometry;
 
+import lombok.Getter;
+import lombok.Setter;
+
 import org.apache.log4j.Logger;
 
 import java.io.StringReader;
@@ -70,43 +73,21 @@ public class PotenzialflaecheSearch extends AbstractCidsServerSearch implements 
 
     //~ Instance fields --------------------------------------------------------
 
-    private SearchMode searchMode = null;
-    private String nummer = null;
-    private String kampagne = null;
-    private String bezeichnung = null;
-    private Geometry geom = null;
-    private final SearchInfo searchInfo;
+    @Getter @Setter private SearchMode searchMode = SearchMode.AND;
+    @Getter @Setter private String nummer = null;
+    @Getter @Setter private Integer kampagneId = null;
+    @Getter @Setter private String bezeichnung = null;
+    @Getter @Setter private Geometry geom = null;
+    @Getter private final SearchInfo searchInfo;
 
-    private ConnectionContext connectionContext = ConnectionContext.createDummy();
+    @Getter private ConnectionContext connectionContext = ConnectionContext.createDummy();
 
     //~ Constructors -----------------------------------------------------------
 
     /**
      * Creates a new PotenzialflaecheSearch object.
-     *
-     * @param  searchMode   DOCUMENT ME!
-     * @param  nummer       DOCUMENT ME!
-     * @param  kampagne     DOCUMENT ME!
-     * @param  bezeichnung  DOCUMENT ME!
-     * @param  geom         DOCUMENT ME!
      */
-    public PotenzialflaecheSearch(final SearchMode searchMode,
-            final String nummer,
-            final String kampagne,
-            final String bezeichnung,
-            final Geometry geom) {
-        this();
-        this.searchMode = searchMode;
-        this.nummer = nummer;
-        this.kampagne = kampagne;
-        this.bezeichnung = bezeichnung;
-        this.geom = geom;
-    }
-
-    /**
-     * Creates a new PotenzialflaecheSearch object.
-     */
-    private PotenzialflaecheSearch() {
+    public PotenzialflaecheSearch() {
         this.searchInfo = new SearchInfo(
                 this.getClass().getName(),
                 this.getClass().getSimpleName(),
@@ -121,12 +102,29 @@ public class PotenzialflaecheSearch extends AbstractCidsServerSearch implements 
                 new MySearchParameterInfo("return", Type.ENTITY_REFERENCE, true));
     }
 
-    //~ Methods ----------------------------------------------------------------
-
-    @Override
-    public SearchInfo getSearchInfo() {
-        return searchInfo;
+    /**
+     * Creates a new PotenzialflaecheSearch object.
+     *
+     * @param  searchMode   DOCUMENT ME!
+     * @param  nummer       DOCUMENT ME!
+     * @param  kampagneId   DOCUMENT ME!
+     * @param  bezeichnung  DOCUMENT ME!
+     * @param  geom         DOCUMENT ME!
+     */
+    public PotenzialflaecheSearch(final SearchMode searchMode,
+            final String nummer,
+            final Integer kampagneId,
+            final String bezeichnung,
+            final Geometry geom) {
+        this();
+        this.searchMode = searchMode;
+        this.nummer = nummer;
+        this.kampagneId = kampagneId;
+        this.bezeichnung = bezeichnung;
+        this.geom = geom;
     }
+
+    //~ Methods ----------------------------------------------------------------
 
     @Override
     public void initWithConnectionContext(final ConnectionContext connectionContext) {
@@ -164,8 +162,8 @@ public class PotenzialflaecheSearch extends AbstractCidsServerSearch implements 
             if (bezeichnung != null) {
                 wheres.add("pf_potenzialflaeche.bezeichnung ILIKE '%" + bezeichnung + "%'");
             }
-            if (kampagne != null) {
-                wheres.add("pf_kampagne.bezeichnung ILIKE '%" + kampagne + "%'");
+            if (kampagneId != null) {
+                wheres.add("kampagne = " + kampagneId + "");
             }
 
             final String geomCondition;
@@ -225,11 +223,6 @@ public class PotenzialflaecheSearch extends AbstractCidsServerSearch implements 
             LOG.error("error while searching for potenzialflaeche", ex);
             throw new RuntimeException(ex);
         }
-    }
-
-    @Override
-    public ConnectionContext getConnectionContext() {
-        return connectionContext;
     }
 
     //~ Inner Classes ----------------------------------------------------------

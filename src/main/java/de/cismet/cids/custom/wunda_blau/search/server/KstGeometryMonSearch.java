@@ -125,13 +125,16 @@ public class KstGeometryMonSearch extends AbstractCidsServerSearch implements Re
             final List<MetaObjectNode> result = new ArrayList<>();
 
             String kst = null;
+            String nr = null;
             switch (searchFor) {
                 case BEZIRK: {
                     kst = "kst_stadtbezirk";
+                    nr = "stadtbezirk_nr";
                 }
                 break;
                 case QUARTIER: {
                     kst = "kst_quartier";
+                    nr = "quartier_nr";
                 }
                 break;
                 default:
@@ -149,13 +152,17 @@ public class KstGeometryMonSearch extends AbstractCidsServerSearch implements Re
             } else {
                 geomCondition = null;
             }
-            final String query = "SELECT \n"
+            final String query = "SELECT "
                         + "	(SELECT id FROM cs_class WHERE table_name ILIKE '" + kst + "') AS class_id, "
                         + "	kst.id AS object_id, "
-                        + "	kst.name AS object_name "
+                        + "	kst.name AS object_name, "
+                        + ((geomCondition != null) ? "	st_area(geom.geo_field)" : "NULL") + "AS area,"
+                        + "	kst." + nr + " AS nummer "
                         + "FROM " + kst + " AS kst "
                         + ((geomCondition != null) ? "LEFT JOIN geom ON kst.georeferenz = geom.id " : " ")
-                        + ((geomCondition != null) ? ("WHERE " + geomCondition) : " ");
+                        + ((geomCondition != null) ? ("WHERE " + geomCondition)
+                                                   : (" "
+                                + "ORDER BY area, " + nr + " DESC"));
 
             if (query != null) {
                 final MetaService ms = (MetaService)getActiveLocalServers().get("WUNDA_BLAU");
