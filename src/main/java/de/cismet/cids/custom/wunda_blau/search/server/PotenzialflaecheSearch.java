@@ -227,8 +227,7 @@ public class PotenzialflaecheSearch extends AbstractCidsServerSearch implements 
                         + "FROM pf_potenzialflaeche "
                         + "LEFT JOIN pf_kampagne ON pf_potenzialflaeche.kampagne = pf_kampagne.id "
                         + "%s "
-                        + "%s "
-                        + where,
+                        + "%s ",
                 (geomCondition != null) ? "LEFT JOIN geom ON pf_potenzialflaeche.geometrie = geom.id " : "",
                 where);
         return query;
