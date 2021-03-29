@@ -50,6 +50,7 @@ import de.cismet.cids.dynamics.CidsBean;
 
 import de.cismet.cids.server.actions.ServerAction;
 import de.cismet.cids.server.actions.ServerActionParameter;
+import de.cismet.cids.server.actions.UserAwareServerAction;
 import de.cismet.cids.server.search.MetaObjectNodeServerSearch;
 
 import de.cismet.cids.utils.serverresources.JasperReportServerResource;
@@ -66,7 +67,8 @@ import de.cismet.connectioncontext.ConnectionContextStore;
  */
 @org.openide.util.lookup.ServiceProvider(service = ServerAction.class)
 public class PotenzialflaecheReportServerAction extends StampedJasperReportServerAction
-        implements ConnectionContextStore {
+        implements ConnectionContextStore,
+            UserAwareServerAction {
 
     //~ Static fields/initializers ---------------------------------------------
 
@@ -270,7 +272,7 @@ public class PotenzialflaecheReportServerAction extends StampedJasperReportServe
 
         //~ Enum constants -----------------------------------------------------
 
-        IMAGE_ORTHO, IMAGE_DGK
+        IMAGE_ORTHO, IMAGE_DGK, TEMPLATE
     }
 
     //~ Instance fields --------------------------------------------------------
@@ -280,6 +282,7 @@ public class PotenzialflaecheReportServerAction extends StampedJasperReportServe
     @Getter private BufferedImage orthoImage;
     @Getter private BufferedImage dgkImage;
     @Getter private CidsBean flaecheBean;
+    @Getter private CidsBean templateBean;
 
     //~ Methods ----------------------------------------------------------------
 
@@ -293,6 +296,7 @@ public class PotenzialflaecheReportServerAction extends StampedJasperReportServe
         final MetaObjectNode flaecheMon = (MetaObjectNode)body;
         byte[] dgkImageBytes = null;
         byte[] orthoImageBytes = null;
+        MetaObjectNode templateMon = null;
 
         try {
             if (flaecheMon != null) {
@@ -302,6 +306,8 @@ public class PotenzialflaecheReportServerAction extends StampedJasperReportServe
                             dgkImageBytes = (byte[])sap.getValue();
                         } else if (sap.getKey().equals(Parameter.IMAGE_ORTHO.toString())) {
                             orthoImageBytes = (byte[])sap.getValue();
+                        } else if (sap.getKey().equals(Parameter.TEMPLATE.toString())) {
+                            templateMon = (MetaObjectNode)sap.getValue();
                         }
                     }
                 }
@@ -310,25 +316,68 @@ public class PotenzialflaecheReportServerAction extends StampedJasperReportServe
                             flaecheMon.getObjectId(),
                             flaecheMon.getClassId(),
                             getConnectionContext()).getBean();
+                templateBean = (templateMon != null)
+                    ? getMetaService().getMetaObject(
+                                getUser(),
+                                templateMon.getObjectId(),
+                                templateMon.getClassId(),
+                                getConnectionContext()).getBean() : null;
 
-                final String template = (String)flaecheBean.getProperty("kampagne.steckbrieftemplate.link");
-                if (BEAN_RESOURCE_MAP.get(template) == null) {
-                    BEAN_RESOURCE_MAP.put(template, new JasperReportServerResource(template));
+                final CidsBean kampagne = (CidsBean)flaecheBean.getProperty("kampagne");
+                CidsBean selectedTemplateBean = null;
+                if (templateBean != null) {
+                    selectedTemplateBean = templateBean;
+                } else {
+                    if (kampagne != null) {
+                        final Collection<CidsBean> templateBeans = kampagne.getBeanCollectionProperty(
+                                "n_steckbrieftemplates");
+                        selectedTemplateBean = ((templateBeans != null) && !templateBeans.isEmpty())
+                            ? templateBeans.iterator().next() : null;
+                        final Integer mainSteckbriefId = (Integer)kampagne.getProperty("haupt_steckbrieftemplate_id");
+                        if (mainSteckbriefId != null) {
+                            for (final CidsBean templateBean : templateBeans) {
+                                if ((templateBean != null)
+                                            && (mainSteckbriefId == templateBean.getMetaObject().getId())) {
+                                    selectedTemplateBean = templateBean;
+                                    break;
+                                }
+                            }
+                        }
+                    }
                 }
 
-                orthoImage = (orthoImageBytes != null) ? ImageIO.read(new ByteArrayInputStream(orthoImageBytes)) : null;
-                dgkImage = (dgkImageBytes != null) ? ImageIO.read(new ByteArrayInputStream(dgkImageBytes)) : null;
+                if (selectedTemplateBean != null) {
+                    final String confAttr = (String)selectedTemplateBean.getProperty("conf_attr");
+                    if ((confAttr != null) && !confAttr.trim().isEmpty()
+                                && (DomainServerImpl.getServerInstance().getConfigAttr(
+                                        getUser(),
+                                        confAttr,
+                                        getConnectionContext()) == null)) {
+                        throw new Exception("kein Recht an Konfigurationsattribut " + confAttr);
+                    }
 
-                final JRBeanCollectionDataSource dataSource = new JRBeanCollectionDataSource(Arrays.asList(
-                            flaecheBean));
-                final Map<String, Object> parameters = generateParams();
-                parameters.put(
-                    "SUBREPORT_DIR",
-                    DomainServerImpl.getServerProperties().getServerResourcesBasePath()
-                            + "/");
-                synchronized (this) {
-                    CURRENT_TEMPLATE = template;
-                    return generateReport(parameters, dataSource);
+                    final String template = (String)selectedTemplateBean.getProperty("link");
+                    if (BEAN_RESOURCE_MAP.get(template) == null) {
+                        BEAN_RESOURCE_MAP.put(template, new JasperReportServerResource(template));
+                    }
+
+                    orthoImage = (orthoImageBytes != null) ? ImageIO.read(new ByteArrayInputStream(orthoImageBytes))
+                                                           : null;
+                    dgkImage = (dgkImageBytes != null) ? ImageIO.read(new ByteArrayInputStream(dgkImageBytes)) : null;
+
+                    final JRBeanCollectionDataSource dataSource = new JRBeanCollectionDataSource(Arrays.asList(
+                                flaecheBean));
+                    final Map<String, Object> parameters = generateParams();
+                    parameters.put(
+                        "SUBREPORT_DIR",
+                        DomainServerImpl.getServerProperties().getServerResourcesBasePath()
+                                + "/");
+                    synchronized (this) {
+                        CURRENT_TEMPLATE = template;
+                        return generateReport(parameters, dataSource);
+                    }
+                } else {
+                    throw new Exception("no template found");
                 }
             } else {
                 return null;

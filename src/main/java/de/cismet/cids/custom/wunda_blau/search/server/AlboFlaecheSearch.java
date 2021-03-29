@@ -49,7 +49,7 @@ import de.cismet.connectioncontext.ConnectionContext;
  * @version  $Revision$, $Date$
  */
 public class AlboFlaecheSearch extends AbstractCidsServerSearch implements MetaObjectNodeServerSearch,
-    StorableSearch<AlboFlaecheSearch.FlaecheSearchInfo> {
+    StorableSearch<AlboFlaecheSearch.Configuration> {
 
     //~ Static fields/initializers ---------------------------------------------
 
@@ -88,7 +88,7 @@ public class AlboFlaecheSearch extends AbstractCidsServerSearch implements MetaO
 
     private ConnectionContext connectionContext = ConnectionContext.createDummy();
 
-    @Getter private FlaecheSearchInfo searchInfo;
+    @Getter private Configuration configuration;
     @Getter @Setter private Geometry geometry;
 
     //~ Constructors -----------------------------------------------------------
@@ -97,7 +97,7 @@ public class AlboFlaecheSearch extends AbstractCidsServerSearch implements MetaO
      * Creates a new AlboFlaecheSearch object.
      */
     public AlboFlaecheSearch() {
-        this(new FlaecheSearchInfo());
+        this(new Configuration());
     }
 
     /**
@@ -105,8 +105,8 @@ public class AlboFlaecheSearch extends AbstractCidsServerSearch implements MetaO
      *
      * @param  searchInfo  DOCUMENT ME!
      */
-    public AlboFlaecheSearch(final FlaecheSearchInfo searchInfo) {
-        this.searchInfo = searchInfo;
+    public AlboFlaecheSearch(final Configuration searchInfo) {
+        this.configuration = searchInfo;
     }
 
     /**
@@ -117,7 +117,7 @@ public class AlboFlaecheSearch extends AbstractCidsServerSearch implements MetaO
      * @throws  Exception  DOCUMENT ME!
      */
     public AlboFlaecheSearch(final String searchInfo) throws Exception {
-        this((searchInfo != null) ? OBJECT_MAPPER.readValue(searchInfo, FlaecheSearchInfo.class) : null);
+        this((searchInfo != null) ? OBJECT_MAPPER.readValue(searchInfo, Configuration.class) : null);
     }
 
     //~ Methods ----------------------------------------------------------------
@@ -141,15 +141,13 @@ public class AlboFlaecheSearch extends AbstractCidsServerSearch implements MetaO
     }
 
     @Override
-    public void setSearchInfo(final FlaecheSearchInfo searchInfo) {
-        this.searchInfo = searchInfo;
+    public void setConfiguration(final Configuration searchConfiguration) {
+        this.configuration = searchConfiguration;
     }
 
     @Override
-    public void setSearchInfo(final Object searchInfo) {
-        if (searchInfo instanceof FlaecheSearchInfo) {
-            this.searchInfo = (FlaecheSearchInfo)searchInfo;
-        }
+    public void setConfiguration(final Object searchConfiguration) {
+        this.configuration = (searchConfiguration instanceof Configuration) ? (Configuration)searchConfiguration : null;
     }
 
     /**
@@ -159,8 +157,8 @@ public class AlboFlaecheSearch extends AbstractCidsServerSearch implements MetaO
      */
     @Override
     public String createQuery() {
-        final FlaecheSearchInfo searchInfo = getSearchInfo();
-        if (searchInfo != null) {
+        final Configuration configuration = getConfiguration();
+        if (configuration != null) {
             final String buffer = SearchProperties.getInstance().getIntersectsBuffer();
             final List<String> leftJoins = new ArrayList<>();
             final Collection<String> wheres = new ArrayList<>();
@@ -169,39 +167,39 @@ public class AlboFlaecheSearch extends AbstractCidsServerSearch implements MetaO
 
             leftJoins.add("albo_vorgang_flaeche AS arr ON flaeche.id = arr.fk_flaeche");
 
-            if ((searchInfo.getErhebungsNummer() != null) && !searchInfo.getErhebungsNummer().isEmpty()) {
+            if ((configuration.getErhebungsNummer() != null) && !configuration.getErhebungsNummer().isEmpty()) {
                 wheresMain.add(String.format(
                         "flaeche.erhebungsnummer ILIKE '%%%s%%'",
-                        searchInfo.getErhebungsNummer()));
+                        configuration.getErhebungsNummer()));
             }
 
-            if ((searchInfo.getVorgangSchluessel() != null) && !searchInfo.getVorgangSchluessel().isEmpty()) {
+            if ((configuration.getVorgangSchluessel() != null) && !configuration.getVorgangSchluessel().isEmpty()) {
                 leftJoins.add("albo_vorgang AS vorgang ON vorgang.arr_flaechen = arr.vorgang_reference");
-                wheresMain.add(String.format("vorgang.schluessel LIKE '%%%s%%'", searchInfo.getVorgangSchluessel()));
+                wheresMain.add(String.format("vorgang.schluessel LIKE '%%%s%%'", configuration.getVorgangSchluessel()));
             }
 
-            if ((searchInfo.getStatusSchluessel() != null) && !searchInfo.getStatusSchluessel().isEmpty()) {
+            if ((configuration.getStatusSchluessel() != null) && !configuration.getStatusSchluessel().isEmpty()) {
                 leftJoins.add("albo_flaechenstatus AS status ON status.id = flaeche.fk_status");
-                wheresMain.add(String.format("status.schluessel LIKE '%s'", searchInfo.getStatusSchluessel()));
+                wheresMain.add(String.format("status.schluessel LIKE '%s'", configuration.getStatusSchluessel()));
             }
 
-            if ((searchInfo.getTypSchluessel() != null) && !searchInfo.getTypSchluessel().isEmpty()) {
+            if ((configuration.getTypSchluessel() != null) && !configuration.getTypSchluessel().isEmpty()) {
                 leftJoins.add("albo_flaechentyp AS typ ON typ.id = flaeche.fk_typ");
-                wheresMain.add(String.format("typ.schluessel LIKE '%s'", searchInfo.getTypSchluessel()));
+                wheresMain.add(String.format("typ.schluessel LIKE '%s'", configuration.getTypSchluessel()));
             }
 
-            if ((searchInfo.getZuordnungSchluessel() != null) && !searchInfo.getZuordnungSchluessel().isEmpty()) {
+            if ((configuration.getZuordnungSchluessel() != null) && !configuration.getZuordnungSchluessel().isEmpty()) {
                 leftJoins.add("albo_flaechenzuordnung AS zuordnung ON zuordnung.id = flaeche.fk_zuordnung");
-                wheresMain.add(String.format("zuordnung.schluessel LIKE '%s'", searchInfo.getZuordnungSchluessel()));
+                wheresMain.add(String.format("zuordnung.schluessel LIKE '%s'", configuration.getZuordnungSchluessel()));
             }
 
-            if (searchInfo.getLoeschen() != null) {
-                wheresMain.add(String.format("flaeche.loeschen = %s", searchInfo.getLoeschen() ? "TRUE" : "FALSE"));
+            if (configuration.getLoeschen() != null) {
+                wheresMain.add(String.format("flaeche.loeschen = %s", configuration.getLoeschen() ? "TRUE" : "FALSE"));
             }
 
-            if (searchInfo.getArtInfos() != null) {
+            if (configuration.getArtInfos() != null) {
                 int artCount = 0;
-                for (final ArtInfo artInfo : searchInfo.getArtInfos()) {
+                for (final ArtInfo artInfo : configuration.getArtInfos()) {
                     final String artSchluessel = (artInfo != null) ? artInfo.getFlaechenartSchluessel() : null;
                     final Collection<String> subAndWheres = new ArrayList<>();
                     if (artSchluessel != null) {
@@ -353,7 +351,7 @@ public class AlboFlaecheSearch extends AbstractCidsServerSearch implements MetaO
             }
 
             if (!wheresMain.isEmpty()) {
-                switch (searchInfo.getSearchModeMain()) {
+                switch (configuration.getSearchModeMain()) {
                     case AND: {
                         wheres.add(String.format("(%s)", String.join(" AND ", wheresMain)));
                     }
@@ -365,7 +363,7 @@ public class AlboFlaecheSearch extends AbstractCidsServerSearch implements MetaO
             }
 
             if (!wheresArt.isEmpty()) {
-                switch (searchInfo.getSearchModeArt()) {
+                switch (configuration.getSearchModeArt()) {
                     case AND: {
                         wheres.add(String.format("(%s)", String.join(" AND ", wheresArt)));
                     }
@@ -434,7 +432,7 @@ public class AlboFlaecheSearch extends AbstractCidsServerSearch implements MetaO
         getterVisibility = JsonAutoDetect.Visibility.NONE,
         setterVisibility = JsonAutoDetect.Visibility.NONE
     )
-    public static class FlaecheSearchInfo extends StorableSearch.Info {
+    public static class Configuration extends StorableSearch.Configuration {
 
         //~ Instance fields ----------------------------------------------------
 
@@ -462,7 +460,7 @@ public class AlboFlaecheSearch extends AbstractCidsServerSearch implements MetaO
         getterVisibility = JsonAutoDetect.Visibility.NONE,
         setterVisibility = JsonAutoDetect.Visibility.NONE
     )
-    public abstract static class ArtInfo extends StorableSearch.Info {
+    public abstract static class ArtInfo extends StorableSearch.Configuration {
 
         //~ Instance fields ----------------------------------------------------
 
