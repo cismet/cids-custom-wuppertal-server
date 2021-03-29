@@ -11,6 +11,9 @@ import Sirius.server.middleware.interfaces.domainserver.ActionService;
 import Sirius.server.middleware.interfaces.domainserver.MetaService;
 import Sirius.server.middleware.types.MetaObjectNode;
 
+import com.fasterxml.jackson.annotation.JsonAutoDetect;
+import com.fasterxml.jackson.annotation.JsonProperty;
+
 import com.vividsolutions.jts.geom.Geometry;
 
 import lombok.Getter;
@@ -50,6 +53,7 @@ import de.cismet.connectioncontext.ConnectionContextStore;
  */
 public class PotenzialflaecheSearch extends AbstractCidsServerSearch implements RestApiCidsServerSearch,
     MetaObjectNodeServerSearch,
+    StorableSearch<PotenzialflaecheSearch.Configuration>,
     ConnectionContextStore {
 
     //~ Static fields/initializers ---------------------------------------------
@@ -74,12 +78,9 @@ public class PotenzialflaecheSearch extends AbstractCidsServerSearch implements 
     //~ Instance fields --------------------------------------------------------
 
     @Getter @Setter private SearchMode searchMode = SearchMode.AND;
-    @Getter @Setter private String nummer = null;
-    @Getter @Setter private Integer kampagneId = null;
-    @Getter @Setter private String bezeichnung = null;
+    @Getter private Configuration configuration;
     @Getter @Setter private Geometry geom = null;
     @Getter private final SearchInfo searchInfo;
-
     @Getter private ConnectionContext connectionContext = ConnectionContext.createDummy();
 
     //~ Constructors -----------------------------------------------------------
@@ -105,22 +106,16 @@ public class PotenzialflaecheSearch extends AbstractCidsServerSearch implements 
     /**
      * Creates a new PotenzialflaecheSearch object.
      *
-     * @param  searchMode   DOCUMENT ME!
-     * @param  nummer       DOCUMENT ME!
-     * @param  kampagneId   DOCUMENT ME!
-     * @param  bezeichnung  DOCUMENT ME!
-     * @param  geom         DOCUMENT ME!
+     * @param  searchMode           DOCUMENT ME!
+     * @param  searchConfiguration  DOCUMENT ME!
+     * @param  geom                 DOCUMENT ME!
      */
     public PotenzialflaecheSearch(final SearchMode searchMode,
-            final String nummer,
-            final Integer kampagneId,
-            final String bezeichnung,
+            final Configuration searchConfiguration,
             final Geometry geom) {
         this();
         this.searchMode = searchMode;
-        this.nummer = nummer;
-        this.kampagneId = kampagneId;
-        this.bezeichnung = bezeichnung;
+        this.configuration = searchConfiguration;
         this.geom = geom;
     }
 
@@ -144,66 +139,7 @@ public class PotenzialflaecheSearch extends AbstractCidsServerSearch implements 
                         WundaBlauServerResources.POTENZIALFLAECHEN_PROPERTIES.getValue(),
                         getConnectionContext())));
 
-            final Collection<String> wheres = new ArrayList<>();
-            switch (searchMode) {
-                case AND: {
-                    wheres.add("TRUE");
-                    break;
-                }
-                case OR: {
-                    wheres.add("FALSE");
-                    break;
-                }
-                default:
-            }
-            if (nummer != null) {
-                wheres.add("pf_potenzialflaeche.nummer ILIKE '%" + nummer + "%'");
-            }
-            if (bezeichnung != null) {
-                wheres.add("pf_potenzialflaeche.bezeichnung ILIKE '%" + bezeichnung + "%'");
-            }
-            if (kampagneId != null) {
-                wheres.add("kampagne = " + kampagneId + "");
-            }
-
-            final String geomCondition;
-            if (geom != null) {
-                final String geomString = PostGisGeometryFactory.getPostGisCompliantDbString(geom);
-                geomCondition = "(geom.geo_field && GeometryFromText('" + geomString + "') AND intersects("
-                            + "st_buffer(geo_field, " + INTERSECTS_BUFFER + "),"
-                            + "GeometryFromText('"
-                            + geomString
-                            + "')))";
-            } else {
-                geomCondition = null;
-            }
-            final String where;
-            switch (searchMode) {
-                case AND: {
-                    if (geomCondition != null) {
-                        wheres.add(geomCondition);
-                    }
-                    where = "WHERE " + String.join(" AND ", wheres);
-                    break;
-                }
-                case OR: {
-                    where = "WHERE " + String.join(" OR ", wheres)
-                                + ((geomCondition != null) ? (" AND " + geomCondition) : "");
-                    break;
-                }
-                default: {
-                    where = ((geomCondition != null) ? ("WHERE " + geomCondition) : "");
-                    break;
-                }
-            }
-            final String query = "SELECT \n"
-                        + "	(SELECT id FROM cs_class WHERE table_name ILIKE 'pf_potenzialflaeche') AS class_id, "
-                        + "	pf_potenzialflaeche.id AS object_id, "
-                        + "	pf_potenzialflaeche.bezeichnung AS object_name "
-                        + "FROM pf_potenzialflaeche "
-                        + "LEFT JOIN pf_kampagne ON pf_potenzialflaeche.kampagne = pf_kampagne.id "
-                        + ((geomCondition != null) ? "LEFT JOIN geom ON pf_potenzialflaeche.geometrie = geom.id " : "")
-                        + where;
+            final String query = createQuery();
 
             if (query != null) {
                 final MetaService ms = (MetaService)getActiveLocalServers().get("WUNDA_BLAU");
@@ -225,7 +161,147 @@ public class PotenzialflaecheSearch extends AbstractCidsServerSearch implements 
         }
     }
 
+    @Override
+    public String createQuery() {
+        final String nummer = getConfiguration().getNummer();
+        final String bezeichnung = getConfiguration().getBezeichnung();
+        final Integer kampagneId = getConfiguration().getKampagneId();
+        final Collection<String> wheres = new ArrayList<>();
+        switch (searchMode) {
+            case AND: {
+                wheres.add("TRUE");
+                break;
+            }
+            case OR: {
+                wheres.add("FALSE");
+                break;
+            }
+            default:
+        }
+
+        if (nummer != null) {
+            wheres.add(String.format("pf_potenzialflaeche.nummer ILIKE '%%%s%%'", nummer));
+        }
+        if (bezeichnung != null) {
+            wheres.add(String.format("pf_potenzialflaeche.bezeichnung ILIKE '%%%s%%'", bezeichnung));
+        }
+        if (kampagneId != null) {
+            wheres.add(String.format("kampagne = %d", kampagneId));
+        }
+
+        final String geomCondition;
+        if (geom != null) {
+            final String geomString = PostGisGeometryFactory.getPostGisCompliantDbString(geom);
+            geomCondition = String.format("(geom.geo_field && GeometryFromText('%1$s') AND intersects("
+                            + "st_buffer(geo_field, %2$s),"
+                            + "GeometryFromText('%1$s')))",
+                    geomString,
+                    INTERSECTS_BUFFER);
+        } else {
+            geomCondition = null;
+        }
+        final String where;
+        switch (searchMode) {
+            case AND: {
+                if (geomCondition != null) {
+                    wheres.add(geomCondition);
+                }
+                where = "WHERE " + String.join(" AND ", wheres);
+                break;
+            }
+            case OR: {
+                where = "WHERE " + String.join(" OR ", wheres)
+                            + ((geomCondition != null) ? String.format(" AND %s", geomCondition) : "");
+                break;
+            }
+            default: {
+                where = ((geomCondition != null) ? String.format("WHERE %s", geomCondition) : "");
+                break;
+            }
+        }
+        final String query = String.format(""
+                        + "SELECT "
+                        + "	(SELECT id FROM cs_class WHERE table_name ILIKE 'pf_potenzialflaeche') AS class_id, "
+                        + "	pf_potenzialflaeche.id AS object_id, "
+                        + "	pf_potenzialflaeche.bezeichnung AS object_name "
+                        + "FROM pf_potenzialflaeche "
+                        + "LEFT JOIN pf_kampagne ON pf_potenzialflaeche.kampagne = pf_kampagne.id "
+                        + "%s "
+                        + "%s "
+                        + where,
+                (geomCondition != null) ? "LEFT JOIN geom ON pf_potenzialflaeche.geometrie = geom.id " : "",
+                where);
+        return query;
+    }
+
+    @Override
+    public void setConfiguration(final Object searchConfiguration) {
+        this.configuration = (searchConfiguration instanceof Configuration) ? (Configuration)searchConfiguration : null;
+    }
+
+    @Override
+    public void setConfiguration(final Configuration searchConfiguration) {
+        this.configuration = searchConfiguration;
+    }
+
     //~ Inner Classes ----------------------------------------------------------
+
+    /**
+     * DOCUMENT ME!
+     *
+     * @version  $Revision$, $Date$
+     */
+    @Getter
+    @Setter
+    @JsonAutoDetect(
+        fieldVisibility = JsonAutoDetect.Visibility.NONE,
+        isGetterVisibility = JsonAutoDetect.Visibility.NONE,
+        getterVisibility = JsonAutoDetect.Visibility.NONE,
+        setterVisibility = JsonAutoDetect.Visibility.NONE
+    )
+    public static class Configuration extends StorableSearch.Configuration {
+
+        //~ Instance fields ----------------------------------------------------
+
+        @JsonProperty private String nummer;
+        @JsonProperty private String bezeichnung;
+        @JsonProperty private Integer kampagneId;
+
+        @JsonProperty private SearchMode searchModeMain = SearchMode.AND;
+        @JsonProperty private SearchMode searchModeArt = SearchMode.AND;
+        @JsonProperty private Collection<ExtratInfo> extraInfos;
+    }
+
+    /**
+     * DOCUMENT ME!
+     *
+     * @version  $Revision$, $Date$
+     */
+    @Getter
+    @Setter
+    @JsonAutoDetect(
+        fieldVisibility = JsonAutoDetect.Visibility.NONE,
+        isGetterVisibility = JsonAutoDetect.Visibility.NONE,
+        getterVisibility = JsonAutoDetect.Visibility.NONE,
+        setterVisibility = JsonAutoDetect.Visibility.NONE
+    )
+    public abstract static class ExtratInfo extends StorableSearch.Configuration {
+
+        //~ Instance fields ----------------------------------------------------
+
+        @JsonProperty private final String flaechenartSchluessel;
+
+        //~ Constructors -------------------------------------------------------
+
+        /**
+         * Creates a new ArtInfo object.
+         *
+         * @param  flaechenartSchluessel  DOCUMENT ME!
+         */
+        protected ExtratInfo(final String flaechenartSchluessel) {
+            this.flaechenartSchluessel = flaechenartSchluessel;
+        }
+    }
 
     /**
      * DOCUMENT ME!

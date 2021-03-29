@@ -24,7 +24,7 @@ import java.io.Serializable;
  * @author   jruiz
  * @version  $Revision$, $Date$
  */
-public interface StorableSearch<I extends StorableSearch.Info> {
+public interface StorableSearch<I extends StorableSearch.Configuration> {
 
     //~ Methods ----------------------------------------------------------------
 
@@ -40,21 +40,21 @@ public interface StorableSearch<I extends StorableSearch.Info> {
      *
      * @return  DOCUMENT ME!
      */
-    I getSearchInfo();
+    I getConfiguration();
 
     /**
      * DOCUMENT ME!
      *
-     * @param  searchInfo  DOCUMENT ME!
+     * @param  configuration  DOCUMENT ME!
      */
-    void setSearchInfo(final I searchInfo);
+    void setConfiguration(final I configuration);
 
     /**
      * DOCUMENT ME!
      *
-     * @param  searchInfo  DOCUMENT ME!
+     * @param  configuration  DOCUMENT ME!
      */
-    void setSearchInfo(final Object searchInfo); // jalopy wants this method. workaround
+    void setConfiguration(final Object configuration); // jalopy wants this method. workaround
 
     //~ Inner Classes ----------------------------------------------------------
 
@@ -69,6 +69,6 @@ public interface StorableSearch<I extends StorableSearch.Info> {
         getterVisibility = JsonAutoDetect.Visibility.NONE,
         setterVisibility = JsonAutoDetect.Visibility.NONE
     )
-    public abstract static class Info implements Serializable {
+    public abstract static class Configuration implements Serializable {
     }
 }
