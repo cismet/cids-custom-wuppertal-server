@@ -96,7 +96,7 @@ public class PotenzialflaecheReportServerAction extends StampedJasperReportServe
         QUELLE(new SingleFieldReportProperty("quelle")), STAND(new SingleFieldReportProperty("stand")),
         LAGEBEWERTUNG_VERKEHR(new SingleFieldReportProperty("fk_lagebewertung_verkehr")),
         SIEDLUNGSRAEUMLICHE_LAGE(new SingleFieldReportProperty("fk_siedlungsraeumliche_lage")),
-        VORHANDENE_BEBAUUNG(new SingleFieldReportProperty("vorhandene_bebauung")),
+        VORHANDENE_BEBAUUNG(new SingleFieldReportProperty("bestand_bebauung")),
         TOPOGRAFIE(new SingleFieldReportProperty("topografie")), HANG(new SingleFieldReportProperty("fk_ausrichtung")),
         VERWERTBARKEIT(new SingleFieldReportProperty("fk_verwertbarkeit")),
         VERFUEGBBARKEIT(new SingleFieldReportProperty("verfuegbarkeit")),
