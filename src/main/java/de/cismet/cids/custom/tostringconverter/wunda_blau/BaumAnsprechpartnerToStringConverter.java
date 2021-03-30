@@ -24,7 +24,8 @@ public class BaumAnsprechpartnerToStringConverter extends CustomToStringConverte
 
     //~ Static fields/initializers ---------------------------------------------
 
-    public static final String FIELD__NAME = "name"; // baum_ansprechpartner
+    public static final String FIELD__NAME = "name";     // baum_ansprechpartner
+    public static final String FIELD__MAIL = "mail";     // baum_ansprechpartner
     public static final String FIELD__BEM = "bemerkung"; // baum_ansprechpartner
     public static final String FIELD__ID = "id";         // baum_ansprechpartner
 
@@ -32,16 +33,20 @@ public class BaumAnsprechpartnerToStringConverter extends CustomToStringConverte
 
     @Override
     public String createString() {
+        String myName = String.valueOf(cidsBean.getProperty(FIELD__NAME));
         final String myid = String.valueOf(cidsBean.getProperty(FIELD__ID));
         if ("-1".equals(myid)) {
             return "--";
         } else {
-            final String myBem = String.valueOf(cidsBean.getProperty(FIELD__BEM));
-            if (myBem.trim().isEmpty()){
-                return String.valueOf(cidsBean.getProperty(FIELD__NAME));
-            } else {
-                return String.valueOf(cidsBean.getProperty(FIELD__NAME)) + ", " + myBem.trim();
+            final String myMail = String.valueOf(cidsBean.getProperty(FIELD__MAIL));
+            if (!myMail.trim().isEmpty()){
+                myName = myName + ", " + myMail.trim();
             }
+            final String myBem = String.valueOf(cidsBean.getProperty(FIELD__BEM));
+            if (!myBem.trim().isEmpty()){
+                myName = myName + ", " + myBem.trim();
+            } 
+            return myName;
         }
     }
 }
