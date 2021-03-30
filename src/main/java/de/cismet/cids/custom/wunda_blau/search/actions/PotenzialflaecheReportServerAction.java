@@ -50,6 +50,7 @@ import de.cismet.cids.dynamics.CidsBean;
 
 import de.cismet.cids.server.actions.ServerAction;
 import de.cismet.cids.server.actions.ServerActionParameter;
+import de.cismet.cids.server.actions.UserAwareServerAction;
 import de.cismet.cids.server.search.MetaObjectNodeServerSearch;
 
 import de.cismet.cids.utils.serverresources.JasperReportServerResource;
@@ -66,7 +67,8 @@ import de.cismet.connectioncontext.ConnectionContextStore;
  */
 @org.openide.util.lookup.ServiceProvider(service = ServerAction.class)
 public class PotenzialflaecheReportServerAction extends StampedJasperReportServerAction
-        implements ConnectionContextStore {
+        implements ConnectionContextStore,
+            UserAwareServerAction {
 
     //~ Static fields/initializers ---------------------------------------------
 
@@ -94,7 +96,7 @@ public class PotenzialflaecheReportServerAction extends StampedJasperReportServe
         QUELLE(new SingleFieldReportProperty("quelle")), STAND(new SingleFieldReportProperty("stand")),
         LAGEBEWERTUNG_VERKEHR(new SingleFieldReportProperty("fk_lagebewertung_verkehr")),
         SIEDLUNGSRAEUMLICHE_LAGE(new SingleFieldReportProperty("fk_siedlungsraeumliche_lage")),
-        VORHANDENE_BEBAUUNG(new SingleFieldReportProperty("vorhandene_bebauung")),
+        VORHANDENE_BEBAUUNG(new SingleFieldReportProperty("bestand_bebauung")),
         TOPOGRAFIE(new SingleFieldReportProperty("topografie")), HANG(new SingleFieldReportProperty("fk_ausrichtung")),
         VERWERTBARKEIT(new SingleFieldReportProperty("fk_verwertbarkeit")),
         VERFUEGBBARKEIT(new SingleFieldReportProperty("verfuegbarkeit")),
@@ -110,7 +112,6 @@ public class PotenzialflaecheReportServerAction extends StampedJasperReportServe
         BISHERIGE_NUTZUNG(new SingleFieldReportProperty("bisherige_nutzung")),
         EIGENTUEMER(new SingleFieldReportProperty("arr_eigentuemer")),
         KLIMAINFORMATIONEN(new SingleFieldReportProperty("fk_klimainformationen")),
-        BAULUECKENART(new SingleFieldReportProperty("fk_baulueckenart")),
         VERSIEGELUNG(new SingleFieldReportProperty("fk_versiegelung")),
         BAUORDNUNGSRECHT_GENEHMIGUNG(new SingleFieldReportProperty("fk_bauordnungsrecht_genehmigung")),
         BAUORDNUNGSRECHT_BAULAST(new SingleFieldReportProperty("fk_bauordnungsrecht_baulast")),
@@ -121,6 +122,7 @@ public class PotenzialflaecheReportServerAction extends StampedJasperReportServe
         BRACHFLAECHENKATEGORIE(new MultifieldReportProperty("arr_brachflaechen")),
         UMGEBUNGSNUTZUNG(new MultifieldReportProperty("umgebungsnutzung")),
         EMPFOHLENE_NUTZUNGEN(new MultifieldReportProperty("arr_empfohlene_nutzungen")),
+        EMPFOHLENE_NUTZUNGEN_WOHNEN(new MultifieldReportProperty("arr_empfohlene_nutzungen_wohnen")),
         REGIONALPLAN(new MultifieldReportProperty("regionalplan")),
         RESTRIKTIONEN(new MultifieldReportProperty("arr_restriktionen")),
         HANDLUNGSDRUCK(new MultifieldReportProperty("handlungsdruck")),
@@ -270,7 +272,7 @@ public class PotenzialflaecheReportServerAction extends StampedJasperReportServe
 
         //~ Enum constants -----------------------------------------------------
 
-        IMAGE_ORTHO, IMAGE_DGK
+        IMAGE_ORTHO, IMAGE_DGK, TEMPLATE
     }
 
     //~ Instance fields --------------------------------------------------------
@@ -280,6 +282,7 @@ public class PotenzialflaecheReportServerAction extends StampedJasperReportServe
     @Getter private BufferedImage orthoImage;
     @Getter private BufferedImage dgkImage;
     @Getter private CidsBean flaecheBean;
+    @Getter private CidsBean templateBean;
 
     //~ Methods ----------------------------------------------------------------
 
@@ -293,6 +296,7 @@ public class PotenzialflaecheReportServerAction extends StampedJasperReportServe
         final MetaObjectNode flaecheMon = (MetaObjectNode)body;
         byte[] dgkImageBytes = null;
         byte[] orthoImageBytes = null;
+        MetaObjectNode templateMon = null;
 
         try {
             if (flaecheMon != null) {
@@ -302,6 +306,8 @@ public class PotenzialflaecheReportServerAction extends StampedJasperReportServe
                             dgkImageBytes = (byte[])sap.getValue();
                         } else if (sap.getKey().equals(Parameter.IMAGE_ORTHO.toString())) {
                             orthoImageBytes = (byte[])sap.getValue();
+                        } else if (sap.getKey().equals(Parameter.TEMPLATE.toString())) {
+                            templateMon = (MetaObjectNode)sap.getValue();
                         }
                     }
                 }
@@ -310,25 +316,68 @@ public class PotenzialflaecheReportServerAction extends StampedJasperReportServe
                             flaecheMon.getObjectId(),
                             flaecheMon.getClassId(),
                             getConnectionContext()).getBean();
+                templateBean = (templateMon != null)
+                    ? getMetaService().getMetaObject(
+                                getUser(),
+                                templateMon.getObjectId(),
+                                templateMon.getClassId(),
+                                getConnectionContext()).getBean() : null;
 
-                final String template = (String)flaecheBean.getProperty("kampagne.steckbrieftemplate.link");
-                if (BEAN_RESOURCE_MAP.get(template) == null) {
-                    BEAN_RESOURCE_MAP.put(template, new JasperReportServerResource(template));
+                final CidsBean kampagne = (CidsBean)flaecheBean.getProperty("kampagne");
+                CidsBean selectedTemplateBean = null;
+                if (templateBean != null) {
+                    selectedTemplateBean = templateBean;
+                } else {
+                    if (kampagne != null) {
+                        final Collection<CidsBean> templateBeans = kampagne.getBeanCollectionProperty(
+                                "n_steckbrieftemplates");
+                        selectedTemplateBean = ((templateBeans != null) && !templateBeans.isEmpty())
+                            ? templateBeans.iterator().next() : null;
+                        final Integer mainSteckbriefId = (Integer)kampagne.getProperty("haupt_steckbrieftemplate_id");
+                        if (mainSteckbriefId != null) {
+                            for (final CidsBean templateBean : templateBeans) {
+                                if ((templateBean != null)
+                                            && (mainSteckbriefId == templateBean.getMetaObject().getId())) {
+                                    selectedTemplateBean = templateBean;
+                                    break;
+                                }
+                            }
+                        }
+                    }
                 }
 
-                orthoImage = (orthoImageBytes != null) ? ImageIO.read(new ByteArrayInputStream(orthoImageBytes)) : null;
-                dgkImage = (dgkImageBytes != null) ? ImageIO.read(new ByteArrayInputStream(dgkImageBytes)) : null;
+                if (selectedTemplateBean != null) {
+                    final String confAttr = (String)selectedTemplateBean.getProperty("conf_attr");
+                    if ((confAttr != null) && !confAttr.trim().isEmpty()
+                                && (DomainServerImpl.getServerInstance().getConfigAttr(
+                                        getUser(),
+                                        confAttr,
+                                        getConnectionContext()) == null)) {
+                        throw new Exception("kein Recht an Konfigurationsattribut " + confAttr);
+                    }
 
-                final JRBeanCollectionDataSource dataSource = new JRBeanCollectionDataSource(Arrays.asList(
-                            flaecheBean));
-                final Map<String, Object> parameters = generateParams();
-                parameters.put(
-                    "SUBREPORT_DIR",
-                    DomainServerImpl.getServerProperties().getServerResourcesBasePath()
-                            + "/");
-                synchronized (this) {
-                    CURRENT_TEMPLATE = template;
-                    return generateReport(parameters, dataSource);
+                    final String template = (String)selectedTemplateBean.getProperty("link");
+                    if (BEAN_RESOURCE_MAP.get(template) == null) {
+                        BEAN_RESOURCE_MAP.put(template, new JasperReportServerResource(template));
+                    }
+
+                    orthoImage = (orthoImageBytes != null) ? ImageIO.read(new ByteArrayInputStream(orthoImageBytes))
+                                                           : null;
+                    dgkImage = (dgkImageBytes != null) ? ImageIO.read(new ByteArrayInputStream(dgkImageBytes)) : null;
+
+                    final JRBeanCollectionDataSource dataSource = new JRBeanCollectionDataSource(Arrays.asList(
+                                flaecheBean));
+                    final Map<String, Object> parameters = generateParams();
+                    parameters.put(
+                        "SUBREPORT_DIR",
+                        DomainServerImpl.getServerProperties().getServerResourcesBasePath()
+                                + "/");
+                    synchronized (this) {
+                        CURRENT_TEMPLATE = template;
+                        return generateReport(parameters, dataSource);
+                    }
+                } else {
+                    throw new Exception("no template found");
                 }
             } else {
                 return null;
@@ -519,29 +568,34 @@ public class PotenzialflaecheReportServerAction extends StampedJasperReportServe
         @Override
         protected String calculateProperty(final PotenzialflaecheReportServerAction serverAction) {
             final MetaObjectNodeServerSearch serverSearch = createMonServerSearch(serverAction);
-            serverSearch.setUser(serverAction.getUser());
-            if (serverSearch instanceof ConnectionContextStore) {
-                ((ConnectionContextStore)serverSearch).initWithConnectionContext(serverAction.getConnectionContext());
-            }
-            final Map localServers = new HashMap<>();
-            localServers.put("WUNDA_BLAU", serverAction.getMetaService());
-            serverSearch.setActiveLocalServers(localServers);
-            final Collection<String> names = new ArrayList<>();
-            try {
-                for (final MetaObjectNode mon : serverSearch.performServerSearch()) {
-                    final MetaObject mo = serverAction.getMetaService()
-                                .getMetaObject(
-                                    serverAction.getUser(),
-                                    mon.getObjectId(),
-                                    mon.getClassId(),
-                                    serverAction.getConnectionContext());
-                    names.add((String)mo.getBean().getProperty("name"));
+            if (serverSearch != null) {
+                serverSearch.setUser(serverAction.getUser());
+                if (serverSearch instanceof ConnectionContextStore) {
+                    ((ConnectionContextStore)serverSearch).initWithConnectionContext(
+                        serverAction.getConnectionContext());
                 }
-            } catch (final Exception ex) {
-                LOG.error(ex, ex);
+                final Map localServers = new HashMap<>();
+                localServers.put("WUNDA_BLAU", serverAction.getMetaService());
+                serverSearch.setActiveLocalServers(localServers);
+                final Collection<String> names = new ArrayList<>();
+                try {
+                    for (final MetaObjectNode mon : serverSearch.performServerSearch()) {
+                        final MetaObject mo = serverAction.getMetaService()
+                                    .getMetaObject(
+                                        serverAction.getUser(),
+                                        mon.getObjectId(),
+                                        mon.getClassId(),
+                                        serverAction.getConnectionContext());
+                        names.add((String)mo.getBean().getProperty("name"));
+                    }
+                } catch (final Exception ex) {
+                    LOG.error(ex, ex);
+                    return null;
+                }
+                return String.join(", ", names);
+            } else {
                 return null;
             }
-            return String.join(", ", names);
         }
     }
 }
