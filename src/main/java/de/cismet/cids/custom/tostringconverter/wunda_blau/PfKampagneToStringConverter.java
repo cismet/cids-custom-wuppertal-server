@@ -19,7 +19,7 @@ import de.cismet.cids.tools.CustomToStringConverter;
  * @author   srichter
  * @version  $Revision$, $Date$
  */
-public class PfPotenzialFlaecheToStringConverter extends CustomToStringConverter {
+public class PfKampagneToStringConverter extends CustomToStringConverter {
 
     //~ Methods ----------------------------------------------------------------
 
