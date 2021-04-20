@@ -62,7 +62,7 @@ public class KitaDeletionProvider extends AbstractCustomDeletionProvider {
     }
 
     @Override
-    public void customDeleteMetaObject(final User user, final MetaObject metaObject) throws Exception {
+    public boolean customDeleteMetaObject(final User user, final MetaObject metaObject) throws Exception {
         if (metaObject != null) {
             final CidsBean kitaBean = metaObject.getBean();
 
@@ -97,5 +97,6 @@ public class KitaDeletionProvider extends AbstractCustomDeletionProvider {
                             + metaObject.getDebugString());
             }
         }
+        return true;
     }
 }

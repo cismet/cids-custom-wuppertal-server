@@ -110,7 +110,7 @@ public class PfSchluesseltabelleDeletionProvider extends AbstractCustomDeletionP
     }
 
     @Override
-    public void customDeleteMetaObject(final User user, final MetaObject metaObject) throws Exception {
+    public boolean customDeleteMetaObject(final User user, final MetaObject metaObject) throws Exception {
         if (metaObject != null) {
             if (metaObject.getMetaClass().getTableName().equalsIgnoreCase(TABLE_NAME)) {
                 throw new DeletionProviderClientException(SYSTEM_TABLE);
@@ -123,5 +123,6 @@ public class PfSchluesseltabelleDeletionProvider extends AbstractCustomDeletionP
                 throw new DeletionProviderClientException(STILL_USED);
             }
         }
+        return false;
     }
 }

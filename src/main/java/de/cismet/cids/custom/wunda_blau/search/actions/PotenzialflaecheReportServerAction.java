@@ -90,43 +90,82 @@ public class PotenzialflaecheReportServerAction extends StampedJasperReportServe
 
         //~ Enum constants -----------------------------------------------------
 
-        BEZEICHNUNG(new SingleFieldReportProperty("bezeichnung")), NUMMER(new SingleFieldReportProperty("nummer")),
-        BESCHREIBUNG_FLAECHE(new SingleFieldReportProperty("beschreibung_flaeche")),
-        NOTWENDIGE_MASSNAHMEN(new SingleFieldReportProperty("notwendige_massnahmen")),
-        QUELLE(new SingleFieldReportProperty("quelle")), STAND(new SingleFieldReportProperty("stand")),
-        LAGEBEWERTUNG_VERKEHR(new SingleFieldReportProperty("fk_lagebewertung_verkehr")),
-        SIEDLUNGSRAEUMLICHE_LAGE(new SingleFieldReportProperty("fk_siedlungsraeumliche_lage")),
-        VORHANDENE_BEBAUUNG(new SingleFieldReportProperty("bestand_bebauung")),
-        TOPOGRAFIE(new SingleFieldReportProperty("topografie")), HANG(new SingleFieldReportProperty("fk_ausrichtung")),
-        VERWERTBARKEIT(new SingleFieldReportProperty("fk_verwertbarkeit")),
-        VERFUEGBBARKEIT(new SingleFieldReportProperty("verfuegbarkeit")),
-        ENTWICKLUNGSAUSSSICHTEN(new SingleFieldReportProperty("fk_entwicklungsaussichten")),
-        ENTWICKLUNGSSTAND(new SingleFieldReportProperty("fk_entwicklungsstand")),
-        REVITALISIERUNG(new SingleFieldReportProperty("fk_revitalisierung")),
-        AEUSSERE_ERSCHLIESSUNG(new SingleFieldReportProperty("fk_aeussere_erschliessung")),
-        POTENZIALART(new SingleFieldReportProperty("fk_potenzialart")),
-        WOHNEINHEITEN(new SingleFieldReportProperty("fk_wohneinheiten")),
-        WOHNEINHEITEN_ANZAHL(new SingleFieldReportProperty("anzahl_wohneinheiten")),
-        JAHR_NUTZUNGSAUFGABE(new SingleFieldReportProperty("jahr_brachflaeche")),
-        OEPNV_ANBINDUNG(new SingleFieldReportProperty("fk_oepnv")),
-        BISHERIGE_NUTZUNG(new SingleFieldReportProperty("bisherige_nutzung")),
-        EIGENTUEMER(new SingleFieldReportProperty("arr_eigentuemer")),
-        KLIMAINFORMATIONEN(new SingleFieldReportProperty("fk_klimainformationen")),
-        VERSIEGELUNG(new SingleFieldReportProperty("fk_versiegelung")),
-        BAUORDNUNGSRECHT_GENEHMIGUNG(new SingleFieldReportProperty("fk_bauordnungsrecht_genehmigung")),
-        BAUORDNUNGSRECHT_BAULAST(new SingleFieldReportProperty("fk_bauordnungsrecht_baulast")),
-        FESTSETZUNGEN_BPLAN(new SingleFieldReportProperty("festsetzungen_bplan")),
-        FESTSETZUNGEN_BPLAN_STAND(new SingleFieldReportProperty("stand_festsetzungen_bplan")),
+        BEZEICHNUNG(new SimpleFieldReportProperty("bezeichnung", String.class.getCanonicalName())),
+        NUMMER(new SimpleFieldReportProperty("nummer", String.class.getCanonicalName())),
+        BESCHREIBUNG_FLAECHE(new SimpleFieldReportProperty("beschreibung_flaeche", String.class.getCanonicalName())),
+        NOTWENDIGE_MASSNAHMEN(new SimpleFieldReportProperty("notwendige_massnahmen", String.class.getCanonicalName())),
+        INTERNE_HINWEISE(new SimpleFieldReportProperty("interne_hinweise", String.class.getCanonicalName())),
+        QUELLE(new SimpleFieldReportProperty("quelle", String.class.getCanonicalName())),
+        WOHNEINHEITEN_ANZAHL(new SimpleFieldReportProperty("anzahl_wohneinheiten", Integer.class.getCanonicalName())),
+        FESTSETZUNGEN_BPLAN(new SimpleFieldReportProperty("festsetzungen_bplan", String.class.getCanonicalName())),
+        FESTSETZUNGEN_BPLAN_STAND(new SimpleFieldReportProperty(
+                "stand_festsetzungen_bplan",
+                Date.class.getCanonicalName())),
+        STAND(new SimpleFieldReportProperty("stand", Date.class.getCanonicalName())),
+        JAHR_NUTZUNGSAUFGABE(new SimpleFieldReportProperty("jahr_brachflaeche", Date.class.getCanonicalName())),
 
-        NAEHE_ZU(new MultifieldReportProperty("arr_naehen_zu")),
-        BRACHFLAECHENKATEGORIE(new MultifieldReportProperty("arr_brachflaechen")),
-        UMGEBUNGSNUTZUNG(new MultifieldReportProperty("umgebungsnutzung")),
-        EMPFOHLENE_NUTZUNGEN(new MultifieldReportProperty("arr_empfohlene_nutzungen")),
-        EMPFOHLENE_NUTZUNGEN_WOHNEN(new MultifieldReportProperty("arr_empfohlene_nutzungen_wohnen")),
-        REGIONALPLAN(new MultifieldReportProperty("regionalplan")),
-        RESTRIKTIONEN(new MultifieldReportProperty("arr_restriktionen")),
-        HANDLUNGSDRUCK(new MultifieldReportProperty("handlungsdruck")),
-        HANDLUNGSPRIORITAET(new MultifieldReportProperty("fk_handlungsprioritaet")),
+        KAMPAGNE(new KeytableReportProperty("kampagne", "pf_kampagne")),
+        LAGEBEWERTUNG_VERKEHR(new KeytableReportProperty("fk_lagebewertung_verkehr", "pf_lagebewertung_verkehr")),
+        SIEDLUNGSRAEUMLICHE_LAGE(new KeytableReportProperty(
+                "fk_siedlungsraeumliche_lage",
+                "pf_siedlungsraeumliche_lage")),
+        VORHANDENE_BEBAUUNG(new KeytableReportProperty("bestand_bebauung", "???")),
+        TOPOGRAFIE(new KeytableReportProperty("topografie", "pf_topografie")),
+        HANG(new KeytableReportProperty("fk_ausrichtung", "???")),
+        VERWERTBARKEIT(new KeytableReportProperty("fk_verwertbarkeit", "pf_verwertbarkeit")),
+        VERFUEGBBARKEIT(new KeytableReportProperty("verfuegbarkeit", "pf_verfuegbarkeit")),
+        ENTWICKLUNGSAUSSSICHTEN(new KeytableReportProperty("fk_entwicklungsaussichten", "pf_entwicklungsaussichten")),
+        ENTWICKLUNGSSTAND(new KeytableReportProperty("fk_entwicklungsstand", "pf_entwicklungsstand")),
+        REVITALISIERUNG(new KeytableReportProperty("fk_revitalisierung", "pf_revitalisierung")),
+        AEUSSERE_ERSCHLIESSUNG(new KeytableReportProperty("fk_aeussere_erschliessung", "pf_aeussere_erschliessung")),
+        POTENZIALART(new KeytableReportProperty("fk_potenzialart", "pf_potenzialart")),
+        KATEGORIE(new KeytableReportProperty("fk_kategorie", "pf_kategorie")),
+        WOHNEINHEITEN(new KeytableReportProperty("fk_wohneinheiten", "pf_wohneinheiten")),
+        OEPNV_ANBINDUNG(new KeytableReportProperty("fk_oepnv", "pf_oepnv")),
+        KLIMAINFORMATIONEN(new KeytableReportProperty("fk_klimainformationen", "pf_klimainformationen")),
+        VERSIEGELUNG(new KeytableReportProperty("fk_versiegelung", "pf_versiegelung")),
+        BAUORDNUNGSRECHT_GENEHMIGUNG(new KeytableReportProperty(
+                "fk_bauordnungsrecht_genehmigung",
+                "pf_bauordnungsrecht_genehmigung")),
+        BAUORDNUNGSRECHT_BAULAST(new KeytableReportProperty(
+                "fk_bauordnungsrecht_baulast",
+                "pf_bauordnungsrecht_baulast")),
+        HANDLUNGSDRUCK(new KeytableReportProperty("handlungsdruck", "pf_handlungsdruck")),
+        HANDLUNGSPRIORITAET(new KeytableReportProperty("fk_handlungsprioritaet", "pf_handlungsprioritaet")),
+
+        EIGENTUEMER(new MultiKeytableReportProperty(
+                "arr_eigentuemer",
+                "pf_eigentuemer_arr.fk_eigentuemer",
+                "pf_eigentuemer")),
+        BISHERIGE_NUTZUNG(new MultiKeytableReportProperty(
+                "bisherige_nutzung",
+                "pf_potenzialflaechen_bisherige_nutzung.nutzung",
+                "pf_nutzung")),
+        UMGEBUNGSNUTZUNG(new MultiKeytableReportProperty(
+                "umgebungsnutzung",
+                "pf_potenzialflaechen_umgebungsnutzung.nutzung",
+                "pf_nutzung")),
+        NAEHE_ZU(new MultiKeytableReportProperty("arr_naehen_zu", "pf_naehen_zu.fk_naehe_zu", "pf_naehe_zu")),
+        BRACHFLAECHENKATEGORIE(new MultiKeytableReportProperty(
+                "arr_brachflaechen",
+                "pf_brachflaechen.fk_brachflaeche",
+                "pf_brachflaeche")),
+        EMPFOHLENE_NUTZUNGEN(new MultiKeytableReportProperty(
+                "arr_empfohlene_nutzungen",
+                "pf_empfohlene_nutzungen.fk_empfohlene_nutzung",
+                "pf_empfohlene_nutzung")),
+        EMPFOHLENE_NUTZUNGEN_WOHNEN(new MultiKeytableReportProperty(
+                "arr_empfohlene_nutzungen_wohnen",
+                "pf_empfohlene_nutzungen_wohnen.fk_empfohlene_nutzung_wohnen",
+                "pf_empfohlene_nutzung_wohnen")),
+        REGIONALPLAN(new MultiKeytableReportProperty(
+                "regionalplan",
+                "pf_potenzialflaechen_pf_regionalplan.regionalplan",
+                "pf_regionalplan")),
+        RESTRIKTIONEN(new MultiKeytableReportProperty(
+                "arr_restriktionen",
+                "pf_restriktionen.fk_restriktion",
+                "pf_restriktion")),
 
         KARTE_ORTHO(new VirtualReportProperty() {
 
@@ -418,8 +457,9 @@ public class PotenzialflaecheReportServerAction extends StampedJasperReportServe
                 params.put(
                     parameterName,
                     ((VirtualReportProperty)reportProperty).calculateProperty(this));
-            } else if (reportProperty instanceof MultifieldReportProperty) {
-                final MultifieldReportProperty multiFieldReportProperty = (MultifieldReportProperty)reportProperty;
+            } else if (reportProperty instanceof MultiKeytableReportProperty) {
+                final MultiKeytableReportProperty multiFieldReportProperty = (MultiKeytableReportProperty)
+                    reportProperty;
                 final Collection beans = flaecheBean.getBeanCollectionProperty(multiFieldReportProperty.getPath());
                 if (beans != null) {
                     final Collection<String> strings = new ArrayList<>();
@@ -430,8 +470,8 @@ public class PotenzialflaecheReportServerAction extends StampedJasperReportServe
                     }
                     params.put(parameterName, String.join(", ", strings));
                 }
-            } else if (reportProperty instanceof SingleFieldReportProperty) {
-                final SingleFieldReportProperty fieldReportProperty = (SingleFieldReportProperty)reportProperty;
+            } else if (reportProperty instanceof PathReportProperty) {
+                final PathReportProperty fieldReportProperty = (PathReportProperty)reportProperty;
                 final Object object = flaecheBean.getProperty(fieldReportProperty.getPath());
                 final String value;
                 if (object == null) {
@@ -474,7 +514,7 @@ public class PotenzialflaecheReportServerAction extends StampedJasperReportServe
      * @version  $Revision$, $Date$
      */
     @Getter
-    public static class SingleFieldReportProperty extends ReportProperty {
+    public abstract static class PathReportProperty extends ReportProperty {
 
         //~ Instance fields ----------------------------------------------------
 
@@ -487,7 +527,7 @@ public class PotenzialflaecheReportServerAction extends StampedJasperReportServe
          *
          * @param  path  DOCUMENT ME!
          */
-        public SingleFieldReportProperty(final String path) {
+        public PathReportProperty(final String path) {
             this.path = path;
         }
     }
@@ -497,7 +537,11 @@ public class PotenzialflaecheReportServerAction extends StampedJasperReportServe
      *
      * @version  $Revision$, $Date$
      */
-    public static class MultifieldReportProperty extends SingleFieldReportProperty {
+    public static class SimpleFieldReportProperty extends PathReportProperty {
+
+        //~ Instance fields ----------------------------------------------------
+
+        @Getter private final String className;
 
         //~ Constructors -------------------------------------------------------
 
@@ -506,8 +550,81 @@ public class PotenzialflaecheReportServerAction extends StampedJasperReportServe
          *
          * @param  path  DOCUMENT ME!
          */
-        public MultifieldReportProperty(final String path) {
+        public SimpleFieldReportProperty(final String path) {
+            this(path, null);
+        }
+
+        /**
+         * Creates a new SinglefieldReportProperty object.
+         *
+         * @param  path       DOCUMENT ME!
+         * @param  className  DOCUMENT ME!
+         */
+        public SimpleFieldReportProperty(final String path, final String className) {
             super(path);
+
+            this.className = className;
+        }
+    }
+
+    /**
+     * DOCUMENT ME!
+     *
+     * @version  $Revision$, $Date$
+     */
+    public static class KeytableReportProperty extends PathReportProperty {
+
+        //~ Instance fields ----------------------------------------------------
+
+        @Getter private final String foreignTable;
+        @Getter private final String filterPath;
+
+        //~ Constructors -------------------------------------------------------
+
+        /**
+         * Creates a new SinglefieldReportProperty object.
+         *
+         * @param  bindingPath   DOCUMENT ME!
+         * @param  foreignTable  DOCUMENT ME!
+         */
+        public KeytableReportProperty(final String bindingPath, final String foreignTable) {
+            this(bindingPath, bindingPath, foreignTable);
+        }
+
+        /**
+         * Creates a new KeytableReportProperty object.
+         *
+         * @param  bindingPath   DOCUMENT ME!
+         * @param  filterPath    DOCUMENT ME!
+         * @param  foreignTable  DOCUMENT ME!
+         */
+        public KeytableReportProperty(final String bindingPath, final String filterPath, final String foreignTable) {
+            super(bindingPath);
+            this.foreignTable = foreignTable;
+            this.filterPath = filterPath;
+        }
+    }
+
+    /**
+     * DOCUMENT ME!
+     *
+     * @version  $Revision$, $Date$
+     */
+    public static class MultiKeytableReportProperty extends KeytableReportProperty {
+
+        //~ Constructors -------------------------------------------------------
+
+        /**
+         * Creates a new MultifieldReportProperty object.
+         *
+         * @param  bindingPath   DOCUMENT ME!
+         * @param  filterPath    DOCUMENT ME!
+         * @param  foreignTable  DOCUMENT ME!
+         */
+        public MultiKeytableReportProperty(final String bindingPath,
+                final String filterPath,
+                final String foreignTable) {
+            super(bindingPath, filterPath, foreignTable);
         }
     }
 
