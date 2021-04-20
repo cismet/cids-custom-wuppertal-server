@@ -58,6 +58,8 @@ public class BplaeneMonSearch extends AbstractCidsServerSearch implements Geomet
     @Getter private final SearchInfo searchInfo;
     @Getter private ConnectionContext connectionContext = ConnectionContext.createDummy();
 
+    private Double buffer;
+
     //~ Constructors -----------------------------------------------------------
 
     /**
@@ -103,7 +105,7 @@ public class BplaeneMonSearch extends AbstractCidsServerSearch implements Geomet
             if (geometry != null) {
                 final String geomString = PostGisGeometryFactory.getPostGisCompliantDbString(geometry);
                 geomCondition = "(geom.geo_field && GeometryFromText('" + geomString + "') AND intersects("
-                            + "st_buffer(geo_field, " + INTERSECTS_BUFFER + "),"
+                            + "st_buffer(geo_field, " + ((getBuffer() != null) ? getBuffer() : INTERSECTS_BUFFER) + "),"
                             + "GeometryFromText('"
                             + geomString
                             + "')))";
@@ -138,6 +140,16 @@ public class BplaeneMonSearch extends AbstractCidsServerSearch implements Geomet
             LOG.error("error while searching for Bplan object", ex);
             throw new RuntimeException(ex);
         }
+    }
+
+    @Override
+    public Double getBuffer() {
+        return buffer;
+    }
+
+    @Override
+    public void setBuffer(final Double buffer) {
+        this.buffer = buffer;
     }
 
     //~ Inner Classes ----------------------------------------------------------

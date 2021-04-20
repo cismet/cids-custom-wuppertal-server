@@ -29,6 +29,20 @@ public interface GeometrySearch {
      *
      * @return  DOCUMENT ME!
      */
+    Double getBuffer();
+
+    /**
+     * DOCUMENT ME!
+     *
+     * @param  buffer  DOCUMENT ME!
+     */
+    void setBuffer(final Double buffer);
+
+    /**
+     * DOCUMENT ME!
+     *
+     * @return  DOCUMENT ME!
+     */
     Geometry getGeometry();
     /**
      * DOCUMENT ME!
