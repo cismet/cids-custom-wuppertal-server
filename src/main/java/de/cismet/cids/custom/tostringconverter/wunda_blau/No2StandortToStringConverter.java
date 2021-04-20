@@ -25,18 +25,20 @@ public class No2StandortToStringConverter extends CustomToStringConverter {
 
     //~ Static fields/initializers ---------------------------------------------
 
-    public static final String FIELD__MP = "mp";                                // no2_standort
-    public static final String FIELD__STRASSE = "strasse";                      // no2_standort
-    public static final String FIELD__HNR = "hnr";                              // no2_standort
+    public static final String FIELD__MP = "mp";           // no2_standort
+    public static final String FIELD__STRASSE = "strasse"; // no2_standort
+    public static final String FIELD__HNR = "hnr";         // no2_standort
 
     //~ Methods ----------------------------------------------------------------
 
     @Override
     public String createString() {
-        if (cidsBean.getProperty(FIELD__HNR) != null){
-                return cidsBean.getProperty(FIELD__MP).toString() + "- " + cidsBean.getProperty(FIELD__STRASSE).toString() + " " + cidsBean.getProperty(FIELD__HNR);
-            }else {
-                return cidsBean.getProperty(FIELD__MP).toString() + "- " + cidsBean.getProperty(FIELD__STRASSE).toString();
-            }
+        if (cidsBean.getProperty(FIELD__HNR) != null) {
+            return cidsBean.getProperty(FIELD__MP).toString() + "- " + cidsBean.getProperty(FIELD__STRASSE)
+                        .toString() + " " + cidsBean.getProperty(FIELD__HNR);
+        } else {
+            return cidsBean.getProperty(FIELD__MP).toString() + "- " + cidsBean.getProperty(FIELD__STRASSE)
+                        .toString();
+        }
     }
 }
