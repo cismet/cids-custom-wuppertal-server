@@ -41,14 +41,14 @@ import de.cismet.connectioncontext.ConnectionContextStore;
  *
  * @version  $Revision$, $Date$
  */
-public class AlkisLandparcelGeometryMonSearch extends AbstractCidsServerSearch implements GeometrySearch,
+public class RpdKategorieMonSearch extends AbstractCidsServerSearch implements GeometrySearch,
     RestApiCidsServerSearch,
     MetaObjectNodeServerSearch,
     ConnectionContextStore {
 
     //~ Static fields/initializers ---------------------------------------------
 
-    private static final transient Logger LOG = Logger.getLogger(AlkisLandparcelGeometryMonSearch.class);
+    private static final transient Logger LOG = Logger.getLogger(RpdKategorieMonSearch.class);
     private static final String INTERSECTS_BUFFER = SearchProperties.getInstance().getIntersectsBuffer();
 
     //~ Instance fields --------------------------------------------------------
@@ -63,23 +63,23 @@ public class AlkisLandparcelGeometryMonSearch extends AbstractCidsServerSearch i
     //~ Constructors -----------------------------------------------------------
 
     /**
-     * Creates a new AlkisLandparcelGeometryMonSearch object.
+     * Creates a new WohnlagenKategorisierungSearch object.
      */
-    public AlkisLandparcelGeometryMonSearch() {
+    public RpdKategorieMonSearch() {
         this(null);
     }
 
     /**
-     * Creates a new AlkisLandparcelGeometryMonSearch object.
+     * Creates a new WohnlagenKategorisierungSearch object.
      *
      * @param  geometry  DOCUMENT ME!
      */
-    public AlkisLandparcelGeometryMonSearch(final Geometry geometry) {
+    public RpdKategorieMonSearch(final Geometry geometry) {
         this.geometry = geometry;
         this.searchInfo = new SearchInfo(
                 this.getClass().getName(),
                 this.getClass().getSimpleName(),
-                "Builtin Legacy Search to delegate the operation AlkisLandparcel to the cids Pure REST Search API.",
+                "Builtin Legacy Search to delegate the operation Wohnlagenkategorisierung to the cids Pure REST Search API.",
                 Arrays.asList(
                     new SearchParameterInfo[] {
                         new MySearchParameterInfo("searchFor", Type.STRING),
@@ -122,23 +122,22 @@ public class AlkisLandparcelGeometryMonSearch extends AbstractCidsServerSearch i
             }
             final String query = ""
                         + "SELECT "
-                        + "    (SELECT id FROM cs_class WHERE table_name ILIKE 'alkis_landparcel') AS class_id, "
+                        + "  (SELECT id FROM cs_class WHERE table_name ILIKE 'rpd_kategorie') AS class_id, "
                         + "  object_id, "
                         + "  min(object_name), "
                         + "  sum(area) "
                         + "FROM ( "
                         + "  SELECT "
                         + "    " + area + " AS area, "
-                        + "    alkis_landparcel.id AS object_id, "
-                        + "    alkis_landparcel.alkis_id AS object_name "
-                        + "  FROM alkis_landparcel "
-                        + "  "
-                        + ((geomCondition != null) ? "LEFT JOIN geom ON geom.id = alkis_landparcel.geometrie " : " ")
+                        + "    rpd_kategorie.id AS object_id, "
+                        + "    rpd_kategorie.bezeichnung AS object_name "
+                        + "  FROM rpd_flaeche "
+                        + "  LEFT JOIN rpd_kategorie ON rpd_flaeche.fk_kategorie = rpd_kategorie.id "
+                        + "  " + ((geomCondition != null) ? "LEFT JOIN geom ON geom.id = rpd_flaeche.fk_geom " : " ")
                         + "  " + ((geomCondition != null) ? ("WHERE " + geomCondition) : " ")
                         + ") AS sub "
                         + "GROUP BY object_id "
                         + "ORDER BY sum(area) DESC;";
-
             if (query != null) {
                 final MetaService ms = (MetaService)getActiveLocalServers().get("WUNDA_BLAU");
 
@@ -154,7 +153,7 @@ public class AlkisLandparcelGeometryMonSearch extends AbstractCidsServerSearch i
             }
             return result;
         } catch (final Exception ex) {
-            LOG.error("error while searching for AlkisLandparcel object", ex);
+            LOG.error("error while searching for RPD Kategorie object", ex);
             throw new RuntimeException(ex);
         }
     }

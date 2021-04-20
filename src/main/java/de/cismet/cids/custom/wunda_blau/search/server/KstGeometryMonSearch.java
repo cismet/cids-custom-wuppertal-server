@@ -73,6 +73,8 @@ public class KstGeometryMonSearch extends AbstractCidsServerSearch implements Re
     @Getter private final SearchInfo searchInfo;
     @Getter private ConnectionContext connectionContext = ConnectionContext.createDummy();
 
+    private Double buffer;
+
     //~ Constructors -----------------------------------------------------------
 
     /**
@@ -145,25 +147,41 @@ public class KstGeometryMonSearch extends AbstractCidsServerSearch implements Re
             if (geom != null) {
                 final String geomString = PostGisGeometryFactory.getPostGisCompliantDbString(geom);
                 geomCondition = "(geom.geo_field && GeometryFromText('" + geomString + "') AND intersects("
-                            + "st_buffer(geo_field, " + INTERSECTS_BUFFER + "),"
+                            + "st_buffer(geo_field, " + ((getBuffer() != null) ? getBuffer() : INTERSECTS_BUFFER) + "),"
                             + "GeometryFromText('"
                             + geomString
                             + "')))";
             } else {
                 geomCondition = null;
             }
-            final String query = "SELECT "
-                        + "	(SELECT id FROM cs_class WHERE table_name ILIKE '" + kst + "') AS class_id, "
-                        + "	kst.id AS object_id, "
-                        + "	kst.name AS object_name, "
-                        + ((geomCondition != null) ? "	st_area(geom.geo_field)" : "NULL") + "AS area,"
-                        + "	kst." + nr + " AS nummer "
-                        + "FROM " + kst + " AS kst "
-                        + ((geomCondition != null) ? "LEFT JOIN geom ON kst.georeferenz = geom.id " : " ")
-                        + ((geomCondition != null) ? ("WHERE " + geomCondition)
-                                                   : (" "
-                                + "ORDER BY area, " + nr + " DESC"));
 
+            final String area;
+            if (geometry != null) {
+                area = String.format(
+                        "st_area(st_intersection(geom.geo_field, GeometryFromText('%1$s')))",
+                        PostGisGeometryFactory.getPostGisCompliantDbString(geometry));
+            } else {
+                area = "st_area(geom.geo_field)";
+            }
+            final String query = ""
+                        + "SELECT "
+                        + "  (SELECT id FROM cs_class WHERE table_name ILIKE '" + kst + "') AS class_id, "
+                        + "  object_id, "
+                        + "  min(object_name), "
+                        + "  sum(area), "
+                        + "  min(nummer) "
+                        + "FROM ( "
+                        + "   SELECT "
+                        + "    " + area + " AS area, "
+                        + "    kst.id AS object_id, "
+                        + "    kst.name AS object_name, "
+                        + "    kst." + nr + " AS nummer "
+                        + "  FROM " + kst + " AS kst "
+                        + "  " + ((geomCondition != null) ? "LEFT JOIN geom ON kst.georeferenz = geom.id " : " ")
+                        + "  " + ((geomCondition != null) ? ("WHERE " + geomCondition) : " ")
+                        + ") AS sub "
+                        + "GROUP BY object_id "
+                        + "ORDER BY sum(area), min(nummer) DESC;";
             if (query != null) {
                 final MetaService ms = (MetaService)getActiveLocalServers().get("WUNDA_BLAU");
 
@@ -182,6 +200,16 @@ public class KstGeometryMonSearch extends AbstractCidsServerSearch implements Re
             LOG.error("error while searching for kst object", ex);
             throw new RuntimeException(ex);
         }
+    }
+
+    @Override
+    public Double getBuffer() {
+        return buffer;
+    }
+
+    @Override
+    public void setBuffer(final Double buffer) {
+        this.buffer = buffer;
     }
 
     //~ Inner Classes ----------------------------------------------------------
