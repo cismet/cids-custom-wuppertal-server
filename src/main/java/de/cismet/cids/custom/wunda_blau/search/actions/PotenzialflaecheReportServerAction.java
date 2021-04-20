@@ -43,6 +43,7 @@ import de.cismet.cids.custom.wunda_blau.search.server.AlkisLandparcelGeometryMon
 import de.cismet.cids.custom.wunda_blau.search.server.BplaeneMonSearch;
 import de.cismet.cids.custom.wunda_blau.search.server.FnpHauptnutzungenMonSearch;
 import de.cismet.cids.custom.wunda_blau.search.server.KstGeometryMonSearch;
+import de.cismet.cids.custom.wunda_blau.search.server.RpdKategorieMonSearch;
 import de.cismet.cids.custom.wunda_blau.search.server.StadtraumtypMonSearch;
 import de.cismet.cids.custom.wunda_blau.search.server.WohnlagenKategorisierungMonSearch;
 
@@ -90,82 +91,102 @@ public class PotenzialflaecheReportServerAction extends StampedJasperReportServe
 
         //~ Enum constants -----------------------------------------------------
 
-        BEZEICHNUNG(new SimpleFieldReportProperty("bezeichnung", String.class.getCanonicalName())),
-        NUMMER(new SimpleFieldReportProperty("nummer", String.class.getCanonicalName())),
-        BESCHREIBUNG_FLAECHE(new SimpleFieldReportProperty("beschreibung_flaeche", String.class.getCanonicalName())),
-        NOTWENDIGE_MASSNAHMEN(new SimpleFieldReportProperty("notwendige_massnahmen", String.class.getCanonicalName())),
-        INTERNE_HINWEISE(new SimpleFieldReportProperty("interne_hinweise", String.class.getCanonicalName())),
-        QUELLE(new SimpleFieldReportProperty("quelle", String.class.getCanonicalName())),
-        WOHNEINHEITEN_ANZAHL(new SimpleFieldReportProperty("anzahl_wohneinheiten", Integer.class.getCanonicalName())),
-        FESTSETZUNGEN_BPLAN(new SimpleFieldReportProperty("festsetzungen_bplan", String.class.getCanonicalName())),
-        FESTSETZUNGEN_BPLAN_STAND(new SimpleFieldReportProperty(
-                "stand_festsetzungen_bplan",
-                Date.class.getCanonicalName())),
-        STAND(new SimpleFieldReportProperty("stand", Date.class.getCanonicalName())),
-        JAHR_NUTZUNGSAUFGABE(new SimpleFieldReportProperty("jahr_brachflaeche", Date.class.getCanonicalName())),
+        BEZEICHNUNG(new SimpleFieldReportProperty("bezeichnung", String.class.getCanonicalName()), "Bezeichnung"),
+        NUMMER(new SimpleFieldReportProperty("nummer", String.class.getCanonicalName()), "Nummer"),
+        BESCHREIBUNG_FLAECHE(new SimpleFieldReportProperty("beschreibung_flaeche", String.class.getCanonicalName()),
+            "Beschreibung der Fläche"),
+        NOTWENDIGE_MASSNAHMEN(new SimpleFieldReportProperty("notwendige_massnahmen", String.class.getCanonicalName()),
+            "Notwendige Maßnahmen"),
+        INTERNE_HINWEISE(new SimpleFieldReportProperty("interne_hinweise", String.class.getCanonicalName()),
+            "Interne Hinweise"),
+        QUELLE(new SimpleFieldReportProperty("quelle", String.class.getCanonicalName()), "Quelle"),
+        WOHNEINHEITEN_ANZAHL(new SimpleFieldReportProperty("anzahl_wohneinheiten", Integer.class.getCanonicalName()),
+            "Anzahl mögl. Wohneinheiten"),
+        FESTSETZUNGEN_BPLAN(new SimpleFieldReportProperty("festsetzungen_bplan", String.class.getCanonicalName()),
+            "Festsetzungen"),
+        BAUORDNUNGSRECHT_STAND(new SimpleFieldReportProperty(
+                "stand_bauordnungsrecht",
+                Date.class.getCanonicalName()),
+            "Stand des Bauordnungsrechts"),
+        STAND(new SimpleFieldReportProperty("stand", Date.class.getCanonicalName()), "Stand der Beschreibung"),
+        JAHR_NUTZUNGSAUFGABE(new SimpleFieldReportProperty("jahr_brachflaeche", Date.class.getCanonicalName()),
+            "Nutzungsaufgabe"),
+        VORHANDENE_BEBAUUNG(new SimpleFieldReportProperty("bestand_bebauung", String.class.getCanonicalName()),
+            "Bestand Bebauung"),
 
-        KAMPAGNE(new KeytableReportProperty("kampagne", "pf_kampagne")),
-        LAGEBEWERTUNG_VERKEHR(new KeytableReportProperty("fk_lagebewertung_verkehr", "pf_lagebewertung_verkehr")),
+        KAMPAGNE(new KeytableReportProperty("kampagne", "pf_kampagne"), "Kampagne"),
+        LAGEBEWERTUNG_VERKEHR(new KeytableReportProperty("fk_lagebewertung_verkehr", "pf_lagebewertung_verkehr"),
+            "Lagebewertung, Verkehr"),
         SIEDLUNGSRAEUMLICHE_LAGE(new KeytableReportProperty(
                 "fk_siedlungsraeumliche_lage",
-                "pf_siedlungsraeumliche_lage")),
-        VORHANDENE_BEBAUUNG(new KeytableReportProperty("bestand_bebauung", "???")),
-        TOPOGRAFIE(new KeytableReportProperty("topografie", "pf_topografie")),
-        HANG(new KeytableReportProperty("fk_ausrichtung", "???")),
-        VERWERTBARKEIT(new KeytableReportProperty("fk_verwertbarkeit", "pf_verwertbarkeit")),
-        VERFUEGBBARKEIT(new KeytableReportProperty("verfuegbarkeit", "pf_verfuegbarkeit")),
-        ENTWICKLUNGSAUSSSICHTEN(new KeytableReportProperty("fk_entwicklungsaussichten", "pf_entwicklungsaussichten")),
-        ENTWICKLUNGSSTAND(new KeytableReportProperty("fk_entwicklungsstand", "pf_entwicklungsstand")),
-        REVITALISIERUNG(new KeytableReportProperty("fk_revitalisierung", "pf_revitalisierung")),
-        AEUSSERE_ERSCHLIESSUNG(new KeytableReportProperty("fk_aeussere_erschliessung", "pf_aeussere_erschliessung")),
-        POTENZIALART(new KeytableReportProperty("fk_potenzialart", "pf_potenzialart")),
-        KATEGORIE(new KeytableReportProperty("fk_kategorie", "pf_kategorie")),
-        WOHNEINHEITEN(new KeytableReportProperty("fk_wohneinheiten", "pf_wohneinheiten")),
-        OEPNV_ANBINDUNG(new KeytableReportProperty("fk_oepnv", "pf_oepnv")),
-        KLIMAINFORMATIONEN(new KeytableReportProperty("fk_klimainformationen", "pf_klimainformationen")),
-        VERSIEGELUNG(new KeytableReportProperty("fk_versiegelung", "pf_versiegelung")),
+                "pf_siedlungsraeumliche_lage"),
+            "Siedlungsräumliche Lage"),
+        TOPOGRAFIE(new KeytableReportProperty("topografie", "pf_topografie"), "Topografie"),
+        HANG(new KeytableReportProperty("fk_ausrichtung", "pf_ausrichtung"), "Hang"),
+        VERWERTBARKEIT(new KeytableReportProperty("fk_verwertbarkeit", "pf_verwertbarkeit"), "Verwertbarkeit"),
+        VERFUEGBBARKEIT(new KeytableReportProperty("verfuegbarkeit", "pf_verfuegbarkeit"), "Verfügbarkeit"),
+        ENTWICKLUNGSAUSSSICHTEN(new KeytableReportProperty("fk_entwicklungsaussichten", "pf_entwicklungsaussichten"),
+            "Entwicklungsaussichten"),
+        ENTWICKLUNGSSTAND(new KeytableReportProperty("fk_entwicklungsstand", "pf_entwicklungsstand"),
+            "Entwicklungsstand"),
+        REVITALISIERUNG(new KeytableReportProperty("fk_revitalisierung", "pf_revitalisierung"), "Revitalisierung"),
+        AEUSSERE_ERSCHLIESSUNG(new KeytableReportProperty("fk_aeussere_erschliessung", "pf_aeussere_erschliessung"),
+            "Äußere Erschließung"),
+        POTENZIALART(new KeytableReportProperty("fk_potenzialart", "pf_potenzialart"), "Potenzialart"),
+        KATEGORIE(new KeytableReportProperty("fk_kategorie", "pf_kategorie"), "Kategorie"),
+        WOHNEINHEITEN(new KeytableReportProperty("fk_wohneinheiten", "pf_wohneinheiten"), "Wohneinheiten"),
+        OEPNV_ANBINDUNG(new KeytableReportProperty("fk_oepnv", "pf_oepnv"), "ÖPNV-Qualität"),
+        KLIMAINFORMATIONEN(new KeytableReportProperty("fk_klimainformationen", "pf_klimainformationen"),
+            "Klimainformationen"),
+        VERSIEGELUNG(new KeytableReportProperty("fk_versiegelung", "pf_versiegelung"), "Versiegelung"),
         BAUORDNUNGSRECHT_GENEHMIGUNG(new KeytableReportProperty(
                 "fk_bauordnungsrecht_genehmigung",
-                "pf_bauordnungsrecht_genehmigung")),
+                "pf_bauordnungsrecht_genehmigung"),
+            "Bauordnungsrecht (Genehmigung)"),
         BAUORDNUNGSRECHT_BAULAST(new KeytableReportProperty(
                 "fk_bauordnungsrecht_baulast",
-                "pf_bauordnungsrecht_baulast")),
-        HANDLUNGSDRUCK(new KeytableReportProperty("handlungsdruck", "pf_handlungsdruck")),
-        HANDLUNGSPRIORITAET(new KeytableReportProperty("fk_handlungsprioritaet", "pf_handlungsprioritaet")),
+                "pf_bauordnungsrecht_baulast"),
+            "Bauordnungsrecht (Baulast)"),
+        HANDLUNGSDRUCK(new KeytableReportProperty("handlungsdruck", "pf_handlungsdruck"), "Handlungsdruck"),
+        HANDLUNGSPRIORITAET(new KeytableReportProperty("fk_handlungsprioritaet", "pf_handlungsprioritaet"),
+            "Handlungspriorität"),
 
         EIGENTUEMER(new MultiKeytableReportProperty(
                 "arr_eigentuemer",
                 "pf_eigentuemer_arr.fk_eigentuemer",
-                "pf_eigentuemer")),
+                "pf_eigentuemer"),
+            "Eigentümer"),
         BISHERIGE_NUTZUNG(new MultiKeytableReportProperty(
                 "bisherige_nutzung",
                 "pf_potenzialflaechen_bisherige_nutzung.nutzung",
-                "pf_nutzung")),
+                "pf_nutzung"),
+            "Bisherige Nutzung"),
         UMGEBUNGSNUTZUNG(new MultiKeytableReportProperty(
                 "umgebungsnutzung",
                 "pf_potenzialflaechen_umgebungsnutzung.nutzung",
-                "pf_nutzung")),
-        NAEHE_ZU(new MultiKeytableReportProperty("arr_naehen_zu", "pf_naehen_zu.fk_naehe_zu", "pf_naehe_zu")),
+                "pf_nutzung"),
+            "Umgebungsnutzung"),
+        NAEHE_ZU(new MultiKeytableReportProperty("arr_naehen_zu", "pf_naehen_zu.fk_naehe_zu", "pf_naehe_zu"), "Nähe zu"),
         BRACHFLAECHENKATEGORIE(new MultiKeytableReportProperty(
                 "arr_brachflaechen",
                 "pf_brachflaechen.fk_brachflaeche",
-                "pf_brachflaeche")),
+                "pf_brachflaeche"),
+            "Brachfläche"),
         EMPFOHLENE_NUTZUNGEN(new MultiKeytableReportProperty(
                 "arr_empfohlene_nutzungen",
                 "pf_empfohlene_nutzungen.fk_empfohlene_nutzung",
-                "pf_empfohlene_nutzung")),
+                "pf_empfohlene_nutzung"),
+            "Empfohlene Nutzung"),
         EMPFOHLENE_NUTZUNGEN_WOHNEN(new MultiKeytableReportProperty(
                 "arr_empfohlene_nutzungen_wohnen",
                 "pf_empfohlene_nutzungen_wohnen.fk_empfohlene_nutzung_wohnen",
-                "pf_empfohlene_nutzung_wohnen")),
-        REGIONALPLAN(new MultiKeytableReportProperty(
-                "regionalplan",
-                "pf_potenzialflaechen_pf_regionalplan.regionalplan",
-                "pf_regionalplan")),
+                "pf_empfohlene_nutzung_wohnen"),
+            "Empfohlene Art der Wohnnutzung"),
         RESTRIKTIONEN(new MultiKeytableReportProperty(
                 "arr_restriktionen",
                 "pf_restriktionen.fk_restriktion",
-                "pf_restriktion")),
+                "pf_restriktion"),
+            "Restriktionen"),
 
         KARTE_ORTHO(new VirtualReportProperty() {
 
@@ -173,14 +194,14 @@ public class PotenzialflaecheReportServerAction extends StampedJasperReportServe
                 protected Object calculateProperty(final PotenzialflaecheReportServerAction serverAction) {
                     return serverAction.getOrthoImage();
                 }
-            }),
+            }, "Karte (Ortho)"),
         KARTE_DGK(new VirtualReportProperty() {
 
                 @Override
                 protected Object calculateProperty(final PotenzialflaecheReportServerAction serverAction) {
                     return serverAction.getDgkImage();
                 }
-            }),
+            }, "Karte (DGK)"),
         GROESSE(new VirtualReportProperty() {
 
                 @Override
@@ -197,7 +218,7 @@ public class PotenzialflaecheReportServerAction extends StampedJasperReportServe
                     final double ha = Math.round(area / 1000) / 10.0;
                     return String.format("%.2f m² (circa %.1f ha)", m2, ha);
                 }
-            }),
+            }, "Größe"),
         BEBAUUNGSPLAN(new MonSearchReportProperty() {
 
                 @Override
@@ -208,7 +229,7 @@ public class PotenzialflaecheReportServerAction extends StampedJasperReportServe
                             (Geometry)flaecheBean.getProperty("geometrie.geo_field"));
                     return serverSearch;
                 }
-            }),
+            }, "BPlan"),
         STADTBEZIRK(new MonSearchReportProperty() {
 
                 @Override
@@ -220,7 +241,7 @@ public class PotenzialflaecheReportServerAction extends StampedJasperReportServe
                             (Geometry)flaecheBean.getProperty("geometrie.geo_field"));
                     return serverSearch;
                 }
-            }),
+            }, "Stadtbezirke"),
         QUARTIER(new MonSearchReportProperty() {
 
                 @Override
@@ -232,7 +253,7 @@ public class PotenzialflaecheReportServerAction extends StampedJasperReportServe
                             (Geometry)flaecheBean.getProperty("geometrie.geo_field"));
                     return serverSearch;
                 }
-            }),
+            }, "Quartiere"),
         FLURSTUECKE(new MonSearchReportProperty() {
 
                 @Override
@@ -243,7 +264,7 @@ public class PotenzialflaecheReportServerAction extends StampedJasperReportServe
                             (Geometry)flaecheBean.getProperty("geometrie.geo_field"));
                     return serverSearch;
                 }
-            }),
+            }, "Flurstücke"),
         WOHNLAGEN(new MonSearchReportProperty() {
 
                 @Override
@@ -254,7 +275,7 @@ public class PotenzialflaecheReportServerAction extends StampedJasperReportServe
                             (Geometry)flaecheBean.getProperty("geometrie.geo_field"));
                     return serverSearch;
                 }
-            }),
+            }, "Wohnlagen"),
         STADTRAUMTYPEN(new MonSearchReportProperty() {
 
                 @Override
@@ -265,7 +286,7 @@ public class PotenzialflaecheReportServerAction extends StampedJasperReportServe
                             (Geometry)flaecheBean.getProperty("geometrie.geo_field"));
                     return serverSearch;
                 }
-            }),
+            }, "Stadtraumtypen"),
         FLAECHENNUTZUNGSPLAN(new MonSearchReportProperty() {
 
                 @Override
@@ -276,7 +297,19 @@ public class PotenzialflaecheReportServerAction extends StampedJasperReportServe
                             (Geometry)flaecheBean.getProperty("geometrie.geo_field"));
                     return serverSearch;
                 }
-            }),
+            }, "Flächennutzungsplan"),
+        REGIONALPLAN(new MonSearchReportProperty() {
+
+                @Override
+                protected MetaObjectNodeServerSearch createMonServerSearch(
+                        final PotenzialflaecheReportServerAction serverAction) {
+                    final CidsBean flaecheBean = serverAction.getFlaecheBean();
+                    final RpdKategorieMonSearch serverSearch = new RpdKategorieMonSearch(
+                            (Geometry)flaecheBean.getProperty("geometrie.geo_field"));
+                    return serverSearch;
+                }
+            }, "Regionalplan"),
+
         BODENRICHTWERTE(new MonSearchReportProperty() {
 
                 @Override
@@ -284,21 +317,31 @@ public class PotenzialflaecheReportServerAction extends StampedJasperReportServe
                         final PotenzialflaecheReportServerAction serverAction) {
                     return null;
                 }
-            });
+            }, "Bodenrichtwerte");
 
         //~ Instance fields ----------------------------------------------------
 
         @Getter private final ReportProperty value;
+        private final String toString;
 
         //~ Constructors -------------------------------------------------------
 
         /**
          * Creates a new Property object.
          *
-         * @param  value  DOCUMENT ME!
+         * @param  value     DOCUMENT ME!
+         * @param  toString  DOCUMENT ME!
          */
-        private Property(final ReportProperty value) {
+        private Property(final ReportProperty value, final String toString) {
             this.value = value;
+            this.toString = toString;
+        }
+
+        //~ Methods ------------------------------------------------------------
+
+        @Override
+        public String toString() {
+            return toString;
         }
     }
 

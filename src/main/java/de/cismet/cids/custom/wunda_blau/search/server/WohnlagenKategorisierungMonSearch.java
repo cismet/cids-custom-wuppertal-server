@@ -58,6 +58,8 @@ public class WohnlagenKategorisierungMonSearch extends AbstractCidsServerSearch 
     @Getter private final SearchInfo searchInfo;
     @Getter private ConnectionContext connectionContext = ConnectionContext.createDummy();
 
+    private Double buffer;
+
     //~ Constructors -----------------------------------------------------------
 
     /**
@@ -101,26 +103,40 @@ public class WohnlagenKategorisierungMonSearch extends AbstractCidsServerSearch 
             final Geometry geometry = getGeometry();
             final String geomCondition;
             if (geometry != null) {
-                final String geomString = PostGisGeometryFactory.getPostGisCompliantDbString(geometry);
-                geomCondition = "(geom.geo_field && GeometryFromText('" + geomString + "') AND intersects("
-                            + "st_buffer(geo_field, " + INTERSECTS_BUFFER + "),"
-                            + "GeometryFromText('"
-                            + geomString
-                            + "')))";
+                geomCondition = String.format(
+                        "(geom.geo_field && GeometryFromText('%1$s') AND intersects(st_buffer(geom.geo_field, %2$s), GeometryFromText('%1$s')))",
+                        PostGisGeometryFactory.getPostGisCompliantDbString(geometry),
+                        ((getBuffer() != null) ? getBuffer() : INTERSECTS_BUFFER));
             } else {
                 geomCondition = null;
             }
+            final String area;
+            if (geometry != null) {
+                area = String.format(
+                        "st_area(st_intersection(geom.geo_field, GeometryFromText('%1$s')))",
+                        PostGisGeometryFactory.getPostGisCompliantDbString(geometry));
+            } else {
+                area = "st_area(geom.geo_field)";
+            }
             final String query = ""
-                        + "SELECT DISTINCT \n"
-                        + "  (SELECT id FROM cs_class WHERE table_name ILIKE 'wohnlage_kategorie') AS class_id, \n"
-                        + "  wohnlage_kategorie.id AS object_id, \n"
-                        + "  wohnlage_kategorie.name AS object_name \n"
-                        + "FROM wohnlage \n"
-                        + "LEFT JOIN wohnlage_kategorisierung ON wohnlage_kategorisierung.fk_wohnlage = wohnlage.id \n"
-                        + "LEFT JOIN wohnlage_kategorie ON wohnlage_kategorie.id = wohnlage_kategorisierung.fk_kategorie \n"
-                        + ((geomCondition != null) ? "LEFT JOIN geom ON geom.id = wohnlage.fk_geometrie " : " ")
-                        + ((geomCondition != null) ? ("WHERE " + geomCondition) : " ")
-                        + ";";
+                        + "SELECT "
+                        + "  (SELECT id FROM cs_class WHERE table_name ILIKE 'wohnlage_kategorie') AS class_id, "
+                        + "  object_id, "
+                        + "  min(object_name), "
+                        + "  sum(area) "
+                        + "FROM ( "
+                        + "  SELECT "
+                        + "    " + area + " AS area, "
+                        + "    wohnlage_kategorie.id AS object_id, "
+                        + "    wohnlage_kategorie.name AS object_name "
+                        + "  FROM wohnlage "
+                        + "  LEFT JOIN wohnlage_kategorisierung ON wohnlage_kategorisierung.fk_wohnlage = wohnlage.id "
+                        + "  LEFT JOIN wohnlage_kategorie ON wohnlage_kategorie.id = wohnlage_kategorisierung.fk_kategorie "
+                        + "  " + ((geomCondition != null) ? "LEFT JOIN geom ON geom.id = wohnlage.fk_geometrie " : " ")
+                        + "  " + ((geomCondition != null) ? ("WHERE " + geomCondition) : " ")
+                        + ") AS sub "
+                        + "GROUP BY object_id "
+                        + "ORDER BY sum(area) DESC;";
 
             if (query != null) {
                 final MetaService ms = (MetaService)getActiveLocalServers().get("WUNDA_BLAU");
@@ -130,9 +146,7 @@ public class WohnlagenKategorisierungMonSearch extends AbstractCidsServerSearch 
                     final int cid = (Integer)al.get(0);
                     final int oid = (Integer)al.get(1);
                     final String name = (String)al.get(2);
-                    final MetaObjectNode mon = new MetaObjectNode("WUNDA_BLAU", oid, cid, name, null, null);
-
-                    result.add(mon);
+                    result.add(new MetaObjectNode("WUNDA_BLAU", oid, cid, name, null, null));
                 }
             }
             return result;
@@ -140,6 +154,16 @@ public class WohnlagenKategorisierungMonSearch extends AbstractCidsServerSearch 
             LOG.error("error while searching for wohnlagenkategorisierung object", ex);
             throw new RuntimeException(ex);
         }
+    }
+
+    @Override
+    public Double getBuffer() {
+        return buffer;
+    }
+
+    @Override
+    public void setBuffer(final Double buffer) {
+        this.buffer = buffer;
     }
 
     //~ Inner Classes ----------------------------------------------------------
