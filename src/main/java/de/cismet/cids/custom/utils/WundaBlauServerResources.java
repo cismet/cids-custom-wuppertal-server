@@ -58,6 +58,7 @@ public enum WundaBlauServerResources {
     VCM_PROPERTIES(new TextServerResource("/virtualcitymap/vcm.properties")),
     IMAGE_ANNOTATOR_FONT(new BinaryServerResource("/tiffer/Calibri_Bold.ttf")),
     STADTBILDER_CONF_PROPERTIES(new TextServerResource("/stadtbilder/sb_conf.properties")),
+    BYTEARRAYFACTORY_PROPERTIES(new TextServerResource("/byteArrayFactory.properties")),
 
     URLCONFIG_PROPERTIES(new TextServerResource("/urlconfig.properties")),
     ALKIS_CONF(new TextServerResource("/alkis/alkis_conf.properties")),
@@ -100,7 +101,9 @@ public enum WundaBlauServerResources {
 
     VZKAT_PROPERTIES(new TextServerResource("/vzkat/vzkat.properties")),
 
-    ALBO_PROPERTIES(new TextServerResource("/albo/albo.properties"));
+    ALBO_PROPERTIES(new TextServerResource("/albo/albo.properties")),
+
+    PF_MAPFACTORY_PROPERTIES(new TextServerResource("/potenzialflaechen/mapfactory.properties"));
 
     //~ Instance fields --------------------------------------------------------
 
