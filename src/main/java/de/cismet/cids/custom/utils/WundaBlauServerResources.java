@@ -35,6 +35,7 @@ public enum WundaBlauServerResources {
     VERMESSUNGSRISSE_DOCUMENT_JASPER(new JasperReportServerResource("/reports/vermessungsrisse_document.jasper")),
     VERMESSUNGSRISSE_OVERVIEW_JASPER(new JasperReportServerResource("/reports/vermessungsrisse_overview.jasper")),
     POTENZIALFLAECHEN_PROPERTIES(new TextServerResource("/potenzialflaechen/potenzialflaechen.properties")),
+    POTENZIALFLAECHEN_MAPFACTORY_PROPERTIES(new TextServerResource("/potenzialflaechen/mapfactory.properties")),
     APMAPS_JASPER(new JasperReportServerResource("/reports/apmaps.jasper")),
     APMAPS_DOCUMENT_JASPER(new JasperReportServerResource("/reports/apmaps_document.jasper")),
     APMAPS_OVERVIEW_JASPER(new JasperReportServerResource("/reports/apmaps_overview.jasper")),
@@ -43,7 +44,6 @@ public enum WundaBlauServerResources {
     NIVP_OVERVIEW_JASPER(new JasperReportServerResource("/reports/nivp_overview.jasper")),
     FS_RECHNUNG_JASPER(new JasperReportServerResource("/reports/bestellung_rechnung.jasper")),
     FS_RECHNUNG_RUECKSEITE_JASPER(new JasperReportServerResource("/reports/bestellung_rechnung_rueckseite.jasper")),
-    POTENZIALFLAECHEN_JASPER(new JasperReportServerResource("/potenzialflaechen/potenzialflaechen_full.jasper")),
     ALBO_VORGANG_JASPER(new JasperReportServerResource("/reports/albo_vorgang.jasper")),
     ALBO_FLAECHE_JASPER(new JasperReportServerResource("/reports/albo_flaeche.jasper")),
 
@@ -58,6 +58,7 @@ public enum WundaBlauServerResources {
     VCM_PROPERTIES(new TextServerResource("/virtualcitymap/vcm.properties")),
     IMAGE_ANNOTATOR_FONT(new BinaryServerResource("/tiffer/Calibri_Bold.ttf")),
     STADTBILDER_CONF_PROPERTIES(new TextServerResource("/stadtbilder/sb_conf.properties")),
+    BYTEARRAYFACTORY_PROPERTIES(new TextServerResource("/byteArrayFactory.properties")),
 
     URLCONFIG_PROPERTIES(new TextServerResource("/urlconfig.properties")),
     ALKIS_CONF(new TextServerResource("/alkis/alkis_conf.properties")),
