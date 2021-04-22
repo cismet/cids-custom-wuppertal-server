@@ -35,6 +35,7 @@ public enum WundaBlauServerResources {
     VERMESSUNGSRISSE_DOCUMENT_JASPER(new JasperReportServerResource("/reports/vermessungsrisse_document.jasper")),
     VERMESSUNGSRISSE_OVERVIEW_JASPER(new JasperReportServerResource("/reports/vermessungsrisse_overview.jasper")),
     POTENZIALFLAECHEN_PROPERTIES(new TextServerResource("/potenzialflaechen/potenzialflaechen.properties")),
+    POTENZIALFLAECHEN_MAPFACTORY_PROPERTIES(new TextServerResource("/potenzialflaechen/mapfactory.properties")),
     APMAPS_JASPER(new JasperReportServerResource("/reports/apmaps.jasper")),
     APMAPS_DOCUMENT_JASPER(new JasperReportServerResource("/reports/apmaps_document.jasper")),
     APMAPS_OVERVIEW_JASPER(new JasperReportServerResource("/reports/apmaps_overview.jasper")),
@@ -43,7 +44,6 @@ public enum WundaBlauServerResources {
     NIVP_OVERVIEW_JASPER(new JasperReportServerResource("/reports/nivp_overview.jasper")),
     FS_RECHNUNG_JASPER(new JasperReportServerResource("/reports/bestellung_rechnung.jasper")),
     FS_RECHNUNG_RUECKSEITE_JASPER(new JasperReportServerResource("/reports/bestellung_rechnung_rueckseite.jasper")),
-    POTENZIALFLAECHEN_JASPER(new JasperReportServerResource("/potenzialflaechen/potenzialflaechen_full.jasper")),
     ALBO_VORGANG_JASPER(new JasperReportServerResource("/reports/albo_vorgang.jasper")),
     ALBO_FLAECHE_JASPER(new JasperReportServerResource("/reports/albo_flaeche.jasper")),
 
@@ -101,9 +101,7 @@ public enum WundaBlauServerResources {
 
     VZKAT_PROPERTIES(new TextServerResource("/vzkat/vzkat.properties")),
 
-    ALBO_PROPERTIES(new TextServerResource("/albo/albo.properties")),
-
-    PF_MAPFACTORY_PROPERTIES(new TextServerResource("/potenzialflaechen/mapfactory.properties"));
+    ALBO_PROPERTIES(new TextServerResource("/albo/albo.properties"));
 
     //~ Instance fields --------------------------------------------------------
 

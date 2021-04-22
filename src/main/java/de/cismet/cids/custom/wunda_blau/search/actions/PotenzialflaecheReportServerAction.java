@@ -16,14 +16,19 @@ import Sirius.server.middleware.impls.domainserver.DomainServerImpl;
 import Sirius.server.middleware.types.MetaObject;
 import Sirius.server.middleware.types.MetaObjectNode;
 
+import Sirius.util.MapImageFactoryConfiguration;
+
+import com.fasterxml.jackson.databind.ObjectMapper;
+
 import com.vividsolutions.jts.geom.Geometry;
 
 import lombok.Getter;
+import lombok.Setter;
 
 import net.sf.jasperreports.engine.JasperReport;
 import net.sf.jasperreports.engine.data.JRBeanCollectionDataSource;
 
-import java.awt.image.BufferedImage;
+import org.apache.commons.lang.StringEscapeUtils;
 
 import java.io.ByteArrayInputStream;
 
@@ -38,7 +43,9 @@ import java.util.Map;
 
 import javax.imageio.ImageIO;
 
+import de.cismet.cids.custom.utils.ByteArrayFactoryHandler;
 import de.cismet.cids.custom.utils.StampedJasperReportServerAction;
+import de.cismet.cids.custom.utils.properties.PotenzialflaechenMapfactoryProperties;
 import de.cismet.cids.custom.wunda_blau.search.server.AlkisLandparcelGeometryMonSearch;
 import de.cismet.cids.custom.wunda_blau.search.server.BplaeneMonSearch;
 import de.cismet.cids.custom.wunda_blau.search.server.FnpHauptnutzungenMonSearch;
@@ -191,15 +198,51 @@ public class PotenzialflaecheReportServerAction extends StampedJasperReportServe
         KARTE_ORTHO(new VirtualReportProperty() {
 
                 @Override
-                protected Object calculateProperty(final PotenzialflaecheReportServerAction serverAction) {
-                    return serverAction.getOrthoImage();
+                protected Object calculateProperty(final PotenzialflaecheReportServerAction serverAction)
+                        throws Exception {
+                    final PfMapConfiguration config = createPreconfiguredPfMapConfiguration();
+                    config.setType(PfMapConfiguration.Type.PF_ORTHO);
+                    config.setWidth(
+                        PotenzialflaechenMapfactoryProperties.getInstance().getWidth(PfMapConfiguration.Type.PF_ORTHO));
+                    config.setHeight(
+                        PotenzialflaechenMapfactoryProperties.getInstance().getHeight(
+                            PfMapConfiguration.Type.PF_ORTHO));
+                    config.setBuffer(
+                        PotenzialflaechenMapfactoryProperties.getInstance().getBuffer(
+                            PfMapConfiguration.Type.PF_ORTHO));
+                    config.setIds(Arrays.asList(serverAction.getFlaecheBean().getMetaObject().getId()));
+
+                    final byte[] bytes = ByteArrayFactoryHandler.getInstance()
+                                .execute(
+                                    "de.cismet.cids.custom.reports.wunda_blau.PfMapGenerator",
+                                    new ObjectMapper().writeValueAsString(config),
+                                    serverAction.getUser(),
+                                    serverAction.getConnectionContext());
+                    return ImageIO.read(new ByteArrayInputStream(bytes));
                 }
             }, "Karte (Ortho)"),
         KARTE_DGK(new VirtualReportProperty() {
 
                 @Override
-                protected Object calculateProperty(final PotenzialflaecheReportServerAction serverAction) {
-                    return serverAction.getDgkImage();
+                protected Object calculateProperty(final PotenzialflaecheReportServerAction serverAction)
+                        throws Exception {
+                    final PfMapConfiguration config = createPreconfiguredPfMapConfiguration();
+                    config.setType(PfMapConfiguration.Type.PF_DGK);
+                    config.setWidth(
+                        PotenzialflaechenMapfactoryProperties.getInstance().getWidth(PfMapConfiguration.Type.PF_DGK));
+                    config.setHeight(
+                        PotenzialflaechenMapfactoryProperties.getInstance().getHeight(PfMapConfiguration.Type.PF_DGK));
+                    config.setBuffer(
+                        PotenzialflaechenMapfactoryProperties.getInstance().getBuffer(PfMapConfiguration.Type.PF_DGK));
+
+                    config.setIds(Arrays.asList(serverAction.getFlaecheBean().getMetaObject().getId()));
+                    final byte[] bytes = ByteArrayFactoryHandler.getInstance()
+                                .execute(
+                                    "de.cismet.cids.custom.reports.wunda_blau.PfMapGenerator",
+                                    new ObjectMapper().writeValueAsString(config),
+                                    serverAction.getUser(),
+                                    serverAction.getConnectionContext());
+                    return ImageIO.read(new ByteArrayInputStream(bytes));
                 }
             }, "Karte (DGK)"),
         GROESSE(new VirtualReportProperty() {
@@ -354,15 +397,13 @@ public class PotenzialflaecheReportServerAction extends StampedJasperReportServe
 
         //~ Enum constants -----------------------------------------------------
 
-        IMAGE_ORTHO, IMAGE_DGK, TEMPLATE
+        POTENZIALFLAECHE, TEMPLATE
     }
 
     //~ Instance fields --------------------------------------------------------
 
     private ConnectionContext connectionContext = ConnectionContext.createDummy();
 
-    @Getter private BufferedImage orthoImage;
-    @Getter private BufferedImage dgkImage;
     @Getter private CidsBean flaecheBean;
     @Getter private CidsBean templateBean;
 
@@ -373,26 +414,54 @@ public class PotenzialflaecheReportServerAction extends StampedJasperReportServe
         this.connectionContext = connectionContext;
     }
 
+    /**
+     * DOCUMENT ME!
+     *
+     * @param   object      DOCUMENT ME!
+     * @param   table_name  DOCUMENT ME!
+     * @param   key         DOCUMENT ME!
+     *
+     * @return  DOCUMENT ME!
+     *
+     * @throws  Exception  DOCUMENT ME!
+     */
+    private MetaObjectNode getFor(final Object object, final String table_name, final String key) throws Exception {
+        if (object instanceof MetaObjectNode) {
+            return (MetaObjectNode)object;
+        } else if (object instanceof Integer) {
+            return new MetaObjectNode(
+                    "WUNDA_BLAU",
+                    (Integer)object,
+                    CidsBean.getMetaClassFromTableName("WUNDA_BLAU", table_name, getConnectionContext()).getId());
+        } else if (object instanceof String) {
+            getMetaService().performCustomSearch(String.format(
+                    "SELECT id, (SELECT id FROM cs_class WHERE table_name ILIKE '%1$s') FROM %1$s WHERE %2$s = '%3$s' LIMIT 1;",
+                    table_name,
+                    key,
+                    StringEscapeUtils.escapeSql((String)object)),
+                getConnectionContext());
+        }
+        return null;
+    }
+
     @Override
     public Object execute(final Object body, final ServerActionParameter... params) {
-        final MetaObjectNode flaecheMon = (MetaObjectNode)body;
-        byte[] dgkImageBytes = null;
-        byte[] orthoImageBytes = null;
-        MetaObjectNode templateMon = null;
-
         try {
-            if (flaecheMon != null) {
-                if (params != null) {
-                    for (final ServerActionParameter sap : params) {
-                        if (sap.getKey().equals(Parameter.IMAGE_DGK.toString())) {
-                            dgkImageBytes = (byte[])sap.getValue();
-                        } else if (sap.getKey().equals(Parameter.IMAGE_ORTHO.toString())) {
-                            orthoImageBytes = (byte[])sap.getValue();
-                        } else if (sap.getKey().equals(Parameter.TEMPLATE.toString())) {
-                            templateMon = (MetaObjectNode)sap.getValue();
+            MetaObjectNode flaecheMon = getFor(body, "pf_potenzialflaeche", "nummer");
+            MetaObjectNode templateMon = null;
+
+            if (params != null) {
+                for (final ServerActionParameter sap : params) {
+                    if (sap.getKey().equals(Parameter.POTENZIALFLAECHE.toString())) {
+                        if (sap.getValue() instanceof MetaObjectNode) {
+                            flaecheMon = getFor(sap.getValue(), "pf_potenzialflaeche", "nummer");
                         }
+                    } else if (sap.getKey().equals(Parameter.TEMPLATE.toString())) {
+                        templateMon = getFor(sap.getValue(), "pf_steckbrieftemplate", "bezeichnung");
                     }
                 }
+            }
+            if (flaecheMon != null) {
                 flaecheBean = getMetaService().getMetaObject(
                             getUser(),
                             flaecheMon.getObjectId(),
@@ -443,10 +512,6 @@ public class PotenzialflaecheReportServerAction extends StampedJasperReportServe
                         BEAN_RESOURCE_MAP.put(template, new JasperReportServerResource(template));
                     }
 
-                    orthoImage = (orthoImageBytes != null) ? ImageIO.read(new ByteArrayInputStream(orthoImageBytes))
-                                                           : null;
-                    dgkImage = (dgkImageBytes != null) ? ImageIO.read(new ByteArrayInputStream(dgkImageBytes)) : null;
-
                     final JRBeanCollectionDataSource dataSource = new JRBeanCollectionDataSource(Arrays.asList(
                                 flaecheBean));
                     final Map<String, Object> parameters = generateParams();
@@ -490,11 +555,13 @@ public class PotenzialflaecheReportServerAction extends StampedJasperReportServe
      * DOCUMENT ME!
      *
      * @return  DOCUMENT ME!
+     *
+     * @throws  Exception  DOCUMENT ME!
      */
-    public Map generateParams() {
+    public Map generateParams() throws Exception {
         final HashMap params = new HashMap();
         for (final Property property : Property.values()) {
-            final String parameterName = property.toString();
+            final String parameterName = property.name();
             final ReportProperty reportProperty = property.getValue();
             if (reportProperty instanceof VirtualReportProperty) {
                 params.put(
@@ -530,6 +597,21 @@ public class PotenzialflaecheReportServerAction extends StampedJasperReportServe
             }
         }
         return params;
+    }
+
+    /**
+     * DOCUMENT ME!
+     *
+     * @return  DOCUMENT ME!
+     */
+    private static PfMapConfiguration createPreconfiguredPfMapConfiguration() {
+        final PfMapConfiguration config = new PfMapConfiguration();
+        config.setBbX1(PotenzialflaechenMapfactoryProperties.getInstance().getHomeX1());
+        config.setBbY1(PotenzialflaechenMapfactoryProperties.getInstance().getHomeY1());
+        config.setBbX2(PotenzialflaechenMapfactoryProperties.getInstance().getHomeX2());
+        config.setBbY2(PotenzialflaechenMapfactoryProperties.getInstance().getHomeY2());
+        config.setSrs(PotenzialflaechenMapfactoryProperties.getInstance().getSrs());
+        return config;
     }
 
     //~ Inner Classes ----------------------------------------------------------
@@ -694,8 +776,11 @@ public class PotenzialflaecheReportServerAction extends StampedJasperReportServe
          * @param   serverAction  flaecheBean DOCUMENT ME!
          *
          * @return  DOCUMENT ME!
+         *
+         * @throws  Exception  DOCUMENT ME!
          */
-        protected abstract Object calculateProperty(final PotenzialflaecheReportServerAction serverAction);
+        protected abstract Object calculateProperty(final PotenzialflaecheReportServerAction serverAction)
+                throws Exception;
     }
 
     /**
@@ -757,5 +842,35 @@ public class PotenzialflaecheReportServerAction extends StampedJasperReportServe
                 return null;
             }
         }
+    }
+
+    /**
+     * DOCUMENT ME!
+     *
+     * @version  $Revision$, $Date$
+     */
+    @Getter
+    @Setter
+    public static class PfMapConfiguration extends MapImageFactoryConfiguration {
+
+        //~ Enums --------------------------------------------------------------
+
+        /**
+         * DOCUMENT ME!
+         *
+         * @version  $Revision$, $Date$
+         */
+        public enum Type {
+
+            //~ Enum constants -------------------------------------------------
+
+            PF_ORTHO, PF_DGK,
+        }
+
+        //~ Instance fields ----------------------------------------------------
+
+        private Type type;
+        private Collection<Integer> ids;
+        private Integer buffer;
     }
 }
