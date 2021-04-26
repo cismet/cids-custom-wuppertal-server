@@ -23,13 +23,18 @@ import org.apache.log4j.Logger;
 
 import java.io.StringReader;
 
+import java.text.SimpleDateFormat;
+
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collection;
+import java.util.Date;
+import java.util.LinkedHashSet;
 import java.util.List;
 import java.util.Properties;
 
 import de.cismet.cids.custom.utils.WundaBlauServerResources;
+import de.cismet.cids.custom.wunda_blau.search.actions.PotenzialflaecheReportServerAction;
 
 import de.cismet.cids.server.actions.GetServerResourceServerAction;
 import de.cismet.cids.server.search.AbstractCidsServerSearch;
@@ -95,10 +100,8 @@ public class PotenzialflaecheSearch extends AbstractCidsServerSearch implements 
                 "Builtin Legacy Search to delegate the operation PotenzialflaecheSearchStatement to the cids Pure REST Search API.",
                 Arrays.asList(
                     new SearchParameterInfo[] {
-                        new MySearchParameterInfo("searchMode", Type.STRING),
-                        new MySearchParameterInfo("nummer", Type.STRING),
-                        new MySearchParameterInfo("kampagne", Type.STRING),
-                        new MySearchParameterInfo("bezeichnung", Type.STRING),
+                        new MySearchParameterInfo("searchMode", Type.UNDEFINED),
+                        new MySearchParameterInfo("filters", Type.UNDEFINED),
                     }),
                 new MySearchParameterInfo("return", Type.ENTITY_REFERENCE, true));
     }
@@ -163,30 +166,163 @@ public class PotenzialflaecheSearch extends AbstractCidsServerSearch implements 
 
     @Override
     public String createQuery() {
-        final String nummer = getConfiguration().getNummer();
-        final String bezeichnung = getConfiguration().getBezeichnung();
-        final Integer kampagneId = getConfiguration().getKampagneId();
-        final Collection<String> wheres = new ArrayList<>();
+        final Collection<String> leftJoins = new LinkedHashSet<>();
+        final Collection<String> wheresMain = new LinkedHashSet<>();
+
+        leftJoins.add("pf_restriktionen ON pf_potenzialflaeche.id = pf_restriktionen.pf_potenzialflaeche_reference");
+        leftJoins.add("pf_brachflaechen ON pf_potenzialflaeche.id = pf_brachflaechen.pf_potenzialflaeche_reference");
+        leftJoins.add(
+            "pf_potenzialflaechen_umgebungsnutzung ON pf_potenzialflaeche.id = pf_potenzialflaechen_umgebungsnutzung.pf_potenzialflaeche_reference");
+        leftJoins.add(
+            "pf_empfohlene_nutzungen_wohnen ON pf_potenzialflaeche.id = pf_empfohlene_nutzungen_wohnen.pf_potenzialflaeche_reference");
+        leftJoins.add(
+            "pf_potenzialflaechen_pf_regionalplan ON pf_potenzialflaeche.id = pf_potenzialflaechen_pf_regionalplan.pf_potenzialflaeche_reference");
+        leftJoins.add("pf_naehen_zu ON pf_potenzialflaeche.id = pf_naehen_zu.pf_potenzialflaeche_reference");
+        leftJoins.add(
+            "pf_potenzialflaechen_bisherige_nutzung ON pf_potenzialflaeche.id = pf_potenzialflaechen_bisherige_nutzung.pf_potenzialflaeche_reference");
+        leftJoins.add(
+            "pf_eigentuemer_arr ON pf_potenzialflaeche.id = pf_eigentuemer_arr.pf_potenzialflaeche_reference");
+        leftJoins.add(
+            "pf_empfohlene_nutzungen ON pf_potenzialflaeche.id = pf_empfohlene_nutzungen.pf_potenzialflaeche_reference");
+        leftJoins.add("pf_kampagne ON pf_potenzialflaeche.kampagne = pf_kampagne.id");
+        leftJoins.add(
+            "pf_entwicklungsaussichten ON pf_potenzialflaeche.fk_entwicklungsaussichten = pf_entwicklungsaussichten.id");
+        leftJoins.add("pf_baulueckenart ON pf_potenzialflaeche.fk_baulueckenart = pf_baulueckenart.id");
+        leftJoins.add(
+            "pf_handlungsprioritaet ON pf_potenzialflaeche.fk_handlungsprioritaet = pf_handlungsprioritaet.id");
+        leftJoins.add("pf_verwertbarkeit ON pf_potenzialflaeche.fk_verwertbarkeit = pf_verwertbarkeit.id");
+        leftJoins.add("pf_wohneinheiten ON pf_potenzialflaeche.fk_wohneinheiten = pf_wohneinheiten.id");
+        leftJoins.add("pf_entwicklungsstand ON pf_potenzialflaeche.fk_entwicklungsstand = pf_entwicklungsstand.id");
+        leftJoins.add("pf_aktivierbarkeit ON pf_potenzialflaeche.aktivierbarkeit = pf_aktivierbarkeit.id");
+        leftJoins.add("pf_ausrichtung ON pf_potenzialflaeche.fk_ausrichtung = pf_ausrichtung.id");
+        leftJoins.add("pf_oepnv ON pf_potenzialflaeche.fk_oepnv = pf_oepnv.id");
+        leftJoins.add("pf_handlungsdruck ON pf_potenzialflaeche.handlungsdruck = pf_handlungsdruck.id");
+        leftJoins.add("pf_verfuegbarkeit ON pf_potenzialflaeche.verfuegbarkeit = pf_verfuegbarkeit.id");
+        leftJoins.add("pf_topografie ON pf_potenzialflaeche.topografie = pf_topografie.id");
+        leftJoins.add(
+            "pf_aeussere_erschliessung ON pf_potenzialflaeche.fk_aeussere_erschliessung = pf_aeussere_erschliessung.id");
+        leftJoins.add("pf_revitalisierung ON pf_potenzialflaeche.fk_revitalisierung = pf_revitalisierung.id");
+        leftJoins.add(
+            "pf_siedlungsraeumliche_lage ON pf_potenzialflaeche.fk_siedlungsraeumliche_lage = pf_siedlungsraeumliche_lage.id");
+        leftJoins.add(
+            "pf_lagebewertung_verkehr ON pf_potenzialflaeche.fk_lagebewertung_verkehr = pf_lagebewertung_verkehr.id");
+        leftJoins.add("pf_potenzialart ON pf_potenzialflaeche.fk_potenzialart = pf_potenzialart.id");
+        leftJoins.add("pf_versiegelung ON pf_potenzialflaeche.fk_versiegelung = pf_versiegelung.id");
+        leftJoins.add(
+            "pf_bauordnungsrecht_baulast ON pf_potenzialflaeche.fk_bauordnungsrecht_baulast = pf_bauordnungsrecht_baulast.id");
+        leftJoins.add(
+            "pf_bauordnungsrecht_genehmigung ON pf_potenzialflaeche.fk_bauordnungsrecht_genehmigung = pf_bauordnungsrecht_genehmigung.id");
+        leftJoins.add("pf_klimainformationen ON pf_potenzialflaeche.fk_klimainformationen = pf_klimainformationen.id");
+        leftJoins.add(
+            "pf_veroeffentlichkeitsstatus ON pf_kampagne.veroeffentlichkeitsstatus = pf_veroeffentlichkeitsstatus.id");
+        leftJoins.add(
+            "pf_nutzung AS bisherige_nutzung ON pf_potenzialflaechen_bisherige_nutzung.nutzung = bisherige_nutzung.id");
+        leftJoins.add(
+            "pf_nutzung AS umgebungs_nutzung ON pf_potenzialflaechen_umgebungsnutzung.nutzung = umgebungs_nutzung.id");
+        leftJoins.add("pf_regionalplan ON pf_potenzialflaechen_pf_regionalplan.regionalplan = pf_regionalplan.id");
+        leftJoins.add("pf_restriktion ON pf_restriktionen.fk_restriktion = pf_restriktion.id");
+        leftJoins.add(
+            "pf_empfohlene_nutzung ON pf_empfohlene_nutzungen.fk_empfohlene_nutzung = pf_empfohlene_nutzung.id");
+        leftJoins.add("pf_brachflaeche ON pf_brachflaechen.fk_brachflaeche = pf_brachflaeche.id");
+        leftJoins.add("pf_eigentuemer ON pf_eigentuemer_arr.fk_eigentuemer = pf_eigentuemer.id");
+        leftJoins.add(
+            "pf_empfohlene_nutzung_wohnen ON pf_empfohlene_nutzungen_wohnen.fk_empfohlene_nutzung_wohnen = pf_empfohlene_nutzung_wohnen.id");
+        leftJoins.add("pf_naehe_zu ON pf_naehen_zu.fk_naehe_zu = pf_naehe_zu.id");
+
         switch (searchMode) {
             case AND: {
-                wheres.add("TRUE");
+                wheresMain.add("TRUE");
                 break;
             }
             case OR: {
-                wheres.add("FALSE");
+                wheresMain.add("FALSE");
                 break;
             }
             default:
         }
 
-        if (nummer != null) {
-            wheres.add(String.format("pf_potenzialflaeche.nummer ILIKE '%%%s%%'", nummer));
+        if (getConfiguration().getFilters() != null) {
+            for (final FilterInfo filterInfo : getConfiguration().getFilters()) {
+                if (filterInfo != null) {
+                    final Object value = filterInfo.getValue();
+                    final PotenzialflaecheReportServerAction.Property property = filterInfo.getProperty();
+                    if ((property != null)
+                                && (property.getValue()
+                                    instanceof PotenzialflaecheReportServerAction.PathReportProperty)) {
+                        final PotenzialflaecheReportServerAction.PathReportProperty pathProp =
+                            (PotenzialflaecheReportServerAction.PathReportProperty)property.getValue();
+                        final String path = String.format("pf_potenzialflaeche.%s", pathProp.getPath());
+                        if (value != null) {
+                            if (property.getValue()
+                                        instanceof PotenzialflaecheReportServerAction.SimpleFieldReportProperty) {
+                                final String className =
+                                    ((PotenzialflaecheReportServerAction.SimpleFieldReportProperty)property.getValue())
+                                            .getClassName();
+                                if (String.class.getCanonicalName().equals(className)) {
+                                    wheresMain.add(String.format("%s LIKE '%%%s%%'", path, value));
+                                } else if (Date.class.getCanonicalName().equals(className)) {
+                                    if (value instanceof Date) {
+                                        wheresMain.add(String.format(
+                                                "%s = '%s'",
+                                                path,
+                                                new SimpleDateFormat("yyyy-MM-dd").format((Date)value)));
+                                    } else if (value instanceof Date[]) {
+                                        final Date[] dates = (Date[])value;
+                                        final String conditionFrom = (dates[0] != null)
+                                            ? String.format(
+                                                "%s >= '%s'",
+                                                path,
+                                                new SimpleDateFormat("yyyy-MM-dd").format(dates[0])) : "TRUE";
+                                        final String conditionTo = (dates[1] != null)
+                                            ? String.format(
+                                                "%s <= '%s'",
+                                                path,
+                                                new SimpleDateFormat("yyyy-MM-dd").format(dates[1])) : "TRUE";
+                                        wheresMain.add(String.format("(%s AND %s)", conditionFrom, conditionTo));
+                                    }
+                                } else {
+                                    wheresMain.add(String.format("%s = %s", path, String.valueOf(value)));
+                                }
+                            } else if (property.getValue()
+                                        instanceof PotenzialflaecheReportServerAction.KeytableReportProperty) {
+                                final String filterPath =
+                                    ((PotenzialflaecheReportServerAction.KeytableReportProperty)property.getValue())
+                                            .getFilterPath();
+                                if (value instanceof Collection) {
+                                    final List<String> subWheres = new ArrayList<>();
+                                    for (final MetaObjectNode mon : (Collection<MetaObjectNode>)value) {
+                                        subWheres.add(String.format("%s = %d", filterPath, mon.getObjectId()));
+                                    }
+                                    wheresMain.add(String.format("(%s)", String.join(" OR ", subWheres)));
+                                } else if (value instanceof MetaObjectNode) {
+                                    wheresMain.add(String.format(
+                                            "%s = %d",
+                                            filterPath,
+                                            ((MetaObjectNode)value).getObjectId()));
+                                }
+                            }
+                        } else {
+                            wheresMain.add(String.format("%s IS NULL", path, value));
+                        }
+                    }
+                }
+            }
         }
-        if (bezeichnung != null) {
-            wheres.add(String.format("pf_potenzialflaeche.bezeichnung ILIKE '%%%s%%'", bezeichnung));
-        }
-        if (kampagneId != null) {
-            wheres.add(String.format("kampagne = %d", kampagneId));
+
+        final String where;
+        switch (searchMode) {
+            case AND: {
+                where = (!wheresMain.isEmpty()) ? String.join(" AND ", wheresMain) : "TRUE";
+                break;
+            }
+            case OR: {
+                where = (!wheresMain.isEmpty()) ? String.join(" OR ", wheresMain) : "FALSE";
+                break;
+            }
+            default: {
+                where = "TRUE";
+                break;
+            }
         }
 
         final String geomCondition;
@@ -197,39 +333,28 @@ public class PotenzialflaecheSearch extends AbstractCidsServerSearch implements 
                             + "GeometryFromText('%1$s')))",
                     geomString,
                     INTERSECTS_BUFFER);
+            leftJoins.add("geom ON pf_potenzialflaeche.geometrie = geom.id");
+            wheresMain.add(geomCondition);
         } else {
             geomCondition = null;
         }
-        final String where;
-        switch (searchMode) {
-            case AND: {
-                if (geomCondition != null) {
-                    wheres.add(geomCondition);
-                }
-                where = "WHERE " + String.join(" AND ", wheres);
-                break;
-            }
-            case OR: {
-                where = "WHERE " + String.join(" OR ", wheres)
-                            + ((geomCondition != null) ? String.format(" AND %s", geomCondition) : "");
-                break;
-            }
-            default: {
-                where = ((geomCondition != null) ? String.format("WHERE %s", geomCondition) : "");
-                break;
-            }
-        }
-        final String query = String.format(""
-                        + "SELECT "
-                        + "	(SELECT id FROM cs_class WHERE table_name ILIKE 'pf_potenzialflaeche') AS class_id, "
-                        + "	pf_potenzialflaeche.id AS object_id, "
-                        + "	pf_potenzialflaeche.bezeichnung AS object_name "
-                        + "FROM pf_potenzialflaeche "
-                        + "LEFT JOIN pf_kampagne ON pf_potenzialflaeche.kampagne = pf_kampagne.id "
-                        + "%s "
-                        + "%s ",
-                (geomCondition != null) ? "LEFT JOIN geom ON pf_potenzialflaeche.geometrie = geom.id " : "",
-                where);
+
+        final String select = String.format(
+                "DISTINCT %s AS class_id, %s AS object_id, %s AS object_name",
+                "(SELECT id FROM cs_class WHERE table_name ILIKE 'pf_potenzialflaeche')",
+                "pf_potenzialflaeche.id",
+                "pf_potenzialflaeche.bezeichnung");
+        final String from = String.format(
+                "pf_potenzialflaeche %s",
+                (!leftJoins.isEmpty()) ? String.format("LEFT JOIN %s", String.join(" LEFT JOIN ", leftJoins)) : "");
+        final String whereWithGeomCondition = String.format(
+                "(%s) AND %s",
+                where,
+                (geom != null) ? geomCondition : "TRUE");
+        final String query = String.format("SELECT %s FROM %s WHERE %s",
+                select,
+                from,
+                whereWithGeomCondition);
         return query;
     }
 
@@ -262,13 +387,20 @@ public class PotenzialflaecheSearch extends AbstractCidsServerSearch implements 
 
         //~ Instance fields ----------------------------------------------------
 
-        @JsonProperty private String nummer;
-        @JsonProperty private String bezeichnung;
-        @JsonProperty private Integer kampagneId;
+        @JsonProperty private SearchMode searchMode = SearchMode.AND;
+        @JsonProperty private final Collection<FilterInfo> filters = new ArrayList<>();
 
-        @JsonProperty private SearchMode searchModeMain = SearchMode.AND;
-        @JsonProperty private SearchMode searchModeArt = SearchMode.AND;
-        @JsonProperty private Collection<ExtratInfo> extraInfos;
+        //~ Methods ------------------------------------------------------------
+
+        /**
+         * DOCUMENT ME!
+         *
+         * @param  property  DOCUMENT ME!
+         * @param  value     DOCUMENT ME!
+         */
+        public void addFilter(final PotenzialflaecheReportServerAction.Property property, final Object value) {
+            filters.add(new FilterInfo(property, value));
+        }
     }
 
     /**
@@ -284,21 +416,24 @@ public class PotenzialflaecheSearch extends AbstractCidsServerSearch implements 
         getterVisibility = JsonAutoDetect.Visibility.NONE,
         setterVisibility = JsonAutoDetect.Visibility.NONE
     )
-    public abstract static class ExtratInfo extends StorableSearch.Configuration {
+    public static class FilterInfo extends StorableSearch.Configuration {
 
         //~ Instance fields ----------------------------------------------------
 
-        @JsonProperty private final String flaechenartSchluessel;
+        @JsonProperty private final Object value;
+        @JsonProperty private final PotenzialflaecheReportServerAction.Property property;
 
         //~ Constructors -------------------------------------------------------
 
         /**
-         * Creates a new ArtInfo object.
+         * Creates a new FilterInfo object.
          *
-         * @param  flaechenartSchluessel  DOCUMENT ME!
+         * @param  property  DOCUMENT ME!
+         * @param  value     DOCUMENT ME!
          */
-        protected ExtratInfo(final String flaechenartSchluessel) {
-            this.flaechenartSchluessel = flaechenartSchluessel;
+        public FilterInfo(final PotenzialflaecheReportServerAction.Property property, final Object value) {
+            this.property = property;
+            this.value = value;
         }
     }
 

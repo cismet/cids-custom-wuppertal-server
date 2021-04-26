@@ -16,14 +16,19 @@ import Sirius.server.middleware.impls.domainserver.DomainServerImpl;
 import Sirius.server.middleware.types.MetaObject;
 import Sirius.server.middleware.types.MetaObjectNode;
 
+import Sirius.util.MapImageFactoryConfiguration;
+
+import com.fasterxml.jackson.databind.ObjectMapper;
+
 import com.vividsolutions.jts.geom.Geometry;
 
 import lombok.Getter;
+import lombok.Setter;
 
 import net.sf.jasperreports.engine.JasperReport;
 import net.sf.jasperreports.engine.data.JRBeanCollectionDataSource;
 
-import java.awt.image.BufferedImage;
+import org.apache.commons.lang.StringEscapeUtils;
 
 import java.io.ByteArrayInputStream;
 
@@ -38,11 +43,14 @@ import java.util.Map;
 
 import javax.imageio.ImageIO;
 
+import de.cismet.cids.custom.utils.ByteArrayFactoryHandler;
 import de.cismet.cids.custom.utils.StampedJasperReportServerAction;
+import de.cismet.cids.custom.utils.properties.PotenzialflaechenMapfactoryProperties;
 import de.cismet.cids.custom.wunda_blau.search.server.AlkisLandparcelGeometryMonSearch;
 import de.cismet.cids.custom.wunda_blau.search.server.BplaeneMonSearch;
 import de.cismet.cids.custom.wunda_blau.search.server.FnpHauptnutzungenMonSearch;
 import de.cismet.cids.custom.wunda_blau.search.server.KstGeometryMonSearch;
+import de.cismet.cids.custom.wunda_blau.search.server.RpdKategorieMonSearch;
 import de.cismet.cids.custom.wunda_blau.search.server.StadtraumtypMonSearch;
 import de.cismet.cids.custom.wunda_blau.search.server.WohnlagenKategorisierungMonSearch;
 
@@ -90,58 +98,153 @@ public class PotenzialflaecheReportServerAction extends StampedJasperReportServe
 
         //~ Enum constants -----------------------------------------------------
 
-        BEZEICHNUNG(new SingleFieldReportProperty("bezeichnung")), NUMMER(new SingleFieldReportProperty("nummer")),
-        BESCHREIBUNG_FLAECHE(new SingleFieldReportProperty("beschreibung_flaeche")),
-        NOTWENDIGE_MASSNAHMEN(new SingleFieldReportProperty("notwendige_massnahmen")),
-        QUELLE(new SingleFieldReportProperty("quelle")), STAND(new SingleFieldReportProperty("stand")),
-        LAGEBEWERTUNG_VERKEHR(new SingleFieldReportProperty("fk_lagebewertung_verkehr")),
-        SIEDLUNGSRAEUMLICHE_LAGE(new SingleFieldReportProperty("fk_siedlungsraeumliche_lage")),
-        VORHANDENE_BEBAUUNG(new SingleFieldReportProperty("bestand_bebauung")),
-        TOPOGRAFIE(new SingleFieldReportProperty("topografie")), HANG(new SingleFieldReportProperty("fk_ausrichtung")),
-        VERWERTBARKEIT(new SingleFieldReportProperty("fk_verwertbarkeit")),
-        VERFUEGBBARKEIT(new SingleFieldReportProperty("verfuegbarkeit")),
-        ENTWICKLUNGSAUSSSICHTEN(new SingleFieldReportProperty("fk_entwicklungsaussichten")),
-        ENTWICKLUNGSSTAND(new SingleFieldReportProperty("fk_entwicklungsstand")),
-        REVITALISIERUNG(new SingleFieldReportProperty("fk_revitalisierung")),
-        AEUSSERE_ERSCHLIESSUNG(new SingleFieldReportProperty("fk_aeussere_erschliessung")),
-        POTENZIALART(new SingleFieldReportProperty("fk_potenzialart")),
-        WOHNEINHEITEN(new SingleFieldReportProperty("fk_wohneinheiten")),
-        WOHNEINHEITEN_ANZAHL(new SingleFieldReportProperty("anzahl_wohneinheiten")),
-        JAHR_NUTZUNGSAUFGABE(new SingleFieldReportProperty("jahr_brachflaeche")),
-        OEPNV_ANBINDUNG(new SingleFieldReportProperty("fk_oepnv")),
-        BISHERIGE_NUTZUNG(new SingleFieldReportProperty("bisherige_nutzung")),
-        EIGENTUEMER(new SingleFieldReportProperty("arr_eigentuemer")),
-        KLIMAINFORMATIONEN(new SingleFieldReportProperty("fk_klimainformationen")),
-        VERSIEGELUNG(new SingleFieldReportProperty("fk_versiegelung")),
-        BAUORDNUNGSRECHT_GENEHMIGUNG(new SingleFieldReportProperty("fk_bauordnungsrecht_genehmigung")),
-        BAUORDNUNGSRECHT_BAULAST(new SingleFieldReportProperty("fk_bauordnungsrecht_baulast")),
-        FESTSETZUNGEN_BPLAN(new SingleFieldReportProperty("festsetzungen_bplan")),
-        FESTSETZUNGEN_BPLAN_STAND(new SingleFieldReportProperty("stand_festsetzungen_bplan")),
+        BEZEICHNUNG(new SimpleFieldReportProperty("bezeichnung", String.class.getCanonicalName()), "Bezeichnung"),
+        NUMMER(new SimpleFieldReportProperty("nummer", String.class.getCanonicalName()), "Nummer"),
+        BESCHREIBUNG_FLAECHE(new SimpleFieldReportProperty("beschreibung_flaeche", String.class.getCanonicalName()),
+            "Beschreibung der Fläche"),
+        NOTWENDIGE_MASSNAHMEN(new SimpleFieldReportProperty("notwendige_massnahmen", String.class.getCanonicalName()),
+            "Notwendige Maßnahmen"),
+        INTERNE_HINWEISE(new SimpleFieldReportProperty("interne_hinweise", String.class.getCanonicalName()),
+            "Interne Hinweise"),
+        QUELLE(new SimpleFieldReportProperty("quelle", String.class.getCanonicalName()), "Quelle"),
+        WOHNEINHEITEN_ANZAHL(new SimpleFieldReportProperty("anzahl_wohneinheiten", Integer.class.getCanonicalName()),
+            "Anzahl mögl. Wohneinheiten"),
+        FESTSETZUNGEN_BPLAN(new SimpleFieldReportProperty("festsetzungen_bplan", String.class.getCanonicalName()),
+            "Festsetzungen"),
+        BAUORDNUNGSRECHT_STAND(new SimpleFieldReportProperty(
+                "stand_bauordnungsrecht",
+                Date.class.getCanonicalName()),
+            "Stand des Bauordnungsrechts"),
+        STAND(new SimpleFieldReportProperty("stand", Date.class.getCanonicalName()), "Stand der Beschreibung"),
+        JAHR_NUTZUNGSAUFGABE(new SimpleFieldReportProperty("jahr_brachflaeche", Date.class.getCanonicalName()),
+            "Nutzungsaufgabe"),
+        VORHANDENE_BEBAUUNG(new SimpleFieldReportProperty("bestand_bebauung", String.class.getCanonicalName()),
+            "Bestand Bebauung"),
 
-        NAEHE_ZU(new MultifieldReportProperty("arr_naehen_zu")),
-        BRACHFLAECHENKATEGORIE(new MultifieldReportProperty("arr_brachflaechen")),
-        UMGEBUNGSNUTZUNG(new MultifieldReportProperty("umgebungsnutzung")),
-        EMPFOHLENE_NUTZUNGEN(new MultifieldReportProperty("arr_empfohlene_nutzungen")),
-        EMPFOHLENE_NUTZUNGEN_WOHNEN(new MultifieldReportProperty("arr_empfohlene_nutzungen_wohnen")),
-        REGIONALPLAN(new MultifieldReportProperty("regionalplan")),
-        RESTRIKTIONEN(new MultifieldReportProperty("arr_restriktionen")),
-        HANDLUNGSDRUCK(new MultifieldReportProperty("handlungsdruck")),
-        HANDLUNGSPRIORITAET(new MultifieldReportProperty("fk_handlungsprioritaet")),
+        KAMPAGNE(new KeytableReportProperty("kampagne", "pf_kampagne"), "Kampagne"),
+        LAGEBEWERTUNG_VERKEHR(new KeytableReportProperty("fk_lagebewertung_verkehr", "pf_lagebewertung_verkehr"),
+            "Lagebewertung, Verkehr"),
+        SIEDLUNGSRAEUMLICHE_LAGE(new KeytableReportProperty(
+                "fk_siedlungsraeumliche_lage",
+                "pf_siedlungsraeumliche_lage"),
+            "Siedlungsräumliche Lage"),
+        TOPOGRAFIE(new KeytableReportProperty("topografie", "pf_topografie"), "Topografie"),
+        HANG(new KeytableReportProperty("fk_ausrichtung", "pf_ausrichtung"), "Hang"),
+        VERWERTBARKEIT(new KeytableReportProperty("fk_verwertbarkeit", "pf_verwertbarkeit"), "Verwertbarkeit"),
+        VERFUEGBBARKEIT(new KeytableReportProperty("verfuegbarkeit", "pf_verfuegbarkeit"), "Verfügbarkeit"),
+        ENTWICKLUNGSAUSSSICHTEN(new KeytableReportProperty("fk_entwicklungsaussichten", "pf_entwicklungsaussichten"),
+            "Entwicklungsaussichten"),
+        ENTWICKLUNGSSTAND(new KeytableReportProperty("fk_entwicklungsstand", "pf_entwicklungsstand"),
+            "Entwicklungsstand"),
+        REVITALISIERUNG(new KeytableReportProperty("fk_revitalisierung", "pf_revitalisierung"), "Revitalisierung"),
+        AEUSSERE_ERSCHLIESSUNG(new KeytableReportProperty("fk_aeussere_erschliessung", "pf_aeussere_erschliessung"),
+            "Äußere Erschließung"),
+        POTENZIALART(new KeytableReportProperty("fk_potenzialart", "pf_potenzialart"), "Potenzialart"),
+        KATEGORIE(new KeytableReportProperty("fk_kategorie", "pf_kategorie"), "Kategorie"),
+        WOHNEINHEITEN(new KeytableReportProperty("fk_wohneinheiten", "pf_wohneinheiten"), "Wohneinheiten"),
+        OEPNV_ANBINDUNG(new KeytableReportProperty("fk_oepnv", "pf_oepnv"), "ÖPNV-Qualität"),
+        KLIMAINFORMATIONEN(new KeytableReportProperty("fk_klimainformationen", "pf_klimainformationen"),
+            "Klimainformationen"),
+        VERSIEGELUNG(new KeytableReportProperty("fk_versiegelung", "pf_versiegelung"), "Versiegelung"),
+        BAUORDNUNGSRECHT_GENEHMIGUNG(new KeytableReportProperty(
+                "fk_bauordnungsrecht_genehmigung",
+                "pf_bauordnungsrecht_genehmigung"),
+            "Bauordnungsrecht (Genehmigung)"),
+        BAUORDNUNGSRECHT_BAULAST(new KeytableReportProperty(
+                "fk_bauordnungsrecht_baulast",
+                "pf_bauordnungsrecht_baulast"),
+            "Bauordnungsrecht (Baulast)"),
+        HANDLUNGSDRUCK(new KeytableReportProperty("handlungsdruck", "pf_handlungsdruck"), "Handlungsdruck"),
+        HANDLUNGSPRIORITAET(new KeytableReportProperty("fk_handlungsprioritaet", "pf_handlungsprioritaet"),
+            "Handlungspriorität"),
+
+        EIGENTUEMER(new MultiKeytableReportProperty(
+                "arr_eigentuemer",
+                "pf_eigentuemer_arr.fk_eigentuemer",
+                "pf_eigentuemer"),
+            "Eigentümer"),
+        BISHERIGE_NUTZUNG(new MultiKeytableReportProperty(
+                "bisherige_nutzung",
+                "pf_potenzialflaechen_bisherige_nutzung.nutzung",
+                "pf_nutzung"),
+            "Bisherige Nutzung"),
+        UMGEBUNGSNUTZUNG(new MultiKeytableReportProperty(
+                "umgebungsnutzung",
+                "pf_potenzialflaechen_umgebungsnutzung.nutzung",
+                "pf_nutzung"),
+            "Umgebungsnutzung"),
+        NAEHE_ZU(new MultiKeytableReportProperty("arr_naehen_zu", "pf_naehen_zu.fk_naehe_zu", "pf_naehe_zu"), "Nähe zu"),
+        BRACHFLAECHENKATEGORIE(new MultiKeytableReportProperty(
+                "arr_brachflaechen",
+                "pf_brachflaechen.fk_brachflaeche",
+                "pf_brachflaeche"),
+            "Brachfläche"),
+        EMPFOHLENE_NUTZUNGEN(new MultiKeytableReportProperty(
+                "arr_empfohlene_nutzungen",
+                "pf_empfohlene_nutzungen.fk_empfohlene_nutzung",
+                "pf_empfohlene_nutzung"),
+            "Empfohlene Nutzung"),
+        EMPFOHLENE_NUTZUNGEN_WOHNEN(new MultiKeytableReportProperty(
+                "arr_empfohlene_nutzungen_wohnen",
+                "pf_empfohlene_nutzungen_wohnen.fk_empfohlene_nutzung_wohnen",
+                "pf_empfohlene_nutzung_wohnen"),
+            "Empfohlene Art der Wohnnutzung"),
+        RESTRIKTIONEN(new MultiKeytableReportProperty(
+                "arr_restriktionen",
+                "pf_restriktionen.fk_restriktion",
+                "pf_restriktion"),
+            "Restriktionen"),
 
         KARTE_ORTHO(new VirtualReportProperty() {
 
                 @Override
-                protected Object calculateProperty(final PotenzialflaecheReportServerAction serverAction) {
-                    return serverAction.getOrthoImage();
+                protected Object calculateProperty(final PotenzialflaecheReportServerAction serverAction)
+                        throws Exception {
+                    final PfMapConfiguration config = createPreconfiguredPfMapConfiguration();
+                    config.setType(PfMapConfiguration.Type.PF_ORTHO);
+                    config.setWidth(
+                        PotenzialflaechenMapfactoryProperties.getInstance().getWidth(PfMapConfiguration.Type.PF_ORTHO));
+                    config.setHeight(
+                        PotenzialflaechenMapfactoryProperties.getInstance().getHeight(
+                            PfMapConfiguration.Type.PF_ORTHO));
+                    config.setBuffer(
+                        PotenzialflaechenMapfactoryProperties.getInstance().getBuffer(
+                            PfMapConfiguration.Type.PF_ORTHO));
+                    config.setIds(Arrays.asList(serverAction.getFlaecheBean().getMetaObject().getId()));
+
+                    final byte[] bytes = ByteArrayFactoryHandler.getInstance()
+                                .execute(
+                                    "de.cismet.cids.custom.reports.wunda_blau.PfMapGenerator",
+                                    new ObjectMapper().writeValueAsString(config),
+                                    serverAction.getUser(),
+                                    serverAction.getConnectionContext());
+                    return ImageIO.read(new ByteArrayInputStream(bytes));
                 }
-            }),
+            }, "Karte (Ortho)"),
         KARTE_DGK(new VirtualReportProperty() {
 
                 @Override
-                protected Object calculateProperty(final PotenzialflaecheReportServerAction serverAction) {
-                    return serverAction.getDgkImage();
+                protected Object calculateProperty(final PotenzialflaecheReportServerAction serverAction)
+                        throws Exception {
+                    final PfMapConfiguration config = createPreconfiguredPfMapConfiguration();
+                    config.setType(PfMapConfiguration.Type.PF_DGK);
+                    config.setWidth(
+                        PotenzialflaechenMapfactoryProperties.getInstance().getWidth(PfMapConfiguration.Type.PF_DGK));
+                    config.setHeight(
+                        PotenzialflaechenMapfactoryProperties.getInstance().getHeight(PfMapConfiguration.Type.PF_DGK));
+                    config.setBuffer(
+                        PotenzialflaechenMapfactoryProperties.getInstance().getBuffer(PfMapConfiguration.Type.PF_DGK));
+
+                    config.setIds(Arrays.asList(serverAction.getFlaecheBean().getMetaObject().getId()));
+                    final byte[] bytes = ByteArrayFactoryHandler.getInstance()
+                                .execute(
+                                    "de.cismet.cids.custom.reports.wunda_blau.PfMapGenerator",
+                                    new ObjectMapper().writeValueAsString(config),
+                                    serverAction.getUser(),
+                                    serverAction.getConnectionContext());
+                    return ImageIO.read(new ByteArrayInputStream(bytes));
                 }
-            }),
+            }, "Karte (DGK)"),
         GROESSE(new VirtualReportProperty() {
 
                 @Override
@@ -158,7 +261,7 @@ public class PotenzialflaecheReportServerAction extends StampedJasperReportServe
                     final double ha = Math.round(area / 1000) / 10.0;
                     return String.format("%.2f m² (circa %.1f ha)", m2, ha);
                 }
-            }),
+            }, "Größe"),
         BEBAUUNGSPLAN(new MonSearchReportProperty() {
 
                 @Override
@@ -169,7 +272,7 @@ public class PotenzialflaecheReportServerAction extends StampedJasperReportServe
                             (Geometry)flaecheBean.getProperty("geometrie.geo_field"));
                     return serverSearch;
                 }
-            }),
+            }, "BPlan"),
         STADTBEZIRK(new MonSearchReportProperty() {
 
                 @Override
@@ -181,7 +284,7 @@ public class PotenzialflaecheReportServerAction extends StampedJasperReportServe
                             (Geometry)flaecheBean.getProperty("geometrie.geo_field"));
                     return serverSearch;
                 }
-            }),
+            }, "Stadtbezirke"),
         QUARTIER(new MonSearchReportProperty() {
 
                 @Override
@@ -193,7 +296,7 @@ public class PotenzialflaecheReportServerAction extends StampedJasperReportServe
                             (Geometry)flaecheBean.getProperty("geometrie.geo_field"));
                     return serverSearch;
                 }
-            }),
+            }, "Quartiere"),
         FLURSTUECKE(new MonSearchReportProperty() {
 
                 @Override
@@ -204,7 +307,7 @@ public class PotenzialflaecheReportServerAction extends StampedJasperReportServe
                             (Geometry)flaecheBean.getProperty("geometrie.geo_field"));
                     return serverSearch;
                 }
-            }),
+            }, "Flurstücke"),
         WOHNLAGEN(new MonSearchReportProperty() {
 
                 @Override
@@ -215,7 +318,7 @@ public class PotenzialflaecheReportServerAction extends StampedJasperReportServe
                             (Geometry)flaecheBean.getProperty("geometrie.geo_field"));
                     return serverSearch;
                 }
-            }),
+            }, "Wohnlagen"),
         STADTRAUMTYPEN(new MonSearchReportProperty() {
 
                 @Override
@@ -226,7 +329,7 @@ public class PotenzialflaecheReportServerAction extends StampedJasperReportServe
                             (Geometry)flaecheBean.getProperty("geometrie.geo_field"));
                     return serverSearch;
                 }
-            }),
+            }, "Stadtraumtypen"),
         FLAECHENNUTZUNGSPLAN(new MonSearchReportProperty() {
 
                 @Override
@@ -237,7 +340,19 @@ public class PotenzialflaecheReportServerAction extends StampedJasperReportServe
                             (Geometry)flaecheBean.getProperty("geometrie.geo_field"));
                     return serverSearch;
                 }
-            }),
+            }, "Flächennutzungsplan"),
+        REGIONALPLAN(new MonSearchReportProperty() {
+
+                @Override
+                protected MetaObjectNodeServerSearch createMonServerSearch(
+                        final PotenzialflaecheReportServerAction serverAction) {
+                    final CidsBean flaecheBean = serverAction.getFlaecheBean();
+                    final RpdKategorieMonSearch serverSearch = new RpdKategorieMonSearch(
+                            (Geometry)flaecheBean.getProperty("geometrie.geo_field"));
+                    return serverSearch;
+                }
+            }, "Regionalplan"),
+
         BODENRICHTWERTE(new MonSearchReportProperty() {
 
                 @Override
@@ -245,21 +360,31 @@ public class PotenzialflaecheReportServerAction extends StampedJasperReportServe
                         final PotenzialflaecheReportServerAction serverAction) {
                     return null;
                 }
-            });
+            }, "Bodenrichtwerte");
 
         //~ Instance fields ----------------------------------------------------
 
         @Getter private final ReportProperty value;
+        private final String toString;
 
         //~ Constructors -------------------------------------------------------
 
         /**
          * Creates a new Property object.
          *
-         * @param  value  DOCUMENT ME!
+         * @param  value     DOCUMENT ME!
+         * @param  toString  DOCUMENT ME!
          */
-        private Property(final ReportProperty value) {
+        private Property(final ReportProperty value, final String toString) {
             this.value = value;
+            this.toString = toString;
+        }
+
+        //~ Methods ------------------------------------------------------------
+
+        @Override
+        public String toString() {
+            return toString;
         }
     }
 
@@ -272,15 +397,13 @@ public class PotenzialflaecheReportServerAction extends StampedJasperReportServe
 
         //~ Enum constants -----------------------------------------------------
 
-        IMAGE_ORTHO, IMAGE_DGK, TEMPLATE
+        POTENZIALFLAECHE, TEMPLATE
     }
 
     //~ Instance fields --------------------------------------------------------
 
     private ConnectionContext connectionContext = ConnectionContext.createDummy();
 
-    @Getter private BufferedImage orthoImage;
-    @Getter private BufferedImage dgkImage;
     @Getter private CidsBean flaecheBean;
     @Getter private CidsBean templateBean;
 
@@ -291,26 +414,54 @@ public class PotenzialflaecheReportServerAction extends StampedJasperReportServe
         this.connectionContext = connectionContext;
     }
 
+    /**
+     * DOCUMENT ME!
+     *
+     * @param   object      DOCUMENT ME!
+     * @param   table_name  DOCUMENT ME!
+     * @param   key         DOCUMENT ME!
+     *
+     * @return  DOCUMENT ME!
+     *
+     * @throws  Exception  DOCUMENT ME!
+     */
+    private MetaObjectNode getFor(final Object object, final String table_name, final String key) throws Exception {
+        if (object instanceof MetaObjectNode) {
+            return (MetaObjectNode)object;
+        } else if (object instanceof Integer) {
+            return new MetaObjectNode(
+                    "WUNDA_BLAU",
+                    (Integer)object,
+                    CidsBean.getMetaClassFromTableName("WUNDA_BLAU", table_name, getConnectionContext()).getId());
+        } else if (object instanceof String) {
+            getMetaService().performCustomSearch(String.format(
+                    "SELECT id, (SELECT id FROM cs_class WHERE table_name ILIKE '%1$s') FROM %1$s WHERE %2$s = '%3$s' LIMIT 1;",
+                    table_name,
+                    key,
+                    StringEscapeUtils.escapeSql((String)object)),
+                getConnectionContext());
+        }
+        return null;
+    }
+
     @Override
     public Object execute(final Object body, final ServerActionParameter... params) {
-        final MetaObjectNode flaecheMon = (MetaObjectNode)body;
-        byte[] dgkImageBytes = null;
-        byte[] orthoImageBytes = null;
-        MetaObjectNode templateMon = null;
-
         try {
-            if (flaecheMon != null) {
-                if (params != null) {
-                    for (final ServerActionParameter sap : params) {
-                        if (sap.getKey().equals(Parameter.IMAGE_DGK.toString())) {
-                            dgkImageBytes = (byte[])sap.getValue();
-                        } else if (sap.getKey().equals(Parameter.IMAGE_ORTHO.toString())) {
-                            orthoImageBytes = (byte[])sap.getValue();
-                        } else if (sap.getKey().equals(Parameter.TEMPLATE.toString())) {
-                            templateMon = (MetaObjectNode)sap.getValue();
+            MetaObjectNode flaecheMon = getFor(body, "pf_potenzialflaeche", "nummer");
+            MetaObjectNode templateMon = null;
+
+            if (params != null) {
+                for (final ServerActionParameter sap : params) {
+                    if (sap.getKey().equals(Parameter.POTENZIALFLAECHE.toString())) {
+                        if (sap.getValue() instanceof MetaObjectNode) {
+                            flaecheMon = getFor(sap.getValue(), "pf_potenzialflaeche", "nummer");
                         }
+                    } else if (sap.getKey().equals(Parameter.TEMPLATE.toString())) {
+                        templateMon = getFor(sap.getValue(), "pf_steckbrieftemplate", "bezeichnung");
                     }
                 }
+            }
+            if (flaecheMon != null) {
                 flaecheBean = getMetaService().getMetaObject(
                             getUser(),
                             flaecheMon.getObjectId(),
@@ -361,10 +512,6 @@ public class PotenzialflaecheReportServerAction extends StampedJasperReportServe
                         BEAN_RESOURCE_MAP.put(template, new JasperReportServerResource(template));
                     }
 
-                    orthoImage = (orthoImageBytes != null) ? ImageIO.read(new ByteArrayInputStream(orthoImageBytes))
-                                                           : null;
-                    dgkImage = (dgkImageBytes != null) ? ImageIO.read(new ByteArrayInputStream(dgkImageBytes)) : null;
-
                     final JRBeanCollectionDataSource dataSource = new JRBeanCollectionDataSource(Arrays.asList(
                                 flaecheBean));
                     final Map<String, Object> parameters = generateParams();
@@ -408,18 +555,21 @@ public class PotenzialflaecheReportServerAction extends StampedJasperReportServe
      * DOCUMENT ME!
      *
      * @return  DOCUMENT ME!
+     *
+     * @throws  Exception  DOCUMENT ME!
      */
-    public Map generateParams() {
+    public Map generateParams() throws Exception {
         final HashMap params = new HashMap();
         for (final Property property : Property.values()) {
-            final String parameterName = property.toString();
+            final String parameterName = property.name();
             final ReportProperty reportProperty = property.getValue();
             if (reportProperty instanceof VirtualReportProperty) {
                 params.put(
                     parameterName,
                     ((VirtualReportProperty)reportProperty).calculateProperty(this));
-            } else if (reportProperty instanceof MultifieldReportProperty) {
-                final MultifieldReportProperty multiFieldReportProperty = (MultifieldReportProperty)reportProperty;
+            } else if (reportProperty instanceof MultiKeytableReportProperty) {
+                final MultiKeytableReportProperty multiFieldReportProperty = (MultiKeytableReportProperty)
+                    reportProperty;
                 final Collection beans = flaecheBean.getBeanCollectionProperty(multiFieldReportProperty.getPath());
                 if (beans != null) {
                     final Collection<String> strings = new ArrayList<>();
@@ -430,8 +580,8 @@ public class PotenzialflaecheReportServerAction extends StampedJasperReportServe
                     }
                     params.put(parameterName, String.join(", ", strings));
                 }
-            } else if (reportProperty instanceof SingleFieldReportProperty) {
-                final SingleFieldReportProperty fieldReportProperty = (SingleFieldReportProperty)reportProperty;
+            } else if (reportProperty instanceof PathReportProperty) {
+                final PathReportProperty fieldReportProperty = (PathReportProperty)reportProperty;
                 final Object object = flaecheBean.getProperty(fieldReportProperty.getPath());
                 final String value;
                 if (object == null) {
@@ -447,6 +597,21 @@ public class PotenzialflaecheReportServerAction extends StampedJasperReportServe
             }
         }
         return params;
+    }
+
+    /**
+     * DOCUMENT ME!
+     *
+     * @return  DOCUMENT ME!
+     */
+    private static PfMapConfiguration createPreconfiguredPfMapConfiguration() {
+        final PfMapConfiguration config = new PfMapConfiguration();
+        config.setBbX1(PotenzialflaechenMapfactoryProperties.getInstance().getHomeX1());
+        config.setBbY1(PotenzialflaechenMapfactoryProperties.getInstance().getHomeY1());
+        config.setBbX2(PotenzialflaechenMapfactoryProperties.getInstance().getHomeX2());
+        config.setBbY2(PotenzialflaechenMapfactoryProperties.getInstance().getHomeY2());
+        config.setSrs(PotenzialflaechenMapfactoryProperties.getInstance().getSrs());
+        return config;
     }
 
     //~ Inner Classes ----------------------------------------------------------
@@ -474,7 +639,7 @@ public class PotenzialflaecheReportServerAction extends StampedJasperReportServe
      * @version  $Revision$, $Date$
      */
     @Getter
-    public static class SingleFieldReportProperty extends ReportProperty {
+    public abstract static class PathReportProperty extends ReportProperty {
 
         //~ Instance fields ----------------------------------------------------
 
@@ -487,7 +652,7 @@ public class PotenzialflaecheReportServerAction extends StampedJasperReportServe
          *
          * @param  path  DOCUMENT ME!
          */
-        public SingleFieldReportProperty(final String path) {
+        public PathReportProperty(final String path) {
             this.path = path;
         }
     }
@@ -497,7 +662,11 @@ public class PotenzialflaecheReportServerAction extends StampedJasperReportServe
      *
      * @version  $Revision$, $Date$
      */
-    public static class MultifieldReportProperty extends SingleFieldReportProperty {
+    public static class SimpleFieldReportProperty extends PathReportProperty {
+
+        //~ Instance fields ----------------------------------------------------
+
+        @Getter private final String className;
 
         //~ Constructors -------------------------------------------------------
 
@@ -506,8 +675,81 @@ public class PotenzialflaecheReportServerAction extends StampedJasperReportServe
          *
          * @param  path  DOCUMENT ME!
          */
-        public MultifieldReportProperty(final String path) {
+        public SimpleFieldReportProperty(final String path) {
+            this(path, null);
+        }
+
+        /**
+         * Creates a new SinglefieldReportProperty object.
+         *
+         * @param  path       DOCUMENT ME!
+         * @param  className  DOCUMENT ME!
+         */
+        public SimpleFieldReportProperty(final String path, final String className) {
             super(path);
+
+            this.className = className;
+        }
+    }
+
+    /**
+     * DOCUMENT ME!
+     *
+     * @version  $Revision$, $Date$
+     */
+    public static class KeytableReportProperty extends PathReportProperty {
+
+        //~ Instance fields ----------------------------------------------------
+
+        @Getter private final String foreignTable;
+        @Getter private final String filterPath;
+
+        //~ Constructors -------------------------------------------------------
+
+        /**
+         * Creates a new SinglefieldReportProperty object.
+         *
+         * @param  bindingPath   DOCUMENT ME!
+         * @param  foreignTable  DOCUMENT ME!
+         */
+        public KeytableReportProperty(final String bindingPath, final String foreignTable) {
+            this(bindingPath, bindingPath, foreignTable);
+        }
+
+        /**
+         * Creates a new KeytableReportProperty object.
+         *
+         * @param  bindingPath   DOCUMENT ME!
+         * @param  filterPath    DOCUMENT ME!
+         * @param  foreignTable  DOCUMENT ME!
+         */
+        public KeytableReportProperty(final String bindingPath, final String filterPath, final String foreignTable) {
+            super(bindingPath);
+            this.foreignTable = foreignTable;
+            this.filterPath = filterPath;
+        }
+    }
+
+    /**
+     * DOCUMENT ME!
+     *
+     * @version  $Revision$, $Date$
+     */
+    public static class MultiKeytableReportProperty extends KeytableReportProperty {
+
+        //~ Constructors -------------------------------------------------------
+
+        /**
+         * Creates a new MultifieldReportProperty object.
+         *
+         * @param  bindingPath   DOCUMENT ME!
+         * @param  filterPath    DOCUMENT ME!
+         * @param  foreignTable  DOCUMENT ME!
+         */
+        public MultiKeytableReportProperty(final String bindingPath,
+                final String filterPath,
+                final String foreignTable) {
+            super(bindingPath, filterPath, foreignTable);
         }
     }
 
@@ -534,8 +776,11 @@ public class PotenzialflaecheReportServerAction extends StampedJasperReportServe
          * @param   serverAction  flaecheBean DOCUMENT ME!
          *
          * @return  DOCUMENT ME!
+         *
+         * @throws  Exception  DOCUMENT ME!
          */
-        protected abstract Object calculateProperty(final PotenzialflaecheReportServerAction serverAction);
+        protected abstract Object calculateProperty(final PotenzialflaecheReportServerAction serverAction)
+                throws Exception;
     }
 
     /**
@@ -597,5 +842,35 @@ public class PotenzialflaecheReportServerAction extends StampedJasperReportServe
                 return null;
             }
         }
+    }
+
+    /**
+     * DOCUMENT ME!
+     *
+     * @version  $Revision$, $Date$
+     */
+    @Getter
+    @Setter
+    public static class PfMapConfiguration extends MapImageFactoryConfiguration {
+
+        //~ Enums --------------------------------------------------------------
+
+        /**
+         * DOCUMENT ME!
+         *
+         * @version  $Revision$, $Date$
+         */
+        public enum Type {
+
+            //~ Enum constants -------------------------------------------------
+
+            PF_ORTHO, PF_DGK,
+        }
+
+        //~ Instance fields ----------------------------------------------------
+
+        private Type type;
+        private Collection<Integer> ids;
+        private Integer buffer;
     }
 }

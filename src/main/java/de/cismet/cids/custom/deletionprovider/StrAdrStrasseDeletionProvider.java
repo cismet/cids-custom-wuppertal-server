@@ -58,7 +58,7 @@ public class StrAdrStrasseDeletionProvider extends AbstractCustomDeletionProvide
     }
 
     @Override
-    public void customDeleteMetaObject(final User user, final MetaObject metaObject) throws Exception {
+    public boolean customDeleteMetaObject(final User user, final MetaObject metaObject) throws Exception {
         if (metaObject != null) {
             final CidsBean strBean = metaObject.getBean();
             final String strasse = strBean.getProperty(FIELD__KEY).toString();
@@ -70,5 +70,6 @@ public class StrAdrStrasseDeletionProvider extends AbstractCustomDeletionProvide
                     DELETE_KLEINER);
             }
         }
+        return false;
     }
 }
