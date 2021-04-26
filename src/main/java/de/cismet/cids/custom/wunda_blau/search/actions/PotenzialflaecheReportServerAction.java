@@ -447,15 +447,14 @@ public class PotenzialflaecheReportServerAction extends StampedJasperReportServe
     @Override
     public Object execute(final Object body, final ServerActionParameter... params) {
         try {
-            MetaObjectNode flaecheMon = getFor(body, "pf_potenzialflaeche", "nummer");
+            MetaObjectNode flaecheMon = (body != null)
+                ? ((body instanceof MetaObjectNode)
+                    ? (MetaObjectNode)body : getFor(new String((byte[])body), "pf_potenzialflaeche", "nummer")) : null;
             MetaObjectNode templateMon = null;
-
             if (params != null) {
                 for (final ServerActionParameter sap : params) {
                     if (sap.getKey().equals(Parameter.POTENZIALFLAECHE.toString())) {
-                        if (sap.getValue() instanceof MetaObjectNode) {
-                            flaecheMon = getFor(sap.getValue(), "pf_potenzialflaeche", "nummer");
-                        }
+                        flaecheMon = getFor(sap.getValue(), "pf_potenzialflaeche", "nummer");
                     } else if (sap.getKey().equals(Parameter.TEMPLATE.toString())) {
                         templateMon = getFor(sap.getValue(), "pf_steckbrieftemplate", "bezeichnung");
                     }
