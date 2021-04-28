@@ -39,6 +39,7 @@ import java.util.Arrays;
 import java.util.Collection;
 import java.util.Date;
 import java.util.HashMap;
+import java.util.List;
 import java.util.Map;
 
 import javax.imageio.ImageIO;
@@ -434,12 +435,17 @@ public class PotenzialflaecheReportServerAction extends StampedJasperReportServe
                     (Integer)object,
                     CidsBean.getMetaClassFromTableName("WUNDA_BLAU", table_name, getConnectionContext()).getId());
         } else if (object instanceof String) {
-            getMetaService().performCustomSearch(String.format(
-                    "SELECT id, (SELECT id FROM cs_class WHERE table_name ILIKE '%1$s') FROM %1$s WHERE %2$s = '%3$s' LIMIT 1;",
-                    table_name,
-                    key,
-                    StringEscapeUtils.escapeSql((String)object)),
-                getConnectionContext());
+            final List singelResult = getMetaService().performCustomSearch(String.format(
+                            "SELECT id, (SELECT id FROM cs_class WHERE table_name ILIKE '%1$s') FROM %1$s WHERE %2$s = '%3$s' LIMIT 1;",
+                            table_name,
+                            key,
+                            StringEscapeUtils.escapeSql((String)object)),
+                        getConnectionContext())
+                        .iterator()
+                        .next();
+            if ((singelResult != null) && (singelResult.size() == 2)) {
+                return new MetaObjectNode("WUNDA_BLAU", (Integer)singelResult.get(0), (Integer)singelResult.get(1));
+            }
         }
         return null;
     }
