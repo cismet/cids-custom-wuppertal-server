@@ -59,6 +59,7 @@ public class FnpHauptnutzungenMonSearch extends AbstractCidsServerSearch impleme
     @Getter private ConnectionContext connectionContext = ConnectionContext.createDummy();
 
     private Double buffer;
+    @Getter @Setter private Double cutoff;
 
     //~ Constructors -----------------------------------------------------------
 
@@ -66,16 +67,36 @@ public class FnpHauptnutzungenMonSearch extends AbstractCidsServerSearch impleme
      * Creates a new FnpHauptnutzungenSearch object.
      */
     public FnpHauptnutzungenMonSearch() {
-        this(null);
+        this(null, null);
+    }
+
+    /**
+     * Creates a new FnpHauptnutzungenMonSearch object.
+     *
+     * @param  geometry  DOCUMENT ME!
+     */
+    public FnpHauptnutzungenMonSearch(final Geometry geometry) {
+        this(geometry, null);
+    }
+
+    /**
+     * Creates a new FnpHauptnutzungenMonSearch object.
+     *
+     * @param  cutoff  DOCUMENT ME!
+     */
+    public FnpHauptnutzungenMonSearch(final Double cutoff) {
+        this(null, cutoff);
     }
 
     /**
      * Creates a new FnpHauptnutzungenSearch object.
      *
      * @param  geometry  DOCUMENT ME!
+     * @param  cutoff    DOCUMENT ME!
      */
-    public FnpHauptnutzungenMonSearch(final Geometry geometry) {
+    public FnpHauptnutzungenMonSearch(final Geometry geometry, final Double cutoff) {
         this.geometry = geometry;
+        this.cutoff = cutoff;
         this.searchInfo = new SearchInfo(
                 this.getClass().getName(),
                 this.getClass().getSimpleName(),
@@ -121,11 +142,12 @@ public class FnpHauptnutzungenMonSearch extends AbstractCidsServerSearch impleme
                 area = "st_area(geom.geo_field)";
             }
             final String query = ""
+                        + "SELECT * FROM ( "
                         + "SELECT "
                         + "  (SELECT id FROM cs_class WHERE table_name ILIKE 'fnp_hn_kategorie') AS class_id, "
                         + "  object_id, "
                         + "  min(object_name), "
-                        + "  sum(area) "
+                        + "  sum(area) AS sum "
                         + "FROM ( "
                         + "  SELECT "
                         + "    " + area + " AS area, "
@@ -137,7 +159,11 @@ public class FnpHauptnutzungenMonSearch extends AbstractCidsServerSearch impleme
                         + "  " + ((geomCondition != null) ? ("WHERE " + geomCondition) : " ")
                         + ") AS sub "
                         + "GROUP BY object_id "
-                        + "ORDER BY sum(area) DESC;";
+                        + "ORDER BY sum(area) DESC "
+                        + ") AS sub2 "
+                        + ""
+                        + (((geometry != null) && (cutoff != null)) ? (" WHERE sum >= " + (geometry.getArea() * cutoff))
+                                                                    : "") + ";";
 
             if (query != null) {
                 final MetaService ms = (MetaService)getActiveLocalServers().get("WUNDA_BLAU");
