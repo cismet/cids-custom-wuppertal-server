@@ -20,20 +20,15 @@ import com.vividsolutions.jts.geom.Geometry;
 
 import lombok.Getter;
 
-import net.sf.jasperreports.engine.JasperReport;
-
 import org.apache.commons.lang.StringEscapeUtils;
-
-import java.text.SimpleDateFormat;
+import org.apache.log4j.Logger;
 
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.Date;
-import java.util.HashMap;
 import java.util.List;
-import java.util.Map;
 
-import de.cismet.cids.custom.utils.StampedJasperReportServerAction;
+import de.cismet.cids.custom.utils.StampedByteArrayServerAction;
 import de.cismet.cids.custom.utils.WundaBlauServerResources;
 import de.cismet.cids.custom.utils.properties.PotenzialflaechenProperties;
 import de.cismet.cids.custom.wunda_blau.search.server.AlkisLandparcelGeometryMonSearch;
@@ -50,15 +45,12 @@ import de.cismet.cids.dynamics.CidsBean;
 
 import de.cismet.cids.server.actions.ServerAction;
 import de.cismet.cids.server.actions.ServerActionParameter;
-import de.cismet.cids.server.actions.UserAwareServerAction;
 import de.cismet.cids.server.search.MetaObjectNodeServerSearch;
 
-import de.cismet.cids.utils.serverresources.JasperReportServerResource;
 import de.cismet.cids.utils.serverresources.PropertiesServerResource;
 import de.cismet.cids.utils.serverresources.ServerResourcesLoader;
 
 import de.cismet.connectioncontext.ConnectionContext;
-import de.cismet.connectioncontext.ConnectionContextStore;
 
 /**
  * DOCUMENT ME!
@@ -67,18 +59,12 @@ import de.cismet.connectioncontext.ConnectionContextStore;
  * @version  $Revision$, $Date$
  */
 @org.openide.util.lookup.ServiceProvider(service = ServerAction.class)
-public class PotenzialflaecheReportServerAction extends StampedJasperReportServerAction
-        implements ConnectionContextStore,
-            UserAwareServerAction {
+public class PotenzialflaecheReportServerAction extends StampedByteArrayServerAction {
 
     //~ Static fields/initializers ---------------------------------------------
 
+    private static final transient Logger LOG = Logger.getLogger(PotenzialflaecheReportServerAction.class);
     public static final String TASK_NAME = "potenzialflaecheReport";
-
-    private static final Map<String, JasperReportServerResource> BEAN_RESOURCE_MAP = new HashMap<>();
-    private static String CURRENT_TEMPLATE = "";
-
-    private static final SimpleDateFormat SDF = new SimpleDateFormat("dd.MM.yyyy");
 
     //~ Enums ------------------------------------------------------------------
 
@@ -381,33 +367,34 @@ public class PotenzialflaecheReportServerAction extends StampedJasperReportServe
     }
 
     @Override
-    public Object execute(final Object body, final ServerActionParameter... params) {
-        try {
-            MetaObjectNode flaecheMon = (body != null)
-                ? ((body instanceof MetaObjectNode)
-                    ? (MetaObjectNode)body : getFor(new String((byte[])body), "pf_potenzialflaeche", "nummer")) : null;
-            MetaObjectNode templateMon = null;
-            if (params != null) {
-                for (final ServerActionParameter sap : params) {
-                    if (sap.getKey().equals(Parameter.POTENZIALFLAECHE.toString())) {
-                        flaecheMon = getFor(sap.getValue(), "pf_potenzialflaeche", "nummer");
-                    } else if (sap.getKey().equals(Parameter.TEMPLATE.toString())) {
-                        templateMon = getFor(sap.getValue(), "pf_steckbrieftemplate", "bezeichnung");
-                    }
+    public byte[] executeBeforeStamp(final Object body, final ServerActionParameter... params) throws Exception {
+        MetaObjectNode flaecheMon = (body != null)
+            ? ((body instanceof MetaObjectNode) ? (MetaObjectNode)body
+                                                : getFor(new String((byte[])body), "pf_potenzialflaeche", "nummer"))
+            : null;
+        MetaObjectNode templateMon = null;
+        if (params != null) {
+            for (final ServerActionParameter sap : params) {
+                if (sap.getKey().equals(Parameter.POTENZIALFLAECHE.toString())) {
+                    flaecheMon = getFor(sap.getValue(), "pf_potenzialflaeche", "nummer");
+                } else if (sap.getKey().equals(Parameter.TEMPLATE.toString())) {
+                    templateMon = getFor(sap.getValue(), "pf_steckbrieftemplate", "bezeichnung");
                 }
             }
-            if (flaecheMon != null) {
-                final PotenzialflaecheReportCreator.ReportConfiguration config =
-                    new PotenzialflaecheReportCreator.ReportConfiguration();
-                config.setId(flaecheMon.getObjectId());
-                config.setTemplateId((templateMon != null) ? templateMon.getObjectId() : null);
-                config.setSubreportDirectory(DomainServerImpl.getServerProperties().getServerResourcesBasePath() + "/");
-                config.setCacheDirectory(getProperties().getPictureCacheDirectory());
-                config.setBbX1(getProperties().getHomeX1());
-                config.setBbY1(getProperties().getHomeY1());
-                config.setBbX2(getProperties().getHomeX2());
-                config.setBbY2(getProperties().getHomeY2());
-                config.setSrs(getProperties().getSrs());
+        }
+        if (flaecheMon != null) {
+            final PotenzialflaecheReportCreator.ReportConfiguration config =
+                new PotenzialflaecheReportCreator.ReportConfiguration();
+            config.setId(flaecheMon.getObjectId());
+            config.setTemplateId((templateMon != null) ? templateMon.getObjectId() : null);
+            config.setSubreportDirectory(DomainServerImpl.getServerProperties().getServerResourcesBasePath() + "/");
+            config.setCacheDirectory(getProperties().getPictureCacheDirectory());
+            config.setUseCache(Boolean.TRUE);
+            config.setBbX1(getProperties().getHomeX1());
+            config.setBbY1(getProperties().getHomeY1());
+            config.setBbX2(getProperties().getHomeX2());
+            config.setBbY2(getProperties().getHomeY2());
+            config.setSrs(getProperties().getSrs());
 //
 //                final byte[] bytes = ByteArrayFactoryHandler.getInstance()
 //                            .execute(
@@ -419,27 +406,22 @@ public class PotenzialflaecheReportServerAction extends StampedJasperReportServe
 //                return bytes;
 
 //                    new PotenzialflaecheReportCreator.ReportConfiguration();
-                final CidsBean flaecheBean = getMetaService().getMetaObject(
-                            getUser(),
-                            flaecheMon.getObjectId(),
-                            flaecheMon.getClassId(),
-                            getConnectionContext())
-                            .getBean();
-                final PotenzialflaecheReportCreatorImpl creator = new PotenzialflaecheReportCreatorImpl(
-                        getProperties(),
-                        flaecheBean,
+            final CidsBean flaecheBean = getMetaService().getMetaObject(
                         getUser(),
-                        getMetaService(),
-                        getConnectionContext());
+                        flaecheMon.getObjectId(),
+                        flaecheMon.getClassId(),
+                        getConnectionContext())
+                        .getBean();
+            final PotenzialflaecheReportCreatorImpl creator = new PotenzialflaecheReportCreatorImpl(
+                    getProperties(),
+                    flaecheBean,
+                    getUser(),
+                    getMetaService(),
+                    getConnectionContext());
 
-                return creator.createReport(config);
-            } else {
-                return null;
-            }
-        } catch (final Exception ex) {
-            LOG.error(ex, ex);
-            return ex;
-        } finally {
+            return creator.createReport(config);
+        } else {
+            throw new Exception("flaeche not given");
         }
     }
 
@@ -457,11 +439,6 @@ public class PotenzialflaecheReportServerAction extends StampedJasperReportServe
     @Override
     public String getTaskName() {
         return TASK_NAME;
-    }
-
-    @Override
-    protected JasperReport getJasperReport() throws Exception {
-        return ServerResourcesLoader.getInstance().loadJasperReport(BEAN_RESOURCE_MAP.get(CURRENT_TEMPLATE));
     }
 
     @Override

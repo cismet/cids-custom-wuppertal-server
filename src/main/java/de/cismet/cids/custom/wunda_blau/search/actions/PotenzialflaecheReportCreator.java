@@ -194,6 +194,7 @@ public interface PotenzialflaecheReportCreator extends ConnectionContextProvider
         private Integer id;
         private Collection<Integer> ids;
         private Integer buffer;
+        private Boolean useCache;
         private String cacheDirectory;
 
         //~ Methods ------------------------------------------------------------

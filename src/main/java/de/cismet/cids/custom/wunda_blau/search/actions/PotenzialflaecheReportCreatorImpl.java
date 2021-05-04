@@ -137,11 +137,14 @@ public class PotenzialflaecheReportCreatorImpl extends AbstractPotenzialflaecheR
     public MapConfiguration getMapConfiguration(final Type type) {
         final PotenzialflaecheReportCreator.MapConfiguration config =
             new PotenzialflaecheReportCreator.MapConfiguration();
-        config.setBbX1(getProperties().getHomeX1());
-        config.setBbY1(getProperties().getHomeY1());
-        config.setBbX2(getProperties().getHomeX2());
-        config.setBbY2(getProperties().getHomeY2());
-        config.setSrs(getProperties().getSrs());
+        config.setBbX1(getReportConfiguration().getBbX1());
+        config.setBbY1(getReportConfiguration().getBbY1());
+        config.setBbX2(getReportConfiguration().getBbX2());
+        config.setBbY2(getReportConfiguration().getBbY1());
+        config.setSrs(getReportConfiguration().getSrs());
+        config.setId(getReportConfiguration().getId());
+        config.setCacheDirectory(getReportConfiguration().getCacheDirectory());
+        config.setUseCache(getReportConfiguration().getUseCache());
 
         config.setType(type);
         config.setWidth(getProperties().getWidth(type));
@@ -149,9 +152,7 @@ public class PotenzialflaecheReportCreatorImpl extends AbstractPotenzialflaecheR
         config.setBuffer(getProperties().getBuffer(type));
         config.setMapUrl(getProperties().getMapUrl(type));
         config.setMapDpi(getProperties().getMapDPI(type));
-        config.setId(getFlaecheBean().getMetaObject().getId());
         config.setIds(Arrays.asList(getFlaecheBean().getMetaObject().getId()));
-        config.setCacheDirectory(getProperties().getPictureCacheDirectory());
         return config;
     }
 
