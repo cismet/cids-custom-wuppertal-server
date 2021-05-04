@@ -49,7 +49,6 @@ public class RpdKategorieMonSearch extends AbstractCidsServerSearch implements G
     //~ Static fields/initializers ---------------------------------------------
 
     private static final transient Logger LOG = Logger.getLogger(RpdKategorieMonSearch.class);
-    private static final String INTERSECTS_BUFFER = SearchProperties.getInstance().getIntersectsBuffer();
 
     //~ Instance fields --------------------------------------------------------
 
@@ -127,10 +126,9 @@ public class RpdKategorieMonSearch extends AbstractCidsServerSearch implements G
             if (geometry != null) {
                 final String geomString = PostGisGeometryFactory.getPostGisCompliantDbString(geometry);
                 geomCondition = "(geom.geo_field && GeometryFromText('" + geomString + "') AND intersects("
-                            + "st_buffer(geo_field, " + ((getBuffer() != null) ? getBuffer() : INTERSECTS_BUFFER) + "),"
-                            + "GeometryFromText('"
-                            + geomString
-                            + "')))";
+                            + ((getBuffer() != null)
+                                ? ("st_buffer(GeometryFromText('" + geomString + "'), " + getBuffer() + ")")
+                                : "geo_field") + ", geo_field))";
             } else {
                 geomCondition = null;
             }
