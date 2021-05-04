@@ -31,23 +31,14 @@ import de.cismet.connectioncontext.ConnectionContextStore;
  * @version  $Revision$, $Date$
  */
 @org.openide.util.lookup.ServiceProvider(service = DomainServerStartupHook.class)
-public class VermessungsunterlagenStartupHook implements DomainServerStartupHook, ConnectionContextStore {
+public class VermessungsunterlagenStartupHook extends AbstractWundaBlauStartupHook {
 
     //~ Static fields/initializers ---------------------------------------------
 
     private static final transient org.apache.log4j.Logger LOG = org.apache.log4j.Logger.getLogger(
             VermessungsunterlagenStartupHook.class);
 
-    //~ Instance fields --------------------------------------------------------
-
-    private ConnectionContext connectionContext = ConnectionContext.createDummy();
-
     //~ Methods ----------------------------------------------------------------
-
-    @Override
-    public void initWithConnectionContext(final ConnectionContext connectionContext) {
-        this.connectionContext = connectionContext;
-    }
 
     @Override
     public void domainServerStarted() {
@@ -56,14 +47,7 @@ public class VermessungsunterlagenStartupHook implements DomainServerStartupHook
                 @Override
                 public void run() {
                     try {
-                        DomainServerImpl metaService = null;
-                        while (metaService == null) {
-                            metaService = DomainServerImpl.getServerInstance();
-                            try {
-                                Thread.sleep(1000);
-                            } catch (InterruptedException ex) {
-                            }
-                        }
+                        final DomainServerImpl metaService = waitForMetaService();
 
                         final String login_name = VermessungsunterlagenHelper.getInstance()
                                     .getProperties()
@@ -90,10 +74,5 @@ public class VermessungsunterlagenStartupHook implements DomainServerStartupHook
     @Override
     public String getDomain() {
         return "WUNDA_BLAU";
-    }
-
-    @Override
-    public ConnectionContext getConnectionContext() {
-        return connectionContext;
     }
 }

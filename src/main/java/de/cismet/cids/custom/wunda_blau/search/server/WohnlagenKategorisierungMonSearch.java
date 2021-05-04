@@ -49,7 +49,6 @@ public class WohnlagenKategorisierungMonSearch extends AbstractCidsServerSearch 
     //~ Static fields/initializers ---------------------------------------------
 
     private static final transient Logger LOG = Logger.getLogger(WohnlagenKategorisierungMonSearch.class);
-    private static final String INTERSECTS_BUFFER = SearchProperties.getInstance().getIntersectsBuffer();
 
     //~ Instance fields --------------------------------------------------------
 
@@ -103,10 +102,11 @@ public class WohnlagenKategorisierungMonSearch extends AbstractCidsServerSearch 
             final Geometry geometry = getGeometry();
             final String geomCondition;
             if (geometry != null) {
-                geomCondition = String.format(
-                        "(geom.geo_field && GeometryFromText('%1$s') AND intersects(st_buffer(geom.geo_field, %2$s), GeometryFromText('%1$s')))",
-                        PostGisGeometryFactory.getPostGisCompliantDbString(geometry),
-                        ((getBuffer() != null) ? getBuffer() : INTERSECTS_BUFFER));
+                final String geomString = PostGisGeometryFactory.getPostGisCompliantDbString(geometry);
+                geomCondition = "(geom.geo_field && GeometryFromText('" + geomString + "') AND intersects("
+                            + ((getBuffer() != null)
+                                ? ("st_buffer(GeometryFromText('" + geomString + "'), " + getBuffer() + ")")
+                                : "geo_field") + ", geo_field))";
             } else {
                 geomCondition = null;
             }
@@ -129,10 +129,10 @@ public class WohnlagenKategorisierungMonSearch extends AbstractCidsServerSearch 
                         + "    " + area + " AS area, "
                         + "    wohnlage_kategorie.id AS object_id, "
                         + "    wohnlage_kategorie.name AS object_name "
-                        + "  FROM wohnlage "
-                        + "  LEFT JOIN wohnlage_kategorisierung ON wohnlage_kategorisierung.fk_wohnlage = wohnlage.id "
-                        + "  LEFT JOIN wohnlage_kategorie ON wohnlage_kategorie.id = wohnlage_kategorisierung.fk_kategorie "
-                        + "  " + ((geomCondition != null) ? "LEFT JOIN geom ON geom.id = wohnlage.fk_geometrie " : " ")
+                        + "  FROM wohnlage_flaeche "
+                        + "  LEFT JOIN wohnlage_kategorie ON wohnlage_kategorie.id = wohnlage_flaeche.fk_wohnlage_kategorie "
+                        + "  "
+                        + ((geomCondition != null) ? "LEFT JOIN geom ON geom.id = wohnlage_flaeche.fk_geom " : " ")
                         + "  " + ((geomCondition != null) ? ("WHERE " + geomCondition) : " ")
                         + ") AS sub "
                         + "GROUP BY object_id "

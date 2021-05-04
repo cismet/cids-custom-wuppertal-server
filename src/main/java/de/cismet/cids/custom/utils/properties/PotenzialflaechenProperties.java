@@ -14,12 +14,9 @@ package de.cismet.cids.custom.utils.properties;
 
 import lombok.Getter;
 
-import java.util.Properties;
+import de.cismet.cids.custom.wunda_blau.search.actions.PotenzialflaecheReportCreator;
 
-import de.cismet.cids.custom.utils.WundaBlauServerResources;
-import de.cismet.cids.custom.wunda_blau.search.actions.PotenzialflaecheReportServerAction.PfMapConfiguration;
-
-import de.cismet.cids.utils.serverresources.ServerResourcesLoader;
+import de.cismet.cids.utils.serverresources.DefaultServerResourcePropertiesHandler;
 
 /**
  * DOCUMENT ME!
@@ -28,12 +25,12 @@ import de.cismet.cids.utils.serverresources.ServerResourcesLoader;
  * @version  $Revision$, $Date$
  */
 @Getter
-public class PotenzialflaechenMapfactoryProperties {
+public class PotenzialflaechenProperties extends DefaultServerResourcePropertiesHandler {
 
     //~ Static fields/initializers ---------------------------------------------
 
     private static final org.apache.log4j.Logger LOG = org.apache.log4j.Logger.getLogger(
-            PotenzialflaechenMapfactoryProperties.class);
+            PotenzialflaechenProperties.class);
 
     private static final String DEFAULT_MAP_URL = "";
     private static final String DEFAULT_SRS = "EPSG:25832";
@@ -46,22 +43,45 @@ public class PotenzialflaechenMapfactoryProperties {
     private static final double DEFAULT_HOME_X2 = 7.1d;
     private static final double DEFAULT_HOME_Y2 = 49.33d;
 
-    //~ Instance fields --------------------------------------------------------
-
-    private final Properties properties;
+    private static final String PROP__FILE_CACHE_DIRECTORY = "fileCacheDirectory";
+    private static final String PROP__REPORT_FACTORY = "reportFactory";
+    private static final String PROP__MAP_FACTORY = "mapFactory";
+    private static final String PROP__SUBREPORT_DIR = "subreportDir";
 
     //~ Constructors -----------------------------------------------------------
 
     /**
-     * Creates a new FormSolutionsProperties object.
-     *
-     * @param  properties  DOCUMENT ME!
+     * Creates a new PotenzialflaechenProperties object.
      */
-    private PotenzialflaechenMapfactoryProperties(final Properties properties) {
-        this.properties = properties;
+    public PotenzialflaechenProperties() {
     }
 
     //~ Methods ----------------------------------------------------------------
+
+    /**
+     * DOCUMENT ME!
+     *
+     * @param   name  DOCUMENT ME!
+     *
+     * @return  DOCUMENT ME!
+     */
+    public String getReportFile(final String name) {
+        try {
+            return getProperties().getProperty(String.format("report_%s", name));
+        } catch (final Exception ex) {
+            LOG.info(String.format("property for report_%s not found", name), ex);
+            return null;
+        }
+    }
+
+    /**
+     * DOCUMENT ME!
+     *
+     * @return  DOCUMENT ME!
+     */
+    public String getPictureCacheDirectory() {
+        return getProperties().getProperty(PROP__FILE_CACHE_DIRECTORY, null);
+    }
 
     /**
      * DOCUMENT ME!
@@ -70,7 +90,7 @@ public class PotenzialflaechenMapfactoryProperties {
      *
      * @return  DOCUMENT ME!
      */
-    public String getMapUrl(final PfMapConfiguration.Type type) {
+    public String getMapUrl(final PotenzialflaecheReportCreator.Type type) {
         try {
             return getProperties().getProperty(String.format("mapUrl_%s", type.name()), DEFAULT_MAP_URL);
         } catch (final Exception ex) {
@@ -86,7 +106,7 @@ public class PotenzialflaechenMapfactoryProperties {
      *
      * @return  DOCUMENT ME!
      */
-    public Integer getMapDPI(final PfMapConfiguration.Type type) {
+    public Integer getMapDPI(final PotenzialflaecheReportCreator.Type type) {
         try {
             return Integer.parseInt(getProperties().getProperty(String.format("mapDPI_%s", type.name())));
         } catch (final Exception ex) {
@@ -102,7 +122,7 @@ public class PotenzialflaechenMapfactoryProperties {
      *
      * @return  DOCUMENT ME!
      */
-    public Integer getWidth(final PfMapConfiguration.Type type) {
+    public Integer getWidth(final PotenzialflaecheReportCreator.Type type) {
         try {
             return Integer.parseInt(getProperties().getProperty(String.format("mapWidth_%s", type.name())));
         } catch (final Exception ex) {
@@ -118,7 +138,7 @@ public class PotenzialflaechenMapfactoryProperties {
      *
      * @return  DOCUMENT ME!
      */
-    public Integer getHeight(final PfMapConfiguration.Type type) {
+    public Integer getHeight(final PotenzialflaecheReportCreator.Type type) {
         try {
             return Integer.parseInt(getProperties().getProperty(String.format("mapHeight_%s", type.name())));
         } catch (final Exception ex) {
@@ -134,7 +154,7 @@ public class PotenzialflaechenMapfactoryProperties {
      *
      * @return  DOCUMENT ME!
      */
-    public Integer getBuffer(final PfMapConfiguration.Type type) {
+    public Integer getBuffer(final PotenzialflaecheReportCreator.Type type) {
         try {
             return Integer.parseInt(getProperties().getProperty(String.format("buffer_%s", type.name())));
         } catch (final Exception ex) {
@@ -218,42 +238,40 @@ public class PotenzialflaechenMapfactoryProperties {
      *
      * @return  DOCUMENT ME!
      */
-    public static PotenzialflaechenMapfactoryProperties getInstance() {
-        return LazyInitialiser.INSTANCE;
+    public String getReportFactory() {
+        try {
+            return getProperties().getProperty(PROP__REPORT_FACTORY, null);
+        } catch (final Exception ex) {
+            LOG.info(String.format("Property %s not set", PROP__REPORT_FACTORY), ex);
+            return null;
+        }
     }
-
-    //~ Inner Classes ----------------------------------------------------------
 
     /**
      * DOCUMENT ME!
      *
-     * @version  $Revision$, $Date$
+     * @return  DOCUMENT ME!
      */
-    private static final class LazyInitialiser {
-
-        //~ Static fields/initializers -----------------------------------------
-
-        private static final PotenzialflaechenMapfactoryProperties INSTANCE;
-
-        static {
-            PotenzialflaechenMapfactoryProperties instance = null;
-            try {
-                final Properties properties = ServerResourcesLoader.getInstance()
-                            .loadProperties(WundaBlauServerResources.POTENZIALFLAECHEN_MAPFACTORY_PROPERTIES
-                                .getValue());
-                instance = new PotenzialflaechenMapfactoryProperties(properties);
-            } catch (final Exception ex) {
-                LOG.error(ex, ex);
-            }
-            INSTANCE = instance;
+    public String getMapFactory() {
+        try {
+            return getProperties().getProperty(PROP__MAP_FACTORY, null);
+        } catch (final Exception ex) {
+            LOG.info(String.format("Property %s not set", PROP__MAP_FACTORY), ex);
+            return null;
         }
+    }
 
-        //~ Constructors -------------------------------------------------------
-
-        /**
-         * Creates a new LazyInitialiser object.
-         */
-        private LazyInitialiser() {
+    /**
+     * DOCUMENT ME!
+     *
+     * @return  DOCUMENT ME!
+     */
+    public String getSubreportDir() {
+        try {
+            return getProperties().getProperty(PROP__SUBREPORT_DIR, null);
+        } catch (final Exception ex) {
+            LOG.info(String.format("Property %s not set", PROP__SUBREPORT_DIR), ex);
+            return null;
         }
     }
 }
