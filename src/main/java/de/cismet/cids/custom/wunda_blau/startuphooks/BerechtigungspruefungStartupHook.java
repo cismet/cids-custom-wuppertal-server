@@ -23,9 +23,6 @@ import de.cismet.cids.custom.utils.berechtigungspruefung.BerechtigungspruefungHa
 import de.cismet.cids.custom.utils.berechtigungspruefung.BerechtigungspruefungProperties;
 import de.cismet.cids.custom.utils.formsolutions.FormSolutionsBestellungBerechtigungspruefungHandler;
 
-import de.cismet.connectioncontext.ConnectionContext;
-import de.cismet.connectioncontext.ConnectionContextStore;
-
 /**
  * DOCUMENT ME!
  *
@@ -33,23 +30,14 @@ import de.cismet.connectioncontext.ConnectionContextStore;
  * @version  $Revision$, $Date$
  */
 @org.openide.util.lookup.ServiceProvider(service = DomainServerStartupHook.class)
-public class BerechtigungspruefungStartupHook implements DomainServerStartupHook, ConnectionContextStore {
+public class BerechtigungspruefungStartupHook extends AbstractWundaBlauStartupHook {
 
     //~ Static fields/initializers ---------------------------------------------
 
     private static final transient org.apache.log4j.Logger LOG = org.apache.log4j.Logger.getLogger(
             BerechtigungspruefungStartupHook.class);
 
-    //~ Instance fields --------------------------------------------------------
-
-    private ConnectionContext connectionContext = ConnectionContext.createDummy();
-
     //~ Methods ----------------------------------------------------------------
-
-    @Override
-    public void initWithConnectionContext(final ConnectionContext connectionContext) {
-        this.connectionContext = connectionContext;
-    }
 
     @Override
     public void domainServerStarted() {
@@ -57,14 +45,7 @@ public class BerechtigungspruefungStartupHook implements DomainServerStartupHook
 
                 @Override
                 public void run() {
-                    DomainServerImpl metaService = null;
-                    while (metaService == null) {
-                        metaService = DomainServerImpl.getServerInstance();
-                        try {
-                            Thread.sleep(1000);
-                        } catch (InterruptedException ex) {
-                        }
-                    }
+                    final DomainServerImpl metaService = waitForMetaService();
 
                     try {
                         final Object userServer = Naming.lookup("rmi://localhost/userServer");
@@ -90,15 +71,5 @@ public class BerechtigungspruefungStartupHook implements DomainServerStartupHook
                     }
                 }
             }).start();
-    }
-
-    @Override
-    public String getDomain() {
-        return "WUNDA_BLAU";
-    }
-
-    @Override
-    public ConnectionContext getConnectionContext() {
-        return connectionContext;
     }
 }
