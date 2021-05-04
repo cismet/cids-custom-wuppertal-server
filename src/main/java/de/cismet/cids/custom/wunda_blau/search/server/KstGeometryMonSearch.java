@@ -49,7 +49,6 @@ public class KstGeometryMonSearch extends AbstractCidsServerSearch implements Re
     //~ Static fields/initializers ---------------------------------------------
 
     private static final transient Logger LOG = Logger.getLogger(KstGeometryMonSearch.class);
-    private static final String INTERSECTS_BUFFER = SearchProperties.getInstance().getIntersectsBuffer();
 
     //~ Enums ------------------------------------------------------------------
 
@@ -147,10 +146,9 @@ public class KstGeometryMonSearch extends AbstractCidsServerSearch implements Re
             if (geom != null) {
                 final String geomString = PostGisGeometryFactory.getPostGisCompliantDbString(geom);
                 geomCondition = "(geom.geo_field && GeometryFromText('" + geomString + "') AND intersects("
-                            + "st_buffer(geo_field, " + ((getBuffer() != null) ? getBuffer() : INTERSECTS_BUFFER) + "),"
-                            + "GeometryFromText('"
-                            + geomString
-                            + "')))";
+                            + ((getBuffer() != null)
+                                ? ("st_buffer(GeometryFromText('" + geomString + "'), " + getBuffer() + ")")
+                                : "geo_field") + ", geo_field))";
             } else {
                 geomCondition = null;
             }

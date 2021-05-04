@@ -27,11 +27,11 @@ import de.cismet.cids.utils.serverresources.ServerResourcesLoader;
  * @version  $Revision$, $Date$
  */
 @org.openide.util.lookup.ServiceProvider(service = DomainServerStartupHook.class)
-public class WundaServerStartupHook implements DomainServerStartupHook {
+public class WundaServerResourcesStartupHook implements DomainServerStartupHook {
 
     //~ Static fields/initializers ---------------------------------------------
 
-    private static final Logger LOG = Logger.getLogger(WundaServerStartupHook.class.getName());
+    private static final Logger LOG = Logger.getLogger(WundaServerResourcesStartupHook.class.getName());
 
     //~ Methods ----------------------------------------------------------------
 

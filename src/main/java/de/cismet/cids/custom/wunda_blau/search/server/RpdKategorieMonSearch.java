@@ -49,7 +49,6 @@ public class RpdKategorieMonSearch extends AbstractCidsServerSearch implements G
     //~ Static fields/initializers ---------------------------------------------
 
     private static final transient Logger LOG = Logger.getLogger(RpdKategorieMonSearch.class);
-    private static final String INTERSECTS_BUFFER = SearchProperties.getInstance().getIntersectsBuffer();
 
     //~ Instance fields --------------------------------------------------------
 
@@ -57,6 +56,8 @@ public class RpdKategorieMonSearch extends AbstractCidsServerSearch implements G
 
     @Getter private final SearchInfo searchInfo;
     @Getter private ConnectionContext connectionContext = ConnectionContext.createDummy();
+
+    @Getter @Setter private Double cutoff;
 
     private Double buffer;
 
@@ -66,16 +67,36 @@ public class RpdKategorieMonSearch extends AbstractCidsServerSearch implements G
      * Creates a new WohnlagenKategorisierungSearch object.
      */
     public RpdKategorieMonSearch() {
-        this(null);
+        this(null, null);
+    }
+
+    /**
+     * Creates a new RpdKategorieMonSearch object.
+     *
+     * @param  geometry  DOCUMENT ME!
+     */
+    public RpdKategorieMonSearch(final Geometry geometry) {
+        this(geometry, null);
+    }
+
+    /**
+     * Creates a new RpdKategorieMonSearch object.
+     *
+     * @param  cutoff  DOCUMENT ME!
+     */
+    public RpdKategorieMonSearch(final Double cutoff) {
+        this(null, cutoff);
     }
 
     /**
      * Creates a new WohnlagenKategorisierungSearch object.
      *
      * @param  geometry  DOCUMENT ME!
+     * @param  cutoff    DOCUMENT ME!
      */
-    public RpdKategorieMonSearch(final Geometry geometry) {
+    public RpdKategorieMonSearch(final Geometry geometry, final Double cutoff) {
         this.geometry = geometry;
+        this.cutoff = cutoff;
         this.searchInfo = new SearchInfo(
                 this.getClass().getName(),
                 this.getClass().getSimpleName(),
@@ -105,10 +126,9 @@ public class RpdKategorieMonSearch extends AbstractCidsServerSearch implements G
             if (geometry != null) {
                 final String geomString = PostGisGeometryFactory.getPostGisCompliantDbString(geometry);
                 geomCondition = "(geom.geo_field && GeometryFromText('" + geomString + "') AND intersects("
-                            + "st_buffer(geo_field, " + ((getBuffer() != null) ? getBuffer() : INTERSECTS_BUFFER) + "),"
-                            + "GeometryFromText('"
-                            + geomString
-                            + "')))";
+                            + ((getBuffer() != null)
+                                ? ("st_buffer(GeometryFromText('" + geomString + "'), " + getBuffer() + ")")
+                                : "geo_field") + ", geo_field))";
             } else {
                 geomCondition = null;
             }
@@ -121,11 +141,12 @@ public class RpdKategorieMonSearch extends AbstractCidsServerSearch implements G
                 area = "st_area(geom.geo_field)";
             }
             final String query = ""
+                        + "SELECT * FROM ( "
                         + "SELECT "
                         + "  (SELECT id FROM cs_class WHERE table_name ILIKE 'rpd_kategorie') AS class_id, "
                         + "  object_id, "
                         + "  min(object_name), "
-                        + "  sum(area) "
+                        + "  sum(area) AS sum "
                         + "FROM ( "
                         + "  SELECT "
                         + "    " + area + " AS area, "
@@ -137,7 +158,11 @@ public class RpdKategorieMonSearch extends AbstractCidsServerSearch implements G
                         + "  " + ((geomCondition != null) ? ("WHERE " + geomCondition) : " ")
                         + ") AS sub "
                         + "GROUP BY object_id "
-                        + "ORDER BY sum(area) DESC;";
+                        + "ORDER BY sum(area) DESC "
+                        + ") AS sub2 "
+                        + ""
+                        + (((geometry != null) && (cutoff != null)) ? (" WHERE sum >= " + (geometry.getArea() * cutoff))
+                                                                    : "") + ";";
             if (query != null) {
                 final MetaService ms = (MetaService)getActiveLocalServers().get("WUNDA_BLAU");
 
