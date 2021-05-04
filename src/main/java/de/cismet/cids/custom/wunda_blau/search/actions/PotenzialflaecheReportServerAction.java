@@ -16,40 +16,31 @@ import Sirius.server.middleware.impls.domainserver.DomainServerImpl;
 import Sirius.server.middleware.types.MetaObject;
 import Sirius.server.middleware.types.MetaObjectNode;
 
-import Sirius.util.MapImageFactoryConfiguration;
-
-import com.fasterxml.jackson.databind.ObjectMapper;
-
 import com.vividsolutions.jts.geom.Geometry;
 
 import lombok.Getter;
-import lombok.Setter;
 
 import net.sf.jasperreports.engine.JasperReport;
-import net.sf.jasperreports.engine.data.JRBeanCollectionDataSource;
 
 import org.apache.commons.lang.StringEscapeUtils;
-
-import java.io.ByteArrayInputStream;
 
 import java.text.SimpleDateFormat;
 
 import java.util.ArrayList;
-import java.util.Arrays;
 import java.util.Collection;
 import java.util.Date;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
-import javax.imageio.ImageIO;
-
-import de.cismet.cids.custom.utils.ByteArrayFactoryHandler;
 import de.cismet.cids.custom.utils.StampedJasperReportServerAction;
-import de.cismet.cids.custom.utils.properties.PotenzialflaechenMapfactoryProperties;
+import de.cismet.cids.custom.utils.WundaBlauServerResources;
+import de.cismet.cids.custom.utils.properties.PotenzialflaechenProperties;
 import de.cismet.cids.custom.wunda_blau.search.server.AlkisLandparcelGeometryMonSearch;
+import de.cismet.cids.custom.wunda_blau.search.server.BodenrichtwertZoneMonSearch;
 import de.cismet.cids.custom.wunda_blau.search.server.BplaeneMonSearch;
 import de.cismet.cids.custom.wunda_blau.search.server.FnpHauptnutzungenMonSearch;
+import de.cismet.cids.custom.wunda_blau.search.server.GeometrySearch;
 import de.cismet.cids.custom.wunda_blau.search.server.KstGeometryMonSearch;
 import de.cismet.cids.custom.wunda_blau.search.server.RpdKategorieMonSearch;
 import de.cismet.cids.custom.wunda_blau.search.server.StadtraumtypMonSearch;
@@ -63,6 +54,7 @@ import de.cismet.cids.server.actions.UserAwareServerAction;
 import de.cismet.cids.server.search.MetaObjectNodeServerSearch;
 
 import de.cismet.cids.utils.serverresources.JasperReportServerResource;
+import de.cismet.cids.utils.serverresources.PropertiesServerResource;
 import de.cismet.cids.utils.serverresources.ServerResourcesLoader;
 
 import de.cismet.connectioncontext.ConnectionContext;
@@ -199,58 +191,22 @@ public class PotenzialflaecheReportServerAction extends StampedJasperReportServe
         KARTE_ORTHO(new VirtualReportProperty() {
 
                 @Override
-                protected Object calculateProperty(final PotenzialflaecheReportServerAction serverAction)
-                        throws Exception {
-                    final PfMapConfiguration config = createPreconfiguredPfMapConfiguration();
-                    config.setType(PfMapConfiguration.Type.PF_ORTHO);
-                    config.setWidth(
-                        PotenzialflaechenMapfactoryProperties.getInstance().getWidth(PfMapConfiguration.Type.PF_ORTHO));
-                    config.setHeight(
-                        PotenzialflaechenMapfactoryProperties.getInstance().getHeight(
-                            PfMapConfiguration.Type.PF_ORTHO));
-                    config.setBuffer(
-                        PotenzialflaechenMapfactoryProperties.getInstance().getBuffer(
-                            PfMapConfiguration.Type.PF_ORTHO));
-                    config.setIds(Arrays.asList(serverAction.getFlaecheBean().getMetaObject().getId()));
-
-                    final byte[] bytes = ByteArrayFactoryHandler.getInstance()
-                                .execute(
-                                    "de.cismet.cids.custom.reports.wunda_blau.PfMapGenerator",
-                                    new ObjectMapper().writeValueAsString(config),
-                                    serverAction.getUser(),
-                                    serverAction.getConnectionContext());
-                    return ImageIO.read(new ByteArrayInputStream(bytes));
+                public Object calculateProperty(final PotenzialflaecheReportCreator creator) throws Exception {
+                    return creator.loadMapFor(PotenzialflaecheReportCreator.Type.PF_ORTHO);
                 }
             }, "Karte (Ortho)"),
         KARTE_DGK(new VirtualReportProperty() {
 
                 @Override
-                protected Object calculateProperty(final PotenzialflaecheReportServerAction serverAction)
-                        throws Exception {
-                    final PfMapConfiguration config = createPreconfiguredPfMapConfiguration();
-                    config.setType(PfMapConfiguration.Type.PF_DGK);
-                    config.setWidth(
-                        PotenzialflaechenMapfactoryProperties.getInstance().getWidth(PfMapConfiguration.Type.PF_DGK));
-                    config.setHeight(
-                        PotenzialflaechenMapfactoryProperties.getInstance().getHeight(PfMapConfiguration.Type.PF_DGK));
-                    config.setBuffer(
-                        PotenzialflaechenMapfactoryProperties.getInstance().getBuffer(PfMapConfiguration.Type.PF_DGK));
-
-                    config.setIds(Arrays.asList(serverAction.getFlaecheBean().getMetaObject().getId()));
-                    final byte[] bytes = ByteArrayFactoryHandler.getInstance()
-                                .execute(
-                                    "de.cismet.cids.custom.reports.wunda_blau.PfMapGenerator",
-                                    new ObjectMapper().writeValueAsString(config),
-                                    serverAction.getUser(),
-                                    serverAction.getConnectionContext());
-                    return ImageIO.read(new ByteArrayInputStream(bytes));
+                public Object calculateProperty(final PotenzialflaecheReportCreator creator) throws Exception {
+                    return creator.loadMapFor(PotenzialflaecheReportCreator.Type.PF_DGK);
                 }
             }, "Karte (DGK)"),
         GROESSE(new VirtualReportProperty() {
 
                 @Override
-                protected String calculateProperty(final PotenzialflaecheReportServerAction serverAction) {
-                    final CidsBean flaecheBean = serverAction.getFlaecheBean();
+                public String calculateProperty(final PotenzialflaecheReportCreator creator) {
+                    final CidsBean flaecheBean = creator.getFlaecheBean();
                     final Object geo = flaecheBean.getProperty("geometrie.geo_field");
                     double area = 0.0;
 
@@ -263,103 +219,77 @@ public class PotenzialflaecheReportServerAction extends StampedJasperReportServe
                     return String.format("%.2f m² (circa %.1f ha)", m2, ha);
                 }
             }, "Größe"),
-        BEBAUUNGSPLAN(new MonSearchReportProperty() {
+        BEBAUUNGSPLAN(new MonSearchReportProperty("nummer") {
 
                 @Override
-                protected MetaObjectNodeServerSearch createMonServerSearch(
-                        final PotenzialflaecheReportServerAction serverAction) {
-                    final CidsBean flaecheBean = serverAction.getFlaecheBean();
-                    final BplaeneMonSearch serverSearch = new BplaeneMonSearch(
-                            (Geometry)flaecheBean.getProperty("geometrie.geo_field"));
-                    return serverSearch;
+                public MetaObjectNodeServerSearch createMonServerSearch(
+                        final PotenzialflaecheReportCreator creator) {
+                    return new BplaeneMonSearch();
                 }
             }, "BPlan"),
-        STADTBEZIRK(new MonSearchReportProperty() {
+        STADTBEZIRK(new MonSearchReportProperty("name") {
 
                 @Override
-                protected MetaObjectNodeServerSearch createMonServerSearch(
-                        final PotenzialflaecheReportServerAction serverAction) {
-                    final CidsBean flaecheBean = serverAction.getFlaecheBean();
-                    final KstGeometryMonSearch serverSearch = new KstGeometryMonSearch(
-                            KstGeometryMonSearch.SearchFor.BEZIRK,
-                            (Geometry)flaecheBean.getProperty("geometrie.geo_field"));
-                    return serverSearch;
+                public MetaObjectNodeServerSearch createMonServerSearch(
+                        final PotenzialflaecheReportCreator creator) {
+                    return new KstGeometryMonSearch(KstGeometryMonSearch.SearchFor.BEZIRK);
                 }
             }, "Stadtbezirke"),
-        QUARTIER(new MonSearchReportProperty() {
+        QUARTIER(new MonSearchReportProperty("name") {
 
                 @Override
-                protected MetaObjectNodeServerSearch createMonServerSearch(
-                        final PotenzialflaecheReportServerAction serverAction) {
-                    final CidsBean flaecheBean = serverAction.getFlaecheBean();
-                    final KstGeometryMonSearch serverSearch = new KstGeometryMonSearch(
-                            KstGeometryMonSearch.SearchFor.QUARTIER,
-                            (Geometry)flaecheBean.getProperty("geometrie.geo_field"));
-                    return serverSearch;
+                public MetaObjectNodeServerSearch createMonServerSearch(
+                        final PotenzialflaecheReportCreator creator) {
+                    return new KstGeometryMonSearch(KstGeometryMonSearch.SearchFor.QUARTIER);
                 }
             }, "Quartiere"),
-        FLURSTUECKE(new MonSearchReportProperty() {
+        FLURSTUECKE(new MonSearchReportProperty("alkis-id") {
 
                 @Override
-                protected MetaObjectNodeServerSearch createMonServerSearch(
-                        final PotenzialflaecheReportServerAction serverAction) {
-                    final CidsBean flaecheBean = serverAction.getFlaecheBean();
-                    final AlkisLandparcelGeometryMonSearch serverSearch = new AlkisLandparcelGeometryMonSearch(
-                            (Geometry)flaecheBean.getProperty("geometrie.geo_field"));
-                    return serverSearch;
+                public MetaObjectNodeServerSearch createMonServerSearch(
+                        final PotenzialflaecheReportCreator creator) {
+                    return new AlkisLandparcelGeometryMonSearch();
                 }
             }, "Flurstücke"),
-        WOHNLAGEN(new MonSearchReportProperty() {
+        WOHNLAGEN(new MonSearchReportProperty("name") {
 
                 @Override
-                protected MetaObjectNodeServerSearch createMonServerSearch(
-                        final PotenzialflaecheReportServerAction serverAction) {
-                    final CidsBean flaecheBean = serverAction.getFlaecheBean();
-                    final WohnlagenKategorisierungMonSearch serverSearch = new WohnlagenKategorisierungMonSearch(
-                            (Geometry)flaecheBean.getProperty("geometrie.geo_field"));
-                    return serverSearch;
+                public MetaObjectNodeServerSearch createMonServerSearch(
+                        final PotenzialflaecheReportCreator creator) {
+                    return new WohnlagenKategorisierungMonSearch();
                 }
             }, "Wohnlagen"),
-        STADTRAUMTYPEN(new MonSearchReportProperty() {
+        STADTRAUMTYPEN(new MonSearchReportProperty("bezeichnung") {
 
                 @Override
-                protected MetaObjectNodeServerSearch createMonServerSearch(
-                        final PotenzialflaecheReportServerAction serverAction) {
-                    final CidsBean flaecheBean = serverAction.getFlaecheBean();
-                    final StadtraumtypMonSearch serverSearch = new StadtraumtypMonSearch(
-                            (Geometry)flaecheBean.getProperty("geometrie.geo_field"));
-                    return serverSearch;
+                public MetaObjectNodeServerSearch createMonServerSearch(
+                        final PotenzialflaecheReportCreator creator) {
+                    return new StadtraumtypMonSearch();
                 }
             }, "Stadtraumtypen"),
-        FLAECHENNUTZUNGSPLAN(new MonSearchReportProperty() {
+        FLAECHENNUTZUNGSPLAN(new MonSearchReportProperty("nutzung") {
 
                 @Override
-                protected MetaObjectNodeServerSearch createMonServerSearch(
-                        final PotenzialflaecheReportServerAction serverAction) {
-                    final CidsBean flaecheBean = serverAction.getFlaecheBean();
-                    final FnpHauptnutzungenMonSearch serverSearch = new FnpHauptnutzungenMonSearch(
-                            (Geometry)flaecheBean.getProperty("geometrie.geo_field"));
-                    return serverSearch;
+                public MetaObjectNodeServerSearch createMonServerSearch(
+                        final PotenzialflaecheReportCreator creator) {
+                    return new FnpHauptnutzungenMonSearch();
                 }
             }, "Flächennutzungsplan"),
-        REGIONALPLAN(new MonSearchReportProperty() {
+        REGIONALPLAN(new MonSearchReportProperty("bezeichnung") {
 
                 @Override
-                protected MetaObjectNodeServerSearch createMonServerSearch(
-                        final PotenzialflaecheReportServerAction serverAction) {
-                    final CidsBean flaecheBean = serverAction.getFlaecheBean();
-                    final RpdKategorieMonSearch serverSearch = new RpdKategorieMonSearch(
-                            (Geometry)flaecheBean.getProperty("geometrie.geo_field"));
-                    return serverSearch;
+                public MetaObjectNodeServerSearch createMonServerSearch(
+                        final PotenzialflaecheReportCreator creator) {
+                    return new RpdKategorieMonSearch(0.2d);
                 }
             }, "Regionalplan"),
 
-        BODENRICHTWERTE(new MonSearchReportProperty() {
+        BODENRICHTWERTE(new MonSearchReportProperty("bodenrichtwert") {
 
                 @Override
-                protected MetaObjectNodeServerSearch createMonServerSearch(
-                        final PotenzialflaecheReportServerAction serverAction) {
-                    return null;
+                public MetaObjectNodeServerSearch createMonServerSearch(
+                        final PotenzialflaecheReportCreator creator) {
+                    return new BodenrichtwertZoneMonSearch();
                 }
             }, "Bodenrichtwerte");
 
@@ -405,8 +335,8 @@ public class PotenzialflaecheReportServerAction extends StampedJasperReportServe
 
     private ConnectionContext connectionContext = ConnectionContext.createDummy();
 
-    @Getter private CidsBean flaecheBean;
-    @Getter private CidsBean templateBean;
+    private final PropertiesServerResource PSR = (PropertiesServerResource)
+        WundaBlauServerResources.POTENZIALFLAECHEN_PROPERTIES.getValue();
 
     //~ Methods ----------------------------------------------------------------
 
@@ -467,70 +397,42 @@ public class PotenzialflaecheReportServerAction extends StampedJasperReportServe
                 }
             }
             if (flaecheMon != null) {
-                flaecheBean = getMetaService().getMetaObject(
+                final PotenzialflaecheReportCreator.ReportConfiguration config =
+                    new PotenzialflaecheReportCreator.ReportConfiguration();
+                config.setId(flaecheMon.getObjectId());
+                config.setTemplateId((templateMon != null) ? templateMon.getObjectId() : null);
+                config.setSubreportDirectory(DomainServerImpl.getServerProperties().getServerResourcesBasePath() + "/");
+                config.setCacheDirectory(getProperties().getPictureCacheDirectory());
+                config.setBbX1(getProperties().getHomeX1());
+                config.setBbY1(getProperties().getHomeY1());
+                config.setBbX2(getProperties().getHomeX2());
+                config.setBbY2(getProperties().getHomeY2());
+                config.setSrs(getProperties().getSrs());
+//
+//                final byte[] bytes = ByteArrayFactoryHandler.getInstance()
+//                            .execute(
+//                                getProperties().getReportFactory(),
+//                                new ObjectMapper().writeValueAsString(config),
+//                                getUser(),
+//                                getConnectionContext());
+//
+//                return bytes;
+
+//                    new PotenzialflaecheReportCreator.ReportConfiguration();
+                final CidsBean flaecheBean = getMetaService().getMetaObject(
                             getUser(),
                             flaecheMon.getObjectId(),
                             flaecheMon.getClassId(),
-                            getConnectionContext()).getBean();
-                templateBean = (templateMon != null)
-                    ? getMetaService().getMetaObject(
-                                getUser(),
-                                templateMon.getObjectId(),
-                                templateMon.getClassId(),
-                                getConnectionContext()).getBean() : null;
+                            getConnectionContext())
+                            .getBean();
+                final PotenzialflaecheReportCreatorImpl creator = new PotenzialflaecheReportCreatorImpl(
+                        getProperties(),
+                        flaecheBean,
+                        getUser(),
+                        getMetaService(),
+                        getConnectionContext());
 
-                final CidsBean kampagne = (CidsBean)flaecheBean.getProperty("kampagne");
-                CidsBean selectedTemplateBean = null;
-                if (templateBean != null) {
-                    selectedTemplateBean = templateBean;
-                } else {
-                    if (kampagne != null) {
-                        final Collection<CidsBean> templateBeans = kampagne.getBeanCollectionProperty(
-                                "n_steckbrieftemplates");
-                        selectedTemplateBean = ((templateBeans != null) && !templateBeans.isEmpty())
-                            ? templateBeans.iterator().next() : null;
-                        final Integer mainSteckbriefId = (Integer)kampagne.getProperty("haupt_steckbrieftemplate_id");
-                        if (mainSteckbriefId != null) {
-                            for (final CidsBean templateBean : templateBeans) {
-                                if ((templateBean != null)
-                                            && (mainSteckbriefId == templateBean.getMetaObject().getId())) {
-                                    selectedTemplateBean = templateBean;
-                                    break;
-                                }
-                            }
-                        }
-                    }
-                }
-
-                if (selectedTemplateBean != null) {
-                    final String confAttr = (String)selectedTemplateBean.getProperty("conf_attr");
-                    if ((confAttr != null) && !confAttr.trim().isEmpty()
-                                && (DomainServerImpl.getServerInstance().getConfigAttr(
-                                        getUser(),
-                                        confAttr,
-                                        getConnectionContext()) == null)) {
-                        throw new Exception("kein Recht an Konfigurationsattribut " + confAttr);
-                    }
-
-                    final String template = (String)selectedTemplateBean.getProperty("link");
-                    if (BEAN_RESOURCE_MAP.get(template) == null) {
-                        BEAN_RESOURCE_MAP.put(template, new JasperReportServerResource(template));
-                    }
-
-                    final JRBeanCollectionDataSource dataSource = new JRBeanCollectionDataSource(Arrays.asList(
-                                flaecheBean));
-                    final Map<String, Object> parameters = generateParams();
-                    parameters.put(
-                        "SUBREPORT_DIR",
-                        DomainServerImpl.getServerProperties().getServerResourcesBasePath()
-                                + "/");
-                    synchronized (this) {
-                        CURRENT_TEMPLATE = template;
-                        return generateReport(parameters, dataSource);
-                    }
-                } else {
-                    throw new Exception("no template found");
-                }
+                return creator.createReport(config);
             } else {
                 return null;
             }
@@ -539,6 +441,17 @@ public class PotenzialflaecheReportServerAction extends StampedJasperReportServe
             return ex;
         } finally {
         }
+    }
+
+    /**
+     * DOCUMENT ME!
+     *
+     * @return  DOCUMENT ME!
+     *
+     * @throws  Exception  DOCUMENT ME!
+     */
+    public PotenzialflaechenProperties getProperties() throws Exception {
+        return (PotenzialflaechenProperties)ServerResourcesLoader.getInstance().get(PSR);
     }
 
     @Override
@@ -554,69 +467,6 @@ public class PotenzialflaecheReportServerAction extends StampedJasperReportServe
     @Override
     public ConnectionContext getConnectionContext() {
         return connectionContext;
-    }
-
-    /**
-     * DOCUMENT ME!
-     *
-     * @return  DOCUMENT ME!
-     *
-     * @throws  Exception  DOCUMENT ME!
-     */
-    public Map generateParams() throws Exception {
-        final HashMap params = new HashMap();
-        for (final Property property : Property.values()) {
-            final String parameterName = property.name();
-            final ReportProperty reportProperty = property.getValue();
-            if (reportProperty instanceof VirtualReportProperty) {
-                params.put(
-                    parameterName,
-                    ((VirtualReportProperty)reportProperty).calculateProperty(this));
-            } else if (reportProperty instanceof MultiKeytableReportProperty) {
-                final MultiKeytableReportProperty multiFieldReportProperty = (MultiKeytableReportProperty)
-                    reportProperty;
-                final Collection beans = flaecheBean.getBeanCollectionProperty(multiFieldReportProperty.getPath());
-                if (beans != null) {
-                    final Collection<String> strings = new ArrayList<>();
-                    for (final Object bean : (Collection)beans) {
-                        if (bean != null) {
-                            strings.add(String.valueOf(bean));
-                        }
-                    }
-                    params.put(parameterName, String.join(", ", strings));
-                }
-            } else if (reportProperty instanceof PathReportProperty) {
-                final PathReportProperty fieldReportProperty = (PathReportProperty)reportProperty;
-                final Object object = flaecheBean.getProperty(fieldReportProperty.getPath());
-                final String value;
-                if (object == null) {
-                    value = null;
-                } else if (object instanceof Date) {
-                    value = SDF.format((Date)object);
-                } else {
-                    value = object.toString();
-                }
-                params.put(parameterName, value);
-            } else if (reportProperty instanceof MonSearchReportProperty) {
-                params.put(parameterName, "UNBEKANNTE PROPERTY");
-            }
-        }
-        return params;
-    }
-
-    /**
-     * DOCUMENT ME!
-     *
-     * @return  DOCUMENT ME!
-     */
-    private static PfMapConfiguration createPreconfiguredPfMapConfiguration() {
-        final PfMapConfiguration config = new PfMapConfiguration();
-        config.setBbX1(PotenzialflaechenMapfactoryProperties.getInstance().getHomeX1());
-        config.setBbY1(PotenzialflaechenMapfactoryProperties.getInstance().getHomeY1());
-        config.setBbX2(PotenzialflaechenMapfactoryProperties.getInstance().getHomeX2());
-        config.setBbY2(PotenzialflaechenMapfactoryProperties.getInstance().getHomeY2());
-        config.setSrs(PotenzialflaechenMapfactoryProperties.getInstance().getSrs());
-        return config;
     }
 
     //~ Inner Classes ----------------------------------------------------------
@@ -778,14 +628,13 @@ public class PotenzialflaecheReportServerAction extends StampedJasperReportServe
         /**
          * DOCUMENT ME!
          *
-         * @param   serverAction  flaecheBean DOCUMENT ME!
+         * @param   creator  flaecheBean DOCUMENT ME!
          *
          * @return  DOCUMENT ME!
          *
          * @throws  Exception  DOCUMENT ME!
          */
-        protected abstract Object calculateProperty(final PotenzialflaecheReportServerAction serverAction)
-                throws Exception;
+        public abstract Object calculateProperty(final PotenzialflaecheReportCreator creator) throws Exception;
     }
 
     /**
@@ -795,12 +644,19 @@ public class PotenzialflaecheReportServerAction extends StampedJasperReportServe
      */
     public abstract static class MonSearchReportProperty extends VirtualReportProperty {
 
+        //~ Instance fields ----------------------------------------------------
+
+        @Getter private final String nameProperty;
+
         //~ Constructors -------------------------------------------------------
 
         /**
          * Creates a new MonSearchReportProperty object.
+         *
+         * @param  nameProperty  DOCUMENT ME!
          */
-        public MonSearchReportProperty() {
+        public MonSearchReportProperty(final String nameProperty) {
+            this.nameProperty = nameProperty;
         }
 
         //~ Methods ------------------------------------------------------------
@@ -808,35 +664,28 @@ public class PotenzialflaecheReportServerAction extends StampedJasperReportServe
         /**
          * DOCUMENT ME!
          *
-         * @param   serverAction  DOCUMENT ME!
+         * @param   creator  serverAction DOCUMENT ME!
          *
          * @return  DOCUMENT ME!
          */
-        protected abstract MetaObjectNodeServerSearch createMonServerSearch(
-                final PotenzialflaecheReportServerAction serverAction);
+        public abstract MetaObjectNodeServerSearch createMonServerSearch(
+                final PotenzialflaecheReportCreator creator);
 
         @Override
-        protected String calculateProperty(final PotenzialflaecheReportServerAction serverAction) {
-            final MetaObjectNodeServerSearch serverSearch = createMonServerSearch(serverAction);
+        public String calculateProperty(final PotenzialflaecheReportCreator creator) {
+            final MetaObjectNodeServerSearch serverSearch = createMonServerSearch(creator);
             if (serverSearch != null) {
-                serverSearch.setUser(serverAction.getUser());
-                if (serverSearch instanceof ConnectionContextStore) {
-                    ((ConnectionContextStore)serverSearch).initWithConnectionContext(
-                        serverAction.getConnectionContext());
+                if (serverSearch instanceof GeometrySearch) {
+                    final CidsBean flaecheBean = creator.getFlaecheBean();
+                    ((GeometrySearch)serverSearch).setGeometry((Geometry)flaecheBean.getProperty(
+                            "geometrie.geo_field"));
+                    ((GeometrySearch)serverSearch).setBuffer(-2d);
                 }
-                final Map localServers = new HashMap<>();
-                localServers.put("WUNDA_BLAU", serverAction.getMetaService());
-                serverSearch.setActiveLocalServers(localServers);
                 final Collection<String> names = new ArrayList<>();
                 try {
-                    for (final MetaObjectNode mon : serverSearch.performServerSearch()) {
-                        final MetaObject mo = serverAction.getMetaService()
-                                    .getMetaObject(
-                                        serverAction.getUser(),
-                                        mon.getObjectId(),
-                                        mon.getClassId(),
-                                        serverAction.getConnectionContext());
-                        names.add((String)mo.getBean().getProperty("name"));
+                    for (final MetaObjectNode mon : creator.executeSearch(serverSearch)) {
+                        final MetaObject mo = creator.getMetaObject(mon);
+                        names.add((String)mo.getBean().getProperty(getNameProperty()));
                     }
                 } catch (final Exception ex) {
                     LOG.error(ex, ex);
@@ -847,35 +696,5 @@ public class PotenzialflaecheReportServerAction extends StampedJasperReportServe
                 return null;
             }
         }
-    }
-
-    /**
-     * DOCUMENT ME!
-     *
-     * @version  $Revision$, $Date$
-     */
-    @Getter
-    @Setter
-    public static class PfMapConfiguration extends MapImageFactoryConfiguration {
-
-        //~ Enums --------------------------------------------------------------
-
-        /**
-         * DOCUMENT ME!
-         *
-         * @version  $Revision$, $Date$
-         */
-        public enum Type {
-
-            //~ Enum constants -------------------------------------------------
-
-            PF_ORTHO, PF_DGK,
-        }
-
-        //~ Instance fields ----------------------------------------------------
-
-        private Type type;
-        private Collection<Integer> ids;
-        private Integer buffer;
     }
 }
