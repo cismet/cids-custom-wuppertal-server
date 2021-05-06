@@ -9,6 +9,7 @@ package de.cismet.cids.custom.wunda_blau.search.server;
 
 import Sirius.server.middleware.interfaces.domainserver.ActionService;
 import Sirius.server.middleware.interfaces.domainserver.MetaService;
+import Sirius.server.middleware.types.LightweightMetaObject;
 import Sirius.server.middleware.types.MetaObjectNode;
 
 import com.fasterxml.jackson.annotation.JsonAutoDetect;
@@ -20,6 +21,8 @@ import lombok.Getter;
 import lombok.Setter;
 
 import org.apache.log4j.Logger;
+
+import org.openide.util.lookup.ServiceProvider;
 
 import java.io.StringReader;
 
@@ -56,6 +59,7 @@ import de.cismet.connectioncontext.ConnectionContextStore;
  *
  * @version  $Revision$, $Date$
  */
+@ServiceProvider(service = RestApiCidsServerSearch.class)
 public class PotenzialflaecheSearch extends AbstractCidsServerSearch implements RestApiCidsServerSearch,
     MetaObjectNodeServerSearch,
     StorableSearch<PotenzialflaecheSearch.Configuration>,
@@ -87,6 +91,7 @@ public class PotenzialflaecheSearch extends AbstractCidsServerSearch implements 
     @Getter @Setter private Geometry geom = null;
     @Getter private final SearchInfo searchInfo;
     @Getter private ConnectionContext connectionContext = ConnectionContext.createDummy();
+    @Getter private final boolean monSearch;
 
     //~ Constructors -----------------------------------------------------------
 
@@ -94,6 +99,7 @@ public class PotenzialflaecheSearch extends AbstractCidsServerSearch implements 
      * Creates a new PotenzialflaecheSearch object.
      */
     public PotenzialflaecheSearch() {
+        this.monSearch = false;
         this.searchInfo = new SearchInfo(
                 this.getClass().getName(),
                 this.getClass().getSimpleName(),
@@ -109,6 +115,16 @@ public class PotenzialflaecheSearch extends AbstractCidsServerSearch implements 
     /**
      * Creates a new PotenzialflaecheSearch object.
      *
+     * @param  monSearch  DOCUMENT ME!
+     */
+    public PotenzialflaecheSearch(final boolean monSearch) {
+        this.monSearch = true;
+        this.searchInfo = null;
+    }
+
+    /**
+     * Creates a new PotenzialflaecheSearch object.
+     *
      * @param  searchMode           DOCUMENT ME!
      * @param  searchConfiguration  DOCUMENT ME!
      * @param  geom                 DOCUMENT ME!
@@ -116,7 +132,7 @@ public class PotenzialflaecheSearch extends AbstractCidsServerSearch implements 
     public PotenzialflaecheSearch(final SearchMode searchMode,
             final Configuration searchConfiguration,
             final Geometry geom) {
-        this();
+        this(true);
         this.searchMode = searchMode;
         this.configuration = searchConfiguration;
         this.geom = geom;
@@ -130,9 +146,9 @@ public class PotenzialflaecheSearch extends AbstractCidsServerSearch implements 
     }
 
     @Override
-    public Collection<MetaObjectNode> performServerSearch() {
+    public Collection performServerSearch() {
         try {
-            final List<MetaObjectNode> result = new ArrayList<>();
+            final List result = new ArrayList<>();
             final Properties properties = new Properties();
             final ActionService as = (ActionService)getActiveLocalServers().get("WUNDA_BLAU");
             properties.load(new StringReader(
@@ -152,9 +168,11 @@ public class PotenzialflaecheSearch extends AbstractCidsServerSearch implements 
                     final int cid = (Integer)al.get(0);
                     final int oid = (Integer)al.get(1);
                     final String name = (String)al.get(2);
-                    final MetaObjectNode mon = new MetaObjectNode("WUNDA_BLAU", oid, cid, name, null, null);
-
-                    result.add(mon);
+                    if (isMonSearch()) {
+                        result.add(new MetaObjectNode("WUNDA_BLAU", oid, cid, name, null, null));
+                    } else {
+                        result.add(new LightweightMetaObject(cid, oid, "WUNDA_BLAU", getUser()));
+                    }
                 }
             }
             return result;
@@ -241,7 +259,7 @@ public class PotenzialflaecheSearch extends AbstractCidsServerSearch implements 
             default:
         }
 
-        if (getConfiguration().getFilters() != null) {
+        if ((getConfiguration() != null) && (getConfiguration().getFilters() != null)) {
             for (final FilterInfo filterInfo : getConfiguration().getFilters()) {
                 if (filterInfo != null) {
                     final Object value = filterInfo.getValue();

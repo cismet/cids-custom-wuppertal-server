@@ -229,7 +229,7 @@ public class PotenzialflaecheReportServerAction extends StampedByteArrayServerAc
                     return new KstGeometryMonSearch(KstGeometryMonSearch.SearchFor.QUARTIER);
                 }
             }, "Quartiere"),
-        FLURSTUECKE(new MonSearchReportProperty("alkis-id") {
+        FLURSTUECKE(new MonSearchReportProperty("alkis_id") {
 
                 @Override
                 public MetaObjectNodeServerSearch createMonServerSearch(
