@@ -92,7 +92,7 @@ public class CidsMauernSearchStatement extends AbstractCidsServerSearch implemen
         MASSNAHME_SANIERUNG_DURCHGEFUEHRT_VON, MASSNAHME_SANIERUNG_DURCHGEFUEHRT_BIS, MASSNAHME_SANIERUNG_GEPLANT_VON,
         MASSNAHME_SANIERUNG_GEPLANT_BIS, MASSNAHME_BAUWERKSBEGEHUNG_VON, MASSNAHME_BAUWERKSBEGEHUNG_BIS,
         MASSNAHME_BAUWERKSBESICHTIGUNG_VON, MASSNAHME_BAUWERKSBESICHTIGUNG_BIS, MASSNAHME_GEWERK_DURCHZU,
-        MASSNAHME_GEWERK_DURCHGE
+        MASSNAHME_GEWERK_DURCHGE, MASSNAHME_ERLEDIGT
     }
 
     //~ Instance fields --------------------------------------------------------
@@ -222,12 +222,15 @@ public class CidsMauernSearchStatement extends AbstractCidsServerSearch implemen
                         (Date)filter.get(PropertyKeys.MASSNAHME_PRUEFUNG_BIS)));
             }
 
+            final Boolean erledigt = (Boolean)filter.get(PropertyKeys.MASSNAHME_ERLEDIGT);
+
             if ((filter.get(PropertyKeys.MASSNAHME_SANIERUNG_DURCHGEFUEHRT_VON) != null)
                         || (filter.get(PropertyKeys.MASSNAHME_SANIERUNG_DURCHGEFUEHRT_BIS) != null)) {
                 joins.add("mauer_massnahme AS mm1 ON m.id = mm1.fk_mauer");
                 joins.add("mauer_massnahme_art AS mma1 ON mm1.fk_art = mma1.id");
                 wheres.add(String.format(
-                        "(mm1.erledigt IS NOT TRUE AND mma1.schluessel LIKE 'durchgefuehrte_sanierung' AND %s)",
+                        "(%s AND mma1.schluessel LIKE 'durchgefuehrte_sanierung' AND %s)",
+                        (erledigt != null) ? (erledigt ? "mm1.erledigt IS TRUE" : "mm1.erledigt IS NOT TRUE") : "TRUE",
                         createWhereFor(
                             "mm1.ziel",
                             (Date)filter.get(PropertyKeys.MASSNAHME_SANIERUNG_DURCHGEFUEHRT_VON),
@@ -238,7 +241,8 @@ public class CidsMauernSearchStatement extends AbstractCidsServerSearch implemen
                 joins.add("mauer_massnahme AS mm2 ON m.id = mm2.fk_mauer");
                 joins.add("mauer_massnahme_art AS mma2 ON mm2.fk_art = mma2.id");
                 wheres.add(String.format(
-                        "(mm2.erledigt IS NOT TRUE AND mma2.schluessel LIKE 'durchzufuehrende_sanierung' AND %s)",
+                        "(%s AND mma2.schluessel LIKE 'durchzufuehrende_sanierung' AND %s)",
+                        (erledigt != null) ? (erledigt ? "mm2.erledigt IS TRUE" : "mm2.erledigt IS NOT TRUE") : "TRUE",
                         createWhereFor(
                             "mm2.ziel",
                             (Date)filter.get(PropertyKeys.MASSNAHME_SANIERUNG_GEPLANT_VON),
@@ -249,7 +253,8 @@ public class CidsMauernSearchStatement extends AbstractCidsServerSearch implemen
                 joins.add("mauer_massnahme AS mm3 ON m.id = mm3.fk_mauer");
                 joins.add("mauer_massnahme_art AS mma3 ON mm3.fk_art = mma3.id");
                 wheres.add(String.format(
-                        "mm3.erledigt IS NOT TRUE AND mma3.schluessel LIKE 'bauwerksbesichtigung' AND %s",
+                        "(%s AND mma3.schluessel LIKE 'bauwerksbesichtigung' AND %s)",
+                        (erledigt != null) ? (erledigt ? "mm3.erledigt IS TRUE" : "mm3.erledigt IS NOT TRUE") : "TRUE",
                         createWhereFor(
                             "mm3.ziel",
                             (Date)filter.get(PropertyKeys.MASSNAHME_BAUWERKSBESICHTIGUNG_VON),
@@ -260,7 +265,8 @@ public class CidsMauernSearchStatement extends AbstractCidsServerSearch implemen
                 joins.add("mauer_massnahme AS mm4 ON m.id = mm4.fk_mauer");
                 joins.add("mauer_massnahme_art AS mma4 ON mm4.fk_art = mma4.id");
                 wheres.add(String.format(
-                        "mm4.erledigt IS NOT TRUE AND mma4.schluessel LIKE 'bauwerksbegehung' AND %s",
+                        "(%s AND mma4.schluessel LIKE 'bauwerksbegehung' AND %s)",
+                        (erledigt != null) ? (erledigt ? "mm4.erledigt IS TRUE" : "mm4.erledigt IS NOT TRUE") : "TRUE",
                         createWhereFor(
                             "mm4.ziel",
                             (Date)filter.get(PropertyKeys.MASSNAHME_BAUWERKSBEGEHUNG_VON),
@@ -340,14 +346,16 @@ public class CidsMauernSearchStatement extends AbstractCidsServerSearch implemen
                 joins.add("mauer_massnahme AS mm1 ON m.id = mm1.fk_mauer");
                 joins.add("mauer_massnahme_art AS mma1 ON mm1.fk_art = mma1.id");
                 wheres.add(String.format(
-                        "(mm1.erledigt IS NOT TRUE AND mma1.schluessel LIKE 'durchgefuehrte_sanierung' AND mm1.fk_objekt = %d)",
+                        "(%s AND mma1.schluessel LIKE 'durchgefuehrte_sanierung' AND mm1.fk_objekt = %d)",
+                        (erledigt != null) ? (erledigt ? "mm1.erledigt IS TRUE" : "mm1.erledigt IS NOT TRUE") : "TRUE",
                         (Integer)filter.get(PropertyKeys.MASSNAHME_GEWERK_DURCHGE)));
             }
             if ((filter.get(PropertyKeys.MASSNAHME_GEWERK_DURCHZU) != null)) {
                 joins.add("mauer_massnahme AS mm2 ON m.id = mm2.fk_mauer");
                 joins.add("mauer_massnahme_art AS mma2 ON mm2.fk_art = mma2.id");
                 wheres.add(String.format(
-                        "(mm2.erledigt IS NOT TRUE AND mma2.schluessel LIKE 'durchzufuehrende_sanierung' AND mm2.fk_objekt = %d)",
+                        "(%s AND mma2.schluessel LIKE 'durchzufuehrende_sanierung' AND mm2.fk_objekt = %d)",
+                        (erledigt != null) ? (erledigt ? "mm2.erledigt IS TRUE" : "mm2.erledigt IS NOT TRUE") : "TRUE",
                         (Integer)filter.get(PropertyKeys.MASSNAHME_GEWERK_DURCHZU)));
             }
             final String sql = (String.format(
