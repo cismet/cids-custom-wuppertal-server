@@ -14,6 +14,20 @@ import Sirius.server.middleware.types.MetaObjectNode;
 
 import com.fasterxml.jackson.annotation.JsonAutoDetect;
 import com.fasterxml.jackson.annotation.JsonProperty;
+import com.fasterxml.jackson.core.JsonGenerationException;
+import com.fasterxml.jackson.core.JsonGenerator;
+import com.fasterxml.jackson.core.JsonParser;
+import com.fasterxml.jackson.core.JsonProcessingException;
+import com.fasterxml.jackson.databind.DeserializationContext;
+import com.fasterxml.jackson.databind.DeserializationFeature;
+import com.fasterxml.jackson.databind.JsonNode;
+import com.fasterxml.jackson.databind.ObjectMapper;
+import com.fasterxml.jackson.databind.SerializerProvider;
+import com.fasterxml.jackson.databind.deser.std.StdDeserializer;
+import com.fasterxml.jackson.databind.module.SimpleModule;
+import com.fasterxml.jackson.databind.node.ArrayNode;
+import com.fasterxml.jackson.databind.node.ObjectNode;
+import com.fasterxml.jackson.databind.ser.std.StdSerializer;
 
 import com.vividsolutions.jts.geom.Geometry;
 
@@ -24,6 +38,7 @@ import org.apache.log4j.Logger;
 
 import org.openide.util.lookup.ServiceProvider;
 
+import java.io.IOException;
 import java.io.StringReader;
 
 import java.text.SimpleDateFormat;
@@ -32,6 +47,7 @@ import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collection;
 import java.util.Date;
+import java.util.Iterator;
 import java.util.LinkedHashSet;
 import java.util.List;
 import java.util.Properties;
@@ -69,6 +85,14 @@ public class PotenzialflaecheSearch extends AbstractCidsServerSearch implements 
 
     private static final transient Logger LOG = Logger.getLogger(PotenzialflaecheSearch.class);
     private static final String INTERSECTS_BUFFER = SearchProperties.getInstance().getIntersectsBuffer();
+    public static final ObjectMapper OBJECT_MAPPER = new ObjectMapper();
+
+    static {
+        final SimpleModule module = new SimpleModule();
+        module.addDeserializer(FilterInfo.class, new FilterInfoDeserializer());
+        module.addSerializer(FilterInfo.class, new FilterInfoSerializer());
+        OBJECT_MAPPER.registerModule(module);
+    }
 
     //~ Enums ------------------------------------------------------------------
 
@@ -86,7 +110,6 @@ public class PotenzialflaecheSearch extends AbstractCidsServerSearch implements 
 
     //~ Instance fields --------------------------------------------------------
 
-    @Getter @Setter private SearchMode searchMode = SearchMode.AND;
     @Getter private Configuration configuration;
     @Getter @Setter private Geometry geom = null;
     @Getter private final SearchInfo searchInfo;
@@ -105,10 +128,7 @@ public class PotenzialflaecheSearch extends AbstractCidsServerSearch implements 
                 this.getClass().getSimpleName(),
                 "Builtin Legacy Search to delegate the operation PotenzialflaecheSearchStatement to the cids Pure REST Search API.",
                 Arrays.asList(
-                    new SearchParameterInfo[] {
-                        new MySearchParameterInfo("searchMode", Type.UNDEFINED),
-                        new MySearchParameterInfo("filters", Type.UNDEFINED),
-                    }),
+                    new SearchParameterInfo[] { new MySearchParameterInfo("filters", Type.UNDEFINED), }),
                 new MySearchParameterInfo("return", Type.ENTITY_REFERENCE, true));
     }
 
@@ -125,15 +145,11 @@ public class PotenzialflaecheSearch extends AbstractCidsServerSearch implements 
     /**
      * Creates a new PotenzialflaecheSearch object.
      *
-     * @param  searchMode           DOCUMENT ME!
      * @param  searchConfiguration  DOCUMENT ME!
      * @param  geom                 DOCUMENT ME!
      */
-    public PotenzialflaecheSearch(final SearchMode searchMode,
-            final Configuration searchConfiguration,
-            final Geometry geom) {
+    public PotenzialflaecheSearch(final Configuration searchConfiguration, final Geometry geom) {
         this(true);
-        this.searchMode = searchMode;
         this.configuration = searchConfiguration;
         this.geom = geom;
     }
@@ -187,6 +203,7 @@ public class PotenzialflaecheSearch extends AbstractCidsServerSearch implements 
         final Collection<String> leftJoins = new LinkedHashSet<>();
         final Collection<String> wheresMain = new LinkedHashSet<>();
 
+        leftJoins.add("geom ON pf_potenzialflaeche.geometrie = geom.id");
         leftJoins.add("pf_restriktionen ON pf_potenzialflaeche.id = pf_restriktionen.pf_potenzialflaeche_reference");
         leftJoins.add("pf_brachflaechen ON pf_potenzialflaeche.id = pf_brachflaechen.pf_potenzialflaeche_reference");
         leftJoins.add(
@@ -247,80 +264,113 @@ public class PotenzialflaecheSearch extends AbstractCidsServerSearch implements 
             "pf_empfohlene_nutzung_wohnen ON pf_empfohlene_nutzungen_wohnen.fk_empfohlene_nutzung_wohnen = pf_empfohlene_nutzung_wohnen.id");
         leftJoins.add("pf_naehe_zu ON pf_naehen_zu.fk_naehe_zu = pf_naehe_zu.id");
 
-        switch (searchMode) {
-            case AND: {
-                wheresMain.add("TRUE");
-                break;
-            }
-            case OR: {
-                wheresMain.add("FALSE");
-                break;
-            }
-            default:
-        }
-
+        SearchMode searchMode = SearchMode.AND;
         if ((getConfiguration() != null) && (getConfiguration().getFilters() != null)) {
+            searchMode = getConfiguration().getSearchMode();
             for (final FilterInfo filterInfo : getConfiguration().getFilters()) {
                 if (filterInfo != null) {
                     final Object value = filterInfo.getValue();
                     final PotenzialflaecheReportServerAction.Property property = filterInfo.getProperty();
-                    if ((property != null)
-                                && (property.getValue()
-                                    instanceof PotenzialflaecheReportServerAction.PathReportProperty)) {
-                        final PotenzialflaecheReportServerAction.PathReportProperty pathProp =
-                            (PotenzialflaecheReportServerAction.PathReportProperty)property.getValue();
-                        final String path = String.format("pf_potenzialflaeche.%s", pathProp.getPath());
-                        if (value != null) {
-                            if (property.getValue()
-                                        instanceof PotenzialflaecheReportServerAction.SimpleFieldReportProperty) {
-                                final String className =
-                                    ((PotenzialflaecheReportServerAction.SimpleFieldReportProperty)property.getValue())
-                                            .getClassName();
-                                if (String.class.getCanonicalName().equals(className)) {
-                                    wheresMain.add(String.format("%s LIKE '%%%s%%'", path, value));
-                                } else if (Date.class.getCanonicalName().equals(className)) {
-                                    if (value instanceof Date) {
-                                        wheresMain.add(String.format(
-                                                "%s = '%s'",
-                                                path,
-                                                new SimpleDateFormat("yyyy-MM-dd").format((Date)value)));
-                                    } else if (value instanceof Date[]) {
-                                        final Date[] dates = (Date[])value;
-                                        final String conditionFrom = (dates[0] != null)
-                                            ? String.format(
-                                                "%s >= '%s'",
-                                                path,
-                                                new SimpleDateFormat("yyyy-MM-dd").format(dates[0])) : "TRUE";
-                                        final String conditionTo = (dates[1] != null)
-                                            ? String.format(
-                                                "%s <= '%s'",
-                                                path,
-                                                new SimpleDateFormat("yyyy-MM-dd").format(dates[1])) : "TRUE";
-                                        wheresMain.add(String.format("(%s AND %s)", conditionFrom, conditionTo));
+                    if (property != null) {
+                        if (property.getValue() instanceof PotenzialflaecheReportServerAction.PathReportProperty) {
+                            final PotenzialflaecheReportServerAction.PathReportProperty pathProp =
+                                (PotenzialflaecheReportServerAction.PathReportProperty)property.getValue();
+                            final String path = String.format("pf_potenzialflaeche.%s", pathProp.getPath());
+                            if (value != null) {
+                                final PotenzialflaecheReportServerAction.ReportProperty reportProperty =
+                                    property.getValue();
+                                if (reportProperty
+                                            instanceof PotenzialflaecheReportServerAction.SimpleFieldReportProperty) {
+                                    final String className =
+                                        ((PotenzialflaecheReportServerAction.SimpleFieldReportProperty)reportProperty)
+                                                .getClassName();
+                                    if (String.class.getCanonicalName().equals(className)) {
+                                        wheresMain.add(String.format("%s LIKE '%%%s%%'", path, value));
+                                    } else if (Date.class.getCanonicalName().equals(className)) {
+                                        if (value instanceof Date) {
+                                            wheresMain.add(String.format(
+                                                    "%s = '%s'",
+                                                    path,
+                                                    new SimpleDateFormat("yyyy-MM-dd").format((Date)value)));
+                                        } else if (value instanceof Date[]) {
+                                            final Date[] dates = (Date[])value;
+                                            final String conditionFrom = (dates[0] != null)
+                                                ? String.format(
+                                                    "%s >= '%s'",
+                                                    path,
+                                                    new SimpleDateFormat("yyyy-MM-dd").format(dates[0])) : "TRUE";
+                                            final String conditionTo = (dates[1] != null)
+                                                ? String.format(
+                                                    "%s <= '%s'",
+                                                    path,
+                                                    new SimpleDateFormat("yyyy-MM-dd").format(dates[1])) : "TRUE";
+                                            wheresMain.add(String.format("(%s AND %s)", conditionFrom, conditionTo));
+                                        }
+                                    } else {
+                                        wheresMain.add(String.format("%s = %s", path, String.valueOf(value)));
                                     }
-                                } else {
-                                    wheresMain.add(String.format("%s = %s", path, String.valueOf(value)));
+                                } else if (reportProperty
+                                            instanceof PotenzialflaecheReportServerAction.KeytableReportProperty) {
+                                    final String filterPath =
+                                        ((PotenzialflaecheReportServerAction.KeytableReportProperty)reportProperty)
+                                                .getFilterPath();
                                 }
-                            } else if (property.getValue()
-                                        instanceof PotenzialflaecheReportServerAction.KeytableReportProperty) {
-                                final String filterPath =
-                                    ((PotenzialflaecheReportServerAction.KeytableReportProperty)property.getValue())
-                                            .getFilterPath();
-                                if (value instanceof Collection) {
-                                    final List<String> subWheres = new ArrayList<>();
-                                    for (final MetaObjectNode mon : (Collection<MetaObjectNode>)value) {
-                                        subWheres.add(String.format("%s = %d", filterPath, mon.getObjectId()));
-                                    }
-                                    wheresMain.add(String.format("(%s)", String.join(" OR ", subWheres)));
-                                } else if (value instanceof MetaObjectNode) {
-                                    wheresMain.add(String.format(
-                                            "%s = %d",
-                                            filterPath,
-                                            ((MetaObjectNode)value).getObjectId()));
-                                }
+                            } else {
+                                wheresMain.add(String.format("%s IS NULL", path, value));
                             }
-                        } else {
-                            wheresMain.add(String.format("%s IS NULL", path, value));
+                        } else if (property.getValue()
+                                    instanceof PotenzialflaecheReportServerAction.MonSearchReportProperty) {
+                            String subject = null;
+                            switch (property) {
+                                case WOHNLAGEN: {
+                                    subject = "wohnlage_kategorie.id";
+                                    leftJoins.add(
+                                        "( SELECT wohnlage_kategorie.id, sub_geom.geo_field FROM wohnlage_flaeche LEFT JOIN geom sub_geom ON sub_geom.id = wohnlage_flaeche.fk_geom LEFT JOIN wohnlage_kategorie ON wohnlage_kategorie.id = wohnlage_flaeche.fk_wohnlage_kategorie ) wohnlage_kategorie ON wohnlage_kategorie.geo_field && geom.geo_field AND st_intersects(wohnlage_kategorie.geo_field, geom.geo_field)");
+                                }
+                                break;
+                                case STADTRAUMTYPEN: {
+                                    subject = "srt_kategorie.id";
+                                    leftJoins.add(
+                                        "( SELECT srt_kategorie.id AS name, sub_geom.geo_field FROM srt_kategorie LEFT JOIN srt_flaeche ON srt_flaeche.fk_kategorie = srt_kategorie.id LEFT JOIN geom sub_geom ON sub_geom.id = srt_flaeche.fk_geom ) srt_kategorie ON srt_kategorie.geo_field && geom.geo_field AND st_intersects(srt_kategorie.geo_field, geom.geo_field)");
+                                }
+                                break;
+                                case QUARTIER: {
+                                    subject = "kst_quartier.id";
+                                    leftJoins.add(
+                                        "( SELECT kst_quartier.id, sub_geom.geo_field FROM kst_quartier LEFT JOIN geom sub_geom ON sub_geom.id = kst_quartier.georeferenz ) kst_quartier ON kst_quartier.geo_field && geom.geo_field AND st_intersects(kst_quartier.geo_field, geom.geo_field)");
+                                }
+                                break;
+                                case STADTBEZIRK: {
+                                    subject = "kst_stadtbezirk.id";
+                                    leftJoins.add(
+                                        "( SELECT kst_stadtbezirk.id, sub_geom.geo_field FROM kst_stadtbezirk LEFT JOIN geom sub_geom ON sub_geom.id = kst_stadtbezirk.georeferenz ) kst_stadtbezirk ON kst_stadtbezirk.geo_field && geom.geo_field AND st_intersects(kst_stadtbezirk.geo_field, geom.geo_field)");
+                                }
+                                break;
+                                case FLAECHENNUTZUNGSPLAN: {
+                                    subject = "fnp_hn_kategorie.id";
+                                    leftJoins.add(
+                                        "( SELECT fnp_hn_kategorie.id, sub_geom.geo_field FROM fnp_hn_kategorie LEFT JOIN fnp_hn_flaeche ON fnp_hn_flaeche.fk_fnp_hn_kategorie = fnp_hn_kategorie.id LEFT JOIN geom sub_geom ON sub_geom.id = fnp_hn_flaeche.fk_geom) fnp_hn_kategorie ON fnp_hn_kategorie.geo_field && geom.geo_field AND st_intersects(fnp_hn_kategorie.geo_field, geom.geo_field)");
+                                }
+                                break;
+                                case REGIONALPLAN: {
+                                    subject = "rpd_kategorie.id";
+                                    leftJoins.add(
+                                        "( SELECT rpd_kategorie.id, sub_geom.geo_field FROM rpd_flaeche LEFT JOIN rpd_kategorie ON rpd_flaeche.fk_kategorie = rpd_kategorie.id LEFT JOIN geom sub_geom ON sub_geom.id = rpd_flaeche.fk_geom ) rpd_kategorie ON rpd_kategorie.geo_field && geom.geo_field AND st_intersects(rpd_kategorie.geo_field, geom.geo_field)");
+                                }
+                                break;
+                            }
+                            if (value instanceof Collection) {
+                                final List<String> subWheres = new ArrayList<>();
+                                for (final MetaObjectNode mon : (Collection<MetaObjectNode>)value) {
+                                    subWheres.add(String.format("%s = %d", subject, mon.getObjectId()));
+                                }
+                                wheresMain.add(String.format("(%s)", String.join(" OR ", subWheres)));
+                            } else if (value instanceof MetaObjectNode) {
+                                wheresMain.add(String.format(
+                                        "%s = %d",
+                                        subject,
+                                        ((MetaObjectNode)value).getObjectId()));
+                            }
                         }
                     }
                 }
@@ -351,7 +401,6 @@ public class PotenzialflaecheSearch extends AbstractCidsServerSearch implements 
                             + "GeometryFromText('%1$s')))",
                     geomString,
                     INTERSECTS_BUFFER);
-            leftJoins.add("geom ON pf_potenzialflaeche.geometrie = geom.id");
             wheresMain.add(geomCondition);
         } else {
             geomCondition = null;
@@ -406,7 +455,7 @@ public class PotenzialflaecheSearch extends AbstractCidsServerSearch implements 
         //~ Instance fields ----------------------------------------------------
 
         @JsonProperty private SearchMode searchMode = SearchMode.AND;
-        @JsonProperty private final Collection<FilterInfo> filters = new ArrayList<>();
+        @JsonProperty private Collection<FilterInfo> filters = new ArrayList<>();
 
         //~ Methods ------------------------------------------------------------
 
@@ -486,6 +535,145 @@ public class PotenzialflaecheSearch extends AbstractCidsServerSearch implements 
             if (array != null) {
                 super.setArray(array);
             }
+        }
+    }
+
+    /**
+     * DOCUMENT ME!
+     *
+     * @version  $Revision$, $Date$
+     */
+    public static class FilterInfoSerializer extends StdSerializer<FilterInfo> {
+
+        //~ Instance fields ----------------------------------------------------
+
+        private final ObjectMapper defaultMapper = new ObjectMapper();
+
+        //~ Constructors -------------------------------------------------------
+
+        /**
+         * Creates a new FilterInfoSerializer object.
+         */
+        public FilterInfoSerializer() {
+            super(FilterInfo.class);
+
+            defaultMapper.configure(DeserializationFeature.FAIL_ON_UNKNOWN_PROPERTIES, false);
+        }
+
+        //~ Methods ------------------------------------------------------------
+
+        @Override
+        public void serialize(final FilterInfo filterInfo, final JsonGenerator jg, final SerializerProvider sp)
+                throws IOException, JsonGenerationException {
+            final PotenzialflaecheReportServerAction.Property property = filterInfo.getProperty();
+            final Object value = filterInfo.getValue();
+            jg.writeStartObject();
+            jg.writeStringField("property", (property != null) ? property.name() : null);
+            if (value instanceof Collection) {
+                jg.writeArrayFieldStart("value");
+                for (final Object subValue : (Collection)value) {
+                    if (subValue instanceof MetaObjectNode) {
+                        final MetaObjectNode mon = (MetaObjectNode)subValue;
+                        jg.writeStartObject();
+                        jg.writeNumberField("classId", mon.getClassId());
+                        jg.writeNumberField("objectId", mon.getObjectId());
+                        jg.writeStringField("domain", mon.getDomain());
+                        jg.writeEndObject();
+                    }
+                }
+                jg.writeEndArray();
+            } else if (value instanceof MetaObjectNode) {
+                final MetaObjectNode mon = (MetaObjectNode)value;
+                jg.writeObjectFieldStart("value");
+                jg.writeNumberField("classId", mon.getClassId());
+                jg.writeNumberField("objectId", mon.getObjectId());
+                jg.writeStringField("domain", mon.getDomain());
+                jg.writeEndObject();
+            }
+            jg.writeEndObject();
+        }
+    }
+
+    /**
+     * DOCUMENT ME!
+     *
+     * @version  $Revision$, $Date$
+     */
+    public static class FilterInfoDeserializer extends StdDeserializer<FilterInfo> {
+
+        //~ Instance fields ----------------------------------------------------
+
+        private final ObjectMapper defaultMapper = new ObjectMapper();
+
+        //~ Constructors -------------------------------------------------------
+
+        /**
+         * Creates a new CidsBeanJsonDeserializer object.
+         */
+        public FilterInfoDeserializer() {
+            super(FilterInfo.class);
+
+            defaultMapper.configure(DeserializationFeature.FAIL_ON_UNKNOWN_PROPERTIES, false);
+        }
+
+        //~ Methods ------------------------------------------------------------
+
+        @Override
+        public FilterInfo deserialize(final JsonParser jp, final DeserializationContext dc) throws IOException,
+            JsonProcessingException {
+            final ObjectNode on = jp.readValueAsTree();
+            final String propertyName = (String)defaultMapper.treeToValue(on.get("property"), String.class);
+            final PotenzialflaecheReportServerAction.Property property = PotenzialflaecheReportServerAction.Property
+                        .valueOf(propertyName);
+
+            final Object value;
+            if (property != null) {
+                final PotenzialflaecheReportServerAction.ReportProperty repProp = property.getValue();
+                if ((repProp instanceof PotenzialflaecheReportServerAction.KeytableReportProperty)
+                            || (repProp instanceof PotenzialflaecheReportServerAction.MonSearchReportProperty)) {
+                    final JsonNode node = on.get("value");
+                    try {
+                        if (node instanceof ArrayNode) {
+                            final ArrayNode arrayNode = (ArrayNode)node;
+                            final List<MetaObjectNode> mons = new ArrayList<>();
+                            final Iterator<JsonNode> iterator = arrayNode.elements();
+                            while (iterator.hasNext()) {
+                                final JsonNode subNode = iterator.next();
+//                                final JsonNode monNode = subNode.get("value").get(propertyName)
+                                final JsonNode valueNode = subNode;
+                                final MetaObjectNode mon = new MetaObjectNode(valueNode.get("domain").asText(),
+                                        valueNode.get("objectId").asInt(),
+                                        valueNode.get("classId").asInt());
+                                mons.add(mon);
+                            }
+                            value = mons;
+                        } else {
+                            final JsonNode valueNode = node;
+                            final MetaObjectNode mon = new MetaObjectNode(valueNode.get("domain").asText(),
+                                    valueNode.get("objectId").asInt(),
+                                    valueNode.get("classId").asInt());
+                            value = mon;
+                        }
+                    } catch (final Exception ex) {
+                        throw new IOException(ex.getMessage(), ex);
+                    }
+                } else if (repProp instanceof PotenzialflaecheReportServerAction.SimpleFieldReportProperty) {
+                    try {
+                        value = defaultMapper.treeToValue(on.get("value"),
+                                Class.forName(
+                                    ((PotenzialflaecheReportServerAction.SimpleFieldReportProperty)repProp)
+                                                .getClassName()));
+                    } catch (final Exception ex) {
+                        throw new IOException(ex.getMessage(), ex);
+                    }
+                } else {
+                    value = null;
+                }
+            } else {
+                value = null;
+            }
+            final FilterInfo filterInfo = new FilterInfo(property, value);
+            return filterInfo;
         }
     }
 }
