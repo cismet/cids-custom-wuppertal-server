@@ -205,7 +205,7 @@ public class PotenzialflaecheReportServerAction extends StampedByteArrayServerAc
                     return String.format("%.2f m² (circa %.1f ha)", m2, ha);
                 }
             }, "Größe"),
-        BEBAUUNGSPLAN(new MonSearchReportProperty("nummer") {
+        BEBAUUNGSPLAN(new MonSearchReportProperty("bplan_verfahren", "nummer") {
 
                 @Override
                 public MetaObjectNodeServerSearch createMonServerSearch(
@@ -213,7 +213,7 @@ public class PotenzialflaecheReportServerAction extends StampedByteArrayServerAc
                     return new BplaeneMonSearch();
                 }
             }, "BPlan"),
-        STADTBEZIRK(new MonSearchReportProperty("name") {
+        STADTBEZIRK(new MonSearchReportProperty("kst_stadtbezirk", "name") {
 
                 @Override
                 public MetaObjectNodeServerSearch createMonServerSearch(
@@ -221,7 +221,7 @@ public class PotenzialflaecheReportServerAction extends StampedByteArrayServerAc
                     return new KstGeometryMonSearch(KstGeometryMonSearch.SearchFor.BEZIRK);
                 }
             }, "Stadtbezirke"),
-        QUARTIER(new MonSearchReportProperty("name") {
+        QUARTIER(new MonSearchReportProperty("kst_quartier", "name") {
 
                 @Override
                 public MetaObjectNodeServerSearch createMonServerSearch(
@@ -229,7 +229,7 @@ public class PotenzialflaecheReportServerAction extends StampedByteArrayServerAc
                     return new KstGeometryMonSearch(KstGeometryMonSearch.SearchFor.QUARTIER);
                 }
             }, "Quartiere"),
-        FLURSTUECKE(new MonSearchReportProperty("alkis_id") {
+        FLURSTUECKE(new MonSearchReportProperty("alkis_landparcel", "alkis_id") {
 
                 @Override
                 public MetaObjectNodeServerSearch createMonServerSearch(
@@ -237,7 +237,7 @@ public class PotenzialflaecheReportServerAction extends StampedByteArrayServerAc
                     return new AlkisLandparcelGeometryMonSearch();
                 }
             }, "Flurstücke"),
-        WOHNLAGEN(new MonSearchReportProperty("name") {
+        WOHNLAGEN(new MonSearchReportProperty("wohnlage_kategorie", "name") {
 
                 @Override
                 public MetaObjectNodeServerSearch createMonServerSearch(
@@ -245,7 +245,7 @@ public class PotenzialflaecheReportServerAction extends StampedByteArrayServerAc
                     return new WohnlagenKategorisierungMonSearch();
                 }
             }, "Wohnlagen"),
-        STADTRAUMTYPEN(new MonSearchReportProperty("bezeichnung") {
+        STADTRAUMTYPEN(new MonSearchReportProperty("srt_kategorie", "bezeichnung") {
 
                 @Override
                 public MetaObjectNodeServerSearch createMonServerSearch(
@@ -253,7 +253,7 @@ public class PotenzialflaecheReportServerAction extends StampedByteArrayServerAc
                     return new StadtraumtypMonSearch();
                 }
             }, "Stadtraumtypen"),
-        FLAECHENNUTZUNGSPLAN(new MonSearchReportProperty("nutzung") {
+        FLAECHENNUTZUNGSPLAN(new MonSearchReportProperty("fnp_hn_kategorie", "nutzung") {
 
                 @Override
                 public MetaObjectNodeServerSearch createMonServerSearch(
@@ -261,7 +261,7 @@ public class PotenzialflaecheReportServerAction extends StampedByteArrayServerAc
                     return new FnpHauptnutzungenMonSearch();
                 }
             }, "Flächennutzungsplan"),
-        REGIONALPLAN(new MonSearchReportProperty("bezeichnung") {
+        REGIONALPLAN(new MonSearchReportProperty("rpd_kategorie", "bezeichnung") {
 
                 @Override
                 public MetaObjectNodeServerSearch createMonServerSearch(
@@ -270,7 +270,7 @@ public class PotenzialflaecheReportServerAction extends StampedByteArrayServerAc
                 }
             }, "Regionalplan"),
 
-        BODENRICHTWERTE(new MonSearchReportProperty("bodenrichtwert") {
+        BODENRICHTWERTE(new MonSearchReportProperty("brw_zone", "bodenrichtwert") {
 
                 @Override
                 public MetaObjectNodeServerSearch createMonServerSearch(
@@ -623,6 +623,7 @@ public class PotenzialflaecheReportServerAction extends StampedByteArrayServerAc
 
         //~ Instance fields ----------------------------------------------------
 
+        @Getter private final String tableName;
         @Getter private final String nameProperty;
 
         //~ Constructors -------------------------------------------------------
@@ -630,9 +631,11 @@ public class PotenzialflaecheReportServerAction extends StampedByteArrayServerAc
         /**
          * Creates a new MonSearchReportProperty object.
          *
+         * @param  tableName     DOCUMENT ME!
          * @param  nameProperty  DOCUMENT ME!
          */
-        public MonSearchReportProperty(final String nameProperty) {
+        public MonSearchReportProperty(final String tableName, final String nameProperty) {
+            this.tableName = tableName;
             this.nameProperty = nameProperty;
         }
 
