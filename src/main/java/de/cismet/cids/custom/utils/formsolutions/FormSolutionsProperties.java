@@ -150,7 +150,7 @@ public class FormSolutionsProperties {
         testXml = properties.getProperty("TEST_XML");
         ignoreTransIdsTxt = properties.getProperty("IGNORE_TRANSIDS_TXT");
         duplicateTransIdsTxt = properties.getProperty("DUPLICATE_TRANSIDS_TXT");
-        
+
         boolean ignoreDuplicates = false;
         try {
             ignoreDuplicates = Boolean.valueOf(properties.getProperty("IGNORE_DUPLICATES"));
@@ -158,12 +158,12 @@ public class FormSolutionsProperties {
             LOG.info(String.format("%s not set. using false as default value", "IGNORE_DUPLICATES"), ex);
         }
         this.ignoreDuplicates = ignoreDuplicates;
-        
+
         boolean skipStartuphook = false;
         try {
             skipStartuphook = Boolean.valueOf(properties.getProperty("SKIP_UNFINNISHED_AT_STARTUP"));
         } catch (final Exception ex) {
-            LOG.info(String.format("%s not set. using false as default value", "SKIP_UNFINNISHED_AT_STARTUP"), ex);            
+            LOG.info(String.format("%s not set. using false as default value", "SKIP_UNFINNISHED_AT_STARTUP"), ex);
         }
         this.skipUnfinnishedAtStartup = skipStartuphook;
 
