@@ -22,7 +22,6 @@ import java.util.Arrays;
 import de.cismet.cids.custom.utils.formsolutions.FormSolutionsBestellungHandler;
 import de.cismet.cids.custom.utils.formsolutions.FormSolutionsProperties;
 
-
 /**
  * DOCUMENT ME!
  *
