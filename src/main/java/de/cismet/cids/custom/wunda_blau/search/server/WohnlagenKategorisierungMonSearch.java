@@ -58,23 +58,44 @@ public class WohnlagenKategorisierungMonSearch extends AbstractCidsServerSearch 
     @Getter private ConnectionContext connectionContext = ConnectionContext.createDummy();
 
     private Double buffer;
+    @Getter @Setter private Double cutoff;
 
     //~ Constructors -----------------------------------------------------------
 
     /**
-     * Creates a new WohnlagenKategorisierungSearch object.
+     * Creates a new WohnlagenKategorisierungMonSearch object.
      */
     public WohnlagenKategorisierungMonSearch() {
-        this(null);
+        this(null, null);
+    }
+
+    /**
+     * Creates a new WohnlagenKategorisierungMonSearch object.
+     *
+     * @param  geometry  DOCUMENT ME!
+     */
+    public WohnlagenKategorisierungMonSearch(final Geometry geometry) {
+        this(geometry, null);
+    }
+
+    /**
+     * Creates a new WohnlagenKategorisierungSearch object.
+     *
+     * @param  cutoff  DOCUMENT ME!
+     */
+    public WohnlagenKategorisierungMonSearch(final Double cutoff) {
+        this(null, cutoff);
     }
 
     /**
      * Creates a new WohnlagenKategorisierungSearch object.
      *
      * @param  geometry  DOCUMENT ME!
+     * @param  cutoff    DOCUMENT ME!
      */
-    public WohnlagenKategorisierungMonSearch(final Geometry geometry) {
+    public WohnlagenKategorisierungMonSearch(final Geometry geometry, final Double cutoff) {
         this.geometry = geometry;
+        this.cutoff = cutoff;
         this.searchInfo = new SearchInfo(
                 this.getClass().getName(),
                 this.getClass().getSimpleName(),
@@ -119,6 +140,7 @@ public class WohnlagenKategorisierungMonSearch extends AbstractCidsServerSearch 
                 area = "st_area(geom.geo_field)";
             }
             final String query = ""
+                        + "SELECT * FROM ( "
                         + "SELECT "
                         + "  (SELECT id FROM cs_class WHERE table_name ILIKE 'wohnlage_kategorie') AS class_id, "
                         + "  object_id, "
@@ -136,7 +158,11 @@ public class WohnlagenKategorisierungMonSearch extends AbstractCidsServerSearch 
                         + "  " + ((geomCondition != null) ? ("WHERE " + geomCondition) : " ")
                         + ") AS sub "
                         + "GROUP BY object_id "
-                        + "ORDER BY sum(area) DESC;";
+                        + "ORDER BY sum(area) DESC "
+                        + ") AS sub2 "
+                        + ""
+                        + (((geometry != null) && (cutoff != null)) ? (" WHERE sum >= " + (geometry.getArea() * cutoff))
+                                                                    : "") + ";";
 
             if (query != null) {
                 final MetaService ms = (MetaService)getActiveLocalServers().get("WUNDA_BLAU");
