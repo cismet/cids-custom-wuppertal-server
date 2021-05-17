@@ -28,6 +28,7 @@ import de.cismet.cids.utils.serverresources.ServerResourcesLoader;
  * @author   jruiz
  * @version  $Revision$, $Date$
  */
+
 @Getter
 public class FormSolutionsProperties {
 
@@ -89,6 +90,7 @@ public class FormSolutionsProperties {
     private final String ignoreTransIdsTxt;
     private final String duplicateTransIdsTxt;
     private final boolean ignoreDuplicates;
+    private final boolean skipUnfinnishedAtStartup;
 
     //~ Constructors -----------------------------------------------------------
 
@@ -148,7 +150,22 @@ public class FormSolutionsProperties {
         testXml = properties.getProperty("TEST_XML");
         ignoreTransIdsTxt = properties.getProperty("IGNORE_TRANSIDS_TXT");
         duplicateTransIdsTxt = properties.getProperty("DUPLICATE_TRANSIDS_TXT");
-        ignoreDuplicates = Boolean.valueOf(properties.getProperty("IGNORE_DUPLICATES"));
+        
+        boolean ignoreDuplicates = false;
+        try {
+            ignoreDuplicates = Boolean.valueOf(properties.getProperty("IGNORE_DUPLICATES"));
+        } catch (final Exception ex) {
+            LOG.info(String.format("%s not set. using false as default value", "IGNORE_DUPLICATES"), ex);
+        }
+        this.ignoreDuplicates = ignoreDuplicates;
+        
+        boolean skipStartuphook = false;
+        try {
+            skipStartuphook = Boolean.valueOf(properties.getProperty("SKIP_UNFINNISHED_AT_STARTUP"));
+        } catch (final Exception ex) {
+            LOG.info(String.format("%s not set. using false as default value", "SKIP_UNFINNISHED_AT_STARTUP"), ex);            
+        }
+        this.skipUnfinnishedAtStartup = skipStartuphook;
 
         Integer soTimeout = null;
         try {

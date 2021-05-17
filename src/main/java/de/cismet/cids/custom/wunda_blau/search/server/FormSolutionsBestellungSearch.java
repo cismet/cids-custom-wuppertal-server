@@ -94,7 +94,10 @@ public class FormSolutionsBestellungSearch extends AbstractCidsServerSearch impl
                 if (entry.getValue() instanceof String) {
                     filterStrings.add(String.format("%s ILIKE '%s'", entry.getKey(), entry.getValue()));
                 } else if (entry.getValue() instanceof Boolean) {
-                    filterStrings.add(String.format("%s IS %s", entry.getKey(), (Boolean)entry.getValue() ? "TRUE" : "NOT TRUE"));
+                    filterStrings.add(String.format(
+                            "%s IS %s",
+                            entry.getKey(),
+                            (Boolean)entry.getValue() ? "TRUE" : "NOT TRUE"));
                 }
             }
             final String query =
