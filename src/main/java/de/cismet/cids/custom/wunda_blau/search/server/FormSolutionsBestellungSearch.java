@@ -82,6 +82,7 @@ public class FormSolutionsBestellungSearch extends AbstractCidsServerSearch impl
                         "md5('%s'||fs_bestellung.transid)",
                         FormSolutionsProperties.getInstance().getTransidHashpepper()),
                     getTransidHash());
+                filter.put("fs_bestellung.duplicate", Boolean.FALSE);
             }
 
             if (getRequestUrl() != null) {
@@ -91,7 +92,12 @@ public class FormSolutionsBestellungSearch extends AbstractCidsServerSearch impl
             final Collection<String> filterStrings = new ArrayList<>();
             for (final Map.Entry<String, Object> entry : filter.entrySet()) {
                 if (entry.getValue() instanceof String) {
-                    filterStrings.add(entry.getKey() + " ILIKE '" + entry.getValue() + "'");
+                    filterStrings.add(String.format("%s ILIKE '%s'", entry.getKey(), entry.getValue()));
+                } else if (entry.getValue() instanceof Boolean) {
+                    filterStrings.add(String.format(
+                            "%s IS %s",
+                            entry.getKey(),
+                            (Boolean)entry.getValue() ? "TRUE" : "NOT TRUE"));
                 }
             }
             final String query =

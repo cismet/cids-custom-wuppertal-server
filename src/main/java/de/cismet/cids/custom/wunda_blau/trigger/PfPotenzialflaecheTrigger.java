@@ -14,7 +14,6 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 import org.openide.util.lookup.ServiceProvider;
 
 import java.util.Arrays;
-import java.util.Collection;
 
 import de.cismet.cids.custom.utils.ByteArrayFactoryHandler;
 import de.cismet.cids.custom.utils.WundaBlauServerResources;
@@ -49,7 +48,6 @@ public class PfPotenzialflaecheTrigger extends AbstractCidsTrigger implements Co
 
     private static final String DOMAIN = "WUNDA_BLAU";
     private static final String TABLE_POTENZIALFLAECHE = "pf_potenzialflaeche";
-    private static final String TABLE_KAMPAGNE = "pf_kampagne";
     private static final ObjectMapper OBJECT_MAPPER = new ObjectMapper();
 
     //~ Instance fields --------------------------------------------------------
@@ -76,15 +74,6 @@ public class PfPotenzialflaecheTrigger extends AbstractCidsTrigger implements Co
      */
     private PotenzialflaechenProperties getProperties() throws Exception {
         return (PotenzialflaechenProperties)ServerResourcesLoader.getInstance().get(PSR);
-    }
-
-    /**
-     * DOCUMENT ME!
-     *
-     * @return  DOCUMENT ME!
-     */
-    public final Collection<String> getTriggeringTableNames() {
-        return Arrays.asList(TABLE_POTENZIALFLAECHE, TABLE_KAMPAGNE);
     }
 
     /**
@@ -206,7 +195,7 @@ public class PfPotenzialflaecheTrigger extends AbstractCidsTrigger implements Co
 
     @Override
     public CidsTriggerKey getTriggerKey() {
-        return new CidsTriggerKey(DOMAIN, CidsTriggerKey.ALL);
+        return new CidsTriggerKey(DOMAIN, TABLE_POTENZIALFLAECHE);
     }
 
     @Override

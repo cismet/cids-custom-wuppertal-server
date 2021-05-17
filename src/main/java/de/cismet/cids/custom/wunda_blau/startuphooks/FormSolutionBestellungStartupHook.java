@@ -14,16 +14,14 @@ package de.cismet.cids.custom.wunda_blau.startuphooks;
 
 import Sirius.server.middleware.impls.domainserver.DomainServerImpl;
 import Sirius.server.middleware.interfaces.domainserver.DomainServerStartupHook;
-import Sirius.server.middleware.interfaces.domainserver.MetaService;
 import Sirius.server.middleware.types.MetaObject;
 import Sirius.server.middleware.types.MetaObjectNode;
 
 import java.util.Arrays;
 
 import de.cismet.cids.custom.utils.formsolutions.FormSolutionsBestellungHandler;
+import de.cismet.cids.custom.utils.formsolutions.FormSolutionsProperties;
 
-import de.cismet.connectioncontext.ConnectionContext;
-import de.cismet.connectioncontext.ConnectionContextStore;
 
 /**
  * DOCUMENT ME!
@@ -48,23 +46,24 @@ public class FormSolutionBestellungStartupHook extends AbstractWundaBlauStartupH
                 @Override
                 public void run() {
                     try {
-                        final DomainServerImpl metaService = waitForMetaService();
-
-                        final FormSolutionsBestellungHandler handler = new FormSolutionsBestellungHandler(
-                                true,
-                                metaService,
-                                getConnectionContext());
-                        final MetaObject[] mos = handler.getUnfinishedBestellungen();
-                        if (mos != null) {
-                            for (final MetaObject mo : mos) {
-                                try {
-                                    redoBestellung(mo, handler);
-                                } catch (final Exception ex) {
-                                    LOG.error("error while retrying FS_bestellung " + mo, ex);
+                        if (!FormSolutionsProperties.getInstance().isSkipUnfinnishedAtStartup()) {
+                            final DomainServerImpl metaService = waitForMetaService();
+                            final FormSolutionsBestellungHandler handler = new FormSolutionsBestellungHandler(
+                                    true,
+                                    metaService,
+                                    getConnectionContext());
+                            final MetaObject[] mos = handler.getUnfinishedBestellungen();
+                            if (mos != null) {
+                                for (final MetaObject mo : mos) {
+                                    try {
+                                        redoBestellung(mo, handler);
+                                    } catch (final Exception ex) {
+                                        LOG.error("error while retrying FS_bestellung " + mo, ex);
+                                    }
                                 }
                             }
+                            requestOpenBestellungen(handler);
                         }
-                        requestOpenBestellungen(handler);
                     } catch (final Exception ex) {
                         LOG.error("error while executing FormSolutionBestellungStartupHook", ex);
                     }
