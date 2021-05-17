@@ -51,8 +51,6 @@ public enum WundaBlauServerResources {
     ALBO_VORGANG_JASPER(new JasperReportServerResource("/reports/albo_vorgang.jasper")),
     ALBO_FLAECHE_JASPER(new JasperReportServerResource("/reports/albo_flaeche.jasper")),
 
-    FS_TEST_XML(new TextServerResource("/formsolutions/TEST_CISMET00.xml")),
-    FS_IGNORE_TRANSID_TXT(new TextServerResource("/formsolutions/ignoreTransids.txt")),
     FORMSOLUTIONS_PROPERTIES(new TextServerResource("/formsolutions/fs_conf.properties")),
     BUTLER_PROPERTIES(new TextServerResource("/butler/butler.properties")),
     NAS_SERVER_PROPERTIES(new TextServerResource("/nas/nasServer_conf.properties")),

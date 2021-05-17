@@ -19,6 +19,7 @@ import Sirius.server.middleware.types.MetaObject;
 import Sirius.server.middleware.types.MetaObjectNode;
 import Sirius.server.newuser.User;
 import Sirius.server.newuser.UserServer;
+import Sirius.server.property.ServerProperties;
 
 import com.fasterxml.jackson.core.type.TypeReference;
 import com.fasterxml.jackson.databind.ObjectMapper;
@@ -241,23 +242,22 @@ public class FormSolutionsBestellungHandler implements ConnectionContextProvider
                     ex);
             }
             try {
-                testCismet00Type = parseProductType(getProperties().getTestCismet00());
+                testCismet00Type = parseProductType(getProperties().getTestType());
             } catch (final Exception ex) {
-                LOG.error("could not read FormSolutionsConstants.TEST_CISMET00. TEST_CISMET00 stays disabled", ex);
+                LOG.error("could not read FormSolutionsConstants.TEST_TYPE. TEST_TYPE stays disabled", ex);
             }
 
             if (testCismet00Type != null) {
-                try {
-                    testCismet00Xml = ServerResourcesLoader.getInstance()
-                                .loadText(WundaBlauServerResources.FS_TEST_XML.getValue());
+                try(final InputStream is = new FileInputStream(getProperties().getTestXml())) {
+                    testCismet00Xml = IOUtils.toString(is, "UTF-8");
                 } catch (final Exception ex) {
-                    LOG.error("could not load " + WundaBlauServerResources.FS_TEST_XML.getValue(), ex);
+                    LOG.error("could not load " + getProperties().getTestXml(), ex);
                 }
             }
 
-            try {
-                final String ignoreFileContent = ServerResourcesLoader.getInstance()
-                            .loadText(WundaBlauServerResources.FS_IGNORE_TRANSID_TXT.getValue());
+            final String ignoreTransIdsTxt = getProperties().getIgnoreTransIdsTxt();
+            try(final InputStream is = new FileInputStream(ignoreTransIdsTxt)) {
+                final String ignoreFileContent = IOUtils.toString(is, "UTF-8");
                 final String[] lines = ignoreFileContent.split("\n");
                 for (final String line : lines) {
                     if (!line.trim().isEmpty()) {
@@ -265,7 +265,7 @@ public class FormSolutionsBestellungHandler implements ConnectionContextProvider
                     }
                 }
             } catch (final Exception ex) {
-                LOG.error("could not load " + WundaBlauServerResources.FS_IGNORE_TRANSID_TXT.getValue(), ex);
+                LOG.error(String.format("could not load %s", ignoreTransIdsTxt), ex);
             }
         }
 
@@ -709,55 +709,57 @@ public class FormSolutionsBestellungHandler implements ConnectionContextProvider
         specialLog("fetching open transids from FS");
 
         final Collection<String> transIds = new ArrayList<>();
-        try {
-            final StringBuilder stringBuilder = new StringBuilder();
-            final URL auftragsListeUrl;
-            switch (productType) {
-                case SGK: {
-                    auftragsListeUrl = new URL(getProperties().getUrlAuftragslisteSgkFs());
+        if (isServerInProduction()) {
+            try {
+                final StringBuilder stringBuilder = new StringBuilder();
+                final URL auftragsListeUrl;
+                switch (productType) {
+                    case SGK: {
+                        auftragsListeUrl = new URL(getProperties().getUrlAuftragslisteSgkFs());
+                    }
+                    break;
+                    case ABK: {
+                        auftragsListeUrl = new URL(getProperties().getUrlAuftragslisteAbkFs());
+                    }
+                    break;
+                    case BAB_WEITERLEITUNG: {
+                        auftragsListeUrl = new URL(getProperties().getUrlAuftragslisteBb1Fs());
+                    }
+                    break;
+                    case BAB_ABSCHLUSS: {
+                        auftragsListeUrl = new URL(getProperties().getUrlAuftragslisteBb2Fs());
+                    }
+                    break;
+                    default: {
+                        throw new Exception("unknown product type");
+                    }
                 }
-                break;
-                case ABK: {
-                    auftragsListeUrl = new URL(getProperties().getUrlAuftragslisteAbkFs());
-                }
-                break;
-                case BAB_WEITERLEITUNG: {
-                    auftragsListeUrl = new URL(getProperties().getUrlAuftragslisteBb1Fs());
-                }
-                break;
-                case BAB_ABSCHLUSS: {
-                    auftragsListeUrl = new URL(getProperties().getUrlAuftragslisteBb2Fs());
-                }
-                break;
-                default: {
-                    throw new Exception("unknown product type");
-                }
-            }
 
-            try(final InputStream in = getHttpAccessHandler().doRequest(
-                                auftragsListeUrl,
-                                new StringReader(""),
-                                AccessHandler.ACCESS_METHODS.GET_REQUEST,
-                                null,
-                                creds)) {
-                final BufferedReader reader = new BufferedReader(new InputStreamReader(in));
-                String line;
-                while ((line = reader.readLine()) != null) {
-                    stringBuilder.append(line);
+                try(final InputStream in = getHttpAccessHandler().doRequest(
+                                    auftragsListeUrl,
+                                    new StringReader(""),
+                                    AccessHandler.ACCESS_METHODS.GET_REQUEST,
+                                    null,
+                                    creds)) {
+                    final BufferedReader reader = new BufferedReader(new InputStreamReader(in));
+                    String line;
+                    while ((line = reader.readLine()) != null) {
+                        stringBuilder.append(line);
+                    }
                 }
-            }
 
-            specialLog("open transids fetched: " + stringBuilder.toString());
+                specialLog("open transids fetched: " + stringBuilder.toString());
 
-            final Map<String, Object> map = getObjectMapper().readValue("{ \"list\" : " + stringBuilder.toString()
-                            + "}",
-                    new TypeReference<HashMap<String, Object>>() {
-                    });
-            for (final String transId : (Collection<String>)map.get("list")) {
-                transIds.add(transId);
+                final Map<String, Object> map = getObjectMapper().readValue("{ \"list\" : " + stringBuilder.toString()
+                                + "}",
+                        new TypeReference<HashMap<String, Object>>() {
+                        });
+                for (final String transId : (Collection<String>)map.get("list")) {
+                    transIds.add(transId);
+                }
+            } catch (final Exception ex) {
+                LOG.error("error while retrieving open transids", ex);
             }
-        } catch (final Exception ex) {
-            LOG.error("error while retrieving open transids", ex);
         }
 
         return transIds;
@@ -889,7 +891,7 @@ public class FormSolutionsBestellungHandler implements ConnectionContextProvider
         specialLog("getting auftrag from FS for: " + transid);
         if ((transid != null) && transid.startsWith(TEST_CISMET00_PREFIX)) {
             return (testCismet00Xml != null) ? testCismet00Xml.replace("${TRANSID}", transid) : null;
-        } else {
+        } else if (isServerInProduction()) {
             final Map<String, Object> map;
             try(final InputStream in = getHttpAccessHandler().doRequest(
                                 new URL(String.format(getProperties().getUrlAuftragFs(), transid)),
@@ -936,6 +938,8 @@ public class FormSolutionsBestellungHandler implements ConnectionContextProvider
             specialLog("auftrag returned from FS: " + convertedXml);
 
             return convertedXml;
+        } else {
+            return null;
         }
     }
 
@@ -945,15 +949,17 @@ public class FormSolutionsBestellungHandler implements ConnectionContextProvider
      * @param  transid  DOCUMENT ME!
      */
     private void doStatusChangedRequest(final String transid) {
-        try {
-            specialLog("doing status changed request for: " + transid);
+        if (isServerInProduction()) {
+            try {
+                specialLog("doing status changed request for: " + transid);
 
-            getHttpAccessHandler().doRequest(new URL(
-                    String.format(getProperties().getUrlStatusUpdate(), transid)),
-                new StringReader(""),
-                AccessHandler.ACCESS_METHODS.GET_REQUEST);
-        } catch (final Exception ex) {
-            LOG.warn("STATUS_UPDATE_URL could not be requested", ex);
+                getHttpAccessHandler().doRequest(new URL(
+                        String.format(getProperties().getUrlStatusUpdate(), transid)),
+                    new StringReader(""),
+                    AccessHandler.ACCESS_METHODS.GET_REQUEST);
+            } catch (final Exception ex) {
+                LOG.warn("STATUS_UPDATE_URL could not be requested", ex);
+            }
         }
     }
 
@@ -1914,6 +1920,16 @@ public class FormSolutionsBestellungHandler implements ConnectionContextProvider
     /**
      * DOCUMENT ME!
      *
+     * @return  DOCUMENT ME!
+     */
+    public boolean isServerInProduction() {
+        return ServerProperties.DEPLOY_ENV__PRODUCTION.equalsIgnoreCase(DomainServerImpl.getServerProperties()
+                        .getDeployEnv());
+    }
+
+    /**
+     * DOCUMENT ME!
+     *
      * @param   bestellungBean  DOCUMENT ME!
      *
      * @throws  Exception  DOCUMENT ME!
@@ -1963,6 +1979,7 @@ public class FormSolutionsBestellungHandler implements ConnectionContextProvider
 
         specialLog("creating cids entries for num of objects: " + transids.size());
 
+        final Set<String> duplicateTransids = new HashSet<>();
         final Map<String, CidsBean> fsBeanMap = new HashMap<>(transids.size());
         for (final String transid : transids) {
             specialLog("creating cids entry for: " + transid);
@@ -1981,9 +1998,13 @@ public class FormSolutionsBestellungHandler implements ConnectionContextProvider
                                 + bestellungMc.getPrimaryKey(),
                         bestellungMc.getTableName(),
                         transid);
-                final MetaObject[] mos = getMetaService().getMetaObject(getUser(), searchQuery);
+                final MetaObject[] mos = getMetaService().getMetaObject(getUser(), searchQuery, getConnectionContext());
                 if ((mos != null) && (mos.length > 0)) {
                     duplicate = true;
+                    if (getProperties().isIgnoreDuplicates()) {
+                        continue;
+                    }
+                    duplicateTransids.add(transid);
                 }
             } catch (final Exception ex) {
                 final String message = "error while search for duplicates for " + transid;
@@ -2024,15 +2045,21 @@ public class FormSolutionsBestellungHandler implements ConnectionContextProvider
                         getConnectionContext());
 
                 final CidsBean persistedBestellungBean = persistedMo.getBean();
-                fsBeanMap.put(transid, persistedBestellungBean);
-
-                getMySqlHelper().updateStatus(transid, STATUS_SAVE);
-                doStatusChangedRequest(transid);
+                if (!duplicate) {
+                    fsBeanMap.put(transid, persistedBestellungBean);
+                    getMySqlHelper().updateStatus(transid, STATUS_SAVE);
+                    doStatusChangedRequest(transid);
+                }
             } catch (final Exception ex) {
                 setErrorStatus(transid, STATUS_SAVE, null, "Fehler beim Erstellen des Bestellungs-Objektes", ex);
             }
         }
-
+        final String duplicateTransIdsTxt = getProperties().getDuplicateTransIdsTxt();
+        try(final OutputStream os = new FileOutputStream(duplicateTransIdsTxt)) {
+            IOUtils.write(String.join("\n", duplicateTransids), os, "UTF-8");
+        } catch (final Exception ex) {
+            LOG.warn(ex, ex);
+        }
         return fsBeanMap;
     }
 
@@ -2099,7 +2126,7 @@ public class FormSolutionsBestellungHandler implements ConnectionContextProvider
                         final boolean closeVeto = (transid == null) || transid.startsWith(TEST_CISMET00_PREFIX)
                                     || DomainServerImpl.getServerInstance()
                                     .hasConfigAttr(getUser(), "custom.formsolutions.noclose", getConnectionContext());
-                        if (!closeVeto) {
+                        if (isServerInProduction() && !closeVeto) {
                             getHttpAccessHandler().doRequest(
                                 new URL(String.format(getProperties().getUrlAuftragDeleteFs(), transid)),
                                 new StringReader(""),
@@ -2348,12 +2375,14 @@ public class FormSolutionsBestellungHandler implements ConnectionContextProvider
 
         for (final String transid : transids) {
             final CidsBean bestellungBean = fsBeanMap.get(transid);
-            if ((bestellungBean != null) && (repairErrors || (bestellungBean.getProperty("fehler") == null))) {
+            if ((bestellungBean != null) && !Boolean.TRUE.equals(bestellungBean.getProperty("duplicate"))
+                        && (repairErrors || (bestellungBean.getProperty("fehler") == null))) {
                 try {
                     final ProductType productType = determineProductType(bestellungBean);
                     switch (productType) {
                         case BAB_WEITERLEITUNG: {
-                            final String flurstueckKennzeichen = ((String)bestellungBean.getProperty("landparcelcode"));
+                            final String flurstueckKennzeichen = ((String)bestellungBean.getProperty(
+                                        "landparcelcode"));
                             final String produktbezeichnung = transid;
                             final List<CidsBean> flurstuecke = new ArrayList<>();
                             if (flurstueckKennzeichen != null) {
@@ -2445,7 +2474,11 @@ public class FormSolutionsBestellungHandler implements ConnectionContextProvider
                                     getConnectionContext());
 
                                 if (schluessel != null) {
-                                    getMySqlHelper().updatePruefungFreigabe(schluessel, transid, STATUS_PRUEFUNG, null);
+                                    getMySqlHelper().updatePruefungFreigabe(
+                                        schluessel,
+                                        transid,
+                                        STATUS_PRUEFUNG,
+                                        null);
                                 }
                             }
                         }
@@ -2542,7 +2575,8 @@ public class FormSolutionsBestellungHandler implements ConnectionContextProvider
             final Collection<String> transids = new ArrayList<>(fsBeanMap.keySet());
             for (final String transid : transids) {
                 final CidsBean bestellungBean = fsBeanMap.get(transid);
-                if ((bestellungBean != null) && (repairErrors || (bestellungBean.getProperty("fehler") == null))) {
+                if ((bestellungBean != null) && !Boolean.TRUE.equals(bestellungBean.getProperty("duplicate"))
+                            && (repairErrors || (bestellungBean.getProperty("fehler") == null))) {
                     try {
                         bestellungBean.setProperty("erledigt", Boolean.FALSE);
                         bestellungBean.setProperty("fehler", null);
