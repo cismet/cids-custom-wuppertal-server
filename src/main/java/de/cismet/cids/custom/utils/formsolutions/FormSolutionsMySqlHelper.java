@@ -12,6 +12,9 @@
  */
 package de.cismet.cids.custom.utils.formsolutions;
 
+import Sirius.server.middleware.impls.domainserver.DomainServerImpl;
+import Sirius.server.property.ServerProperties;
+
 import java.sql.Connection;
 import java.sql.DriverManager;
 import java.sql.PreparedStatement;
@@ -396,7 +399,8 @@ public class FormSolutionsMySqlHelper {
      * @return  DOCUMENT ME!
      */
     public boolean isEnabled() {
-        return !FormSolutionsProperties.getInstance().isMysqlDisabled();
+        return ServerProperties.DEPLOY_ENV__PRODUCTION.equalsIgnoreCase(DomainServerImpl.getServerProperties()
+                        .getDeployEnv()) && !FormSolutionsProperties.getInstance().isMysqlDisabled();
     }
 
     //~ Inner Classes ----------------------------------------------------------
