@@ -49,7 +49,7 @@ public class GrundwassermessstellenWebDavTunnelAction extends WebDavTunnelAction
             properties = new GrundwassermessstellenProperties(ServerResourcesLoader.getInstance().loadProperties(
                         WundaBlauServerResources.GRUNDWASSERMESSSTELLEN_PROPERTIES.getValue()));
         } catch (final Exception ex) {
-            LOG.error("GrundwassermessstellenWebDavTunnelAction could not load the properties", ex);
+            LOG.info("GrundwassermessstellenWebDavTunnelAction could not load the properties", ex);
         }
         this.properties = properties;
     }
