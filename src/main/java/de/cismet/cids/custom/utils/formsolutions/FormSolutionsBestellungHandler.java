@@ -2130,6 +2130,7 @@ public class FormSolutionsBestellungHandler implements ConnectionContextProvider
                             getHttpAccessHandler().doRequest(
                                 new URL(String.format(getProperties().getUrlAuftragDeleteFs(), transid)),
                                 new StringReader(""),
+                                "text/plain",
                                 AccessHandler.ACCESS_METHODS.POST_REQUEST,
                                 null,
                                 creds);
