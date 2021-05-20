@@ -144,11 +144,14 @@ public class KstGeometryMonSearch extends AbstractCidsServerSearch implements Re
             final Geometry geom = getGeometry();
             final String geomCondition;
             if (geom != null) {
-                final String geomString = PostGisGeometryFactory.getPostGisCompliantDbString(geom);
-                geomCondition = "(geom.geo_field && GeometryFromText('" + geomString + "') AND intersects("
-                            + ((getBuffer() != null)
-                                ? ("st_buffer(GeometryFromText('" + geomString + "'), " + getBuffer() + ")")
-                                : "geo_field") + ", geo_field))";
+                final String geomStringFromText = String.format(
+                        "GeometryFromText('%s')",
+                        PostGisGeometryFactory.getPostGisCompliantDbString(geom));
+                geomCondition = String.format(
+                        "(geom.geo_field && %s AND intersects(%s, geo_field))",
+                        geomStringFromText,
+                        ((getBuffer() != null) ? String.format("st_buffer(%s, %f)", geomStringFromText, getBuffer())
+                                               : geomStringFromText));
             } else {
                 geomCondition = null;
             }
@@ -161,25 +164,30 @@ public class KstGeometryMonSearch extends AbstractCidsServerSearch implements Re
             } else {
                 area = "st_area(geom.geo_field)";
             }
-            final String query = ""
-                        + "SELECT "
-                        + "  (SELECT id FROM cs_class WHERE table_name ILIKE '" + kst + "') AS class_id, "
-                        + "  object_id, "
-                        + "  min(object_name), "
-                        + "  sum(area), "
-                        + "  min(nummer) "
-                        + "FROM ( "
-                        + "   SELECT "
-                        + "    " + area + " AS area, "
-                        + "    kst.id AS object_id, "
-                        + "    kst.name AS object_name, "
-                        + "    kst." + nr + " AS nummer "
-                        + "  FROM " + kst + " AS kst "
-                        + "  " + ((geomCondition != null) ? "LEFT JOIN geom ON kst.georeferenz = geom.id " : " ")
-                        + "  " + ((geomCondition != null) ? ("WHERE " + geomCondition) : " ")
-                        + ") AS sub "
-                        + "GROUP BY object_id "
-                        + "ORDER BY sum(area), min(nummer) DESC;";
+            final String query = String.format(
+                    "SELECT "
+                            + "  (SELECT id FROM cs_class WHERE table_name ILIKE '%1$s') AS class_id, "
+                            + "  object_id, "
+                            + "  min(object_name), "
+                            + "  sum(area), "
+                            + "  min(nummer) "
+                            + "FROM ( "
+                            + "   SELECT "
+                            + "    %2$s AS area, "
+                            + "    kst.id AS object_id, "
+                            + "    kst.name AS object_name, "
+                            + "    kst.%3$s AS nummer "
+                            + "  FROM %1$s AS kst "
+                            + "  %4$s"
+                            + "  %5$s"
+                            + ") AS sub "
+                            + "GROUP BY object_id "
+                            + "ORDER BY sum(area), min(nummer) DESC;",
+                    kst,
+                    area,
+                    nr,
+                    ((geomCondition != null) ? "LEFT JOIN geom ON kst.georeferenz = geom.id " : " "),
+                    ((geomCondition != null) ? ("WHERE " + geomCondition) : " "));
             if (query != null) {
                 final MetaService ms = (MetaService)getActiveLocalServers().get("WUNDA_BLAU");
 
