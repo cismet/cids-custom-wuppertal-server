@@ -209,11 +209,11 @@
             <scope>compile</scope>
             <type>jar</type>
         </dependency>
-        <dependency>
+<!--        <dependency>
             <groupId>de.cismet.custom</groupId>
             <artifactId>cismet-deegree2.3</artifactId>
             <type>jar</type>
-        </dependency>                
+        </dependency>                -->
         <dependency>
             <groupId>com.fasterxml.jackson.core</groupId>
             <artifactId>jackson-core</artifactId>
