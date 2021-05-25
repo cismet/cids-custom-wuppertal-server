@@ -10,7 +10,6 @@ package de.cismet.cids.custom.deletionprovider;
 import Sirius.server.localserver.object.AbstractCustomDeletionProvider;
 import Sirius.server.localserver.object.CustomDeletionProvider;
 import Sirius.server.localserver.object.DeletionProviderClientException;
-import Sirius.server.middleware.types.MetaClass;
 import Sirius.server.middleware.types.MetaObject;
 import Sirius.server.newuser.User;
 
@@ -94,7 +93,7 @@ public class BaumArtDeletionProvider extends AbstractCustomDeletionProvider {
     }
 
     @Override
-    public void customDeleteMetaObject(final User user, final MetaObject metaObject) throws Exception {
+    public boolean customDeleteMetaObject(final User user, final MetaObject metaObject) throws Exception {
         if (metaObject != null) {
             // darf nicht geloescht werden
             
@@ -104,5 +103,6 @@ public class BaumArtDeletionProvider extends AbstractCustomDeletionProvider {
              
             }
         }
+        return false;
     }
 }
