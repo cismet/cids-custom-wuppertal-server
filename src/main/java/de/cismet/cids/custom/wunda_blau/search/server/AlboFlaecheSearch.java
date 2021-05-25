@@ -34,8 +34,6 @@ import java.util.ArrayList;
 import java.util.Collection;
 import java.util.List;
 
-import de.cismet.cids.custom.utils.vermessungsunterlagen.exceptions.VermessungsunterlagenException;
-
 import de.cismet.cids.server.search.AbstractCidsServerSearch;
 import de.cismet.cids.server.search.MetaObjectNodeServerSearch;
 
@@ -700,7 +698,7 @@ public class AlboFlaecheSearch extends AbstractCidsServerSearch implements MetaO
          * Creates a new CidsBeanJsonDeserializer object.
          */
         public ArtInfoDeserializer() {
-            super(VermessungsunterlagenException.class);
+            super(ArtInfoDeserializer.class);
 
             defaultMapper.configure(DeserializationFeature.FAIL_ON_UNKNOWN_PROPERTIES, false);
         }

@@ -28,6 +28,7 @@ import de.cismet.cids.utils.serverresources.ServerResourcesLoader;
  * @author   jruiz
  * @version  $Revision$, $Date$
  */
+
 @Getter
 public class FormSolutionsProperties {
 
@@ -57,7 +58,7 @@ public class FormSolutionsProperties {
     private final String ftpPass;
     private final boolean ftpOverTls;
     private final String ftpMountAbsPath;
-    private final String testCismet00;
+    private final String testType;
     private final String specialLogAbsPath;
     private final String produktTmpAbsPath;
     private final String anhangTmpAbsPath;
@@ -85,6 +86,11 @@ public class FormSolutionsProperties {
     private final boolean deleteTmpProductAfterSuccessfulUploadDisabled;
     private final Integer connectionTimeout;
     private final Integer soTimeout;
+    private final String testXml;
+    private final String ignoreTransIdsTxt;
+    private final String duplicateTransIdsTxt;
+    private final boolean ignoreDuplicates;
+    private final boolean skipUnfinnishedAtStartup;
 
     //~ Constructors -----------------------------------------------------------
 
@@ -114,7 +120,7 @@ public class FormSolutionsProperties {
         ftpPass = properties.getProperty("FTP_PASS");
         ftpMountAbsPath = properties.getProperty("FTP_MOUNT_ABS_PATH");
         ftpOverTls = Boolean.valueOf(properties.getProperty("FTP_OVER_TLS"));
-        testCismet00 = properties.getProperty("TEST_CISMET00");
+        testType = properties.getProperty("TEST_TYPE");
         specialLogAbsPath = properties.getProperty("SPECIAL_LOG_ABS_PATH");
         produktTmpAbsPath = properties.getProperty("PRODUKT_TMP_ABS_PATH");
         anhangTmpAbsPath = properties.getProperty("ANHANG_TMP_ABS_PATH");
@@ -139,8 +145,27 @@ public class FormSolutionsProperties {
         redirectionFormat = properties.getProperty("REDIRECTION_FORMAT");
         urlCreateCacheid = properties.getProperty("URL_CREATE_CACHEID");
         cidsActionHttpRedirectorUrl = properties.getProperty("CIDS_ACTION_HTTP_REDIRECTOR_URL");
-        deleteTmpProductAfterSuccessfulUploadDisabled = Boolean.valueOf(
-                properties.getProperty("DELETE_TMP_PRODUCT_AFTER_SUCCESSFUL_UPLOAD_DISABLED"));
+        deleteTmpProductAfterSuccessfulUploadDisabled = Boolean.valueOf(properties.getProperty(
+                    "DELETE_TMP_PRODUCT_AFTER_SUCCESSFUL_UPLOAD_DISABLED"));
+        testXml = properties.getProperty("TEST_XML");
+        ignoreTransIdsTxt = properties.getProperty("IGNORE_TRANSIDS_TXT");
+        duplicateTransIdsTxt = properties.getProperty("DUPLICATE_TRANSIDS_TXT");
+
+        boolean ignoreDuplicates = false;
+        try {
+            ignoreDuplicates = Boolean.valueOf(properties.getProperty("IGNORE_DUPLICATES"));
+        } catch (final Exception ex) {
+            LOG.info(String.format("%s not set. using false as default value", "IGNORE_DUPLICATES"), ex);
+        }
+        this.ignoreDuplicates = ignoreDuplicates;
+
+        boolean skipStartuphook = false;
+        try {
+            skipStartuphook = Boolean.valueOf(properties.getProperty("SKIP_UNFINNISHED_AT_STARTUP"));
+        } catch (final Exception ex) {
+            LOG.info(String.format("%s not set. using false as default value", "SKIP_UNFINNISHED_AT_STARTUP"), ex);
+        }
+        this.skipUnfinnishedAtStartup = skipStartuphook;
 
         Integer soTimeout = null;
         try {

@@ -14,8 +14,11 @@ package de.cismet.cids.custom.utils;
 
 import lombok.Getter;
 
+import de.cismet.cids.custom.utils.properties.PotenzialflaechenProperties;
+
 import de.cismet.cids.utils.serverresources.BinaryServerResource;
 import de.cismet.cids.utils.serverresources.JasperReportServerResource;
+import de.cismet.cids.utils.serverresources.PropertiesServerResource;
 import de.cismet.cids.utils.serverresources.ServerResource;
 import de.cismet.cids.utils.serverresources.TextServerResource;
 
@@ -34,8 +37,9 @@ public enum WundaBlauServerResources {
     VERMESSUNGSRISSE_JASPER(new JasperReportServerResource("/reports/vermessungsrisse.jasper")),
     VERMESSUNGSRISSE_DOCUMENT_JASPER(new JasperReportServerResource("/reports/vermessungsrisse_document.jasper")),
     VERMESSUNGSRISSE_OVERVIEW_JASPER(new JasperReportServerResource("/reports/vermessungsrisse_overview.jasper")),
-    POTENZIALFLAECHEN_PROPERTIES(new TextServerResource("/potenzialflaechen/potenzialflaechen.properties")),
-    POTENZIALFLAECHEN_MAPFACTORY_PROPERTIES(new TextServerResource("/potenzialflaechen/mapfactory.properties")),
+    POTENZIALFLAECHEN_PROPERTIES(new PropertiesServerResource(
+            "/potenzialflaechen/potenzialflaechen.properties",
+            PotenzialflaechenProperties.class)),
     APMAPS_JASPER(new JasperReportServerResource("/reports/apmaps.jasper")),
     APMAPS_DOCUMENT_JASPER(new JasperReportServerResource("/reports/apmaps_document.jasper")),
     APMAPS_OVERVIEW_JASPER(new JasperReportServerResource("/reports/apmaps_overview.jasper")),
@@ -47,8 +51,6 @@ public enum WundaBlauServerResources {
     ALBO_VORGANG_JASPER(new JasperReportServerResource("/reports/albo_vorgang.jasper")),
     ALBO_FLAECHE_JASPER(new JasperReportServerResource("/reports/albo_flaeche.jasper")),
 
-    FS_TEST_XML(new TextServerResource("/formsolutions/TEST_CISMET00.xml")),
-    FS_IGNORE_TRANSID_TXT(new TextServerResource("/formsolutions/ignoreTransids.txt")),
     FORMSOLUTIONS_PROPERTIES(new TextServerResource("/formsolutions/fs_conf.properties")),
     BUTLER_PROPERTIES(new TextServerResource("/butler/butler.properties")),
     NAS_SERVER_PROPERTIES(new TextServerResource("/nas/nasServer_conf.properties")),
