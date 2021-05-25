@@ -34,24 +34,30 @@ public class AlboProperties {
 
     //~ Instance fields --------------------------------------------------------
 
+    private final Properties properties;
     private final String flaecheMapUrl;
     private final Integer flaecheMapWidth;
     private final Integer flaecheMapHeight;
     private final Integer flaecheMapDpi;
 
-    private final String altstandort_color;
-    private final String altablagerung_color;
-    private final String betriebsstandort_color;
-    private final String materialaufbringung_color;
-    private final String sonstige_color;
-    private final String ohne_verdacht_color;
+    private final String altstandortColor;
+    private final String altablagerungColor;
+    private final String betriebsstandortColor;
+    private final String materialaufbringungColor;
+    private final String sonstigeColor;
+    private final String ohneVerdachtColor;
 
-    private final String wz_klassifikation_link;
+    private final String wzKlassifikationLink;
 
     private final String vorgangMapUrl;
     private final Integer vorgangMapWidth;
     private final Integer vorgangMapHeight;
     private final Integer vorgangMapDpi;
+
+    private final String exportTmpAbsPath;
+    private final String exportViewName;
+    private final String exportOrderbyField;
+    private final String exportRowidField;
 
     // private final String xxx_color;
 
@@ -63,93 +69,34 @@ public class AlboProperties {
      * @param  properties  DOCUMENT ME!
      */
     protected AlboProperties(final Properties properties) {
-        this.flaecheMapUrl = readProperty(properties, "flaecheMapUrl", null);
-        {
-            Integer flaecheMapWidth;
-            try {
-                flaecheMapWidth = Integer.parseInt(readProperty(properties, "flaecheMapWidth", null));
-            } catch (final Exception ex) {
-                flaecheMapWidth = null;
-                LOG.warn("could not set flaecheMapWidth=" + flaecheMapWidth, ex);
-            }
-            this.flaecheMapWidth = flaecheMapWidth;
-        }
-        {
-            Integer flaecheMapHeight;
-            try {
-                flaecheMapHeight = Integer.parseInt(readProperty(properties, "flaecheMapHeight", null));
-            } catch (final Exception ex) {
-                flaecheMapHeight = null;
-                LOG.warn("could not set flaecheMapHeight=" + flaecheMapHeight, ex);
-            }
-            this.flaecheMapHeight = flaecheMapHeight;
-        }
-        {
-            Integer flaecheMapDpi;
-            try {
-                flaecheMapDpi = Integer.parseInt(readProperty(properties, "flaecheMapDpi", null));
-            } catch (final Exception ex) {
-                flaecheMapDpi = null;
-                LOG.warn("could not set flaecheMapDpi=" + flaecheMapDpi, ex);
-            }
-            this.flaecheMapDpi = flaecheMapDpi;
-        }
+        this.properties = properties;
 
-        altstandort_color = readProperty(properties, "altstandort_color", null);
-        altablagerung_color = readProperty(properties, "altablagerung_color", null);
-        betriebsstandort_color = readProperty(properties, "betriebsstandort_color", null);
-        materialaufbringung_color = readProperty(properties, "materialaufbringung_color", null);
-        sonstige_color = readProperty(properties, "sonstige_color", null);
-        ohne_verdacht_color = readProperty(properties, "ohne_verdacht_color", null);
+        flaecheMapUrl = valueOfString("flaecheMapUrl", null);
+        flaecheMapWidth = valueOfInteger("flaecheMapWidth", null);
+        flaecheMapHeight = valueOfInteger("flaecheMapHeight", null);
+        flaecheMapDpi = valueOfInteger("flaecheMapDpi", null);
 
-        wz_klassifikation_link = readProperty(properties, "wz_klassifikation_link", null);
-        vorgangMapUrl = readProperty(properties, "vorgang_map_url", null);
+        altstandortColor = valueOfString("altstandort_color", null);
+        altablagerungColor = valueOfString("altablagerung_color", null);
+        betriebsstandortColor = valueOfString("betriebsstandort_color", null);
+        materialaufbringungColor = valueOfString("materialaufbringung_color", null);
+        sonstigeColor = valueOfString("sonstige_color", null);
+        ohneVerdachtColor = valueOfString("ohne_verdacht_color", null);
 
-        Integer vorgangMapDpi = null;
-        try {
-            vorgangMapDpi = Integer.parseInt(readProperty(properties, "vorgang_map_dpi", "300"));
-        } catch (final Exception ex) {
-        }
-        this.vorgangMapDpi = vorgangMapDpi;
+        wzKlassifikationLink = valueOfString("wz_klassifikation_link", null);
+        vorgangMapUrl = valueOfString("vorgang_map_url", null);
 
-        Integer vorgangMapWidth = null;
-        try {
-            vorgangMapWidth = Integer.parseInt(readProperty(properties, "vorgang_map_width", "275"));
-        } catch (final Exception ex) {
-        }
-        this.vorgangMapWidth = vorgangMapWidth;
+        vorgangMapDpi = valueOfInteger("vorgang_map_dpi", 300);
+        vorgangMapWidth = valueOfInteger("vorgang_map_width", 275);
+        vorgangMapHeight = valueOfInteger("vorgang_map_height", 130);
 
-        Integer vorgangMapHeight = null;
-        try {
-            vorgangMapHeight = Integer.parseInt(readProperty(properties, "vorgang_map_height", "130"));
-        } catch (final Exception ex) {
-        }
-        this.vorgangMapHeight = vorgangMapHeight;
+        exportTmpAbsPath = valueOfString("export_tmp_abs_path", "/tmp");
+        exportViewName = valueOfString("export_view_name", "view_albo_export");
+        exportOrderbyField = valueOfString("export_orderby_field", "id");
+        exportRowidField = valueOfString("export_rowid_field", "id");
     }
 
     //~ Methods ----------------------------------------------------------------
-
-    /**
-     * DOCUMENT ME!
-     *
-     * @param   properties    DOCUMENT ME!
-     * @param   property      DOCUMENT ME!
-     * @param   defaultValue  DOCUMENT ME!
-     *
-     * @return  DOCUMENT ME!
-     */
-    private String readProperty(final Properties properties, final String property, final String defaultValue) {
-        String value = defaultValue;
-        try {
-            value = properties.getProperty(property, defaultValue);
-        } catch (final Exception ex) {
-            final String message = "could not read " + property + " from "
-                        + SERVER_RESOURCE.getValue()
-                        + ". setting to default value: " + defaultValue;
-            LOG.warn(message, ex);
-        }
-        return value;
-    }
 
     /**
      * DOCUMENT ME!
@@ -158,6 +105,66 @@ public class AlboProperties {
      */
     public static AlboProperties getInstance() {
         return LazyInitialiser.INSTANCE;
+    }
+
+    /**
+     * DOCUMENT ME!
+     *
+     * @param   property      DOCUMENT ME!
+     * @param   defaultValue  DOCUMENT ME!
+     *
+     * @return  DOCUMENT ME!
+     */
+    public final String valueOfString(final String property, final String defaultValue) {
+        String value = defaultValue;
+        if (properties.getProperty(property) != null) {
+            value = properties.getProperty(property);
+        }
+        return value;
+    }
+
+    /**
+     * DOCUMENT ME!
+     *
+     * @param   property      DOCUMENT ME!
+     * @param   defaultValue  DOCUMENT ME!
+     *
+     * @return  DOCUMENT ME!
+     */
+    public final Integer valueOfInteger(final String property, final Integer defaultValue) {
+        Integer value = defaultValue;
+        try {
+            value = Integer.valueOf(properties.getProperty(property));
+        } catch (final Exception ex) {
+            LOG.warn(String.format(
+                    "value of %s is set to %s and can't be cast to Integer.",
+                    property,
+                    properties.getProperty(property)),
+                ex);
+        }
+        return value;
+    }
+
+    /**
+     * DOCUMENT ME!
+     *
+     * @param   property      DOCUMENT ME!
+     * @param   defaultValue  DOCUMENT ME!
+     *
+     * @return  DOCUMENT ME!
+     */
+    public final Boolean valueOfBoolean(final String property, final Boolean defaultValue) {
+        Boolean value = defaultValue;
+        try {
+            value = Boolean.valueOf(properties.getProperty(property));
+        } catch (final Exception ex) {
+            LOG.warn(String.format(
+                    "value of %s is set to %s and can't be cast to Boolean.",
+                    property,
+                    properties.getProperty(property)),
+                ex);
+        }
+        return value;
     }
 
     //~ Inner Classes ----------------------------------------------------------
@@ -175,8 +182,7 @@ public class AlboProperties {
 
         static {
             try {
-                INSTANCE = new AlboProperties(ServerResourcesLoader.getInstance().loadProperties(
-                            SERVER_RESOURCE.getValue()));
+                INSTANCE = getNewInstance();
             } catch (final Exception ex) {
                 throw new RuntimeException("Exception while initializing AlboProperties", ex);
             }
@@ -188,6 +194,24 @@ public class AlboProperties {
          * Creates a new LazyInitialiser object.
          */
         private LazyInitialiser() {
+        }
+
+        //~ Methods ------------------------------------------------------------
+
+        /**
+         * DOCUMENT ME!
+         *
+         * @return  DOCUMENT ME!
+         *
+         * @throws  RuntimeException  DOCUMENT ME!
+         */
+        public static AlboProperties getNewInstance() {
+            try {
+                return new AlboProperties(ServerResourcesLoader.getInstance().loadProperties(
+                            SERVER_RESOURCE.getValue()));
+            } catch (final Throwable ex) {
+                throw new RuntimeException("Exception while initializing AlboProperties", ex);
+            }
         }
     }
 }
