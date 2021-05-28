@@ -99,7 +99,7 @@ public class FormSolutionsProperties {
      *
      * @param  properties  DOCUMENT ME!
      */
-    public FormSolutionsProperties(final Properties properties) {
+    protected FormSolutionsProperties(final Properties properties) {
         user = properties.getProperty("USER");
         password = properties.getProperty("PASSWORD");
         mysqlJdbc = properties.getProperty("MYSQL_JDBC");

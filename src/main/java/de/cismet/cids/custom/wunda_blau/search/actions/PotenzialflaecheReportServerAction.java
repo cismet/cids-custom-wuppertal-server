@@ -13,7 +13,6 @@
 package de.cismet.cids.custom.wunda_blau.search.actions;
 
 import Sirius.server.middleware.impls.domainserver.DomainServerImpl;
-import Sirius.server.middleware.types.MetaObject;
 import Sirius.server.middleware.types.MetaObjectNode;
 
 import com.vividsolutions.jts.geom.Geometry;
@@ -37,6 +36,7 @@ import de.cismet.cids.custom.wunda_blau.search.server.BplaeneMonSearch;
 import de.cismet.cids.custom.wunda_blau.search.server.FnpHauptnutzungenMonSearch;
 import de.cismet.cids.custom.wunda_blau.search.server.GeometrySearch;
 import de.cismet.cids.custom.wunda_blau.search.server.KstGeometryMonSearch;
+import de.cismet.cids.custom.wunda_blau.search.server.RestApiMonSearch;
 import de.cismet.cids.custom.wunda_blau.search.server.RpdKategorieMonSearch;
 import de.cismet.cids.custom.wunda_blau.search.server.StadtraumtypMonSearch;
 import de.cismet.cids.custom.wunda_blau.search.server.WohnlagenKategorisierungMonSearch;
@@ -45,7 +45,6 @@ import de.cismet.cids.dynamics.CidsBean;
 
 import de.cismet.cids.server.actions.ServerAction;
 import de.cismet.cids.server.actions.ServerActionParameter;
-import de.cismet.cids.server.search.MetaObjectNodeServerSearch;
 
 import de.cismet.cids.utils.serverresources.PropertiesServerResource;
 import de.cismet.cids.utils.serverresources.ServerResourcesLoader;
@@ -205,76 +204,70 @@ public class PotenzialflaecheReportServerAction extends StampedByteArrayServerAc
                     return String.format("%.2f m² (circa %.1f ha)", m2, ha);
                 }
             }, "Größe"),
-        BEBAUUNGSPLAN(new MonSearchReportProperty("bplan_verfahren", "nummer") {
+        BEBAUUNGSPLAN(new MonSearchReportProperty("bplan_verfahren") {
 
                 @Override
-                public MetaObjectNodeServerSearch createMonServerSearch(
-                        final PotenzialflaecheReportCreator creator) {
-                    return new BplaeneMonSearch();
+                public RestApiMonSearch createMonServerSearch() {
+                    return new BplaeneMonSearch(
+                            "nummer "
+                                    + "|| CASE WHEN (vstandi IS NOT NULL) THEN ' i[' || vstandi || ' ' || datumi || ']' ELSE '' END "
+                                    + "|| CASE WHEN (vstandr IS NOT NULL) THEN ' r[' || vstandr || ' ' || datumr || ']' ELSE '' END ");
                 }
             }, "BPlan"),
-        STADTBEZIRK(new MonSearchReportProperty("kst_stadtbezirk", "name") {
+        STADTBEZIRK(new MonSearchReportProperty("kst_stadtbezirk") {
 
                 @Override
-                public MetaObjectNodeServerSearch createMonServerSearch(
-                        final PotenzialflaecheReportCreator creator) {
+                public RestApiMonSearch createMonServerSearch() {
                     return new KstGeometryMonSearch(KstGeometryMonSearch.SearchFor.BEZIRK);
                 }
             }, "Stadtbezirke"),
-        QUARTIER(new MonSearchReportProperty("kst_quartier", "name") {
+        QUARTIER(new MonSearchReportProperty("kst_quartier") {
 
                 @Override
-                public MetaObjectNodeServerSearch createMonServerSearch(
-                        final PotenzialflaecheReportCreator creator) {
+                public RestApiMonSearch createMonServerSearch() {
                     return new KstGeometryMonSearch(KstGeometryMonSearch.SearchFor.QUARTIER);
                 }
             }, "Quartiere"),
-        FLURSTUECKE(new MonSearchReportProperty("alkis_landparcel", "alkis_id") {
+        FLURSTUECKE(new MonSearchReportProperty("alkis_landparcel") {
 
                 @Override
-                public MetaObjectNodeServerSearch createMonServerSearch(
-                        final PotenzialflaecheReportCreator creator) {
+                public RestApiMonSearch createMonServerSearch() {
                     return new AlkisLandparcelGeometryMonSearch();
                 }
             }, "Flurstücke"),
-        WOHNLAGEN(new MonSearchReportProperty("wohnlage_kategorie", "name") {
+        WOHNLAGEN(new MonSearchReportProperty("wohnlage_kategorie") {
 
                 @Override
-                public MetaObjectNodeServerSearch createMonServerSearch(
-                        final PotenzialflaecheReportCreator creator) {
-                    return new WohnlagenKategorisierungMonSearch();
+                public RestApiMonSearch createMonServerSearch() {
+                    return new WohnlagenKategorisierungMonSearch(0.1d);
                 }
             }, "Wohnlagen"),
-        STADTRAUMTYPEN(new MonSearchReportProperty("srt_kategorie", "bezeichnung") {
+        STADTRAUMTYPEN(new MonSearchReportProperty("srt_kategorie") {
 
                 @Override
-                public MetaObjectNodeServerSearch createMonServerSearch(
-                        final PotenzialflaecheReportCreator creator) {
+                public RestApiMonSearch createMonServerSearch() {
                     return new StadtraumtypMonSearch();
                 }
             }, "Stadtraumtypen"),
-        FLAECHENNUTZUNGSPLAN(new MonSearchReportProperty("fnp_hn_kategorie", "nutzung") {
+        FLAECHENNUTZUNGSPLAN(new MonSearchReportProperty("fnp_hn_kategorie") {
 
                 @Override
-                public MetaObjectNodeServerSearch createMonServerSearch(
-                        final PotenzialflaecheReportCreator creator) {
-                    return new FnpHauptnutzungenMonSearch();
+                public RestApiMonSearch createMonServerSearch() {
+                    return new FnpHauptnutzungenMonSearch(0.1d);
                 }
             }, "Flächennutzungsplan"),
-        REGIONALPLAN(new MonSearchReportProperty("rpd_kategorie", "bezeichnung") {
+        REGIONALPLAN(new MonSearchReportProperty("rpd_kategorie") {
 
                 @Override
-                public MetaObjectNodeServerSearch createMonServerSearch(
-                        final PotenzialflaecheReportCreator creator) {
+                public RestApiMonSearch createMonServerSearch() {
                     return new RpdKategorieMonSearch(0.2d);
                 }
             }, "Regionalplan"),
 
-        BODENRICHTWERTE(new MonSearchReportProperty("brw_zone", "bodenrichtwert") {
+        BODENRICHTWERTE(new MonSearchReportProperty("brw_zone") {
 
                 @Override
-                public MetaObjectNodeServerSearch createMonServerSearch(
-                        final PotenzialflaecheReportCreator creator) {
+                public RestApiMonSearch createMonServerSearch() {
                     return new BodenrichtwertZoneMonSearch();
                 }
             }, "Bodenrichtwerte");
@@ -624,19 +617,16 @@ public class PotenzialflaecheReportServerAction extends StampedByteArrayServerAc
         //~ Instance fields ----------------------------------------------------
 
         @Getter private final String tableName;
-        @Getter private final String nameProperty;
 
         //~ Constructors -------------------------------------------------------
 
         /**
          * Creates a new MonSearchReportProperty object.
          *
-         * @param  tableName     DOCUMENT ME!
-         * @param  nameProperty  DOCUMENT ME!
+         * @param  tableName  DOCUMENT ME!
          */
-        public MonSearchReportProperty(final String tableName, final String nameProperty) {
+        public MonSearchReportProperty(final String tableName) {
             this.tableName = tableName;
-            this.nameProperty = nameProperty;
         }
 
         //~ Methods ------------------------------------------------------------
@@ -644,16 +634,13 @@ public class PotenzialflaecheReportServerAction extends StampedByteArrayServerAc
         /**
          * DOCUMENT ME!
          *
-         * @param   creator  serverAction DOCUMENT ME!
-         *
          * @return  DOCUMENT ME!
          */
-        public abstract MetaObjectNodeServerSearch createMonServerSearch(
-                final PotenzialflaecheReportCreator creator);
+        public abstract RestApiMonSearch createMonServerSearch();
 
         @Override
         public String calculateProperty(final PotenzialflaecheReportCreator creator) {
-            final MetaObjectNodeServerSearch serverSearch = createMonServerSearch(creator);
+            final RestApiMonSearch serverSearch = createMonServerSearch();
             if (serverSearch != null) {
                 if (serverSearch instanceof GeometrySearch) {
                     final CidsBean flaecheBean = creator.getFlaecheBean();
@@ -664,8 +651,7 @@ public class PotenzialflaecheReportServerAction extends StampedByteArrayServerAc
                 final Collection<String> names = new ArrayList<>();
                 try {
                     for (final MetaObjectNode mon : creator.executeSearch(serverSearch)) {
-                        final MetaObject mo = creator.getMetaObject(mon);
-                        names.add((String)mo.getBean().getProperty(getNameProperty()));
+                        names.add(mon.getName());
                     }
                 } catch (final Exception ex) {
                     LOG.error(ex, ex);

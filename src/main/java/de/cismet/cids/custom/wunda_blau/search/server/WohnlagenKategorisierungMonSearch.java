@@ -12,9 +12,6 @@ import Sirius.server.middleware.types.MetaObjectNode;
 
 import com.vividsolutions.jts.geom.Geometry;
 
-import lombok.Getter;
-import lombok.Setter;
-
 import org.apache.log4j.Logger;
 
 import java.util.ArrayList;
@@ -22,43 +19,23 @@ import java.util.Arrays;
 import java.util.Collection;
 import java.util.List;
 
-import de.cismet.cids.server.search.AbstractCidsServerSearch;
-import de.cismet.cids.server.search.MetaObjectNodeServerSearch;
-
 import de.cismet.cidsx.base.types.Type;
 
 import de.cismet.cidsx.server.api.types.SearchInfo;
 import de.cismet.cidsx.server.api.types.SearchParameterInfo;
-import de.cismet.cidsx.server.search.RestApiCidsServerSearch;
 
 import de.cismet.cismap.commons.jtsgeometryfactories.PostGisGeometryFactory;
-
-import de.cismet.connectioncontext.ConnectionContext;
-import de.cismet.connectioncontext.ConnectionContextStore;
 
 /**
  * DOCUMENT ME!
  *
  * @version  $Revision$, $Date$
  */
-public class WohnlagenKategorisierungMonSearch extends AbstractCidsServerSearch implements GeometrySearch,
-    RestApiCidsServerSearch,
-    MetaObjectNodeServerSearch,
-    ConnectionContextStore {
+public class WohnlagenKategorisierungMonSearch extends RestApiMonGeometrySearch {
 
     //~ Static fields/initializers ---------------------------------------------
 
     private static final transient Logger LOG = Logger.getLogger(WohnlagenKategorisierungMonSearch.class);
-
-    //~ Instance fields --------------------------------------------------------
-
-    @Getter @Setter private Geometry geometry = null;
-
-    @Getter private final SearchInfo searchInfo;
-    @Getter private ConnectionContext connectionContext = ConnectionContext.createDummy();
-
-    private Double buffer;
-    @Getter @Setter private Double cutoff;
 
     //~ Constructors -----------------------------------------------------------
 
@@ -94,9 +71,9 @@ public class WohnlagenKategorisierungMonSearch extends AbstractCidsServerSearch 
      * @param  cutoff    DOCUMENT ME!
      */
     public WohnlagenKategorisierungMonSearch(final Geometry geometry, final Double cutoff) {
-        this.geometry = geometry;
-        this.cutoff = cutoff;
-        this.searchInfo = new SearchInfo(
+        setGeometry(geometry);
+        setCutoff(cutoff);
+        setSearchInfo(new SearchInfo(
                 this.getClass().getName(),
                 this.getClass().getSimpleName(),
                 "Builtin Legacy Search to delegate the operation Wohnlagenkategorisierung to the cids Pure REST Search API.",
@@ -105,15 +82,10 @@ public class WohnlagenKategorisierungMonSearch extends AbstractCidsServerSearch 
                         new MySearchParameterInfo("searchFor", Type.STRING),
                         new MySearchParameterInfo("geom", Type.UNDEFINED),
                     }),
-                new MySearchParameterInfo("return", Type.ENTITY_REFERENCE, true));
+                new MySearchParameterInfo("return", Type.ENTITY_REFERENCE, true)));
     }
 
     //~ Methods ----------------------------------------------------------------
-
-    @Override
-    public void initWithConnectionContext(final ConnectionContext connectionContext) {
-        this.connectionContext = connectionContext;
-    }
 
     @Override
     public Collection<MetaObjectNode> performServerSearch() {
@@ -139,6 +111,7 @@ public class WohnlagenKategorisierungMonSearch extends AbstractCidsServerSearch 
             } else {
                 area = "st_area(geom.geo_field)";
             }
+            final Double cutoff = getCutoff();
             final String query = ""
                         + "SELECT * FROM ( "
                         + "SELECT "
@@ -179,53 +152,6 @@ public class WohnlagenKategorisierungMonSearch extends AbstractCidsServerSearch 
         } catch (final Exception ex) {
             LOG.error("error while searching for wohnlagenkategorisierung object", ex);
             throw new RuntimeException(ex);
-        }
-    }
-
-    @Override
-    public Double getBuffer() {
-        return buffer;
-    }
-
-    @Override
-    public void setBuffer(final Double buffer) {
-        this.buffer = buffer;
-    }
-
-    //~ Inner Classes ----------------------------------------------------------
-
-    /**
-     * DOCUMENT ME!
-     *
-     * @version  $Revision$, $Date$
-     */
-    private class MySearchParameterInfo extends SearchParameterInfo {
-
-        //~ Constructors -------------------------------------------------------
-
-        /**
-         * Creates a new MySearchParameterInfo object.
-         *
-         * @param  key   DOCUMENT ME!
-         * @param  type  DOCUMENT ME!
-         */
-        private MySearchParameterInfo(final String key, final Type type) {
-            this(key, type, null);
-        }
-
-        /**
-         * Creates a new MySearchParameterInfo object.
-         *
-         * @param  key    DOCUMENT ME!
-         * @param  type   DOCUMENT ME!
-         * @param  array  DOCUMENT ME!
-         */
-        private MySearchParameterInfo(final String key, final Type type, final Boolean array) {
-            super.setKey(key);
-            super.setType(type);
-            if (array != null) {
-                super.setArray(array);
-            }
         }
     }
 }
