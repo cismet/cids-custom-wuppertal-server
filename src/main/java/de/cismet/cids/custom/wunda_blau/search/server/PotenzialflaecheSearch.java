@@ -56,8 +56,6 @@ import de.cismet.cids.custom.utils.WundaBlauServerResources;
 import de.cismet.cids.custom.wunda_blau.search.actions.PotenzialflaecheReportServerAction;
 
 import de.cismet.cids.server.actions.GetServerResourceServerAction;
-import de.cismet.cids.server.search.AbstractCidsServerSearch;
-import de.cismet.cids.server.search.MetaObjectNodeServerSearch;
 
 import de.cismet.cidsx.base.types.Type;
 
@@ -65,26 +63,18 @@ import de.cismet.cidsx.server.api.types.SearchInfo;
 import de.cismet.cidsx.server.api.types.SearchParameterInfo;
 import de.cismet.cidsx.server.search.RestApiCidsServerSearch;
 
-import de.cismet.cismap.commons.jtsgeometryfactories.PostGisGeometryFactory;
-
-import de.cismet.connectioncontext.ConnectionContext;
-import de.cismet.connectioncontext.ConnectionContextStore;
-
 /**
  * DOCUMENT ME!
  *
  * @version  $Revision$, $Date$
  */
 @ServiceProvider(service = RestApiCidsServerSearch.class)
-public class PotenzialflaecheSearch extends AbstractCidsServerSearch implements RestApiCidsServerSearch,
-    MetaObjectNodeServerSearch,
-    StorableSearch<PotenzialflaecheSearch.Configuration>,
-    ConnectionContextStore {
+public class PotenzialflaecheSearch extends RestApiMonGeometrySearch
+        implements StorableSearch<PotenzialflaecheSearch.Configuration> {
 
     //~ Static fields/initializers ---------------------------------------------
 
     private static final transient Logger LOG = Logger.getLogger(PotenzialflaecheSearch.class);
-    private static final String INTERSECTS_BUFFER = SearchProperties.getInstance().getIntersectsBuffer();
     public static final ObjectMapper OBJECT_MAPPER = new ObjectMapper();
 
     static {
@@ -111,9 +101,6 @@ public class PotenzialflaecheSearch extends AbstractCidsServerSearch implements 
     //~ Instance fields --------------------------------------------------------
 
     @Getter private Configuration configuration;
-    @Getter @Setter private Geometry geom = null;
-    @Getter private final SearchInfo searchInfo;
-    @Getter private ConnectionContext connectionContext = ConnectionContext.createDummy();
     @Getter private final boolean monSearch;
 
     //~ Constructors -----------------------------------------------------------
@@ -122,14 +109,15 @@ public class PotenzialflaecheSearch extends AbstractCidsServerSearch implements 
      * Creates a new PotenzialflaecheSearch object.
      */
     public PotenzialflaecheSearch() {
+        initBuffer();
         this.monSearch = false;
-        this.searchInfo = new SearchInfo(
+        setSearchInfo(new SearchInfo(
                 this.getClass().getName(),
                 this.getClass().getSimpleName(),
                 "Builtin Legacy Search to delegate the operation PotenzialflaecheSearchStatement to the cids Pure REST Search API.",
                 Arrays.asList(
                     new SearchParameterInfo[] { new MySearchParameterInfo("filters", Type.UNDEFINED), }),
-                new MySearchParameterInfo("return", Type.ENTITY_REFERENCE, true));
+                new MySearchParameterInfo("return", Type.ENTITY_REFERENCE, true)));
     }
 
     /**
@@ -138,8 +126,9 @@ public class PotenzialflaecheSearch extends AbstractCidsServerSearch implements 
      * @param  monSearch  DOCUMENT ME!
      */
     public PotenzialflaecheSearch(final boolean monSearch) {
+        initBuffer();
         this.monSearch = true;
-        this.searchInfo = null;
+        setSearchInfo(null);
     }
 
     /**
@@ -151,14 +140,23 @@ public class PotenzialflaecheSearch extends AbstractCidsServerSearch implements 
     public PotenzialflaecheSearch(final Configuration searchConfiguration, final Geometry geom) {
         this(true);
         this.configuration = searchConfiguration;
-        this.geom = geom;
+        setGeometry(geom);
     }
 
     //~ Methods ----------------------------------------------------------------
 
-    @Override
-    public void initWithConnectionContext(final ConnectionContext connectionContext) {
-        this.connectionContext = connectionContext;
+    /**
+     * DOCUMENT ME!
+     */
+    private void initBuffer() {
+        final String searchPropBuffer = SearchProperties.getInstance().getIntersectsBuffer();
+        if (searchPropBuffer != null) {
+            try {
+                setBuffer(Double.parseDouble(searchPropBuffer));
+            } catch (final Exception ex) {
+                LOG.warn(String.format("could not set buffer to %s", searchPropBuffer), ex);
+            }
+        }
     }
 
     @Override
@@ -393,17 +391,9 @@ public class PotenzialflaecheSearch extends AbstractCidsServerSearch implements 
             }
         }
 
-        final String geomCondition;
-        if (geom != null) {
-            final String geomString = PostGisGeometryFactory.getPostGisCompliantDbString(geom);
-            geomCondition = String.format("(geom.geo_field && GeometryFromText('%1$s') AND intersects("
-                            + "st_buffer(geo_field, %2$s),"
-                            + "GeometryFromText('%1$s')))",
-                    geomString,
-                    INTERSECTS_BUFFER);
+        final String geomCondition = getGeomCondition();
+        if (geomCondition != null) {
             wheresMain.add(geomCondition);
-        } else {
-            geomCondition = null;
         }
 
         final String select = String.format(
@@ -417,7 +407,7 @@ public class PotenzialflaecheSearch extends AbstractCidsServerSearch implements 
         final String whereWithGeomCondition = String.format(
                 "(%s) AND %s",
                 where,
-                (geom != null) ? geomCondition : "TRUE");
+                (geomCondition != null) ? geomCondition : "TRUE");
         final String query = String.format("SELECT %s FROM %s WHERE %s",
                 select,
                 from,

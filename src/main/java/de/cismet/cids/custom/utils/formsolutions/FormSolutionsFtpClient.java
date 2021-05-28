@@ -17,13 +17,8 @@ import org.apache.commons.net.ftp.FTPFile;
 import org.apache.commons.net.ftp.FTPReply;
 import org.apache.commons.net.ftp.FTPSClient;
 
-import org.openide.util.Exceptions;
-
-import java.io.FileInputStream;
 import java.io.InputStream;
 import java.io.OutputStream;
-
-import java.util.Properties;
 
 import static org.apache.commons.net.ftp.FTP.BINARY_FILE_TYPE;
 
@@ -107,23 +102,6 @@ public class FormSolutionsFtpClient {
         ftpClient.disconnect();
     }
 
-    /**
-     * DOCUMENT ME!
-     *
-     * @param  args  DOCUMENT ME!
-     */
-    public static void main(final String[] args) {
-        try {
-            final Properties props = new Properties();
-            props.load(new FileInputStream(
-                    "/home/jruiz/cidsDistribution/server/040_wunda_live/server_resources/formsolutions/fs_conf.properties"));
-            final FormSolutionsProperties fsProps = new FormSolutionsProperties(props);
-            final FormSolutionsFtpClient ftpClient = new FormSolutionsFtpClient(fsProps);
-            ftpClient.test();
-        } catch (final Exception ex) {
-            Exceptions.printStackTrace(ex);
-        }
-    }
     /**
      * DOCUMENT ME!
      *
