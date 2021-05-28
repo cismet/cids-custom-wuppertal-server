@@ -22,42 +22,27 @@ import java.util.Arrays;
 import java.util.Collection;
 import java.util.List;
 
-import de.cismet.cids.server.search.AbstractCidsServerSearch;
-import de.cismet.cids.server.search.MetaObjectNodeServerSearch;
-
 import de.cismet.cidsx.base.types.Type;
 
 import de.cismet.cidsx.server.api.types.SearchInfo;
 import de.cismet.cidsx.server.api.types.SearchParameterInfo;
-import de.cismet.cidsx.server.search.RestApiCidsServerSearch;
-
-import de.cismet.cismap.commons.jtsgeometryfactories.PostGisGeometryFactory;
-
-import de.cismet.connectioncontext.ConnectionContext;
-import de.cismet.connectioncontext.ConnectionContextStore;
 
 /**
  * DOCUMENT ME!
  *
  * @version  $Revision$, $Date$
  */
-public class BplaeneMonSearch extends AbstractCidsServerSearch implements GeometrySearch,
-    RestApiCidsServerSearch,
-    MetaObjectNodeServerSearch,
-    ConnectionContextStore {
+public class BplaeneMonSearch extends RestApiMonGeometrySearch {
 
     //~ Static fields/initializers ---------------------------------------------
 
     private static final transient Logger LOG = Logger.getLogger(BplaeneMonSearch.class);
 
+    private static final String DEFAULT_NAME_PROPERTY = "bplan_verfahren.nummer";
+
     //~ Instance fields --------------------------------------------------------
 
-    @Getter @Setter private Geometry geometry = null;
-
-    @Getter private final SearchInfo searchInfo;
-    @Getter private ConnectionContext connectionContext = ConnectionContext.createDummy();
-
-    private Double buffer;
+    @Getter @Setter private String nameProperty = DEFAULT_NAME_PROPERTY;
 
     //~ Constructors -----------------------------------------------------------
 
@@ -65,17 +50,37 @@ public class BplaeneMonSearch extends AbstractCidsServerSearch implements Geomet
      * Creates a new BplanSearch object.
      */
     public BplaeneMonSearch() {
-        this(null);
+        this(null, DEFAULT_NAME_PROPERTY);
+    }
+
+    /**
+     * Creates a new BplaeneMonSearch object.
+     *
+     * @param  geometry  DOCUMENT ME!
+     */
+    public BplaeneMonSearch(final Geometry geometry) {
+        this(geometry, DEFAULT_NAME_PROPERTY);
+    }
+
+    /**
+     * Creates a new BplaeneMonSearch object.
+     *
+     * @param  nameProperty  nameFormat DOCUMENT ME!
+     */
+    public BplaeneMonSearch(final String nameProperty) {
+        this(null, nameProperty);
     }
 
     /**
      * Creates a new BplanSearch object.
      *
-     * @param  geometry  DOCUMENT ME!
+     * @param  geometry      DOCUMENT ME!
+     * @param  nameProperty  nameFormat DOCUMENT ME!
      */
-    public BplaeneMonSearch(final Geometry geometry) {
-        this.geometry = geometry;
-        this.searchInfo = new SearchInfo(
+    public BplaeneMonSearch(final Geometry geometry, final String nameProperty) {
+        setGeometry(geometry);
+        this.nameProperty = nameProperty;
+        setSearchInfo(new SearchInfo(
                 this.getClass().getName(),
                 this.getClass().getSimpleName(),
                 "Builtin Legacy Search to delegate the operation Bplan to the cids Pure REST Search API.",
@@ -84,37 +89,23 @@ public class BplaeneMonSearch extends AbstractCidsServerSearch implements Geomet
                         new MySearchParameterInfo("searchFor", Type.STRING),
                         new MySearchParameterInfo("geom", Type.UNDEFINED),
                     }),
-                new MySearchParameterInfo("return", Type.ENTITY_REFERENCE, true));
+                new MySearchParameterInfo("return", Type.ENTITY_REFERENCE, true)));
     }
 
     //~ Methods ----------------------------------------------------------------
-
-    @Override
-    public void initWithConnectionContext(final ConnectionContext connectionContext) {
-        this.connectionContext = connectionContext;
-    }
 
     @Override
     public Collection<MetaObjectNode> performServerSearch() {
         try {
             final List<MetaObjectNode> result = new ArrayList<>();
 
-            final String geomCondition;
-            final Geometry geometry = getGeometry();
-            if (geometry != null) {
-                final String geomString = PostGisGeometryFactory.getPostGisCompliantDbString(geometry);
-                geomCondition = "(geom.geo_field && GeometryFromText('" + geomString + "') AND intersects("
-                            + ((getBuffer() != null)
-                                ? ("st_buffer(GeometryFromText('" + geomString + "'), " + getBuffer() + ")")
-                                : "geo_field") + ", geo_field))";
-            } else {
-                geomCondition = null;
-            }
+            final String geomCondition = getGeomCondition();
+
             final String query = ""
                         + "SELECT DISTINCT \n"
-                        + "  (SELECT id FROM cs_class WHERE table_name ILIKE 'bplan_verfahren') AS class_id, \n"
-                        + "  bplan_verfahren.id AS object_id, \n"
-                        + "  bplan_verfahren.nummer AS object_name \n"
+                        + "  (SELECT id FROM cs_class WHERE table_name ILIKE 'bplan_verfahren') AS cid, \n"
+                        + "  bplan_verfahren.id AS oid, \n"
+                        + "  " + String.format("%s AS name", getNameProperty()) + " \n"
                         + "FROM bplan_verfahren \n"
                         + ((geomCondition != null) ? "LEFT JOIN geom ON geom.id = bplan_verfahren.geometrie " : " ")
                         + ((geomCondition != null) ? ("WHERE " + geomCondition) : " ")
@@ -137,53 +128,6 @@ public class BplaeneMonSearch extends AbstractCidsServerSearch implements Geomet
         } catch (final Exception ex) {
             LOG.error("error while searching for Bplan object", ex);
             throw new RuntimeException(ex);
-        }
-    }
-
-    @Override
-    public Double getBuffer() {
-        return buffer;
-    }
-
-    @Override
-    public void setBuffer(final Double buffer) {
-        this.buffer = buffer;
-    }
-
-    //~ Inner Classes ----------------------------------------------------------
-
-    /**
-     * DOCUMENT ME!
-     *
-     * @version  $Revision$, $Date$
-     */
-    private class MySearchParameterInfo extends SearchParameterInfo {
-
-        //~ Constructors -------------------------------------------------------
-
-        /**
-         * Creates a new MySearchParameterInfo object.
-         *
-         * @param  key   DOCUMENT ME!
-         * @param  type  DOCUMENT ME!
-         */
-        private MySearchParameterInfo(final String key, final Type type) {
-            this(key, type, null);
-        }
-
-        /**
-         * Creates a new MySearchParameterInfo object.
-         *
-         * @param  key    DOCUMENT ME!
-         * @param  type   DOCUMENT ME!
-         * @param  array  DOCUMENT ME!
-         */
-        private MySearchParameterInfo(final String key, final Type type, final Boolean array) {
-            super.setKey(key);
-            super.setType(type);
-            if (array != null) {
-                super.setArray(array);
-            }
         }
     }
 }
