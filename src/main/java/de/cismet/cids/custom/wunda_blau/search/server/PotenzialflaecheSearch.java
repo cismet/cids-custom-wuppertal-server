@@ -270,7 +270,23 @@ public class PotenzialflaecheSearch extends RestApiMonGeometrySearch
                     final Object value = filterInfo.getValue();
                     final PotenzialflaecheReportServerAction.Property property = filterInfo.getProperty();
                     if (property != null) {
-                        if (property.getValue() instanceof PotenzialflaecheReportServerAction.PathReportProperty) {
+                        if (PotenzialflaecheReportServerAction.Property.GROESSE.equals(property)) {
+                            if (value instanceof Date) {
+                                wheresMain.add(String.format(
+                                        "st_area(geom.geo_field) = %s",
+                                        Double.toString((Double)value)));
+                            } else if (value instanceof Double[]) {
+                                final Double[] doubles = (Double[])value;
+                                final String conditionFrom = (doubles[0] != null)
+                                    ? String.format("st_area(geom.geo_field) >= '%s'", Double.toString(doubles[0]))
+                                    : "TRUE";
+                                final String conditionTo = (doubles[1] != null)
+                                    ? String.format("st_area(geom.geo_field) <= '%s'", Double.toString(doubles[1]))
+                                    : "TRUE";
+                                wheresMain.add(String.format("(%s AND %s)", conditionFrom, conditionTo));
+                            }
+                        } else if (property.getValue()
+                                    instanceof PotenzialflaecheReportServerAction.PathReportProperty) {
                             final PotenzialflaecheReportServerAction.PathReportProperty pathProp =
                                 (PotenzialflaecheReportServerAction.PathReportProperty)property.getValue();
                             final String path = String.format("pf_potenzialflaeche.%s", pathProp.getPath());
@@ -309,9 +325,10 @@ public class PotenzialflaecheSearch extends RestApiMonGeometrySearch
                                     }
                                 } else if (reportProperty
                                             instanceof PotenzialflaecheReportServerAction.KeytableReportProperty) {
-                                    final String filterPath =
-                                        ((PotenzialflaecheReportServerAction.KeytableReportProperty)reportProperty)
-                                                .getFilterPath();
+                                    wheresMain.add(String.format(
+                                            "%s = %d",
+                                            path,
+                                            ((MetaObjectNode)value).getObjectId()));
                                 }
                             } else {
                                 wheresMain.add(String.format("%s IS NULL", path, value));
