@@ -23,6 +23,7 @@ import org.apache.commons.lang.StringEscapeUtils;
 import org.apache.log4j.Logger;
 
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.Collection;
 import java.util.Date;
 import java.util.List;
@@ -209,9 +210,12 @@ public class PotenzialflaecheReportServerAction extends StampedByteArrayServerAc
                 @Override
                 public RestApiMonSearch createMonServerSearch() {
                     return new BplaeneMonSearch(
-                            "nummer "
-                                    + "|| CASE WHEN (vstandi IS NOT NULL) THEN ' i[' || vstandi || ' ' || datumi || ']' ELSE '' END "
-                                    + "|| CASE WHEN (vstandr IS NOT NULL) THEN ' r[' || vstandr || ' ' || datumr || ']' ELSE '' END ");
+                            new BplaeneMonSearch.SubUnion(
+                                "nummer || ' [' || datumr || ' ' || vstandr || ']'",
+                                "vstandr IS NOT NULL"),
+                            new BplaeneMonSearch.SubUnion(
+                                "nummer || ' [' || datumi || ' ' || vstandi || ']'",
+                                "vstandi IS NOT NULL"));
                 }
             }, "BPlan"),
         STADTBEZIRK(new MonSearchReportProperty("kst_stadtbezirk") {
