@@ -12,10 +12,13 @@ import Sirius.server.middleware.types.MetaObjectNode;
 
 import com.vividsolutions.jts.geom.Geometry;
 
+import lombok.AllArgsConstructor;
 import lombok.Getter;
 import lombok.Setter;
 
 import org.apache.log4j.Logger;
+
+import java.io.Serializable;
 
 import java.util.ArrayList;
 import java.util.Arrays;
@@ -42,7 +45,8 @@ public class BplaeneMonSearch extends RestApiMonGeometrySearch {
 
     //~ Instance fields --------------------------------------------------------
 
-    @Getter @Setter private String nameProperty = DEFAULT_NAME_PROPERTY;
+    @Getter @Setter private List<String> nameProperties = Arrays.asList(DEFAULT_NAME_PROPERTY);
+    @Getter @Setter private SubUnion[] subUnions;
 
     //~ Constructors -----------------------------------------------------------
 
@@ -50,7 +54,7 @@ public class BplaeneMonSearch extends RestApiMonGeometrySearch {
      * Creates a new BplanSearch object.
      */
     public BplaeneMonSearch() {
-        this(null, DEFAULT_NAME_PROPERTY);
+        this(null, (SubUnion[])null);
     }
 
     /**
@@ -59,27 +63,27 @@ public class BplaeneMonSearch extends RestApiMonGeometrySearch {
      * @param  geometry  DOCUMENT ME!
      */
     public BplaeneMonSearch(final Geometry geometry) {
-        this(geometry, DEFAULT_NAME_PROPERTY);
+        this(geometry, (SubUnion[])null);
     }
 
     /**
      * Creates a new BplaeneMonSearch object.
      *
-     * @param  nameProperty  nameFormat DOCUMENT ME!
+     * @param  subUnions  DOCUMENT ME!
      */
-    public BplaeneMonSearch(final String nameProperty) {
-        this(null, nameProperty);
+    public BplaeneMonSearch(final SubUnion... subUnions) {
+        this(null, subUnions);
     }
 
     /**
      * Creates a new BplanSearch object.
      *
-     * @param  geometry      DOCUMENT ME!
-     * @param  nameProperty  nameFormat DOCUMENT ME!
+     * @param  geometry   DOCUMENT ME!
+     * @param  subUnions  DOCUMENT ME!
      */
-    public BplaeneMonSearch(final Geometry geometry, final String nameProperty) {
+    public BplaeneMonSearch(final Geometry geometry, final SubUnion... subUnions) {
         setGeometry(geometry);
-        this.nameProperty = nameProperty;
+        setSubUnions(subUnions);
         setSearchInfo(new SearchInfo(
                 this.getClass().getName(),
                 this.getClass().getSimpleName(),
@@ -101,17 +105,43 @@ public class BplaeneMonSearch extends RestApiMonGeometrySearch {
 
             final String geomCondition = getGeomCondition();
 
-            final String query = ""
-                        + "SELECT DISTINCT \n"
-                        + "  (SELECT id FROM cs_class WHERE table_name ILIKE 'bplan_verfahren') AS cid, \n"
-                        + "  bplan_verfahren.id AS oid, \n"
-                        + "  " + String.format("%s AS name", getNameProperty()) + " \n"
-                        + "FROM bplan_verfahren \n"
-                        + ((geomCondition != null) ? "LEFT JOIN geom ON geom.id = bplan_verfahren.geometrie " : " ")
-                        + ((geomCondition != null) ? ("WHERE " + geomCondition) : " ")
-                        + ";";
-
-            if (query != null) {
+            final List<String> queries = new ArrayList<>();
+            if (getNameProperties() != null) {
+                final String query;
+                final SubUnion[] subUnions = getSubUnions();
+                if (subUnions != null) {
+                    for (final SubUnion subUnion : subUnions) {
+                        if (subUnion != null) {
+                            final List<String> wheres = new ArrayList<>();
+                            if (geomCondition != null) {
+                                wheres.add(geomCondition);
+                            }
+                            final String whereClause = subUnion.getWhereClause();
+                            if (whereClause != null) {
+                                wheres.add(whereClause);
+                            }
+                            queries.add(""
+                                        + "SELECT DISTINCT \n"
+                                        + "  (SELECT id FROM cs_class WHERE table_name ILIKE 'bplan_verfahren') AS cid, \n"
+                                        + "  bplan_verfahren.id AS oid, \n"
+                                        + "  " + String.format("%s AS name", subUnion.getFieldProperty()) + " \n"
+                                        + "FROM bplan_verfahren \n"
+                                        + ((geomCondition != null)
+                                            ? "LEFT JOIN geom ON geom.id = bplan_verfahren.geometrie " : " ")
+                                        + ((!wheres.isEmpty()) ? ("WHERE " + String.join(" AND ", wheres)) : " "));
+                        }
+                    }
+                    query = String.format("SELECT * FROM (%s) AS unioned;", String.join(" UNION ", queries));
+                } else {
+                    query = "SELECT DISTINCT \n"
+                                + "  (SELECT id FROM cs_class WHERE table_name ILIKE 'bplan_verfahren') AS cid, \n"
+                                + "  bplan_verfahren.id AS oid, \n"
+                                + "  nummer \n"
+                                + "FROM bplan_verfahren \n"
+                                + ((geomCondition != null) ? "LEFT JOIN geom ON geom.id = bplan_verfahren.geometrie "
+                                                           : " ")
+                                + ((geomCondition != null) ? ("WHERE " + geomCondition) : " ");
+                }
                 final MetaService ms = (MetaService)getActiveLocalServers().get("WUNDA_BLAU");
 
                 final List<ArrayList> resultList = ms.performCustomSearch(query, getConnectionContext());
@@ -119,9 +149,7 @@ public class BplaeneMonSearch extends RestApiMonGeometrySearch {
                     final int cid = (Integer)al.get(0);
                     final int oid = (Integer)al.get(1);
                     final String name = (String)al.get(2);
-                    final MetaObjectNode mon = new MetaObjectNode("WUNDA_BLAU", oid, cid, name, null, null);
-
-                    result.add(mon);
+                    result.add(new MetaObjectNode("WUNDA_BLAU", oid, cid, name, null, null));
                 }
             }
             return result;
@@ -129,5 +157,23 @@ public class BplaeneMonSearch extends RestApiMonGeometrySearch {
             LOG.error("error while searching for Bplan object", ex);
             throw new RuntimeException(ex);
         }
+    }
+
+    //~ Inner Classes ----------------------------------------------------------
+
+    /**
+     * DOCUMENT ME!
+     *
+     * @version  $Revision$, $Date$
+     */
+    @Getter
+    @Setter
+    @AllArgsConstructor
+    public static class SubUnion implements Serializable {
+
+        //~ Instance fields ----------------------------------------------------
+
+        private String fieldProperty;
+        private String whereClause;
     }
 }
