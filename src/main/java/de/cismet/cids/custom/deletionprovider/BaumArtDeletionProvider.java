@@ -39,7 +39,13 @@ public class BaumArtDeletionProvider extends AbstractCustomDeletionProvider {
     public static final String FIELD__FK = "fk_art";
     public static final String TABLE_NAME_SEARCH_S = "baum_schaden";
     public static final String TABLE_NAME_SEARCH_E = "baum_ersatz";
-    public static final String DELETE_TEXT = "Diese Art kann nicht gelöscht werden, da diese verwendet wird.";
+    public static final String TABLE_NAME_SEARCH_F = "baum_festsetzung";
+    public static final String TABLE_NAME_SEARCH_SORTE = "baum_sorte";
+    public String DELETE_TEXT = "Diese Art kann nicht gelöscht werden, da diese verwendet wird.";
+    public static final String CAUSE_SCHADEN = "Diese Art kann nicht gelöscht werden, da diese bei mindestens einem Schaden verwendet wird.";
+    public static final String CAUSE_ERSATZ = "Diese Art kann nicht gelöscht werden, da diese bei mindestens einer Ersatzpflanzung verwendet wird.";
+    public static final String CAUSE_FEST = "Diese Art kann nicht gelöscht werden, da diese bei mindestens einer Festsetzung verwendet wird.";
+    public static final String CAUSE_SORTE = "Diese Art kann nicht gelöscht werden, da diese mindestens eine Sorte hat.";
     public boolean notToDelete = false;
 
     //~ Methods ----------------------------------------------------------------
@@ -73,17 +79,49 @@ public class BaumArtDeletionProvider extends AbstractCustomDeletionProvider {
                         + " = "
                         + art_id
                         + ";"; 
+            final String queryArtInFest = ""
+                        + "SELECT * "
+                        + "FROM "
+                        + TABLE_NAME_SEARCH_F
+                        + " WHERE "
+                        + FIELD__FK
+                        + " = "
+                        + art_id
+                        + ";"; 
+            final String queryArtInSorte = ""
+                        + "SELECT * "
+                        + "FROM "
+                        + TABLE_NAME_SEARCH_SORTE
+                        + " WHERE "
+                        + FIELD__FK
+                        + " = "
+                        + art_id
+                        + ";"; 
             try {
                 ArrayList<ArrayList>artArrayS = getMetaService().performCustomSearch(queryArtInSchaden, getConnectionContext());
                 if (artArrayS.size() < 1) {
                     ArrayList<ArrayList>artArrayE = getMetaService().performCustomSearch(queryArtInErsatz, getConnectionContext());
                     if (artArrayE.size() < 1) {
-                        return false; // kein true sonst läuft jede Klasse durch
+                        ArrayList<ArrayList>artArrayF = getMetaService().performCustomSearch(queryArtInFest, getConnectionContext());
+                        if (artArrayF.size() < 1) {
+                            ArrayList<ArrayList>artArraySorte = getMetaService().performCustomSearch(queryArtInSorte, getConnectionContext());
+                            if (artArraySorte.size() < 1) {
+                                return false; // kein true sonst läuft jede Klasse durch
+                            }else {
+                                DELETE_TEXT = CAUSE_SORTE;
+                                notToDelete = true;
+                            }
+                        }else {
+                            notToDelete = true;
+                            DELETE_TEXT = CAUSE_FEST;
+                        }
                     }else {
                         notToDelete = true;
+                        DELETE_TEXT = CAUSE_ERSATZ;
                     }
                 }else {
                     notToDelete = true;
+                    DELETE_TEXT = CAUSE_SCHADEN;
                 }
             } catch (RemoteException ex) {
                 Exceptions.printStackTrace(ex);
