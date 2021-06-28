@@ -9,7 +9,6 @@ package de.cismet.cids.custom.wunda_blau.search.server;
 
 import Sirius.server.middleware.interfaces.domainserver.MetaService;
 import Sirius.server.middleware.types.MetaClass;
-import de.cismet.cids.dynamics.CidsBean;
 
 import lombok.Getter;
 import lombok.Setter;
@@ -21,6 +20,9 @@ import org.openide.util.lookup.ServiceProvider;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collection;
+import java.util.List;
+
+import de.cismet.cids.dynamics.CidsBean;
 
 import de.cismet.cids.server.search.AbstractCidsServerSearch;
 import de.cismet.cids.server.search.SearchException;
@@ -34,7 +36,6 @@ import de.cismet.cidsx.server.search.builtin.legacy.LightweightMetaObjectsSearch
 
 import de.cismet.connectioncontext.ConnectionContext;
 import de.cismet.connectioncontext.ConnectionContextStore;
-import java.util.List;
 
 /**
  * Builtin Legacy Search to delegate the operation getLightweightMetaObjectsByQuery to the cids Pure REST Search API.
@@ -54,9 +55,7 @@ public class StrAdrGeplanteAdresseStrasseSearch extends AbstractCidsServerSearch
     private static final String TABLE__STRASSE = "str_adr_strasse";
     private static final String TABLE__SCHLUESSEL = "str_adr_strasse_schluessel";
     public static final String TOSTRING_TEMPLATE = "%1$s (%2$s)";
-    //~ Enums ------------------------------------------------------------------
 
-    
     //~ Instance fields --------------------------------------------------------
 
     private ConnectionContext connectionContext = ConnectionContext.createDummy();
@@ -133,13 +132,12 @@ public class StrAdrGeplanteAdresseStrasseSearch extends AbstractCidsServerSearch
         final Collection<String> conditions = new ArrayList<>();
         conditions.add(String.format("k.name::int < 4000"));
         conditions.add(String.format("s.entnenndat IS NULL"));
-        
-        
 
-        final String query = "SELECT (SELECT c.id FROM cs_class c WHERE table_name ILIKE '" + TABLE__STRASSE + "') AS class_id,"
-                + " s.id, s.name, "
-                + String.join(", ", selectFields) 
-                + " FROM " + TABLE__STRASSE + " AS s"
+        final String query = "SELECT (SELECT c.id FROM cs_class c WHERE table_name ILIKE '" + TABLE__STRASSE
+                    + "') AS class_id,"
+                    + " s.id, s.name, "
+                    + String.join(", ", selectFields)
+                    + " FROM " + TABLE__STRASSE + " AS s"
                     + (leftjoins.isEmpty() ? "" : (" LEFT JOIN " + String.join(" , ", leftjoins)))
                     + (conditions.isEmpty() ? "" : (" WHERE " + String.join(" AND ", conditions)))
                     + " ORDER BY s.name ";
