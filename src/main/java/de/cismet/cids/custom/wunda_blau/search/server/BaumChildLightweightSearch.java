@@ -9,6 +9,7 @@ package de.cismet.cids.custom.wunda_blau.search.server;
 
 import Sirius.server.middleware.interfaces.domainserver.MetaService;
 import Sirius.server.middleware.types.MetaClass;
+import Sirius.server.middleware.types.MetaObjectNode;
 import de.cismet.cids.dynamics.CidsBean;
 
 import lombok.Getter;
@@ -34,76 +35,52 @@ import de.cismet.cidsx.server.search.builtin.legacy.LightweightMetaObjectsSearch
 
 import de.cismet.connectioncontext.ConnectionContext;
 import de.cismet.connectioncontext.ConnectionContextStore;
+import java.util.List;
 
 /**
  * Builtin Legacy Search to delegate the operation getLightweightMetaObjectsByQuery to the cids Pure REST Search API.
- ***Searches all Adresses for one Streetkey (implemented for baum)
- * 
+ *
  * @author   Sandra Simmert
  * @version  $Revision$, $Date$
  */
 @ServiceProvider(service = RestApiCidsServerSearch.class)
-public class StrasseLightweightSearch extends AbstractCidsServerSearch implements RestApiCidsServerSearch,
+public class BaumChildLightweightSearch extends AbstractCidsServerSearch implements RestApiCidsServerSearch,
     LightweightMetaObjectsSearch,
     ConnectionContextStore {
 
     //~ Static fields/initializers ---------------------------------------------
 
-    private static final Logger LOG = Logger.getLogger(StrasseLightweightSearch.class);
+    private static final Logger LOG = Logger.getLogger(BaumChildLightweightSearch.class);
 
-    private static final String TABLE__STR = "strasse";
-    public static final String TOSTRING_TEMPLATE = "%1$s (%2$s)";
-    public static final String[] TOSTRING_FIELDS = { Subject.NAME.toString(), Subject.KEY.toString() };
+    
 
     //~ Enums ------------------------------------------------------------------
 
-/**
-     * DOCUMENT ME!
-     *
-     * @version  $Revision$, $Date$
-     */
-    public enum Subject {
 
-        //~ Enum constants -----------------------------------------------------
-
-        NAME {
-
-            @Override
-            public String toString() {
-                return "name";
-            }
-        },
-        KEY {
-
-            @Override
-            public String toString() {
-                return "strassenschluessel";
-            }
-        }
-    }
     //~ Instance fields --------------------------------------------------------
 
     private ConnectionContext connectionContext = ConnectionContext.createDummy();
 
     @Getter private final SearchInfo searchInfo;
-    @Getter @Setter private Subject subject = Subject.NAME;
-    @Getter @Setter private Integer keyId;
+    @Getter @Setter private Integer parentId;
     @Getter @Setter private String representationPattern;
     @Getter @Setter private String[] representationFields;
+    @Getter @Setter private String table;
+    @Getter @Setter private String fkField;
 
     //~ Constructors -----------------------------------------------------------
 
     /**
      * Creates a new LightweightMetaObjectsByQuerySearch object.
      */
-    public StrasseLightweightSearch() {
+    public BaumChildLightweightSearch() {
         this.searchInfo = new SearchInfo(
                 this.getClass().getName(),
                 this.getClass().getSimpleName(),
                 "Builtin Legacy Search to delegate the operation getLightweightMetaObjectsByQuery to the cids Pure REST Search API.",
                 Arrays.asList(
                     new SearchParameterInfo[] {
-                        new MySearchParameterInfo("keyId", Type.INTEGER),
+                        new MySearchParameterInfo(fkField, Type.INTEGER),
                         new MySearchParameterInfo("representationPattern", Type.STRING, true),
                         new MySearchParameterInfo("representationFields", Type.STRING, true)
                     }),
@@ -111,20 +88,22 @@ public class StrasseLightweightSearch extends AbstractCidsServerSearch implement
     }
 
     /**
-     * Creates a new AdresseLightweightSearch object.
+     * Creates a new BaumChildLightweightSearch object.
      *
-     * @param subject
      * @param  representationPattern  DOCUMENT ME!
      * @param  representationFields   DOCUMENT ME!
+     * @param table
+     * @param fkField
      */
-    public StrasseLightweightSearch(
-            final Subject subject,
-            final String representationPattern,
-            final String[] representationFields) {
+    public BaumChildLightweightSearch(final String representationPattern,
+            final String[] representationFields,
+            final String table,
+            final String fkField) {
         this();
-        setSubject(subject);
         setRepresentationPattern(representationPattern);
         setRepresentationFields(representationFields);
+        setTable(table);
+        setFkField(fkField);
     }
 
     //~ Methods ----------------------------------------------------------------
@@ -141,7 +120,7 @@ public class StrasseLightweightSearch extends AbstractCidsServerSearch implement
 
     @Override
     public Collection performServerSearch() throws SearchException {
-        final Integer keyId = getKeyId();
+        final Integer id = getParentId();
 
         final MetaService metaService = (MetaService)this.getActiveLocalServers().get("WUNDA_BLAU");
         if (metaService == null) {
@@ -152,39 +131,41 @@ public class StrasseLightweightSearch extends AbstractCidsServerSearch implement
         }
 
         final Collection<String> conditions = new ArrayList<>();
-        if (keyId != null) {
-            conditions.add(String.format("strasse = %d", keyId));
+        if (id != null) {
+            conditions.add(String.format(fkField + " = %d", id));
         }
 
         
 
-        final String query = "SELECT (SELECT c.id FROM cs_class c WHERE table_name ILIKE '" + TABLE__STR + "') AS class_id, id, nane FROM " + TABLE__STR
-                    + (conditions.isEmpty() ? "" : (" WHERE " + String.join(" AND ", conditions)));
-        
+        final String query = "SELECT (SELECT c.id FROM cs_class c WHERE table_name ILIKE '" + table + "') AS class_id, "
+                         + "id, " + representationFields[0] 
+                    + " FROM " + table
+                    + (conditions.isEmpty() ? "" : (" WHERE " + String.join(" AND ", conditions)));      
         try {
             final MetaClass mc = CidsBean.getMetaClassFromTableName(
                     "WUNDA_BLAU",
-                    TABLE__STR,
+                    table,
                     getConnectionContext());
-            if (getRepresentationPattern() != null) {
-                return Arrays.asList(metaService.getLightweightMetaObjectsByQuery(
-                            mc.getID(),
-                            getUser(),
-                            query,
-                            getRepresentationFields(),
-                            getRepresentationPattern(),
-                            getConnectionContext()));
-            } else {
-                return Arrays.asList(metaService.getLightweightMetaObjectsByQuery(
-                            mc.getID(),
-                            getUser(),
-                            query,
-                            getRepresentationFields(),
-                            getConnectionContext()));
+            
+           //final MetaService ms = (MetaService)getActiveLocalServers().get("WUNDA_BLAU");
+            final List<MetaObjectNode> mons = new ArrayList<>();
+            final List<ArrayList> resultList = metaService.performCustomSearch(query, getConnectionContext());
+            for (final ArrayList al : resultList) {
+                final int cid = (Integer)al.get(0);
+                final int oid = (Integer)al.get(1);
+                final String name = String.valueOf(al.get(2));
+                final MetaObjectNode mon = new MetaObjectNode("WUNDA_BLAU", oid, cid, name, null, null);
+
+                mons.add(mon);
             }
+            return mons;
         } catch (final Exception ex) {
             throw new SearchException("error while loading lwmos", ex);
         }
+    }
+
+    public void setTransidHash(String transidHash) {
+        throw new UnsupportedOperationException("Not supported yet."); //To change body of generated methods, choose Tools | Templates.
     }
 
     //~ Inner Classes ----------------------------------------------------------
