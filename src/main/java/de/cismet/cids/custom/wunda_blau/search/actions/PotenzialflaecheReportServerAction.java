@@ -211,11 +211,15 @@ public class PotenzialflaecheReportServerAction extends StampedByteArrayServerAc
                 public RestApiMonSearch createMonServerSearch() {
                     return new BplaeneMonSearch(
                             new BplaeneMonSearch.SubUnion(
-                                "nummer || ' [' || datumr || ' ' || vstandr || ']'",
-                                "vstandr IS NOT NULL"),
+                                "nummer || ' (' || vstandr || ' ' || datumr || ')'",
+                                "LEFT JOIN geom ON geom.id = bplan_verfahren.geometrie",
+                                "vstandr IS NOT NULL",
+                                "('-'||LPAD(REGEXP_REPLACE(COALESCE(nummer, '0'), '[^0-9]+.*$', '', 'g'), 4, '0') || LPAD(COALESCE(TO_CHAR(TO_DATE(datumr, 'DD.MM.YYYY'), 'YYYYMMDD'), '0'), 8, '0'))::bigint"),
                             new BplaeneMonSearch.SubUnion(
-                                "nummer || ' [' || datumi || ' ' || vstandi || ']'",
-                                "vstandi IS NOT NULL"));
+                                "nummer || ' (' || vstandi || ' ' || datumi || ')'",
+                                "LEFT JOIN geom ON geom.id = bplan_verfahren.georefi",
+                                "vstandi IS NOT NULL",
+                                "('-'||LPAD(REGEXP_REPLACE(COALESCE(nummer, '0'), '[^0-9]+.*$', '', 'g'), 4, '0') || LPAD(COALESCE(TO_CHAR(TO_DATE(datumi, 'DD.MM.YYYY'), 'YYYYMMDD'), '0'), 8, '0'))::bigint"));
                 }
             }, "BPlan"),
         STADTBEZIRK(new MonSearchReportProperty("kst_stadtbezirk") {
