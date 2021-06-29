@@ -44,13 +44,13 @@ import java.util.List;
  * @version  $Revision$, $Date$
  */
 @ServiceProvider(service = RestApiCidsServerSearch.class)
-public class BaumChildLightweightSearch extends AbstractCidsServerSearch implements RestApiCidsServerSearch,
+public class RedundantObjectSearch extends AbstractCidsServerSearch implements RestApiCidsServerSearch,
     LightweightMetaObjectsSearch,
     ConnectionContextStore {
 
     //~ Static fields/initializers ---------------------------------------------
 
-    private static final Logger LOG = Logger.getLogger(BaumChildLightweightSearch.class);
+    private static final Logger LOG = Logger.getLogger(RedundantObjectSearch.class);
 
     
 
@@ -62,25 +62,24 @@ public class BaumChildLightweightSearch extends AbstractCidsServerSearch impleme
     private ConnectionContext connectionContext = ConnectionContext.createDummy();
 
     @Getter private final SearchInfo searchInfo;
-    @Getter @Setter private Integer parentId;
+    @Getter @Setter private Collection<String> where = new ArrayList<>();
+    @Getter @Setter private String table;
     @Getter @Setter private String representationPattern;
     @Getter @Setter private String[] representationFields;
-    @Getter @Setter private String table;
-    @Getter @Setter private String fkField;
 
     //~ Constructors -----------------------------------------------------------
 
     /**
      * Creates a new LightweightMetaObjectsByQuerySearch object.
      */
-    public BaumChildLightweightSearch() {
+    public RedundantObjectSearch() {
         this.searchInfo = new SearchInfo(
                 this.getClass().getName(),
                 this.getClass().getSimpleName(),
                 "Builtin Legacy Search to delegate the operation getLightweightMetaObjectsByQuery to the cids Pure REST Search API.",
                 Arrays.asList(
                     new SearchParameterInfo[] {
-                        new MySearchParameterInfo(fkField, Type.INTEGER),
+                        new MySearchParameterInfo("id", Type.INTEGER),
                         new MySearchParameterInfo("representationPattern", Type.STRING, true),
                         new MySearchParameterInfo("representationFields", Type.STRING, true)
                     }),
@@ -88,22 +87,23 @@ public class BaumChildLightweightSearch extends AbstractCidsServerSearch impleme
     }
 
     /**
-     * Creates a new BaumChildLightweightSearch object.
+     * Creates a new RedundantObjectSearch object.
      *
-     * @param  representationPattern  DOCUMENT ME!
-     * @param  representationFields   DOCUMENT ME!
+     * 
+     * @param representationPattern
+     * @param representationFields
      * @param table
-     * @param fkField
+     * @param where
      */
-    public BaumChildLightweightSearch(final String representationPattern,
+    public RedundantObjectSearch(final String representationPattern,
             final String[] representationFields,
-            final String table,
-            final String fkField) {
+            final Collection<String> where,
+            final String table) {
         this();
         setRepresentationPattern(representationPattern);
         setRepresentationFields(representationFields);
         setTable(table);
-        setFkField(fkField);
+        setWhere(where);
     }
 
     //~ Methods ----------------------------------------------------------------
@@ -120,45 +120,30 @@ public class BaumChildLightweightSearch extends AbstractCidsServerSearch impleme
 
     @Override
     public Collection performServerSearch() throws SearchException {
-        final Integer id = getParentId();
-
         final MetaService metaService = (MetaService)this.getActiveLocalServers().get("WUNDA_BLAU");
         if (metaService == null) {
             final String message = "Lightweight Meta Objects By Query Search "
                         + "could not connect ot MetaService @domain 'WUNDA_BLAU'";
             LOG.error(message);
             throw new SearchException(message);
+        } 
+        final Collection<String> fields = new ArrayList<>();
+        if (representationFields != null) {
+            fields.addAll(Arrays.asList(representationFields));
         }
-
-        final Collection<String> conditions = new ArrayList<>();
-        if (id != null) {
-            conditions.add(String.format(fkField + " = %d", id));
-        }
-
-        
 
         final String query = "SELECT (SELECT c.id FROM cs_class c WHERE table_name ILIKE '" + table + "') AS class_id, "
-                         + "id, " + representationFields[0] 
+                         + "id"
+                    + (fields.isEmpty() ? "" : (", " + String.join(", ", fields))) 
                     + " FROM " + table
-                    + (conditions.isEmpty() ? "" : (" WHERE " + String.join(" AND ", conditions)));      
+                    + (where.isEmpty() ? "" : (" WHERE " + String.join(" AND ", where)));      
         try {
             final MetaClass mc = CidsBean.getMetaClassFromTableName(
                     "WUNDA_BLAU",
                     table,
                     getConnectionContext());
-            
-           //final MetaService ms = (MetaService)getActiveLocalServers().get("WUNDA_BLAU");
-            final List<MetaObjectNode> mons = new ArrayList<>();
             final List<ArrayList> resultList = metaService.performCustomSearch(query, getConnectionContext());
-            for (final ArrayList al : resultList) {
-                final int cid = (Integer)al.get(0);
-                final int oid = (Integer)al.get(1);
-                final String name = String.valueOf(al.get(2));
-                final MetaObjectNode mon = new MetaObjectNode("WUNDA_BLAU", oid, cid, name, null, null);
-
-                mons.add(mon);
-            }
-            return mons;
+            return resultList;
         } catch (final Exception ex) {
             throw new SearchException("error while loading lwmos", ex);
         }
