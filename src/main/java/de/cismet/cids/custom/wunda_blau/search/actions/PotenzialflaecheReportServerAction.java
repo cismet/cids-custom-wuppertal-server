@@ -23,7 +23,6 @@ import org.apache.commons.lang.StringEscapeUtils;
 import org.apache.log4j.Logger;
 
 import java.util.ArrayList;
-import java.util.Arrays;
 import java.util.Collection;
 import java.util.Date;
 import java.util.List;
@@ -211,12 +210,12 @@ public class PotenzialflaecheReportServerAction extends StampedByteArrayServerAc
                 public RestApiMonSearch createMonServerSearch() {
                     return new BplaeneMonSearch(
                             new BplaeneMonSearch.SubUnion(
-                                "nummer || ' (' || vstandr || ' ' || datumr || ')'",
+                                "nummer || ' (' || vstandr || ' ' || TO_CHAR(TO_DATE(datumr, 'DD.MM.YYYY'), 'DD.MM.YYYY') || ')'",
                                 "LEFT JOIN geom ON geom.id = bplan_verfahren.geometrie",
                                 "vstandr IS NOT NULL",
                                 "('-'||LPAD(REGEXP_REPLACE(COALESCE(nummer, '0'), '[^0-9]+.*$', '', 'g'), 4, '0') || LPAD(COALESCE(TO_CHAR(TO_DATE(datumr, 'DD.MM.YYYY'), 'YYYYMMDD'), '0'), 8, '0'))::bigint"),
                             new BplaeneMonSearch.SubUnion(
-                                "nummer || ' (' || vstandi || ' ' || datumi || ')'",
+                                "nummer || ' (' || vstandi || ' ' || TO_CHAR(TO_DATE(datumi, 'DD.MM.YYYY'), 'DD.MM.YYYY') || ')'",
                                 "LEFT JOIN geom ON geom.id = bplan_verfahren.georefi",
                                 "vstandi IS NOT NULL",
                                 "('-'||LPAD(REGEXP_REPLACE(COALESCE(nummer, '0'), '[^0-9]+.*$', '', 'g'), 4, '0') || LPAD(COALESCE(TO_CHAR(TO_DATE(datumi, 'DD.MM.YYYY'), 'YYYYMMDD'), '0'), 8, '0'))::bigint"));
