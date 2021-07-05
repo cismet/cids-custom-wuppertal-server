@@ -17,8 +17,6 @@ import lombok.Setter;
 
 import org.apache.log4j.Logger;
 
-import java.sql.Timestamp;
-
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collection;
@@ -87,7 +85,7 @@ public class VzkatSchilderSearch extends AbstractCidsServerSearch implements Res
     private SearchFor searchFor = SearchFor.SCHILD;
     private Integer standortId = null;
     private Integer zeichenId = null;
-    private Timestamp activeTimestamp = null;
+    private Date activeDate = null;
     private Geometry geom = null;
     private final SearchInfo searchInfo;
 
@@ -149,34 +147,26 @@ public class VzkatSchilderSearch extends AbstractCidsServerSearch implements Res
                 leftJoins.add("geom ON vzkat_standort.fk_geom = geom.id");
             }
 
-            if (activeTimestamp == null) {
-                activeTimestamp = new Timestamp(new Date().getTime());
+            if (activeDate == null) {
+                activeDate = new Date();
             }
 
-            wheres.add("  ("
-                        + "  vzkat_schild.gueltig_von IS NOT NULL AND vzkat_schild.gueltig_bis IS NOT NULL AND '"
-                        + activeTimestamp + "' >= gueltig_von AND '" + activeTimestamp + "' <= gueltig_bis "
-                        + ") OR ( "
-                        + "  vzkat_schild.gueltig_von IS NOT NULL AND vzkat_schild.gueltig_bis IS     NULL AND '"
-                        + activeTimestamp + "' >= gueltig_von "
-                        + ") OR ( "
-                        + "  vzkat_schild.gueltig_von IS     NULL AND vzkat_schild.gueltig_bis IS NOT NULL AND '"
-                        + activeTimestamp + "' <= gueltig_bis "
-                        + ") OR false ");
+            wheres.add(String.format(
+                    "  "
+                            + "(vzkat_schild.gueltig_von IS NULL OR '%1$s'::date >= gueltig_von::date ) AND "
+                            + "(vzkat_schild.gueltig_bis IS NULL OR '%1$s'::date <= gueltig_bis::date )",
+                    activeDate.toString()));
 
-            final String where = (!wheres.isEmpty()) ? (" WHERE (" + String.join(") AND (", wheres) + ")") : ")";
-            final String leftJoin = (!leftJoins.isEmpty()) ? (" LEFT JOIN " + String.join(" LEFT JOIN ", leftJoins))
-                                                           : "";
+            final String where = (!wheres.isEmpty()) ? String.format(" WHERE (%s)", String.join(") AND (", wheres))
+                                                     : ")";
+            final String leftJoin = (!leftJoins.isEmpty())
+                ? (String.format(" LEFT JOIN %s", String.join(" LEFT JOIN ", leftJoins))) : "";
 
-            final String d = SearchFor.STANDORT.equals(searchFor)
+            final String fields = SearchFor.STANDORT.equals(searchFor)
                 ? "(SELECT id FROM cs_class WHERE table_name ILIKE 'vzkat_standort') AS class_id, vzkat_schild.fk_standort AS object_id, vzkat_standort.import_id::text AS object_name"
                 : "(SELECT id FROM cs_class WHERE table_name ILIKE 'vzkat_schild') AS class_id, vzkat_schild.id AS object_id, 'Standort ' || vzkat_standort.import_id::text || ', ' || vzkat_richtung.schluessel || ' ' || vzkat_schild.reihenfolge AS object_name";
 
-            final String query = "SELECT \n"
-                        + "	" + d + " "
-                        + "FROM vzkat_schild "
-                        + leftJoin + " "
-                        + where;
+            final String query = String.format("SELECT %s FROM vzkat_schild %s %s", fields, leftJoin, where);
 
             if (query != null) {
                 final MetaService ms = (MetaService)getActiveLocalServers().get("WUNDA_BLAU");
