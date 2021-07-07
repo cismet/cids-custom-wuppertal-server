@@ -201,7 +201,7 @@ public class PotenzialflaecheReportServerAction extends StampedByteArrayServerAc
 
                     final double m2 = Math.round(area * 100) / 100.0;
                     final double ha = Math.round(area / 1000) / 10.0;
-                    return String.format("%.2f m² (circa %.1f ha)", m2, ha);
+                    return String.format("%,.2f m² (circa %,.1f ha)", m2, ha);
                 }
             }, "Größe"),
         BEBAUUNGSPLAN(new MonSearchReportProperty("bplan_verfahren") {
