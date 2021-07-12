@@ -122,25 +122,33 @@ public class BplaeneMonSearch extends RestApiMonGeometrySearch {
                             }
                             queries.add(""
                                         + "SELECT DISTINCT \n"
-                                        + "  (SELECT id FROM cs_class WHERE table_name ILIKE 'bplan_verfahren') AS cid, \n"
-                                        + "  bplan_verfahren.id AS oid, \n"
-                                        + "  " + String.format("%s AS name", subUnion.getFieldProperty()) + " \n"
-                                        + "FROM bplan_verfahren \n"
-                                        + ((geomCondition != null)
-                                            ? "LEFT JOIN geom ON geom.id = bplan_verfahren.geometrie " : " ")
-                                        + ((!wheres.isEmpty()) ? ("WHERE " + String.join(" AND ", wheres)) : " "));
+                                        + "  (SELECT id FROM cs_class WHERE table_name ILIKE 'bplan_verfahren') AS cid, "
+                                        + "  bplan_verfahren.id AS oid, "
+                                        + "  " + String.format("%s AS name", subUnion.getFieldProperty()) + ", "
+                                        + "  "
+                                        + String.format(
+                                            "%s AS orderField ",
+                                            (((subUnion.getOrderField() != null)
+                                                    && !subUnion.getOrderField().trim().isEmpty())
+                                                ? subUnion.getOrderField().trim() : "0"))
+                                        + "FROM bplan_verfahren "
+                                        + ((geomCondition != null) ? subUnion.getGeomJoin() : "") + " "
+                                        + ((!wheres.isEmpty()) ? ("WHERE " + String.join(" AND ", wheres)) : ""));
                         }
                     }
-                    query = String.format("SELECT * FROM (%s) AS unioned;", String.join(" UNION ", queries));
+                    query = String.format(
+                            "SELECT * FROM (%s) AS unioned ORDER BY orderField ASC;",
+                            String.join(" UNION ", queries));
                 } else {
                     query = "SELECT DISTINCT \n"
-                                + "  (SELECT id FROM cs_class WHERE table_name ILIKE 'bplan_verfahren') AS cid, \n"
-                                + "  bplan_verfahren.id AS oid, \n"
-                                + "  nummer \n"
-                                + "FROM bplan_verfahren \n"
+                                + "  (SELECT id FROM cs_class WHERE table_name ILIKE 'bplan_verfahren') AS cid, "
+                                + "  bplan_verfahren.id AS oid, "
+                                + "  nummer "
+                                + "FROM bplan_verfahren "
                                 + ((geomCondition != null) ? "LEFT JOIN geom ON geom.id = bplan_verfahren.geometrie "
                                                            : " ")
-                                + ((geomCondition != null) ? ("WHERE " + geomCondition) : " ");
+                                + ((geomCondition != null) ? ("WHERE " + geomCondition) : " ")
+                                + " ORDER BY nummer DESC";
                 }
                 final MetaService ms = (MetaService)getActiveLocalServers().get("WUNDA_BLAU");
 
@@ -174,6 +182,8 @@ public class BplaeneMonSearch extends RestApiMonGeometrySearch {
         //~ Instance fields ----------------------------------------------------
 
         private String fieldProperty;
+        private String geomJoin;
         private String whereClause;
+        private String orderField;
     }
 }
