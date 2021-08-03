@@ -191,8 +191,10 @@ public class AlboFlaecheSearch extends AbstractCidsServerSearch implements MetaO
                 wheresMain.add(String.format("zuordnung.schluessel LIKE '%s'", configuration.getZuordnungSchluessel()));
             }
 
-            if (configuration.getLoeschen() != null) {
-                wheresMain.add(String.format("flaeche.loeschen = %s", configuration.getLoeschen() ? "TRUE" : "FALSE"));
+            if (configuration.getUnterdrueckt() != null) {
+                wheresMain.add(String.format(
+                        "flaeche.loeschen = %s",
+                        configuration.getUnterdrueckt() ? "TRUE" : "FALSE"));
             }
 
             if (configuration.getArtInfos() != null) {
@@ -439,7 +441,7 @@ public class AlboFlaecheSearch extends AbstractCidsServerSearch implements MetaO
         @JsonProperty private String statusSchluessel;
         @JsonProperty private String typSchluessel;
         @JsonProperty private String zuordnungSchluessel;
-        @JsonProperty private Boolean loeschen = Boolean.FALSE;
+        @JsonProperty private Boolean unterdrueckt = Boolean.FALSE;
         @JsonProperty private SearchMode searchModeMain = SearchMode.AND;
         @JsonProperty private SearchMode searchModeArt = SearchMode.AND;
         @JsonProperty private Collection<ArtInfo> artInfos;
@@ -583,6 +585,181 @@ public class AlboFlaecheSearch extends AbstractCidsServerSearch implements MetaO
          */
         public SonstigeInfo() {
             super("sonstige");
+        }
+    }
+
+    /**
+     * DOCUMENT ME!
+     *
+     * @version  $Revision$, $Date$
+     */
+    @Getter
+    @Setter
+    @JsonAutoDetect(
+        fieldVisibility = JsonAutoDetect.Visibility.NONE,
+        isGetterVisibility = JsonAutoDetect.Visibility.NONE,
+        getterVisibility = JsonAutoDetect.Visibility.NONE,
+        setterVisibility = JsonAutoDetect.Visibility.NONE
+    )
+    public static class StofflicheInfo extends ArtInfo {
+
+        //~ Constructors -------------------------------------------------------
+
+        /**
+         * Creates a new SonstigeInfo object.
+         */
+        public StofflicheInfo() {
+            super("stoffliche");
+        }
+    }
+
+    /**
+     * DOCUMENT ME!
+     *
+     * @version  $Revision$, $Date$
+     */
+    @Getter
+    @Setter
+    @JsonAutoDetect(
+        fieldVisibility = JsonAutoDetect.Visibility.NONE,
+        isGetterVisibility = JsonAutoDetect.Visibility.NONE,
+        getterVisibility = JsonAutoDetect.Visibility.NONE,
+        setterVisibility = JsonAutoDetect.Visibility.NONE
+    )
+    public static class BodenaehnlichInfo extends ArtInfo {
+
+        //~ Constructors -------------------------------------------------------
+
+        /**
+         * Creates a new SonstigeInfo object.
+         */
+        public BodenaehnlichInfo() {
+            super("bodenaehnlich");
+        }
+    }
+
+    /**
+     * DOCUMENT ME!
+     *
+     * @version  $Revision$, $Date$
+     */
+    @Getter
+    @Setter
+    @JsonAutoDetect(
+        fieldVisibility = JsonAutoDetect.Visibility.NONE,
+        isGetterVisibility = JsonAutoDetect.Visibility.NONE,
+        getterVisibility = JsonAutoDetect.Visibility.NONE,
+        setterVisibility = JsonAutoDetect.Visibility.NONE
+    )
+    public static class AbraumhaldeInfo extends ArtInfo {
+
+        //~ Constructors -------------------------------------------------------
+
+        /**
+         * Creates a new SonstigeInfo object.
+         */
+        public AbraumhaldeInfo() {
+            super("abraumhalde");
+        }
+    }
+
+    /**
+     * DOCUMENT ME!
+     *
+     * @version  $Revision$, $Date$
+     */
+    @Getter
+    @Setter
+    @JsonAutoDetect(
+        fieldVisibility = JsonAutoDetect.Visibility.NONE,
+        isGetterVisibility = JsonAutoDetect.Visibility.NONE,
+        getterVisibility = JsonAutoDetect.Visibility.NONE,
+        setterVisibility = JsonAutoDetect.Visibility.NONE
+    )
+    public static class InBetriebInfo extends ArtInfo {
+
+        //~ Constructors -------------------------------------------------------
+
+        /**
+         * Creates a new SonstigeInfo object.
+         */
+        public InBetriebInfo() {
+            super("in_betrieb");
+        }
+    }
+
+    /**
+     * DOCUMENT ME!
+     *
+     * @version  $Revision$, $Date$
+     */
+    @Getter
+    @Setter
+    @JsonAutoDetect(
+        fieldVisibility = JsonAutoDetect.Visibility.NONE,
+        isGetterVisibility = JsonAutoDetect.Visibility.NONE,
+        getterVisibility = JsonAutoDetect.Visibility.NONE,
+        setterVisibility = JsonAutoDetect.Visibility.NONE
+    )
+    public static class RclInfo extends ArtInfo {
+
+        //~ Constructors -------------------------------------------------------
+
+        /**
+         * Creates a new SonstigeInfo object.
+         */
+        public RclInfo() {
+            super("rcl");
+        }
+    }
+
+    /**
+     * DOCUMENT ME!
+     *
+     * @version  $Revision$, $Date$
+     */
+    @Getter
+    @Setter
+    @JsonAutoDetect(
+        fieldVisibility = JsonAutoDetect.Visibility.NONE,
+        isGetterVisibility = JsonAutoDetect.Visibility.NONE,
+        getterVisibility = JsonAutoDetect.Visibility.NONE,
+        setterVisibility = JsonAutoDetect.Visibility.NONE
+    )
+    public static class BaugrundInfo extends ArtInfo {
+
+        //~ Constructors -------------------------------------------------------
+
+        /**
+         * Creates a new SonstigeInfo object.
+         */
+        public BaugrundInfo() {
+            super("baugrund");
+        }
+    }
+
+    /**
+     * DOCUMENT ME!
+     *
+     * @version  $Revision$, $Date$
+     */
+    @Getter
+    @Setter
+    @JsonAutoDetect(
+        fieldVisibility = JsonAutoDetect.Visibility.NONE,
+        isGetterVisibility = JsonAutoDetect.Visibility.NONE,
+        getterVisibility = JsonAutoDetect.Visibility.NONE,
+        setterVisibility = JsonAutoDetect.Visibility.NONE
+    )
+    public static class SonstigesInfo extends ArtInfo {
+
+        //~ Constructors -------------------------------------------------------
+
+        /**
+         * Creates a new SonstigeInfo object.
+         */
+        public SonstigesInfo() {
+            super("sonstiges");
         }
     }
 
