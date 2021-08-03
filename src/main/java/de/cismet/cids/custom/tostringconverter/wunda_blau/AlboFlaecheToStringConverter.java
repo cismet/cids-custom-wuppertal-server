@@ -26,6 +26,8 @@ public class AlboFlaecheToStringConverter extends CustomToStringConverter {
     @Override
     public String createString() {
         final String erhebungsnummer = (String)cidsBean.getProperty("erhebungsnummer");
-        return String.format("Fläche: %s", erhebungsnummer);
+        return Boolean.TRUE.equals(cidsBean.getProperty("loeschen"))
+            ? String.format("<html><body>Fläche: <strike>%s</strike>", erhebungsnummer)
+            : String.format("Fläche: %s", erhebungsnummer);
     }
 }
