@@ -36,6 +36,7 @@ import java.util.concurrent.TimeUnit;
 import javax.swing.SwingWorker;
 
 import de.cismet.cids.dynamics.CidsBean;
+import java.util.List;
 
 /**
  * DOCUMENT ME!
@@ -188,12 +189,13 @@ public abstract class AbstractPotenzialflaecheReportCreator implements Potenzial
                             final Collection beans = flaecheBean.getBeanCollectionProperty(
                                     multiFieldReportProperty.getPath());
                             if (beans != null) {
-                                final Collection<String> strings = new ArrayList<>();
+                                final List<String> strings = new ArrayList<>();
                                 for (final Object bean : (Collection)beans) {
                                     if (bean != null) {
                                         strings.add(String.valueOf(bean));
                                     }
                                 }
+                                params.put(String.format("%s_LIST", parameterName), object);
                                 object = String.join(", ", strings);
                             }
                         } else if (reportProperty instanceof PotenzialflaecheReportServerAction.PathReportProperty) {
@@ -207,6 +209,7 @@ public abstract class AbstractPotenzialflaecheReportCreator implements Potenzial
                             } else {
                                 object = value.toString();
                             }
+                            params.put(String.format("%s_DATE", parameterName), object);
                         } else if (reportProperty
                                     instanceof PotenzialflaecheReportServerAction.MonSearchReportProperty) {
                             object = "UNBEKANNTE PROPERTY";
