@@ -40,13 +40,6 @@ public class AlboProperties {
     private final Integer flaecheMapHeight;
     private final Integer flaecheMapDpi;
 
-    private final String altstandortColor;
-    private final String altablagerungColor;
-    private final String betriebsstandortColor;
-    private final String materialaufbringungColor;
-    private final String sonstigeColor;
-    private final String ohneVerdachtColor;
-
     private final String wzKlassifikationLink;
 
     private final String vorgangMapUrl;
@@ -76,13 +69,6 @@ public class AlboProperties {
         flaecheMapHeight = valueOfInteger("flaecheMapHeight", null);
         flaecheMapDpi = valueOfInteger("flaecheMapDpi", null);
 
-        altstandortColor = valueOfString("altstandort_color", null);
-        altablagerungColor = valueOfString("altablagerung_color", null);
-        betriebsstandortColor = valueOfString("betriebsstandort_color", null);
-        materialaufbringungColor = valueOfString("materialaufbringung_color", null);
-        sonstigeColor = valueOfString("sonstige_color", null);
-        ohneVerdachtColor = valueOfString("ohne_verdacht_color", null);
-
         wzKlassifikationLink = valueOfString("wz_klassifikation_link", null);
         vorgangMapUrl = valueOfString("vorgang_map_url", null);
 
@@ -98,6 +84,16 @@ public class AlboProperties {
 
     //~ Methods ----------------------------------------------------------------
 
+    /**
+     * DOCUMENT ME!
+     *
+     * @param   art  DOCUMENT ME!
+     *
+     * @return  DOCUMENT ME!
+     */
+    public String getColorOfArt(final String art) {
+        return (art != null) ? valueOfString(String.format("%s_color", art), null) : null;
+    }
     /**
      * DOCUMENT ME!
      *
