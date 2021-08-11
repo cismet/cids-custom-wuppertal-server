@@ -313,22 +313,39 @@ public class AlboFlaecheSearch extends AbstractCidsServerSearch implements MetaO
                                         alias));
                                 leftJoins.addAll(subLeftJoins);
                             }
-                        } else if (artInfo instanceof MaterialaufbringungInfo) {
+                        } else if (artInfo instanceof RclInfo) {
                             final List<String> subLeftJoins = new ArrayList<>();
-                            final String materialaufbringungsart = ((MaterialaufbringungInfo)artInfo)
-                                        .getMaterialaufbringungsartSchluessel();
-                            if (materialaufbringungsart != null) {
+                            final String art = ((RclInfo)artInfo).getArtSchluessel();
+                            if (art != null) {
                                 subLeftJoins.add(String.format(
-                                        "albo_materialaufbringungsart AS materialaufbringungsart%1$s ON materialaufbringung%1$s.fk_art = materialaufbringungsart%1$s.id",
+                                        "albo_rclart AS rclart%1$s ON rcl%1$s.fk_art = rclart%1$s.id",
                                         alias));
                                 subAndWheres.add(String.format(
-                                        "materialaufbringungsart%s.schluessel LIKE '%s'",
+                                        "rclart%s.schluessel LIKE '%s'",
                                         alias,
-                                        materialaufbringungsart));
+                                        art));
                             }
                             if (!subAndWheres.isEmpty()) {
                                 leftJoins.add(String.format(
-                                        "albo_materialaufbringung AS materialaufbringung%1$s ON flaeche.fk_materialaufbringung = materialaufbringung%1$s.id",
+                                        "albo_rcl AS rcl%1$s ON flaeche.fk_rcl = rcl%1$s.id",
+                                        alias));
+                                leftJoins.addAll(subLeftJoins);
+                            }
+                        } else if (artInfo instanceof StofflicheInfo) {
+                            final List<String> subLeftJoins = new ArrayList<>();
+                            final String art = ((StofflicheInfo)artInfo).getArtSchluessel();
+                            if (art != null) {
+                                subLeftJoins.add(String.format(
+                                        "albo_stofflicheart AS stofflicheart%1$s ON stoffliche%1$s.fk_art = stofflicheart%1$s.id",
+                                        alias));
+                                subAndWheres.add(String.format(
+                                        "stofflicheart%s.schluessel LIKE '%s'",
+                                        alias,
+                                        art));
+                            }
+                            if (!subAndWheres.isEmpty()) {
+                                leftJoins.add(String.format(
+                                        "albo_stoffliche AS stoffliche%1$s ON flaeche.fk_stoffliche = stoffliche%1$s.id",
                                         alias));
                                 leftJoins.addAll(subLeftJoins);
                             }
@@ -460,7 +477,7 @@ public class AlboFlaecheSearch extends AbstractCidsServerSearch implements MetaO
         getterVisibility = JsonAutoDetect.Visibility.NONE,
         setterVisibility = JsonAutoDetect.Visibility.NONE
     )
-    public abstract static class ArtInfo extends StorableSearch.Configuration {
+    public static class ArtInfo extends StorableSearch.Configuration {
 
         //~ Instance fields ----------------------------------------------------
 
@@ -473,7 +490,7 @@ public class AlboFlaecheSearch extends AbstractCidsServerSearch implements MetaO
          *
          * @param  flaechenartSchluessel  DOCUMENT ME!
          */
-        protected ArtInfo(final String flaechenartSchluessel) {
+        public ArtInfo(final String flaechenartSchluessel) {
             this.flaechenartSchluessel = flaechenartSchluessel;
         }
     }
@@ -491,7 +508,7 @@ public class AlboFlaecheSearch extends AbstractCidsServerSearch implements MetaO
         getterVisibility = JsonAutoDetect.Visibility.NONE,
         setterVisibility = JsonAutoDetect.Visibility.NONE
     )
-    public abstract static class StandortInfo extends ArtInfo {
+    public static class StandortInfo extends ArtInfo {
 
         //~ Instance fields ----------------------------------------------------
 
@@ -512,82 +529,6 @@ public class AlboFlaecheSearch extends AbstractCidsServerSearch implements MetaO
             super(artSchluessel);
         }
     }
-
-    /**
-     * DOCUMENT ME!
-     *
-     * @version  $Revision$, $Date$
-     */
-    @Getter
-    @Setter
-    @JsonAutoDetect(
-        fieldVisibility = JsonAutoDetect.Visibility.NONE,
-        isGetterVisibility = JsonAutoDetect.Visibility.NONE,
-        getterVisibility = JsonAutoDetect.Visibility.NONE,
-        setterVisibility = JsonAutoDetect.Visibility.NONE
-    )
-    public static class AltstandortInfo extends StandortInfo {
-
-        //~ Constructors -------------------------------------------------------
-
-        /**
-         * Creates a new AltstandortInfo object.
-         */
-        public AltstandortInfo() {
-            super("altstandort");
-        }
-    }
-
-    /**
-     * DOCUMENT ME!
-     *
-     * @version  $Revision$, $Date$
-     */
-    @Getter
-    @Setter
-    @JsonAutoDetect(
-        fieldVisibility = JsonAutoDetect.Visibility.NONE,
-        isGetterVisibility = JsonAutoDetect.Visibility.NONE,
-        getterVisibility = JsonAutoDetect.Visibility.NONE,
-        setterVisibility = JsonAutoDetect.Visibility.NONE
-    )
-    public static class OhneVerdachtInfo extends ArtInfo {
-
-        //~ Constructors -------------------------------------------------------
-
-        /**
-         * Creates a new OhneVerdachtInfo object.
-         */
-        public OhneVerdachtInfo() {
-            super("ohne_verdacht");
-        }
-    }
-
-    /**
-     * DOCUMENT ME!
-     *
-     * @version  $Revision$, $Date$
-     */
-    @Getter
-    @Setter
-    @JsonAutoDetect(
-        fieldVisibility = JsonAutoDetect.Visibility.NONE,
-        isGetterVisibility = JsonAutoDetect.Visibility.NONE,
-        getterVisibility = JsonAutoDetect.Visibility.NONE,
-        setterVisibility = JsonAutoDetect.Visibility.NONE
-    )
-    public static class SonstigeInfo extends ArtInfo {
-
-        //~ Constructors -------------------------------------------------------
-
-        /**
-         * Creates a new SonstigeInfo object.
-         */
-        public SonstigeInfo() {
-            super("sonstige");
-        }
-    }
-
     /**
      * DOCUMENT ME!
      *
@@ -603,88 +544,27 @@ public class AlboFlaecheSearch extends AbstractCidsServerSearch implements MetaO
     )
     public static class StofflicheInfo extends ArtInfo {
 
+        //~ Instance fields ----------------------------------------------------
+
+        @JsonProperty private String artSchluessel;
+
         //~ Constructors -------------------------------------------------------
 
         /**
-         * Creates a new SonstigeInfo object.
+         * Creates a new StofflicheInfo object.
          */
         public StofflicheInfo() {
+            this(null);
+        }
+
+        /**
+         * Creates a new SonstigeInfo object.
+         *
+         * @param  artSchluessel  DOCUMENT ME!
+         */
+        public StofflicheInfo(final String artSchluessel) {
             super("stoffliche");
-        }
-    }
-
-    /**
-     * DOCUMENT ME!
-     *
-     * @version  $Revision$, $Date$
-     */
-    @Getter
-    @Setter
-    @JsonAutoDetect(
-        fieldVisibility = JsonAutoDetect.Visibility.NONE,
-        isGetterVisibility = JsonAutoDetect.Visibility.NONE,
-        getterVisibility = JsonAutoDetect.Visibility.NONE,
-        setterVisibility = JsonAutoDetect.Visibility.NONE
-    )
-    public static class BodenaehnlichInfo extends ArtInfo {
-
-        //~ Constructors -------------------------------------------------------
-
-        /**
-         * Creates a new SonstigeInfo object.
-         */
-        public BodenaehnlichInfo() {
-            super("bodenaehnlich");
-        }
-    }
-
-    /**
-     * DOCUMENT ME!
-     *
-     * @version  $Revision$, $Date$
-     */
-    @Getter
-    @Setter
-    @JsonAutoDetect(
-        fieldVisibility = JsonAutoDetect.Visibility.NONE,
-        isGetterVisibility = JsonAutoDetect.Visibility.NONE,
-        getterVisibility = JsonAutoDetect.Visibility.NONE,
-        setterVisibility = JsonAutoDetect.Visibility.NONE
-    )
-    public static class AbraumhaldeInfo extends ArtInfo {
-
-        //~ Constructors -------------------------------------------------------
-
-        /**
-         * Creates a new SonstigeInfo object.
-         */
-        public AbraumhaldeInfo() {
-            super("abraumhalde");
-        }
-    }
-
-    /**
-     * DOCUMENT ME!
-     *
-     * @version  $Revision$, $Date$
-     */
-    @Getter
-    @Setter
-    @JsonAutoDetect(
-        fieldVisibility = JsonAutoDetect.Visibility.NONE,
-        isGetterVisibility = JsonAutoDetect.Visibility.NONE,
-        getterVisibility = JsonAutoDetect.Visibility.NONE,
-        setterVisibility = JsonAutoDetect.Visibility.NONE
-    )
-    public static class InBetriebInfo extends ArtInfo {
-
-        //~ Constructors -------------------------------------------------------
-
-        /**
-         * Creates a new SonstigeInfo object.
-         */
-        public InBetriebInfo() {
-            super("in_betrieb");
+            this.artSchluessel = artSchluessel;
         }
     }
 
@@ -703,102 +583,27 @@ public class AlboFlaecheSearch extends AbstractCidsServerSearch implements MetaO
     )
     public static class RclInfo extends ArtInfo {
 
-        //~ Constructors -------------------------------------------------------
-
-        /**
-         * Creates a new SonstigeInfo object.
-         */
-        public RclInfo() {
-            super("rcl");
-        }
-    }
-
-    /**
-     * DOCUMENT ME!
-     *
-     * @version  $Revision$, $Date$
-     */
-    @Getter
-    @Setter
-    @JsonAutoDetect(
-        fieldVisibility = JsonAutoDetect.Visibility.NONE,
-        isGetterVisibility = JsonAutoDetect.Visibility.NONE,
-        getterVisibility = JsonAutoDetect.Visibility.NONE,
-        setterVisibility = JsonAutoDetect.Visibility.NONE
-    )
-    public static class BaugrundInfo extends ArtInfo {
-
-        //~ Constructors -------------------------------------------------------
-
-        /**
-         * Creates a new SonstigeInfo object.
-         */
-        public BaugrundInfo() {
-            super("baugrund");
-        }
-    }
-
-    /**
-     * DOCUMENT ME!
-     *
-     * @version  $Revision$, $Date$
-     */
-    @Getter
-    @Setter
-    @JsonAutoDetect(
-        fieldVisibility = JsonAutoDetect.Visibility.NONE,
-        isGetterVisibility = JsonAutoDetect.Visibility.NONE,
-        getterVisibility = JsonAutoDetect.Visibility.NONE,
-        setterVisibility = JsonAutoDetect.Visibility.NONE
-    )
-    public static class SonstigesInfo extends ArtInfo {
-
-        //~ Constructors -------------------------------------------------------
-
-        /**
-         * Creates a new SonstigeInfo object.
-         */
-        public SonstigesInfo() {
-            super("sonstiges");
-        }
-    }
-
-    /**
-     * DOCUMENT ME!
-     *
-     * @version  $Revision$, $Date$
-     */
-    @Getter
-    @Setter
-    @JsonAutoDetect(
-        fieldVisibility = JsonAutoDetect.Visibility.NONE,
-        isGetterVisibility = JsonAutoDetect.Visibility.NONE,
-        getterVisibility = JsonAutoDetect.Visibility.NONE,
-        setterVisibility = JsonAutoDetect.Visibility.NONE
-    )
-    public static class MaterialaufbringungInfo extends ArtInfo {
-
         //~ Instance fields ----------------------------------------------------
 
-        @JsonProperty private String materialaufbringungsartSchluessel;
+        @JsonProperty private String artSchluessel;
 
         //~ Constructors -------------------------------------------------------
 
         /**
-         * Creates a new MaterialaufbringungInfo object.
+         * Creates a new RclInfo object.
          */
-        public MaterialaufbringungInfo() {
+        public RclInfo() {
             this(null);
         }
 
         /**
-         * Creates a new MaterialaufbringungInfo object.
+         * Creates a new SonstigeInfo object.
          *
-         * @param  materialaufbringungsartSchluessel  DOCUMENT ME!
+         * @param  artSchluessel  DOCUMENT ME!
          */
-        public MaterialaufbringungInfo(final String materialaufbringungsartSchluessel) {
-            super("materialaufbringung");
-            this.materialaufbringungsartSchluessel = materialaufbringungsartSchluessel;
+        public RclInfo(final String artSchluessel) {
+            super("rcl");
+            this.artSchluessel = artSchluessel;
         }
     }
 
@@ -838,31 +643,6 @@ public class AlboFlaecheSearch extends AbstractCidsServerSearch implements MetaO
      *
      * @version  $Revision$, $Date$
      */
-    @Getter
-    @Setter
-    @JsonAutoDetect(
-        fieldVisibility = JsonAutoDetect.Visibility.NONE,
-        isGetterVisibility = JsonAutoDetect.Visibility.NONE,
-        getterVisibility = JsonAutoDetect.Visibility.NONE,
-        setterVisibility = JsonAutoDetect.Visibility.NONE
-    )
-    public static class BetriebsstandortInfo extends StandortInfo {
-
-        //~ Constructors -------------------------------------------------------
-
-        /**
-         * Creates a new BetrienbsstandortInfo object.
-         */
-        public BetriebsstandortInfo() {
-            super("betriebsstandort");
-        }
-    }
-
-    /**
-     * DOCUMENT ME!
-     *
-     * @version  $Revision$, $Date$
-     */
     public static class ArtInfoDeserializer extends StdDeserializer<ArtInfo> {
 
         //~ Instance fields ----------------------------------------------------
@@ -891,26 +671,26 @@ public class AlboFlaecheSearch extends AbstractCidsServerSearch implements MetaO
                         String.class);
                 switch (flaechenartSchluessel) {
                     case "betriebsstandort": {
-                        return defaultMapper.treeToValue(on, BetriebsstandortInfo.class);
+                        return defaultMapper.treeToValue(on, StandortInfo.class);
                     }
                     case "altstandort": {
-                        return defaultMapper.treeToValue(on, AltstandortInfo.class);
+                        return defaultMapper.treeToValue(on, StandortInfo.class);
                     }
                     case "altablagerung": {
                         return defaultMapper.treeToValue(on, AltablagerungInfo.class);
                     }
-                    case "materialaufbringung": {
-                        return defaultMapper.treeToValue(on, MaterialaufbringungInfo.class);
+                    case "rcl": {
+                        return defaultMapper.treeToValue(on, RclInfo.class);
                     }
-                    case "sonstige": {
-                        return defaultMapper.treeToValue(on, SonstigeInfo.class);
+                    case "stoffliche": {
+                        return defaultMapper.treeToValue(on, StofflicheInfo.class);
                     }
-                    case "ohne_verdacht": {
-                        return defaultMapper.treeToValue(on, OhneVerdachtInfo.class);
+                    default: {
+                        return defaultMapper.treeToValue(on, ArtInfo.class);
                     }
                 }
             }
-            throw new RuntimeException("invalid ArtInfo");
+            throw new RuntimeException("missing ArtInfo");
         }
     }
 }
