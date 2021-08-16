@@ -487,6 +487,13 @@ public class AlboFlaecheSearch extends AbstractCidsServerSearch implements MetaO
 
         /**
          * Creates a new ArtInfo object.
+         */
+        public ArtInfo() {
+            this(null);
+        }
+
+        /**
+         * Creates a new ArtInfo object.
          *
          * @param  flaechenartSchluessel  DOCUMENT ME!
          */
@@ -519,6 +526,13 @@ public class AlboFlaecheSearch extends AbstractCidsServerSearch implements MetaO
         @JsonProperty private Boolean dauerModus;
 
         //~ Constructors -------------------------------------------------------
+
+        /**
+         * Creates a new StandortInfo object.
+         */
+        public StandortInfo() {
+            this(null);
+        }
 
         /**
          * Creates a new StandortInfo object.
