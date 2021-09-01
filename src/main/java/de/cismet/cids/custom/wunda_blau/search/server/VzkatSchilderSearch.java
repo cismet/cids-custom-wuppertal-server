@@ -139,9 +139,9 @@ public class VzkatSchilderSearch extends AbstractCidsServerSearch implements Res
 
             if (geom != null) {
                 final String geomString = PostGisGeometryFactory.getPostGisCompliantDbString(geom);
-                wheres.add("(geom.geo_field && GeometryFromText('" + geomString + "') AND intersects("
+                wheres.add("(geom.geo_field && st_GeometryFromText('" + geomString + "') AND st_intersects("
                             + "st_buffer(geo_field, " + INTERSECTS_BUFFER + "),"
-                            + "GeometryFromText('"
+                            + "st_GeometryFromText('"
                             + geomString
                             + "')))");
                 leftJoins.add("geom ON vzkat_standort.fk_geom = geom.id");

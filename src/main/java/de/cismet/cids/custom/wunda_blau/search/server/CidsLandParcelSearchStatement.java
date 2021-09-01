@@ -134,16 +134,16 @@ public class CidsLandParcelSearchStatement extends AbstractCidsServerSearch impl
                 if ((geometry instanceof Polygon) || (geometry instanceof MultiPolygon)) {
                     query += " and geo_field &&\n"
                                 + "st_buffer(\n"
-                                + "GeometryFromText('" + geostring + "')\n"
+                                + "st_GeometryFromText('" + geostring + "')\n"
                                 + ", " + INTERSECTS_BUFFER + ")\n"
-                                + "and intersects(geo_field,st_buffer(GeometryFromText('" + geostring
+                                + "and st_intersects(geo_field,st_buffer(st_GeometryFromText('" + geostring
                                 + "'), " + INTERSECTS_BUFFER + "))";
                 } else {
                     query += " and geo_field &&\n"
                                 + "st_buffer(\n"
-                                + "GeometryFromText('" + geostring + "')\n"
+                                + "st_GeometryFromText('" + geostring + "')\n"
                                 + ", " + INTERSECTS_BUFFER + ")\n"
-                                + "and intersects(geo_field, GeometryFromText('" + geostring + "'))";
+                                + "and st_intersects(geo_field, st_GeometryFromText('" + geostring + "'))";
                 }
             }
 

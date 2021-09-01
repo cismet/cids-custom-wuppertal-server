@@ -145,9 +145,9 @@ public class CidsGrundwassermessstelleSearch extends AbstractCidsServerSearch im
             final String geomWhere;
             if (geom != null) {
                 final String geostring = PostGisGeometryFactory.getPostGisCompliantDbString(geom);
-                geomWhere = " AND (geom.geo_field && GeometryFromText('" + geostring + "') AND intersects("
+                geomWhere = " AND (geom.geo_field && st_GeometryFromText('" + geostring + "') AND st_intersects("
                             + "st_buffer(geo_field, " + INTERSECTS_BUFFER + "),"
-                            + "GeometryFromText('"
+                            + "st_GeometryFromText('"
                             + geostring
                             + "')))";
             } else {
