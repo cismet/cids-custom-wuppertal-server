@@ -195,8 +195,8 @@ public abstract class AbstractPotenzialflaecheReportCreator implements Potenzial
                                         strings.add(String.valueOf(bean));
                                     }
                                 }
-                                params.put(String.format("%s_LIST", parameterName), object);
                                 object = String.join(", ", strings);
+                                params.put(String.format("%s_LIST", parameterName), strings);
                             }
                         } else if (reportProperty instanceof PotenzialflaecheReportServerAction.PathReportProperty) {
                             final PotenzialflaecheReportServerAction.PathReportProperty fieldReportProperty =
