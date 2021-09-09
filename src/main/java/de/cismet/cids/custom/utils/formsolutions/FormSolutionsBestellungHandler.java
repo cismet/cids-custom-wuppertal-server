@@ -132,8 +132,8 @@ public class FormSolutionsBestellungHandler implements ConnectionContextProvider
     public static final int STATUS_GETFLURSTUECK = 55;
     public static final int STATUS_SAVE = 50;
     public static final int STATUS_CLOSE = 40;
-    public static final int STATUS_PRUEFUNG = 35;
     public static final int STATUS_WEITERLEITUNG_ABSCHLUSSFORMULAR = 37;
+    public static final int STATUS_PRUEFUNG = 35;
     public static final int STATUS_PRODUKT = 20;
     public static final int STATUS_BILLING = 15;
     public static final int STATUS_PENDING = 10;
@@ -1896,8 +1896,7 @@ public class FormSolutionsBestellungHandler implements ConnectionContextProvider
                 specialLog("simple bestellung bean created for: " + transids.size());
 
                 final boolean downloadOnly = !"Kartenausdruck".equals(formSolutionsBestellung.getBezugsweg());
-                final String email = downloadOnly ? trimedNotEmpty(formSolutionsBestellung.getEMailadresse())
-                                                  : trimedNotEmpty(formSolutionsBestellung.getEMailadresse()); // 1
+                final String email = trimedNotEmpty(formSolutionsBestellung.getEMailadresse());
 
                 specialLog("updating mysql email entry for: " + transid);
 
