@@ -206,10 +206,13 @@ public abstract class AbstractPotenzialflaecheReportCreator implements Potenzial
                                 object = null;
                             } else if (value instanceof Date) {
                                 object = SDF.format((Date)value);
+                                params.put(String.format("%s_DATE", parameterName), object);
+                            } else if (value instanceof Collection) {
+                                object = String.join(", ", (Collection)value);
+                                params.put(String.format("%s_LIST", parameterName), value);
                             } else {
                                 object = value.toString();
                             }
-                            params.put(String.format("%s_DATE", parameterName), object);
                         } else if (reportProperty
                                     instanceof PotenzialflaecheReportServerAction.MonSearchReportProperty) {
                             object = "UNBEKANNTE PROPERTY";
