@@ -19,15 +19,15 @@ import net.sf.jasperreports.engine.JasperFillManager;
 import net.sf.jasperreports.engine.JasperPrint;
 import net.sf.jasperreports.engine.data.JRBeanCollectionDataSource;
 
+import java.awt.image.BufferedImage;
+
 import java.io.ByteArrayOutputStream;
 
 import java.text.SimpleDateFormat;
 
-import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collection;
 import java.util.Date;
-import java.util.List;
 import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.ExecutorService;
@@ -177,47 +177,20 @@ public abstract class AbstractPotenzialflaecheReportCreator implements Potenzial
 
                     @Override
                     protected Void doInBackground() throws Exception {
-                        Object object = null;
-                        if (reportProperty instanceof PotenzialflaecheReportServerAction.VirtualReportProperty) {
-                            object = ((PotenzialflaecheReportServerAction.VirtualReportProperty)reportProperty)
-                                        .calculateProperty(
-                                            creator);
-                        } else if (reportProperty
-                                    instanceof PotenzialflaecheReportServerAction.MultiKeytableReportProperty) {
-                            final PotenzialflaecheReportServerAction.MultiKeytableReportProperty multiFieldReportProperty =
-                                (PotenzialflaecheReportServerAction.MultiKeytableReportProperty)reportProperty;
-                            final Collection beans = flaecheBean.getBeanCollectionProperty(
-                                    multiFieldReportProperty.getPath());
-                            if (beans != null) {
-                                final List<String> strings = new ArrayList<>();
-                                for (final Object bean : (Collection)beans) {
-                                    if (bean != null) {
-                                        strings.add(String.valueOf(bean));
-                                    }
-                                }
-                                object = String.join(", ", strings);
-                                params.put(String.format("%s_LIST", parameterName), strings);
-                            }
-                        } else if (reportProperty instanceof PotenzialflaecheReportServerAction.PathReportProperty) {
-                            final PotenzialflaecheReportServerAction.PathReportProperty fieldReportProperty =
-                                (PotenzialflaecheReportServerAction.PathReportProperty)reportProperty;
-                            final Object value = flaecheBean.getProperty(fieldReportProperty.getPath());
-                            if (value == null) {
-                                object = null;
-                            } else if (value instanceof Date) {
-                                object = SDF.format((Date)value);
-                                params.put(String.format("%s_DATE", parameterName), object);
-                            } else if (value instanceof Collection) {
-                                object = String.join(", ", (Collection)value);
-                                params.put(String.format("%s_LIST", parameterName), value);
-                            } else {
-                                object = value.toString();
-                            }
-                        } else if (reportProperty
-                                    instanceof PotenzialflaecheReportServerAction.MonSearchReportProperty) {
-                            object = "UNBEKANNTE PROPERTY";
+                        final Object object = reportProperty.calculateProperty(creator);
+
+                        if (object instanceof Collection) {
+                            params.put(parameterName, String.join(", ", (Collection)object));
+                            params.put(String.format("%s_LIST", parameterName), object);
+                        } else if (object instanceof Date) {
+                            params.put(parameterName, SDF.format((Date)object));
+                            params.put(String.format("%s_DATE", parameterName), object);
+                        } else if (object instanceof BufferedImage) {
+                            params.put(parameterName, (BufferedImage)object);
+                        } else {
+                            params.put(parameterName, (object != null) ? object.toString() : null);
                         }
-                        params.put(parameterName, object);
+
                         return null;
                     }
                 });
