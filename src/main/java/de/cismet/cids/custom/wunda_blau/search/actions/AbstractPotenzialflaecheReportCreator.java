@@ -25,9 +25,11 @@ import java.io.ByteArrayOutputStream;
 
 import java.text.SimpleDateFormat;
 
+import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collection;
 import java.util.Date;
+import java.util.List;
 import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.ExecutorService;
@@ -180,7 +182,11 @@ public abstract class AbstractPotenzialflaecheReportCreator implements Potenzial
                         final Object object = reportProperty.calculateProperty(creator);
 
                         if (object instanceof Collection) {
-                            params.put(parameterName, String.join(", ", (Collection)object));
+                            final List<String> list = new ArrayList<>(((Collection)object).size());
+                            for (final Object single : (Collection)object) {
+                                list.add((single != null) ? String.valueOf(object) : null);
+                            }
+                            params.put(parameterName, String.join(", ", list));
                             params.put(String.format("%s_LIST", parameterName), object);
                         } else if (object instanceof Date) {
                             params.put(parameterName, SDF.format((Date)object));

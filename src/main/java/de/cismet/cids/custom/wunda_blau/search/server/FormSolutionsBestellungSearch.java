@@ -106,7 +106,7 @@ public class FormSolutionsBestellungSearch extends AbstractCidsServerSearch impl
                         + "LEFT JOIN berechtigungspruefung ON fs_bestellung.berechtigungspruefung = berechtigungspruefung.id "
                         + "LEFT JOIN fs_bestellung_cacheid ON fs_bestellung_cacheid.fk_bestellung = fs_bestellung.id "
                         + "WHERE "
-                        + String.join(" AND ", filterStrings)
+                        + (filterStrings.isEmpty() ? "TRUE" : String.join(" AND ", filterStrings))
                         + " "
                         + "GROUP BY (fs_bestellung.id);";
 
