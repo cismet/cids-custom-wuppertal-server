@@ -141,8 +141,6 @@ public class AdresseLightweightSearch extends AbstractCidsServerSearch implement
 
     @Override
     public Collection performServerSearch() throws SearchException {
-        final Integer keyId = getKeyId();
-
         final MetaService metaService = (MetaService)this.getActiveLocalServers().get("WUNDA_BLAU");
         if (metaService == null) {
             final String message = "Lightweight Meta Objects By Query Search "
@@ -152,15 +150,16 @@ public class AdresseLightweightSearch extends AbstractCidsServerSearch implement
         }
 
         final Collection<String> conditions = new ArrayList<>();
-        if (keyId != null) {
-            conditions.add(String.format("strasse = %d", keyId));
+        if (getKeyId() != null) {
+            conditions.add(String.format("strasse = %d", getKeyId()));
         }
 
         
 
-        final String query = "SELECT (SELECT c.id FROM cs_class c WHERE table_name ILIKE '" + TABLE__ADR + "') AS class_id, id, hausnummer FROM " + TABLE__ADR
-                    + (conditions.isEmpty() ? "" : (" WHERE " + String.join(" AND ", conditions)));
-      
+        final String query = String.format("SELECT ("
+                + "SELECT c.id FROM cs_class c WHERE table_name ILIKE '%1$s') AS class_id, "
+                + "id, hausnummer FROM %1$s %2$s",
+                TABLE__ADR,(conditions.isEmpty() ? "" : (" WHERE " + String.join(" AND ", conditions))));
         try {
             final MetaClass mc = CidsBean.getMetaClassFromTableName(
                     "WUNDA_BLAU",

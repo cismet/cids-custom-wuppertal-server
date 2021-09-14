@@ -34,8 +34,8 @@ public class BaumAnsprechpartnerToStringConverter extends CustomToStringConverte
     @Override
     public String createString() {
         String myName = String.valueOf(cidsBean.getProperty(FIELD__NAME));
-        final String myid = String.valueOf(cidsBean.getProperty(FIELD__ID));
-        if ("-1".equals(myid)) {
+        final Integer myid = cidsBean.getPrimaryKeyValue();
+        if (myid < 0) {
             return "--";
         } else {
             final String myMail = String.valueOf(cidsBean.getProperty(FIELD__MAIL));

@@ -20,7 +20,6 @@ import org.openide.util.lookup.ServiceProvider;
 import de.cismet.cids.dynamics.CidsBean;
 import java.rmi.RemoteException;
 import java.util.ArrayList;
-import org.openide.util.Exceptions;
 
 /**
  * DOCUMENT ME!
@@ -54,15 +53,9 @@ public class BaumAnsprechpartnerDeletionProvider extends AbstractCustomDeletionP
             final CidsBean ansprechpartnerBean = metaObject.getBean();
             final Integer ansprechpartner_id = (Integer) ansprechpartnerBean.getProperty(FIELD__ID);
             
-            final String queryArtInErsatz = ""
-                        + "SELECT * "
-                        + "FROM "
-                        + TABLE_NAME_SEARCH
-                        + " WHERE "
-                        + FIELD__FK
-                        + " = "
-                        + ansprechpartner_id
-                        + ";"; 
+            final String queryArtInErsatz = String.format(
+                        "SELECT * FROM %s WHERE %s = %d;",
+                        TABLE_NAME_SEARCH, FIELD__FK, ansprechpartner_id); 
             try {
                 ArrayList<ArrayList>artArrayE = getMetaService().performCustomSearch(queryArtInErsatz, getConnectionContext());
                 if (artArrayE.size() < 1) {
@@ -72,7 +65,7 @@ public class BaumAnsprechpartnerDeletionProvider extends AbstractCustomDeletionP
                 }
                         
             } catch (RemoteException ex) {
-                Exceptions.printStackTrace(ex);
+                LOG.error("Cannot delete Ap object", ex);
             }
         }
         return super.isMatching(user, metaObject);
@@ -86,7 +79,6 @@ public class BaumAnsprechpartnerDeletionProvider extends AbstractCustomDeletionP
             if (notToDelete) {
                 throw new DeletionProviderClientException(
                         DELETE_TEXT);
-             
             }
         }
         return false;

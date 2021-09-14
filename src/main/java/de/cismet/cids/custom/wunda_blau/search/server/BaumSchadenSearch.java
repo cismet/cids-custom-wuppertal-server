@@ -61,8 +61,6 @@ public class BaumSchadenSearch extends AbstractCidsServerSearch implements MetaO
     
     public static final ObjectMapper OBJECT_MAPPER = new ObjectMapper();
 
-    
-
     private static final String QUERY_TEMPLATE = "SELECT " 
             + "  (SELECT c.id FROM cs_class c WHERE table_name ILIKE '" + TABLE_NAME_SCHADEN + "') AS class_id, "
             + TABLE_NAME_SCHADEN + "." + FIELD__SCHADEN_ID + ", "
@@ -113,9 +111,6 @@ public class BaumSchadenSearch extends AbstractCidsServerSearch implements MetaO
         this.connectionContext = connectionContext;
     }
 
-
-   
-
     /**
      * DOCUMENT ME!
      *
@@ -134,7 +129,7 @@ public class BaumSchadenSearch extends AbstractCidsServerSearch implements MetaO
                 ? String.format("LEFT JOIN %s", String.join(" LEFT JOIN ", leftJoins)) : "";
             final String where = (!wheres.isEmpty()) ? String.format("WHERE %s", String.join(" AND ", wheres)) : "";
             final String query = String.format(QUERY_TEMPLATE, leftJoin, where);
-//System.out.println(query);
+            LOG.info(query);
             final MetaService ms = (MetaService)getActiveLocalServers().get("WUNDA_BLAU");
             final List<MetaObjectNode> mons = new ArrayList<>();
             final List<ArrayList> resultList = ms.performCustomSearch(query, getConnectionContext());

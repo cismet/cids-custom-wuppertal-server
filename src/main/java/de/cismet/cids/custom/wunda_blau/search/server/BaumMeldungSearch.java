@@ -9,38 +9,19 @@ package de.cismet.cids.custom.wunda_blau.search.server;
 
 import Sirius.server.middleware.interfaces.domainserver.MetaService;
 import Sirius.server.middleware.types.MetaObjectNode;
-
-import com.fasterxml.jackson.annotation.JsonAutoDetect;
-import com.fasterxml.jackson.annotation.JsonProperty;
-import com.fasterxml.jackson.core.JsonParser;
-import com.fasterxml.jackson.core.JsonProcessingException;
-import com.fasterxml.jackson.databind.DeserializationContext;
-import com.fasterxml.jackson.databind.DeserializationFeature;
 import com.fasterxml.jackson.databind.ObjectMapper;
-import com.fasterxml.jackson.databind.deser.std.StdDeserializer;
-import com.fasterxml.jackson.databind.module.SimpleModule;
-import com.fasterxml.jackson.databind.node.ObjectNode;
-
-import com.vividsolutions.jts.geom.Geometry;
-import com.vividsolutions.jts.io.ParseException;
 
 import lombok.Getter;
 import lombok.Setter;
 
 import org.apache.log4j.Logger;
 
-import java.io.IOException;
-
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.List;
 
-import de.cismet.cids.custom.utils.vermessungsunterlagen.exceptions.VermessungsunterlagenException;
-
 import de.cismet.cids.server.search.AbstractCidsServerSearch;
 import de.cismet.cids.server.search.MetaObjectNodeServerSearch;
-
-import de.cismet.cismap.commons.jtsgeometryfactories.PostGisGeometryFactory;
 
 import de.cismet.connectioncontext.ConnectionContext;
 import java.rmi.RemoteException;
@@ -54,9 +35,7 @@ public class BaumMeldungSearch extends AbstractCidsServerSearch implements MetaO
 
     //~ Static fields/initializers ---------------------------------------------
     private static final transient Logger LOG = Logger.getLogger(BaumMeldungSearch.class);
-            
-    
-    
+      
     public static final String TABLE_NAME = "baum_gebiet";
     public static final String TABLE_NAME_MELDUNG = "baum_meldung";
     public static final String FIELD__GEBIET_NAME = "name";
@@ -66,8 +45,6 @@ public class BaumMeldungSearch extends AbstractCidsServerSearch implements MetaO
     public static final String FIELD__MELDUNG_FK = "fk_gebiet";
     
     public static final ObjectMapper OBJECT_MAPPER = new ObjectMapper();
-
-    
 
     private static final String QUERY_TEMPLATE = "SELECT " 
                                  + "  (SELECT c.id FROM cs_class c WHERE table_name ILIKE '" + TABLE_NAME_MELDUNG + "') AS class_id, "
@@ -108,9 +85,6 @@ public class BaumMeldungSearch extends AbstractCidsServerSearch implements MetaO
         this.connectionContext = connectionContext;
     }
 
-
-   
-
     /**
      * DOCUMENT ME!
      *
@@ -132,7 +106,7 @@ public class BaumMeldungSearch extends AbstractCidsServerSearch implements MetaO
                 ? String.format("LEFT JOIN %s", String.join(" LEFT JOIN ", leftJoins)) : "";
             final String where = (!wheres.isEmpty()) ? String.format("WHERE %s", String.join(" AND ", wheres)) : "";
             final String query = String.format(QUERY_TEMPLATE, leftJoin, where);
-//System.out.println(query);
+            LOG.info(query);
             final MetaService ms = (MetaService)getActiveLocalServers().get("WUNDA_BLAU");
             final List<MetaObjectNode> mons = new ArrayList<>();
             final List<ArrayList> resultList = ms.performCustomSearch(query, getConnectionContext());
@@ -161,10 +135,5 @@ public class BaumMeldungSearch extends AbstractCidsServerSearch implements MetaO
     }
     
     //~ Inner Classes ----------------------------------------------------------
-
-    
-   
-
-    
 
 }

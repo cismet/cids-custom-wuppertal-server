@@ -20,7 +20,6 @@ import org.openide.util.lookup.ServiceProvider;
 import de.cismet.cids.dynamics.CidsBean;
 import java.rmi.RemoteException;
 import java.util.ArrayList;
-import org.openide.util.Exceptions;
 
 /**
  * DOCUMENT ME!
@@ -54,16 +53,9 @@ public class BaumKroneDeletionProvider extends AbstractCustomDeletionProvider {
             final CidsBean schadenBean = metaObject.getBean();
             final Integer schaden_id = (Integer) schadenBean.getProperty(FIELD__ID);
             
-            final String queryKroneInSchaden = ""
-                        + "SELECT * "
-                        + "FROM "
-                        + TABLE_NAME_SEARCH_S
-                        + " WHERE "
-                        + FIELD__FK
-                        + " = "
-                        + schaden_id
-                        + ";"; 
-            
+            final String queryKroneInSchaden = String.format(
+                        "SELECT * FROM %s WHERE %s = %d;",
+                        TABLE_NAME_SEARCH_S, FIELD__FK, schaden_id); 
             try {
                 ArrayList<ArrayList>artArrayS = getMetaService().performCustomSearch(queryKroneInSchaden, getConnectionContext());
                 if (artArrayS.size() < 1) {
@@ -72,7 +64,7 @@ public class BaumKroneDeletionProvider extends AbstractCustomDeletionProvider {
                     notToDelete = true;
                 }
             } catch (RemoteException ex) {
-                Exceptions.printStackTrace(ex);
+                LOG.error("Cannot delete krone object", ex);
             }
         }
         return super.isMatching(user, metaObject);
@@ -86,7 +78,6 @@ public class BaumKroneDeletionProvider extends AbstractCustomDeletionProvider {
             if (notToDelete) {
                 throw new DeletionProviderClientException(
                         DELETE_TEXT);
-             
             }
         }
         return false;

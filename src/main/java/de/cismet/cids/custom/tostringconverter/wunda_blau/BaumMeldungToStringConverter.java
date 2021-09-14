@@ -31,8 +31,8 @@ public class BaumMeldungToStringConverter extends CustomToStringConverter {
 
     @Override
     public String createString() {
-        final String myid = String.valueOf(cidsBean.getProperty(FIELD__ID));
-        if ("-1".equals(myid)) {
+        final Integer myid = cidsBean.getPrimaryKeyValue();
+        if (myid < 0) {
             return "--";
         } else {
             return String.valueOf(cidsBean.getProperty(FIELD__NAME));

@@ -25,14 +25,13 @@ public class BaumOrtsterminToStringConverter extends CustomToStringConverter {
     //~ Static fields/initializers ---------------------------------------------
 
     public static final String FIELD__NAME = "datum"; // baum_meldung
-    public static final String FIELD__ID = "id";         // baum_meldung
 
     //~ Methods ----------------------------------------------------------------
 
     @Override
     public String createString() {
-        final String myid = String.valueOf(cidsBean.getProperty(FIELD__ID));
-        if ("-1".equals(myid)) {
+        final Integer myid = cidsBean.getPrimaryKeyValue();
+        if (myid < 0) {
             return "--";
         } else {
             return String.valueOf(cidsBean.getProperty(FIELD__NAME));

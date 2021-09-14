@@ -20,15 +20,12 @@ import org.apache.log4j.Logger;
 import org.openide.util.lookup.ServiceProvider;
 
 import de.cismet.cids.dynamics.CidsBean;
-import de.cismet.cids.server.actions.ServerActionParameter;
-import de.cismet.cids.server.actions.UserAwareServerAction;
 import de.cismet.cids.server.search.SearchException;
 import de.cismet.connectioncontext.ConnectionContext;
 import de.cismet.connectioncontext.ConnectionContextStore;
 import java.util.Collection;
 import java.util.HashMap;
 import java.util.Map;
-import org.openide.util.Exceptions;
 
 /**
  * DOCUMENT ME!
@@ -38,7 +35,7 @@ import org.openide.util.Exceptions;
  */
 @ServiceProvider(service = CustomDeletionProvider.class)
 public class BaumMeldungDeletionProvider extends AbstractCustomDeletionProvider
-implements UserAwareServerAction, ConnectionContextStore{
+implements ConnectionContextStore{
 
     //~ Static fields/initializers ---------------------------------------------
 
@@ -83,11 +80,11 @@ implements UserAwareServerAction, ConnectionContextStore{
             
             notToDelete = false;
             DELETE_TEXT = "Dieses Meldung kann nicht gelöscht werden, da diese mindestens ein Unterobjekt hat.";
-            if (checkChildObject(FIELD__FK, meldung_id, TABLE_NAME_SEARCH_O)) {
+            if (checkChildObject(FIELD__FK, meldung_id, TABLE_NAME_SEARCH_O, user)) {
                 notToDelete = true;
                 DELETE_TEXT = DELETE_TEXT_ORT;
             }else {
-                if (checkChildObject(FIELD__FK, meldung_id,TABLE_NAME_SEARCH_S)) {
+                if (checkChildObject(FIELD__FK, meldung_id,TABLE_NAME_SEARCH_S, user)) {
                     notToDelete = true;
                     DELETE_TEXT = DELETE_TEXT_SCHADEN;
                 }
@@ -100,14 +97,15 @@ implements UserAwareServerAction, ConnectionContextStore{
     public boolean checkChildObject(
                 final String fkField,
                 final int parentId,
-                final String searchTable){
+                final String searchTable,
+                final User user){
         final String[] childFields = {"id"};
         
         final BaumChildLightweightSearch search = new BaumChildLightweightSearch();
         final Map localServers = new HashMap<>();
         localServers.put("WUNDA_BLAU", getMetaService());
         search.setActiveLocalServers(localServers);
-        search.setUser(getUser());
+        search.setUser(user);
         search.initWithConnectionContext(connectionContext);
         search.setFkField(fkField);
         search.setParentId(parentId);
@@ -119,21 +117,11 @@ implements UserAwareServerAction, ConnectionContextStore{
                 return true;//Kinder vorhanden
             }
         } catch (SearchException ex) {
-            Exceptions.printStackTrace(ex);
+            LOG.error("Cannot delete Meldung object", ex);
         }      
         
         return false;
     }
-    @Override
-    public User getUser() {
-        return user;
-    }
-
-    @Override
-    public void setUser(final User user) {
-        this.user = user;
-    }
-
     @Override
     public boolean customDeleteMetaObject(final User user, final MetaObject metaObject) throws Exception {
         if (metaObject != null) {
@@ -142,20 +130,8 @@ implements UserAwareServerAction, ConnectionContextStore{
             if (notToDelete) {
                 throw new DeletionProviderClientException(
                         DELETE_TEXT);
-             
             }
         }
         return false;
     }
-
-    @Override
-    public Object execute(Object o, ServerActionParameter... saps) {
-        throw new UnsupportedOperationException("Not supported yet."); //To change body of generated methods, choose Tools | Templates.
-    }
-
-    @Override
-    public String getTaskName() {
-        throw new UnsupportedOperationException("Not supported yet."); //To change body of generated methods, choose Tools | Templates.
-    }
-
 }

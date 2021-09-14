@@ -25,14 +25,13 @@ public class BaumHauptartToStringConverter extends CustomToStringConverter {
     //~ Static fields/initializers ---------------------------------------------
 
     public static final String FIELD__NAME = "name"; // baum_hauptart
-    public static final String FIELD__ID = "id";     // baum_hauptart
 
     //~ Methods ----------------------------------------------------------------
 
     @Override
     public String createString() {
-        final String myid = String.valueOf(cidsBean.getProperty(FIELD__ID));
-        if ("-1".equals(myid)) {
+        final Integer myid = cidsBean.getPrimaryKeyValue();
+        if (myid < 0) {
             return "Neue Hauptart anlegen";
         } else {
             return String.valueOf(cidsBean.getProperty(FIELD__NAME));

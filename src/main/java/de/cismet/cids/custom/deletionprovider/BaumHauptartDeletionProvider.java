@@ -20,7 +20,6 @@ import org.openide.util.lookup.ServiceProvider;
 import de.cismet.cids.dynamics.CidsBean;
 import java.rmi.RemoteException;
 import java.util.ArrayList;
-import org.openide.util.Exceptions;
 
 /**
  * DOCUMENT ME!
@@ -54,15 +53,9 @@ public class BaumHauptartDeletionProvider extends AbstractCustomDeletionProvider
             final CidsBean hauptartBean = metaObject.getBean();
             final Integer hauptart_id = (Integer) hauptartBean.getProperty(FIELD__ID);
             
-            final String queryHauptartInArt = ""
-                        + "SELECT * "
-                        + "FROM "
-                        + TABLE_NAME_SEARCH
-                        + " WHERE "
-                        + FIELD__FK
-                        + " = "
-                        + hauptart_id
-                        + ";"; 
+            final String queryHauptartInArt = String.format(
+                        "SELECT * FROM %s WHERE %s = %d;",
+                        TABLE_NAME_SEARCH, FIELD__FK, hauptart_id); 
             try {
                 ArrayList<ArrayList>hauptartArray = getMetaService().performCustomSearch(queryHauptartInArt, getConnectionContext());
                 if (hauptartArray.size() < 1) {
@@ -71,7 +64,7 @@ public class BaumHauptartDeletionProvider extends AbstractCustomDeletionProvider
                     notToDelete = true;
                 }
             } catch (RemoteException ex) {
-                Exceptions.printStackTrace(ex);
+                LOG.error("Cannot delete hauptart object", ex);
             }
         }
         return super.isMatching(user, metaObject);
@@ -85,7 +78,6 @@ public class BaumHauptartDeletionProvider extends AbstractCustomDeletionProvider
             if (notToDelete) {
                 throw new DeletionProviderClientException(
                         DELETE_TEXT);
-             
             }
         }
         return false;

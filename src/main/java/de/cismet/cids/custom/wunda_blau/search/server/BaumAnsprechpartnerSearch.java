@@ -104,7 +104,7 @@ public class BaumAnsprechpartnerSearch extends AbstractCidsServerSearch implemen
                 ? String.format("LEFT JOIN %s", String.join(" LEFT JOIN ", leftJoins)) : "";
             final String where = (!wheres.isEmpty()) ? String.format("WHERE %s", String.join(" AND ", wheres)) : "";
             final String query = String.format(QUERY_TEMPLATE, leftJoin, where);
-System.out.println(query);
+            LOG.info(query);
             final MetaService ms = (MetaService)getActiveLocalServers().get("WUNDA_BLAU");
             final List<MetaObjectNode> mons = new ArrayList<>();
             final List<ArrayList> resultList = ms.performCustomSearch(query, getConnectionContext());

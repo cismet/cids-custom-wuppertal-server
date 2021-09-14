@@ -132,17 +132,18 @@ public class BaumChildLightweightSearch extends AbstractCidsServerSearch impleme
 
         final Collection<String> conditions = new ArrayList<>();
         if (id != null) {
-            conditions.add(String.format(fkField + " = %d", id));
+            conditions.add(String.format("%s = %d", fkField, id));
         }
 
         
 
-        final String query = "SELECT (SELECT c.id FROM cs_class c WHERE table_name ILIKE '" + table + "') AS class_id, "
-                         + "id, " + representationFields[0] 
-                    + " FROM " + table
-                    + (conditions.isEmpty() ? "" : (" WHERE " + String.join(" AND ", conditions)))
-                    + " ORDER BY " + representationFields[0]; 
-System.out.println(query);
+        final String query = String.format("SELECT ("
+                + "SELECT c.id FROM cs_class c WHERE table_name ILIKE '%1$s') AS class_id, "
+                + "id, %2$s FROM %1$s %3$s"
+                + " ORDER BY %2$s", 
+                table, representationFields[0],
+                (conditions.isEmpty() ? "" : (" WHERE " + String.join(" AND ", conditions))));
+        LOG.info(query);
         try {
             final MetaClass mc = CidsBean.getMetaClassFromTableName(
                     "WUNDA_BLAU",

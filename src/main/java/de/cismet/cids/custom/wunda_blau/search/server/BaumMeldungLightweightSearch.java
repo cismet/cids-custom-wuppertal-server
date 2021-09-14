@@ -59,7 +59,6 @@ public class BaumMeldungLightweightSearch extends AbstractMonToLwmoSearch {
     //~ Methods ----------------------------------------------------------------
     public static void main(final String[] args)throws ParseException{
         BaumMeldungLightweightSearch bmlw = new BaumMeldungLightweightSearch();
-        System.out.println(bmlw.getMonSearch());
     }
     /**
      * DOCUMENT ME!
@@ -69,7 +68,7 @@ public class BaumMeldungLightweightSearch extends AbstractMonToLwmoSearch {
     private static SearchInfo createSearchInfo() {
         return new SearchInfo(BaumMeldungLightweightSearch.class.getName(),
                 BaumMeldungLightweightSearch.class.getSimpleName(),
-                "TODO",
+                "BaumMeldungLS",
                 Arrays.asList(new SearchParameterInfo[0]),
                 new SearchParameterInfo());
     }

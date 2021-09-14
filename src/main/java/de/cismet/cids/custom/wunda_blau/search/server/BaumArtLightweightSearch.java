@@ -9,7 +9,6 @@ package de.cismet.cids.custom.wunda_blau.search.server;
 
 import Sirius.server.middleware.interfaces.domainserver.MetaService;
 import Sirius.server.middleware.types.MetaClass;
-import Sirius.server.middleware.types.MetaObjectNode;
 import de.cismet.cids.dynamics.CidsBean;
 
 import lombok.Getter;
@@ -35,8 +34,6 @@ import de.cismet.cidsx.server.search.builtin.legacy.LightweightMetaObjectsSearch
 
 import de.cismet.connectioncontext.ConnectionContext;
 import de.cismet.connectioncontext.ConnectionContextStore;
-import java.rmi.RemoteException;
-import java.util.List;
 
 /**
  * Builtin Legacy Search to delegate the operation getLightweightMetaObjectsByQuery to the cids Pure REST Search API.
@@ -113,8 +110,6 @@ public class BaumArtLightweightSearch extends AbstractCidsServerSearch implement
 
     @Override
     public Collection performServerSearch() throws SearchException {
-        final Integer artId = getArtId();
-
         final MetaService metaService = (MetaService)this.getActiveLocalServers().get("WUNDA_BLAU");
         if (metaService == null) {
             final String message = "Lightweight Meta Objects By Query Search "
@@ -124,14 +119,15 @@ public class BaumArtLightweightSearch extends AbstractCidsServerSearch implement
         }
 
         final Collection<String> conditions = new ArrayList<>();
-        if (artId != null) {
-            conditions.add(String.format("fk_art = %d", artId));
+        if (getArtId() != null) {
+            conditions.add(String.format("fk_art = %d", getArtId()));
         }
 
-        
-
-        final String query = "SELECT (SELECT c.id FROM cs_class c WHERE table_name ILIKE '" + TABLE__SORTE + "') AS class_id, id, name FROM " + TABLE__SORTE
-                    + (conditions.isEmpty() ? "" : (" WHERE " + String.join(" AND ", conditions)));
+        final String query = String.format("SELECT ("
+                + "SELECT c.id FROM cs_class c "
+                + "WHERE table_name ILIKE ' %1$s ') AS class_id, id, name "
+                + "FROM %1$s %2$s", 
+                TABLE__SORTE, (conditions.isEmpty() ? "" : (" WHERE " + String.join(" AND ", conditions))));
         try {
             final MetaClass mc = CidsBean.getMetaClassFromTableName(
                     "WUNDA_BLAU",

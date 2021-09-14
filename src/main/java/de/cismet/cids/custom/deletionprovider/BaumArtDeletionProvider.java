@@ -20,7 +20,6 @@ import org.openide.util.lookup.ServiceProvider;
 import de.cismet.cids.dynamics.CidsBean;
 import java.rmi.RemoteException;
 import java.util.ArrayList;
-import org.openide.util.Exceptions;
 
 /**
  * DOCUMENT ME!
@@ -61,42 +60,18 @@ public class BaumArtDeletionProvider extends AbstractCustomDeletionProvider {
             final CidsBean artBean = metaObject.getBean();
             final Integer art_id = (Integer) artBean.getProperty(FIELD__ID);
             
-            final String queryArtInSchaden = ""
-                        + "SELECT * "
-                        + "FROM "
-                        + TABLE_NAME_SEARCH_S
-                        + " WHERE "
-                        + FIELD__FK
-                        + " = "
-                        + art_id
-                        + ";"; 
-            final String queryArtInErsatz = ""
-                        + "SELECT * "
-                        + "FROM "
-                        + TABLE_NAME_SEARCH_E
-                        + " WHERE "
-                        + FIELD__FK
-                        + " = "
-                        + art_id
-                        + ";"; 
-            final String queryArtInFest = ""
-                        + "SELECT * "
-                        + "FROM "
-                        + TABLE_NAME_SEARCH_F
-                        + " WHERE "
-                        + FIELD__FK
-                        + " = "
-                        + art_id
-                        + ";"; 
-            final String queryArtInSorte = ""
-                        + "SELECT * "
-                        + "FROM "
-                        + TABLE_NAME_SEARCH_SORTE
-                        + " WHERE "
-                        + FIELD__FK
-                        + " = "
-                        + art_id
-                        + ";"; 
+            final String queryArtInSchaden = String.format(
+                        "SELECT * FROM %s WHERE %s = %d;",
+                        TABLE_NAME_SEARCH_S, FIELD__FK, art_id); 
+            final String queryArtInErsatz = String.format(
+                        "SELECT * FROM %s WHERE %s = %d;",
+                        TABLE_NAME_SEARCH_E, FIELD__FK, art_id);
+            final String queryArtInFest = String.format(
+                        "SELECT * FROM %s WHERE %s = %d;",
+                        TABLE_NAME_SEARCH_F, FIELD__FK, art_id);
+            final String queryArtInSorte = String.format(
+                        "SELECT * FROM %s WHERE %s = %d;",
+                        TABLE_NAME_SEARCH_SORTE, FIELD__FK, art_id); 
             try {
                 ArrayList<ArrayList>artArrayS = getMetaService().performCustomSearch(queryArtInSchaden, getConnectionContext());
                 if (artArrayS.size() < 1) {
@@ -124,7 +99,7 @@ public class BaumArtDeletionProvider extends AbstractCustomDeletionProvider {
                     DELETE_TEXT = CAUSE_SCHADEN;
                 }
             } catch (RemoteException ex) {
-                Exceptions.printStackTrace(ex);
+                LOG.error("Cannot delete Art object", ex);
             }
         }
         return super.isMatching(user, metaObject);

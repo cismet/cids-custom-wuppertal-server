@@ -20,8 +20,6 @@ import org.apache.log4j.Logger;
 import org.openide.util.lookup.ServiceProvider;
 
 import de.cismet.cids.dynamics.CidsBean;
-import de.cismet.cids.server.actions.ServerActionParameter;
-import de.cismet.cids.server.actions.UserAwareServerAction;
 import de.cismet.cids.server.search.SearchException;
 import de.cismet.connectioncontext.ConnectionContext;
 import de.cismet.connectioncontext.ConnectionContextStore;
@@ -29,7 +27,6 @@ import de.cismet.connectioncontext.ConnectionContextStore;
 import java.util.Collection;
 import java.util.HashMap;
 import java.util.Map;
-import org.openide.util.Exceptions;
 
 /**
  * DOCUMENT ME!
@@ -39,7 +36,7 @@ import org.openide.util.Exceptions;
  */
 @ServiceProvider(service = CustomDeletionProvider.class)
 public class BaumGebietDeletionProvider extends AbstractCustomDeletionProvider
-implements UserAwareServerAction, ConnectionContextStore{
+implements ConnectionContextStore{
 
     //~ Static fields/initializers ---------------------------------------------
 
@@ -51,7 +48,6 @@ implements UserAwareServerAction, ConnectionContextStore{
     public String DELETE_TEXT = "Dieses Gebiet kann nicht gelöscht werden, da dieses mindestens eine Meldung hat.";
     public boolean notToDelete = false;
     private ConnectionContext connectionContext = ConnectionContext.createDummy();
-    private User user;
 
     //~ Methods ----------------------------------------------------------------
     @Override
@@ -74,25 +70,25 @@ implements UserAwareServerAction, ConnectionContextStore{
             final Integer gebiet_id = (Integer) gebietBean.getProperty(FIELD__ID);
             
             notToDelete = false;
-            if (checkChildObject(FIELD__FK, gebiet_id, TABLE_NAME_SEARCH)) {
+            if (checkChildObject(FIELD__FK, gebiet_id, TABLE_NAME_SEARCH, user)) {
                 notToDelete = true;
             }
         }
         return super.isMatching(user, metaObject);// kein true sonst läuft jede Klasse durch
-        
     }
 
     public boolean checkChildObject(
                 final String fkField,
                 final int parentId,
-                final String searchTable){
+                final String searchTable,
+                final User user){
         final String[] childFields = {"id"};
         
         final BaumChildLightweightSearch search = new BaumChildLightweightSearch();
         final Map localServers = new HashMap<>();
         localServers.put("WUNDA_BLAU", getMetaService());
         search.setActiveLocalServers(localServers);
-        search.setUser(getUser());
+        search.setUser(user);
         search.initWithConnectionContext(connectionContext);
         search.setFkField(fkField);
         search.setParentId(parentId);
@@ -104,7 +100,7 @@ implements UserAwareServerAction, ConnectionContextStore{
                 return true;//Kinder vorhanden
             }
         } catch (SearchException ex) {
-            Exceptions.printStackTrace(ex);
+            LOG.error("Cannot delete Gebiet object", ex);
         }      
         
         return false;
@@ -117,29 +113,8 @@ implements UserAwareServerAction, ConnectionContextStore{
             if (notToDelete) {
                 throw new DeletionProviderClientException(
                         DELETE_TEXT);
-             
             }
         }
         return false;
-    }
-
-    @Override
-    public Object execute(Object o, ServerActionParameter... saps) {
-        throw new UnsupportedOperationException("Not supported yet."); //To change body of generated methods, choose Tools | Templates.
-    }
-
-    @Override
-    public String getTaskName() {
-        throw new UnsupportedOperationException("Not supported yet."); //To change body of generated methods, choose Tools | Templates.
-    }
-
-    @Override
-    public User getUser() {
-        return user;
-    }
-
-    @Override
-    public void setUser(final User user) {
-        this.user = user;
     }
 }

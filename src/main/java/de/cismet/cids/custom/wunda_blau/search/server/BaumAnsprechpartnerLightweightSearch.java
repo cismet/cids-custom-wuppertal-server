@@ -12,7 +12,6 @@
  */
 package de.cismet.cids.custom.wunda_blau.search.server;
 
-import com.vividsolutions.jts.io.ParseException;
 import lombok.Getter;
 import lombok.Setter;
 
@@ -57,10 +56,6 @@ public class BaumAnsprechpartnerLightweightSearch extends AbstractMonToLwmoSearc
     }
 
     //~ Methods ----------------------------------------------------------------
-    public static void main(final String[] args)throws ParseException{
-        BaumAnsprechpartnerLightweightSearch bmlw = new BaumAnsprechpartnerLightweightSearch();
-        System.out.println(bmlw.getMonSearch());
-    }
     /**
      * DOCUMENT ME!
      *
@@ -69,7 +64,7 @@ public class BaumAnsprechpartnerLightweightSearch extends AbstractMonToLwmoSearc
     private static SearchInfo createSearchInfo() {
         return new SearchInfo(BaumAnsprechpartnerLightweightSearch.class.getName(),
                 BaumAnsprechpartnerLightweightSearch.class.getSimpleName(),
-                "TODO",
+                "BaumAnsprechpartnerLS",
                 Arrays.asList(new SearchParameterInfo[0]),
                 new SearchParameterInfo());
     }
