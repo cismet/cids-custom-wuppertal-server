@@ -34,6 +34,8 @@ import net.sf.jasperreports.engine.JasperPrint;
 import net.sf.jasperreports.engine.JasperReport;
 import net.sf.jasperreports.engine.data.JRBeanCollectionDataSource;
 
+import okhttp3.HttpUrl;
+
 import org.apache.commons.codec.digest.DigestUtils;
 import org.apache.commons.httpclient.UsernamePasswordCredentials;
 import org.apache.commons.io.FilenameUtils;
@@ -1437,8 +1439,9 @@ public class FormSolutionsBestellungHandler implements ConnectionContextProvider
         if (ProductType.BAB_ABSCHLUSS.equals(productType)) {
             final String fileUrl = (formSolutionsBestellung.getFileUrl() != null)
                 ? URLDecoder.decode(formSolutionsBestellung.getFileUrl(), "UTF-8") : null;
-            if (fileUrl != null) {
-                nachfolgerVonBean = searchBestellungByRequestUrl(fileUrl);
+            final String cacheId = (fileUrl != null) ? HttpUrl.parse(fileUrl).queryParameter("cacheID") : null;
+            if (cacheId != null) {
+                nachfolgerVonBean = searchBestellungByCacheId(cacheId);
             } else {
                 nachfolgerVonBean = null;
             }
@@ -1632,15 +1635,15 @@ public class FormSolutionsBestellungHandler implements ConnectionContextProvider
     /**
      * DOCUMENT ME!
      *
-     * @param   requestUrl  DOCUMENT ME!
+     * @param   cacheId  DOCUMENT ME!
      *
      * @return  DOCUMENT ME!
      *
      * @throws  Exception  DOCUMENT ME!
      */
-    private CidsBean searchBestellungByRequestUrl(final String requestUrl) throws Exception {
+    private CidsBean searchBestellungByCacheId(final String cacheId) throws Exception {
         final FormSolutionsBestellungSearch search = new FormSolutionsBestellungSearch();
-        search.setRequestUrl(requestUrl);
+        search.setCacheId(cacheId);
         return executeSingleResultSearch(search);
     }
 
