@@ -454,7 +454,7 @@ public class PotenzialflaecheReportServerAction extends StampedByteArrayServerAc
      * @version  $Revision$, $Date$
      */
     @Getter
-    public static class ReportProperty {
+    public abstract static class ReportProperty {
 
         //~ Constructors -------------------------------------------------------
 
@@ -463,6 +463,19 @@ public class PotenzialflaecheReportServerAction extends StampedByteArrayServerAc
          */
         public ReportProperty() {
         }
+
+        //~ Methods ------------------------------------------------------------
+
+        /**
+         * DOCUMENT ME!
+         *
+         * @param   creator  DOCUMENT ME!
+         *
+         * @return  DOCUMENT ME!
+         *
+         * @throws  Exception  DOCUMENT ME!
+         */
+        public abstract Object calculateProperty(final PotenzialflaecheReportCreator creator) throws Exception;
     }
 
     /**
@@ -486,6 +499,13 @@ public class PotenzialflaecheReportServerAction extends StampedByteArrayServerAc
          */
         public PathReportProperty(final String path) {
             this.path = path;
+        }
+
+        //~ Methods ------------------------------------------------------------
+
+        @Override
+        public Object calculateProperty(final PotenzialflaecheReportCreator creator) throws Exception {
+            return creator.getFlaecheBean().getProperty(getPath());
         }
     }
 
@@ -583,6 +603,13 @@ public class PotenzialflaecheReportServerAction extends StampedByteArrayServerAc
                 final String foreignTable) {
             super(bindingPath, filterPath, foreignTable);
         }
+
+        //~ Methods ------------------------------------------------------------
+
+        @Override
+        public Object calculateProperty(final PotenzialflaecheReportCreator creator) throws Exception {
+            return creator.getFlaecheBean().getBeanCollectionProperty(getPath());
+        }
     }
 
     /**
@@ -599,19 +626,6 @@ public class PotenzialflaecheReportServerAction extends StampedByteArrayServerAc
          */
         public VirtualReportProperty() {
         }
-
-        //~ Methods ------------------------------------------------------------
-
-        /**
-         * DOCUMENT ME!
-         *
-         * @param   creator  flaecheBean DOCUMENT ME!
-         *
-         * @return  DOCUMENT ME!
-         *
-         * @throws  Exception  DOCUMENT ME!
-         */
-        public abstract Object calculateProperty(final PotenzialflaecheReportCreator creator) throws Exception;
     }
 
     /**
@@ -646,7 +660,7 @@ public class PotenzialflaecheReportServerAction extends StampedByteArrayServerAc
         public abstract RestApiMonSearch createMonServerSearch();
 
         @Override
-        public String calculateProperty(final PotenzialflaecheReportCreator creator) {
+        public Collection calculateProperty(final PotenzialflaecheReportCreator creator) {
             final RestApiMonSearch serverSearch = createMonServerSearch();
             if (serverSearch != null) {
                 if (serverSearch instanceof GeometrySearch) {
@@ -664,7 +678,7 @@ public class PotenzialflaecheReportServerAction extends StampedByteArrayServerAc
                     LOG.error(ex, ex);
                     return null;
                 }
-                return String.join(", ", names);
+                return names;
             } else {
                 return null;
             }
