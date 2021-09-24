@@ -57,7 +57,9 @@ public class BaumAnsprechpartnerDeletionProvider extends AbstractCustomDeletionP
                         "SELECT * FROM %s WHERE %s = %d;",
                         TABLE_NAME_SEARCH, FIELD__FK, ansprechpartner_id); 
             try {
-                ArrayList<ArrayList>artArrayE = getMetaService().performCustomSearch(queryArtInErsatz, getConnectionContext());
+                ArrayList<ArrayList>artArrayE = getMetaService().performCustomSearch(
+                        queryArtInErsatz, 
+                        getConnectionContext());
                 if (artArrayE.size() < 1) {
                     return false; // kein true sonst läuft jede Klasse durch
                 }else {

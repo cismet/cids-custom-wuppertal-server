@@ -96,9 +96,6 @@ public class BaumMeldungSearch extends AbstractCidsServerSearch implements MetaO
             final List<String> leftJoins = new ArrayList<>();
             final List<String> wheres = new ArrayList<>();
             if (getOrtsterminId() != null) {
-                //leftJoins.add(
-                  //  "albo_vorgang_flaeche ON albo_vorgang.arr_flaechen = albo_vorgang_flaeche.vorgang_reference");
-                //wheres.add(String.format("albo_vorgang_flaeche.fk_flaeche = %d", getOrtsterminId()));
                 wheres.add(String.format("baum_meldung.id = %d", getOrtsterminFKMeldung()));
             }
 

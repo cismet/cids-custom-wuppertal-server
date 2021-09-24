@@ -37,7 +37,8 @@ public class BaumWurzelDeletionProvider extends AbstractCustomDeletionProvider {
     public static final String FIELD__ID = "id";
     public static final String FIELD__FK = "fk_wurzel";
     public static final String TABLE_NAME_SEARCH_S = "baum_schaden_wurzel";
-    public String DELETE_TEXT = "Dieser Wurzelschaden kann nicht gelöscht werden, da dieser verwendet wird.";
+    public String DELETE_TEXT = 
+            "Dieser Wurzelschaden kann nicht gelöscht werden, da dieser verwendet wird.";
     public boolean notToDelete = false;
 
     //~ Methods ----------------------------------------------------------------
@@ -57,7 +58,9 @@ public class BaumWurzelDeletionProvider extends AbstractCustomDeletionProvider {
                         "SELECT * FROM %s WHERE %s = %d;",
                         TABLE_NAME_SEARCH_S, FIELD__FK, schaden_id);            
             try {
-                ArrayList<ArrayList>artArrayS = getMetaService().performCustomSearch(queryWurzelInSchaden, getConnectionContext());
+                ArrayList<ArrayList>artArrayS = getMetaService().performCustomSearch(
+                        queryWurzelInSchaden, 
+                        getConnectionContext());
                 if (artArrayS.size() < 1) {
                     return false; // kein true sonst läuft jede Klasse durch
                 }else {

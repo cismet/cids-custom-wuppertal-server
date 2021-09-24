@@ -37,7 +37,8 @@ public class BaumKroneDeletionProvider extends AbstractCustomDeletionProvider {
     public static final String FIELD__ID = "id";
     public static final String FIELD__FK = "fk_krone";
     public static final String TABLE_NAME_SEARCH_S = "baum_schaden_krone";
-    public String DELETE_TEXT = "Dieser Kronenschaden kann nicht gelöscht werden, da dieser verwendet wird.";
+    public String DELETE_TEXT = 
+            "Dieser Kronenschaden kann nicht gelöscht werden, da dieser verwendet wird.";
     public boolean notToDelete = false;
 
     //~ Methods ----------------------------------------------------------------
@@ -57,7 +58,9 @@ public class BaumKroneDeletionProvider extends AbstractCustomDeletionProvider {
                         "SELECT * FROM %s WHERE %s = %d;",
                         TABLE_NAME_SEARCH_S, FIELD__FK, schaden_id); 
             try {
-                ArrayList<ArrayList>artArrayS = getMetaService().performCustomSearch(queryKroneInSchaden, getConnectionContext());
+                ArrayList<ArrayList>artArrayS = getMetaService().performCustomSearch(
+                        queryKroneInSchaden, 
+                        getConnectionContext());
                 if (artArrayS.size() < 1) {
                     return false; // kein true sonst läuft jede Klasse durch
                 }else {

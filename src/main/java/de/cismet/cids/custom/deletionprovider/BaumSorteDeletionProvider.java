@@ -57,7 +57,9 @@ public class BaumSorteDeletionProvider extends AbstractCustomDeletionProvider {
                         "SELECT * FROM %s WHERE %s = %d;",
                         TABLE_NAME_SEARCH_E,  FIELD__FK, sorte_id); 
             try {
-                ArrayList<ArrayList>artArrayE = getMetaService().performCustomSearch(queryArtInErsatz, getConnectionContext());
+                ArrayList<ArrayList>artArrayE = getMetaService().performCustomSearch(
+                        queryArtInErsatz, 
+                        getConnectionContext());
                 if (artArrayE.size() < 1) {
                     return false; // kein true sonst läuft jede Klasse durch
                 }else {

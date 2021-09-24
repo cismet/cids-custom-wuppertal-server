@@ -37,7 +37,8 @@ public class BaumStammDeletionProvider extends AbstractCustomDeletionProvider {
     public static final String FIELD__ID = "id";
     public static final String FIELD__FK = "fk_stamm";
     public static final String TABLE_NAME_SEARCH_S = "baum_schaden_stamm";
-    public String DELETE_TEXT = "Dieser Stammschaden kann nicht gelöscht werden, da dieser verwendet wird.";
+    public String DELETE_TEXT = 
+            "Dieser Stammschaden kann nicht gelöscht werden, da dieser verwendet wird.";
     public boolean notToDelete = false;
 
     //~ Methods ----------------------------------------------------------------
@@ -58,7 +59,9 @@ public class BaumStammDeletionProvider extends AbstractCustomDeletionProvider {
                         TABLE_NAME_SEARCH_S, FIELD__FK, schaden_id); 
             
             try {
-                ArrayList<ArrayList>artArrayS = getMetaService().performCustomSearch(queryStammInSchaden, getConnectionContext());
+                ArrayList<ArrayList>artArrayS = getMetaService().performCustomSearch(
+                        queryStammInSchaden, 
+                        getConnectionContext());
                 if (artArrayS.size() < 1) {
                     return false; // kein true sonst läuft jede Klasse durch
                 }else {

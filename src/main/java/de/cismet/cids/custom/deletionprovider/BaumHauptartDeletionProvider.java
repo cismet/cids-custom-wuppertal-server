@@ -37,7 +37,8 @@ public class BaumHauptartDeletionProvider extends AbstractCustomDeletionProvider
     public static final String FIELD__ID = "id";
     public static final String FIELD__FK = "fk_hauptart";
     public static final String TABLE_NAME_SEARCH = "baum_art";
-    public static final String DELETE_TEXT = "Diese Hauptart kann nicht gelöscht werden, da diese verwendet wird.";
+    public static final String DELETE_TEXT = 
+            "Diese Hauptart kann nicht gelöscht werden, da diese verwendet wird.";
     public boolean notToDelete = false;
 
     //~ Methods ----------------------------------------------------------------
@@ -57,7 +58,9 @@ public class BaumHauptartDeletionProvider extends AbstractCustomDeletionProvider
                         "SELECT * FROM %s WHERE %s = %d;",
                         TABLE_NAME_SEARCH, FIELD__FK, hauptart_id); 
             try {
-                ArrayList<ArrayList>hauptartArray = getMetaService().performCustomSearch(queryHauptartInArt, getConnectionContext());
+                ArrayList<ArrayList>hauptartArray = getMetaService().performCustomSearch(
+                        queryHauptartInArt, 
+                        getConnectionContext());
                 if (hauptartArray.size() < 1) {
                     return false; // kein true sonst läuft jede Klasse durch
                 }else {

@@ -37,7 +37,8 @@ public class BaumMassnahmeDeletionProvider extends AbstractCustomDeletionProvide
     public static final String FIELD__ID = "id";
     public static final String FIELD__FK = "fk_massnahme";
     public static final String TABLE_NAME_SEARCH_S = "baum_schaden_massnahme";
-    public String DELETE_TEXT = "Diese Maßnahme kann nicht gelöscht werden, da diese verwendet wird.";
+    public String DELETE_TEXT = 
+            "Diese Maßnahme kann nicht gelöscht werden, da diese verwendet wird.";
     public boolean notToDelete = false;
 
     //~ Methods ----------------------------------------------------------------
@@ -58,7 +59,9 @@ public class BaumMassnahmeDeletionProvider extends AbstractCustomDeletionProvide
                         TABLE_NAME_SEARCH_S, FIELD__FK, schaden_id); 
             
             try {
-                ArrayList<ArrayList>artArrayS = getMetaService().performCustomSearch(queryMassnahmeInSchaden, getConnectionContext());
+                ArrayList<ArrayList>artArrayS = getMetaService().performCustomSearch(
+                        queryMassnahmeInSchaden, 
+                        getConnectionContext());
                 if (artArrayS.size() < 1) {
                     return false; // kein true sonst läuft jede Klasse durch
                 }else {

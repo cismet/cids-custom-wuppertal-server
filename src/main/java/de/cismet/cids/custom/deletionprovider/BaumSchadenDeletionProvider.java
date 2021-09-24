@@ -45,9 +45,12 @@ implements ConnectionContextStore{
     public static final String FIELD__FK = "fk_schaden";
     public static final String TABLE_NAME_SEARCH_E = "baum_ersatz";
     public static final String TABLE_NAME_SEARCH_F = "baum_festsetzung";
-    public static String DELETE_TEXT = "Dieses Meldung kann nicht gelöscht werden, da diese mindestens ein Unterobjekt hat.";
-    public static String DELETE_TEXT_ERSATZ = "Dieser Schaden kann nicht gelöscht werden, da dieser mindestens eine Ersatzpflanzung hat.";
-    public static String DELETE_TEXT_FEST = "Dieser Schaden kann nicht gelöscht werden, da dieser mindestens eine Festsetzung hat.";
+    public static String DELETE_TEXT = 
+            "Dieses Meldung kann nicht gelöscht werden, da diese mindestens ein Unterobjekt hat.";
+    public static String DELETE_TEXT_ERSATZ = 
+            "Dieser Schaden kann nicht gelöscht werden, da dieser mindestens eine Ersatzpflanzung hat.";
+    public static String DELETE_TEXT_FEST = 
+            "Dieser Schaden kann nicht gelöscht werden, da dieser mindestens eine Festsetzung hat.";
     public static boolean notToDelete = false;
 
     private User user;

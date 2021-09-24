@@ -45,9 +45,12 @@ implements ConnectionContextStore{
     public static final String FIELD__FK = "fk_meldung";
     public static final String TABLE_NAME_SEARCH_S = "baum_schaden";
     public static final String TABLE_NAME_SEARCH_O = "baum_ortstermin";
-    public static String DELETE_TEXT = "Dieses Meldung kann nicht gelöscht werden, da diese mindestens ein Unterobjekt hat.";
-    public static String DELETE_TEXT_SCHADEN = "Diese Meldung kann nicht gelöscht werden, da diese mindestens einen Schaden hat.";
-    public static String DELETE_TEXT_ORT = "Diese Meldung kann nicht gelöscht werden, da diese mindestens einen Ortstermin hat.";
+    public static String DELETE_TEXT =
+            "Dieses Meldung kann nicht gelöscht werden, da diese mindestens ein Unterobjekt hat.";
+    public static String DELETE_TEXT_SCHADEN = 
+            "Diese Meldung kann nicht gelöscht werden, da diese mindestens einen Schaden hat.";
+    public static String DELETE_TEXT_ORT = 
+            "Diese Meldung kann nicht gelöscht werden, da diese mindestens einen Ortstermin hat.";
     public static boolean notToDelete = false;
 
     private User user;

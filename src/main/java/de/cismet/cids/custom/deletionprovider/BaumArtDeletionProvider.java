@@ -41,10 +41,14 @@ public class BaumArtDeletionProvider extends AbstractCustomDeletionProvider {
     public static final String TABLE_NAME_SEARCH_F = "baum_festsetzung";
     public static final String TABLE_NAME_SEARCH_SORTE = "baum_sorte";
     public String DELETE_TEXT = "Diese Art kann nicht gelöscht werden, da diese verwendet wird.";
-    public static final String CAUSE_SCHADEN = "Diese Art kann nicht gelöscht werden, da diese bei mindestens einem Schaden verwendet wird.";
-    public static final String CAUSE_ERSATZ = "Diese Art kann nicht gelöscht werden, da diese bei mindestens einer Ersatzpflanzung verwendet wird.";
-    public static final String CAUSE_FEST = "Diese Art kann nicht gelöscht werden, da diese bei mindestens einer Festsetzung verwendet wird.";
-    public static final String CAUSE_SORTE = "Diese Art kann nicht gelöscht werden, da diese mindestens eine Sorte hat.";
+    public static final String CAUSE_SCHADEN = 
+            "Diese Art kann nicht gelöscht werden, da diese bei mindestens einem Schaden verwendet wird.";
+    public static final String CAUSE_ERSATZ = 
+            "Diese Art kann nicht gelöscht werden, da diese bei mindestens einer Ersatzpflanzung verwendet wird.";
+    public static final String CAUSE_FEST = 
+            "Diese Art kann nicht gelöscht werden, da diese bei mindestens einer Festsetzung verwendet wird.";
+    public static final String CAUSE_SORTE = 
+            "Diese Art kann nicht gelöscht werden, da diese mindestens eine Sorte hat.";
     public boolean notToDelete = false;
 
     //~ Methods ----------------------------------------------------------------
@@ -73,13 +77,21 @@ public class BaumArtDeletionProvider extends AbstractCustomDeletionProvider {
                         "SELECT * FROM %s WHERE %s = %d;",
                         TABLE_NAME_SEARCH_SORTE, FIELD__FK, art_id); 
             try {
-                ArrayList<ArrayList>artArrayS = getMetaService().performCustomSearch(queryArtInSchaden, getConnectionContext());
+                ArrayList<ArrayList>artArrayS = getMetaService().performCustomSearch(
+                        queryArtInSchaden, 
+                        getConnectionContext());
                 if (artArrayS.size() < 1) {
-                    ArrayList<ArrayList>artArrayE = getMetaService().performCustomSearch(queryArtInErsatz, getConnectionContext());
+                    ArrayList<ArrayList>artArrayE = getMetaService().performCustomSearch(
+                            queryArtInErsatz, 
+                            getConnectionContext());
                     if (artArrayE.size() < 1) {
-                        ArrayList<ArrayList>artArrayF = getMetaService().performCustomSearch(queryArtInFest, getConnectionContext());
+                        ArrayList<ArrayList>artArrayF = getMetaService().performCustomSearch(
+                                queryArtInFest, 
+                                getConnectionContext());
                         if (artArrayF.size() < 1) {
-                            ArrayList<ArrayList>artArraySorte = getMetaService().performCustomSearch(queryArtInSorte, getConnectionContext());
+                            ArrayList<ArrayList>artArraySorte = getMetaService().performCustomSearch(
+                                    queryArtInSorte, 
+                                    getConnectionContext());
                             if (artArraySorte.size() < 1) {
                                 return false; // kein true sonst läuft jede Klasse durch
                             }else {

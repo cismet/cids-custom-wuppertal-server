@@ -45,7 +45,8 @@ implements ConnectionContextStore{
     public static final String FIELD__ID = "id";
     public static final String FIELD__FK = "fk_gebiet";
     public static final String TABLE_NAME_SEARCH = "baum_meldung";
-    public String DELETE_TEXT = "Dieses Gebiet kann nicht gelöscht werden, da dieses mindestens eine Meldung hat.";
+    public String DELETE_TEXT = 
+            "Dieses Gebiet kann nicht gelöscht werden, da dieses mindestens eine Meldung hat.";
     public boolean notToDelete = false;
     private ConnectionContext connectionContext = ConnectionContext.createDummy();
 
