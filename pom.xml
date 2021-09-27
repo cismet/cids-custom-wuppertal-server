@@ -13,7 +13,7 @@
 
     <groupId>de.cismet.cids.custom.wupp.server</groupId>
     <artifactId>cids-custom-server-wuppertal</artifactId>
-    <version>7.4-SNAPSHOT</version>
+    <version>7.5-SNAPSHOT</version>
     <packaging>jar</packaging>
     
     <name>${names.cids.custom-wuppertal-server} [${project.version}]</name>
@@ -69,7 +69,7 @@
             <dependency>
                 <groupId>de.cismet.cids</groupId>
                 <artifactId>cids-server</artifactId>
-                <version>7.6.2</version>
+                <version>7.7</version>
                 <type>jar</type>
                 <scope>compile</scope>
             </dependency>
