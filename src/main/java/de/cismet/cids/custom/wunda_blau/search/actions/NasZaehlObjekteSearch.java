@@ -73,9 +73,9 @@ public class NasZaehlObjekteSearch extends AbstractCidsServerSearch implements C
                 + " WHERE i.attr_class_id = ( SELECT cs_class.id FROM cs_class WHERE cs_class.table_name::text = 'GEOM'::text )"
                 + " AND i.attr_object_id = g.id"
                 + " AND i.class_id IN (6)"
-                + " AND geo_field && GeometryFromText('<geom>')"
-                + " AND intersects(st_buffer(geo_field, " + INTERSECTS_BUFFER
-                + "),st_buffer(GeometryFromText('<geom>'), " + INTERSECTS_BUFFER + ")) ORDER BY 1,2,3";
+                + " AND geo_field && st_GeometryFromText('<geom>')"
+                + " AND st_intersects(st_buffer(geo_field, " + INTERSECTS_BUFFER
+                + "),st_buffer(st_GeometryFromText('<geom>'), " + INTERSECTS_BUFFER + ")) ORDER BY 1,2,3";
     private static Connection fmeConn = null;
     private static String url;
     private static String user;
@@ -210,7 +210,7 @@ public class NasZaehlObjekteSearch extends AbstractCidsServerSearch implements C
             if ((geometry instanceof Polygon) || (geometry instanceof MultiPolygon)) { // with buffer for geostring
                 sb.append(statement.replace(
                         "<geom>",
-                        "st_buffer(GeometryFromText('"
+                        "st_buffer(st_GeometryFromText('"
                                 + geostring
                                 + "'), 0.000001)"));
             }

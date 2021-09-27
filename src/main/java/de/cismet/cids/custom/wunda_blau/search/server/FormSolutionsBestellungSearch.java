@@ -75,11 +75,11 @@ public class FormSolutionsBestellungSearch extends AbstractCidsServerSearch impl
             final List<MetaObjectNode> result = new ArrayList<>();
 
             final Map<String, Object> filter = new HashMap<>();
-            
+
             if (getDuplicate() != null) {
                 filter.put("fs_bestellung.duplicate", getDuplicate());
             }
-                
+
             if (getBerechtigungspruefungSchluessel() != null) {
                 filter.put("berechtigungspruefung.schluessel", getBerechtigungspruefungSchluessel());
             }

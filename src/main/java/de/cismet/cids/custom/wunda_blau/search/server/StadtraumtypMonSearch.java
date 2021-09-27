@@ -76,9 +76,9 @@ public class StadtraumtypMonSearch extends RestApiMonGeometrySearch {
             final String geomCondition;
             if (geometry != null) {
                 final String geomString = PostGisGeometryFactory.getPostGisCompliantDbString(geometry);
-                geomCondition = "(geom.geo_field && GeometryFromText('" + geomString + "') AND intersects("
+                geomCondition = "(geom.geo_field && st_GeometryFromText('" + geomString + "') AND st_intersects("
                             + ((getBuffer() != null)
-                                ? ("st_buffer(GeometryFromText('" + geomString + "'), " + getBuffer() + ")")
+                                ? ("st_buffer(st_GeometryFromText('" + geomString + "'), " + getBuffer() + ")")
                                 : "geo_field") + ", geo_field))";
             } else {
                 geomCondition = null;
@@ -86,7 +86,7 @@ public class StadtraumtypMonSearch extends RestApiMonGeometrySearch {
             final String area;
             if (geometry != null) {
                 area = String.format(
-                        "st_area(st_intersection(geom.geo_field, GeometryFromText('%1$s')))",
+                        "st_area(st_intersection(geom.geo_field, st_GeometryFromText('%1$s')))",
                         PostGisGeometryFactory.getPostGisCompliantDbString(geometry));
             } else {
                 area = "st_area(geom.geo_field)";
