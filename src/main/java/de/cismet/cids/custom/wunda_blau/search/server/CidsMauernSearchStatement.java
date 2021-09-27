@@ -160,25 +160,25 @@ public class CidsMauernSearchStatement extends AbstractCidsServerSearch implemen
                 final String geostring = PostGisGeometryFactory.getPostGisCompliantDbString(geom);
 
                 final List<String> conditions = new ArrayList<>();
-                conditions.add(String.format("g.geo_field && GeometryFromText('%s')", geostring));
+                conditions.add(String.format("g.geo_field && st_GeometryFromText('%s')", geostring));
                 if ((geom instanceof Polygon) || (geom instanceof MultiPolygon)) { // with buffer for geostring
                     conditions.add(String.format(
-                            " intersects("
+                            " st_intersects("
                                     + "st_buffer(geo_field, "
                                     + INTERSECTS_BUFFER
                                     + "),"
-                                    + "st_buffer(GeometryFromText('%s'), "
+                                    + "st_buffer(st_GeometryFromText('%s'), "
                                     + INTERSECTS_BUFFER
                                     + "))",
                             geostring));
                 } else {                                                           // without buffer for
                     // geostring
                     conditions.add(String.format(
-                            " and intersects("
+                            " and st_intersects("
                                     + "st_buffer(geo_field, "
                                     + INTERSECTS_BUFFER
                                     + "),"
-                                    + "GeometryFromText('%s'))",
+                                    + "st_GeometryFromText('%s'))",
                             geostring));
                 }
                 wheres.add(String.join(" AND ", conditions));

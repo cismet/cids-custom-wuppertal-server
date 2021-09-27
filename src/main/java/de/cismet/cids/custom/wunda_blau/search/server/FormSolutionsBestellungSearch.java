@@ -45,7 +45,8 @@ public class FormSolutionsBestellungSearch extends AbstractCidsServerSearch impl
 
     @Setter @Getter private String berechtigungspruefungSchluessel;
     @Setter @Getter private String transidHash;
-    @Setter @Getter private String requestUrl;
+    @Setter @Getter private String cacheId;
+    @Setter @Getter private Boolean duplicate = Boolean.FALSE;
 
     private ConnectionContext connectionContext = ConnectionContext.createDummy();
 
@@ -74,6 +75,11 @@ public class FormSolutionsBestellungSearch extends AbstractCidsServerSearch impl
             final List<MetaObjectNode> result = new ArrayList<>();
 
             final Map<String, Object> filter = new HashMap<>();
+
+            if (getDuplicate() != null) {
+                filter.put("fs_bestellung.duplicate", getDuplicate());
+            }
+
             if (getBerechtigungspruefungSchluessel() != null) {
                 filter.put("berechtigungspruefung.schluessel", getBerechtigungspruefungSchluessel());
             }
@@ -82,13 +88,12 @@ public class FormSolutionsBestellungSearch extends AbstractCidsServerSearch impl
                         "md5('%s'||fs_bestellung.transid)",
                         FormSolutionsProperties.getInstance().getTransidHashpepper()),
                     getTransidHash());
-                filter.put("fs_bestellung.duplicate", Boolean.FALSE);
             }
 
-            if (getRequestUrl() != null) {
-                final String cacheId = HttpUrl.parse(getRequestUrl()).queryParameter("cacheID");
-                filter.put("fs_bestellung_cacheid.cache_id", cacheId);
+            if (getCacheId() != null) {
+                filter.put("fs_bestellung_cacheid.cache_id", getCacheId());
             }
+
             final Collection<String> filterStrings = new ArrayList<>();
             for (final Map.Entry<String, Object> entry : filter.entrySet()) {
                 if (entry.getValue() instanceof String) {
@@ -98,6 +103,8 @@ public class FormSolutionsBestellungSearch extends AbstractCidsServerSearch impl
                             "%s IS %s",
                             entry.getKey(),
                             (Boolean)entry.getValue() ? "TRUE" : "NOT TRUE"));
+                } else if (entry.getValue() == null) {
+                    filterStrings.add(String.format("%s IS NULL", entry.getKey()));
                 }
             }
             final String query =

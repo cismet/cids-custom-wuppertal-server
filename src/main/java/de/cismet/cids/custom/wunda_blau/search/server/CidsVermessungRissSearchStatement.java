@@ -259,22 +259,22 @@ public class CidsVermessungRissSearchStatement extends AbstractCidsServerSearch 
             result.append(conjunction);
             conjunction = " AND ";
 
-            result.append("g.geo_field && GeometryFromText('").append(geomString).append("')");
+            result.append("g.geo_field && st_GeometryFromText('").append(geomString).append("')");
 
             result.append(conjunction);
 
             if ((geometry instanceof Polygon) || (geometry instanceof MultiPolygon)) { // with buffer for searchGeometry
-                result.append("intersects(st_buffer(g.geo_field, ")
+                result.append("st_intersects(st_buffer(g.geo_field, ")
                         .append(INTERSECTS_BUFFER)
-                        .append("), st_buffer(GeometryFromText('")
+                        .append("), st_buffer(st_GeometryFromText('")
                         .append(geomString)
                         .append("'), ")
                         .append(INTERSECTS_BUFFER)
                         .append("))");
             } else {
-                result.append("intersects(st_buffer(g.geo_field, ")
+                result.append("st_intersects(st_buffer(g.geo_field, ")
                         .append(INTERSECTS_BUFFER)
-                        .append("), GeometryFromText('")
+                        .append("), st_GeometryFromText('")
                         .append(geomString)
                         .append("'))");
             }

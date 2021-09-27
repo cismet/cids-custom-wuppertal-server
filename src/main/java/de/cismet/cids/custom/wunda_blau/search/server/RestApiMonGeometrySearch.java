@@ -44,10 +44,10 @@ public abstract class RestApiMonGeometrySearch extends RestApiMonSearch implemen
         final Geometry geometry = getGeometry();
         if (geometry != null) {
             final String geomStringFromText = String.format(
-                    "GeometryFromText('%s')",
+                    "st_GeometryFromText('%s')",
                     PostGisGeometryFactory.getPostGisCompliantDbString(geometry));
             return String.format(
-                    "(geom.geo_field && %s AND intersects(%s, geo_field))",
+                    "(geom.geo_field && %s AND st_intersects(%s, geo_field))",
                     geomStringFromText,
                     ((getBuffer() != null) ? String.format("st_buffer(%s, %f)", geomStringFromText, getBuffer())
                                            : geomStringFromText));

@@ -98,7 +98,7 @@ public class FnpHauptnutzungenMonSearch extends RestApiMonGeometrySearch {
             final String area;
             if (geometry != null) {
                 area = String.format(
-                        "st_area(st_intersection(geom.geo_field, GeometryFromText('%1$s')))",
+                        "st_area(st_intersection(geom.geo_field, st_GeometryFromText('%1$s')))",
                         PostGisGeometryFactory.getPostGisCompliantDbString(geometry));
             } else {
                 area = "st_area(geom.geo_field)";
