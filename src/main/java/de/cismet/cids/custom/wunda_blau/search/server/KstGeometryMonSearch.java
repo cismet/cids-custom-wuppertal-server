@@ -151,7 +151,7 @@ public class KstGeometryMonSearch extends RestApiMonGeometrySearch {
                             + "  %5$s"
                             + ") AS sub "
                             + "GROUP BY object_id "
-                            + "ORDER BY sum(area), min(nummer) DESC;",
+                            + "ORDER BY sum(area) DESC;",
                     kst,
                     area,
                     nr,
