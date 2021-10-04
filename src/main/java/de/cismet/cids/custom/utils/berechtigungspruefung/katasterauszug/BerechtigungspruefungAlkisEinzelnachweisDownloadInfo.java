@@ -39,6 +39,7 @@ public class BerechtigungspruefungAlkisEinzelnachweisDownloadInfo extends Berech
 
     @JsonProperty private final String alkisProdukt;
     @JsonProperty private final Date date;
+    @JsonProperty private final Integer amounts;
 
     //~ Constructors -----------------------------------------------------------
 
@@ -103,6 +104,42 @@ public class BerechtigungspruefungAlkisEinzelnachweisDownloadInfo extends Berech
      * @param  alkisProdukt        DOCUMENT ME!
      * @param  stichtag            DOCUMENT ME!
      */
+    public BerechtigungspruefungAlkisEinzelnachweisDownloadInfo(final String produktTyp,
+            final String auftragsnummer,
+            final String produktbezeichnung,
+            final Integer billingId,
+            final AlkisObjektTyp alkisObjectTyp,
+            final AlkisDownloadTyp alkisDownloadTyp,
+            final List<String> alkisCodes,
+            final String alkisProdukt,
+            final Date stichtag) {
+        this(
+            produktTyp,
+            auftragsnummer,
+            produktbezeichnung,
+            billingId,
+            alkisObjectTyp,
+            alkisDownloadTyp,
+            alkisCodes,
+            alkisProdukt,
+            stichtag,
+            null);
+    }
+
+    /**
+     * Creates a new BerechtigungspruefungAlkisEinzelnachweisDownloadInfo object.
+     *
+     * @param  produktTyp          DOCUMENT ME!
+     * @param  auftragsnummer      DOCUMENT ME!
+     * @param  produktbezeichnung  DOCUMENT ME!
+     * @param  billingId           DOCUMENT ME!
+     * @param  alkisObjectTyp      DOCUMENT ME!
+     * @param  alkisDownloadTyp    DOCUMENT ME!
+     * @param  alkisCodes          DOCUMENT ME!
+     * @param  alkisProdukt        DOCUMENT ME!
+     * @param  stichtag            DOCUMENT ME!
+     * @param  amounts             DOCUMENT ME!
+     */
     public BerechtigungspruefungAlkisEinzelnachweisDownloadInfo(@JsonProperty("produktTyp") final String produktTyp,
             @JsonProperty("auftragsnummer") final String auftragsnummer,
             @JsonProperty("produktbezeichnung") final String produktbezeichnung,
@@ -111,9 +148,11 @@ public class BerechtigungspruefungAlkisEinzelnachweisDownloadInfo extends Berech
             @JsonProperty("alkisDownloadTyp") final AlkisDownloadTyp alkisDownloadTyp,
             @JsonProperty("alkisCodes") final List<String> alkisCodes,
             @JsonProperty("alkisProdukt") final String alkisProdukt,
-            @JsonProperty("stichtag") final Date stichtag) {
+            @JsonProperty("stichtag") final Date stichtag,
+            @JsonProperty("amounts") final Integer amounts) {
         super(produktTyp, auftragsnummer, produktbezeichnung, billingId, alkisObjectTyp, alkisDownloadTyp, alkisCodes);
         this.alkisProdukt = alkisProdukt;
         this.date = stichtag;
+        this.amounts = amounts;
     }
 }
