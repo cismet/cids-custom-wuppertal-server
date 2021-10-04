@@ -89,6 +89,12 @@ public class FormSolutionsBestellung {
     @XmlElement(name = "Flurstückskennzeichen.1")
     private String flurstueckskennzeichen1;
 
+    @XmlElement(name = "Ausgewählte_Buchungsblätter")
+    private String ausgewaehlteBuchungsblaetter;
+
+    @XmlElement(name = "Buchungsblattkennzeichen")
+    private String buchungsblattkennzeichen;
+
     @XmlElement(name = "NS-Ausdehnung.1")
     private String nsAusdehnung1;
 
