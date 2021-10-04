@@ -14,10 +14,12 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 import org.openide.util.lookup.ServiceProvider;
 
 import java.util.Arrays;
+import java.util.Map;
 
 import de.cismet.cids.custom.utils.ByteArrayFactoryHandler;
+import de.cismet.cids.custom.utils.PotenzialflaechenMapsJson;
+import de.cismet.cids.custom.utils.PotenzialflaechenProperties;
 import de.cismet.cids.custom.utils.WundaBlauServerResources;
-import de.cismet.cids.custom.utils.properties.PotenzialflaechenProperties;
 import de.cismet.cids.custom.wunda_blau.search.actions.PotenzialflaecheReportCreator;
 
 import de.cismet.cids.dynamics.CidsBean;
@@ -26,6 +28,7 @@ import de.cismet.cids.trigger.AbstractCidsTrigger;
 import de.cismet.cids.trigger.CidsTrigger;
 import de.cismet.cids.trigger.CidsTriggerKey;
 
+import de.cismet.cids.utils.serverresources.JsonServerResource;
 import de.cismet.cids.utils.serverresources.PropertiesServerResource;
 import de.cismet.cids.utils.serverresources.ServerResourcesLoader;
 
@@ -55,8 +58,10 @@ public class PfPotenzialflaecheTrigger extends AbstractCidsTrigger implements Co
     private final ConnectionContext connectionContext = ConnectionContext.create(
             AbstractConnectionContext.Category.OTHER,
             PfPotenzialflaecheTrigger.class.getCanonicalName());
-    private final PropertiesServerResource PSR = (PropertiesServerResource)
+    private final PropertiesServerResource POTENZIALFLAECHEN_PROPERTIES = (PropertiesServerResource)
         WundaBlauServerResources.POTENZIALFLAECHEN_PROPERTIES.getValue();
+    private final JsonServerResource POTENZIALFLAECHEN_MAPS_JSON = (JsonServerResource)
+        WundaBlauServerResources.POTENZIALFLAECHEN_MAPS_JSON.getValue();
 
     //~ Methods ----------------------------------------------------------------
 
@@ -72,8 +77,19 @@ public class PfPotenzialflaecheTrigger extends AbstractCidsTrigger implements Co
      *
      * @throws  Exception  DOCUMENT ME!
      */
-    private PotenzialflaechenProperties getProperties() throws Exception {
-        return (PotenzialflaechenProperties)ServerResourcesLoader.getInstance().get(PSR);
+    public PotenzialflaechenProperties getProperties() throws Exception {
+        return (PotenzialflaechenProperties)ServerResourcesLoader.getInstance().get(POTENZIALFLAECHEN_PROPERTIES);
+    }
+
+    /**
+     * DOCUMENT ME!
+     *
+     * @return  DOCUMENT ME!
+     *
+     * @throws  Exception  DOCUMENT ME!
+     */
+    public PotenzialflaechenMapsJson getMapsJson() throws Exception {
+        return (PotenzialflaechenMapsJson)ServerResourcesLoader.getInstance().get(POTENZIALFLAECHEN_MAPS_JSON);
     }
 
     /**
@@ -104,33 +120,36 @@ public class PfPotenzialflaecheTrigger extends AbstractCidsTrigger implements Co
     /**
      * DOCUMENT ME!
      *
-     * @param   id    DOCUMENT ME!
-     * @param   type  DOCUMENT ME!
+     * @param   id          DOCUMENT ME!
+     * @param   identifier  type DOCUMENT ME!
      *
      * @return  DOCUMENT ME!
      *
      * @throws  Exception  DOCUMENT ME!
      */
-    private PotenzialflaecheReportCreator.MapConfiguration createConfigFor(final Integer id,
-            final PotenzialflaecheReportCreator.Type type) throws Exception {
+    private PotenzialflaecheReportCreator.MapConfiguration createConfigFor(final Integer id, final String identifier)
+            throws Exception {
+        final PotenzialflaechenProperties properties = getProperties();
+        final PotenzialflaechenMapsJson.MapProperties mapProperties = getMapsJson().getMapProperties(identifier);
+
         final PotenzialflaecheReportCreator.MapConfiguration config =
-            new PotenzialflaecheReportCreator.MapConfiguration();
-        config.setId(id);
+            new PotenzialflaecheReportCreator.MapConfiguration(identifier);
+        config.setPfId(id);
         config.setIds(Arrays.asList(id));
         config.setCacheDirectory(getProperties().getPictureCacheDirectory());
         config.setUseCache(Boolean.FALSE);
-        config.setBbX1(getProperties().getHomeX1());
-        config.setBbY1(getProperties().getHomeY1());
-        config.setBbX2(getProperties().getHomeX2());
-        config.setBbY2(getProperties().getHomeY2());
-        config.setSrs(getProperties().getSrs());
 
-        config.setType(type);
-        config.setWidth(getProperties().getWidth(type));
-        config.setHeight(getProperties().getHeight(type));
-        config.setMapUrl(getProperties().getMapUrl(type));
-        config.setMapDpi(getProperties().getMapDPI(type));
-        config.setBuffer(getProperties().getBuffer(type));
+        config.setBbX1(properties.getHomeX1());
+        config.setBbY1(properties.getHomeY1());
+        config.setBbX2(properties.getHomeX2());
+        config.setBbY2(properties.getHomeY2());
+        config.setSrs(properties.getSrs());
+
+        config.setWidth(mapProperties.getWidth());
+        config.setHeight(mapProperties.getHeight());
+        config.setMapUrl(mapProperties.getWmsUrl());
+        config.setMapDpi(mapProperties.getDpi());
+        config.setBuffer(mapProperties.getBuffer());
         return config;
     }
 
@@ -142,14 +161,11 @@ public class PfPotenzialflaecheTrigger extends AbstractCidsTrigger implements Co
      */
     private void refreshMaps(final CidsBean cidsBean, final User user) {
         try {
-            refreshMapThreaded(createConfigFor(
-                    cidsBean.getMetaObject().getId(),
-                    PotenzialflaecheReportCreator.Type.PF_DGK),
-                user);
-            refreshMapThreaded(createConfigFor(
-                    cidsBean.getMetaObject().getId(),
-                    PotenzialflaecheReportCreator.Type.PF_ORTHO),
-                user);
+            final Map<String, PotenzialflaechenMapsJson.MapProperties> mapsProperties = getMapsJson()
+                        .getMapProperties();
+            for (final String identifier : mapsProperties.keySet()) {
+                refreshMapThreaded(createConfigFor(cidsBean.getMetaObject().getId(), identifier), user);
+            }
         } catch (final Exception ex) {
             LOG.error(ex, ex);
         }
