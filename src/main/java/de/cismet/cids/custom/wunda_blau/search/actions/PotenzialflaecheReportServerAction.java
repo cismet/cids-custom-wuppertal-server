@@ -27,9 +27,10 @@ import java.util.Collection;
 import java.util.Date;
 import java.util.List;
 
+import de.cismet.cids.custom.utils.PotenzialflaechenMapsJson;
+import de.cismet.cids.custom.utils.PotenzialflaechenProperties;
 import de.cismet.cids.custom.utils.StampedByteArrayServerAction;
 import de.cismet.cids.custom.utils.WundaBlauServerResources;
-import de.cismet.cids.custom.utils.properties.PotenzialflaechenProperties;
 import de.cismet.cids.custom.wunda_blau.search.server.AlkisLandparcelGeometryMonSearch;
 import de.cismet.cids.custom.wunda_blau.search.server.BodenrichtwertZoneMonSearch;
 import de.cismet.cids.custom.wunda_blau.search.server.BplaeneMonSearch;
@@ -46,6 +47,7 @@ import de.cismet.cids.dynamics.CidsBean;
 import de.cismet.cids.server.actions.ServerAction;
 import de.cismet.cids.server.actions.ServerActionParameter;
 
+import de.cismet.cids.utils.serverresources.JsonServerResource;
 import de.cismet.cids.utils.serverresources.PropertiesServerResource;
 import de.cismet.cids.utils.serverresources.ServerResourcesLoader;
 
@@ -172,21 +174,6 @@ public class PotenzialflaecheReportServerAction extends StampedByteArrayServerAc
                 "pf_restriktionen.fk_restriktion",
                 "pf_restriktion"),
             "Restriktionen"),
-
-        KARTE_ORTHO(new VirtualReportProperty() {
-
-                @Override
-                public Object calculateProperty(final PotenzialflaecheReportCreator creator) throws Exception {
-                    return creator.loadMapFor(PotenzialflaecheReportCreator.Type.PF_ORTHO);
-                }
-            }, "Karte (Ortho)"),
-        KARTE_DGK(new VirtualReportProperty() {
-
-                @Override
-                public Object calculateProperty(final PotenzialflaecheReportCreator creator) throws Exception {
-                    return creator.loadMapFor(PotenzialflaecheReportCreator.Type.PF_DGK);
-                }
-            }, "Karte (DGK)"),
         GROESSE(new VirtualReportProperty() {
 
                 @Override
@@ -321,8 +308,10 @@ public class PotenzialflaecheReportServerAction extends StampedByteArrayServerAc
 
     private ConnectionContext connectionContext = ConnectionContext.createDummy();
 
-    private final PropertiesServerResource PSR = (PropertiesServerResource)
+    private final PropertiesServerResource POTENZIALFLAECHEN_PROPERTIES = (PropertiesServerResource)
         WundaBlauServerResources.POTENZIALFLAECHEN_PROPERTIES.getValue();
+    private final JsonServerResource POTENZIALFLAECHEN_MAPS_JSON = (JsonServerResource)
+        WundaBlauServerResources.POTENZIALFLAECHEN_MAPS_JSON.getValue();
 
     //~ Methods ----------------------------------------------------------------
 
@@ -388,32 +377,16 @@ public class PotenzialflaecheReportServerAction extends StampedByteArrayServerAc
             config.setId(flaecheMon.getObjectId());
             config.setTemplateId((templateMon != null) ? templateMon.getObjectId() : null);
             config.setSubreportDirectory(DomainServerImpl.getServerProperties().getServerResourcesBasePath() + "/");
-            config.setCacheDirectory(getProperties().getPictureCacheDirectory());
-            config.setUseCache(Boolean.TRUE);
-            config.setBbX1(getProperties().getHomeX1());
-            config.setBbY1(getProperties().getHomeY1());
-            config.setBbX2(getProperties().getHomeX2());
-            config.setBbY2(getProperties().getHomeY2());
-            config.setSrs(getProperties().getSrs());
-//
-//                final byte[] bytes = ByteArrayFactoryHandler.getInstance()
-//                            .execute(
-//                                getProperties().getReportFactory(),
-//                                new ObjectMapper().writeValueAsString(config),
-//                                getUser(),
-//                                getConnectionContext());
-//
-//                return bytes;
 
-//                    new PotenzialflaecheReportCreator.ReportConfiguration();
             final CidsBean flaecheBean = getMetaService().getMetaObject(
                         getUser(),
                         flaecheMon.getObjectId(),
                         flaecheMon.getClassId(),
                         getConnectionContext())
                         .getBean();
-            final PotenzialflaecheReportCreatorImpl creator = new PotenzialflaecheReportCreatorImpl(
+            final PotenzialflaecheReportCreator creator = new PotenzialflaecheReportCreator(
                     getProperties(),
+                    getMapsJson(),
                     flaecheBean,
                     getUser(),
                     getMetaService(),
@@ -433,7 +406,18 @@ public class PotenzialflaecheReportServerAction extends StampedByteArrayServerAc
      * @throws  Exception  DOCUMENT ME!
      */
     public PotenzialflaechenProperties getProperties() throws Exception {
-        return (PotenzialflaechenProperties)ServerResourcesLoader.getInstance().get(PSR);
+        return (PotenzialflaechenProperties)ServerResourcesLoader.getInstance().get(POTENZIALFLAECHEN_PROPERTIES);
+    }
+
+    /**
+     * DOCUMENT ME!
+     *
+     * @return  DOCUMENT ME!
+     *
+     * @throws  Exception  DOCUMENT ME!
+     */
+    public PotenzialflaechenMapsJson getMapsJson() throws Exception {
+        return (PotenzialflaechenMapsJson)ServerResourcesLoader.getInstance().get(POTENZIALFLAECHEN_MAPS_JSON);
     }
 
     @Override
