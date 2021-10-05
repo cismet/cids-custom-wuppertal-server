@@ -153,6 +153,12 @@ public class Redirect2FormsolutionsAction implements UserAwareServerAction, Meta
                         "Antragsteller.Daten.Flurstueckskennzeichen",
                         (String)bestellungBean.getProperty("landparcelcode"));
 
+                    if (transid.startsWith("KFAS_KF600204")) {
+                        form.put(
+                            "Antragsteller.Daten.Buchungsblattkennzeichen",
+                            (String)bestellungBean.getProperty("buchungsblattcode"));
+                    }
+
                     form.put("Antragsteller.Daten.betragDL", gebuehrDownload);
                     form.put("Antragsteller.Daten.betragPost", gebuehrPostweg);
 
@@ -240,9 +246,13 @@ public class Redirect2FormsolutionsAction implements UserAwareServerAction, Meta
                             AccessHandler.ACCESS_METHODS.POST_REQUEST,
                             headerMap);
                     final String cacheID = IOUtils.toString(in, "UTF-8");
-                    final String redirectionLink = String.format(FormSolutionsProperties.getInstance()
-                                    .getRedirectionFormat(),
+                    String redirectionLink = String.format(FormSolutionsProperties.getInstance().getRedirectionFormat(),
                             cacheID);
+
+                    if (transid.startsWith("KFAS_KF600204")) {
+                        redirectionLink = String.format(FormSolutionsProperties.getInstance().getRedirectionFormatLB(),
+                                cacheID);
+                    }
 
                     final CidsBean cacheIdBean = CidsBean.createNewCidsBeanFromTableName(
                             "WUNDA_BLAU",

@@ -76,4 +76,18 @@ public class BillingInfoHandler {
         }
         return price;
     }
+
+    /**
+     * DOCUMENT ME!modus.
+     *
+     * @param   product  DOCUMENT ME!
+     * @param   amount   DOCUMENT ME!
+     *
+     * @return  DOCUMENT ME!
+     */
+    public static double calculateRawLBPrice(final BillingProduct product, final Integer amount) {
+        final double price = amount * product.getPrices().get("ea");
+
+        return price;
+    }
 }
