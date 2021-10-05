@@ -49,6 +49,8 @@ public class FormSolutionsProperties {
     private final String urlAuftragslisteAbkFs;
     private final String urlAuftragslisteBb1Fs;
     private final String urlAuftragslisteBb2Fs;
+    private final String urlAuftragslisteLb1Fs;
+    private final String urlAuftragslisteLb2Fs;
     private final String urlAuftragFs;
     private final String urlAuftragDeleteFs;
     private final String urlStatusUpdate;
@@ -73,6 +75,10 @@ public class FormSolutionsProperties {
     private final String billingVerwendungskeyPostweg;
     private final String billingProduktkeyBBDownload;
     private final String billingProduktkeyBBPostweg;
+    private final String billingProduktkeyLBDownload;
+    private final String billingProduktkeyLBPostweg;
+    private final String billingProduktkeyLBBestDownload;
+    private final String billingProduktkeyLBBestPostweg;
     private final String rechnungAuftragsartKarte;
     private final String rechnungAuftragsartBaulasten;
     private final String rechnungBerechnugsgGrundlageKarte;
@@ -80,6 +86,7 @@ public class FormSolutionsProperties {
     private final String tmpBrokenpdfsAbsPath;
     private final String transidHashpepper;
     private final String redirectionFormat;
+    private final String redirectionFormatLB;
     private final String urlCreateCacheid;
     private final String cidsActionHttpRedirectorUrl;
     private final boolean mysqlDisabled;
@@ -111,6 +118,8 @@ public class FormSolutionsProperties {
         urlAuftragslisteAbkFs = properties.getProperty("URL_AUFTRAGSLISTE_ABK_FS");
         urlAuftragslisteBb1Fs = properties.getProperty("URL_AUFTRAGSLISTE_BB1_FS");
         urlAuftragslisteBb2Fs = properties.getProperty("URL_AUFTRAGSLISTE_BB2_FS");
+        urlAuftragslisteLb1Fs = properties.getProperty("URL_AUFTRAGSLISTE_LB1_FS");
+        urlAuftragslisteLb2Fs = properties.getProperty("URL_AUFTRAGSLISTE_LB2_FS");
         urlAuftragFs = properties.getProperty("URL_AUFTRAG_FS");
         urlAuftragDeleteFs = properties.getProperty("URL_AUFTRAG_DELETE_FS");
         urlStatusUpdate = properties.getProperty("URL_STATUS_UPDATE");
@@ -134,6 +143,10 @@ public class FormSolutionsProperties {
         billingVerwendungskeyDownload = properties.getProperty("BILLING_VERWENDUNGSKEY_DOWNLOAD");
         billingVerwendungskeyPostweg = properties.getProperty("BILLING_VERWENDUNGSKEY_POSTWEG");
         billingProduktkeyBBDownload = properties.getProperty("BILLING_PRODUKTKEY_BB_DOWNLOAD");
+        billingProduktkeyLBDownload = properties.getProperty("BILLING_PRODUKTKEY_LB_DOWNLOAD");
+        billingProduktkeyLBPostweg = properties.getProperty("BILLING_PRODUKTKEY_LB_POSTWEG");
+        billingProduktkeyLBBestDownload = properties.getProperty("BILLING_PRODUKTKEY_LB_Best_DOWNLOAD");
+        billingProduktkeyLBBestPostweg = properties.getProperty("BILLING_PRODUKTKEY_LB_Best_POSTWEG");
         billingProduktkeyBBPostweg = properties.getProperty("BILLING_PRODUKTKEY_BB_POSTWEG");
         mysqlDisabled = Boolean.valueOf(properties.getProperty("MYSQL_DISABLED"));
         rechnungAuftragsartKarte = properties.getProperty("RECHNUNG_AUFTRAGSART_KARTE");
@@ -143,6 +156,7 @@ public class FormSolutionsProperties {
         tmpBrokenpdfsAbsPath = properties.getProperty("TMP_BROKENPDFS_ABS_PATH");
         transidHashpepper = properties.getProperty("TRANSID_HASHPEPPER");
         redirectionFormat = properties.getProperty("REDIRECTION_FORMAT");
+        redirectionFormatLB = properties.getProperty("REDIRECTION_FORMAT_LB");
         urlCreateCacheid = properties.getProperty("URL_CREATE_CACHEID");
         cidsActionHttpRedirectorUrl = properties.getProperty("CIDS_ACTION_HTTP_REDIRECTOR_URL");
         deleteTmpProductAfterSuccessfulUploadDisabled = Boolean.valueOf(properties.getProperty(
