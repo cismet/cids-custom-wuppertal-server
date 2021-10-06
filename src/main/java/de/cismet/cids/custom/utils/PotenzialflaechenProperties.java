@@ -81,10 +81,11 @@ public class PotenzialflaechenProperties extends DefaultServerResourceProperties
      * @return  DOCUMENT ME!
      */
     public Double getHomeX1() {
+        final String homeX1 = getProperties().getProperty("homeX1");
         try {
-            return Double.parseDouble(getProperties().getProperty("homeX1"));
+            return (homeX1 != null) ? Double.parseDouble(homeX1) : DEFAULT_HOME_X1;
         } catch (final Exception ex) {
-            LOG.info(String.format("returning %f as default HomeX1", DEFAULT_HOME_X1), ex);
+            LOG.info(String.format("error parsing '%s', returning %f as default homeX1", homeX1, DEFAULT_HOME_X1), ex);
             return DEFAULT_HOME_X1;
         }
     }
@@ -95,10 +96,11 @@ public class PotenzialflaechenProperties extends DefaultServerResourceProperties
      * @return  DOCUMENT ME!
      */
     public Double getHomeY1() {
+        final String homeY1 = getProperties().getProperty("homeY1");
         try {
-            return Double.parseDouble(getProperties().getProperty("homeY1"));
+            return (homeY1 != null) ? Double.parseDouble(homeY1) : DEFAULT_HOME_Y1;
         } catch (final Exception ex) {
-            LOG.info(String.format("returning %f as default HomeY1", DEFAULT_HOME_Y1), ex);
+            LOG.info(String.format("error parsing '%s', returning %f as default homeY1", homeY1, DEFAULT_HOME_Y1), ex);
             return DEFAULT_HOME_Y1;
         }
     }
@@ -109,10 +111,11 @@ public class PotenzialflaechenProperties extends DefaultServerResourceProperties
      * @return  DOCUMENT ME!
      */
     public Double getHomeX2() {
+        final String homeX2 = getProperties().getProperty("homeX2");
         try {
-            return Double.parseDouble(getProperties().getProperty("homeX2"));
+            return (homeX2 != null) ? Double.parseDouble(homeX2) : DEFAULT_HOME_X2;
         } catch (final Exception ex) {
-            LOG.info(String.format("returning %f as default HomeX2", DEFAULT_HOME_X2), ex);
+            LOG.info(String.format("error parsing '%s', returning %f as default homeX2", homeX2, DEFAULT_HOME_X2), ex);
             return DEFAULT_HOME_X2;
         }
     }
@@ -123,10 +126,11 @@ public class PotenzialflaechenProperties extends DefaultServerResourceProperties
      * @return  DOCUMENT ME!
      */
     public Double getHomeY2() {
+        final String homeY2 = getProperties().getProperty("homeY2");
         try {
-            return Double.parseDouble(getProperties().getProperty("homeY2"));
+            return (homeY2 != null) ? Double.parseDouble(homeY2) : DEFAULT_HOME_Y2;
         } catch (final Exception ex) {
-            LOG.info(String.format("returning %f as default HomeY2", DEFAULT_HOME_Y2), ex);
+            LOG.info(String.format("error parsing '%s', returning %f as default homeY2", homeY2, DEFAULT_HOME_Y2), ex);
             return DEFAULT_HOME_Y2;
         }
     }
