@@ -17,10 +17,10 @@ import java.util.Arrays;
 import java.util.Map;
 
 import de.cismet.cids.custom.utils.ByteArrayFactoryHandler;
+import de.cismet.cids.custom.utils.PotenzialflaecheReportCreator;
 import de.cismet.cids.custom.utils.PotenzialflaechenMapsJson;
 import de.cismet.cids.custom.utils.PotenzialflaechenProperties;
 import de.cismet.cids.custom.utils.WundaBlauServerResources;
-import de.cismet.cids.custom.wunda_blau.search.actions.PotenzialflaecheReportCreator;
 
 import de.cismet.cids.dynamics.CidsBean;
 

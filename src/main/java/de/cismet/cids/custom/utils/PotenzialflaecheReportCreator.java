@@ -10,7 +10,7 @@
  * To change this template file, choose Tools | Templates
  * and open the template in the editor.
  */
-package de.cismet.cids.custom.wunda_blau.search.actions;
+package de.cismet.cids.custom.utils;
 
 import Sirius.server.middleware.impls.domainserver.DomainServerImpl;
 import Sirius.server.middleware.interfaces.domainserver.MetaService;
@@ -57,9 +57,7 @@ import javax.imageio.ImageIO;
 
 import javax.swing.SwingWorker;
 
-import de.cismet.cids.custom.utils.ByteArrayFactoryHandler;
-import de.cismet.cids.custom.utils.PotenzialflaechenMapsJson;
-import de.cismet.cids.custom.utils.PotenzialflaechenProperties;
+import de.cismet.cids.custom.wunda_blau.search.actions.PotenzialflaecheReportServerAction;
 
 import de.cismet.cids.dynamics.CidsBean;
 
@@ -89,9 +87,8 @@ public class PotenzialflaecheReportCreator {
 
     //~ Instance fields --------------------------------------------------------
 
-    private CidsBean flaecheBean;
+    private final CidsBean flaecheBean;
     private CidsBean templateBean;
-    private ReportConfiguration reportConfiguration;
     private final User user;
     private final MetaService metaService;
     private final ConnectionContext connectionContext;
@@ -120,21 +117,13 @@ public class PotenzialflaecheReportCreator {
             final ConnectionContext connectionContext) throws Exception {
         this.properties = properties;
         this.mapsJson = mapsJson;
+        this.flaecheBean = flaecheBean;
         this.user = user;
         this.metaService = metaService;
         this.connectionContext = connectionContext;
     }
 
     //~ Methods ----------------------------------------------------------------
-
-    /**
-     * DOCUMENT ME!
-     *
-     * @return  DOCUMENT ME!
-     */
-    public CidsBean getFlaecheBean() {
-        return flaecheBean;
-    }
 
     /**
      * DOCUMENT ME!
@@ -148,37 +137,17 @@ public class PotenzialflaecheReportCreator {
     /**
      * DOCUMENT ME!
      *
-     * @param   reportConfiguration  DOCUMENT ME!
+     * @param   flaecheBean   DOCUMENT ME!
+     * @param   templateBean  DOCUMENT ME!
      *
      * @return  DOCUMENT ME!
      *
      * @throws  Exception  DOCUMENT ME!
      */
-    public byte[] createReport(final ReportConfiguration reportConfiguration) throws Exception {
-        this.reportConfiguration = reportConfiguration;
+    public byte[] createReport(final CidsBean flaecheBean, final CidsBean templateBean) throws Exception {
+        final CidsBean kampagne = (flaecheBean != null) ? (CidsBean)flaecheBean.getProperty("kampagne") : null;
 
-        final Integer flaecheId = reportConfiguration.getId();
-        final MetaObjectNode flaecheMon = (flaecheId != null)
-            ? new MetaObjectNode(
-                "WUNDA_BLAU",
-                flaecheId,
-                CidsBean.getMetaClassFromTableName("WUNDA_BLAU", "pf_potenzialflaeche", getConnectionContext())
-                            .getId()) : null;
-        flaecheBean = (flaecheMon != null) ? getMetaObject(flaecheMon).getBean() : null;
-
-        final Integer templateId = getReportConfiguration().getTemplateId();
-        final MetaObjectNode templateMon = (templateId != null)
-            ? new MetaObjectNode(
-                "WUNDA_BLAU",
-                templateId,
-                CidsBean.getMetaClassFromTableName("WUNDA_BLAU", "pf_steckbrieftemplate", getConnectionContext())
-                            .getId()) : null;
-        templateBean = (templateMon != null) ? getMetaObject(templateMon).getBean() : null;
-
-        final CidsBean kampagne = (CidsBean)flaecheBean.getProperty("kampagne");
         CidsBean selectedTemplateBean = null;
-        final CidsBean flaecheBean = getFlaecheBean();
-        final CidsBean templateBean = getTemplateBean();
         if (templateBean != null) {
             selectedTemplateBean = templateBean;
         } else {
@@ -212,8 +181,10 @@ public class PotenzialflaecheReportCreator {
 
         final JRBeanCollectionDataSource dataSource = new JRBeanCollectionDataSource(Arrays.asList(
                     flaecheBean));
-        final Map<String, Object> parameters = generateParams(flaecheBean);
-        parameters.put("SUBREPORT_DIR", reportConfiguration.getSubreportDirectory());
+        final Map<String, Object> parameters = generateParams(this);
+        parameters.put("PF_ID", (flaecheBean != null) ? flaecheBean.getPrimaryKeyValue() : null);
+        parameters.put("SUBREPORT_DIR", DomainServerImpl.getServerProperties().getServerResourcesBasePath() + "/");
+        parameters.put("CREATOR", this);
 
         final JasperPrint print = JasperFillManager.fillReport(getJasperReport(selectedTemplateBean),
                 parameters,
@@ -235,18 +206,15 @@ public class PotenzialflaecheReportCreator {
     /**
      * DOCUMENT ME!
      *
-     * @param   flaecheBean  DOCUMENT ME!
+     * @param   creator  flaecheBean DOCUMENT ME!
      *
      * @return  DOCUMENT ME!
      *
      * @throws  Exception  DOCUMENT ME!
      */
-    public Map generateParams(final CidsBean flaecheBean) throws Exception {
+    private Map generateParams(final PotenzialflaecheReportCreator creator) throws Exception {
         final ConcurrentHashMap params = new ConcurrentHashMap();
         final ExecutorService calcExecutor = Executors.newFixedThreadPool(4);
-        final ExecutorService mapExecutor = Executors.newFixedThreadPool(4);
-
-        final PotenzialflaecheReportCreator creator = this;
 
         for (final PotenzialflaecheReportServerAction.Property property
                     : PotenzialflaecheReportServerAction.Property.values()) {
@@ -286,34 +254,7 @@ public class PotenzialflaecheReportCreator {
             throw new Exception("calculation of params took too long", ex);
         }
 
-        final Map<String, PotenzialflaechenMapsJson.MapProperties> mapProperties = getMapsJson().getMapProperties();
-        for (final String identifier : mapProperties.keySet()) {
-            mapExecutor.execute(new SwingWorker() {
-
-                    @Override
-                    protected Void doInBackground() throws Exception {
-                        params.put(identifier, loadMapFor(identifier));
-                        return null;
-                    }
-                });
-        }
-        try {
-            mapExecutor.shutdown();
-            mapExecutor.awaitTermination(60, TimeUnit.SECONDS);
-        } catch (final InterruptedException ex) {
-            throw new Exception("generation of maps took too long", ex);
-        }
-
         return params;
-    }
-
-    /**
-     * DOCUMENT ME!
-     *
-     * @return  DOCUMENT ME!
-     */
-    public ReportConfiguration getReportConfiguration() {
-        return reportConfiguration;
     }
 
     /**
@@ -353,11 +294,12 @@ public class PotenzialflaecheReportCreator {
     /**
      * DOCUMENT ME!
      *
+     * @param   pfId        DOCUMENT ME!
      * @param   identifier  DOCUMENT ME!
      *
      * @return  DOCUMENT ME!
      */
-    private MapConfiguration getMapConfiguration(final String identifier) {
+    private MapConfiguration getMapConfiguration(final int pfId, final String identifier) {
         final PotenzialflaechenProperties properties = getProperties();
         final PotenzialflaechenMapsJson.MapProperties mapProperties = (identifier != null)
             ? getMapsJson().getMapProperties(identifier) : null;
@@ -365,7 +307,7 @@ public class PotenzialflaecheReportCreator {
         final PotenzialflaecheReportCreator.MapConfiguration config =
             new PotenzialflaecheReportCreator.MapConfiguration(identifier);
 
-        config.setPfId(getReportConfiguration().getId());
+        config.setPfId(pfId);
         config.setCacheDirectory(properties.getPictureCacheDirectory());
         config.setUseCache(Boolean.TRUE);
 
@@ -377,7 +319,7 @@ public class PotenzialflaecheReportCreator {
                                                  : PotenzialflaechenMapsJson.DEFAULT_BUFFER);
         config.setMapDpi((mapProperties != null) ? mapProperties.getDpi() : PotenzialflaechenMapsJson.DEFAULT_MAP_DPI);
         config.setMapUrl((mapProperties != null) ? mapProperties.getWmsUrl() : null);
-        config.setIds(Arrays.asList(getFlaecheBean().getMetaObject().getId()));
+        config.setIds(Arrays.asList(pfId));
         config.setShowGeom((mapProperties != null) ? mapProperties.isShowGeom() : null);
         config.setBbX1(properties.getHomeX1());
         config.setBbY1(properties.getHomeY1());
@@ -398,7 +340,9 @@ public class PotenzialflaecheReportCreator {
      * @throws  Exception  DOCUMENT ME!
      */
     public BufferedImage loadMapFor(final String identifier) throws Exception {
-        final PotenzialflaecheReportCreator.MapConfiguration config = getMapConfiguration(identifier);
+        final PotenzialflaecheReportCreator.MapConfiguration config = getMapConfiguration(getFlaecheBean()
+                        .getPrimaryKeyValue(),
+                identifier);
 
         final File file = config.getFileFromCache();
         if ((file != null) && file.exists() && file.isFile()) {
@@ -435,28 +379,12 @@ public class PotenzialflaecheReportCreator {
      *
      * @throws  Exception  DOCUMENT ME!
      */
-    public JasperReport getJasperReport(final CidsBean templateBean) throws Exception {
+    public static JasperReport getJasperReport(final CidsBean templateBean) throws Exception {
         return ServerResourcesLoader.getInstance()
                     .loadJasperReport(new JasperReportServerResource((String)templateBean.getProperty("link")));
     }
 
     //~ Inner Classes ----------------------------------------------------------
-
-    /**
-     * DOCUMENT ME!
-     *
-     * @version  $Revision$, $Date$
-     */
-    @Getter
-    @Setter
-    public static class ReportConfiguration {
-
-        //~ Instance fields ----------------------------------------------------
-
-        private Integer id;
-        private Integer templateId;
-        private String subreportDirectory;
-    }
 
     /**
      * DOCUMENT ME!
