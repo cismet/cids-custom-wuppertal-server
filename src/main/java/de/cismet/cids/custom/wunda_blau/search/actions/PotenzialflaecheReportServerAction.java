@@ -12,7 +12,6 @@
  */
 package de.cismet.cids.custom.wunda_blau.search.actions;
 
-import Sirius.server.middleware.impls.domainserver.DomainServerImpl;
 import Sirius.server.middleware.types.MetaObjectNode;
 
 import com.vividsolutions.jts.geom.Geometry;
@@ -27,6 +26,7 @@ import java.util.Collection;
 import java.util.Date;
 import java.util.List;
 
+import de.cismet.cids.custom.utils.PotenzialflaecheReportCreator;
 import de.cismet.cids.custom.utils.PotenzialflaechenMapsJson;
 import de.cismet.cids.custom.utils.PotenzialflaechenProperties;
 import de.cismet.cids.custom.utils.StampedByteArrayServerAction;
@@ -372,16 +372,16 @@ public class PotenzialflaecheReportServerAction extends StampedByteArrayServerAc
             }
         }
         if (flaecheMon != null) {
-            final PotenzialflaecheReportCreator.ReportConfiguration config =
-                new PotenzialflaecheReportCreator.ReportConfiguration();
-            config.setId(flaecheMon.getObjectId());
-            config.setTemplateId((templateMon != null) ? templateMon.getObjectId() : null);
-            config.setSubreportDirectory(DomainServerImpl.getServerProperties().getServerResourcesBasePath() + "/");
-
             final CidsBean flaecheBean = getMetaService().getMetaObject(
                         getUser(),
                         flaecheMon.getObjectId(),
                         flaecheMon.getClassId(),
+                        getConnectionContext())
+                        .getBean();
+            final CidsBean templateBean = getMetaService().getMetaObject(
+                        getUser(),
+                        templateMon.getObjectId(),
+                        templateMon.getClassId(),
                         getConnectionContext())
                         .getBean();
             final PotenzialflaecheReportCreator creator = new PotenzialflaecheReportCreator(
@@ -392,7 +392,7 @@ public class PotenzialflaecheReportServerAction extends StampedByteArrayServerAc
                     getMetaService(),
                     getConnectionContext());
 
-            return creator.createReport(config);
+            return creator.createReport(flaecheBean, templateBean);
         } else {
             throw new Exception("flaeche not given");
         }
