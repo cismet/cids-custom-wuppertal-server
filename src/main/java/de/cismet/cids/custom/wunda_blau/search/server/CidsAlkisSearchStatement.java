@@ -102,6 +102,7 @@ public class CidsAlkisSearchStatement extends AbstractCidsServerSearch implement
     private String buchungsblattnummer = null;
     private SucheUeber ueber = null;
     private Geometry geometry = null;
+    private boolean useWildcardForBuchungsblattsearch = true;
 
     private ConnectionContext connectionContext = ConnectionContext.createDummy();
 
@@ -119,6 +120,23 @@ public class CidsAlkisSearchStatement extends AbstractCidsServerSearch implement
             final SucheUeber ueber,
             final String flurstuecksnummerOrBuchungsblattnummer,
             final Geometry geometry) {
+        this(resulttyp, ueber, flurstuecksnummerOrBuchungsblattnummer, geometry, true);
+    }
+
+    /**
+     * Creates a new CidsAlkisSearchStatement object.
+     *
+     * @param  resulttyp                               DOCUMENT ME!
+     * @param  ueber                                   DOCUMENT ME!
+     * @param  flurstuecksnummerOrBuchungsblattnummer  DOCUMENT ME!
+     * @param  geometry                                DOCUMENT ME!
+     * @param  useWildcardForBuchungsblattsearch       DOCUMENT ME!
+     */
+    public CidsAlkisSearchStatement(final Resulttyp resulttyp,
+            final SucheUeber ueber,
+            final String flurstuecksnummerOrBuchungsblattnummer,
+            final Geometry geometry,
+            final boolean useWildcardForBuchungsblattsearch) {
         this.resulttyp = resulttyp;
         this.ueber = ueber;
         if (ueber == SucheUeber.FLURSTUECKSNUMMER) {
@@ -127,6 +145,7 @@ public class CidsAlkisSearchStatement extends AbstractCidsServerSearch implement
             buchungsblattnummer = flurstuecksnummerOrBuchungsblattnummer;
         }
         this.geometry = geometry;
+        this.useWildcardForBuchungsblattsearch = useWildcardForBuchungsblattsearch;
     }
 
     /**
@@ -229,17 +248,31 @@ public class CidsAlkisSearchStatement extends AbstractCidsServerSearch implement
                 }
                 case BUCHUNGSBLATTNUMMER: {
                     if (resulttyp == Resulttyp.FLURSTUECK) {
-                        query =
-                            "select distinct (select id from cs_class where table_name ilike 'alkis_landparcel') as class_id, lp.id as object_id, lp.alkis_id from alkis_landparcel lp,alkis_flurstueck_to_buchungsblaetter jt,alkis_buchungsblatt bb ,geom where geom.id = lp.geometrie and lp.buchungsblaetter=jt.flurstueck_reference and jt.buchungsblatt=bb.id and bb.buchungsblattcode ilike '"
-                                    + buchungsblattnummer
-                                    + WILDCARD
-                                    + "'";
+                        if (useWildcardForBuchungsblattsearch) {
+                            query =
+                                "select distinct (select id from cs_class where table_name ilike 'alkis_landparcel') as class_id, lp.id as object_id, lp.alkis_id from alkis_landparcel lp,alkis_flurstueck_to_buchungsblaetter jt,alkis_buchungsblatt bb ,geom where geom.id = lp.geometrie and lp.buchungsblaetter=jt.flurstueck_reference and jt.buchungsblatt=bb.id and bb.buchungsblattcode ilike '"
+                                        + buchungsblattnummer
+                                        + WILDCARD
+                                        + "'";
+                        } else {
+                            query =
+                                "select distinct (select id from cs_class where table_name ilike 'alkis_landparcel') as class_id, lp.id as object_id, lp.alkis_id from alkis_landparcel lp,alkis_flurstueck_to_buchungsblaetter jt,alkis_buchungsblatt bb ,geom where geom.id = lp.geometrie and lp.buchungsblaetter=jt.flurstueck_reference and jt.buchungsblatt=bb.id and bb.buchungsblattcode ilike '"
+                                        + buchungsblattnummer
+                                        + "'";
+                        }
                     } else {
-                        query =
-                            "select distinct (select id from cs_class where table_name ilike 'alkis_buchungsblatt') as class_id, jt.buchungsblatt as object_id,bb.buchungsblattcode from alkis_landparcel lp,alkis_flurstueck_to_buchungsblaetter jt,alkis_buchungsblatt bb ,geom where geom.id = lp.geometrie and lp.buchungsblaetter=jt.flurstueck_reference and jt.buchungsblatt=bb.id and bb.buchungsblattcode ilike '"
-                                    + buchungsblattnummer
-                                    + WILDCARD
-                                    + "'";
+                        if (useWildcardForBuchungsblattsearch) {
+                            query =
+                                "select distinct (select id from cs_class where table_name ilike 'alkis_buchungsblatt') as class_id, jt.buchungsblatt as object_id,bb.buchungsblattcode from alkis_landparcel lp,alkis_flurstueck_to_buchungsblaetter jt,alkis_buchungsblatt bb ,geom where geom.id = lp.geometrie and lp.buchungsblaetter=jt.flurstueck_reference and jt.buchungsblatt=bb.id and bb.buchungsblattcode ilike '"
+                                        + buchungsblattnummer
+                                        + WILDCARD
+                                        + "'";
+                        } else {
+                            query =
+                                "select distinct (select id from cs_class where table_name ilike 'alkis_buchungsblatt') as class_id, jt.buchungsblatt as object_id,bb.buchungsblattcode from alkis_landparcel lp,alkis_flurstueck_to_buchungsblaetter jt,alkis_buchungsblatt bb ,geom where geom.id = lp.geometrie and lp.buchungsblaetter=jt.flurstueck_reference and jt.buchungsblatt=bb.id and bb.buchungsblattcode ilike '"
+                                        + buchungsblattnummer
+                                        + "'";
+                        }
                     }
                     break;
                 }

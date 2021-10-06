@@ -1312,14 +1312,14 @@ public class FormSolutionsBestellungHandler implements ConnectionContextProvider
      */
     private static String extractBuchungsblatt(final FormSolutionsBestellung formSolutionsBestellung) {
         final Set<String> bbkz = new LinkedHashSet<>();
-        final String ausgewaehlteBuchungsblaetter = trimedNotEmpty(
+        final String ausgewaehlteBuchungsblaetter = nullWhenEmptyAftertrim(
                 formSolutionsBestellung.getAusgewaehlteBuchungsblaetter());
         if (ausgewaehlteBuchungsblaetter != null) {
             for (final String tmp : ausgewaehlteBuchungsblaetter.split(",")) {
                 bbkz.add(AlkisProducts.fixBuchungslattCode(tmp));
             }
         } else {
-            final String buchungsblattkennzeichen = trimedNotEmpty(
+            final String buchungsblattkennzeichen = nullWhenEmptyAftertrim(
                     formSolutionsBestellung.getBuchungsblattkennzeichen());
             if (buchungsblattkennzeichen != null) {
                 for (final String tmp : buchungsblattkennzeichen.split(",")) {
@@ -1681,6 +1681,26 @@ public class FormSolutionsBestellungHandler implements ConnectionContextProvider
         }
     }
 
+    /**
+     * DOCUMENT ME!
+     *
+     * @param   string  DOCUMENT ME!
+     *
+     * @return  DOCUMENT ME!
+     */
+    private static String nullWhenEmptyAftertrim(final String string) {
+        if (string == null) {
+            return null;
+        } else {
+            final String trimed = string.trim();
+            if (trimed.isEmpty()) {
+                return null;
+            } else {
+                return string;
+            }
+        }
+    }
+
     @Override
     public ConnectionContext getConnectionContext() {
         return connectionContext;
@@ -1806,8 +1826,9 @@ public class FormSolutionsBestellungHandler implements ConnectionContextProvider
         final CidsAlkisSearchStatement search = new CidsAlkisSearchStatement(
                 CidsAlkisSearchStatement.Resulttyp.BUCHUNGSBLATT,
                 CidsAlkisSearchStatement.SucheUeber.BUCHUNGSBLATTNUMMER,
-                buchungsblattKennzeichen,
-                null);
+                AlkisProducts.fixBuchungslattCode(buchungsblattKennzeichen),
+                null,
+                false);
         return executeSingleResultSearch(search);
     }
 
@@ -2094,7 +2115,8 @@ public class FormSolutionsBestellungHandler implements ConnectionContextProvider
                         || (buchungsblaetter.length
                             < ((String)bestellungBean.getProperty("landparcelcode")).split(",").length)) {
                 for (final String buchungsblattcode : buchungsblaetter) {
-                    final CidsBean buchungsblatt = getBuchungsblatt(buchungsblattcode);
+                    final CidsBean buchungsblatt = getBuchungsblatt(AlkisProducts.fixBuchungslattCode(
+                                buchungsblattcode));
                     if (buchungsblatt == null) {
                         throw new Exception("ALKIS Buchungsblatt wurde nicht gefunden (" + buchungsblattcode + ")");
                     }
@@ -2684,7 +2706,14 @@ public class FormSolutionsBestellungHandler implements ConnectionContextProvider
                             final List<CidsBean> buchungsblaetter = new ArrayList<>();
                             if (buchungsblattKennzeichen != null) {
                                 for (final String einzelBBKennzeichen : buchungsblattKennzeichen.split(",")) {
-                                    buchungsblaetter.add(getBuchungsblatt(einzelBBKennzeichen));
+                                    final CidsBean buchungsblatt = getBuchungsblatt(einzelBBKennzeichen);
+
+                                    if (buchungsblatt != null) {
+                                        buchungsblaetter.add(buchungsblatt);
+                                    } else {
+                                        throw new RuntimeException("Buchungsblattcode '" + einzelBBKennzeichen
+                                                    + "' nicht gefunden");
+                                    }
                                 }
                             }
 
