@@ -2709,8 +2709,13 @@ public class FormSolutionsBestellungHandler implements ConnectionContextProvider
                             if (flurstueckKennzeichen != null) {
                                 for (final String einzelFSKennzeichen : flurstueckKennzeichen.split(",")) {
                                     final CidsBean flurstueck = getFlurstueck(einzelFSKennzeichen);
-                                    // todo check != null ?
-                                    flurstuecke.add(flurstueck);
+                                    if (flurstueck == null) {
+                                        throw new Exception(String.format(
+                                                "ALKIS-Flurstück %s konnte nicht gefunden werden!",
+                                                einzelFSKennzeichen));
+                                    } else {
+                                        flurstuecke.add(flurstueck);
+                                    }
                                 }
                             }
 
@@ -2723,13 +2728,16 @@ public class FormSolutionsBestellungHandler implements ConnectionContextProvider
                                     if (buchungsblatt != null) {
                                         buchungsblaetter.add(buchungsblatt);
                                     } else {
-                                        throw new RuntimeException("Buchungsblattcode '" + einzelBBKennzeichen
+                                        throw new Exception("Buchungsblattcode '" + einzelBBKennzeichen
                                                     + "' nicht gefunden");
                                     }
                                 }
                             }
 
-                            // todo bb is empty && fs is empty => throw exception ?
+                            if (flurstuecke.isEmpty() && buchungsblaetter.isEmpty()) {
+                                throw new Exception(String.format(
+                                        "Es konnten keine Flurstücke und keine Buchungsblätter gefunden werden."));
+                            }
 
                             final LiegenschaftsbuchauszugHelper.ProtocolBuffer protocolBuffer =
                                 new LiegenschaftsbuchauszugHelper.ProtocolBuffer();
