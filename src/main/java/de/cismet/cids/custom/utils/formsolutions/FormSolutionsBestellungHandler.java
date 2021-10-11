@@ -2142,6 +2142,7 @@ public class FormSolutionsBestellungHandler implements ConnectionContextProvider
         if ((geom == null) && (bestellungBean.getProperty("landparcelcode") != null)) {
             final String[] landparcelcodes = ((String)bestellungBean.getProperty("landparcelcode")).split(
                     ",");
+            // landparcelcodes.isEmpty => throw Exception ?!
             for (final String landparcelcode : landparcelcodes) {
                 final CidsBean flurstueck = getFlurstueck(landparcelcode);
                 if (flurstueck == null) {
@@ -2594,7 +2595,17 @@ public class FormSolutionsBestellungHandler implements ConnectionContextProvider
                             final List<CidsBean> flurstuecke = new ArrayList<>();
                             if (flurstueckKennzeichen != null) {
                                 for (final String einzelFSKennzeichen : flurstueckKennzeichen.split(",")) {
-                                    flurstuecke.add(getFlurstueck(einzelFSKennzeichen));
+                                    final CidsBean flurstueck = getFlurstueck(einzelFSKennzeichen);
+                                    if (flurstueck == null) {
+                                        throw new Exception(String.format(
+                                                "ALKIS-Flurstück %s konnte nicht gefunden werden!",
+                                                einzelFSKennzeichen));
+                                    } else {
+                                        flurstuecke.add(flurstueck);
+                                    }
+                                }
+                                if (flurstuecke.isEmpty()) {
+                                    throw new Exception(String.format("Es konnten keine Flurstücke gefunden werden."));
                                 }
                             }
                             final BaulastBescheinigungHelper.ProtocolBuffer protocolBuffer =
@@ -2697,7 +2708,14 @@ public class FormSolutionsBestellungHandler implements ConnectionContextProvider
                             final List<CidsBean> flurstuecke = new ArrayList<>();
                             if (flurstueckKennzeichen != null) {
                                 for (final String einzelFSKennzeichen : flurstueckKennzeichen.split(",")) {
-                                    flurstuecke.add(getFlurstueck(einzelFSKennzeichen));
+                                    final CidsBean flurstueck = getFlurstueck(einzelFSKennzeichen);
+                                    if (flurstueck == null) {
+                                        throw new Exception(String.format(
+                                                "ALKIS-Flurstück %s konnte nicht gefunden werden!",
+                                                einzelFSKennzeichen));
+                                    } else {
+                                        flurstuecke.add(flurstueck);
+                                    }
                                 }
                             }
 
@@ -2707,14 +2725,18 @@ public class FormSolutionsBestellungHandler implements ConnectionContextProvider
                             if (buchungsblattKennzeichen != null) {
                                 for (final String einzelBBKennzeichen : buchungsblattKennzeichen.split(",")) {
                                     final CidsBean buchungsblatt = getBuchungsblatt(einzelBBKennzeichen);
-
                                     if (buchungsblatt != null) {
                                         buchungsblaetter.add(buchungsblatt);
                                     } else {
-                                        throw new RuntimeException("Buchungsblattcode '" + einzelBBKennzeichen
+                                        throw new Exception("Buchungsblattcode '" + einzelBBKennzeichen
                                                     + "' nicht gefunden");
                                     }
                                 }
+                            }
+
+                            if (flurstuecke.isEmpty() && buchungsblaetter.isEmpty()) {
+                                throw new Exception(String.format(
+                                        "Es konnten keine Flurstücke und keine Buchungsblätter gefunden werden."));
                             }
 
                             final LiegenschaftsbuchauszugHelper.ProtocolBuffer protocolBuffer =
@@ -2827,6 +2849,7 @@ public class FormSolutionsBestellungHandler implements ConnectionContextProvider
                         bestellungBean,
                         "Fehler beim Vorlage der Bestellung zur Prüfung.",
                         ex);
+                    fsBeanMap.remove(transid);
                 }
             }
         }
@@ -3106,6 +3129,7 @@ public class FormSolutionsBestellungHandler implements ConnectionContextProvider
                             bestellungBean,
                             "Fehler beim Erzeugen des Produktes",
                             ex);
+                        fsBeanMap.remove(transid);
                     }
                 }
             }

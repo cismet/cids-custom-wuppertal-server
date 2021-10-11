@@ -18,18 +18,34 @@ import com.vividsolutions.jts.geom.Geometry;
 
 import lombok.Getter;
 
+import org.apache.commons.io.IOUtils;
+import org.apache.commons.lang.RandomStringUtils;
 import org.apache.commons.lang.StringEscapeUtils;
 import org.apache.log4j.Logger;
 
+import java.awt.Color;
+
+import java.io.File;
+import java.io.FileInputStream;
+import java.io.FileOutputStream;
+import java.io.IOException;
+import java.io.InputStream;
+
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.Collection;
 import java.util.Date;
+import java.util.HashMap;
+import java.util.HashSet;
 import java.util.List;
+import java.util.Map;
+import java.util.Set;
+import java.util.zip.ZipEntry;
+import java.util.zip.ZipOutputStream;
 
 import de.cismet.cids.custom.utils.PotenzialflaecheReportCreator;
 import de.cismet.cids.custom.utils.PotenzialflaechenMapsJson;
 import de.cismet.cids.custom.utils.PotenzialflaechenProperties;
-import de.cismet.cids.custom.utils.StampedByteArrayServerAction;
 import de.cismet.cids.custom.utils.WundaBlauServerResources;
 import de.cismet.cids.custom.wunda_blau.search.server.AlkisLandparcelGeometryMonSearch;
 import de.cismet.cids.custom.wunda_blau.search.server.BodenrichtwertZoneMonSearch;
@@ -37,6 +53,7 @@ import de.cismet.cids.custom.wunda_blau.search.server.BplaeneMonSearch;
 import de.cismet.cids.custom.wunda_blau.search.server.FnpHauptnutzungenMonSearch;
 import de.cismet.cids.custom.wunda_blau.search.server.GeometrySearch;
 import de.cismet.cids.custom.wunda_blau.search.server.KstGeometryMonSearch;
+import de.cismet.cids.custom.wunda_blau.search.server.PotenzialflaecheSearch;
 import de.cismet.cids.custom.wunda_blau.search.server.RestApiMonSearch;
 import de.cismet.cids.custom.wunda_blau.search.server.RpdKategorieMonSearch;
 import de.cismet.cids.custom.wunda_blau.search.server.StadtraumtypMonSearch;
@@ -44,6 +61,7 @@ import de.cismet.cids.custom.wunda_blau.search.server.WohnlagenKategorisierungMo
 
 import de.cismet.cids.dynamics.CidsBean;
 
+import de.cismet.cids.server.actions.DefaultServerAction;
 import de.cismet.cids.server.actions.ServerAction;
 import de.cismet.cids.server.actions.ServerActionParameter;
 
@@ -60,7 +78,7 @@ import de.cismet.connectioncontext.ConnectionContext;
  * @version  $Revision$, $Date$
  */
 @org.openide.util.lookup.ServiceProvider(service = ServerAction.class)
-public class PotenzialflaecheReportServerAction extends StampedByteArrayServerAction {
+public class PotenzialflaecheReportServerAction extends DefaultServerAction {
 
     //~ Static fields/initializers ---------------------------------------------
 
@@ -264,7 +282,28 @@ public class PotenzialflaecheReportServerAction extends StampedByteArrayServerAc
                 public RestApiMonSearch createMonServerSearch() {
                     return new BodenrichtwertZoneMonSearch();
                 }
-            }, "Bodenrichtwerte");
+            }, "Bodenrichtwerte"),
+        BACKCOLOR(new VirtualReportProperty() {
+
+                @Override
+                public String calculateProperty(final PotenzialflaecheReportCreator creator) {
+                    final CidsBean flaecheBean = creator.getFlaecheBean();
+                    final String colorcode = (String)flaecheBean.getProperty("kampagne.colorcode");
+                    return colorcode;
+                }
+            }, "Größe"),
+        FORECOLOR(new VirtualReportProperty() {
+
+                @Override
+                public String calculateProperty(final PotenzialflaecheReportCreator creator) {
+                    final CidsBean flaecheBean = creator.getFlaecheBean();
+                    final String colorcode = (String)flaecheBean.getProperty("kampagne.colorcode");
+                    final Color backgroundColor = Color.decode(colorcode);
+                    final double luminance = (0.2126 * backgroundColor.getRed()) + (0.7152 * backgroundColor.getGreen())
+                                + (0.0722 * backgroundColor.getBlue());
+                    return (luminance < 140) ? "#FFFFFF" : "#000000";
+                }
+            }, "Größe");
 
         //~ Instance fields ----------------------------------------------------
 
@@ -301,7 +340,19 @@ public class PotenzialflaecheReportServerAction extends StampedByteArrayServerAc
 
         //~ Enum constants -----------------------------------------------------
 
-        POTENZIALFLAECHE, TEMPLATE
+        POTENZIALFLAECHE, KAMPAGNE, BODY_TYPE, TEMPLATE, EXTERNAL
+    }
+
+    /**
+     * DOCUMENT ME!
+     *
+     * @version  $Revision$, $Date$
+     */
+    public enum BodyType {
+
+        //~ Enum constants -----------------------------------------------------
+
+        POTENZIALFLAECHE, KAMPAGNE
     }
 
     //~ Instance fields --------------------------------------------------------
@@ -356,34 +407,204 @@ public class PotenzialflaecheReportServerAction extends StampedByteArrayServerAc
     }
 
     @Override
-    public byte[] executeBeforeStamp(final Object body, final ServerActionParameter... params) throws Exception {
-        MetaObjectNode flaecheMon = (body != null)
-            ? ((body instanceof MetaObjectNode) ? (MetaObjectNode)body
-                                                : getFor(new String((byte[])body), "pf_potenzialflaeche", "nummer"))
-            : null;
-        MetaObjectNode templateMon = null;
-        if (params != null) {
-            for (final ServerActionParameter sap : params) {
-                if (sap.getKey().equals(Parameter.POTENZIALFLAECHE.toString())) {
-                    flaecheMon = getFor(sap.getValue(), "pf_potenzialflaeche", "nummer");
-                } else if (sap.getKey().equals(Parameter.TEMPLATE.toString())) {
-                    templateMon = getFor(sap.getValue(), "pf_steckbrieftemplate", "bezeichnung");
+    public Object execute(final Object body, final ServerActionParameter... params) {
+        try {
+            BodyType bodyType = BodyType.POTENZIALFLAECHE;
+
+            final Set<MetaObjectNode> flaecheMons = new HashSet<>();
+            final Set<MetaObjectNode> kampagneMons = new HashSet<>();
+            MetaObjectNode templateMon = null;
+
+            if (params != null) {
+                for (final ServerActionParameter sap : params) {
+                    final Object value = sap.getValue();
+                    if (sap.getKey().equals(Parameter.BODY_TYPE.toString())) {
+                        bodyType = (value instanceof BodyType)
+                            ? (BodyType)value : ((value instanceof String) ? BodyType.valueOf((String)value) : null);
+                    } else if (sap.getKey().equals(Parameter.POTENZIALFLAECHE.toString())) {
+                        flaecheMons.add(getFor(sap.getValue(), "pf_potenzialflaeche", "nummer"));
+                    } else if (sap.getKey().equals(Parameter.KAMPAGNE.toString())) {
+                        kampagneMons.add(getFor(sap.getValue(), "pf_kampagne", "bezeichnung"));
+                    } else if (sap.getKey().equals(Parameter.TEMPLATE.toString())) {
+                        templateMon = getFor(sap.getValue(), "pf_steckbrieftemplate", "bezeichnung");
+                    }
                 }
             }
+
+            final CidsBean templateBean = (templateMon != null)
+                ? getMetaService().getMetaObject(
+                            getUser(),
+                            templateMon.getObjectId(),
+                            templateMon.getClassId(),
+                            getConnectionContext()).getBean() : null;
+
+            if (BodyType.POTENZIALFLAECHE.equals(bodyType)) {
+                if (body instanceof MetaObjectNode) {
+                    flaecheMons.add((MetaObjectNode)body);
+                } else if (body instanceof byte[]) {
+                    flaecheMons.add(getFor(new String((byte[])body), "pf_potenzialflaeche", "nummer"));
+                } else if (body instanceof MetaObjectNode[]) {
+                    flaecheMons.addAll(Arrays.asList((MetaObjectNode[])body));
+                } else if (body instanceof Collection) {
+                    flaecheMons.addAll((Collection<MetaObjectNode>)body);
+                }
+            } else if (BodyType.KAMPAGNE.equals(bodyType)) {
+                if (body instanceof MetaObjectNode) {
+                    kampagneMons.add((MetaObjectNode)body);
+                } else if (body instanceof byte[]) {
+                    kampagneMons.add(getFor(new String((byte[])body), "pf_kampagne", "bezeichnung"));
+                } else if (body instanceof MetaObjectNode[]) {
+                    kampagneMons.addAll(Arrays.asList((MetaObjectNode[])body));
+                } else if (body instanceof Collection) {
+                    kampagneMons.addAll((Collection<MetaObjectNode>)body);
+                }
+            }
+
+            if (!kampagneMons.isEmpty()) {
+                for (final MetaObjectNode kampagneMon : kampagneMons) {
+                    final PotenzialflaecheSearch.Configuration configuration =
+                        new PotenzialflaecheSearch.Configuration();
+                    configuration.addFilter(Property.KAMPAGNE, kampagneMon);
+                    final PotenzialflaecheSearch search = new PotenzialflaecheSearch(true);
+                    final Map localServers = new HashMap<>();
+                    localServers.put("WUNDA_BLAU", getMetaService());
+                    search.setActiveLocalServers(localServers);
+                    search.setUser(getUser());
+                    search.setConfiguration(configuration);
+                    flaecheMons.addAll(search.performServerSearch());
+                }
+            }
+
+            if (flaecheMons.isEmpty()) {
+                throw new Exception("flaeche not given");
+            } else if (flaecheMons.size() == 1) {
+                final MetaObjectNode flaecheMon = flaecheMons.iterator().next();
+                final CidsBean flaecheBean = getMetaService().getMetaObject(
+                            getUser(),
+                            flaecheMon.getObjectId(),
+                            flaecheMon.getClassId(),
+                            getConnectionContext())
+                            .getBean();
+                final String pdfName = String.format("%s.pdf", RandomStringUtils.randomAlphanumeric(24));
+                final File pdfFile = new File(getProperties().getReportsDirectory(), pdfName);
+                createSingleReport(flaecheBean, templateBean, pdfFile);
+                return pdfName;
+            } else {
+                final File tmpDir = new File(getProperties().getReportsDirectory());
+                final String zipName = String.format("%s.zip", RandomStringUtils.randomAlphanumeric(24));
+                final File zipFile = new File(tmpDir, zipName);
+                try(final ZipOutputStream zipOutputStream = new ZipOutputStream(new FileOutputStream(zipFile));
+                    ) {
+                    final StringBuffer errorAppender = new StringBuffer();
+                    for (final MetaObjectNode flaecheMon : flaecheMons) {
+                        final String pdfName = String.format("%s.pdf", RandomStringUtils.randomAlphanumeric(24));
+                        final File pdfFile = new File(tmpDir, pdfName);
+
+                        try {
+                            final CidsBean flaecheBean = getMetaService().getMetaObject(
+                                        getUser(),
+                                        flaecheMon.getObjectId(),
+                                        flaecheMon.getClassId(),
+                                        getConnectionContext())
+                                        .getBean();
+                            createSingleReport(flaecheBean, templateBean, pdfFile);
+                            appendZipEntryFor(
+                                pdfFile,
+                                String.format("%s.pdf", (String)flaecheBean.getProperty("nummer")),
+                                zipOutputStream);
+                            pdfFile.delete();
+                        } catch (final Exception ex) {
+                            errorAppender.append(String.format(
+                                    "-----%s-----\n==========\n%s\n==========\n",
+                                    flaecheMon.toString(),
+                                    ex.getMessage()));
+                        }
+                    }
+                    final String errors = errorAppender.toString();
+                    if (!errors.isEmpty()) {
+                        appendZipEntryFor(errors, "errors.txt", zipOutputStream);
+                    }
+                    zipOutputStream.closeEntry();
+                    zipOutputStream.finish();
+                    zipOutputStream.flush();
+                    return zipName;
+                }
+            }
+        } catch (final Exception ex) {
+            LOG.error("error while creating report", ex);
+            return ex;
         }
-        if (flaecheMon != null) {
-            final CidsBean flaecheBean = getMetaService().getMetaObject(
-                        getUser(),
-                        flaecheMon.getObjectId(),
-                        flaecheMon.getClassId(),
-                        getConnectionContext())
-                        .getBean();
-            final CidsBean templateBean = getMetaService().getMetaObject(
-                        getUser(),
-                        templateMon.getObjectId(),
-                        templateMon.getClassId(),
-                        getConnectionContext())
-                        .getBean();
+    }
+
+    /**
+     * DOCUMENT ME!
+     *
+     * @param   file             is DOCUMENT ME!
+     * @param   entryName        DOCUMENT ME!
+     * @param   zipOutputStream  DOCUMENT ME!
+     *
+     * @return  DOCUMENT ME!
+     *
+     * @throws  IOException  DOCUMENT ME!
+     */
+    public ZipOutputStream appendZipEntryFor(final File file,
+            final String entryName,
+            final ZipOutputStream zipOutputStream) throws IOException {
+        try(final FileInputStream fileInputStream = new FileInputStream(file)) {
+            return appendZipEntryFor(fileInputStream, entryName, zipOutputStream);
+        }
+    }
+
+    /**
+     * DOCUMENT ME!
+     *
+     * @param   string           DOCUMENT ME!
+     * @param   entryName        DOCUMENT ME!
+     * @param   zipOutputStream  DOCUMENT ME!
+     *
+     * @return  DOCUMENT ME!
+     *
+     * @throws  IOException  DOCUMENT ME!
+     */
+    public ZipOutputStream appendZipEntryFor(final String string,
+            final String entryName,
+            final ZipOutputStream zipOutputStream) throws IOException {
+        return appendZipEntryFor(IOUtils.toInputStream(string, "UTF-8"), entryName, zipOutputStream);
+    }
+
+    /**
+     * DOCUMENT ME!
+     *
+     * @param   inputStream      DOCUMENT ME!
+     * @param   entryName        DOCUMENT ME!
+     * @param   zipOutputStream  DOCUMENT ME!
+     *
+     * @return  DOCUMENT ME!
+     *
+     * @throws  IOException  DOCUMENT ME!
+     */
+    public ZipOutputStream appendZipEntryFor(final InputStream inputStream,
+            final String entryName,
+            final ZipOutputStream zipOutputStream) throws IOException {
+        final ZipEntry zipEntry = new ZipEntry(entryName);
+        zipOutputStream.putNextEntry(zipEntry);
+        IOUtils.copy(inputStream, zipOutputStream);
+        zipOutputStream.closeEntry();
+        return zipOutputStream;
+    }
+
+    /**
+     * DOCUMENT ME!
+     *
+     * @param   flaecheBean   DOCUMENT ME!
+     * @param   templateBean  DOCUMENT ME!
+     * @param   file          DOCUMENT ME!
+     *
+     * @throws  Exception  DOCUMENT ME!
+     */
+    private void createSingleReport(final CidsBean flaecheBean, final CidsBean templateBean, final File file)
+            throws Exception {
+        try(final FileOutputStream fileOutputStream = new FileOutputStream(file)) {
             final PotenzialflaecheReportCreator creator = new PotenzialflaecheReportCreator(
                     getProperties(),
                     getMapsJson(),
@@ -391,10 +612,7 @@ public class PotenzialflaecheReportServerAction extends StampedByteArrayServerAc
                     getUser(),
                     getMetaService(),
                     getConnectionContext());
-
-            return creator.createReport(flaecheBean, templateBean);
-        } else {
-            throw new Exception("flaeche not given");
+            creator.writeReportToOutputStream(flaecheBean, templateBean, fileOutputStream);
         }
     }
 
