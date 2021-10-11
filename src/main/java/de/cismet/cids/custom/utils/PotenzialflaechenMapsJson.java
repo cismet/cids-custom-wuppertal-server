@@ -41,6 +41,7 @@ public class PotenzialflaechenMapsJson extends DefaultServerResourceJsonHandler 
     public static final int DEFAULT_BUFFER = 50;
     public static final int DEFAULT_MAP_WIDTH = 300;
     public static final int DEFAULT_MAP_HEIGHT = 200;
+    public static final boolean DEFAULT_SHOW_GEOM = true;
 
     //~ Instance fields --------------------------------------------------------
 
@@ -78,7 +79,7 @@ public class PotenzialflaechenMapsJson extends DefaultServerResourceJsonHandler 
         private int width = DEFAULT_MAP_WIDTH;
         private int height = DEFAULT_MAP_HEIGHT;
         private int dpi = DEFAULT_MAP_DPI;
-        private boolean showGeom = true;
+        private boolean showGeom = DEFAULT_SHOW_GEOM;
         private int buffer = DEFAULT_BUFFER;
     }
 }

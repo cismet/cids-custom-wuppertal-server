@@ -36,8 +36,8 @@ import net.sf.jasperreports.engine.data.JRBeanCollectionDataSource;
 import java.awt.image.BufferedImage;
 
 import java.io.ByteArrayInputStream;
-import java.io.ByteArrayOutputStream;
 import java.io.File;
+import java.io.OutputStream;
 
 import java.text.SimpleDateFormat;
 
@@ -139,12 +139,13 @@ public class PotenzialflaecheReportCreator {
      *
      * @param   flaecheBean   DOCUMENT ME!
      * @param   templateBean  DOCUMENT ME!
-     *
-     * @return  DOCUMENT ME!
+     * @param   outputStream  DOCUMENT ME!
      *
      * @throws  Exception  DOCUMENT ME!
      */
-    public byte[] createReport(final CidsBean flaecheBean, final CidsBean templateBean) throws Exception {
+    public void writeReportToOutputStream(final CidsBean flaecheBean,
+            final CidsBean templateBean,
+            final OutputStream outputStream) throws Exception {
         final CidsBean kampagne = (flaecheBean != null) ? (CidsBean)flaecheBean.getProperty("kampagne") : null;
 
         CidsBean selectedTemplateBean = null;
@@ -190,17 +191,8 @@ public class PotenzialflaecheReportCreator {
                 parameters,
                 dataSource);
 
-        ByteArrayOutputStream os = null;
-        try {
-            os = new ByteArrayOutputStream();
-            JasperExportManager.exportReportToPdfStream(print, os);
-            final byte[] bytes = os.toByteArray();
-            return bytes;
-        } finally {
-            if (os != null) {
-                os.close();
-            }
-        }
+        JasperExportManager.exportReportToPdfStream(print, outputStream);
+        outputStream.flush();
     }
 
     /**
