@@ -14,10 +14,9 @@ package de.cismet.cids.custom.utils;
 
 import lombok.Getter;
 
-import de.cismet.cids.custom.utils.properties.PotenzialflaechenProperties;
-
 import de.cismet.cids.utils.serverresources.BinaryServerResource;
 import de.cismet.cids.utils.serverresources.JasperReportServerResource;
+import de.cismet.cids.utils.serverresources.JsonServerResource;
 import de.cismet.cids.utils.serverresources.PropertiesServerResource;
 import de.cismet.cids.utils.serverresources.ServerResource;
 import de.cismet.cids.utils.serverresources.TextServerResource;
@@ -40,6 +39,7 @@ public enum WundaBlauServerResources {
     POTENZIALFLAECHEN_PROPERTIES(new PropertiesServerResource(
             "/potenzialflaechen/potenzialflaechen.properties",
             PotenzialflaechenProperties.class)),
+    POTENZIALFLAECHEN_MAPS_JSON(new JsonServerResource("/potenzialflaechen/maps.json", PotenzialflaechenMapsJson.class)),
     APMAPS_JASPER(new JasperReportServerResource("/reports/apmaps.jasper")),
     APMAPS_DOCUMENT_JASPER(new JasperReportServerResource("/reports/apmaps_document.jasper")),
     APMAPS_OVERVIEW_JASPER(new JasperReportServerResource("/reports/apmaps_overview.jasper")),

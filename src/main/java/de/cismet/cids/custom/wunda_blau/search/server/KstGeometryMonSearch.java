@@ -128,7 +128,7 @@ public class KstGeometryMonSearch extends RestApiMonGeometrySearch {
             final Geometry geometry = getGeometry();
             if (geometry != null) {
                 area = String.format(
-                        "st_area(st_intersection(geom.geo_field, GeometryFromText('%1$s')))",
+                        "st_area(st_intersection(geom.geo_field, st_GeometryFromText('%1$s')))",
                         PostGisGeometryFactory.getPostGisCompliantDbString(geometry));
             } else {
                 area = "st_area(geom.geo_field)";
@@ -151,7 +151,7 @@ public class KstGeometryMonSearch extends RestApiMonGeometrySearch {
                             + "  %5$s"
                             + ") AS sub "
                             + "GROUP BY object_id "
-                            + "ORDER BY sum(area), min(nummer) DESC;",
+                            + "ORDER BY sum(area) DESC;",
                     kst,
                     area,
                     nr,

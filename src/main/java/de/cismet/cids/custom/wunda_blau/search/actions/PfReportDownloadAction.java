@@ -22,8 +22,8 @@ import java.io.File;
 import java.io.FileInputStream;
 import java.io.InputStream;
 
+import de.cismet.cids.custom.utils.PotenzialflaechenProperties;
 import de.cismet.cids.custom.utils.WundaBlauServerResources;
-import de.cismet.cids.custom.utils.properties.PotenzialflaechenProperties;
 
 import de.cismet.cids.dynamics.CidsBean;
 

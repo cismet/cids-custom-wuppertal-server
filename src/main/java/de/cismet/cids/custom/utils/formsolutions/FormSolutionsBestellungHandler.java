@@ -92,11 +92,15 @@ import javax.xml.bind.ValidationEventHandler;
 
 import de.cismet.cids.custom.utils.WundaBlauServerResources;
 import de.cismet.cids.custom.utils.alkis.AlkisProductDescription;
+import de.cismet.cids.custom.utils.alkis.AlkisProducts;
 import de.cismet.cids.custom.utils.alkis.BaulastBescheinigungHelper;
+import de.cismet.cids.custom.utils.alkis.LiegenschaftsbuchauszugHelper;
 import de.cismet.cids.custom.utils.alkis.ServerAlkisProducts;
+import de.cismet.cids.custom.utils.berechtigungspruefung.BerechtigungspruefungBillingDownloadInfo;
 import de.cismet.cids.custom.utils.berechtigungspruefung.BerechtigungspruefungDownloadInfo;
 import de.cismet.cids.custom.utils.berechtigungspruefung.BerechtigungspruefungHandler;
 import de.cismet.cids.custom.utils.berechtigungspruefung.baulastbescheinigung.BerechtigungspruefungBescheinigungDownloadInfo;
+import de.cismet.cids.custom.utils.berechtigungspruefung.katasterauszug.BerechtigungspruefungAlkisEinzelnachweisDownloadInfo;
 import de.cismet.cids.custom.utils.billing.BillingInfo;
 import de.cismet.cids.custom.utils.billing.BillingInfoHandler;
 import de.cismet.cids.custom.utils.billing.BillingPrice;
@@ -185,7 +189,7 @@ public class FormSolutionsBestellungHandler implements ConnectionContextProvider
 
         //~ Enum constants -----------------------------------------------------
 
-        SGK, ABK, BAB_WEITERLEITUNG, BAB_ABSCHLUSS
+        SGK, ABK, BAB_WEITERLEITUNG, BAB_ABSCHLUSS, LB_WEITERLEITUNG, LB_ABSCHLUSS
     }
 
     //~ Instance fields --------------------------------------------------------
@@ -201,6 +205,7 @@ public class FormSolutionsBestellungHandler implements ConnectionContextProvider
     private final ProductType testCismet00Type;
     private final Set<String> ignoreTransids = new HashSet<>();
     private final BaulastBescheinigungHelper baulastBescheinigungHelper;
+    private final LiegenschaftsbuchauszugHelper liegenschaftsbuchauszugHelper;
     private final BillingInfoHandler billingInfoHander;
 
     //~ Constructors -----------------------------------------------------------
@@ -283,6 +288,7 @@ public class FormSolutionsBestellungHandler implements ConnectionContextProvider
         this.user = FormSolutionsBestellungHandler.getFsUser();
         this.billingInfoHander = billingInfoHander;
         this.baulastBescheinigungHelper = new BaulastBescheinigungHelper(user, metaService, connectionContext);
+        this.liegenschaftsbuchauszugHelper = new LiegenschaftsbuchauszugHelper(user, metaService, connectionContext);
         this.testCismet00Type = testCismet00Type;
         this.testCismet00Xml = testCismet00Xml;
         this.creds = creds;
@@ -299,6 +305,15 @@ public class FormSolutionsBestellungHandler implements ConnectionContextProvider
      */
     private BaulastBescheinigungHelper getBaulastBescheinigungHelper() {
         return baulastBescheinigungHelper;
+    }
+
+    /**
+     * DOCUMENT ME!
+     *
+     * @return  DOCUMENT ME!
+     */
+    private LiegenschaftsbuchauszugHelper getLiegenschaftsbuchauszugHelper() {
+        return liegenschaftsbuchauszugHelper;
     }
 
     /**
@@ -643,6 +658,7 @@ public class FormSolutionsBestellungHandler implements ConnectionContextProvider
                     switch (productType) {
                         case SGK:
                         case ABK:
+                        case LB_ABSCHLUSS:
                         case BAB_ABSCHLUSS: {
                             try {
                                 if (!Boolean.TRUE.equals(bestellungBean.getProperty("duplicate"))
@@ -732,6 +748,14 @@ public class FormSolutionsBestellungHandler implements ConnectionContextProvider
                         auftragsListeUrl = new URL(getProperties().getUrlAuftragslisteBb2Fs());
                     }
                     break;
+                    case LB_WEITERLEITUNG: {
+                        auftragsListeUrl = new URL(getProperties().getUrlAuftragslisteLb1Fs());
+                    }
+                    break;
+                    case LB_ABSCHLUSS: {
+                        auftragsListeUrl = new URL(getProperties().getUrlAuftragslisteLb2Fs());
+                    }
+                    break;
                     default: {
                         throw new Exception("unknown product type");
                     }
@@ -785,6 +809,7 @@ public class FormSolutionsBestellungHandler implements ConnectionContextProvider
                     switch (productType) {
                         case ABK:
                         case SGK:
+                        case LB_ABSCHLUSS:
                         case BAB_ABSCHLUSS: {
                             final int okStatus;
                             if (Boolean.TRUE.equals(propPostweg)) {
@@ -1038,6 +1063,10 @@ public class FormSolutionsBestellungHandler implements ConnectionContextProvider
             case BAB_ABSCHLUSS: {
                 return "Baulastenbescheinigung";
             }
+            case LB_WEITERLEITUNG:
+            case LB_ABSCHLUSS: {
+                return "Liegenschaftsbuchauszug";
+            }
             default: {
                 return null;
             }
@@ -1086,6 +1115,12 @@ public class FormSolutionsBestellungHandler implements ConnectionContextProvider
             }
             case BAB_ABSCHLUSS: {
                 return "BAB";
+            }
+            case LB_WEITERLEITUNG: {
+                return "LB_WEITERLEITUNG";
+            }
+            case LB_ABSCHLUSS: {
+                return "LB";
             }
             default: {
                 return null;
@@ -1153,8 +1188,21 @@ public class FormSolutionsBestellungHandler implements ConnectionContextProvider
      */
     private CidsBean getProduktBean(final FormSolutionsBestellung formSolutionsBestellung,
             final ProductType productType) throws RemoteException {
-        final String produktKey = extractProduktKey(formSolutionsBestellung, productType);
+        String produktKey = extractProduktKey(formSolutionsBestellung, productType);
         final String formatKey = extractFormatKey(formSolutionsBestellung);
+
+        if (produktKey.equals("LB_WEITERLEITUNG") || produktKey.equals("LB")) {
+            // Zum Vergleichen der Gebuehren wird die Abkuerzung aus Issue 2253 genutzt
+
+            final int gebFuseKom = getObjectCount(formSolutionsBestellung.getAusgewaehlteFlurstuecke());
+            final int gebBekom = getObjectCount(formSolutionsBestellung.getAusgewaehlteBuchungsblaetter());
+
+            if ((formSolutionsBestellung.getAusgewaehlteFlurstuecke() != null) && (gebFuseKom <= gebBekom)) {
+                produktKey = produktKey.equals("LB_WEITERLEITUNG") ? "fsueKom_WEITERLEITUNG" : "fsueKom";
+            } else {
+                produktKey = produktKey.equals("LB_WEITERLEITUNG") ? "bekom_WEITERLEITUNG" : "bekom";
+            }
+        }
 
         final MetaClass produktTypMc = getMetaClass("fs_bestellung_produkt_typ", getConnectionContext());
         final MetaClass produktMc = getMetaClass("fs_bestellung_produkt", getConnectionContext());
@@ -1198,6 +1246,21 @@ public class FormSolutionsBestellungHandler implements ConnectionContextProvider
     /**
      * DOCUMENT ME!
      *
+     * @param   objects  DOCUMENT ME!
+     *
+     * @return  DOCUMENT ME!
+     */
+    private int getObjectCount(final String objects) {
+        if (objects != null) {
+            return objects.split(",").length;
+        } else {
+            return 0;
+        }
+    }
+
+    /**
+     * DOCUMENT ME!
+     *
      * @param   formSolutionsBestellung  DOCUMENT ME!
      *
      * @return  DOCUMENT ME!
@@ -1232,6 +1295,44 @@ public class FormSolutionsBestellungHandler implements ConnectionContextProvider
             return null;
         } else {
             final Iterator<String> it = fskz.iterator();
+            final StringBuffer sb = new StringBuffer(it.next());
+            while (it.hasNext()) {
+                sb.append(",").append(it.next());
+            }
+            return sb.toString();
+        }
+    }
+
+    /**
+     * Extract the buchungsblaetter. This was introduced with KFAS600204, KFAS600205
+     *
+     * @param   formSolutionsBestellung  DOCUMENT ME!
+     *
+     * @return  DOCUMENT ME!
+     */
+    private static String extractBuchungsblatt(final FormSolutionsBestellung formSolutionsBestellung) {
+        final Set<String> bbkz = new LinkedHashSet<>();
+        final String ausgewaehlteBuchungsblaetter = nullWhenEmptyAftertrim(
+                formSolutionsBestellung.getAusgewaehlteBuchungsblaetter());
+        if (ausgewaehlteBuchungsblaetter != null) {
+            for (final String tmp : ausgewaehlteBuchungsblaetter.split(",")) {
+                bbkz.add(AlkisProducts.fixBuchungslattCode(tmp));
+            }
+        } else {
+            final String buchungsblattkennzeichen = nullWhenEmptyAftertrim(
+                    formSolutionsBestellung.getBuchungsblattkennzeichen());
+            if (buchungsblattkennzeichen != null) {
+                for (final String tmp : buchungsblattkennzeichen.split(",")) {
+                    bbkz.add(tmp);
+                }
+                bbkz.add(buchungsblattkennzeichen);
+            }
+        }
+
+        if (bbkz.isEmpty()) {
+            return null;
+        } else {
+            final Iterator<String> it = bbkz.iterator();
             final StringBuffer sb = new StringBuffer(it.next());
             while (it.hasNext()) {
                 sb.append(",").append(it.next());
@@ -1314,12 +1415,13 @@ public class FormSolutionsBestellungHandler implements ConnectionContextProvider
             ? adresseRechnungBean : adresseMc.getEmptyInstance(getConnectionContext()).getBean();
 
         // https://github.com/cismet/wupp/issues/1896#issuecomment-603776307
-        final boolean isBaulast = ProductType.BAB_ABSCHLUSS.equals(productType)
-                    || ProductType.BAB_WEITERLEITUNG.equals(productType);
+        final boolean checkAlternateAddress = ProductType.BAB_ABSCHLUSS.equals(productType)
+                    || ProductType.BAB_WEITERLEITUNG.equals(productType) || ProductType.LB_ABSCHLUSS.equals(productType)
+                    || ProductType.LB_WEITERLEITUNG.equals(productType);
         final boolean isAdresseAlternativRechnung = formSolutionsBestellung.getAltAdresse() != null;
         final boolean isAdresseAlternativVersand = (formSolutionsBestellung.getAltAdresseAbweichendeLieferanschrift()
                         != null) || (formSolutionsBestellung.getAltAdresse1() != null);
-        if (isBaulast && !isAdresseAlternativVersand && !isAdresseAlternativRechnung) {
+        if (checkAlternateAddress && !isAdresseAlternativVersand && !isAdresseAlternativRechnung) {
             adresseVersandBean.setProperty(
                 "firma",
                 trimedNotEmpty(formSolutionsBestellung.getFirmaAbweichendeLieferanschrift()));
@@ -1341,7 +1443,7 @@ public class FormSolutionsBestellungHandler implements ConnectionContextProvider
             adresseRechnungBean.setProperty("plz", plz);
             adresseRechnungBean.setProperty("ort", trimedNotEmpty(formSolutionsBestellung.getAsOrt()));
             adresseRechnungBean.setProperty("staat", trimedNotEmpty(formSolutionsBestellung.getStaat()));
-        } else if (isBaulast && isAdresseAlternativVersand && !isAdresseAlternativRechnung) {
+        } else if (checkAlternateAddress && isAdresseAlternativVersand && !isAdresseAlternativRechnung) {
             adresseVersandBean.setProperty(
                 "firma",
                 trimedNotEmpty(formSolutionsBestellung.getFirmaAbweichendeLieferanschrift()));
@@ -1365,7 +1467,7 @@ public class FormSolutionsBestellungHandler implements ConnectionContextProvider
             adresseRechnungBean.setProperty("plz", plz);
             adresseRechnungBean.setProperty("ort", trimedNotEmpty(formSolutionsBestellung.getAsOrt()));
             adresseRechnungBean.setProperty("staat", trimedNotEmpty(formSolutionsBestellung.getStaat()));
-        } else if (isBaulast && !isAdresseAlternativVersand && isAdresseAlternativRechnung) {
+        } else if (checkAlternateAddress && !isAdresseAlternativVersand && isAdresseAlternativRechnung) {
             adresseVersandBean.setProperty(
                 "firma",
                 trimedNotEmpty(formSolutionsBestellung.getFirmaAbweichendeLieferanschrift()));
@@ -1387,7 +1489,7 @@ public class FormSolutionsBestellungHandler implements ConnectionContextProvider
             adresseRechnungBean.setProperty("plz", null);
             adresseRechnungBean.setProperty("ort", null);
             adresseRechnungBean.setProperty("staat", trimedNotEmpty(formSolutionsBestellung.getStaat()));
-        } else if (isBaulast && isAdresseAlternativVersand && isAdresseAlternativRechnung) {
+        } else if (checkAlternateAddress && isAdresseAlternativVersand && isAdresseAlternativRechnung) {
             adresseVersandBean.setProperty(
                 "firma",
                 trimedNotEmpty(formSolutionsBestellung.getFirmaAbweichendeLieferanschrift()));
@@ -1411,7 +1513,7 @@ public class FormSolutionsBestellungHandler implements ConnectionContextProvider
             adresseRechnungBean.setProperty("plz", null);
             adresseRechnungBean.setProperty("ort", null);
             adresseRechnungBean.setProperty("staat", trimedNotEmpty(formSolutionsBestellung.getStaat()));
-        } else if (!isBaulast) {
+        } else if (!checkAlternateAddress) {
             adresseVersandBean.setProperty("firma", trimedNotEmpty(formSolutionsBestellung.getFirma1()));
             adresseVersandBean.setProperty("vorname", trimedNotEmpty(formSolutionsBestellung.getAsVorname1()));
             adresseVersandBean.setProperty("name", trimedNotEmpty(formSolutionsBestellung.getAsName1()));
@@ -1436,7 +1538,7 @@ public class FormSolutionsBestellungHandler implements ConnectionContextProvider
         final String transid = formSolutionsBestellung.getTransId();
 
         final CidsBean nachfolgerVonBean;
-        if (ProductType.BAB_ABSCHLUSS.equals(productType)) {
+        if (ProductType.BAB_ABSCHLUSS.equals(productType) || ProductType.LB_ABSCHLUSS.equals(productType)) {
             final String fileUrl = (formSolutionsBestellung.getFileUrl() != null)
                 ? URLDecoder.decode(formSolutionsBestellung.getFileUrl(), "UTF-8") : null;
             final String cacheId = (fileUrl != null) ? HttpUrl.parse(fileUrl).queryParameter("cacheID") : null;
@@ -1455,6 +1557,9 @@ public class FormSolutionsBestellungHandler implements ConnectionContextProvider
 
         final String landparcelcode = (nachfolgerVonBean != null)
             ? (String)nachfolgerVonBean.getProperty("landparcelcode") : extractLandparcelcode(formSolutionsBestellung);
+        final String buchungsblattcode = (nachfolgerVonBean != null)
+            ? (String)nachfolgerVonBean.getProperty("buchungsblattcode")
+            : extractBuchungsblatt(formSolutionsBestellung);
         final boolean isGutschein = ((formSolutionsBestellung.getGutschein() != null)
                         && (GUTSCHEIN_YES == Integer.parseInt(formSolutionsBestellung.getGutschein())));
         final String gutscheinCode = isGutschein ? formSolutionsBestellung.getGutscheinCode() : null;
@@ -1479,10 +1584,13 @@ public class FormSolutionsBestellungHandler implements ConnectionContextProvider
             Double tmpGebuehr = null;
             try {
                 tmpGebuehr = Double.parseDouble(
-                        ((ProductType.BAB_ABSCHLUSS.equals(productType) && Boolean.FALSE.equals(postweg))
-                            ? formSolutionsBestellung.getBetragDL() : formSolutionsBestellung.getBetrag()).replaceAll(
-                            ",",
-                            "."));
+                        (((ProductType.BAB_ABSCHLUSS.equals(productType)
+                                            || ProductType.LB_ABSCHLUSS.equals(productType))
+                                        && Boolean.FALSE.equals(postweg)) ? formSolutionsBestellung.getBetragDL()
+                                                                          : formSolutionsBestellung.getBetrag())
+                                    .replaceAll(
+                                        ",",
+                                        "."));
             } catch (final Exception ex) {
                 LOG.warn("Exception while parsing Gebuehr", ex);
             }
@@ -1494,6 +1602,7 @@ public class FormSolutionsBestellungHandler implements ConnectionContextProvider
         bestellungBean.setProperty("postweg", postweg);
         bestellungBean.setProperty("transid", transid);
         bestellungBean.setProperty("landparcelcode", landparcelcode);
+        bestellungBean.setProperty("buchungsblattcode", buchungsblattcode);
         bestellungBean.setProperty("fk_produkt", produktBean);
         bestellungBean.setProperty("massstab", massstab);
         bestellungBean.setProperty("fk_adresse_versand", adresseVersandBean);
@@ -1536,6 +1645,25 @@ public class FormSolutionsBestellungHandler implements ConnectionContextProvider
     /**
      * DOCUMENT ME!
      *
+     * @param   productKey    DOCUMENT ME!
+     * @param   usagekey      DOCUMENT ME!
+     * @param   downloadInfo  DOCUMENT ME!
+     *
+     * @return  DOCUMENT ME!
+     */
+    private double calculateLBGebuehr(final String productKey,
+            final String usagekey,
+            final BerechtigungspruefungAlkisEinzelnachweisDownloadInfo downloadInfo) {
+        final BillingProduct product = billingInfoHander.getProducts().get(productKey);
+
+        final double raw = BillingInfoHandler.calculateRawLBPrice(product, downloadInfo.getAmounts());
+        final BillingPrice price = new BillingPrice(raw, usagekey, product);
+        return price.getNetto();
+    }
+
+    /**
+     * DOCUMENT ME!
+     *
      * @param   string  DOCUMENT ME!
      *
      * @return  DOCUMENT ME!
@@ -1549,6 +1677,26 @@ public class FormSolutionsBestellungHandler implements ConnectionContextProvider
                 return null;
             } else {
                 return trimed;
+            }
+        }
+    }
+
+    /**
+     * DOCUMENT ME!
+     *
+     * @param   string  DOCUMENT ME!
+     *
+     * @return  DOCUMENT ME!
+     */
+    private static String nullWhenEmptyAftertrim(final String string) {
+        if (string == null) {
+            return null;
+        } else {
+            final String trimed = string.trim();
+            if (trimed.isEmpty()) {
+                return null;
+            } else {
+                return string;
             }
         }
     }
@@ -1662,6 +1810,25 @@ public class FormSolutionsBestellungHandler implements ConnectionContextProvider
                 CidsAlkisSearchStatement.SucheUeber.FLURSTUECKSNUMMER,
                 flurstueckKennzeichen,
                 null);
+        return executeSingleResultSearch(search);
+    }
+
+    /**
+     * DOCUMENT ME!
+     *
+     * @param   buchungsblattKennzeichen  flurstueckKennzeichen DOCUMENT ME!
+     *
+     * @return  DOCUMENT ME!
+     *
+     * @throws  Exception  DOCUMENT ME!
+     */
+    private CidsBean getBuchungsblatt(final String buchungsblattKennzeichen) throws Exception {
+        final CidsAlkisSearchStatement search = new CidsAlkisSearchStatement(
+                CidsAlkisSearchStatement.Resulttyp.BUCHUNGSBLATT,
+                CidsAlkisSearchStatement.SucheUeber.BUCHUNGSBLATTNUMMER,
+                AlkisProducts.fixBuchungslattCode(buchungsblattKennzeichen),
+                null,
+                false);
         return executeSingleResultSearch(search);
     }
 
@@ -1940,9 +2107,42 @@ public class FormSolutionsBestellungHandler implements ConnectionContextProvider
         final MetaClass geomMc = getMetaClass("geom", getConnectionContext());
         final CidsBean geomBean = geomMc.getEmptyInstance(getConnectionContext()).getBean();
         Geometry geom = null;
-        if (bestellungBean.getProperty("landparcelcode") != null) {
+
+        if (bestellungBean.getProperty("buchungsblattcode") != null) {
+            final String[] buchungsblaetter = ((String)bestellungBean.getProperty("buchungsblattcode")).split(",");
+
+            if ((bestellungBean.getProperty("landparcelcode") == null)
+                        || (buchungsblaetter.length
+                            < ((String)bestellungBean.getProperty("landparcelcode")).split(",").length)) {
+                for (final String buchungsblattcode : buchungsblaetter) {
+                    final CidsBean buchungsblatt = getBuchungsblatt(AlkisProducts.fixBuchungslattCode(
+                                buchungsblattcode));
+                    if (buchungsblatt == null) {
+                        throw new Exception("ALKIS Buchungsblatt wurde nicht gefunden (" + buchungsblattcode + ")");
+                    }
+                    if ((buchungsblatt != null) && (buchungsblatt != null)) {
+                        final Object colObj = buchungsblatt.getProperty("landparcels");
+                        if (colObj instanceof Collection) {
+                            final List<CidsBean> landparcelList = (List<CidsBean>)colObj;
+
+                            for (final CidsBean landparcel : landparcelList) {
+                                final Geometry flurgeom = (Geometry)landparcel.getProperty("geometrie.geo_field");
+
+                                if (geom == null) {
+                                    geom = flurgeom;
+                                } else {
+                                    geom = flurgeom.union(geom);
+                                }
+                            }
+                        }
+                    }
+                }
+            }
+        }
+        if ((geom == null) && (bestellungBean.getProperty("landparcelcode") != null)) {
             final String[] landparcelcodes = ((String)bestellungBean.getProperty("landparcelcode")).split(
                     ",");
+            // landparcelcodes.isEmpty => throw Exception ?!
             for (final String landparcelcode : landparcelcodes) {
                 final CidsBean flurstueck = getFlurstueck(landparcelcode);
                 if (flurstueck == null) {
@@ -2081,6 +2281,10 @@ public class FormSolutionsBestellungHandler implements ConnectionContextProvider
             return ProductType.BAB_WEITERLEITUNG;
         } else if (ProductType.BAB_ABSCHLUSS.toString().equals(string)) {
             return ProductType.BAB_ABSCHLUSS;
+        } else if (ProductType.LB_WEITERLEITUNG.toString().equals(string)) {
+            return ProductType.LB_WEITERLEITUNG;
+        } else if (ProductType.LB_ABSCHLUSS.toString().equals(string)) {
+            return ProductType.LB_ABSCHLUSS;
         } else {
             return null;
         }
@@ -2210,6 +2414,7 @@ public class FormSolutionsBestellungHandler implements ConnectionContextProvider
             case SGK: {
                 return getProperties().getBillingKundeLoginKarte();
             }
+            case LB_ABSCHLUSS:
             case BAB_ABSCHLUSS: {
                 return getProperties().getBillingKundeLoginBB();
             }
@@ -2390,7 +2595,17 @@ public class FormSolutionsBestellungHandler implements ConnectionContextProvider
                             final List<CidsBean> flurstuecke = new ArrayList<>();
                             if (flurstueckKennzeichen != null) {
                                 for (final String einzelFSKennzeichen : flurstueckKennzeichen.split(",")) {
-                                    flurstuecke.add(getFlurstueck(einzelFSKennzeichen));
+                                    final CidsBean flurstueck = getFlurstueck(einzelFSKennzeichen);
+                                    if (flurstueck == null) {
+                                        throw new Exception(String.format(
+                                                "ALKIS-Flurstück %s konnte nicht gefunden werden!",
+                                                einzelFSKennzeichen));
+                                    } else {
+                                        flurstuecke.add(flurstueck);
+                                    }
+                                }
+                                if (flurstuecke.isEmpty()) {
+                                    throw new Exception(String.format("Es konnten keine Flurstücke gefunden werden."));
                                 }
                             }
                             final BaulastBescheinigungHelper.ProtocolBuffer protocolBuffer =
@@ -2484,6 +2699,146 @@ public class FormSolutionsBestellungHandler implements ConnectionContextProvider
                                         null);
                                 }
                             }
+                            break;
+                        }
+                        case LB_WEITERLEITUNG: {
+                            final String flurstueckKennzeichen = ((String)bestellungBean.getProperty(
+                                        "landparcelcode"));
+                            final String produktbezeichnung = transid;
+                            final List<CidsBean> flurstuecke = new ArrayList<>();
+                            if (flurstueckKennzeichen != null) {
+                                for (final String einzelFSKennzeichen : flurstueckKennzeichen.split(",")) {
+                                    final CidsBean flurstueck = getFlurstueck(einzelFSKennzeichen);
+                                    if (flurstueck == null) {
+                                        throw new Exception(String.format(
+                                                "ALKIS-Flurstück %s konnte nicht gefunden werden!",
+                                                einzelFSKennzeichen));
+                                    } else {
+                                        flurstuecke.add(flurstueck);
+                                    }
+                                }
+                            }
+
+                            final String buchungsblattKennzeichen = ((String)bestellungBean.getProperty(
+                                        "buchungsblattcode"));
+                            final List<CidsBean> buchungsblaetter = new ArrayList<>();
+                            if (buchungsblattKennzeichen != null) {
+                                for (final String einzelBBKennzeichen : buchungsblattKennzeichen.split(",")) {
+                                    final CidsBean buchungsblatt = getBuchungsblatt(einzelBBKennzeichen);
+                                    if (buchungsblatt != null) {
+                                        buchungsblaetter.add(buchungsblatt);
+                                    } else {
+                                        throw new Exception("Buchungsblattcode '" + einzelBBKennzeichen
+                                                    + "' nicht gefunden");
+                                    }
+                                }
+                            }
+
+                            if (flurstuecke.isEmpty() && buchungsblaetter.isEmpty()) {
+                                throw new Exception(String.format(
+                                        "Es konnten keine Flurstücke und keine Buchungsblätter gefunden werden."));
+                            }
+
+                            final LiegenschaftsbuchauszugHelper.ProtocolBuffer protocolBuffer =
+                                new LiegenschaftsbuchauszugHelper.ProtocolBuffer();
+                            final LiegenschaftsbuchauszugHelper.StatusHolder statusHolder =
+                                new LiegenschaftsbuchauszugHelper.StatusHolder();
+
+                            String alkisProduct = (String)bestellungBean.getProperty("fk_produkt.fk_typ.key");
+
+                            if (alkisProduct.contains("_")) {
+                                // remove WEITERLEITUNG
+                                alkisProduct = alkisProduct.substring(0, alkisProduct.indexOf("_"));
+                            }
+
+                            final BerechtigungspruefungAlkisEinzelnachweisDownloadInfo downloadInfo =
+                                getLiegenschaftsbuchauszugHelper().calculateDownloadInfo(
+                                    null,
+                                    produktbezeichnung,
+                                    null,
+                                    flurstuecke,
+                                    buchungsblaetter,
+                                    alkisProduct,
+                                    protocolBuffer,
+                                    statusHolder);
+                            final String verwendungskeyDownload = getProperties().getBillingVerwendungskeyDownload();
+                            final String verwendungskeyPostweg = getProperties().getBillingVerwendungskeyPostweg();
+                            String productKeyDownload = null;
+                            String productKeyPostweg = null;
+
+                            if (alkisProduct.startsWith("bekom")) {
+                                productKeyDownload = getProperties().getBillingProduktkeyLBBestDownload();
+                                productKeyPostweg = getProperties().getBillingProduktkeyLBBestPostweg();
+                            } else {
+                                productKeyDownload = getProperties().getBillingProduktkeyLBDownload();
+                                productKeyPostweg = getProperties().getBillingProduktkeyLBPostweg();
+                            }
+
+                            final boolean isGutschein = bestellungBean.getProperty("gutschein_code") != null;
+                            final double gebuehr = isGutschein
+                                ? 0d : calculateLBGebuehr(productKeyDownload, verwendungskeyDownload, downloadInfo);
+                            final Double gebuehrPostweg = isGutschein
+                                ? 0d : calculateLBGebuehr(productKeyPostweg, verwendungskeyPostweg, downloadInfo);
+
+                            bestellungBean.setProperty("gebuehr", gebuehr);
+                            bestellungBean.setProperty("gebuehr_postweg", gebuehrPostweg);
+
+                            final String auftragXml = (String)bestellungBean.getProperty("form_xml_orig");
+                            try(final InputStream in = IOUtils.toInputStream(auftragXml, "UTF-8")) {
+                                final FormSolutionsBestellung formSolutionBestellung = createFormSolutionsBestellung(
+                                        in);
+
+                                String schluessel = null;
+                                if (bestellungBean.getProperty("berechtigungspruefung") == null) {
+                                    schluessel = BerechtigungspruefungHandler.getInstance()
+                                                .createNewSchluessel(getUser(), downloadInfo);
+
+                                    final File attachementsFile = new File(String.format(
+                                                "%s/%s.zip",
+                                                getProperties().getAnhangTmpAbsPath(),
+                                                transid));
+                                    final String dateiName;
+                                    final byte[] data;
+                                    if (attachementsFile.exists()) {
+                                        try(final InputStream in2 = new FileInputStream(attachementsFile)) {
+                                            dateiName = attachementsFile.getName();
+                                            data = IOUtils.toByteArray(in2);
+                                        }
+                                    } else {
+                                        dateiName = null;
+                                        data = null;
+                                    }
+
+                                    downloadInfo.setAuftragsnummer(schluessel);
+                                    final CidsBean pruefung = BerechtigungspruefungHandler.getInstance()
+                                                .addNewAnfrage(
+                                                    getUser(),
+                                                    schluessel,
+                                                    downloadInfo,
+                                                    formSolutionBestellung.getBerechtigungsgrund(),
+                                                    formSolutionBestellung.getBegruendungstext(),
+                                                    dateiName,
+                                                    data);
+
+                                    if (attachementsFile.exists()) {
+                                        attachementsFile.delete();
+                                    }
+                                    bestellungBean.setProperty("berechtigungspruefung", pruefung);
+                                }
+
+                                getMetaService().updateMetaObject(
+                                    getUser(),
+                                    bestellungBean.getMetaObject(),
+                                    getConnectionContext());
+
+                                if (schluessel != null) {
+                                    getMySqlHelper().updatePruefungFreigabe(
+                                        schluessel,
+                                        transid,
+                                        STATUS_PRUEFUNG,
+                                        null);
+                                }
+                            }
                         }
                     }
                 } catch (final Exception ex) {
@@ -2494,6 +2849,7 @@ public class FormSolutionsBestellungHandler implements ConnectionContextProvider
                         bestellungBean,
                         "Fehler beim Vorlage der Bestellung zur Prüfung.",
                         ex);
+                    fsBeanMap.remove(transid);
                 }
             }
         }
@@ -2632,6 +2988,7 @@ public class FormSolutionsBestellungHandler implements ConnectionContextProvider
                                 doStatusChangedRequest(transid);
                             }
                             break;
+                            case LB_WEITERLEITUNG:
                             case BAB_WEITERLEITUNG: {
                                 final CidsBean berechtigungspruefung = (CidsBean)bestellungBean.getProperty(
                                         "berechtigungspruefung");
@@ -2682,6 +3039,7 @@ public class FormSolutionsBestellungHandler implements ConnectionContextProvider
                                 }
                             }
                             break;
+                            case LB_ABSCHLUSS:
                             case BAB_ABSCHLUSS: {
                                 final CidsBean vorgaengerBestellungBean = (CidsBean)bestellungBean.getProperty(
                                         "nachfolger_von");
@@ -2705,26 +3063,48 @@ public class FormSolutionsBestellungHandler implements ConnectionContextProvider
                                         vorgaengerBestellungBean.getMetaObject(),
                                         getConnectionContext());
 
-                                    final String fileNameOrig = "baulastbescheinigung.zip";
+                                    final String fileNameOrig;
+
+                                    if (productType.equals(ProductType.LB_ABSCHLUSS)) {
+                                        fileNameOrig = "liegenschaftsbuch.zip";
+                                    } else {
+                                        fileNameOrig = "baulastbescheinigung.zip";
+                                    }
+
                                     final File tmpFile = new File(String.format(
                                                 "%s/%s.%s",
                                                 getProperties().getProduktTmpAbsPath(),
                                                 transid,
                                                 FilenameUtils.getExtension(fileNameOrig)));
+                                    BerechtigungspruefungBillingDownloadInfo downloadInfo;
 
-                                    final BerechtigungspruefungBescheinigungDownloadInfo downloadInfo =
-                                        new ObjectMapper().readValue(
-                                            downloadinfoJson,
-                                            BerechtigungspruefungBescheinigungDownloadInfo.class);
-                                    getBaulastBescheinigungHelper().writeFullBescheinigung(downloadInfo, tmpFile);
+                                    if (productType.equals(ProductType.LB_ABSCHLUSS)) {
+                                        downloadInfo =
+                                            new ObjectMapper().readValue(
+                                                downloadinfoJson,
+                                                BerechtigungspruefungAlkisEinzelnachweisDownloadInfo.class);
+
+                                        getLiegenschaftsbuchauszugHelper().writeFullBescheinigung(
+                                            (BerechtigungspruefungAlkisEinzelnachweisDownloadInfo)downloadInfo,
+                                            tmpFile);
+                                    } else {
+                                        downloadInfo =
+                                            new ObjectMapper().readValue(
+                                                downloadinfoJson,
+                                                BerechtigungspruefungBescheinigungDownloadInfo.class);
+
+                                        getBaulastBescheinigungHelper().writeFullBescheinigung(
+                                            (BerechtigungspruefungBescheinigungDownloadInfo)downloadInfo,
+                                            tmpFile);
+                                    }
                                     try(final InputStream in = new FileInputStream(tmpFile)) {
                                         uploadAndFillProduktFields(fileNameOrig, in, bestellungBean, false);
                                     }
                                     if (!getProperties().isDeleteTmpProductAfterSuccessfulUploadDisabled()) {
                                         tmpFile.delete();
                                     }
-                                    downloadInfoMap.put(transid, downloadInfo);
 
+                                    downloadInfoMap.put(transid, downloadInfo);
                                     getMySqlHelper().insertOrUpdateProduct(
                                         transid,
                                         STATUS_PRODUKT,
@@ -2749,6 +3129,7 @@ public class FormSolutionsBestellungHandler implements ConnectionContextProvider
                             bestellungBean,
                             "Fehler beim Erzeugen des Produktes",
                             ex);
+                        fsBeanMap.remove(transid);
                     }
                 }
             }
@@ -2781,6 +3162,14 @@ public class FormSolutionsBestellungHandler implements ConnectionContextProvider
                 }
                 case "BAB": {
                     return ProductType.BAB_ABSCHLUSS;
+                }
+                case "bekom_WEITERLEITUNG":
+                case "fsueKom_WEITERLEITUNG": {
+                    return ProductType.LB_WEITERLEITUNG;
+                }
+                case "bekom":
+                case "fsueKom": {
+                    return ProductType.LB_ABSCHLUSS;
                 }
             }
         }

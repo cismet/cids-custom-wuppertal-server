@@ -360,9 +360,9 @@ public class AlboFlaecheSearch extends AbstractCidsServerSearch implements MetaO
             if (getGeometry() != null) {
                 final String geomString = PostGisGeometryFactory.getPostGisCompliantDbString(getGeometry());
                 leftJoins.add("geom ON flaeche.fk_geom = geom.id");
-                wheres.add(String.format("geom.geo_field && GeometryFromText('%s')", geomString));
+                wheres.add(String.format("geom.geo_field && st_GeometryFromText('%s')", geomString));
                 wheres.add(String.format(
-                        "intersects(st_buffer(geo_field, %s), GeometryFromText('%s'))",
+                        "st_intersects(st_buffer(geo_field, %s), st_GeometryFromText('%s'))",
                         buffer,
                         geomString));
             }

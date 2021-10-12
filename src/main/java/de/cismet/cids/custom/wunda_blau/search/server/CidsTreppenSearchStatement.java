@@ -159,19 +159,19 @@ public class CidsTreppenSearchStatement extends AbstractCidsServerSearch impleme
 
             fromBuilder.append(" LEFT OUTER JOIN geom ON treppe.geometrie = geom.id");
 
-            whereBuilder.append(" AND geom.geo_field && GeometryFromText('").append(geostring).append("') AND");
+            whereBuilder.append(" AND geom.geo_field && st_GeometryFromText('").append(geostring).append("') AND");
 
             if ((geom instanceof Polygon) || (geom instanceof MultiPolygon)) { // with buffer for geostring
-                whereBuilder.append(" intersects("
+                whereBuilder.append(" st_intersects("
                             + "st_buffer(geo_field, " + INTERSECTS_BUFFER + "),"
-                            + "st_buffer(GeometryFromText('"
+                            + "st_buffer(st_GeometryFromText('"
                             + geostring
                             + "'), " + INTERSECTS_BUFFER + "))");
             } else {                                                           // without buffer for
                 // geostring
-                whereBuilder.append(" and intersects("
+                whereBuilder.append(" and st_intersects("
                             + "st_buffer(geo_field, " + INTERSECTS_BUFFER + "),"
-                            + "GeometryFromText('"
+                            + "st_GeometryFromText('"
                             + geostring
                             + "'))");
             }

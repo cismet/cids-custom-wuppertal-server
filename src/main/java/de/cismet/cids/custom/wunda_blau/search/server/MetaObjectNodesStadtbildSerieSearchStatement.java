@@ -456,17 +456,17 @@ public class MetaObjectNodesStadtbildSerieSearchStatement extends AbstractCidsSe
     private void appendGeometry() {
         if (geometryToSearchFor != null) {
             final String geostring = PostGisGeometryFactory.getPostGisCompliantDbString(geometryToSearchFor);
-            query.append("and g.geo_field && GeometryFromText('").append(geostring).append("')");
+            query.append("and g.geo_field && st_GeometryFromText('").append(geostring).append("')");
 
             if ((geometryToSearchFor instanceof Polygon) || (geometryToSearchFor instanceof MultiPolygon)) { // with buffer for geostring
-                query.append(" and intersects(" + "st_buffer(geo_field, " + INTERSECTS_BUFFER + "),"
-                                + "st_buffer(GeometryFromText('")
+                query.append(" and st_intersects(" + "st_buffer(geo_field, " + INTERSECTS_BUFFER + "),"
+                                + "st_buffer(st_GeometryFromText('")
                         .append(geostring)
                         .append("'), " + INTERSECTS_BUFFER + "))");
             } else {                                                                                         // without buffer for
                 // geostring
-                query.append(" and intersects(" + "st_buffer(geo_field, " + INTERSECTS_BUFFER + "),"
-                                + "GeometryFromText('")
+                query.append(" and st_intersects(" + "st_buffer(geo_field, " + INTERSECTS_BUFFER + "),"
+                                + "st_GeometryFromText('")
                         .append(geostring)
                         .append("'))");
             }
