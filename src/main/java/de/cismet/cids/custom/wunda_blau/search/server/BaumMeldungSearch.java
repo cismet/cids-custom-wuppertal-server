@@ -9,12 +9,15 @@ package de.cismet.cids.custom.wunda_blau.search.server;
 
 import Sirius.server.middleware.interfaces.domainserver.MetaService;
 import Sirius.server.middleware.types.MetaObjectNode;
+
 import com.fasterxml.jackson.databind.ObjectMapper;
 
 import lombok.Getter;
 import lombok.Setter;
 
 import org.apache.log4j.Logger;
+
+import java.rmi.RemoteException;
 
 import java.util.ArrayList;
 import java.util.Collection;
@@ -24,7 +27,6 @@ import de.cismet.cids.server.search.AbstractCidsServerSearch;
 import de.cismet.cids.server.search.MetaObjectNodeServerSearch;
 
 import de.cismet.connectioncontext.ConnectionContext;
-import java.rmi.RemoteException;
 
 /**
  * DOCUMENT ME!
@@ -34,8 +36,9 @@ import java.rmi.RemoteException;
 public class BaumMeldungSearch extends AbstractCidsServerSearch implements MetaObjectNodeServerSearch {
 
     //~ Static fields/initializers ---------------------------------------------
+
     private static final transient Logger LOG = Logger.getLogger(BaumMeldungSearch.class);
-      
+
     public static final String TABLE_NAME = "baum_gebiet";
     public static final String TABLE_NAME_MELDUNG = "baum_meldung";
     public static final String FIELD__GEBIET_NAME = "name";
@@ -43,35 +46,36 @@ public class BaumMeldungSearch extends AbstractCidsServerSearch implements MetaO
     public static final String FIELD__GEBIET_AZ = "aktenzeichen";
     public static final String FIELD__MELDUNG_DATUM = "datum";
     public static final String FIELD__MELDUNG_FK = "fk_gebiet";
-    
+
     public static final ObjectMapper OBJECT_MAPPER = new ObjectMapper();
 
-    private static final String QUERY_TEMPLATE = "SELECT " 
-                                 + "  (SELECT c.id FROM cs_class c WHERE table_name ILIKE '" + TABLE_NAME_MELDUNG + "') AS class_id, "
-                                 + TABLE_NAME_MELDUNG + "." + FIELD__MELDUNG_ID + ", " 
-                                 + TABLE_NAME + "." + FIELD__GEBIET_AZ //+ ", "
-                                  + " || '---' || " + TABLE_NAME_MELDUNG + "."  + FIELD__MELDUNG_DATUM + " AS aktenzeichen , "
-                                 + TABLE_NAME + "." + FIELD__GEBIET_NAME + ", " 
-                                 + "'[' || " + TABLE_NAME_MELDUNG + "."  + FIELD__MELDUNG_DATUM + " || ']' AS datum"
-                    + " FROM " + TABLE_NAME_MELDUNG
-                    + " LEFT JOIN " + TABLE_NAME 
-                            + " ON " + TABLE_NAME_MELDUNG + "." + FIELD__MELDUNG_FK + " = " 
-                            + TABLE_NAME + "." + FIELD__MELDUNG_ID
-                    + " ORDER BY " + TABLE_NAME + "." + FIELD__GEBIET_AZ + ", " + TABLE_NAME_MELDUNG + "."  + FIELD__MELDUNG_DATUM;
+    private static final String QUERY_TEMPLATE = "SELECT "
+                + "  (SELECT c.id FROM cs_class c WHERE table_name ILIKE '" + TABLE_NAME_MELDUNG + "') AS class_id, "
+                + TABLE_NAME_MELDUNG + "." + FIELD__MELDUNG_ID + ", "
+                + TABLE_NAME + "." + FIELD__GEBIET_AZ // + ", "
+                + " || '---' || " + TABLE_NAME_MELDUNG + "." + FIELD__MELDUNG_DATUM + " AS aktenzeichen , "
+                + TABLE_NAME + "." + FIELD__GEBIET_NAME + ", "
+                + "'[' || " + TABLE_NAME_MELDUNG + "." + FIELD__MELDUNG_DATUM + " || ']' AS datum"
+                + " FROM " + TABLE_NAME_MELDUNG
+                + " LEFT JOIN " + TABLE_NAME
+                + " ON " + TABLE_NAME_MELDUNG + "." + FIELD__MELDUNG_FK + " = "
+                + TABLE_NAME + "." + FIELD__MELDUNG_ID
+                + " ORDER BY " + TABLE_NAME + "." + FIELD__GEBIET_AZ + ", " + TABLE_NAME_MELDUNG + "."
+                + FIELD__MELDUNG_DATUM;
 
-    //~ Enums ------------------------------------------------------------------
-
-    
     //~ Instance fields --------------------------------------------------------
 
     private ConnectionContext connectionContext = ConnectionContext.createDummy();
 
     @Setter @Getter private Integer ortsterminId;
     @Setter @Getter private Integer ortsterminFKMeldung;
+
     //~ Constructors -----------------------------------------------------------
 
-    public BaumMeldungSearch(){
-        
+    /**
+     * Creates a new BaumMeldungSearch object.
+     */
+    public BaumMeldungSearch() {
     }
 
     //~ Methods ----------------------------------------------------------------
@@ -89,6 +93,8 @@ public class BaumMeldungSearch extends AbstractCidsServerSearch implements MetaO
      * DOCUMENT ME!
      *
      * @return  DOCUMENT ME!
+     *
+     * @throws  RuntimeException  DOCUMENT ME!
      */
     @Override
     public Collection<MetaObjectNode> performServerSearch() {
@@ -130,7 +136,4 @@ public class BaumMeldungSearch extends AbstractCidsServerSearch implements MetaO
     public ConnectionContext getConnectionContext() {
         return connectionContext;
     }
-    
-    //~ Inner Classes ----------------------------------------------------------
-
 }

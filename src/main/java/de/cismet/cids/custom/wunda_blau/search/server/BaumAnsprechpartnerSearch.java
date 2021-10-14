@@ -9,6 +9,7 @@ package de.cismet.cids.custom.wunda_blau.search.server;
 
 import Sirius.server.middleware.interfaces.domainserver.MetaService;
 import Sirius.server.middleware.types.MetaObjectNode;
+
 import com.fasterxml.jackson.databind.ObjectMapper;
 
 import lombok.Getter;
@@ -16,6 +17,7 @@ import lombok.Setter;
 
 import org.apache.log4j.Logger;
 
+import java.rmi.RemoteException;
 
 import java.util.ArrayList;
 import java.util.Collection;
@@ -25,7 +27,6 @@ import de.cismet.cids.server.search.AbstractCidsServerSearch;
 import de.cismet.cids.server.search.MetaObjectNodeServerSearch;
 
 import de.cismet.connectioncontext.ConnectionContext;
-import java.rmi.RemoteException;
 
 /**
  * DOCUMENT ME!
@@ -35,41 +36,38 @@ import java.rmi.RemoteException;
 public class BaumAnsprechpartnerSearch extends AbstractCidsServerSearch implements MetaObjectNodeServerSearch {
 
     //~ Static fields/initializers ---------------------------------------------
+
     private static final transient Logger LOG = Logger.getLogger(BaumAnsprechpartnerSearch.class);
-            
-    
-    
+
     public static final String TABLE_NAME = "baum_ansprechpartner";
     public static final String FIELD__ID = "id";
     public static final String FIELD__NAME = "name";
     public static final String FIELD__MAIL = "mail";
     public static final String FIELD__BEMERKUNG = "bemerkung";
-    
+
     public static final ObjectMapper OBJECT_MAPPER = new ObjectMapper();
 
-    
+    private static final String QUERY_TEMPLATE = "SELECT "
+                + "  (SELECT c.id FROM cs_class c WHERE table_name ILIKE '" + TABLE_NAME + "') AS class_id, "
+                + TABLE_NAME + "." + FIELD__ID + ", "
+                + TABLE_NAME + "." + FIELD__NAME + " || ' -- ' || "
+                + "COALESCE(" + TABLE_NAME + "." + FIELD__MAIL + ", 'k.A.')" + " || ' -- ' || "
+                + "COALESCE(" + TABLE_NAME + "." + FIELD__BEMERKUNG + ", 'k.A.')" + " as name"
+                + " FROM " + TABLE_NAME
+                + " ORDER BY " + TABLE_NAME + "." + FIELD__NAME;
 
-    private static final String QUERY_TEMPLATE = "SELECT " 
-                                 + "  (SELECT c.id FROM cs_class c WHERE table_name ILIKE '" + TABLE_NAME + "') AS class_id, "
-                                 + TABLE_NAME + "." + FIELD__ID + ", " 
-                                 + TABLE_NAME + "." + FIELD__NAME + " || ' -- ' || "
-                                 + "COALESCE(" + TABLE_NAME + "."  + FIELD__MAIL + ", 'k.A.')" + " || ' -- ' || "
-                                 + "COALESCE(" + TABLE_NAME + "." + FIELD__BEMERKUNG + ", 'k.A.')" + " as name"
-                    + " FROM " + TABLE_NAME
-                    + " ORDER BY " + TABLE_NAME + "." + FIELD__NAME;
-
-    //~ Enums ------------------------------------------------------------------
-
-    
     //~ Instance fields --------------------------------------------------------
 
     private ConnectionContext connectionContext = ConnectionContext.createDummy();
 
     @Setter @Getter private Integer ansprechpartnerId;
+
     //~ Constructors -----------------------------------------------------------
 
-    public BaumAnsprechpartnerSearch(){
-        
+    /**
+     * Creates a new BaumAnsprechpartnerSearch object.
+     */
+    public BaumAnsprechpartnerSearch() {
     }
 
     //~ Methods ----------------------------------------------------------------
@@ -83,20 +81,19 @@ public class BaumAnsprechpartnerSearch extends AbstractCidsServerSearch implemen
         this.connectionContext = connectionContext;
     }
 
-
-   
-
     /**
      * DOCUMENT ME!
      *
      * @return  DOCUMENT ME!
+     *
+     * @throws  RuntimeException  DOCUMENT ME!
      */
     @Override
     public Collection<MetaObjectNode> performServerSearch() {
         try {
             final List<String> leftJoins = new ArrayList<>();
             final List<String> wheres = new ArrayList<>();
-            if (getAnsprechpartnerId()!= null) {
+            if (getAnsprechpartnerId() != null) {
                 wheres.add(String.format("baum_ansprechpartner.id = %d", getAnsprechpartnerId()));
             }
 
@@ -131,12 +128,4 @@ public class BaumAnsprechpartnerSearch extends AbstractCidsServerSearch implemen
     public ConnectionContext getConnectionContext() {
         return connectionContext;
     }
-    
-    //~ Inner Classes ----------------------------------------------------------
-
-    
-   
-
-    
-
 }

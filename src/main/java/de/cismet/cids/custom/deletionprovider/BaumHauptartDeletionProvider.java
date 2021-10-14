@@ -17,9 +17,11 @@ import org.apache.log4j.Logger;
 
 import org.openide.util.lookup.ServiceProvider;
 
-import de.cismet.cids.dynamics.CidsBean;
 import java.rmi.RemoteException;
+
 import java.util.ArrayList;
+
+import de.cismet.cids.dynamics.CidsBean;
 
 /**
  * DOCUMENT ME!
@@ -33,13 +35,11 @@ public class BaumHauptartDeletionProvider extends AbstractCustomDeletionProvider
     //~ Static fields/initializers ---------------------------------------------
 
     private static final Logger LOG = Logger.getLogger(BaumHauptartDeletionProvider.class);
-    public static final String TABLE_NAME = "baum_hauptart";
-    public static final String FIELD__ID = "id";
-    public static final String FIELD__FK = "fk_hauptart";
-    public static final String TABLE_NAME_SEARCH = "baum_art";
-    public static final String DELETE_TEXT = 
-            "Diese Hauptart kann nicht gelöscht werden, da diese verwendet wird.";
-    public boolean notToDelete = false;
+    private static final String TABLE_NAME = "baum_hauptart";
+    private static final String FIELD__ID = "id";
+    private static final String FIELD__FK = "fk_hauptart";
+    private static final String TABLE_NAME_SEARCH = "baum_art";
+    private static final String DELETE_TEXT = "Diese Hauptart kann nicht gelöscht werden, da diese verwendet wird.";
 
     //~ Methods ----------------------------------------------------------------
 
@@ -50,39 +50,39 @@ public class BaumHauptartDeletionProvider extends AbstractCustomDeletionProvider
 
     @Override
     public boolean isMatching(final User user, final MetaObject metaObject) {
-        if (metaObject != null) {
-            final CidsBean hauptartBean = metaObject.getBean();
-            final Integer hauptart_id = (Integer) hauptartBean.getProperty(FIELD__ID);
-            
-            final String queryHauptartInArt = String.format(
-                        "SELECT * FROM %s WHERE %s = %d;",
-                        TABLE_NAME_SEARCH, FIELD__FK, hauptart_id); 
-            try {
-                ArrayList<ArrayList>hauptartArray = getMetaService().performCustomSearch(
-                        queryHauptartInArt, 
-                        getConnectionContext());
-                if (hauptartArray.size() < 1) {
-                    return false; // kein true sonst läuft jede Klasse durch
-                }else {
-                    notToDelete = true;
-                }
-            } catch (RemoteException ex) {
-                LOG.error("Cannot delete hauptart object", ex);
-            }
+        if (!super.isMatching(user, metaObject)) {
+            return false;
         }
-        return super.isMatching(user, metaObject);
+
+        final CidsBean hauptartBean = metaObject.getBean();
+        final Integer hauptart_id = (Integer)hauptartBean.getProperty(FIELD__ID);
+
+        final String queryHauptartInArt = String.format(
+                "SELECT * FROM %s WHERE %s = %d;",
+                TABLE_NAME_SEARCH,
+                FIELD__FK,
+                hauptart_id);
+        try {
+            final ArrayList<ArrayList> hauptartArray = getMetaService().performCustomSearch(
+                    queryHauptartInArt,
+                    getConnectionContext());
+            if (!hauptartArray.isEmpty()) {
+                return true;
+            }
+        } catch (RemoteException ex) {
+            LOG.error("Cannot delete hauptart object", ex);
+        }
+        return false;
     }
 
     @Override
     public boolean customDeleteMetaObject(final User user, final MetaObject metaObject) throws Exception {
-        if (metaObject != null) {
-            // darf nicht geloescht werden
-            
-            if (notToDelete) {
-                throw new DeletionProviderClientException(
-                        DELETE_TEXT);
-            }
-        }
-        return false;
+        // darf nicht geloescht werden
+        throw new DeletionProviderClientException(DELETE_TEXT);
+    }
+
+    @Override
+    public String getDomain() {
+        return "WUNDA_BLAU";
     }
 }

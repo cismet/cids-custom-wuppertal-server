@@ -13,6 +13,7 @@
 package de.cismet.cids.custom.wunda_blau.search.server;
 
 import com.vividsolutions.jts.io.ParseException;
+
 import lombok.Getter;
 import lombok.Setter;
 
@@ -57,8 +58,16 @@ public class BaumSchadenLightweightSearch extends AbstractMonToLwmoSearch {
     }
 
     //~ Methods ----------------------------------------------------------------
-    public static void main(final String[] args)throws ParseException{
-        BaumSchadenLightweightSearch bmlw = new BaumSchadenLightweightSearch();
+
+    /**
+     * DOCUMENT ME!
+     *
+     * @param   args  DOCUMENT ME!
+     *
+     * @throws  ParseException  DOCUMENT ME!
+     */
+    public static void main(final String[] args) throws ParseException {
+        final BaumSchadenLightweightSearch bmlw = new BaumSchadenLightweightSearch();
     }
     /**
      * DOCUMENT ME!

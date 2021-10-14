@@ -17,9 +17,11 @@ import org.apache.log4j.Logger;
 
 import org.openide.util.lookup.ServiceProvider;
 
-import de.cismet.cids.dynamics.CidsBean;
 import java.rmi.RemoteException;
+
 import java.util.ArrayList;
+
+import de.cismet.cids.dynamics.CidsBean;
 
 /**
  * DOCUMENT ME!
@@ -33,12 +35,11 @@ public class BaumSorteDeletionProvider extends AbstractCustomDeletionProvider {
     //~ Static fields/initializers ---------------------------------------------
 
     private static final Logger LOG = Logger.getLogger(BaumSorteDeletionProvider.class);
-    public static final String TABLE_NAME = "baum_sorte";
-    public static final String FIELD__ID = "id";
-    public static final String FIELD__FK = "fk_sorte";
-    public static final String TABLE_NAME_SEARCH_E = "baum_ersatz";
-    public String DELETE_TEXT = "Diese Sorte kann nicht gelöscht werden, da diese verwendet wird.";
-    public boolean notToDelete = false;
+    private static final String TABLE_NAME = "baum_sorte";
+    private static final String FIELD__ID = "id";
+    private static final String FIELD__FK = "fk_sorte";
+    private static final String TABLE_NAME_SEARCH_E = "baum_ersatz";
+    private static final String DELETE_TEXT = "Diese Sorte kann nicht gelöscht werden, da diese verwendet wird.";
 
     //~ Methods ----------------------------------------------------------------
 
@@ -49,41 +50,39 @@ public class BaumSorteDeletionProvider extends AbstractCustomDeletionProvider {
 
     @Override
     public boolean isMatching(final User user, final MetaObject metaObject) {
-        if (metaObject != null) {
-            final CidsBean sorteBean = metaObject.getBean();
-            final Integer sorte_id = (Integer) sorteBean.getProperty(FIELD__ID);
-            
-            final String queryArtInErsatz = String.format(
-                        "SELECT * FROM %s WHERE %s = %d;",
-                        TABLE_NAME_SEARCH_E,  FIELD__FK, sorte_id); 
-            try {
-                ArrayList<ArrayList>artArrayE = getMetaService().performCustomSearch(
-                        queryArtInErsatz, 
-                        getConnectionContext());
-                if (artArrayE.size() < 1) {
-                    return false; // kein true sonst läuft jede Klasse durch
-                }else {
-                    notToDelete = true;
-                }
-                        
-            } catch (RemoteException ex) {
-                LOG.error("Cannot delete sorte object", ex);
-            }
+        if (!super.isMatching(user, metaObject)) {
+            return false;
         }
-        return super.isMatching(user, metaObject);
+
+        final CidsBean sorteBean = metaObject.getBean();
+        final Integer sorte_id = (Integer)sorteBean.getProperty(FIELD__ID);
+
+        final String queryArtInErsatz = String.format(
+                "SELECT * FROM %s WHERE %s = %d;",
+                TABLE_NAME_SEARCH_E,
+                FIELD__FK,
+                sorte_id);
+        try {
+            final ArrayList<ArrayList> artArrayE = getMetaService().performCustomSearch(
+                    queryArtInErsatz,
+                    getConnectionContext());
+            if (!artArrayE.isEmpty()) {
+                return true;
+            }
+        } catch (RemoteException ex) {
+            LOG.error("Cannot delete sorte object", ex);
+        }
+        return false;
     }
 
     @Override
     public boolean customDeleteMetaObject(final User user, final MetaObject metaObject) throws Exception {
-        if (metaObject != null) {
-            // darf nicht geloescht werden
-            
-            if (notToDelete) {
-                throw new DeletionProviderClientException(
-                        DELETE_TEXT);
-             
-            }
-        }
-        return false;
+        // darf nicht geloescht werden
+        throw new DeletionProviderClientException(DELETE_TEXT);
+    }
+
+    @Override
+    public String getDomain() {
+        return "WUNDA_BLAU";
     }
 }

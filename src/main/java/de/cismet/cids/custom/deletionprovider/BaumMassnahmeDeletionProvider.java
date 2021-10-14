@@ -17,9 +17,11 @@ import org.apache.log4j.Logger;
 
 import org.openide.util.lookup.ServiceProvider;
 
-import de.cismet.cids.dynamics.CidsBean;
 import java.rmi.RemoteException;
+
 import java.util.ArrayList;
+
+import de.cismet.cids.dynamics.CidsBean;
 
 /**
  * DOCUMENT ME!
@@ -33,13 +35,11 @@ public class BaumMassnahmeDeletionProvider extends AbstractCustomDeletionProvide
     //~ Static fields/initializers ---------------------------------------------
 
     private static final Logger LOG = Logger.getLogger(BaumMassnahmeDeletionProvider.class);
-    public static final String TABLE_NAME = "baum_massnahme";
-    public static final String FIELD__ID = "id";
-    public static final String FIELD__FK = "fk_massnahme";
-    public static final String TABLE_NAME_SEARCH_S = "baum_schaden_massnahme";
-    public String DELETE_TEXT = 
-            "Diese Maßnahme kann nicht gelöscht werden, da diese verwendet wird.";
-    public boolean notToDelete = false;
+    private static final String TABLE_NAME = "baum_massnahme";
+    private static final String FIELD__ID = "id";
+    private static final String FIELD__FK = "fk_massnahme";
+    private static final String TABLE_NAME_SEARCH_S = "baum_schaden_massnahme";
+    private static final String DELETE_TEXT = "Diese Maßnahme kann nicht gelöscht werden, da diese verwendet wird.";
 
     //~ Methods ----------------------------------------------------------------
 
@@ -50,40 +50,40 @@ public class BaumMassnahmeDeletionProvider extends AbstractCustomDeletionProvide
 
     @Override
     public boolean isMatching(final User user, final MetaObject metaObject) {
-        if (metaObject != null) {
-            final CidsBean schadenBean = metaObject.getBean();
-            final Integer schaden_id = (Integer) schadenBean.getProperty(FIELD__ID);
-            
-            final String queryMassnahmeInSchaden = String.format(
-                        "SELECT * FROM %s WHERE %s = %d;",
-                        TABLE_NAME_SEARCH_S, FIELD__FK, schaden_id); 
-            
-            try {
-                ArrayList<ArrayList>artArrayS = getMetaService().performCustomSearch(
-                        queryMassnahmeInSchaden, 
-                        getConnectionContext());
-                if (artArrayS.size() < 1) {
-                    return false; // kein true sonst läuft jede Klasse durch
-                }else {
-                    notToDelete = true;
-                }
-            } catch (RemoteException ex) {
-                LOG.error("Cannot delete Massnahme object", ex);
-            }
+        if (!super.isMatching(user, metaObject)) {
+            return false;
         }
-        return super.isMatching(user, metaObject);
+
+        final CidsBean schadenBean = metaObject.getBean();
+        final Integer schaden_id = (Integer)schadenBean.getProperty(FIELD__ID);
+
+        final String queryMassnahmeInSchaden = String.format(
+                "SELECT * FROM %s WHERE %s = %d;",
+                TABLE_NAME_SEARCH_S,
+                FIELD__FK,
+                schaden_id);
+
+        try {
+            final ArrayList<ArrayList> artArrayS = getMetaService().performCustomSearch(
+                    queryMassnahmeInSchaden,
+                    getConnectionContext());
+            if (!artArrayS.isEmpty()) {
+                return true;
+            }
+        } catch (RemoteException ex) {
+            LOG.error("Cannot delete Massnahme object", ex);
+        }
+        return false;
     }
 
     @Override
     public boolean customDeleteMetaObject(final User user, final MetaObject metaObject) throws Exception {
-        if (metaObject != null) {
-            // darf nicht geloescht werden
-            
-            if (notToDelete) {
-                throw new DeletionProviderClientException(
-                        DELETE_TEXT);
-            }
-        }
-        return false;
+        // darf nicht geloescht werden
+        throw new DeletionProviderClientException(DELETE_TEXT);
+    }
+
+    @Override
+    public String getDomain() {
+        return "WUNDA_BLAU";
     }
 }

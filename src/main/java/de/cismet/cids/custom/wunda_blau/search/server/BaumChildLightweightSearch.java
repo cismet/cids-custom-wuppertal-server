@@ -10,7 +10,6 @@ package de.cismet.cids.custom.wunda_blau.search.server;
 import Sirius.server.middleware.interfaces.domainserver.MetaService;
 import Sirius.server.middleware.types.MetaClass;
 import Sirius.server.middleware.types.MetaObjectNode;
-import de.cismet.cids.dynamics.CidsBean;
 
 import lombok.Getter;
 import lombok.Setter;
@@ -22,6 +21,9 @@ import org.openide.util.lookup.ServiceProvider;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collection;
+import java.util.List;
+
+import de.cismet.cids.dynamics.CidsBean;
 
 import de.cismet.cids.server.search.AbstractCidsServerSearch;
 import de.cismet.cids.server.search.SearchException;
@@ -35,7 +37,6 @@ import de.cismet.cidsx.server.search.builtin.legacy.LightweightMetaObjectsSearch
 
 import de.cismet.connectioncontext.ConnectionContext;
 import de.cismet.connectioncontext.ConnectionContextStore;
-import java.util.List;
 
 /**
  * Builtin Legacy Search to delegate the operation getLightweightMetaObjectsByQuery to the cids Pure REST Search API.
@@ -51,11 +52,6 @@ public class BaumChildLightweightSearch extends AbstractCidsServerSearch impleme
     //~ Static fields/initializers ---------------------------------------------
 
     private static final Logger LOG = Logger.getLogger(BaumChildLightweightSearch.class);
-
-    
-
-    //~ Enums ------------------------------------------------------------------
-
 
     //~ Instance fields --------------------------------------------------------
 
@@ -92,8 +88,8 @@ public class BaumChildLightweightSearch extends AbstractCidsServerSearch impleme
      *
      * @param  representationPattern  DOCUMENT ME!
      * @param  representationFields   DOCUMENT ME!
-     * @param table
-     * @param fkField
+     * @param  table                  DOCUMENT ME!
+     * @param  fkField                DOCUMENT ME!
      */
     public BaumChildLightweightSearch(final String representationPattern,
             final String[] representationFields,
@@ -135,13 +131,12 @@ public class BaumChildLightweightSearch extends AbstractCidsServerSearch impleme
             conditions.add(String.format("%s = %d", fkField, id));
         }
 
-        
-
         final String query = String.format("SELECT ("
-                + "SELECT c.id FROM cs_class c WHERE table_name ILIKE '%1$s') AS class_id, "
-                + "id, %2$s FROM %1$s %3$s"
-                + " ORDER BY %2$s", 
-                table, representationFields[0],
+                        + "SELECT c.id FROM cs_class c WHERE table_name ILIKE '%1$s') AS class_id, "
+                        + "id, %2$s FROM %1$s %3$s"
+                        + " ORDER BY %2$s",
+                table,
+                representationFields[0],
                 (conditions.isEmpty() ? "" : (" WHERE " + String.join(" AND ", conditions))));
         LOG.info(query);
         try {
@@ -149,8 +144,8 @@ public class BaumChildLightweightSearch extends AbstractCidsServerSearch impleme
                     "WUNDA_BLAU",
                     table,
                     getConnectionContext());
-            
-           //final MetaService ms = (MetaService)getActiveLocalServers().get("WUNDA_BLAU");
+
+            // final MetaService ms = (MetaService)getActiveLocalServers().get("WUNDA_BLAU");
             final List<MetaObjectNode> mons = new ArrayList<>();
             final List<ArrayList> resultList = metaService.performCustomSearch(query, getConnectionContext());
             for (final ArrayList al : resultList) {
@@ -167,7 +162,6 @@ public class BaumChildLightweightSearch extends AbstractCidsServerSearch impleme
         }
     }
 
-    
     //~ Inner Classes ----------------------------------------------------------
 
     /**

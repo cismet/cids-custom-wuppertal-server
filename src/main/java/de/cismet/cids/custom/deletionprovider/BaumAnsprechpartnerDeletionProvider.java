@@ -17,9 +17,11 @@ import org.apache.log4j.Logger;
 
 import org.openide.util.lookup.ServiceProvider;
 
-import de.cismet.cids.dynamics.CidsBean;
 import java.rmi.RemoteException;
+
 import java.util.ArrayList;
+
+import de.cismet.cids.dynamics.CidsBean;
 
 /**
  * DOCUMENT ME!
@@ -33,12 +35,12 @@ public class BaumAnsprechpartnerDeletionProvider extends AbstractCustomDeletionP
     //~ Static fields/initializers ---------------------------------------------
 
     private static final Logger LOG = Logger.getLogger(BaumAnsprechpartnerDeletionProvider.class);
-    public static final String TABLE_NAME = "baum_ansprechpartner";
-    public static final String FIELD__ID = "id";
-    public static final String FIELD__FK = "fk_ansprechpartner";
-    public static final String TABLE_NAME_SEARCH = "baum_meldung_ansprechpartner";
-    public String DELETE_TEXT = "Dieser Ansprechpartner kann nicht gelöscht werden, da dieser verwendet wird.";
-    public boolean notToDelete = false;
+    private static final String TABLE_NAME = "baum_ansprechpartner";
+    private static final String FIELD__ID = "id";
+    private static final String FIELD__FK = "fk_ansprechpartner";
+    private static final String TABLE_NAME_SEARCH = "baum_meldung_ansprechpartner";
+    private static final String DELETE_TEXT =
+        "Dieser Ansprechpartner kann nicht gelöscht werden, da dieser verwendet wird.";
 
     //~ Methods ----------------------------------------------------------------
 
@@ -49,40 +51,39 @@ public class BaumAnsprechpartnerDeletionProvider extends AbstractCustomDeletionP
 
     @Override
     public boolean isMatching(final User user, final MetaObject metaObject) {
-        if (metaObject != null) {
-            final CidsBean ansprechpartnerBean = metaObject.getBean();
-            final Integer ansprechpartner_id = (Integer) ansprechpartnerBean.getProperty(FIELD__ID);
-            
-            final String queryArtInErsatz = String.format(
-                        "SELECT * FROM %s WHERE %s = %d;",
-                        TABLE_NAME_SEARCH, FIELD__FK, ansprechpartner_id); 
-            try {
-                ArrayList<ArrayList>artArrayE = getMetaService().performCustomSearch(
-                        queryArtInErsatz, 
-                        getConnectionContext());
-                if (artArrayE.size() < 1) {
-                    return false; // kein true sonst läuft jede Klasse durch
-                }else {
-                    notToDelete = true;
-                }
-                        
-            } catch (RemoteException ex) {
-                LOG.error("Cannot delete Ap object", ex);
-            }
+        if (!super.isMatching(user, metaObject)) {
+            return false;
         }
-        return super.isMatching(user, metaObject);
+
+        final CidsBean ansprechpartnerBean = metaObject.getBean();
+        final Integer ansprechpartner_id = (Integer)ansprechpartnerBean.getProperty(FIELD__ID);
+
+        final String queryArtInErsatz = String.format(
+                "SELECT * FROM %s WHERE %s = %d;",
+                TABLE_NAME_SEARCH,
+                FIELD__FK,
+                ansprechpartner_id);
+        try {
+            final ArrayList<ArrayList> artArrayE = getMetaService().performCustomSearch(
+                    queryArtInErsatz,
+                    getConnectionContext());
+            if (!artArrayE.isEmpty()) {
+                return true;
+            }
+        } catch (RemoteException ex) {
+            LOG.error("Cannot delete Ap object", ex);
+        }
+        return false;
     }
 
     @Override
     public boolean customDeleteMetaObject(final User user, final MetaObject metaObject) throws Exception {
-        if (metaObject != null) {
-            // darf nicht geloescht werden
-            
-            if (notToDelete) {
-                throw new DeletionProviderClientException(
-                        DELETE_TEXT);
-            }
-        }
-        return false;
+        // darf nicht geloescht werden
+        throw new DeletionProviderClientException(DELETE_TEXT);
+    }
+
+    @Override
+    public String getDomain() {
+        return "WUNDA_BLAU";
     }
 }
