@@ -9,7 +9,6 @@ package de.cismet.cids.custom.wunda_blau.search.server;
 
 import Sirius.server.middleware.interfaces.domainserver.MetaService;
 import Sirius.server.middleware.types.MetaClass;
-import de.cismet.cids.dynamics.CidsBean;
 
 import lombok.Getter;
 import lombok.Setter;
@@ -21,6 +20,8 @@ import org.openide.util.lookup.ServiceProvider;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collection;
+
+import de.cismet.cids.dynamics.CidsBean;
 
 import de.cismet.cids.server.search.AbstractCidsServerSearch;
 import de.cismet.cids.server.search.SearchException;
@@ -51,9 +52,6 @@ public class BaumArtLightweightSearch extends AbstractCidsServerSearch implement
     private static final Logger LOG = Logger.getLogger(BaumArtLightweightSearch.class);
 
     private static final String TABLE__SORTE = "baum_sorte";
-
-    //~ Enums ------------------------------------------------------------------
-
 
     //~ Instance fields --------------------------------------------------------
 
@@ -124,10 +122,11 @@ public class BaumArtLightweightSearch extends AbstractCidsServerSearch implement
         }
 
         final String query = String.format("SELECT ("
-                + "SELECT c.id FROM cs_class c "
-                + "WHERE table_name ILIKE ' %1$s ') AS class_id, id, name "
-                + "FROM %1$s %2$s", 
-                TABLE__SORTE, (conditions.isEmpty() ? "" : (" WHERE " + String.join(" AND ", conditions))));
+                        + "SELECT c.id FROM cs_class c "
+                        + "WHERE table_name ILIKE ' %1$s ') AS class_id, id, name "
+                        + "FROM %1$s %2$s",
+                TABLE__SORTE,
+                (conditions.isEmpty() ? "" : (" WHERE " + String.join(" AND ", conditions))));
         try {
             final MetaClass mc = CidsBean.getMetaClassFromTableName(
                     "WUNDA_BLAU",

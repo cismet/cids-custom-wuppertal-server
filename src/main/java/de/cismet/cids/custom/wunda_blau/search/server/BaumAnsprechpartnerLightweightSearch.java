@@ -56,6 +56,7 @@ public class BaumAnsprechpartnerLightweightSearch extends AbstractMonToLwmoSearc
     }
 
     //~ Methods ----------------------------------------------------------------
+
     /**
      * DOCUMENT ME!
      *

@@ -25,7 +25,7 @@ public class BaumMeldungToStringConverter extends CustomToStringConverter {
     //~ Static fields/initializers ---------------------------------------------
 
     public static final String FIELD__NAME = "datum"; // baum_meldung
-    public static final String FIELD__ID = "id";         // baum_meldung
+    public static final String FIELD__ID = "id";      // baum_meldung
 
     //~ Methods ----------------------------------------------------------------
 

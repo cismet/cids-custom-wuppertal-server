@@ -24,8 +24,8 @@ public class BaumArtToStringConverter extends CustomToStringConverter {
 
     //~ Static fields/initializers ---------------------------------------------
 
-    public static final String FIELD__NAME = "name";                // baum_Art
-    public static final String FIELD__HAUPTART = "fk_hauptart.name";  // baum_Hauptart
+    public static final String FIELD__NAME = "name";                 // baum_Art
+    public static final String FIELD__HAUPTART = "fk_hauptart.name"; // baum_Hauptart
 
     //~ Methods ----------------------------------------------------------------
 
@@ -35,7 +35,8 @@ public class BaumArtToStringConverter extends CustomToStringConverter {
         if (myid < 0) {
             return "Neue Art anlegen";
         } else {
-            return String.format("%s - %s",
+            return String.format(
+                    "%s - %s",
                     String.valueOf(cidsBean.getProperty(FIELD__HAUPTART)),
                     String.valueOf(cidsBean.getProperty(FIELD__NAME)));
         }

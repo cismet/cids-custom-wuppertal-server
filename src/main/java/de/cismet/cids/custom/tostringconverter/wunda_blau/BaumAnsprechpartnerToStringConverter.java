@@ -39,13 +39,13 @@ public class BaumAnsprechpartnerToStringConverter extends CustomToStringConverte
             return "--";
         } else {
             final String myMail = String.valueOf(cidsBean.getProperty(FIELD__MAIL));
-            if (!myMail.trim().isEmpty()){
+            if (!myMail.trim().isEmpty()) {
                 myName = myName + ", " + myMail.trim();
             }
             final String myBem = String.valueOf(cidsBean.getProperty(FIELD__BEM));
-            if (!myBem.trim().isEmpty()){
+            if (!myBem.trim().isEmpty()) {
                 myName = myName + ", " + myBem.trim();
-            } 
+            }
             return myName;
         }
     }

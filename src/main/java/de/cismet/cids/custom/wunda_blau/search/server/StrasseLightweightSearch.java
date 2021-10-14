@@ -9,7 +9,6 @@ package de.cismet.cids.custom.wunda_blau.search.server;
 
 import Sirius.server.middleware.interfaces.domainserver.MetaService;
 import Sirius.server.middleware.types.MetaClass;
-import de.cismet.cids.dynamics.CidsBean;
 
 import lombok.Getter;
 import lombok.Setter;
@@ -21,6 +20,8 @@ import org.openide.util.lookup.ServiceProvider;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collection;
+
+import de.cismet.cids.dynamics.CidsBean;
 
 import de.cismet.cids.server.search.AbstractCidsServerSearch;
 import de.cismet.cids.server.search.SearchException;
@@ -36,9 +37,9 @@ import de.cismet.connectioncontext.ConnectionContext;
 import de.cismet.connectioncontext.ConnectionContextStore;
 
 /**
- * Builtin Legacy Search to delegate the operation getLightweightMetaObjectsByQuery to the cids Pure REST Search API.
- ***Searches all Adresses for one Streetkey (implemented for baum)
- * 
+ * Builtin Legacy Search to delegate the operation getLightweightMetaObjectsByQuery to the cids Pure REST Search API.**
+ * Searches all Adresses for one Streetkey (implemented for baum)
+ *
  * @author   Sandra Simmert
  * @version  $Revision$, $Date$
  */
@@ -57,7 +58,7 @@ public class StrasseLightweightSearch extends AbstractCidsServerSearch implement
 
     //~ Enums ------------------------------------------------------------------
 
-/**
+    /**
      * DOCUMENT ME!
      *
      * @version  $Revision$, $Date$
@@ -81,6 +82,7 @@ public class StrasseLightweightSearch extends AbstractCidsServerSearch implement
             }
         }
     }
+
     //~ Instance fields --------------------------------------------------------
 
     private ConnectionContext connectionContext = ConnectionContext.createDummy();
@@ -113,7 +115,7 @@ public class StrasseLightweightSearch extends AbstractCidsServerSearch implement
     /**
      * Creates a new AdresseLightweightSearch object.
      *
-     * @param subject
+     * @param  subject                DOCUMENT ME!
      * @param  representationPattern  DOCUMENT ME!
      * @param  representationFields   DOCUMENT ME!
      */
@@ -155,8 +157,8 @@ public class StrasseLightweightSearch extends AbstractCidsServerSearch implement
         }
 
         final String query = String.format("SELECT ("
-                + "SELECT c.id FROM cs_class c WHERE table_name ILIKE '%1$s')"
-                + "AS class_id, id, nane FROM %1$s %2$s",
+                        + "SELECT c.id FROM cs_class c WHERE table_name ILIKE '%1$s')"
+                        + "AS class_id, id, nane FROM %1$s %2$s",
                 TABLE__STR,
                 (conditions.isEmpty() ? "" : (" WHERE " + String.join(" AND ", conditions))));
         try {

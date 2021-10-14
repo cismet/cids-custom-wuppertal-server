@@ -69,9 +69,9 @@ public class StrAdrStrasseDeletionProvider extends AbstractCustomDeletionProvide
         }
         return false;
     }
-    
+
     @Override
     public String getDomain() {
         return "WUNDA_BLAU";
-    }    
+    }
 }

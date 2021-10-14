@@ -10,7 +10,6 @@ package de.cismet.cids.custom.wunda_blau.search.server;
 import Sirius.server.middleware.interfaces.domainserver.MetaService;
 import Sirius.server.middleware.types.MetaClass;
 import Sirius.server.middleware.types.MetaObjectNode;
-import de.cismet.cids.dynamics.CidsBean;
 
 import lombok.Getter;
 import lombok.Setter;
@@ -22,6 +21,9 @@ import org.openide.util.lookup.ServiceProvider;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collection;
+import java.util.List;
+
+import de.cismet.cids.dynamics.CidsBean;
 
 import de.cismet.cids.server.search.AbstractCidsServerSearch;
 import de.cismet.cids.server.search.SearchException;
@@ -35,7 +37,6 @@ import de.cismet.cidsx.server.search.builtin.legacy.LightweightMetaObjectsSearch
 
 import de.cismet.connectioncontext.ConnectionContext;
 import de.cismet.connectioncontext.ConnectionContextStore;
-import java.util.List;
 
 /**
  * Builtin Legacy Search to delegate the operation getLightweightMetaObjectsByQuery to the cids Pure REST Search API.
@@ -51,11 +52,6 @@ public class RedundantObjectSearch extends AbstractCidsServerSearch implements R
     //~ Static fields/initializers ---------------------------------------------
 
     private static final Logger LOG = Logger.getLogger(RedundantObjectSearch.class);
-
-    
-
-    //~ Enums ------------------------------------------------------------------
-
 
     //~ Instance fields --------------------------------------------------------
 
@@ -89,11 +85,10 @@ public class RedundantObjectSearch extends AbstractCidsServerSearch implements R
     /**
      * Creates a new RedundantObjectSearch object.
      *
-     * 
-     * @param representationPattern
-     * @param representationFields
-     * @param table
-     * @param where
+     * @param  representationPattern  DOCUMENT ME!
+     * @param  representationFields   DOCUMENT ME!
+     * @param  where                  DOCUMENT ME!
+     * @param  table                  DOCUMENT ME!
      */
     public RedundantObjectSearch(final String representationPattern,
             final String[] representationFields,
@@ -126,17 +121,17 @@ public class RedundantObjectSearch extends AbstractCidsServerSearch implements R
                         + "could not connect ot MetaService @domain 'WUNDA_BLAU'";
             LOG.error(message);
             throw new SearchException(message);
-        } 
+        }
         final Collection<String> fields = new ArrayList<>();
         if (representationFields != null) {
             fields.addAll(Arrays.asList(representationFields));
         }
 
         final String query = "SELECT (SELECT c.id FROM cs_class c WHERE table_name ILIKE '" + table + "') AS class_id, "
-                         + "id"
-                    + (fields.isEmpty() ? "" : (", " + String.join(", ", fields))) 
+                    + "id"
+                    + (fields.isEmpty() ? "" : (", " + String.join(", ", fields)))
                     + " FROM " + table
-                    + (where.isEmpty() ? "" : (" WHERE " + String.join(" AND ", where)));      
+                    + (where.isEmpty() ? "" : (" WHERE " + String.join(" AND ", where)));
         try {
             final MetaClass mc = CidsBean.getMetaClassFromTableName(
                     "WUNDA_BLAU",
@@ -149,7 +144,6 @@ public class RedundantObjectSearch extends AbstractCidsServerSearch implements R
         }
     }
 
-    
     //~ Inner Classes ----------------------------------------------------------
 
     /**
