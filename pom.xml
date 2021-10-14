@@ -71,7 +71,6 @@
                 <artifactId>cids-server</artifactId>
                 <version>7.7.4</version>
                 <type>jar</type>
-                <scope>compile</scope>
             </dependency>
 
             <dependency>
