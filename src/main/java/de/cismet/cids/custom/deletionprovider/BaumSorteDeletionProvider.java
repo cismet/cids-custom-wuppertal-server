@@ -15,8 +15,11 @@ import Sirius.server.newuser.User;
 
 import org.apache.log4j.Logger;
 
-import org.openide.util.NbBundle;
 import org.openide.util.lookup.ServiceProvider;
+
+import java.rmi.RemoteException;
+
+import java.util.ArrayList;
 
 import de.cismet.cids.dynamics.CidsBean;
 
@@ -27,16 +30,16 @@ import de.cismet.cids.dynamics.CidsBean;
  * @version  $Revision$, $Date$
  */
 @ServiceProvider(service = CustomDeletionProvider.class)
-public class StrAdrStrasseDeletionProvider extends AbstractCustomDeletionProvider {
+public class BaumSorteDeletionProvider extends AbstractCustomDeletionProvider {
 
     //~ Static fields/initializers ---------------------------------------------
 
-    private static final Logger LOG = Logger.getLogger(StrAdrStrasseDeletionProvider.class);
-    public static final String TABLE_NAME = "str_adr_strasse";
-    public static final String FIELD__KEY = "schluessel.name";
-    private static final String AMTL_STR_GRENZE = "04000";
-    private static final String DELETE_KLEINER =
-        "Diese Straße darf nicht gelöscht werden, sie muss historisiert werden.";
+    private static final Logger LOG = Logger.getLogger(BaumSorteDeletionProvider.class);
+    private static final String TABLE_NAME = "baum_sorte";
+    private static final String FIELD__ID = "id";
+    private static final String FIELD__FK = "fk_sorte";
+    private static final String TABLE_NAME_SEARCH_E = "baum_ersatz";
+    private static final String DELETE_TEXT = "Diese Sorte kann nicht gelöscht werden, da diese verwendet wird.";
 
     //~ Methods ----------------------------------------------------------------
 
@@ -51,23 +54,31 @@ public class StrAdrStrasseDeletionProvider extends AbstractCustomDeletionProvide
             return false;
         }
 
-        final CidsBean strBean = metaObject.getBean();
-        return (strBean.getProperty(FIELD__KEY).toString().compareTo(AMTL_STR_GRENZE) <= 0);
+        final CidsBean sorteBean = metaObject.getBean();
+        final Integer sorte_id = (Integer)sorteBean.getProperty(FIELD__ID);
+
+        final String queryArtInErsatz = String.format(
+                "SELECT * FROM %s WHERE %s = %d;",
+                TABLE_NAME_SEARCH_E,
+                FIELD__FK,
+                sorte_id);
+        try {
+            final ArrayList<ArrayList> artArrayE = getMetaService().performCustomSearch(
+                    queryArtInErsatz,
+                    getConnectionContext());
+            if (!artArrayE.isEmpty()) {
+                return true;
+            }
+        } catch (RemoteException ex) {
+            LOG.error("Cannot delete sorte object", ex);
+        }
+        return false;
     }
 
     @Override
     public boolean customDeleteMetaObject(final User user, final MetaObject metaObject) throws Exception {
-        if (metaObject != null) {
-            final CidsBean strBean = metaObject.getBean();
-            final String strasse = strBean.getProperty(FIELD__KEY).toString();
-
-            // finde amtliche (historische) Straßen
-            if (strasse.compareTo(AMTL_STR_GRENZE) < 0) {
-                throw new DeletionProviderClientException(
-                    DELETE_KLEINER);
-            }
-        }
-        return false;
+        // darf nicht geloescht werden
+        throw new DeletionProviderClientException(DELETE_TEXT);
     }
 
     @Override

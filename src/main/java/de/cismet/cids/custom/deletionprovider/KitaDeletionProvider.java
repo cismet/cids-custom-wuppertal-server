@@ -96,7 +96,7 @@ public class KitaDeletionProvider extends AbstractCustomDeletionProvider {
         }
         return true;
     }
-    
+
     @Override
     public String getDomain() {
         return "WUNDA_BLAU";

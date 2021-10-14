@@ -128,9 +128,9 @@ public class PfSchluesseltabelleDeletionProvider extends AbstractCustomDeletionP
         }
         return false;
     }
-    
+
     @Override
     public String getDomain() {
         return "WUNDA_BLAU";
-    }    
+    }
 }
