@@ -60,18 +60,17 @@ public class PotenzialflaecheStartupHook extends AbstractWundaBlauStartupHook {
                             final File reportsDirectoryFile = new File(reportsDirectory);
                             if (reportsDirectoryFile.exists() && reportsDirectoryFile.isDirectory()
                                         && reportsDirectoryFile.canWrite()) {
-                                for (final File file : reportsDirectoryFile.listFiles(new FilenameFilter() {
-
-                                                    @Override
-                                                    public boolean accept(final File dir, final String name) {
-                                                        return name.toLowerCase().endsWith(".pdf")
-                                                            || name.toLowerCase().endsWith(".zip");
-                                                    }
-                                                })
-                                ) {
-                                    file.delete();
+                                for (final File file : reportsDirectoryFile.listFiles()) {
+                                    if (file.isDirectory()) {
+                                        for (final File tmpFile : file.listFiles()) {
+                                            tmpFile.delete();
+                                        }
+                                        file.delete();
+                                    } else if (file.getName().toLowerCase().endsWith(".pdf")
+                                                || file.getName().toLowerCase().endsWith(".pdf")) {
+                                        file.delete();
+                                    }
                                 }
-                                ;
                             }
                         }
                     } catch (final Exception ex) {

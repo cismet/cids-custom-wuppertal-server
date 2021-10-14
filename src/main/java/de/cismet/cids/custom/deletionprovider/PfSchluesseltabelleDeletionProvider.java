@@ -92,6 +92,9 @@ public class PfSchluesseltabelleDeletionProvider extends AbstractCustomDeletionP
 
     @Override
     public boolean isMatching(final User user, final MetaObject metaObject) {
+        if (!super.isMatching(user, metaObject)) {
+            return false;
+        }
         if (!initalized) {
             synchronized (matchingTableNames) {
                 try {
@@ -125,4 +128,9 @@ public class PfSchluesseltabelleDeletionProvider extends AbstractCustomDeletionP
         }
         return false;
     }
+    
+    @Override
+    public String getDomain() {
+        return "WUNDA_BLAU";
+    }    
 }

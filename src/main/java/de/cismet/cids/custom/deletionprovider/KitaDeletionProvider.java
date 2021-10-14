@@ -50,15 +50,12 @@ public class KitaDeletionProvider extends AbstractCustomDeletionProvider {
 
     @Override
     public boolean isMatching(final User user, final MetaObject metaObject) {
-        if (metaObject != null) {
-            final CidsBean kitaBean = metaObject.getBean();
-
-            if ((kitaBean.getProperty(FIELD__ONLINE_STELLEN) == null)
-                        || Boolean.FALSE.equals(kitaBean.getProperty(FIELD__ONLINE_STELLEN))) {
-                return false; // kein true sonst läuft jede Klasse durch
-            }
+        if (!super.isMatching(user, metaObject)) {
+            return false;
         }
-        return super.isMatching(user, metaObject);
+        final CidsBean kitaBean = metaObject.getBean();
+        return ((kitaBean.getProperty(FIELD__ONLINE_STELLEN) != null)
+                        && Boolean.TRUE.equals(kitaBean.getProperty(FIELD__ONLINE_STELLEN)));
     }
 
     @Override
@@ -98,5 +95,10 @@ public class KitaDeletionProvider extends AbstractCustomDeletionProvider {
             }
         }
         return true;
+    }
+    
+    @Override
+    public String getDomain() {
+        return "WUNDA_BLAU";
     }
 }

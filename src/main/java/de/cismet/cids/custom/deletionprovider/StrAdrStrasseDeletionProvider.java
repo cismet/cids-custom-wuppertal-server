@@ -34,7 +34,7 @@ public class StrAdrStrasseDeletionProvider extends AbstractCustomDeletionProvide
     private static final Logger LOG = Logger.getLogger(StrAdrStrasseDeletionProvider.class);
     public static final String TABLE_NAME = "str_adr_strasse";
     public static final String FIELD__KEY = "schluessel.name";
-    private static final String amtlStrGrenze = "04000";
+    private static final String AMTL_STR_GRENZE = "04000";
     private static final String DELETE_KLEINER =
         "Diese Straße darf nicht gelöscht werden, sie muss historisiert werden.";
 
@@ -47,14 +47,12 @@ public class StrAdrStrasseDeletionProvider extends AbstractCustomDeletionProvide
 
     @Override
     public boolean isMatching(final User user, final MetaObject metaObject) {
-        if (metaObject != null) {
-            final CidsBean strBean = metaObject.getBean();
-
-            if (strBean.getProperty(FIELD__KEY).toString().compareTo(amtlStrGrenze) > 0) {
-                return false; // kein true sonst läuft jede Klasse durch
-            }
+        if (!super.isMatching(user, metaObject)) {
+            return false;
         }
-        return super.isMatching(user, metaObject);
+
+        final CidsBean strBean = metaObject.getBean();
+        return (strBean.getProperty(FIELD__KEY).toString().compareTo(AMTL_STR_GRENZE) <= 0);
     }
 
     @Override
@@ -64,12 +62,16 @@ public class StrAdrStrasseDeletionProvider extends AbstractCustomDeletionProvide
             final String strasse = strBean.getProperty(FIELD__KEY).toString();
 
             // finde amtliche (historische) Straßen
-
-            if (strasse.compareTo(amtlStrGrenze) < 0) {
+            if (strasse.compareTo(AMTL_STR_GRENZE) < 0) {
                 throw new DeletionProviderClientException(
                     DELETE_KLEINER);
             }
         }
         return false;
     }
+    
+    @Override
+    public String getDomain() {
+        return "WUNDA_BLAU";
+    }    
 }
