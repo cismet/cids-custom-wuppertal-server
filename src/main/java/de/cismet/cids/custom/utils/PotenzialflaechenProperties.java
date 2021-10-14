@@ -42,6 +42,9 @@ public class PotenzialflaechenProperties extends DefaultServerResourceProperties
     private static final String PROP__SECRES_KEY = "secresKey";
     private static final String PROP__SECRES_API = "secresApi";
 
+    private static final String PROP__PDFMERGE_CMD_TMEPLATE = "pdfmergeCmdTemplate";
+
+    private static final String DEFAULT__PDFMERGE_CMD_TEMPLATE = "pdfunite {PDF_INPUT_FILELIST} {PDF_OUTPUT_FILE}";
     private static final String DEFAULT__MAP_FACTORY = "de.cismet.cids.custom.reports.wunda_blau.PfMapFactory";
     private static final String DEFAULT__SRS = "EPSG:25832";
     private static final double DEFAULT__HOME_X1 = 6.7d;
@@ -257,6 +260,20 @@ public class PotenzialflaechenProperties extends DefaultServerResourceProperties
         } catch (final Exception ex) {
             LOG.info(String.format("Property %s not set", PROP__REPORTS_DIR), ex);
             return DEFAULT__REPORTS_DIR;
+        }
+    }
+
+    /**
+     * DOCUMENT ME!
+     *
+     * @return  DOCUMENT ME!
+     */
+    public String getPdfMergeCmdTemplate() {
+        try {
+            return getProperties().getProperty(PROP__PDFMERGE_CMD_TMEPLATE, DEFAULT__PDFMERGE_CMD_TEMPLATE);
+        } catch (final Exception ex) {
+            LOG.info(String.format("Property %s not set", PROP__PDFMERGE_CMD_TMEPLATE), ex);
+            return DEFAULT__PDFMERGE_CMD_TEMPLATE;
         }
     }
 }

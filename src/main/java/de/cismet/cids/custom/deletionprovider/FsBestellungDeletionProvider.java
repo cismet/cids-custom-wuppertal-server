@@ -42,4 +42,9 @@ public class FsBestellungDeletionProvider extends AbstractCustomDeletionProvider
     public boolean customDeleteMetaObject(final User user, final MetaObject metaObject) throws Exception {
         throw new DeletionProviderClientException("Das Löschen von Produktbestellungen ist nicht erlaubt.");
     }
+
+    @Override
+    public String getDomain() {
+        return "WUNDA_BLAU";
+    }
 }
