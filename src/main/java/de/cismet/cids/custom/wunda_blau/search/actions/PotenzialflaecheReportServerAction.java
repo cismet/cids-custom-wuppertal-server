@@ -30,6 +30,7 @@ import java.io.FileInputStream;
 import java.io.FileOutputStream;
 import java.io.IOException;
 import java.io.InputStream;
+import java.io.InputStreamReader;
 
 import java.util.ArrayList;
 import java.util.Arrays;
@@ -40,6 +41,8 @@ import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
+import java.util.regex.Matcher;
+import java.util.regex.Pattern;
 import java.util.zip.ZipEntry;
 import java.util.zip.ZipOutputStream;
 
@@ -84,6 +87,9 @@ public class PotenzialflaecheReportServerAction extends DefaultServerAction {
 
     private static final transient Logger LOG = Logger.getLogger(PotenzialflaecheReportServerAction.class);
     public static final String TASK_NAME = "potenzialflaecheReport";
+
+    private static String TEMPLATEREPLACER_INPUT_FILELIST = "{PDF_INPUT_FILELIST}";
+    private static String TEMPLATEREPLACER_OUTPUT_FILE = "{PDF_OUTPUT_FILE}";
 
     //~ Enums ------------------------------------------------------------------
 
@@ -340,7 +346,7 @@ public class PotenzialflaecheReportServerAction extends DefaultServerAction {
 
         //~ Enum constants -----------------------------------------------------
 
-        POTENZIALFLAECHE, KAMPAGNE, BODY_TYPE, TEMPLATE, EXTERNAL
+        POTENZIALFLAECHE, KAMPAGNE, BODY_TYPE, RESULT_TYPE, TEMPLATE, EXTERNAL
     }
 
     /**
@@ -353,6 +359,18 @@ public class PotenzialflaecheReportServerAction extends DefaultServerAction {
         //~ Enum constants -----------------------------------------------------
 
         POTENZIALFLAECHE, KAMPAGNE
+    }
+
+    /**
+     * DOCUMENT ME!
+     *
+     * @version  $Revision$, $Date$
+     */
+    public enum ResultType {
+
+        //~ Enum constants -----------------------------------------------------
+
+        PDF, ZIP
     }
 
     //~ Instance fields --------------------------------------------------------
@@ -410,6 +428,7 @@ public class PotenzialflaecheReportServerAction extends DefaultServerAction {
     public Object execute(final Object body, final ServerActionParameter... params) {
         try {
             BodyType bodyType = BodyType.POTENZIALFLAECHE;
+            ResultType resultType = ResultType.PDF;
 
             final Set<MetaObjectNode> flaecheMons = new HashSet<>();
             final Set<MetaObjectNode> kampagneMons = new HashSet<>();
@@ -421,6 +440,10 @@ public class PotenzialflaecheReportServerAction extends DefaultServerAction {
                     if (sap.getKey().equals(Parameter.BODY_TYPE.toString())) {
                         bodyType = (value instanceof BodyType)
                             ? (BodyType)value : ((value instanceof String) ? BodyType.valueOf((String)value) : null);
+                    } else if (sap.getKey().equals(Parameter.RESULT_TYPE.toString())) {
+                        resultType = (value instanceof ResultType)
+                            ? (ResultType)value
+                            : ((value instanceof String) ? ResultType.valueOf((String)value) : null);
                     } else if (sap.getKey().equals(Parameter.POTENZIALFLAECHE.toString())) {
                         flaecheMons.add(getFor(sap.getValue(), "pf_potenzialflaeche", "nummer"));
                     } else if (sap.getKey().equals(Parameter.KAMPAGNE.toString())) {
@@ -475,26 +498,63 @@ public class PotenzialflaecheReportServerAction extends DefaultServerAction {
                 }
             }
 
+            final String reportsDirectoryName = getProperties().getReportsDirectory();
+            final String random = RandomStringUtils.randomAlphanumeric(24);
             if (flaecheMons.isEmpty()) {
                 throw new Exception("flaeche not given");
-            } else if (flaecheMons.size() == 1) {
-                final MetaObjectNode flaecheMon = flaecheMons.iterator().next();
-                final CidsBean flaecheBean = getMetaService().getMetaObject(
-                            getUser(),
-                            flaecheMon.getObjectId(),
-                            flaecheMon.getClassId(),
-                            getConnectionContext())
-                            .getBean();
-                final String pdfName = String.format("%s.pdf", RandomStringUtils.randomAlphanumeric(24));
-                final File pdfFile = new File(getProperties().getReportsDirectory(), pdfName);
-                createSingleReport(flaecheBean, templateBean, pdfFile);
+            } else if (ResultType.PDF.equals(resultType)) {
+                final File reportsDirectory = new File(reportsDirectoryName);
+                final String pdfName = String.format("%s.pdf", random);
+                final File pdfFile = new File(reportsDirectoryName, pdfName);
+                if (flaecheMons.size() == 1) {
+                    final MetaObjectNode flaecheMon = flaecheMons.iterator().next();
+                    final CidsBean flaecheBean = getMetaService().getMetaObject(
+                                getUser(),
+                                flaecheMon.getObjectId(),
+                                flaecheMon.getClassId(),
+                                getConnectionContext())
+                                .getBean();
+                    createSingleReport(flaecheBean, templateBean, pdfFile);
+                } else {
+                    final String cmdTemplate = getProperties().getPdfMergeCmdTemplate();
+                    if ((cmdTemplate != null) && !cmdTemplate.isEmpty()) {
+                        final File tmpDir = new File(reportsDirectoryName, random);
+                        if (!tmpDir.exists()) {
+                            tmpDir.mkdir();
+                        }
+                        for (final MetaObjectNode flaecheMon : flaecheMons) {
+                            final CidsBean flaecheBean = getMetaService().getMetaObject(
+                                        getUser(),
+                                        flaecheMon.getObjectId(),
+                                        flaecheMon.getClassId(),
+                                        getConnectionContext())
+                                        .getBean();
+                            final File pdfTmpFile = new File(
+                                    tmpDir,
+                                    String.format("%s.pdf", (String)flaecheBean.getProperty("nummer")));
+                            createSingleReport(flaecheBean, templateBean, pdfTmpFile);
+                        }
+
+                        final String cmd = cmdTemplate.replaceAll(Pattern.quote(TEMPLATEREPLACER_INPUT_FILELIST),
+                                    Matcher.quoteReplacement(String.format("\"%s\"/*", tmpDir)))
+                                    .replaceAll(Pattern.quote(TEMPLATEREPLACER_OUTPUT_FILE),
+                                        Matcher.quoteReplacement(String.format("\"%s\"", pdfFile)));
+                        LOG.info(String.format("executing CMD: %s", cmd));
+                        executeCmd(cmd, reportsDirectory);
+                        for (final File tmpFile : tmpDir.listFiles()) {
+                            tmpFile.delete();
+                        }
+                        tmpDir.delete();
+                    } else {
+                        throw new Exception("can't create multi-report pdf, no merge command provided");
+                    }
+                }
                 return pdfName;
-            } else {
+            } else if (ResultType.ZIP.equals(resultType)) {
                 final File tmpDir = new File(getProperties().getReportsDirectory());
-                final String zipName = String.format("%s.zip", RandomStringUtils.randomAlphanumeric(24));
+                final String zipName = String.format("%s.zip", random);
                 final File zipFile = new File(tmpDir, zipName);
-                try(final ZipOutputStream zipOutputStream = new ZipOutputStream(new FileOutputStream(zipFile));
-                    ) {
+                try(final ZipOutputStream zipOutputStream = new ZipOutputStream(new FileOutputStream(zipFile))) {
                     final StringBuffer errorAppender = new StringBuffer();
                     for (final MetaObjectNode flaecheMon : flaecheMons) {
                         final String pdfName = String.format("%s.pdf", RandomStringUtils.randomAlphanumeric(24));
@@ -529,11 +589,30 @@ public class PotenzialflaecheReportServerAction extends DefaultServerAction {
                     zipOutputStream.flush();
                     return zipName;
                 }
+            } else {
+                return null;
             }
         } catch (final Exception ex) {
             LOG.error("error while creating report", ex);
             return ex;
         }
+    }
+
+    /**
+     * DOCUMENT ME!
+     *
+     * @param   cmd         DOCUMENT ME!
+     * @param   workingDir  DOCUMENT ME!
+     *
+     * @return  DOCUMENT ME!
+     *
+     * @throws  Exception  DOCUMENT ME!
+     */
+    private static String executeCmd(final String cmd, final File workingDir) throws Exception {
+        final ProcessBuilder builder = new ProcessBuilder("/bin/sh", "-c", cmd).directory(workingDir);
+        final Process process = builder.start();
+        final InputStream is = process.getInputStream();
+        return IOUtils.toString(new InputStreamReader(is));
     }
 
     /**
