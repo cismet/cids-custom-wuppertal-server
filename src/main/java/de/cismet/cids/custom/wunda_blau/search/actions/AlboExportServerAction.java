@@ -56,6 +56,11 @@ public class AlboExportServerAction extends AbstractPostgresToShapefileServerAct
     }
 
     @Override
+    public String getWrtProjection() {
+        return AlboProperties.getInstance().getWrtProjection();
+    }
+
+    @Override
     public Class<? extends Geometry> getGeometryClass(final String columnName) {
         return Polygon.class;
     }

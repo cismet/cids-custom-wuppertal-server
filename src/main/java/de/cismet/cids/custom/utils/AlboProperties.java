@@ -32,6 +32,18 @@ public class AlboProperties {
             AlboProperties.class);
     protected static final WundaBlauServerResources SERVER_RESOURCE = WundaBlauServerResources.ALBO_PROPERTIES;
 
+    private static final int DEFAULT_VORGANG_MAP_DPI = 300;
+    private static final int DEFAULT_VORGANG_MAP_WIDTH = 275;
+    private static final int DEFAULT_VORGANG_MAP_HEIGHT = 130;
+
+    private static final String DEFAULT_EXPORT_TMP_ABS_PATH = "/tmp";
+    private static final String DEFAULT_EXPORT_VIEW_NAME = "view_albo_export";
+    private static final String DEFAULT_EXPORT_ORDERBY_FIELD = "id";
+    private static final String DEFAULT_EXPORT_ROWID_FIELD = "id";
+
+    private static final String DEFAULT_WRT_PROJECTION =
+        "PROJCS[\"ETRS_1989_UTM_Zone_32N\",GEOGCS[\"GCS_ETRS_1989\",DATUM[\"D_ETRS_1989\",SPHEROID[\"GRS_1980\",6378137.0,298.257222101]],PRIMEM[\"Greenwich\",0.0],UNIT[\"Degree\",0.0174532925199433]],PROJECTION[\"Transverse_Mercator\"],PARAMETER[\"False_Easting\",500000.0],PARAMETER[\"False_Northing\",0.0],PARAMETER[\"Central_Meridian\",9.0],PARAMETER[\"Scale_Factor\",0.9996],PARAMETER[\"Latitude_Of_Origin\",0.0],UNIT[\"Meter\",1.0]]";
+
     //~ Instance fields --------------------------------------------------------
 
     private final Properties properties;
@@ -52,7 +64,7 @@ public class AlboProperties {
     private final String exportOrderbyField;
     private final String exportRowidField;
 
-    // private final String xxx_color;
+    private final String wrtProjection;
 
     //~ Constructors -----------------------------------------------------------
 
@@ -72,14 +84,16 @@ public class AlboProperties {
         wzKlassifikationLink = valueOfString("wz_klassifikation_link", null);
         vorgangMapUrl = valueOfString("vorgang_map_url", null);
 
-        vorgangMapDpi = valueOfInteger("vorgang_map_dpi", 300);
-        vorgangMapWidth = valueOfInteger("vorgang_map_width", 275);
-        vorgangMapHeight = valueOfInteger("vorgang_map_height", 130);
+        vorgangMapDpi = valueOfInteger("vorgang_map_dpi", DEFAULT_VORGANG_MAP_DPI);
+        vorgangMapWidth = valueOfInteger("vorgang_map_width", DEFAULT_VORGANG_MAP_WIDTH);
+        vorgangMapHeight = valueOfInteger("vorgang_map_height", DEFAULT_VORGANG_MAP_HEIGHT);
 
-        exportTmpAbsPath = valueOfString("export_tmp_abs_path", "/tmp");
-        exportViewName = valueOfString("export_view_name", "view_albo_export");
-        exportOrderbyField = valueOfString("export_orderby_field", "id");
-        exportRowidField = valueOfString("export_rowid_field", "id");
+        exportTmpAbsPath = valueOfString("export_tmp_abs_path", DEFAULT_EXPORT_TMP_ABS_PATH);
+        exportViewName = valueOfString("export_view_name", DEFAULT_EXPORT_VIEW_NAME);
+        exportOrderbyField = valueOfString("export_orderby_field", DEFAULT_EXPORT_ORDERBY_FIELD);
+        exportRowidField = valueOfString("export_rowid_field", DEFAULT_EXPORT_ROWID_FIELD);
+
+        wrtProjection = valueOfString("wrtProjection", DEFAULT_WRT_PROJECTION);
     }
 
     //~ Methods ----------------------------------------------------------------
@@ -94,6 +108,7 @@ public class AlboProperties {
     public String getColorOfArt(final String art) {
         return (art != null) ? valueOfString(String.format("%s_color", art), null) : null;
     }
+
     /**
      * DOCUMENT ME!
      *
