@@ -40,7 +40,7 @@ public class BaumAnsprechpartnerDeletionProvider extends AbstractCustomDeletionP
     private static final String FIELD__FK = "fk_ansprechpartner";
     private static final String TABLE_NAME_SEARCH = "baum_meldung_ansprechpartner";
     private static final String DELETE_TEXT =
-        "Dieser Ansprechpartner kann nicht gelöscht werden, da dieser verwendet wird.";
+        "Dieser Ansprechpartner/Melder kann nicht gelöscht werden, da dieser verwendet wird.";
 
     //~ Methods ----------------------------------------------------------------
 
