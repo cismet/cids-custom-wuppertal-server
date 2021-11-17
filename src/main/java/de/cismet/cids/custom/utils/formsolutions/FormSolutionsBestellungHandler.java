@@ -2463,12 +2463,21 @@ public class FormSolutionsBestellungHandler implements ConnectionContextProvider
         } else {
             landparcelcode = null;
         }
+        final String buchungsblattString = noNullAndTrimed((String)bestellungBean.getProperty("buchungsblattcode"));
+        final String buchungsblattcode;
+        if ((buchungsblattString != null) && !buchungsblattString.isEmpty()) {
+            final String[] buchungsblattcodes = buchungsblattString.split(",");
+            buchungsblattcode = buchungsblattcodes[0] + ((buchungsblattcodes.length > 1) ? " u.a." : "");
+        } else {
+            buchungsblattcode = null;
+        }
 
         parameters.put("DATUM_HEUTE", new SimpleDateFormat("dd.MM.yyyy").format(new Date()));
         final String datumEingang = (bestellungBean.getProperty("eingang_ts") != null)
             ? new SimpleDateFormat("dd.MM.yyyy").format(bestellungBean.getProperty("eingang_ts")) : "";
         parameters.put("DATUM_EINGANG", noNullAndTrimed(datumEingang));
         parameters.put("FLURSTUECKSKENNZEICHEN", landparcelcode);
+        parameters.put("BUCHUNGSBLATTKENNZEICHEN", buchungsblattcode);
         parameters.put("TRANSAKTIONSID", noNullAndTrimed((String)bestellungBean.getProperty("transid")));
         parameters.put("LIEFER_FIRMA", noNullAndTrimed((String)bestellungBean.getProperty("fk_adresse_versand.firma")));
         parameters.put(
@@ -2553,6 +2562,16 @@ public class FormSolutionsBestellungHandler implements ConnectionContextProvider
             "RECHNUNG_AUFTRAGSART",
             ProductType.BAB_ABSCHLUSS.equals(productType) ? getProperties().getRechnungAuftragsartBaulasten()
                                                           : getProperties().getRechnungAuftragsartKarte());
+
+        if (ProductType.LB_ABSCHLUSS.equals(productType)) {
+            parameters.put(
+                "RECHNUNG_BERECH_GRUNDLAGE",
+                getProperties().getRechnungBerechnugsgGrundlageLB());
+            parameters.put(
+                "RECHNUNG_AUFTRAGSART",
+                getProperties().getRechnungAuftragsartLB());
+        }
+
         parameters.put("RECHNUNG_ANZAHL", 1);
         parameters.put("RECHNUNG_RABATT", 0.0f);
         parameters.put("RECHNUNG_UST", 0.0f);
@@ -3064,9 +3083,22 @@ public class FormSolutionsBestellungHandler implements ConnectionContextProvider
                                         getConnectionContext());
 
                                     final String fileNameOrig;
+                                    BerechtigungspruefungBillingDownloadInfo downloadInfo = null;
 
                                     if (productType.equals(ProductType.LB_ABSCHLUSS)) {
-                                        fileNameOrig = "liegenschaftsbuch.zip";
+                                        downloadInfo =
+                                            new ObjectMapper().readValue(
+                                                downloadinfoJson,
+                                                BerechtigungspruefungAlkisEinzelnachweisDownloadInfo.class);
+                                        final BerechtigungspruefungAlkisEinzelnachweisDownloadInfo info =
+                                            (BerechtigungspruefungAlkisEinzelnachweisDownloadInfo)downloadInfo;
+
+                                        if ((info.getAlkisCodes() != null) && (info.getAlkisCodes().size() == 1)) {
+                                            fileNameOrig = info.getAlkisProdukt() + "." + info.getAlkisCodes().get(0)
+                                                        + ".pdf";
+                                        } else {
+                                            fileNameOrig = "liegenschaftsbuch.zip";
+                                        }
                                     } else {
                                         fileNameOrig = "baulastbescheinigung.zip";
                                     }
@@ -3076,14 +3108,8 @@ public class FormSolutionsBestellungHandler implements ConnectionContextProvider
                                                 getProperties().getProduktTmpAbsPath(),
                                                 transid,
                                                 FilenameUtils.getExtension(fileNameOrig)));
-                                    BerechtigungspruefungBillingDownloadInfo downloadInfo;
 
                                     if (productType.equals(ProductType.LB_ABSCHLUSS)) {
-                                        downloadInfo =
-                                            new ObjectMapper().readValue(
-                                                downloadinfoJson,
-                                                BerechtigungspruefungAlkisEinzelnachweisDownloadInfo.class);
-
                                         getLiegenschaftsbuchauszugHelper().writeFullBescheinigung(
                                             (BerechtigungspruefungAlkisEinzelnachweisDownloadInfo)downloadInfo,
                                             tmpFile);
