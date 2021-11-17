@@ -199,42 +199,73 @@ public class LiegenschaftsbuchauszugHelper {
             final String jobNumber,
             final String product,
             final File file) throws IOException {
-        try(final ZipOutputStream zipOut = new ZipOutputStream(new FileOutputStream(file))) {
-            for (final String code : alkisCode) {
-                final ServerActionParameter[] saps = new ServerActionParameter[] {
-                        new ServerActionParameter<>(
-                            AlkisProductServerAction.Parameter.PRODUKT.toString(),
-                            product),
-                        new ServerActionParameter<>(
-                            AlkisProductServerAction.Parameter.ALKIS_CODE.toString(),
-                            AlkisProducts.escapeHtmlSpaces(AlkisProducts.fixBuchungslattCode(code))),
-                        new ServerActionParameter<>(
-                            AlkisProductServerAction.Parameter.AUFTRAGSNUMMER.toString(),
-                            jobNumber)
-                    };
+        if ((alkisCode != null) && (alkisCode.size() == 1)) {
+            final ServerActionParameter[] saps = new ServerActionParameter[] {
+                    new ServerActionParameter<>(
+                        AlkisProductServerAction.Parameter.PRODUKT.toString(),
+                        product),
+                    new ServerActionParameter<>(
+                        AlkisProductServerAction.Parameter.ALKIS_CODE.toString(),
+                        AlkisProducts.escapeHtmlSpaces(AlkisProducts.fixBuchungslattCode(alkisCode.get(0)))),
+                    new ServerActionParameter<>(
+                        AlkisProductServerAction.Parameter.AUFTRAGSNUMMER.toString(),
+                        jobNumber)
+                };
+            final AlkisProductServerAction serverAction = new AlkisProductServerAction();
+            serverAction.setMetaService(getMetaService());
+            serverAction.setUser(getUser());
+            serverAction.initWithConnectionContext(getConnectionContext());
 
-                final AlkisProductServerAction serverAction = new AlkisProductServerAction();
-                serverAction.setMetaService(getMetaService());
-                serverAction.setUser(getUser());
-                serverAction.initWithConnectionContext(getConnectionContext());
+            final Object o = serverAction.execute(AlkisProductServerAction.Body.EINZELNACHWEIS, saps);
 
-                final Object o = serverAction.execute(AlkisProductServerAction.Body.EINZELNACHWEIS, saps);
-
-                if (o instanceof Exception) {
-                    throw new IOException((Exception)o);
-                }
-
-                writeToZip(
-                    product
-                            + "."
-                            + code
-                            + ".pdf",
-                    new ByteArrayInputStream((byte[])o),
-                    zipOut);
+            if (o instanceof Exception) {
+                throw new IOException((Exception)o);
             }
-        } catch (final IOException ex) {
-            LOG.fatal(ex, ex);
-            throw ex;
+
+            try(final FileOutputStream out = new FileOutputStream(file)) {
+                out.write((byte[])o);
+            } catch (final IOException ex) {
+                LOG.fatal(ex, ex);
+                throw ex;
+            }
+        } else {
+            try(final ZipOutputStream zipOut = new ZipOutputStream(new FileOutputStream(file))) {
+                for (final String code : alkisCode) {
+                    final ServerActionParameter[] saps = new ServerActionParameter[] {
+                            new ServerActionParameter<>(
+                                AlkisProductServerAction.Parameter.PRODUKT.toString(),
+                                product),
+                            new ServerActionParameter<>(
+                                AlkisProductServerAction.Parameter.ALKIS_CODE.toString(),
+                                AlkisProducts.escapeHtmlSpaces(AlkisProducts.fixBuchungslattCode(code))),
+                            new ServerActionParameter<>(
+                                AlkisProductServerAction.Parameter.AUFTRAGSNUMMER.toString(),
+                                jobNumber)
+                        };
+
+                    final AlkisProductServerAction serverAction = new AlkisProductServerAction();
+                    serverAction.setMetaService(getMetaService());
+                    serverAction.setUser(getUser());
+                    serverAction.initWithConnectionContext(getConnectionContext());
+
+                    final Object o = serverAction.execute(AlkisProductServerAction.Body.EINZELNACHWEIS, saps);
+
+                    if (o instanceof Exception) {
+                        throw new IOException((Exception)o);
+                    }
+
+                    writeToZip(
+                        product
+                                + "."
+                                + code
+                                + ".pdf",
+                        new ByteArrayInputStream((byte[])o),
+                        zipOut);
+                }
+            } catch (final IOException ex) {
+                LOG.fatal(ex, ex);
+                throw ex;
+            }
         }
     }
 

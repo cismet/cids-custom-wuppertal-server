@@ -81,8 +81,10 @@ public class FormSolutionsProperties {
     private final String billingProduktkeyLBBestPostweg;
     private final String rechnungAuftragsartKarte;
     private final String rechnungAuftragsartBaulasten;
+    private final String rechnungAuftragsartLB;
     private final String rechnungBerechnugsgGrundlageKarte;
     private final String rechnungBerechnugsgGrundlageBaulasten;
+    private final String rechnungBerechnugsgGrundlageLB;
     private final String tmpBrokenpdfsAbsPath;
     private final String transidHashpepper;
     private final String redirectionFormat;
@@ -151,8 +153,10 @@ public class FormSolutionsProperties {
         mysqlDisabled = Boolean.valueOf(properties.getProperty("MYSQL_DISABLED"));
         rechnungAuftragsartKarte = properties.getProperty("RECHNUNG_AUFTRAGSART_KARTE");
         rechnungAuftragsartBaulasten = properties.getProperty("RECHNUNG_AUFTRAGSART_BAULASTEN");
+        rechnungAuftragsartLB = properties.getProperty("RECHNUNG_AUFTRAGSART_LB");
         rechnungBerechnugsgGrundlageKarte = properties.getProperty("RECHNUNG_BERECHNUNGSGRUNDLAGE_KARTE");
         rechnungBerechnugsgGrundlageBaulasten = properties.getProperty("RECHNUNG_BERECHNUNGSGRUNDLAGE_BAULASTEN");
+        rechnungBerechnugsgGrundlageLB = properties.getProperty("RECHNUNG_BERECHNUNGSGRUNDLAGE_LB");
         tmpBrokenpdfsAbsPath = properties.getProperty("TMP_BROKENPDFS_ABS_PATH");
         transidHashpepper = properties.getProperty("TRANSID_HASHPEPPER");
         redirectionFormat = properties.getProperty("REDIRECTION_FORMAT");
