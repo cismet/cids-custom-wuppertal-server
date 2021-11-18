@@ -980,10 +980,19 @@ public class FormSolutionsBestellungHandler implements ConnectionContextProvider
             try {
                 specialLog("doing status changed request for: " + transid);
 
-                getHttpAccessHandler().doRequest(new URL(
-                        String.format(getProperties().getUrlStatusUpdate(), transid)),
-                    new StringReader(""),
-                    AccessHandler.ACCESS_METHODS.GET_REQUEST);
+                if ((transid != null)
+                            && (transid.toLowerCase().startsWith("kfas_kf600204")
+                                || transid.toLowerCase().startsWith("kfas_kf600205"))) {
+                    getHttpAccessHandler().doRequest(new URL(
+                            String.format(getProperties().getUrlStatusUpdateLB(), transid)),
+                        new StringReader(""),
+                        AccessHandler.ACCESS_METHODS.GET_REQUEST);
+                } else {
+                    getHttpAccessHandler().doRequest(new URL(
+                            String.format(getProperties().getUrlStatusUpdate(), transid)),
+                        new StringReader(""),
+                        AccessHandler.ACCESS_METHODS.GET_REQUEST);
+                }
             } catch (final Exception ex) {
                 LOG.warn("STATUS_UPDATE_URL could not be requested", ex);
             }
