@@ -54,6 +54,7 @@ public class FormSolutionsProperties {
     private final String urlAuftragFs;
     private final String urlAuftragDeleteFs;
     private final String urlStatusUpdate;
+    private final String urlStatusUpdateLB;
     private final boolean ftpEnabled;
     private final String ftpHost;
     private final String ftpLogin;
@@ -125,6 +126,7 @@ public class FormSolutionsProperties {
         urlAuftragFs = properties.getProperty("URL_AUFTRAG_FS");
         urlAuftragDeleteFs = properties.getProperty("URL_AUFTRAG_DELETE_FS");
         urlStatusUpdate = properties.getProperty("URL_STATUS_UPDATE");
+        urlStatusUpdateLB = properties.getProperty("URL_STATUS_UPDATE_LB");
         ftpEnabled = Boolean.valueOf(properties.getProperty("FTP_ENABLED"));
         ftpHost = properties.getProperty("FTP_HOST");
         ftpLogin = properties.getProperty("FTP_LOGIN");
