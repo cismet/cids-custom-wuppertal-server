@@ -424,7 +424,13 @@ public class PotenzialflaecheReportCreator {
             final String dirName = getCacheDirectory();
             if (dirName != null) {
                 final File dir = new File(dirName);
-                return new File(dir, String.format("%d_%s.png", getPfId(), getIdentifier()));
+                return new File(
+                        dir,
+                        String.format(
+                            "%d_%s_%s.png",
+                            getPfId(),
+                            getIdentifier(),
+                            (((getShowGeom() != null) && getShowGeom()) ? "geom" : "nogeom")));
             }
             return null;
         }

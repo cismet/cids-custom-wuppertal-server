@@ -150,6 +150,7 @@ public class PfPotenzialflaecheTrigger extends AbstractCidsTrigger implements Co
         config.setMapUrl(mapProperties.getWmsUrl());
         config.setMapDpi(mapProperties.getDpi());
         config.setBuffer(mapProperties.getBuffer());
+        config.setShowGeom(mapProperties.isShowGeom());
         return config;
     }
 
