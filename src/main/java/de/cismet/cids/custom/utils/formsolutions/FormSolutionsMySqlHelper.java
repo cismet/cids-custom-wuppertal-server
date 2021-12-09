@@ -75,7 +75,7 @@ public class FormSolutionsMySqlHelper {
             this.preparedInsertStatement = connection.prepareStatement(
                     "INSERT INTO bestellung (id, transid, status, flurstueck, produkt, nur_download, email, dokument_dateipfad, dokument_dateiname, last_update) VALUES (default, ?, ?, null, null, null, null, null, null, now());");
             this.preparedInsertCompleteStatement = connection.prepareStatement(
-                    "INSERT INTO bestellung (id, transid, bpruefnr, status, flurstueck, produkt, nur_download, email, dokument_dateipfad, dokument_dateiname, last_update) VALUES (default, ?, ?, ?, ?, ?, ?, ?, ?, ?, now());");
+                    "INSERT INTO bestellung (id, transid, bpruefnr, status, flurstueck, buchungsblatt, produkt, nur_download, email, dokument_dateipfad, dokument_dateiname, last_update) VALUES (default, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, now());");
             this.preparedUpdateProductStatement = connection.prepareStatement(
                     "UPDATE bestellung SET bpruefnr = ?, status = ?, last_update = now(), dokument_dateipfad = ?, dokument_dateiname = ? WHERE transid = ?;");
             this.preparedUpdateInfoStatement = connection.prepareStatement(
@@ -152,6 +152,7 @@ public class FormSolutionsMySqlHelper {
      * @param   transid         DOCUMENT ME!
      * @param   status          DOCUMENT ME!
      * @param   landparcelcode  DOCUMENT ME!
+     * @param   buchungsblatt   DOCUMENT ME!
      * @param   product         DOCUMENT ME!
      * @param   downloadOnly    DOCUMENT ME!
      * @param   email           DOCUMENT ME!
@@ -164,6 +165,7 @@ public class FormSolutionsMySqlHelper {
     public void insertOrUpdateProduct(final String transid,
             final int status,
             final String landparcelcode,
+            final String buchungsblatt,
             final String product,
             final Boolean downloadOnly,
             final String email,
@@ -184,6 +186,7 @@ public class FormSolutionsMySqlHelper {
                     schluessel,
                     status,
                     landparcelcode,
+                    buchungsblatt,
                     product,
                     downloadOnly,
                     email,
@@ -200,6 +203,7 @@ public class FormSolutionsMySqlHelper {
      * @param   schluessel      DOCUMENT ME!
      * @param   status          DOCUMENT ME!
      * @param   landparcelcode  DOCUMENT ME!
+     * @param   buchungsblatt   DOCUMENT ME!
      * @param   product         DOCUMENT ME!
      * @param   downloadOnly    DOCUMENT ME!
      * @param   email           DOCUMENT ME!
@@ -212,6 +216,7 @@ public class FormSolutionsMySqlHelper {
             final String schluessel,
             final int status,
             final String landparcelcode,
+            final String buchungsblatt,
             final String product,
             final Boolean downloadOnly,
             final String email,
@@ -225,6 +230,7 @@ public class FormSolutionsMySqlHelper {
             preparedInsertCompleteStatement.setString(index++, schluessel);
             preparedInsertCompleteStatement.setInt(index++, status);
             preparedInsertCompleteStatement.setString(index++, landparcelcode);
+            preparedInsertCompleteStatement.setString(index++, buchungsblatt);
             preparedInsertCompleteStatement.setString(index++, product);
             preparedInsertCompleteStatement.setBoolean(index++, downloadOnly);
             preparedInsertCompleteStatement.setString(index++, email);
