@@ -819,7 +819,9 @@ public class FormSolutionsBestellungHandler implements ConnectionContextProvider
                             }
                             try {
                                 getMySqlHelper().updateStatus(transid, okStatus);
-                                doStatusChangedRequest(transid);
+                                final String email = trimedNotEmpty((String)bestellungBean.getProperty("email"));
+
+                                doStatusChangedRequest(transid, isInternalEmail(email));
                             } catch (final Exception ex) {
                                 setErrorStatus(
                                     transid,
@@ -846,6 +848,17 @@ public class FormSolutionsBestellungHandler implements ConnectionContextProvider
                 }
             }
         }
+    }
+
+    /**
+     * DOCUMENT ME!
+     *
+     * @param   email  DOCUMENT ME!
+     *
+     * @return  DOCUMENT ME!
+     */
+    private boolean isInternalEmail(final String email) {
+        return ((email != null) && (email.endsWith("@cismet.de") || email.endsWith("@stadt.wuppertal.de")));
     }
 
     /**
@@ -899,7 +912,10 @@ public class FormSolutionsBestellungHandler implements ConnectionContextProvider
         }
         try {
             getMySqlHelper().updateStatus(transid, -status);
-            doStatusChangedRequest(transid);
+            final String email = ((bestellungBean != null) ? trimedNotEmpty(
+                        (String)bestellungBean.getProperty("email")) : null);
+
+            doStatusChangedRequest(transid, isInternalEmail(email));
         } catch (final Exception ex2) {
             LOG.error("Fehler beim Aktualisieren des MySQL-Datensatzes", ex2);
         }
@@ -973,9 +989,10 @@ public class FormSolutionsBestellungHandler implements ConnectionContextProvider
     /**
      * DOCUMENT ME!
      *
-     * @param  transid  DOCUMENT ME!
+     * @param  transid        DOCUMENT ME!
+     * @param  toBothSystems  DOCUMENT ME!
      */
-    private void doStatusChangedRequest(final String transid) {
+    private void doStatusChangedRequest(final String transid, final boolean toBothSystems) {
         if (isServerInProduction()) {
             try {
                 specialLog("doing status changed request for: " + transid);
@@ -992,6 +1009,15 @@ public class FormSolutionsBestellungHandler implements ConnectionContextProvider
                             String.format(getProperties().getUrlStatusUpdate(), transid)),
                         new StringReader(""),
                         AccessHandler.ACCESS_METHODS.GET_REQUEST);
+
+                    if (toBothSystems
+                                && !getProperties().getUrlStatusUpdateLB().equals(
+                                    getProperties().getUrlStatusUpdate())) {
+                        getHttpAccessHandler().doRequest(new URL(
+                                String.format(getProperties().getUrlStatusUpdateLB(), transid)),
+                            new StringReader(""),
+                            AccessHandler.ACCESS_METHODS.GET_REQUEST);
+                    }
                 }
             } catch (final Exception ex) {
                 LOG.warn("STATUS_UPDATE_URL could not be requested", ex);
@@ -2041,7 +2067,20 @@ public class FormSolutionsBestellungHandler implements ConnectionContextProvider
                 final String auftragXml = getAuftrag(transid);
                 fsXmlMap.put(transid, auftragXml);
                 getMySqlHelper().updateStatus(transid, STATUS_FETCH);
-                doStatusChangedRequest(transid);
+
+                // determine email address to decide whether the status changed request should be sent to both systems
+                String email = null;
+
+                if (auftragXml != null) {
+                    try(final InputStream in = IOUtils.toInputStream(auftragXml, "UTF-8")) {
+                        final FormSolutionsBestellung formSolutionsBestellung = createFormSolutionsBestellung(in);
+                        email = trimedNotEmpty(formSolutionsBestellung.getEMailadresse());
+                    } catch (final Exception ex) {
+                        // status changed request will only be sent to one system
+                    }
+                }
+
+                doStatusChangedRequest(transid, isInternalEmail(email));
             } catch (final Exception ex) {
                 setErrorStatus(transid, STATUS_FETCH, null, "Fehler beim Abholen FormSolution", ex);
             }
@@ -2086,7 +2125,7 @@ public class FormSolutionsBestellungHandler implements ConnectionContextProvider
                     extractProduct(formSolutionsBestellung, typeMap.get(transid)),
                     downloadOnly,
                     email);
-                doStatusChangedRequest(transid);
+                doStatusChangedRequest(transid, isInternalEmail(email));
             } catch (final Exception ex) {
                 setErrorStatus(transid, STATUS_PARSE, null, "Fehler beim Parsen FormSolution", ex);
             }
@@ -2259,7 +2298,8 @@ public class FormSolutionsBestellungHandler implements ConnectionContextProvider
                 if (!duplicate) {
                     fsBeanMap.put(transid, persistedBestellungBean);
                     getMySqlHelper().updateStatus(transid, STATUS_SAVE);
-                    doStatusChangedRequest(transid);
+                    final String email = trimedNotEmpty((String)bestellungBean.getProperty("email"));
+                    doStatusChangedRequest(transid, isInternalEmail(email));
                 }
             } catch (final Exception ex) {
                 setErrorStatus(transid, STATUS_SAVE, null, "Fehler beim Erstellen des Bestellungs-Objektes", ex);
@@ -2313,7 +2353,8 @@ public class FormSolutionsBestellungHandler implements ConnectionContextProvider
             try {
                 specialLog("updating or inserting mySQL entry for: " + transid);
                 getMySqlHelper().insertOrUpdateStatus(transid, STATUS_CREATE);
-                doStatusChangedRequest(transid);
+
+                doStatusChangedRequest(transid, false);
             } catch (final Exception ex) {
                 LOG.error("Fehler beim Erzeugen/Aktualisieren des MySQL-Datensatzes.", ex);
                 insertExceptionMap.put(transid, ex);
@@ -2352,7 +2393,8 @@ public class FormSolutionsBestellungHandler implements ConnectionContextProvider
                         }
 
                         getMySqlHelper().updateStatus(transid, STATUS_CLOSE);
-                        doStatusChangedRequest(transid);
+                        final String email = trimedNotEmpty((String)bestellungBean.getProperty("email"));
+                        doStatusChangedRequest(transid, isInternalEmail(email));
                     } catch (final Exception ex) {
                         LOG.error(ex, ex);
 //                        setErrorStatus(
@@ -3007,13 +3049,15 @@ public class FormSolutionsBestellungHandler implements ConnectionContextProvider
                                     transid,
                                     STATUS_PRODUKT,
                                     (String)bestellungBean.getProperty("landparcelcode"),
+                                    (String)bestellungBean.getProperty("buchungsblattcode"),
                                     (String)bestellungBean.getProperty("fk_produkt.fk_typ.name"),
                                     (Boolean)bestellungBean.getProperty("postweg"),
                                     (String)bestellungBean.getProperty("email"),
                                     null,
                                     (String)bestellungBean.getProperty("produkt_dateipfad"),
                                     (String)bestellungBean.getProperty("produkt_dateiname_orig"));
-                                doStatusChangedRequest(transid);
+                                final String email = trimedNotEmpty((String)bestellungBean.getProperty("email"));
+                                doStatusChangedRequest(transid, isInternalEmail(email));
                             }
                             break;
                             case LB_WEITERLEITUNG:
@@ -3045,7 +3089,9 @@ public class FormSolutionsBestellungHandler implements ConnectionContextProvider
                                             transid,
                                             STATUS_WEITERLEITUNG_ABSCHLUSSFORMULAR,
                                             redirect2formsolutions);
-                                        doStatusChangedRequest(transid);
+                                        final String email = trimedNotEmpty((String)bestellungBean.getProperty(
+                                                    "email"));
+                                        doStatusChangedRequest(transid, isInternalEmail(email));
 
                                         try {
                                             berechtigungspruefung.setProperty("abgeholt", true);
@@ -3062,7 +3108,9 @@ public class FormSolutionsBestellungHandler implements ConnectionContextProvider
                                             transid,
                                             -STATUS_PRUEFUNG,
                                             (String)berechtigungspruefung.getProperty("pruefkommentar"));
-                                        doStatusChangedRequest(transid);
+                                        final String email = trimedNotEmpty((String)bestellungBean.getProperty(
+                                                    "email"));
+                                        doStatusChangedRequest(transid, isInternalEmail(email));
                                     }
                                 }
                             }
@@ -3144,13 +3192,15 @@ public class FormSolutionsBestellungHandler implements ConnectionContextProvider
                                         transid,
                                         STATUS_PRODUKT,
                                         (String)bestellungBean.getProperty("landparcelcode"),
+                                        (String)bestellungBean.getProperty("buchungsblattcode"),
                                         (String)bestellungBean.getProperty("fk_product.fk_typ.name"),
                                         (Boolean)bestellungBean.getProperty("postweg"),
                                         (String)bestellungBean.getProperty("email"),
                                         (String)berechtigungspruefung.getProperty("schluessel"),
                                         (String)bestellungBean.getProperty("produkt_dateipfad"),
                                         (String)bestellungBean.getProperty("produkt_dateiname_orig"));
-                                    doStatusChangedRequest(transid);
+                                    final String email = trimedNotEmpty((String)bestellungBean.getProperty("email"));
+                                    doStatusChangedRequest(transid, isInternalEmail(email));
                                 } else {
                                     throw new Exception("Daten des vorgelagerten Formulars wurden nicht gefunden.");
                                 }
