@@ -2122,6 +2122,7 @@ public class FormSolutionsBestellungHandler implements ConnectionContextProvider
                     transid,
                     STATUS_PARSE,
                     extractLandparcelcode(formSolutionsBestellung),
+                    extractBuchungsblatt(formSolutionsBestellung),
                     extractProduct(formSolutionsBestellung, typeMap.get(transid)),
                     downloadOnly,
                     email);

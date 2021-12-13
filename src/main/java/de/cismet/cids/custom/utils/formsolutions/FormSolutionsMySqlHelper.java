@@ -73,13 +73,13 @@ public class FormSolutionsMySqlHelper {
             this.preparedSelectStatement = connection.prepareStatement(
                     "SELECT id FROM bestellung WHERE transid = ?;");
             this.preparedInsertStatement = connection.prepareStatement(
-                    "INSERT INTO bestellung (id, transid, status, flurstueck, produkt, nur_download, email, dokument_dateipfad, dokument_dateiname, last_update) VALUES (default, ?, ?, null, null, null, null, null, null, now());");
+                    "INSERT INTO bestellung (id, transid, status, flurstueck, buchungsblatt, produkt, nur_download, email, dokument_dateipfad, dokument_dateiname, last_update) VALUES (default, ?, ?, null, null, null, null, null, null, null, now());");
             this.preparedInsertCompleteStatement = connection.prepareStatement(
                     "INSERT INTO bestellung (id, transid, bpruefnr, status, flurstueck, buchungsblatt, produkt, nur_download, email, dokument_dateipfad, dokument_dateiname, last_update) VALUES (default, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, now());");
             this.preparedUpdateProductStatement = connection.prepareStatement(
                     "UPDATE bestellung SET bpruefnr = ?, status = ?, last_update = now(), dokument_dateipfad = ?, dokument_dateiname = ? WHERE transid = ?;");
             this.preparedUpdateInfoStatement = connection.prepareStatement(
-                    "UPDATE bestellung SET status = ?, last_update = now(), flurstueck = ?, produkt = ?, nur_download = ?, email = ? WHERE transid = ?;");
+                    "UPDATE bestellung SET status = ?, last_update = now(), flurstueck = ?, buchungsblatt = ?, produkt = ?, nur_download = ?, email = ? WHERE transid = ?;");
             this.preparedUpdateStatusStatement = connection.prepareStatement(
                     "UPDATE bestellung SET status = ?, last_update = now() WHERE transid = ?;");
             this.preparedUpdatePruefungFreigabeStatement = connection.prepareStatement(
@@ -315,18 +315,20 @@ public class FormSolutionsMySqlHelper {
     /**
      * DOCUMENT ME!
      *
-     * @param   transid         DOCUMENT ME!
-     * @param   status          DOCUMENT ME!
-     * @param   landparcelcode  DOCUMENT ME!
-     * @param   product         DOCUMENT ME!
-     * @param   downloadOnly    DOCUMENT ME!
-     * @param   email           DOCUMENT ME!
+     * @param   transid            DOCUMENT ME!
+     * @param   status             DOCUMENT ME!
+     * @param   landparcelcode     DOCUMENT ME!
+     * @param   buchungsblattcode  DOCUMENT ME!
+     * @param   product            DOCUMENT ME!
+     * @param   downloadOnly       DOCUMENT ME!
+     * @param   email              DOCUMENT ME!
      *
      * @throws  SQLException  DOCUMENT ME!
      */
     public void updateRequest(final String transid,
             final int status,
             final String landparcelcode,
+            final String buchungsblattcode,
             final String product,
             final Boolean downloadOnly,
             final String email) throws SQLException {
@@ -336,6 +338,7 @@ public class FormSolutionsMySqlHelper {
             int index = 1;
             preparedUpdateInfoStatement.setInt(index++, status);
             preparedUpdateInfoStatement.setString(index++, landparcelcode);
+            preparedUpdateInfoStatement.setString(index++, buchungsblattcode);
             preparedUpdateInfoStatement.setString(index++, product);
             preparedUpdateInfoStatement.setBoolean(index++, downloadOnly);
             preparedUpdateInfoStatement.setString(index++, email);
