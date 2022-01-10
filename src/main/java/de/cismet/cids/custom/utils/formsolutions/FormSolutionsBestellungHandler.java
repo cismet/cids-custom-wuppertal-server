@@ -1313,7 +1313,9 @@ public class FormSolutionsBestellungHandler implements ConnectionContextProvider
                 for (final String tmp : flurstueckskennzeichen.split(",")) {
                     fskz.add(tmp);
                 }
-                fskz.add(flurstueckskennzeichen);
+                if (fskz.isEmpty()) {
+                    fskz.add(flurstueckskennzeichen);
+                }
             }
             if ("Anschrift".equals(formSolutionsBestellung.getAuswahlUeber())) {
                 final String flurstueckskennzeichen1 = trimedNotEmpty(
@@ -1351,7 +1353,7 @@ public class FormSolutionsBestellungHandler implements ConnectionContextProvider
                 formSolutionsBestellung.getAusgewaehlteBuchungsblaetter());
         if (ausgewaehlteBuchungsblaetter != null) {
             for (final String tmp : ausgewaehlteBuchungsblaetter.split(",")) {
-                bbkz.add(AlkisProducts.fixBuchungslattCode(tmp));
+                bbkz.add(tmp);
             }
         } else {
             final String buchungsblattkennzeichen = nullWhenEmptyAftertrim(
@@ -1360,7 +1362,9 @@ public class FormSolutionsBestellungHandler implements ConnectionContextProvider
                 for (final String tmp : buchungsblattkennzeichen.split(",")) {
                     bbkz.add(tmp);
                 }
-                bbkz.add(buchungsblattkennzeichen);
+                if (bbkz.isEmpty()) {
+                    bbkz.add(buchungsblattkennzeichen);
+                }
             }
         }
 
