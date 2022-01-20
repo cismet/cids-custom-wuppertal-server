@@ -178,7 +178,7 @@ public class LiegenschaftsbuchauszugHelper {
             throws IOException {
         final byte[] buf = new byte[1024];
         int len;
-        zipOut.putNextEntry(new ZipEntry(fileName));
+        zipOut.putNextEntry(new ZipEntry(fileName.replace("/", "--")));
         while ((len = in.read(buf)) > 0) {
             zipOut.write(buf, 0, len);
         }
