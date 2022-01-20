@@ -1229,10 +1229,10 @@ public class FormSolutionsBestellungHandler implements ConnectionContextProvider
         if (produktKey.equals("LB_WEITERLEITUNG") || produktKey.equals("LB")) {
             // Zum Vergleichen der Gebuehren wird die Abkuerzung aus Issue 2253 genutzt
 
-            final int gebFuseKom = getObjectCount(formSolutionsBestellung.getAusgewaehlteFlurstuecke());
-            final int gebBekom = getObjectCount(formSolutionsBestellung.getAusgewaehlteBuchungsblaetter());
+            final int gebFuseKom = getObjectCount(formSolutionsBestellung.getFlurstueckskennzeichen());
+            final int gebBekom = getObjectCount(formSolutionsBestellung.getBuchungsblattkennzeichen());
 
-            if ((formSolutionsBestellung.getAusgewaehlteFlurstuecke() != null) && (gebFuseKom <= gebBekom)) {
+            if ((formSolutionsBestellung.getFlurstueckskennzeichen() != null) && (gebFuseKom <= gebBekom)) {
                 produktKey = produktKey.equals("LB_WEITERLEITUNG") ? "fsueKom_WEITERLEITUNG" : "fsueKom";
             } else {
                 produktKey = produktKey.equals("LB_WEITERLEITUNG") ? "bekom_WEITERLEITUNG" : "bekom";
@@ -2470,7 +2470,9 @@ public class FormSolutionsBestellungHandler implements ConnectionContextProvider
             case SGK: {
                 return getProperties().getBillingKundeLoginKarte();
             }
-            case LB_ABSCHLUSS:
+            case LB_ABSCHLUSS: {
+                return getProperties().getBillingKundeLoginLB();
+            }
             case BAB_ABSCHLUSS: {
                 return getProperties().getBillingKundeLoginBB();
             }
