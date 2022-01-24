@@ -2614,21 +2614,14 @@ public class FormSolutionsBestellungHandler implements ConnectionContextProvider
         parameters.put("RECHNUNG_GESAMMTPREIS", gebuehrFloat);
         parameters.put(
             "RECHNUNG_BERECH_GRUNDLAGE",
-            ProductType.BAB_ABSCHLUSS.equals(productType) ? getProperties().getRechnungBerechnugsgGrundlageBaulasten()
-                                                          : getProperties().getRechnungBerechnugsgGrundlageKarte());
+            ProductType.BAB_ABSCHLUSS.equals(productType) ? getProperties().getRechnungBerechnugsgGrundlageBaulasten() 
+                    : ProductType.LB_ABSCHLUSS.equals(productType) ? getProperties().getRechnungBerechnugsgGrundlageLB() 
+                            : getProperties().getRechnungBerechnugsgGrundlageKarte());
         parameters.put(
             "RECHNUNG_AUFTRAGSART",
             ProductType.BAB_ABSCHLUSS.equals(productType) ? getProperties().getRechnungAuftragsartBaulasten()
-                                                          : getProperties().getRechnungAuftragsartKarte());
-
-        if (ProductType.LB_ABSCHLUSS.equals(productType)) {
-            parameters.put(
-                "RECHNUNG_BERECH_GRUNDLAGE",
-                getProperties().getRechnungBerechnugsgGrundlageLB());
-            parameters.put(
-                "RECHNUNG_AUFTRAGSART",
-                getProperties().getRechnungAuftragsartLB());
-        }
+                    : ProductType.LB_ABSCHLUSS.equals(productType) ? getProperties().getRechnungAuftragsartLB() 
+                            : getProperties().getRechnungAuftragsartKarte());
 
         parameters.put("RECHNUNG_ANZAHL", 1);
         parameters.put("RECHNUNG_RABATT", 0.0f);
