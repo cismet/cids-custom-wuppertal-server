@@ -111,7 +111,7 @@ public class Redirect2FormsolutionsAction implements UserAwareServerAction, Meta
         }
         return String.join("&", keyValues);
     }
-
+    
     @Override
     public Object execute(final Object body, final ServerActionParameter... params) {
         String transidHash = null;
@@ -151,6 +151,9 @@ public class Redirect2FormsolutionsAction implements UserAwareServerAction, Meta
                     form.put("Antragsteller.Daten.Vorgang", transid);
                     form.put(
                         "Antragsteller.Daten.Flurstueckskennzeichen",
+                        (String)bestellungBean.getProperty("landparcelcode"));
+                    form.put(
+                        "Antragsteller.Daten.Flurstückskennzeichen",
                         (String)bestellungBean.getProperty("landparcelcode"));
 
                     if (transid.startsWith("KFAS_KF600204")) {
