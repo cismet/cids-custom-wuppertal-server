@@ -13,6 +13,7 @@
 package de.cismet.cids.custom.tostringconverter.wunda_blau;
 
 import de.cismet.cids.tools.CustomToStringConverter;
+import java.text.SimpleDateFormat;
 
 /**
  * DOCUMENT ME!
@@ -40,10 +41,12 @@ public class BaumFestsetzungToStringConverter extends CustomToStringConverter {
         if (myid < 0) {
             return "--";
         } else {
+            SimpleDateFormat formatTag = new SimpleDateFormat("dd.MM.yy");
             return String.format(
                     "G: %s - M: %s - S: %s, %s - F:%s, %s",
                     cidsBean.getProperty(FIELD__GEBIET_AZ),
-                    cidsBean.getProperty(FIELD__MELDUNG_DATUM),
+                    formatTag.format(
+                    cidsBean.getProperty(FIELD__MELDUNG_DATUM)),
                     cidsBean.getProperty(FIELD__SCHADEN_ID),
                     cidsBean.getProperty(FIELD__SCHADEN_ART),
                     cidsBean.getProperty(FIELD__ID),
