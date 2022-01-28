@@ -176,7 +176,10 @@ public class PotenzialflaecheReportCreator {
 
         final String confAttr = (String)selectedTemplateBean.getProperty("conf_attr");
         if ((confAttr != null) && !confAttr.trim().isEmpty()
-                    && (getConfAttr(confAttr) == null)) {
+                    && !((DomainServerImpl)getMetaService()).hasConfigAttr(
+                        getUser(),
+                        confAttr,
+                        getConnectionContext())) {
             throw new Exception("kein Recht an Konfigurationsattribut " + confAttr);
         }
 
@@ -247,19 +250,6 @@ public class PotenzialflaecheReportCreator {
         }
 
         return params;
-    }
-
-    /**
-     * DOCUMENT ME!
-     *
-     * @param   confAttr  DOCUMENT ME!
-     *
-     * @return  DOCUMENT ME!
-     *
-     * @throws  Exception  DOCUMENT ME!
-     */
-    public String getConfAttr(final String confAttr) throws Exception {
-        return ((DomainServerImpl)getMetaService()).getConfigAttr(getUser(), confAttr, getConnectionContext());
     }
 
     /**
