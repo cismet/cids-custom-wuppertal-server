@@ -1229,10 +1229,10 @@ public class FormSolutionsBestellungHandler implements ConnectionContextProvider
         if (produktKey.equals("LB_WEITERLEITUNG") || produktKey.equals("LB")) {
             // Zum Vergleichen der Gebuehren wird die Abkuerzung aus Issue 2253 genutzt
 
-            final int gebFuseKom = getObjectCount(formSolutionsBestellung.getAusgewaehlteFlurstuecke());
-            final int gebBekom = getObjectCount(formSolutionsBestellung.getAusgewaehlteBuchungsblaetter());
+            final int gebFuseKom = getObjectCount(formSolutionsBestellung.getFlurstueckskennzeichen());
+            final int gebBekom = getObjectCount(formSolutionsBestellung.getBuchungsblattkennzeichen());
 
-            if ((formSolutionsBestellung.getAusgewaehlteFlurstuecke() != null) && (gebFuseKom <= gebBekom)) {
+            if ((formSolutionsBestellung.getFlurstueckskennzeichen() != null) && (gebFuseKom <= gebBekom)) {
                 produktKey = produktKey.equals("LB_WEITERLEITUNG") ? "fsueKom_WEITERLEITUNG" : "fsueKom";
             } else {
                 produktKey = produktKey.equals("LB_WEITERLEITUNG") ? "bekom_WEITERLEITUNG" : "bekom";
@@ -1313,7 +1313,9 @@ public class FormSolutionsBestellungHandler implements ConnectionContextProvider
                 for (final String tmp : flurstueckskennzeichen.split(",")) {
                     fskz.add(tmp);
                 }
-                fskz.add(flurstueckskennzeichen);
+                if (fskz.isEmpty()) {
+                    fskz.add(flurstueckskennzeichen);
+                }
             }
             if ("Anschrift".equals(formSolutionsBestellung.getAuswahlUeber())) {
                 final String flurstueckskennzeichen1 = trimedNotEmpty(
@@ -1351,7 +1353,7 @@ public class FormSolutionsBestellungHandler implements ConnectionContextProvider
                 formSolutionsBestellung.getAusgewaehlteBuchungsblaetter());
         if (ausgewaehlteBuchungsblaetter != null) {
             for (final String tmp : ausgewaehlteBuchungsblaetter.split(",")) {
-                bbkz.add(AlkisProducts.fixBuchungslattCode(tmp));
+                bbkz.add(tmp);
             }
         } else {
             final String buchungsblattkennzeichen = nullWhenEmptyAftertrim(
@@ -1360,7 +1362,9 @@ public class FormSolutionsBestellungHandler implements ConnectionContextProvider
                 for (final String tmp : buchungsblattkennzeichen.split(",")) {
                     bbkz.add(tmp);
                 }
-                bbkz.add(buchungsblattkennzeichen);
+                if (bbkz.isEmpty()) {
+                    bbkz.add(buchungsblattkennzeichen);
+                }
             }
         }
 
@@ -2466,7 +2470,9 @@ public class FormSolutionsBestellungHandler implements ConnectionContextProvider
             case SGK: {
                 return getProperties().getBillingKundeLoginKarte();
             }
-            case LB_ABSCHLUSS:
+            case LB_ABSCHLUSS: {
+                return getProperties().getBillingKundeLoginLB();
+            }
             case BAB_ABSCHLUSS: {
                 return getProperties().getBillingKundeLoginBB();
             }
@@ -2608,21 +2614,17 @@ public class FormSolutionsBestellungHandler implements ConnectionContextProvider
         parameters.put("RECHNUNG_GESAMMTPREIS", gebuehrFloat);
         parameters.put(
             "RECHNUNG_BERECH_GRUNDLAGE",
-            ProductType.BAB_ABSCHLUSS.equals(productType) ? getProperties().getRechnungBerechnugsgGrundlageBaulasten()
-                                                          : getProperties().getRechnungBerechnugsgGrundlageKarte());
+            ProductType.BAB_ABSCHLUSS.equals(productType)
+                ? getProperties().getRechnungBerechnugsgGrundlageBaulasten()
+                : (ProductType.LB_ABSCHLUSS.equals(productType)
+                    ? getProperties().getRechnungBerechnugsgGrundlageLB()
+                    : getProperties().getRechnungBerechnugsgGrundlageKarte()));
         parameters.put(
             "RECHNUNG_AUFTRAGSART",
-            ProductType.BAB_ABSCHLUSS.equals(productType) ? getProperties().getRechnungAuftragsartBaulasten()
-                                                          : getProperties().getRechnungAuftragsartKarte());
-
-        if (ProductType.LB_ABSCHLUSS.equals(productType)) {
-            parameters.put(
-                "RECHNUNG_BERECH_GRUNDLAGE",
-                getProperties().getRechnungBerechnugsgGrundlageLB());
-            parameters.put(
-                "RECHNUNG_AUFTRAGSART",
-                getProperties().getRechnungAuftragsartLB());
-        }
+            ProductType.BAB_ABSCHLUSS.equals(productType)
+                ? getProperties().getRechnungAuftragsartBaulasten()
+                : (ProductType.LB_ABSCHLUSS.equals(productType) ? getProperties().getRechnungAuftragsartLB()
+                                                                : getProperties().getRechnungAuftragsartKarte()));
 
         parameters.put("RECHNUNG_ANZAHL", 1);
         parameters.put("RECHNUNG_RABATT", 0.0f);
