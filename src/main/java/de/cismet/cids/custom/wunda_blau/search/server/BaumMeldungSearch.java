@@ -53,7 +53,7 @@ public class BaumMeldungSearch extends AbstractCidsServerSearch implements MetaO
                 + "  (SELECT c.id FROM cs_class c WHERE table_name ILIKE '" + TABLE_NAME_MELDUNG + "') AS class_id, "
                 + TABLE_NAME_MELDUNG + "." + FIELD__MELDUNG_ID + ", "
                 + TABLE_NAME + "." + FIELD__GEBIET_AZ // + ", "
-                + " || '---' || " + TABLE_NAME_MELDUNG + "." + FIELD__MELDUNG_DATUM + " AS aktenzeichen , "
+                + " || '---' || to_char(" + TABLE_NAME_MELDUNG + "." + FIELD__MELDUNG_DATUM + ", 'DD.MM.YY') AS aktenzeichen , "
                 + TABLE_NAME + "." + FIELD__GEBIET_NAME + ", "
                 + "'[' || " + TABLE_NAME_MELDUNG + "." + FIELD__MELDUNG_DATUM + " || ']' AS datum"
                 + " FROM " + TABLE_NAME_MELDUNG

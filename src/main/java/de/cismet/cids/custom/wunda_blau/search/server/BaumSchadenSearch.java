@@ -64,7 +64,7 @@ public class BaumSchadenSearch extends AbstractCidsServerSearch implements MetaO
                 + "  (SELECT c.id FROM cs_class c WHERE table_name ILIKE '" + TABLE_NAME_SCHADEN + "') AS class_id, "
                 + TABLE_NAME_SCHADEN + "." + FIELD__SCHADEN_ID + ", "
                 + TABLE_NAME_GEBIET + "." + FIELD__GEBIET_AZ // + ", "
-                + " || '---' || " + TABLE_NAME_MELDUNG + "." + FIELD__MELDUNG_DATUM
+                + " || '---' || to_char(" + TABLE_NAME_MELDUNG + "." + FIELD__MELDUNG_DATUM + ", 'DD.MM.YY')"
                 + " || '---' || " + TABLE_NAME_SCHADEN + "." + FIELD__SCHADEN_ID
                 + " || '(' || " + "COALESCE(" + TABLE_NAME_HAUPTART + "." + FIELD__HAUPTART_NAME
                 + ", ' '::character varying)"
