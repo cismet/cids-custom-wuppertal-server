@@ -12,6 +12,8 @@
  */
 package de.cismet.cids.custom.tostringconverter.wunda_blau;
 
+import java.text.SimpleDateFormat;
+
 import de.cismet.cids.tools.CustomToStringConverter;
 
 /**
@@ -24,7 +26,7 @@ public class BaumOrtsterminToStringConverter extends CustomToStringConverter {
 
     //~ Static fields/initializers ---------------------------------------------
 
-    public static final String FIELD__NAME = "datum"; // baum_meldung
+    public static final String FIELD__NAME = "zeit"; // baum_meldung
 
     //~ Methods ----------------------------------------------------------------
 
@@ -34,7 +36,8 @@ public class BaumOrtsterminToStringConverter extends CustomToStringConverter {
         if (myid < 0) {
             return "--";
         } else {
-            return String.valueOf(cidsBean.getProperty(FIELD__NAME));
+            final SimpleDateFormat formatTag = new SimpleDateFormat("dd.MM.yy");
+            return String.valueOf(formatTag.format(cidsBean.getProperty(FIELD__NAME)));
         }
     }
 }

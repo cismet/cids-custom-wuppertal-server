@@ -22,12 +22,13 @@ import de.cismet.cids.tools.CustomToStringConverter;
  * @author   sandra
  * @version  $Revision$, $Date$
  */
-public class BaumMeldungToStringConverter extends CustomToStringConverter {
+public class BaumSchadenToStringConverter extends CustomToStringConverter {
 
     //~ Static fields/initializers ---------------------------------------------
 
-    public static final String FIELD__NAME = "datum"; // baum_meldung
-    public static final String FIELD__ID = "id";      // baum_meldung
+    public static final String FIELD__ID = "id";                                       // baum_schaden
+    public static final String FIELD__MELDUNG_DATUM = "fk_meldung.datum";              // baum_meldung
+    public static final String FIELD__GEBIET_AZ = "fk_meldung.fk_gebiet.aktenzeichen"; // baum_gebiet
 
     //~ Methods ----------------------------------------------------------------
 
@@ -38,8 +39,11 @@ public class BaumMeldungToStringConverter extends CustomToStringConverter {
             return "--";
         } else {
             final SimpleDateFormat formatTag = new SimpleDateFormat("dd.MM.yy");
-            return String.valueOf(formatTag.format(
-                        cidsBean.getProperty(FIELD__NAME)));
+            return String.format(
+                    "G: %s - M: %s - S: %s",
+                    cidsBean.getProperty(FIELD__GEBIET_AZ),
+                    formatTag.format(cidsBean.getProperty(FIELD__MELDUNG_DATUM)),
+                    cidsBean.getProperty(FIELD__ID));
         }
     }
 }
