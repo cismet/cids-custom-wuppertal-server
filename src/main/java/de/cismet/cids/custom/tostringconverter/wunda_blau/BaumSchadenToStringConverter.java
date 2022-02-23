@@ -12,8 +12,9 @@
  */
 package de.cismet.cids.custom.tostringconverter.wunda_blau;
 
-import de.cismet.cids.tools.CustomToStringConverter;
 import java.text.SimpleDateFormat;
+
+import de.cismet.cids.tools.CustomToStringConverter;
 
 /**
  * DOCUMENT ME!
@@ -29,7 +30,6 @@ public class BaumSchadenToStringConverter extends CustomToStringConverter {
     public static final String FIELD__MELDUNG_DATUM = "fk_meldung.datum";              // baum_meldung
     public static final String FIELD__GEBIET_AZ = "fk_meldung.fk_gebiet.aktenzeichen"; // baum_gebiet
 
-
     //~ Methods ----------------------------------------------------------------
 
     @Override
@@ -38,7 +38,7 @@ public class BaumSchadenToStringConverter extends CustomToStringConverter {
         if (myid < 0) {
             return "--";
         } else {
-            SimpleDateFormat formatTag = new SimpleDateFormat("dd.MM.yy");
+            final SimpleDateFormat formatTag = new SimpleDateFormat("dd.MM.yy");
             return String.format(
                     "G: %s - M: %s - S: %s",
                     cidsBean.getProperty(FIELD__GEBIET_AZ),
