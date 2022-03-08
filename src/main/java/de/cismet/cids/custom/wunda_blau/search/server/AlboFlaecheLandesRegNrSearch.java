@@ -37,6 +37,7 @@ public class AlboFlaecheLandesRegNrSearch extends AbstractCidsServerSearch imple
     //~ Instance fields --------------------------------------------------------
 
     private final String geometryAsText;
+    private String landesregistriernummer;
 
     private ConnectionContext connectionContext = ConnectionContext.createDummy();
 
@@ -45,10 +46,12 @@ public class AlboFlaecheLandesRegNrSearch extends AbstractCidsServerSearch imple
     /**
      * Creates a new Alb_BaulastChecker object.
      *
-     * @param  geometryAsText  blattnummer DOCUMENT ME!
+     * @param  geometryAsText          blattnummer DOCUMENT ME!
+     * @param  landesregistriernummer  DOCUMENT ME!
      */
-    public AlboFlaecheLandesRegNrSearch(final String geometryAsText) {
+    public AlboFlaecheLandesRegNrSearch(final String geometryAsText, final String landesregistriernummer) {
         this.geometryAsText = geometryAsText;
+        this.landesregistriernummer = landesregistriernummer;
     }
 
     //~ Methods ----------------------------------------------------------------
@@ -63,14 +66,22 @@ public class AlboFlaecheLandesRegNrSearch extends AbstractCidsServerSearch imple
         final MetaService ms = (MetaService)getActiveLocalServers().get("WUNDA_BLAU");
         if (ms != null) {
             try {
-                final ArrayList<ArrayList> landReg = ms.performCustomSearch(String.format(QUERY_AREA, geometryAsText),
-                        getConnectionContext());
+                if (landesregistriernummer == null) {
+                    final ArrayList<ArrayList> landReg = ms.performCustomSearch(String.format(
+                                QUERY_AREA,
+                                geometryAsText),
+                            getConnectionContext());
+                    if ((landReg != null) && (landReg.size() > 0) && (landReg.get(0) != null)
+                                && (landReg.get(0).size() > 0)
+                                && (landReg.get(0).get(0) != null)) {
+                        landesregistriernummer = String.valueOf(landReg.get(0).get(0));
+                    }
+                }
 
-                if ((landReg != null) && (landReg.size() > 0) && (landReg.get(0) != null) && (landReg.get(0).size() > 0)
-                            && (landReg.get(0).get(0) != null)) {
-                    final String currentLandReg = String.valueOf(landReg.get(0).get(0));
-
-                    final ArrayList<ArrayList> nr = ms.performCustomSearch(String.format(QUERY_LFD_NR, currentLandReg),
+                if (landesregistriernummer != null) {
+                    final ArrayList<ArrayList> nr = ms.performCustomSearch(String.format(
+                                QUERY_LFD_NR,
+                                landesregistriernummer),
                             getConnectionContext());
                     int maxNumber = 0;
 
@@ -93,7 +104,7 @@ public class AlboFlaecheLandesRegNrSearch extends AbstractCidsServerSearch imple
                     final ArrayList<ArrayList<String>> resultList = new ArrayList<>();
                     final ArrayList<String> numberList = new ArrayList<>();
 
-                    numberList.add(currentLandReg);
+                    numberList.add(landesregistriernummer);
                     numberList.add(String.format("%04d", (maxNumber + 1)));
 
                     resultList.add(numberList);
