@@ -49,6 +49,7 @@ public enum WundaBlauServerResources {
     FS_RECHNUNG_JASPER(new JasperReportServerResource("/reports/bestellung_rechnung.jasper")),
     FS_RECHNUNG_RUECKSEITE_JASPER(new JasperReportServerResource("/reports/bestellung_rechnung_rueckseite.jasper")),
     ALBO_VORGANG_JASPER(new JasperReportServerResource("/reports/albo_vorgang.jasper")),
+    ALBO_VORGANG_EXT_JASPER(new JasperReportServerResource("/reports/albo_2_vorgang.jasper")),
     ALBO_FLAECHE_JASPER(new JasperReportServerResource("/reports/albo_flaeche.jasper")),
 
     FORMSOLUTIONS_PROPERTIES(new TextServerResource("/formsolutions/fs_conf.properties")),
