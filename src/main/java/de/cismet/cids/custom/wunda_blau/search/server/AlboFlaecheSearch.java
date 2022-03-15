@@ -67,6 +67,12 @@ public class AlboFlaecheSearch extends AbstractCidsServerSearch implements MetaO
                 + "%s "
                 + "WHERE %s "
                 + "ORDER BY flaeche.erhebungsnummer";
+    private static final String QUERY_VORGANG_TEMPLATE = "SELECT DISTINCT "
+                + "(SELECT c.id FROM cs_class c WHERE table_name ILIKE 'albo_vorgang') AS class_id, vorgang.id AS object_id, vorgang.schluessel AS name "
+                + "FROM albo_vorgang AS vorgang "
+                + "join albo_vorgang_flaeche AS arr ON (vorgang.arr_flaechen = arr.vorgang_reference) "
+                + "WHERE arr.fk_flaeche in (%s) "
+                + "ORDER BY name";
 
     //~ Enums ------------------------------------------------------------------
 
@@ -408,8 +414,28 @@ public class AlboFlaecheSearch extends AbstractCidsServerSearch implements MetaO
 
             final List<MetaObjectNode> mons = new ArrayList<>();
             final MetaService ms = (MetaService)getActiveLocalServers().get("WUNDA_BLAU");
+            final StringBuilder flaechenIds = new StringBuilder();
 
-            final List<ArrayList> resultList = ms.performCustomSearch(query, getConnectionContext());
+            List<ArrayList> resultList = ms.performCustomSearch(query, getConnectionContext());
+
+            for (final ArrayList al : resultList) {
+                final int cid = (Integer)al.get(0);
+                final int oid = (Integer)al.get(1);
+                final String name = String.valueOf(al.get(2));
+                final MetaObjectNode mon = new MetaObjectNode("WUNDA_BLAU", oid, cid, name, null, null);
+
+                if (flaechenIds.toString().equals("")) {
+                    flaechenIds.append(oid);
+                } else {
+                    flaechenIds.append(",").append(oid);
+                }
+
+                mons.add(mon);
+            }
+
+            resultList = ms.performCustomSearch(String.format(QUERY_VORGANG_TEMPLATE, flaechenIds.toString()),
+                    getConnectionContext());
+
             for (final ArrayList al : resultList) {
                 final int cid = (Integer)al.get(0);
                 final int oid = (Integer)al.get(1);
@@ -418,6 +444,7 @@ public class AlboFlaecheSearch extends AbstractCidsServerSearch implements MetaO
 
                 mons.add(mon);
             }
+
             return mons;
         } catch (final Exception ex) {
             LOG.error("error while searching for albo_flaeche", ex);
