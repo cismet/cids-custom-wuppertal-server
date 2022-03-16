@@ -94,6 +94,7 @@ public class AlboFlaecheSearch extends AbstractCidsServerSearch implements MetaO
 
     @Getter private Configuration configuration;
     @Getter @Setter private Geometry geometry;
+    private boolean withAlboVorgang = true;
 
     //~ Constructors -----------------------------------------------------------
 
@@ -102,6 +103,16 @@ public class AlboFlaecheSearch extends AbstractCidsServerSearch implements MetaO
      */
     public AlboFlaecheSearch() {
         this(new Configuration());
+    }
+
+    /**
+     * Creates a new AlboFlaecheSearch object.
+     *
+     * @param  withAlboVorgang  DOCUMENT ME!
+     */
+    public AlboFlaecheSearch(final boolean withAlboVorgang) {
+        this(new Configuration());
+        this.withAlboVorgang = withAlboVorgang;
     }
 
     /**
@@ -433,18 +444,19 @@ public class AlboFlaecheSearch extends AbstractCidsServerSearch implements MetaO
                 mons.add(mon);
             }
 
-            resultList = ms.performCustomSearch(String.format(QUERY_VORGANG_TEMPLATE, flaechenIds.toString()),
-                    getConnectionContext());
+            if (withAlboVorgang) {
+                resultList = ms.performCustomSearch(String.format(QUERY_VORGANG_TEMPLATE, flaechenIds.toString()),
+                        getConnectionContext());
 
-            for (final ArrayList al : resultList) {
-                final int cid = (Integer)al.get(0);
-                final int oid = (Integer)al.get(1);
-                final String name = String.valueOf(al.get(2));
-                final MetaObjectNode mon = new MetaObjectNode("WUNDA_BLAU", oid, cid, name, null, null);
+                for (final ArrayList al : resultList) {
+                    final int cid = (Integer)al.get(0);
+                    final int oid = (Integer)al.get(1);
+                    final String name = String.valueOf(al.get(2));
+                    final MetaObjectNode mon = new MetaObjectNode("WUNDA_BLAU", oid, cid, name, null, null);
 
-                mons.add(mon);
+                    mons.add(mon);
+                }
             }
-
             return mons;
         } catch (final Exception ex) {
             LOG.error("error while searching for albo_flaeche", ex);
