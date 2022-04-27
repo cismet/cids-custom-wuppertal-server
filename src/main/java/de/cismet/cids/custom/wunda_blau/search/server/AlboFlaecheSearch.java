@@ -94,7 +94,7 @@ public class AlboFlaecheSearch extends AbstractCidsServerSearch implements MetaO
 
     @Getter private Configuration configuration;
     @Getter @Setter private Geometry geometry;
-    private boolean withAlboVorgang = true;
+    private boolean withAlboVorgang = false;
 
     //~ Constructors -----------------------------------------------------------
 
@@ -444,17 +444,24 @@ public class AlboFlaecheSearch extends AbstractCidsServerSearch implements MetaO
                 mons.add(mon);
             }
 
-            if (withAlboVorgang) {
-                resultList = ms.performCustomSearch(String.format(QUERY_VORGANG_TEMPLATE, flaechenIds.toString()),
-                        getConnectionContext());
+            if (withAlboVorgang || ((this.configuration != null) && (this.configuration.vorgaenge != null))) {
+                if ((this.configuration != null) && (this.configuration.vorgaenge != null)
+                            && this.configuration.vorgaenge) {
+                    mons.clear();
+                }
 
-                for (final ArrayList al : resultList) {
-                    final int cid = (Integer)al.get(0);
-                    final int oid = (Integer)al.get(1);
-                    final String name = String.valueOf(al.get(2));
-                    final MetaObjectNode mon = new MetaObjectNode("WUNDA_BLAU", oid, cid, name, null, null);
+                if (!flaechenIds.toString().equals("")) {
+                    resultList = ms.performCustomSearch(String.format(QUERY_VORGANG_TEMPLATE, flaechenIds.toString()),
+                            getConnectionContext());
 
-                    mons.add(mon);
+                    for (final ArrayList al : resultList) {
+                        final int cid = (Integer)al.get(0);
+                        final int oid = (Integer)al.get(1);
+                        final String name = String.valueOf(al.get(2));
+                        final MetaObjectNode mon = new MetaObjectNode("WUNDA_BLAU", oid, cid, name, null, null);
+
+                        mons.add(mon);
+                    }
                 }
             }
             return mons;
@@ -498,6 +505,7 @@ public class AlboFlaecheSearch extends AbstractCidsServerSearch implements MetaO
         @JsonProperty private String typSchluessel;
         @JsonProperty private String zuordnungSchluessel;
         @JsonProperty private Boolean unterdrueckt = Boolean.FALSE;
+        @JsonProperty private Boolean vorgaenge = Boolean.FALSE;
         @JsonProperty private SearchMode searchModeMain = SearchMode.AND;
         @JsonProperty private SearchMode searchModeArt = SearchMode.AND;
         @JsonProperty private Collection<ArtInfo> artInfos;
