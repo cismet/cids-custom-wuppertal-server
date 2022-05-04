@@ -43,7 +43,15 @@ public class AlkisLandparcelGeometryMonSearch extends RestApiMonGeometrySearch {
      * Creates a new AlkisLandparcelGeometryMonSearch object.
      */
     public AlkisLandparcelGeometryMonSearch() {
-        this(null);
+        this(null, null);
+    }
+
+    public AlkisLandparcelGeometryMonSearch(final Geometry geometry) {
+        this(geometry, null);        
+    }
+
+    public AlkisLandparcelGeometryMonSearch(final Double buffer) {
+        this(null, buffer);
     }
 
     /**
@@ -51,8 +59,9 @@ public class AlkisLandparcelGeometryMonSearch extends RestApiMonGeometrySearch {
      *
      * @param  geometry  DOCUMENT ME!
      */
-    public AlkisLandparcelGeometryMonSearch(final Geometry geometry) {
+    public AlkisLandparcelGeometryMonSearch(final Geometry geometry, final Double buffer) {
         setGeometry(geometry);
+        setBuffer(buffer);
         setSearchInfo(new SearchInfo(
                 this.getClass().getName(),
                 this.getClass().getSimpleName(),
