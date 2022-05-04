@@ -43,16 +43,7 @@ public class RpdKategorieMonSearch extends RestApiMonGeometrySearch {
      * Creates a new WohnlagenKategorisierungSearch object.
      */
     public RpdKategorieMonSearch() {
-        this(null, null);
-    }
-
-    /**
-     * Creates a new RpdKategorieMonSearch object.
-     *
-     * @param  geometry  DOCUMENT ME!
-     */
-    public RpdKategorieMonSearch(final Geometry geometry) {
-        this(geometry, null);
+        this(null, null, null);
     }
 
     /**
@@ -61,7 +52,21 @@ public class RpdKategorieMonSearch extends RestApiMonGeometrySearch {
      * @param  cutoff  DOCUMENT ME!
      */
     public RpdKategorieMonSearch(final Double cutoff) {
-        this(null, cutoff);
+        this(cutoff, null, null);
+    }
+
+    
+    /**
+     * Creates a new RpdKategorieMonSearch object.
+     *
+     * @param  geometry  DOCUMENT ME!
+     */
+    public RpdKategorieMonSearch(final Double cutoff, final Geometry geometry) {
+        this(cutoff, geometry, null);
+    }
+
+    public RpdKategorieMonSearch(final Double cutoff, final Double buffer) {
+        this(cutoff, null, buffer);
     }
 
     /**
@@ -69,10 +74,12 @@ public class RpdKategorieMonSearch extends RestApiMonGeometrySearch {
      *
      * @param  geometry  DOCUMENT ME!
      * @param  cutoff    DOCUMENT ME!
+     * @param buffer
      */
-    public RpdKategorieMonSearch(final Geometry geometry, final Double cutoff) {
-        setGeometry(geometry);
+    public RpdKategorieMonSearch(final Double cutoff, final Geometry geometry, final Double buffer) {
         setCutoff(cutoff);
+        setGeometry(geometry);
+        setBuffer(buffer);
         setSearchInfo(new SearchInfo(
                 this.getClass().getName(),
                 this.getClass().getSimpleName(),

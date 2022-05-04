@@ -43,7 +43,11 @@ public class BodenrichtwertZoneMonSearch extends RestApiMonGeometrySearch {
      * Creates a new WohnlagenKategorisierungSearch object.
      */
     public BodenrichtwertZoneMonSearch() {
-        this(null);
+        this(null, null);
+    }
+
+    public BodenrichtwertZoneMonSearch(final Double buffer) {
+        this(null, buffer);
     }
 
     /**
@@ -51,8 +55,9 @@ public class BodenrichtwertZoneMonSearch extends RestApiMonGeometrySearch {
      *
      * @param  geometry  DOCUMENT ME!
      */
-    public BodenrichtwertZoneMonSearch(final Geometry geometry) {
+    public BodenrichtwertZoneMonSearch(final Geometry geometry, final Double buffer) {
         setGeometry(geometry);
+        setBuffer(buffer);
         setSearchInfo(new SearchInfo(
                 this.getClass().getName(),
                 this.getClass().getSimpleName(),

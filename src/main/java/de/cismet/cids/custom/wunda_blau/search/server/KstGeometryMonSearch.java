@@ -66,7 +66,16 @@ public class KstGeometryMonSearch extends RestApiMonGeometrySearch {
      * @param  searchFor  DOCUMENT ME!
      */
     public KstGeometryMonSearch(final SearchFor searchFor) {
-        this(searchFor, null);
+        this(searchFor, null, null);
+    }
+
+
+    public KstGeometryMonSearch(final SearchFor searchFor, final Geometry geometry) {
+        this(searchFor, geometry, null);
+    }
+    
+    public KstGeometryMonSearch(final SearchFor searchFor, final Double buffer) {
+        this(searchFor, null, buffer);
     }
 
     /**
@@ -75,8 +84,9 @@ public class KstGeometryMonSearch extends RestApiMonGeometrySearch {
      * @param  searchFor  DOCUMENT ME!
      * @param  geometry   DOCUMENT ME!
      */
-    public KstGeometryMonSearch(final SearchFor searchFor, final Geometry geometry) {
+    public KstGeometryMonSearch(final SearchFor searchFor, final Geometry geometry, final Double buffer) {
         setGeometry(geometry);
+        setBuffer(buffer);
         this.searchFor = searchFor;
 
         setSearchInfo(new SearchInfo(

@@ -43,7 +43,11 @@ public class WohnlagenKategorisierungMonSearch extends RestApiMonGeometrySearch 
      * Creates a new WohnlagenKategorisierungMonSearch object.
      */
     public WohnlagenKategorisierungMonSearch() {
-        this(null, null);
+        this(null, null, null);
+    }
+
+    public WohnlagenKategorisierungMonSearch(final Double cutoff) {
+        this(cutoff, null, null);
     }
 
     /**
@@ -51,17 +55,17 @@ public class WohnlagenKategorisierungMonSearch extends RestApiMonGeometrySearch 
      *
      * @param  geometry  DOCUMENT ME!
      */
-    public WohnlagenKategorisierungMonSearch(final Geometry geometry) {
-        this(geometry, null);
-    }
-
     /**
      * Creates a new WohnlagenKategorisierungSearch object.
      *
-     * @param  cutoff  DOCUMENT ME!
+     * @param  buffer  DOCUMENT ME!
      */
-    public WohnlagenKategorisierungMonSearch(final Double cutoff) {
-        this(null, cutoff);
+    public WohnlagenKategorisierungMonSearch(final Double cutoff, final Double buffer) {
+        this(cutoff, null, buffer);
+    }
+
+    public WohnlagenKategorisierungMonSearch(final Double cutoff, final Geometry geometry) {
+        this(cutoff, geometry, null);
     }
 
     /**
@@ -70,9 +74,10 @@ public class WohnlagenKategorisierungMonSearch extends RestApiMonGeometrySearch 
      * @param  geometry  DOCUMENT ME!
      * @param  cutoff    DOCUMENT ME!
      */
-    public WohnlagenKategorisierungMonSearch(final Geometry geometry, final Double cutoff) {
-        setGeometry(geometry);
+    public WohnlagenKategorisierungMonSearch(final Double cutoff, final Geometry geometry, final Double buffer) {
         setCutoff(cutoff);
+        setGeometry(geometry);
+        setBuffer(buffer);
         setSearchInfo(new SearchInfo(
                 this.getClass().getName(),
                 this.getClass().getSimpleName(),
