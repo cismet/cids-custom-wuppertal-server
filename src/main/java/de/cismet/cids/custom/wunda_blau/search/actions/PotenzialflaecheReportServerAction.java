@@ -125,7 +125,7 @@ public class PotenzialflaecheReportServerAction extends DefaultServerAction {
         VORHANDENE_BEBAUUNG(new SimpleFieldReportProperty("bestand_bebauung", String.class.getCanonicalName()),
             "Bestand Bebauung"),
 
-        KAMPAGNE(new KeytableReportProperty("kampagne", "pf_kampagne"), "Kampagne"),
+        KAMPAGNE(new KeytableReportProperty("kampagne", "pf_kampagne"), "Kategorie"),
         LAGEBEWERTUNG_VERKEHR(new KeytableReportProperty("fk_lagebewertung_verkehr", "pf_lagebewertung_verkehr"),
             "Lagebewertung, Verkehr"),
         SIEDLUNGSRAEUMLICHE_LAGE(new KeytableReportProperty(
@@ -144,7 +144,7 @@ public class PotenzialflaecheReportServerAction extends DefaultServerAction {
         AEUSSERE_ERSCHLIESSUNG(new KeytableReportProperty("fk_aeussere_erschliessung", "pf_aeussere_erschliessung"),
             "Äußere Erschließung"),
         POTENZIALART(new KeytableReportProperty("fk_potenzialart", "pf_potenzialart"), "Potenzialart"),
-        KATEGORIE(new KeytableReportProperty("fk_kategorie", "pf_kategorie"), "Kategorie"),
+        KATEGORIE(new KeytableReportProperty("fk_kategorie", "pf_kategorie"), "Entwicklung"),
         WOHNEINHEITEN(new KeytableReportProperty("fk_wohneinheiten", "pf_wohneinheiten"), "Wohneinheiten"),
         OEPNV_ANBINDUNG(new KeytableReportProperty("fk_oepnv", "pf_oepnv"), "ÖPNV-Qualität"),
         KLIMAINFORMATIONEN(new KeytableReportProperty("fk_klimainformationen", "pf_klimainformationen"),
@@ -347,7 +347,7 @@ public class PotenzialflaecheReportServerAction extends DefaultServerAction {
 
         //~ Enum constants -----------------------------------------------------
 
-        POTENZIALFLAECHE, KAMPAGNE, BODY_TYPE, RESULT_TYPE, TEMPLATE, EXTERNAL
+        POTENZIALFLAECHE, KATEGORIE, BODY_TYPE, RESULT_TYPE, TEMPLATE, EXTERNAL
     }
 
     /**
@@ -359,7 +359,7 @@ public class PotenzialflaecheReportServerAction extends DefaultServerAction {
 
         //~ Enum constants -----------------------------------------------------
 
-        POTENZIALFLAECHE, KAMPAGNE
+        POTENZIALFLAECHE, KATEGORIE
     }
 
     /**
@@ -432,7 +432,7 @@ public class PotenzialflaecheReportServerAction extends DefaultServerAction {
             ResultType resultType = ResultType.PDF;
 
             final Set<MetaObjectNode> flaecheMons = new HashSet<>();
-            final Set<MetaObjectNode> kampagneMons = new HashSet<>();
+            final Set<MetaObjectNode> kategorieMons = new HashSet<>();
             MetaObjectNode templateMon = null;
 
             if (params != null) {
@@ -447,8 +447,8 @@ public class PotenzialflaecheReportServerAction extends DefaultServerAction {
                             : ((value instanceof String) ? ResultType.valueOf((String)value) : null);
                     } else if (sap.getKey().equals(Parameter.POTENZIALFLAECHE.toString())) {
                         flaecheMons.add(getFor(sap.getValue(), "pf_potenzialflaeche", "nummer"));
-                    } else if (sap.getKey().equals(Parameter.KAMPAGNE.toString())) {
-                        kampagneMons.add(getFor(sap.getValue(), "pf_kampagne", "bezeichnung"));
+                    } else if (sap.getKey().equals(Parameter.KATEGORIE.toString())) {
+                        kategorieMons.add(getFor(sap.getValue(), "pf_kampagne", "bezeichnung"));
                     } else if (sap.getKey().equals(Parameter.TEMPLATE.toString())) {
                         templateMon = getFor(sap.getValue(), "pf_steckbrieftemplate", "bezeichnung");
                     }
@@ -472,23 +472,23 @@ public class PotenzialflaecheReportServerAction extends DefaultServerAction {
                 } else if (body instanceof Collection) {
                     flaecheMons.addAll((Collection<MetaObjectNode>)body);
                 }
-            } else if (BodyType.KAMPAGNE.equals(bodyType)) {
+            } else if (BodyType.KATEGORIE.equals(bodyType)) {
                 if (body instanceof MetaObjectNode) {
-                    kampagneMons.add((MetaObjectNode)body);
+                    kategorieMons.add((MetaObjectNode)body);
                 } else if (body instanceof byte[]) {
-                    kampagneMons.add(getFor(new String((byte[])body), "pf_kampagne", "bezeichnung"));
+                    kategorieMons.add(getFor(new String((byte[])body), "pf_kampagne", "bezeichnung"));
                 } else if (body instanceof MetaObjectNode[]) {
-                    kampagneMons.addAll(Arrays.asList((MetaObjectNode[])body));
+                    kategorieMons.addAll(Arrays.asList((MetaObjectNode[])body));
                 } else if (body instanceof Collection) {
-                    kampagneMons.addAll((Collection<MetaObjectNode>)body);
+                    kategorieMons.addAll((Collection<MetaObjectNode>)body);
                 }
             }
 
-            if (!kampagneMons.isEmpty()) {
-                for (final MetaObjectNode kampagneMon : kampagneMons) {
+            if (!kategorieMons.isEmpty()) {
+                for (final MetaObjectNode kategorieMon : kategorieMons) {
                     final PotenzialflaecheSearch.Configuration configuration =
                         new PotenzialflaecheSearch.Configuration();
-                    configuration.addFilter(Property.KAMPAGNE, kampagneMon);
+                    configuration.addFilter(Property.KAMPAGNE, kategorieMon);
                     final PotenzialflaecheSearch search = new PotenzialflaecheSearch(true);
                     final Map localServers = new HashMap<>();
                     localServers.put("WUNDA_BLAU", getMetaService());

@@ -146,18 +146,18 @@ public class PotenzialflaecheReportCreator {
     public void writeReportToOutputStream(final CidsBean flaecheBean,
             final CidsBean templateBean,
             final OutputStream outputStream) throws Exception {
-        final CidsBean kampagne = (flaecheBean != null) ? (CidsBean)flaecheBean.getProperty("kampagne") : null;
+        final CidsBean kategorie = (flaecheBean != null) ? (CidsBean)flaecheBean.getProperty("kampagne") : null;
 
         CidsBean selectedTemplateBean = null;
         if (templateBean != null) {
             selectedTemplateBean = templateBean;
         } else {
-            if (kampagne != null) {
-                final Collection<CidsBean> templateBeans = kampagne.getBeanCollectionProperty(
+            if (kategorie != null) {
+                final Collection<CidsBean> templateBeans = kategorie.getBeanCollectionProperty(
                         "n_steckbrieftemplates");
                 selectedTemplateBean = ((templateBeans != null) && !templateBeans.isEmpty())
                     ? templateBeans.iterator().next() : null;
-                final Integer mainSteckbriefId = (Integer)kampagne.getProperty("haupt_steckbrieftemplate_id");
+                final Integer mainSteckbriefId = (Integer)kategorie.getProperty("haupt_steckbrieftemplate_id");
                 if (mainSteckbriefId != null) {
                     for (final CidsBean templateSubBean : templateBeans) {
                         if ((templateSubBean != null)
