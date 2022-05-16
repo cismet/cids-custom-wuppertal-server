@@ -220,6 +220,7 @@ public class PotenzialflaecheReportServerAction extends DefaultServerAction {
                 @Override
                 public RestApiMonSearch createMonServerSearch() {
                     return new BplaeneMonSearch(
+                            -3d, //per mail so gewünscht
                             new BplaeneMonSearch.SubUnion(
                                 "nummer || ' (' || vstandr || ' ' || TO_CHAR(TO_DATE(datumr, 'DD.MM.YYYY'), 'DD.MM.YYYY') || ')'",
                                 "LEFT JOIN geom ON geom.id = bplan_verfahren.geometrie",
@@ -236,49 +237,49 @@ public class PotenzialflaecheReportServerAction extends DefaultServerAction {
 
                 @Override
                 public RestApiMonSearch createMonServerSearch() {
-                    return new KstGeometryMonSearch(KstGeometryMonSearch.SearchFor.BEZIRK);
+                    return new KstGeometryMonSearch(KstGeometryMonSearch.SearchFor.BEZIRK, -2d);
                 }
             }, "Stadtbezirke"),
         QUARTIER(new MonSearchReportProperty("kst_quartier") {
 
                 @Override
                 public RestApiMonSearch createMonServerSearch() {
-                    return new KstGeometryMonSearch(KstGeometryMonSearch.SearchFor.QUARTIER);
+                    return new KstGeometryMonSearch(KstGeometryMonSearch.SearchFor.QUARTIER, -2d);
                 }
             }, "Quartiere"),
         FLURSTUECKE(new MonSearchReportProperty("alkis_landparcel") {
 
                 @Override
                 public RestApiMonSearch createMonServerSearch() {
-                    return new AlkisLandparcelGeometryMonSearch();
+                    return new AlkisLandparcelGeometryMonSearch(-2d);
                 }
             }, "Flurstücke"),
         WOHNLAGEN(new MonSearchReportProperty("wohnlage_kategorie") {
 
                 @Override
                 public RestApiMonSearch createMonServerSearch() {
-                    return new WohnlagenKategorisierungMonSearch(0.1d);
+                    return new WohnlagenKategorisierungMonSearch(0.1d, -2d);
                 }
             }, "Wohnlagen"),
         STADTRAUMTYPEN(new MonSearchReportProperty("srt_kategorie") {
 
                 @Override
                 public RestApiMonSearch createMonServerSearch() {
-                    return new StadtraumtypMonSearch();
+                    return new StadtraumtypMonSearch(-2d);
                 }
             }, "Stadtraumtypen"),
         FLAECHENNUTZUNGSPLAN(new MonSearchReportProperty("fnp_hn_kategorie") {
 
                 @Override
                 public RestApiMonSearch createMonServerSearch() {
-                    return new FnpHauptnutzungenMonSearch(0.1d);
+                    return new FnpHauptnutzungenMonSearch(0.1d, -2d);
                 }
             }, "Flächennutzungsplan"),
         REGIONALPLAN(new MonSearchReportProperty("rpd_kategorie") {
 
                 @Override
                 public RestApiMonSearch createMonServerSearch() {
-                    return new RpdKategorieMonSearch(0.2d);
+                    return new RpdKategorieMonSearch(0.2d, -2d);
                 }
             }, "Regionalplan"),
 
@@ -286,7 +287,7 @@ public class PotenzialflaecheReportServerAction extends DefaultServerAction {
 
                 @Override
                 public RestApiMonSearch createMonServerSearch() {
-                    return new BodenrichtwertZoneMonSearch();
+                    return new BodenrichtwertZoneMonSearch(-2d);
                 }
             }, "Bodenrichtwerte"),
         BACKCOLOR(new VirtualReportProperty() {
@@ -948,7 +949,6 @@ public class PotenzialflaecheReportServerAction extends DefaultServerAction {
                     final CidsBean flaecheBean = creator.getFlaecheBean();
                     ((GeometrySearch)serverSearch).setGeometry((Geometry)flaecheBean.getProperty(
                             "geometrie.geo_field"));
-                    ((GeometrySearch)serverSearch).setBuffer(-2d);
                 }
                 final Collection<String> names = new ArrayList<>();
                 try {

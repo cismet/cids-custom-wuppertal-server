@@ -50,39 +50,44 @@ public class BplaeneMonSearch extends RestApiMonGeometrySearch {
 
     //~ Constructors -----------------------------------------------------------
 
-    /**
-     * Creates a new BplanSearch object.
-     */
-    public BplaeneMonSearch() {
-        this(null, (SubUnion[])null);
+    public BplaeneMonSearch(final SubUnion... subUnions) {
+        this(null, null, subUnions);
+    }
+
+    public BplaeneMonSearch(final Double buffer) {
+        this(null, buffer);
     }
 
     /**
      * Creates a new BplaeneMonSearch object.
      *
      * @param  geometry  DOCUMENT ME!
+     * @param subUnions
      */
-    public BplaeneMonSearch(final Geometry geometry) {
-        this(geometry, (SubUnion[])null);
+    public BplaeneMonSearch(final Geometry geometry, final SubUnion... subUnions) {
+        this(geometry, null, subUnions);
     }
 
     /**
      * Creates a new BplaeneMonSearch object.
      *
+     * @param buffer
      * @param  subUnions  DOCUMENT ME!
      */
-    public BplaeneMonSearch(final SubUnion... subUnions) {
-        this(null, subUnions);
+    public BplaeneMonSearch(final Double buffer, final SubUnion... subUnions) {
+        this(null, buffer, subUnions);
     }
 
     /**
      * Creates a new BplanSearch object.
      *
      * @param  geometry   DOCUMENT ME!
+     * @param buffer
      * @param  subUnions  DOCUMENT ME!
      */
-    public BplaeneMonSearch(final Geometry geometry, final SubUnion... subUnions) {
+    public BplaeneMonSearch(final Geometry geometry, final Double buffer, final SubUnion... subUnions) {
         setGeometry(geometry);
+        setBuffer(buffer);
         setSubUnions(subUnions);
         setSearchInfo(new SearchInfo(
                 this.getClass().getName(),
