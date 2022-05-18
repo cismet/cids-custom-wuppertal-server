@@ -114,7 +114,7 @@ public class BplaeneMonSearch extends RestApiMonGeometrySearch {
             if (getNameProperties() != null) {
                 final String query;
                 final SubUnion[] subUnions = getSubUnions();
-                if (subUnions != null) {
+                if (subUnions != null && subUnions.length != 0) {
                     for (final SubUnion subUnion : subUnions) {
                         if (subUnion != null) {
                             final List<String> wheres = new ArrayList<>();
