@@ -38,10 +38,13 @@ public class BaumAnsprechpartnerDeletionProvider extends AbstractCustomDeletionP
     private static final String TABLE_NAME = "baum_ansprechpartner";
     private static final String FIELD__ID = "id";
     private static final String FIELD__FK = "fk_ansprechpartner";
-    private static final String TABLE_NAME_SEARCH = "baum_meldung_ansprechpartner";
-    private static final String DELETE_TEXT =
-        "Dieser Ansprechpartner/Melder kann nicht gelöscht werden, da dieser verwendet wird.";
-
+    private static final String TABLE_NAME_SEARCH_OT = "baum_ortstermin_ansprechpartner";
+    private static final String TABLE_NAME_SEARCH_M = "baum_meldung_ansprechpartner";
+    private static final String DELETE_TEXT_OT =
+        "Dieser Ansprechpartner kann nicht gelöscht werden, da dieser beim Ortstermin verwendet wird.";
+    private static final String DELETE_TEXT_M =
+        "Dieser Ansprechpartner/Melder kann nicht gelöscht werden, da dieser bei der Meldung verwendet wird.";
+    private String deleteText = "Dieser Ansprechpartner kann nicht gelöscht werden, da dieser verwendet wird.";
     //~ Methods ----------------------------------------------------------------
 
     @Override
@@ -58,16 +61,30 @@ public class BaumAnsprechpartnerDeletionProvider extends AbstractCustomDeletionP
         final CidsBean ansprechpartnerBean = metaObject.getBean();
         final Integer ansprechpartner_id = (Integer)ansprechpartnerBean.getProperty(FIELD__ID);
 
-        final String queryArtInErsatz = String.format(
+        final String queryApInOt = String.format(
                 "SELECT * FROM %s WHERE %s = %d;",
-                TABLE_NAME_SEARCH,
+                TABLE_NAME_SEARCH_OT,
                 FIELD__FK,
                 ansprechpartner_id);
+        final String queryApInM = String.format(
+                "SELECT * FROM %s WHERE %s = %d;",
+                TABLE_NAME_SEARCH_M,
+                FIELD__FK,
+                ansprechpartner_id);
+        
         try {
-            final ArrayList<ArrayList> artArrayE = getMetaService().performCustomSearch(
-                    queryArtInErsatz,
+            final ArrayList<ArrayList> artArrayM = getMetaService().performCustomSearch(
+                    queryApInM,
                     getConnectionContext());
-            if (!artArrayE.isEmpty()) {
+            if (!artArrayM.isEmpty()) {
+                deleteText = DELETE_TEXT_M;
+                return true;
+            }
+            final ArrayList<ArrayList> artArrayOt = getMetaService().performCustomSearch(
+                    queryApInOt,
+                    getConnectionContext());
+            if (!artArrayOt.isEmpty()) {
+                deleteText = DELETE_TEXT_OT;
                 return true;
             }
         } catch (RemoteException ex) {
@@ -79,7 +96,7 @@ public class BaumAnsprechpartnerDeletionProvider extends AbstractCustomDeletionP
     @Override
     public boolean customDeleteMetaObject(final User user, final MetaObject metaObject) throws Exception {
         // darf nicht geloescht werden
-        throw new DeletionProviderClientException(DELETE_TEXT);
+        throw new DeletionProviderClientException(deleteText);
     }
 
     @Override
