@@ -27,7 +27,6 @@ public class BaumErsatzToStringConverter extends CustomToStringConverter {
     //~ Static fields/initializers ---------------------------------------------
 
     public static final String FIELD__ID = "id";                                                  // baum_ersatz
-    public static final String FIELD__ART = "fk_art.name";                                        // baum_ersatz
     public static final String FIELD__SCHADEN_ID = "fk_schaden.id";                               // baum_schaden
     public static final String FIELD__SCHADEN_ART = "fk_schaden.fk_art.name";                     // baum_schaden
     public static final String FIELD__MELDUNG_DATUM = "fk_schaden.fk_meldung.datum";              // baum_meldung
@@ -43,14 +42,13 @@ public class BaumErsatzToStringConverter extends CustomToStringConverter {
         } else {
             final SimpleDateFormat formatTag = new SimpleDateFormat("dd.MM.yy");
             return String.format(
-                    "G: %s - M: %s - S: %s, %s - E:%s, %s",
+                    "G: %s - M: %s - S: %s, %s - E:%s",
                     cidsBean.getProperty(FIELD__GEBIET_AZ),
                     formatTag.format(
                         cidsBean.getProperty(FIELD__MELDUNG_DATUM)),
                     cidsBean.getProperty(FIELD__SCHADEN_ID),
                     cidsBean.getProperty(FIELD__SCHADEN_ART),
-                    cidsBean.getProperty(FIELD__ID),
-                    cidsBean.getProperty(FIELD__ART));
+                    cidsBean.getProperty(FIELD__ID));
         }
     }
 }
