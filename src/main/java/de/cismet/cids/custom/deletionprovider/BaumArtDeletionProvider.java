@@ -39,7 +39,7 @@ public class BaumArtDeletionProvider extends AbstractCustomDeletionProvider {
     private static final String FIELD__ID = "id";
     private static final String FIELD__FK = "fk_art";
     private static final String TABLE_NAME_SEARCH_S = "baum_schaden";
-    private static final String TABLE_NAME_SEARCH_E = "baum_ersatz";
+    private static final String TABLE_NAME_SEARCH_E = "baum_ersatzbaum";
     private static final String TABLE_NAME_SEARCH_F = "baum_festsetzung";
     private static final String TABLE_NAME_SEARCH_SORTE = "baum_sorte";
     private static final String CAUSE_SCHADEN =

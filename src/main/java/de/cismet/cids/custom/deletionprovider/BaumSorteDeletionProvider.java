@@ -38,7 +38,7 @@ public class BaumSorteDeletionProvider extends AbstractCustomDeletionProvider {
     private static final String TABLE_NAME = "baum_sorte";
     private static final String FIELD__ID = "id";
     private static final String FIELD__FK = "fk_sorte";
-    private static final String TABLE_NAME_SEARCH_E = "baum_ersatz";
+    private static final String TABLE_NAME_SEARCH_E = "baum_ersatzbaum";
     private static final String DELETE_TEXT = "Diese Sorte kann nicht gelöscht werden, da diese verwendet wird.";
 
     //~ Methods ----------------------------------------------------------------
