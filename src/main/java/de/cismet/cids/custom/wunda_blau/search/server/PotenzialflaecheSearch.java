@@ -346,7 +346,7 @@ public class PotenzialflaecheSearch extends RestApiMonGeometrySearch
                                 case STADTRAUMTYPEN: {
                                     subject = "srt_kategorie.id";
                                     leftJoins.add(
-                                        "( SELECT srt_kategorie.id AS name, sub_geom.geo_field FROM srt_kategorie LEFT JOIN srt_flaeche ON srt_flaeche.fk_kategorie = srt_kategorie.id LEFT JOIN geom sub_geom ON sub_geom.id = srt_flaeche.fk_geom ) srt_kategorie ON srt_kategorie.geo_field && geom.geo_field AND st_intersects(srt_kategorie.geo_field, geom.geo_field)");
+                                        "( SELECT srt_kategorie.id, sub_geom.geo_field FROM srt_kategorie LEFT JOIN srt_flaeche ON srt_flaeche.fk_kategorie = srt_kategorie.id LEFT JOIN geom sub_geom ON sub_geom.id = srt_flaeche.fk_geom ) srt_kategorie ON srt_kategorie.geo_field && geom.geo_field AND st_intersects(srt_kategorie.geo_field, geom.geo_field)");
                                 }
                                 break;
                                 case QUARTIER: {
