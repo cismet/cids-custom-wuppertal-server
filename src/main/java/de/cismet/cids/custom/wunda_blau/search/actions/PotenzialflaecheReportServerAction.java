@@ -144,7 +144,7 @@ public class PotenzialflaecheReportServerAction extends DefaultServerAction {
         AEUSSERE_ERSCHLIESSUNG(new KeytableReportProperty("fk_aeussere_erschliessung", "pf_aeussere_erschliessung"),
             "Äußere Erschließung"),
         POTENZIALART(new KeytableReportProperty("fk_potenzialart", "pf_potenzialart"), "Potenzialart"),
-        KATEGORIE(new KeytableReportProperty("fk_kategorie", "pf_kategorie"), "Entwicklung"),
+        KATEGORIE(new KeytableReportProperty("fk_kategorie", "pf_kategorie"), "Entwicklungsart"),
         WOHNEINHEITEN(new KeytableReportProperty("fk_wohneinheiten", "pf_wohneinheiten"), "Wohneinheiten"),
         OEPNV_ANBINDUNG(new KeytableReportProperty("fk_oepnv", "pf_oepnv"), "ÖPNV-Qualität"),
         KLIMAINFORMATIONEN(new KeytableReportProperty("fk_klimainformationen", "pf_klimainformationen"),
