@@ -50,10 +50,20 @@ public class BplaeneMonSearch extends RestApiMonGeometrySearch {
 
     //~ Constructors -----------------------------------------------------------
 
+    /**
+     * Creates a new BplaeneMonSearch object.
+     *
+     * @param  subUnions  DOCUMENT ME!
+     */
     public BplaeneMonSearch(final SubUnion... subUnions) {
         this(null, null, subUnions);
     }
 
+    /**
+     * Creates a new BplaeneMonSearch object.
+     *
+     * @param  buffer  DOCUMENT ME!
+     */
     public BplaeneMonSearch(final Double buffer) {
         this(null, buffer);
     }
@@ -61,8 +71,8 @@ public class BplaeneMonSearch extends RestApiMonGeometrySearch {
     /**
      * Creates a new BplaeneMonSearch object.
      *
-     * @param  geometry  DOCUMENT ME!
-     * @param subUnions
+     * @param  geometry   DOCUMENT ME!
+     * @param  subUnions  DOCUMENT ME!
      */
     public BplaeneMonSearch(final Geometry geometry, final SubUnion... subUnions) {
         this(geometry, null, subUnions);
@@ -71,7 +81,7 @@ public class BplaeneMonSearch extends RestApiMonGeometrySearch {
     /**
      * Creates a new BplaeneMonSearch object.
      *
-     * @param buffer
+     * @param  buffer     DOCUMENT ME!
      * @param  subUnions  DOCUMENT ME!
      */
     public BplaeneMonSearch(final Double buffer, final SubUnion... subUnions) {
@@ -82,7 +92,7 @@ public class BplaeneMonSearch extends RestApiMonGeometrySearch {
      * Creates a new BplanSearch object.
      *
      * @param  geometry   DOCUMENT ME!
-     * @param buffer
+     * @param  buffer     DOCUMENT ME!
      * @param  subUnions  DOCUMENT ME!
      */
     public BplaeneMonSearch(final Geometry geometry, final Double buffer, final SubUnion... subUnions) {
@@ -114,7 +124,7 @@ public class BplaeneMonSearch extends RestApiMonGeometrySearch {
             if (getNameProperties() != null) {
                 final String query;
                 final SubUnion[] subUnions = getSubUnions();
-                if (subUnions != null && subUnions.length != 0) {
+                if ((subUnions != null) && (subUnions.length != 0)) {
                     for (final SubUnion subUnion : subUnions) {
                         if (subUnion != null) {
                             final List<String> wheres = new ArrayList<>();

@@ -50,18 +50,18 @@ public class BaumGebietAnsprechpartnerSearch extends AbstractCidsServerSearch im
     public static final String TABLE_ORTSTERMIN_AP = "baum_ortstermin_ansprechpartner";
     public static final String TABLE_ORTSTERMIN = "baum_ortstermin";
     public static final String FIELD__ID = "id";
-    public static final String FIELD__NAME = "name";                          //baum_ortstermin
-    public static final String FIELD__MAIL = "mail";                          //baum_ortstermin
-    public static final String FIELD__STRASSE = "strasse";                    //baum_ortstermin
-    public static final String FIELD__ORT = "ort";                            //baum_ortstermin
+    public static final String FIELD__NAME = "name";                              // baum_ortstermin
+    public static final String FIELD__MAIL = "mail";                              // baum_ortstermin
+    public static final String FIELD__STRASSE = "strasse";                        // baum_ortstermin
+    public static final String FIELD__ORT = "ort";                                // baum_ortstermin
     public static final String FIELD__BEMERKUNG = "bemerkung";
-    public static final String FIELD__FK_AP = "fk_ansprechpartner";         // baum_meldung/ot_ansprechpartner
-    public static final String FIELD__FK_GEBIET = "fk_gebiet";              // baum_meldung
-    public static final String FIELD__FK_MELDUNG = "fk_meldung";              // baum_ortstermin
-    public static final String FIELD__ARR_AP = "arr_ansprechpartner";       // baum_meldung
-    public static final String FIELD__REFERENCE_M = "baum_meldung_reference"; // baum_meldung_ansprechpartner
+    public static final String FIELD__FK_AP = "fk_ansprechpartner";               // baum_meldung/ot_ansprechpartner
+    public static final String FIELD__FK_GEBIET = "fk_gebiet";                    // baum_meldung
+    public static final String FIELD__FK_MELDUNG = "fk_meldung";                  // baum_ortstermin
+    public static final String FIELD__ARR_AP = "arr_ansprechpartner";             // baum_meldung
+    public static final String FIELD__REFERENCE_M = "baum_meldung_reference";     // baum_meldung_ansprechpartner
     public static final String FIELD__REFERENCE_OT = "baum_ortstermin_reference"; // baum_ortstermin_ansprechpartner
-    public static final String FIELD__AZ = "aktenzeichen";                  // baum_gebiet
+    public static final String FIELD__AZ = "aktenzeichen";                        // baum_gebiet
 
     public static final ObjectMapper OBJECT_MAPPER = new ObjectMapper();
     private static final String INTERSECTS_BUFFER = SearchProperties.getInstance().getIntersectsBuffer();
@@ -74,7 +74,7 @@ public class BaumGebietAnsprechpartnerSearch extends AbstractCidsServerSearch im
                 + "a." + FIELD__BEMERKUNG + ", "
                 + "a." + FIELD__MAIL + ", "
                 + "a." + FIELD__ORT + ", "
-                + "a." + FIELD__STRASSE 
+                + "a." + FIELD__STRASSE
                 + " FROM " + TABLE_MELDUNG_AP + " ma"
                 + " LEFT JOIN " + TABLE_MELDUNG + " m ON m." + FIELD__ARR_AP + " = "
                 + " ma." + FIELD__REFERENCE_M
@@ -90,7 +90,7 @@ public class BaumGebietAnsprechpartnerSearch extends AbstractCidsServerSearch im
                 + "a." + FIELD__BEMERKUNG + ", "
                 + "a." + FIELD__MAIL + ", "
                 + "a." + FIELD__ORT + ", "
-                + "a." + FIELD__STRASSE 
+                + "a." + FIELD__STRASSE
                 + " FROM " + TABLE_ORTSTERMIN_AP + " oa"
                 + " LEFT JOIN " + TABLE_ORTSTERMIN + " o ON o." + FIELD__ARR_AP + " = "
                 + " o." + FIELD__FK_MELDUNG
@@ -101,11 +101,10 @@ public class BaumGebietAnsprechpartnerSearch extends AbstractCidsServerSearch im
                 + " LEFT JOIN " + TABLE_NAME + " a ON a." + FIELD__ID + " = "
                 + "oa." + FIELD__FK_AP + ") "
                 + " SELECT DISTINCT "
-                + "  (SELECT c.id FROM cs_class c WHERE table_name ILIKE '" + TABLE_GEBIET + "') AS class_id, " 
+                + "  (SELECT c.id FROM cs_class c WHERE table_name ILIKE '" + TABLE_GEBIET + "') AS class_id, "
                 + FIELD__ID + ", "
-                + FIELD__AZ 
+                + FIELD__AZ
                 + " FROM APs ";
-
 
     //~ Instance fields --------------------------------------------------------
 
