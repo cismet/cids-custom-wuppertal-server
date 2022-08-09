@@ -44,6 +44,7 @@ import de.cismet.cids.custom.utils.vermessungsunterlagen.tasks.VermUntTaskAPList
 import de.cismet.cids.custom.utils.vermessungsunterlagen.tasks.VermUntTaskAPMap;
 import de.cismet.cids.custom.utils.vermessungsunterlagen.tasks.VermUntTaskAPUebersicht;
 import de.cismet.cids.custom.utils.vermessungsunterlagen.tasks.VermUntTaskNasKomplett;
+import de.cismet.cids.custom.utils.vermessungsunterlagen.tasks.VermUntTaskNasOhneEigentuemer;
 import de.cismet.cids.custom.utils.vermessungsunterlagen.tasks.VermUntTaskNasPunkte;
 import de.cismet.cids.custom.utils.vermessungsunterlagen.tasks.VermUntTaskNivPBeschreibungen;
 import de.cismet.cids.custom.utils.vermessungsunterlagen.tasks.VermUntTaskNivPUebersicht;
@@ -382,7 +383,8 @@ public class VermessungsunterlagenJob implements Runnable, ConnectionContextProv
                             }
                         }
 
-                        if (isTaskAllowed(VermUntTaskNasKomplett.TYPE) || isTaskAllowed(VermUntTaskNasPunkte.TYPE)) {
+                        if (isTaskAllowed(VermUntTaskNasKomplett.TYPE) || isTaskAllowed(VermUntTaskNasPunkte.TYPE)
+                                    || isTaskAllowed(VermUntTaskNasOhneEigentuemer.TYPE)) {
                             final String requestId = getKey();
                             if (vermessungsGeometrie != null) {
                                 submitTask(new VermUntTaskNasKomplett(
@@ -392,6 +394,14 @@ public class VermessungsunterlagenJob implements Runnable, ConnectionContextProv
                                         vermessungsGeometrie));
                             }
                             if (vermessungsGeometrieSaum != null) {
+                                submitTask(new VermUntTaskNasPunkte(
+                                        getKey(),
+                                        helper.getUser(),
+                                        requestId,
+                                        vermessungsGeometrieSaum));
+                            }
+                            if (false /*noch deaktiviert, siehe wupp#2467*/
+                                        && isTaskAllowed(VermUntTaskNasOhneEigentuemer.TYPE)) {
                                 submitTask(new VermUntTaskNasPunkte(
                                         getKey(),
                                         helper.getUser(),

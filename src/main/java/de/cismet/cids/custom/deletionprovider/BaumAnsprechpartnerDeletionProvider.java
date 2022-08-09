@@ -44,7 +44,11 @@ public class BaumAnsprechpartnerDeletionProvider extends AbstractCustomDeletionP
         "Dieser Ansprechpartner kann nicht gelöscht werden, da dieser beim Ortstermin verwendet wird.";
     private static final String DELETE_TEXT_M =
         "Dieser Ansprechpartner/Melder kann nicht gelöscht werden, da dieser bei der Meldung verwendet wird.";
+
+    //~ Instance fields --------------------------------------------------------
+
     private String deleteText = "Dieser Ansprechpartner kann nicht gelöscht werden, da dieser verwendet wird.";
+
     //~ Methods ----------------------------------------------------------------
 
     @Override
@@ -71,7 +75,7 @@ public class BaumAnsprechpartnerDeletionProvider extends AbstractCustomDeletionP
                 TABLE_NAME_SEARCH_M,
                 FIELD__FK,
                 ansprechpartner_id);
-        
+
         try {
             final ArrayList<ArrayList> artArrayM = getMetaService().performCustomSearch(
                     queryApInM,
