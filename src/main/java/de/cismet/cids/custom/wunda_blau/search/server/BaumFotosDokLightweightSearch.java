@@ -45,15 +45,15 @@ import de.cismet.connectioncontext.ConnectionContextStore;
  * @version  $Revision$, $Date$
  */
 @ServiceProvider(service = RestApiCidsServerSearch.class)
-public class BaumFotosLightweightSearch extends AbstractCidsServerSearch implements RestApiCidsServerSearch,
+public class BaumFotosDokLightweightSearch extends AbstractCidsServerSearch implements RestApiCidsServerSearch,
     LightweightMetaObjectsSearch,
     ConnectionContextStore {
 
     //~ Static fields/initializers ---------------------------------------------
 
-    private static final Logger LOG = Logger.getLogger(BaumFotosLightweightSearch.class);
-    private static final String TABLE_FOTOS = "baum_fotos";
-    private static final String FIELD__GEBIET = "baum_fotos";
+    private static final Logger LOG = Logger.getLogger(BaumFotosDokLightweightSearch.class);
+    //private static final String TABLE_FOTOS = "baum_fotos";
+    private static final String FIELD__GEBIET = "fk_gebiet";
 
     //~ Instance fields --------------------------------------------------------
 
@@ -61,6 +61,7 @@ public class BaumFotosLightweightSearch extends AbstractCidsServerSearch impleme
 
     @Getter private final SearchInfo searchInfo;
     @Getter @Setter private Integer gebietId;
+    @Getter @Setter private String tableName;
     @Getter @Setter private String representationPattern;
     @Getter @Setter private String[] representationFields;
 
@@ -69,7 +70,7 @@ public class BaumFotosLightweightSearch extends AbstractCidsServerSearch impleme
     /**
      * Creates a new LightweightMetaObjectsByQuerySearch object.
      */
-    public BaumFotosLightweightSearch() {
+    public BaumFotosDokLightweightSearch() {
         this.searchInfo = new SearchInfo(
                 this.getClass().getName(),
                 this.getClass().getSimpleName(),
@@ -84,12 +85,12 @@ public class BaumFotosLightweightSearch extends AbstractCidsServerSearch impleme
     }
 
     /**
-     * Creates a new BaumFotosLightweightSearch object.
+     * Creates a new BaumFotosDokLightweightSearch object.
      *
      * @param  representationPattern  DOCUMENT ME!
      * @param  representationFields   DOCUMENT ME!
      */
-    public BaumFotosLightweightSearch(
+    public BaumFotosDokLightweightSearch(
             final String representationPattern,
             final String[] representationFields) {
         this();
@@ -112,6 +113,7 @@ public class BaumFotosLightweightSearch extends AbstractCidsServerSearch impleme
     @Override
     public Collection performServerSearch() throws SearchException {
         final Integer id = getGebietId();
+        final String table = getTableName();
 
         final MetaService metaService = (MetaService)this.getActiveLocalServers().get("WUNDA_BLAU");
         if (metaService == null) {
@@ -130,14 +132,14 @@ public class BaumFotosLightweightSearch extends AbstractCidsServerSearch impleme
                         + "SELECT c.id FROM cs_class c WHERE table_name ILIKE '%1$s') AS class_id, "
                         + "id, %2$s FROM %1$s %3$s"
                         + " ORDER BY %2$s",
-                TABLE_FOTOS,
+                table,
                 representationFields[0],
                 (conditions.isEmpty() ? "" : (" WHERE " + String.join(" AND ", conditions))));
         LOG.info(query);
         try {
             final MetaClass mc = CidsBean.getMetaClassFromTableName(
                     "WUNDA_BLAU",
-                    TABLE_FOTOS,
+                    table,
                     getConnectionContext());
 
             // final MetaService ms = (MetaService)getActiveLocalServers().get("WUNDA_BLAU");
