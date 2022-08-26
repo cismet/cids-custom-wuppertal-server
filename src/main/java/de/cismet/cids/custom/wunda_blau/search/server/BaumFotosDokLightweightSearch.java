@@ -52,7 +52,7 @@ public class BaumFotosDokLightweightSearch extends AbstractCidsServerSearch impl
     //~ Static fields/initializers ---------------------------------------------
 
     private static final Logger LOG = Logger.getLogger(BaumFotosDokLightweightSearch.class);
-    //private static final String TABLE_FOTOS = "baum_fotos";
+    // private static final String TABLE_FOTOS = "baum_fotos";
     private static final String FIELD__GEBIET = "fk_gebiet";
 
     //~ Instance fields --------------------------------------------------------
