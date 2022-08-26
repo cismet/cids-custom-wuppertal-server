@@ -24,8 +24,8 @@ public class BaumGebietToStringConverter extends CustomToStringConverter {
 
     //~ Static fields/initializers ---------------------------------------------
 
-    public static final String FIELD__AZ = "aktenzeichen";      // baum_gebiet
-    public static final String FIELD__ID = "id";                // baum_gebiet
+    public static final String FIELD__AZ = "aktenzeichen"; // baum_gebiet
+    public static final String FIELD__ID = "id";           // baum_gebiet
 
     //~ Methods ----------------------------------------------------------------
 

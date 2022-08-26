@@ -46,10 +46,20 @@ public class StadtraumtypMonSearch extends RestApiMonGeometrySearch {
         this(null, null);
     }
 
+    /**
+     * Creates a new StadtraumtypMonSearch object.
+     *
+     * @param  geometry  DOCUMENT ME!
+     */
     public StadtraumtypMonSearch(final Geometry geometry) {
         this(geometry, null);
     }
 
+    /**
+     * Creates a new StadtraumtypMonSearch object.
+     *
+     * @param  buffer  DOCUMENT ME!
+     */
     public StadtraumtypMonSearch(final Double buffer) {
         this(null, buffer);
     }
@@ -57,6 +67,7 @@ public class StadtraumtypMonSearch extends RestApiMonGeometrySearch {
      * Creates a new StadtraumtypSearch object.
      *
      * @param  geometry  DOCUMENT ME!
+     * @param  buffer    DOCUMENT ME!
      */
     public StadtraumtypMonSearch(final Geometry geometry, final Double buffer) {
         setGeometry(geometry);

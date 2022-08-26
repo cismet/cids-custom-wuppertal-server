@@ -129,11 +129,13 @@ public class VermessungsunterlagenHelper implements ConnectionContextProvider {
     }
 
     public static final NasProduct NAS_PRODUCT_KOMPLETT;
+    public static final NasProduct NAS_PRODUCT_OHNE_EIGENTUEMER;
     public static final NasProduct NAS_PRODUCT_PUNKTE;
 
     static {
         final ObjectMapper mapper = new ObjectMapper();
         NasProduct productPunkte = null;
+        NasProduct productOhneEigentuemer = null;
         NasProduct productKomplett = null;
         final ArrayList<NasProduct> nasProducts;
         try {
@@ -143,6 +145,8 @@ public class VermessungsunterlagenHelper implements ConnectionContextProvider {
             for (final NasProduct nasProduct : nasProducts) {
                 if ("punkte".equals(nasProduct.getKey())) {
                     productPunkte = nasProduct;
+                } else if ("ohne_eigentuemer".equals(nasProduct.getKey())) {
+                    productOhneEigentuemer = nasProduct;
                 } else if ("komplett".equals(nasProduct.getKey())) {
                     productKomplett = nasProduct;
                 }
@@ -153,6 +157,7 @@ public class VermessungsunterlagenHelper implements ConnectionContextProvider {
             throw new RuntimeException(message, ex);
         }
         NAS_PRODUCT_PUNKTE = productPunkte;
+        NAS_PRODUCT_OHNE_EIGENTUEMER = productOhneEigentuemer;
         NAS_PRODUCT_KOMPLETT = productKomplett;
     }
 

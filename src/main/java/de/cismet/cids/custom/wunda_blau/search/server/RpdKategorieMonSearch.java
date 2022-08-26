@@ -55,16 +55,22 @@ public class RpdKategorieMonSearch extends RestApiMonGeometrySearch {
         this(cutoff, null, null);
     }
 
-    
     /**
      * Creates a new RpdKategorieMonSearch object.
      *
+     * @param  cutoff    DOCUMENT ME!
      * @param  geometry  DOCUMENT ME!
      */
     public RpdKategorieMonSearch(final Double cutoff, final Geometry geometry) {
         this(cutoff, geometry, null);
     }
 
+    /**
+     * Creates a new RpdKategorieMonSearch object.
+     *
+     * @param  cutoff  DOCUMENT ME!
+     * @param  buffer  DOCUMENT ME!
+     */
     public RpdKategorieMonSearch(final Double cutoff, final Double buffer) {
         this(cutoff, null, buffer);
     }
@@ -72,9 +78,9 @@ public class RpdKategorieMonSearch extends RestApiMonGeometrySearch {
     /**
      * Creates a new WohnlagenKategorisierungSearch object.
      *
-     * @param  geometry  DOCUMENT ME!
      * @param  cutoff    DOCUMENT ME!
-     * @param buffer
+     * @param  geometry  DOCUMENT ME!
+     * @param  buffer    DOCUMENT ME!
      */
     public RpdKategorieMonSearch(final Double cutoff, final Geometry geometry, final Double buffer) {
         setCutoff(cutoff);

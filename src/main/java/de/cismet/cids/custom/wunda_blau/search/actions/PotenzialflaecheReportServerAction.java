@@ -220,7 +220,7 @@ public class PotenzialflaecheReportServerAction extends DefaultServerAction {
                 @Override
                 public RestApiMonSearch createMonServerSearch() {
                     return new BplaeneMonSearch(
-                            -3d, //per mail so gewünscht
+                            -3d, // per mail so gewünscht
                             new BplaeneMonSearch.SubUnion(
                                 "nummer || ' (' || vstandr || ' ' || TO_CHAR(TO_DATE(datumr, 'DD.MM.YYYY'), 'DD.MM.YYYY') || ')'",
                                 "LEFT JOIN geom ON geom.id = bplan_verfahren.geometrie",

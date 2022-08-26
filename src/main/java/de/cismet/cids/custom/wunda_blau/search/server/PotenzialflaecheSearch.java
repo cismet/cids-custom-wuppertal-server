@@ -325,21 +325,22 @@ public class PotenzialflaecheSearch extends RestApiMonGeometrySearch
                                     }
                                 } else if (reportProperty
                                             instanceof PotenzialflaecheReportServerAction.MultiKeytableReportProperty) {
-                                    final PotenzialflaecheReportServerAction.MultiKeytableReportProperty mkrp = (PotenzialflaecheReportServerAction.MultiKeytableReportProperty) reportProperty;                                    
+                                    final PotenzialflaecheReportServerAction.MultiKeytableReportProperty mkrp =
+                                        (PotenzialflaecheReportServerAction.MultiKeytableReportProperty)reportProperty;
                                     if (value instanceof Collection) {
                                         final List<String> ids = new ArrayList<>();
                                         for (final MetaObjectNode mon : (Collection<MetaObjectNode>)value) {
                                             ids.add(String.valueOf(mon.getObjectId()));
                                         }
                                         wheresMain.add(String.format(
-                                            "%s IN (%s)",
-                                            mkrp.getFilterPath(),
-                                            String.join(",", ids)));
+                                                "%s IN (%s)",
+                                                mkrp.getFilterPath(),
+                                                String.join(",", ids)));
                                     } else {
                                         wheresMain.add(String.format(
-                                            "%s = %d",
-                                            mkrp.getFilterPath(),
-                                            ((MetaObjectNode)value).getObjectId()));                                        
+                                                "%s = %d",
+                                                mkrp.getFilterPath(),
+                                                ((MetaObjectNode)value).getObjectId()));
                                     }
                                 } else if (reportProperty
                                             instanceof PotenzialflaecheReportServerAction.KeytableReportProperty) {
@@ -349,9 +350,9 @@ public class PotenzialflaecheSearch extends RestApiMonGeometrySearch
                                             ids.add(String.valueOf(mon.getObjectId()));
                                         }
                                         wheresMain.add(String.format(
-                                            "%s IN (%s)",
-                                            path,
-                                            String.join(",", ids)));
+                                                "%s IN (%s)",
+                                                path,
+                                                String.join(",", ids)));
                                     } else {
                                         wheresMain.add(String.format(
                                                 "%s = %d",

@@ -30,7 +30,8 @@ import de.cismet.connectioncontext.ConnectionContext;
 
 /**
  * DOCUMENT ME!
- * @author Sandra
+ *
+ * @author   Sandra
  * @version  $Revision$, $Date$
  */
 public class ZaehlungLastYearsSearch extends AbstractCidsServerSearch implements MetaObjectNodeServerSearch {
@@ -39,23 +40,21 @@ public class ZaehlungLastYearsSearch extends AbstractCidsServerSearch implements
 
     private static final transient Logger LOG = Logger.getLogger(BaumSchadenSearch.class);
 
-
     public static final ObjectMapper OBJECT_MAPPER = new ObjectMapper();
-
-    private final String QUERY_TEMPLATE =  String.format("SELECT "
-            + "  (SELECT c.id FROM cs_class c WHERE table_name ILIKE 'zaehlung') AS class_id, "
-            + " z.id \n"
-            + "from zaehlung z\n"
-            + "left join zaehlung_ref r on z.id = r.zaehlung_ref\n");
 
     //~ Instance fields --------------------------------------------------------
 
+    private final String QUERY_TEMPLATE = String.format("SELECT "
+                    + "  (SELECT c.id FROM cs_class c WHERE table_name ILIKE 'zaehlung') AS class_id, "
+                    + " z.id \n"
+                    + "from zaehlung z\n"
+                    + "left join zaehlung_ref r on z.id = r.zaehlung_ref\n");
+
     private ConnectionContext connectionContext = ConnectionContext.create(
-                ConnectionContext.Category.STATIC,
-                ZaehlungLastYearsSearch.class.getSimpleName());
+            ConnectionContext.Category.STATIC,
+            ZaehlungLastYearsSearch.class.getSimpleName());
 
     @Setter @Getter private Integer standortId;
-    
 
     //~ Constructors -----------------------------------------------------------
 
@@ -90,15 +89,16 @@ public class ZaehlungLastYearsSearch extends AbstractCidsServerSearch implements
             final List<String> wheres = new ArrayList<>();
             if (getStandortId() != null) {
                 wheres.add(String.format("standpunkt_ref= %d", getStandortId()));
-                wheres.add(String.format("date_part('year'::text, datum) in (\n"
-                            + "select date_part('year'::text, datum)\n"
-                            + "from zaehlung z\n"
-                            + "left join zaehlung_ref r on z.id = r.zaehlung_ref\n"
-                            + "where standpunkt_ref= %d \n"
-                            + "group by date_part('year'::text, datum)\n" 
-                            + "order by date_part('year'::text, datum) desc\n" 
-                            + "fetch first 2 row only)",
-                            getStandortId()));
+                wheres.add(String.format(
+                        "date_part('year'::text, datum) in (\n"
+                                + "select date_part('year'::text, datum)\n"
+                                + "from zaehlung z\n"
+                                + "left join zaehlung_ref r on z.id = r.zaehlung_ref\n"
+                                + "where standpunkt_ref= %d \n"
+                                + "group by date_part('year'::text, datum)\n"
+                                + "order by date_part('year'::text, datum) desc\n"
+                                + "fetch first 2 row only)",
+                        getStandortId()));
             }
 
             final String leftJoin = (!leftJoins.isEmpty())
