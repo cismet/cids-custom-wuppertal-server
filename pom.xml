@@ -69,7 +69,7 @@
             <dependency>
                 <groupId>de.cismet.cids</groupId>
                 <artifactId>cids-server</artifactId>
-                <version>7.10.10</version>
+                <version>7.11</version>
                 <type>jar</type>
             </dependency>
 
