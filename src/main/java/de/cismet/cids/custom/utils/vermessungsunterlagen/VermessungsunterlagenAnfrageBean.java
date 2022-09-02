@@ -14,9 +14,7 @@ package de.cismet.cids.custom.utils.vermessungsunterlagen;
 
 import com.vividsolutions.jts.geom.Polygon;
 
-import lombok.AllArgsConstructor;
 import lombok.Getter;
-import lombok.NoArgsConstructor;
 import lombok.Setter;
 
 /**
@@ -32,16 +30,25 @@ public class VermessungsunterlagenAnfrageBean {
     //~ Instance fields --------------------------------------------------------
 
     private String aktenzeichenKatasteramt;
-    private Polygon[] anfragepolygonArray;
-    private AntragsflurstueckBean[] antragsflurstuecksArray;
+    private Boolean anonymousOrder;
+    private Polygon[] antragsPolygone;
+    private VermessungsunterlagenAnfrageBean.AntragsflurstueckBean[] antragsflurstuecke;
     private String[] artderVermessung;
     private String geschaeftsbuchnummer;
     private String katasteramtAuftragsnummer;
-    private String katasteramtsId;
+    private Boolean mitAPBeschreibungen;
+    private Boolean mitAPKarten;
+    private Boolean mitAPUebersichten;
+    private Boolean mitAlkisBestandsdatenmitEigentuemerinfo;
+    private Boolean mitAlkisBestandsdatennurPunkte;
+    private Boolean mitAlkisBestandsdatenohneEigentuemerinfo;
     private Boolean mitGrenzniederschriften;
+    private Boolean mitPunktnummernreservierung;
+    private Boolean mitRisse;
+    private String katasteramtsId;
     private String nameVermessungsstelle;
-    private Boolean nurPunktnummernreservierung;
-    private PunktnummernreservierungBean[] punktnummernreservierungsArray;
+    private Boolean _nurPunktnummernreservierung;
+    private VermessungsunterlagenAnfrageBean.PunktnummernreservierungBean[] punktnummernreservierungen;
     private String saumAPSuche;
     private String zulassungsnummerVermessungsstelle;
     private Boolean test;

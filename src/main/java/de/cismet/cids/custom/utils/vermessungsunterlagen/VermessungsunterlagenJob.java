@@ -327,9 +327,9 @@ public class VermessungsunterlagenJob implements Runnable, ConnectionContextProv
 
                     final int saum = Integer.parseInt(anfrageBean.getSaumAPSuche());
                     final Geometry vermessungsGeometrie =
-                        ((anfrageBean.getAnfragepolygonArray() != null)
-                                    && (anfrageBean.getAnfragepolygonArray()[0] != null))
-                        ? anfrageBean.getAnfragepolygonArray()[0] : null;
+                        ((anfrageBean.getAntragsPolygone() != null)
+                                    && (anfrageBean.getAntragsPolygone()[0] != null))
+                        ? anfrageBean.getAntragsPolygone()[0] : null;
 
                     final Geometry vermessungsGeometrieSaum;
                     if (vermessungsGeometrie != null) {
@@ -349,9 +349,9 @@ public class VermessungsunterlagenJob implements Runnable, ConnectionContextProv
                                 getKey(),
                                 anfrageBean.getZulassungsnummerVermessungsstelle(),
                                 anfrageBean.getGeschaeftsbuchnummer(),
-                                anfrageBean.getPunktnummernreservierungsArray()));
+                                anfrageBean.getPunktnummernreservierungen()));
                     }
-                    if (!anfrageBean.getNurPunktnummernreservierung()) {
+                    if (!anfrageBean.get_nurPunktnummernreservierung()) {
                         if (isTaskAllowed(VermUntTaskAPMap.TYPE) || isTaskAllowed(VermUntTaskAPList.TYPE)
                                     || isTaskAllowed(VermUntTaskAPUebersicht.TYPE)) {
                             if (vermessungsGeometrieSaum != null) {

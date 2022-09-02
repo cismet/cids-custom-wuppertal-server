@@ -125,10 +125,10 @@ public class VermessungsunterlagenValidator implements ConnectionContextProvider
                     && anfrageBean.getAktenzeichenKatasteramt().startsWith("[i_e]");
 
         // Validierung der Punktnummernreservierung
-        if ((anfrageBean.getPunktnummernreservierungsArray() != null)
-                    && (anfrageBean.getPunktnummernreservierungsArray().length > 0)) {
+        if ((anfrageBean.getPunktnummernreservierungen() != null)
+                    && (anfrageBean.getPunktnummernreservierungen().length > 0)) {
             for (final VermessungsunterlagenAnfrageBean.PunktnummernreservierungBean pnrOvject
-                        : anfrageBean.getPunktnummernreservierungsArray()) {
+                        : anfrageBean.getPunktnummernreservierungen()) {
                 if ((pnrOvject.getAnzahlPunktnummern() == null) || (pnrOvject.getUtmKilometerQuadrat() == null)
                             || (pnrOvject.getAnzahlPunktnummern() == null)) {
                     throw getExceptionByErrorCode(Error.UNSUFFICENT_PNR);
@@ -150,13 +150,13 @@ public class VermessungsunterlagenValidator implements ConnectionContextProvider
         }
 
         // Wenn ausschließlich neue Punktnummern reserviert werden sollen, ist keine weitere Überprüfung notwendig.
-        if (anfrageBean.getNurPunktnummernreservierung()) {
+        if (anfrageBean.get_nurPunktnummernreservierung()) {
             return true;
         }
 
         // Validierung der übergebenen Flurstücke
-        if ((anfrageBean.getAntragsflurstuecksArray() == null)
-                    || (anfrageBean.getAntragsflurstuecksArray().length <= 0)) {
+        if ((anfrageBean.getAntragsflurstuecke() == null)
+                    || (anfrageBean.getAntragsflurstuecke().length <= 0)) {
             // es wurde kein Flurstück übergeben
             throw getExceptionByErrorCode(Error.NO_ANTRAGSFLURSTUECK);
         }
@@ -165,7 +165,7 @@ public class VermessungsunterlagenValidator implements ConnectionContextProvider
         final Collection<VermessungsunterlagenAnfrageBean.AntragsflurstueckBean> wuppFlurstuecke = new ArrayList<>();
 
         for (final VermessungsunterlagenAnfrageBean.AntragsflurstueckBean antragsFlurstueck
-                    : anfrageBean.getAntragsflurstuecksArray()) {
+                    : anfrageBean.getAntragsflurstuecke()) {
             if (isFlurstueckValide(antragsFlurstueck)) {
                 valideFlurstuecke.add(antragsFlurstueck);
             }
@@ -182,7 +182,7 @@ public class VermessungsunterlagenValidator implements ConnectionContextProvider
 
         // keine wuppertale Flurstücke
         if (wuppFlurstuecke.isEmpty()) {
-            final Polygon[] polygonArray = anfrageBean.getAnfragepolygonArray();
+            final Polygon[] polygonArray = anfrageBean.getAntragsPolygone();
             // Validierung des Vermessungsgebiets
             if ((polygonArray == null) || (polygonArray.length <= 0) || (polygonArray[0] == null)) {
                 // es wurde kein Flurstück übergeben
