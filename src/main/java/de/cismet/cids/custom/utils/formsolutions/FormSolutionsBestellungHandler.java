@@ -1229,10 +1229,25 @@ public class FormSolutionsBestellungHandler implements ConnectionContextProvider
         if (produktKey.equals("LB_WEITERLEITUNG") || produktKey.equals("LB")) {
             // Zum Vergleichen der Gebuehren wird die Abkuerzung aus Issue 2253 genutzt
 
-            final int gebFuseKom = getObjectCount(formSolutionsBestellung.getFlurstueckskennzeichen());
-            final int gebBekom = getObjectCount(formSolutionsBestellung.getBuchungsblattkennzeichen());
+            // 204: the tag ausgewaehlte_flurstuecke contains all landparcels and the tag flurstueckskennzeichen
+            // contains either all (variant 1) or just one landparcel (variant 2). It's the same for buchungsblatt
+            // 205: the tag ausgewaehlte_flurstuecke does not exist and the tag flurstueckskennzeichen contains all
+            // landparcels. It's the same for buchungsblatt.
+            String flurstuecke = formSolutionsBestellung.getAusgewaehlteFlurstuecke();
+            String buchungsblaetter = formSolutionsBestellung.getAusgewaehlteBuchungsblaetter();
 
-            if ((formSolutionsBestellung.getFlurstueckskennzeichen() != null) && (gebFuseKom <= gebBekom)) {
+            if (flurstuecke == null) {
+                flurstuecke = formSolutionsBestellung.getFlurstueckskennzeichen();
+            }
+
+            if (buchungsblaetter == null) {
+                buchungsblaetter = formSolutionsBestellung.getBuchungsblattkennzeichen();
+            }
+
+            final int gebFuseKom = getObjectCount(flurstuecke);
+            final int gebBekom = getObjectCount(buchungsblaetter);
+
+            if ((gebFuseKom > 0) && (gebFuseKom <= gebBekom)) {
                 produktKey = produktKey.equals("LB_WEITERLEITUNG") ? "fsueKom_WEITERLEITUNG" : "fsueKom";
             } else {
                 produktKey = produktKey.equals("LB_WEITERLEITUNG") ? "bekom_WEITERLEITUNG" : "bekom";
