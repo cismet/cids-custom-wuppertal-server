@@ -22,6 +22,7 @@ import Sirius.server.newuser.UserServer;
 import Sirius.server.property.ServerProperties;
 
 import com.fasterxml.jackson.core.type.TypeReference;
+import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
 
 import com.vividsolutions.jts.geom.Geometry;
@@ -51,6 +52,7 @@ import java.io.ByteArrayOutputStream;
 import java.io.File;
 import java.io.FileInputStream;
 import java.io.FileOutputStream;
+import java.io.FileReader;
 import java.io.InputStream;
 import java.io.InputStreamReader;
 import java.io.OutputStream;
@@ -776,12 +778,30 @@ public class FormSolutionsBestellungHandler implements ConnectionContextProvider
 
                 specialLog("open transids fetched: " + stringBuilder.toString());
 
-                final Map<String, Object> map = getObjectMapper().readValue("{ \"list\" : " + stringBuilder.toString()
-                                + "}",
-                        new TypeReference<HashMap<String, Object>>() {
-                        });
-                for (final String transId : (Collection<String>)map.get("list")) {
-                    transIds.add(transId);
+//                final Map<String, Object> map = getObjectMapper().readValue("{ \"list\" : " + stringBuilder.toString()
+//                                + "}",
+//                        new TypeReference<HashMap<String, Object>>() {
+//                        });
+//                for (final String transId : (Collection<String>)map.get("list")) {
+//                    transIds.add(transId);
+//                }
+
+                // new format
+                final JsonNode node = MAPPER.readTree(stringBuilder.toString());
+
+                if (node.isArray()) {
+                    final Iterator<JsonNode> it = node.elements();
+
+                    while (it.hasNext()) {
+                        final JsonNode n = it.next();
+                        final JsonNode transidNode = n.get("transID");
+
+                        if (transidNode != null) {
+                            final String transId = transidNode.asText();
+
+                            transIds.add(transId);
+                        }
+                    }
                 }
             } catch (final Exception ex) {
                 LOG.error("error while retrieving open transids", ex);
@@ -789,6 +809,49 @@ public class FormSolutionsBestellungHandler implements ConnectionContextProvider
         }
 
         return transIds;
+    }
+
+    /**
+     * DOCUMENT ME!
+     *
+     * @param  args  DOCUMENT ME!
+     */
+    public static void main(final String[] args) {
+        final Collection<String> transIds = new ArrayList<>();
+        final StringBuilder stringBuilder = new StringBuilder();
+
+        try {
+            try(final FileReader in = new FileReader(new File("/home/therter/resp.json"))) {
+                final BufferedReader reader = new BufferedReader(in);
+                String line;
+                while ((line = reader.readLine()) != null) {
+                    stringBuilder.append(line);
+                }
+            }
+
+            System.out.println("out: " + stringBuilder);
+
+            final JsonNode node = MAPPER.readTree(stringBuilder.toString());
+
+            if (node.isArray()) {
+                final Iterator<JsonNode> it = node.elements();
+
+                while (it.hasNext()) {
+                    final JsonNode n = it.next();
+                    final JsonNode transidNode = n.get("transID");
+
+                    if (transidNode != null) {
+                        transIds.add(transidNode.asText());
+                    }
+                }
+            }
+        } catch (Exception e) {
+            e.printStackTrace();
+        }
+
+        for (final String id : transIds) {
+            System.out.println(id);
+        }
     }
 
     /**
@@ -937,7 +1000,11 @@ public class FormSolutionsBestellungHandler implements ConnectionContextProvider
         } else if (isServerInProduction()) {
             final Map<String, Object> map;
             try(final InputStream in = getHttpAccessHandler().doRequest(
-                                new URL(String.format(getProperties().getUrlAuftragFs(), transid)),
+                                new URL(
+                                    String.format(
+                                        getProperties().getUrlAuftragFs(),
+                                        transid.substring(0, transid.indexOf("-")),
+                                        transid)),
                                 new StringReader(""),
                                 AccessHandler.ACCESS_METHODS.GET_REQUEST,
                                 null,
@@ -2160,8 +2227,12 @@ public class FormSolutionsBestellungHandler implements ConnectionContextProvider
      * @return  DOCUMENT ME!
      */
     public boolean isServerInProduction() {
-        return ServerProperties.DEPLOY_ENV__PRODUCTION.equalsIgnoreCase(DomainServerImpl.getServerProperties()
-                        .getDeployEnv());
+//        return ServerProperties.DEPLOY_ENV__PRODUCTION.equalsIgnoreCase(DomainServerImpl.getServerProperties()
+//                        .getDeployEnv());
+        final boolean inProduction;
+        inProduction = false;
+
+        return inProduction;
     }
 
     /**
@@ -2404,7 +2475,11 @@ public class FormSolutionsBestellungHandler implements ConnectionContextProvider
                                     .hasConfigAttr(getUser(), "custom.formsolutions.noclose", getConnectionContext());
                         if (isServerInProduction() && !closeVeto) {
                             getHttpAccessHandler().doRequest(
-                                new URL(String.format(getProperties().getUrlAuftragDeleteFs(), transid)),
+                                new URL(
+                                    String.format(
+                                        getProperties().getUrlAuftragDeleteFs(),
+                                        transid.substring(0, transid.indexOf("-")),
+                                        transid)),
                                 new StringReader(""),
                                 "text/plain",
                                 AccessHandler.ACCESS_METHODS.POST_REQUEST,
