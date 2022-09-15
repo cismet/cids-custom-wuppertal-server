@@ -2227,12 +2227,12 @@ public class FormSolutionsBestellungHandler implements ConnectionContextProvider
      * @return  DOCUMENT ME!
      */
     public boolean isServerInProduction() {
-//        return ServerProperties.DEPLOY_ENV__PRODUCTION.equalsIgnoreCase(DomainServerImpl.getServerProperties()
-//                        .getDeployEnv());
-        final boolean inProduction;
-        inProduction = false;
-
-        return inProduction;
+        return ServerProperties.DEPLOY_ENV__PRODUCTION.equalsIgnoreCase(DomainServerImpl.getServerProperties()
+                        .getDeployEnv());
+//        final boolean inProduction;
+//        inProduction = false;
+//
+//        return inProduction;
     }
 
     /**
