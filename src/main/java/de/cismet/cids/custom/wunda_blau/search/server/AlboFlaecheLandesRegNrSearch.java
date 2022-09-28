@@ -83,7 +83,7 @@ public class AlboFlaecheLandesRegNrSearch extends AbstractCidsServerSearch imple
                                 QUERY_LFD_NR,
                                 landesregistriernummer),
                             getConnectionContext());
-                    int maxNumber = 0;
+                    int maxNumber = -1;
 
                     if ((nr != null) && (nr.size() > 0)) {
                         for (int i = 0; i < nr.size(); ++i) {
