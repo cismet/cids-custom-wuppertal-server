@@ -52,6 +52,7 @@ public class VermessungsunterlagenAnfrageBean {
     private String saumAPSuche;
     private String zulassungsnummerVermessungsstelle;
     private Boolean test;
+    private String portalVersion;
 
     //~ Inner Classes ----------------------------------------------------------
 
