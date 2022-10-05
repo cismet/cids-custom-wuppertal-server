@@ -60,7 +60,6 @@ import java.io.Reader;
 
 import java.net.URL;
 
-import java.rmi.Remote;
 import java.rmi.RemoteException;
 
 import java.sql.Timestamp;
@@ -245,11 +244,28 @@ public class VermessungsunterlagenHelper implements ConnectionContextProvider {
      * DOCUMENT ME!
      *
      * @param   tmpNode  DOCUMENT ME!
+     * @param   wrapped  DOCUMENT ME!
      *
      * @return  DOCUMENT ME!
      */
-    private static String getString(final JsonNode tmpNode) {
-        return ((tmpNode != null) && (tmpNode.get("$value") != null)) ? tmpNode.get("$value").asText() : null;
+    private static JsonNode getValueNode(final JsonNode tmpNode, final boolean wrapped) {
+        if (tmpNode == null) {
+            return null;
+        }
+        return wrapped ? (((tmpNode.get("$value") != null)) ? tmpNode.get("$value") : null) : tmpNode;
+    }
+
+    /**
+     * DOCUMENT ME!
+     *
+     * @param   tmpNode  DOCUMENT ME!
+     * @param   wrapped  DOCUMENT ME!
+     *
+     * @return  DOCUMENT ME!
+     */
+    private static String getString(final JsonNode tmpNode, final boolean wrapped) {
+        final JsonNode valueNode = getValueNode(tmpNode, wrapped);
+        return (valueNode != null) ? valueNode.asText() : null;
     }
 
     /**
@@ -257,12 +273,13 @@ public class VermessungsunterlagenHelper implements ConnectionContextProvider {
      *
      * @param   attribute   DOCUMENT ME!
      * @param   parentNode  DOCUMENT ME!
+     * @param   wrapped     DOCUMENT ME!
      *
      * @return  DOCUMENT ME!
      */
-    private static String getString(final String attribute, final JsonNode parentNode) {
+    private static String getString(final String attribute, final JsonNode parentNode, final boolean wrapped) {
         final JsonNode tmpNode = parentNode.get(attribute);
-        return ((tmpNode != null) && (tmpNode.get("$value") != null)) ? tmpNode.get("$value").asText() : null;
+        return getString(tmpNode, wrapped);
     }
 
     /**
@@ -270,12 +287,14 @@ public class VermessungsunterlagenHelper implements ConnectionContextProvider {
      *
      * @param   attribute   DOCUMENT ME!
      * @param   parentNode  DOCUMENT ME!
+     * @param   wrapped     DOCUMENT ME!
      *
      * @return  DOCUMENT ME!
      */
-    private static Boolean getBoolean(final String attribute, final JsonNode parentNode) {
+    private static Boolean getBoolean(final String attribute, final JsonNode parentNode, final boolean wrapped) {
         final JsonNode tmpNode = parentNode.get(attribute);
-        return ((tmpNode != null) && (tmpNode.get("$value") != null)) ? tmpNode.get("$value").asBoolean() : null;
+        final JsonNode valueNode = getValueNode(tmpNode, wrapped);
+        return (valueNode != null) ? valueNode.asBoolean() : null;
     }
 
     /**
@@ -283,12 +302,14 @@ public class VermessungsunterlagenHelper implements ConnectionContextProvider {
      *
      * @param   attribute   DOCUMENT ME!
      * @param   parentNode  DOCUMENT ME!
+     * @param   wrapped     DOCUMENT ME!
      *
      * @return  DOCUMENT ME!
      */
-    private static Integer getInteger(final String attribute, final JsonNode parentNode) {
+    private static Integer getInteger(final String attribute, final JsonNode parentNode, final boolean wrapped) {
         final JsonNode tmpNode = parentNode.get(attribute);
-        return ((tmpNode != null) && (tmpNode.get("$value") != null)) ? tmpNode.get("$value").asInt() : null;
+        final JsonNode valueNode = getValueNode(tmpNode, wrapped);
+        return (valueNode != null) ? valueNode.asInt() : null;
     }
 
     /**
@@ -556,6 +577,8 @@ public class VermessungsunterlagenHelper implements ConnectionContextProvider {
                 "WUNDA_BLAU",
                 mc_VERMESSUNGSUNTERLAGENAUFTRAG.getTableName(),
                 getConnectionContext());
+        jobCidsBean.setProperty("portalversion", anfrageBean.getPortalVersion());
+
         jobCidsBean.setProperty("executejob_json", executeJobContent);
         jobCidsBean.setProperty("schluessel", job.getKey());
         jobCidsBean.setProperty("geometrie", geomBean);
@@ -588,8 +611,24 @@ public class VermessungsunterlagenHelper implements ConnectionContextProvider {
         jobCidsBean.setProperty("katasteramtsid", anfrageBean.getKatasteramtsId());
         jobCidsBean.setProperty("vermessungsstelle", anfrageBean.getZulassungsnummerVermessungsstelle());
         jobCidsBean.setProperty("nur_punktnummernreservierung", anfrageBean.getNurPunktnummernreservierung());
+
+        jobCidsBean.setProperty(
+            "mit_alkisbestandsdatenmiteigentuemerinfo",
+            anfrageBean.getMitAlkisBestandsdatenmitEigentuemerinfo());
+        jobCidsBean.setProperty(
+            "mit_alkisbestandsdatenohneeigentuemerinfo",
+            anfrageBean.getMitAlkisBestandsdatenohneEigentuemerinfo());
+        jobCidsBean.setProperty("mit_alkisbestandsdatennurpunkte", anfrageBean.getMitAlkisBestandsdatennurPunkte());
+        jobCidsBean.setProperty("mit_punktnummernreservierung", anfrageBean.getMitPunktnummernreservierung());
+        jobCidsBean.setProperty("mit_risse", anfrageBean.getMitRisse());
+        jobCidsBean.setProperty("mit_apuebersichten", anfrageBean.getMitAPUebersichten());
+        jobCidsBean.setProperty("mit_apkarten", anfrageBean.getMitAPKarten());
+        jobCidsBean.setProperty("mit_apbeschreibungen", anfrageBean.getMitAPBeschreibungen());
+
+        jobCidsBean.setProperty("anonym", anfrageBean.getAnonymousOrder());
+
         try {
-            jobCidsBean.setProperty("saumap", Integer.parseInt(anfrageBean.getSaumAPSuche()));
+            jobCidsBean.setProperty("saumap", anfrageBean.getSaumAPSuche());
         } catch (final Exception ex) {
             // validation will fail. Need to be catched so that the object can be persisted.
             // The validation exception will be stored in the exception_json field later on.
@@ -605,7 +644,7 @@ public class VermessungsunterlagenHelper implements ConnectionContextProvider {
         }
         jobCidsBean.setProperty("timestamp", new Timestamp(new Date().getTime()));
         jobCidsBean.setProperty("tasks", Arrays.toString(getAllowedTasks().toArray()));
-        jobCidsBean.setProperty("test", anfrageBean.getTest());
+        jobCidsBean.setProperty("test", anfrageBean.isTest());
 
         job.setCidsBean(getMetaService().insertMetaObject(
                 getUser(),
@@ -722,24 +761,6 @@ public class VermessungsunterlagenHelper implements ConnectionContextProvider {
     /**
      * DOCUMENT ME!
      *
-     * @param   vermessungsart  DOCUMENT ME!
-     *
-     * @return  DOCUMENT ME!
-     *
-     * @throws  Exception  DOCUMENT ME!
-     */
-    public CidsBean selectOrCreateVermessungArt(final String vermessungsart) throws Exception {
-        final CidsBean bean = CidsBean.createNewCidsBeanFromTableName(
-                "WUNDA_BLAU",
-                mc_VERMESSUNGSUNTERLAGENAUFTRAG_VERMESSUNGSART.getTableName(),
-                getConnectionContext());
-        getMetaService().getMetaObject(getUser(), "SELECT FROM ", getConnectionContext());
-        return null;
-    }
-
-    /**
-     * DOCUMENT ME!
-     *
      * @param   json  DOCUMENT ME!
      *
      * @return  DOCUMENT ME!
@@ -748,112 +769,267 @@ public class VermessungsunterlagenHelper implements ConnectionContextProvider {
      */
     public static VermessungsunterlagenAnfrageBean createAnfrageBean(final String json) throws IOException {
         final JsonNode rootNode = JOB_MAPPER.readTree(json);
-        final JsonNode in0 = rootNode.get("in0");
-
         final VermessungsunterlagenAnfrageBean anfrageBean = new VermessungsunterlagenAnfrageBean();
-        anfrageBean.setAktenzeichenKatasteramt(getString("aktenzeichenKatasteramt", in0));
+        anfrageBean.setPortalVersion(getString("portalVersion", rootNode, false));
+        final boolean wrapped = !anfrageBean.isNewPortalVersion();
+        if (wrapped) { // is not 2.1.0
+            final JsonNode in0 = rootNode.get("in0");
 
-        final Collection<Polygon> anfragepolygonList = new ArrayList<Polygon>();
-        final JsonNode anfragepolygonArrayNode = in0.get("anfragepolygonArray").get("anfragepolygonArray");
-
-        if (anfragepolygonArrayNode != null) {
-            final JsonNode polygonArrayNode = anfragepolygonArrayNode.get("polygon").get("polygon");
-            if (polygonArrayNode.isArray()) {
-                final GeometryFactory geometryFactory = new GeometryFactory();
-                final Collection<Coordinate> coordinates = new ArrayList<Coordinate>(polygonArrayNode.size());
-                for (final JsonNode objNode : polygonArrayNode) {
-                    final Double x = objNode.get("polygon").get(0).get("$value").asDouble();
-                    final Double y = objNode.get("polygon").get(1).get("$value").asDouble();
-                    coordinates.add(new Coordinate(x, y));
+            final Collection<Polygon> anfragepolygonList = new ArrayList<>();
+            final JsonNode anfragepolygonArrayNode = in0.get("anfragepolygonArray").get("anfragepolygonArray");
+            if (anfragepolygonArrayNode != null) {
+                final JsonNode polygonArrayNode = anfragepolygonArrayNode.get("polygon").get("polygon");
+                if (polygonArrayNode.isArray()) {
+                    anfragepolygonList.add(createAnfragepolygon(polygonArrayNode, wrapped));
                 }
-                final LinearRing ring = new LinearRing(new CoordinateArraySequence(
-                            coordinates.toArray(new Coordinate[0])),
-                        geometryFactory);
-                final Polygon anfragepolygon = geometryFactory.createPolygon(ring, new LinearRing[0]);
-                anfragepolygon.setSRID(SRID);
-                anfragepolygonList.add(anfragepolygon);
             }
-        }
-        anfrageBean.setAnfragepolygonArray(anfragepolygonList.toArray(new Polygon[0]));
 
-        final Collection<VermessungsunterlagenAnfrageBean.AntragsflurstueckBean> antragsflurstueckList =
-            new ArrayList<VermessungsunterlagenAnfrageBean.AntragsflurstueckBean>();
-        final JsonNode antragsflurstuecksArrayNode = in0.get("antragsflurstuecksArray").get("antragsflurstuecksArray");
-        if (antragsflurstuecksArrayNode != null) {
-            if (antragsflurstuecksArrayNode.isArray()) {
-                for (final JsonNode objNode : antragsflurstuecksArrayNode) {
+            final Collection<VermessungsunterlagenAnfrageBean.AntragsflurstueckBean> antragsflurstueckList =
+                new ArrayList<>();
+            final JsonNode antragsflurstuecksArrayNode = in0.get("antragsflurstuecksArray")
+                        .get("antragsflurstuecksArray");
+            if (antragsflurstuecksArrayNode != null) {
+                if (antragsflurstuecksArrayNode.isArray()) {
+                    for (final JsonNode objNode : antragsflurstuecksArrayNode) {
+                        final VermessungsunterlagenAnfrageBean.AntragsflurstueckBean antragsflurstueckBean =
+                            createAntragsflurstueckBean(objNode, wrapped);
+                        antragsflurstueckList.add(antragsflurstueckBean);
+                    }
+                } else {
+                    final JsonNode objNode = antragsflurstuecksArrayNode;
                     final VermessungsunterlagenAnfrageBean.AntragsflurstueckBean antragsflurstueckBean =
-                        new VermessungsunterlagenAnfrageBean.AntragsflurstueckBean();
-                    antragsflurstueckBean.setFlurID(getString("flurID", objNode));
-                    antragsflurstueckBean.setFlurstuecksID(getString("flurstuecksID", objNode));
-                    antragsflurstueckBean.setGemarkungsID(getString("gemarkungsID", objNode));
+                        createAntragsflurstueckBean(objNode, wrapped);
                     antragsflurstueckList.add(antragsflurstueckBean);
                 }
-            } else {
-                final JsonNode objNode = antragsflurstuecksArrayNode;
-                final VermessungsunterlagenAnfrageBean.AntragsflurstueckBean antragsflurstueckBean =
-                    new VermessungsunterlagenAnfrageBean.AntragsflurstueckBean();
-                antragsflurstueckBean.setFlurID(getString("flurID", objNode));
-                antragsflurstueckBean.setFlurstuecksID(getString("flurstuecksID", objNode));
-                antragsflurstueckBean.setGemarkungsID(getString("gemarkungsID", objNode));
-                antragsflurstueckList.add(antragsflurstueckBean);
             }
-        }
-        anfrageBean.setAntragsflurstuecksArray(antragsflurstueckList.toArray(
-                new VermessungsunterlagenAnfrageBean.AntragsflurstueckBean[0]));
 
-        final Collection<String> artderVermessungList = new ArrayList<String>();
-        final JsonNode artderVermessungNode = in0.get("artderVermessung").get("artderVermessung");
-        if ((artderVermessungNode != null)) {
-            if (artderVermessungNode.isArray()) {
-                for (final JsonNode objNode : artderVermessungNode) {
-                    artderVermessungList.add(getString(objNode));
+            final Collection<String> artderVermessungList = new ArrayList<>();
+            final JsonNode artderVermessungNode = in0.get("artderVermessung").get("artderVermessung");
+            if ((artderVermessungNode != null)) {
+                if (artderVermessungNode.isArray()) {
+                    for (final JsonNode objNode : artderVermessungNode) {
+                        artderVermessungList.add(getString(objNode, wrapped));
+                    }
+                } else {
+                    final JsonNode objNode = artderVermessungNode;
+                    artderVermessungList.add(getString(objNode, wrapped));
                 }
-            } else {
-                final JsonNode objNode = artderVermessungNode;
-                artderVermessungList.add(getString(objNode));
             }
-        }
-        anfrageBean.setArtderVermessung(artderVermessungList.toArray(new String[0]));
 
-        anfrageBean.setGeschaeftsbuchnummer(getString("geschaeftsbuchnummer", in0));
-        anfrageBean.setKatasteramtAuftragsnummer(getString("katasteramtAuftragsnummer", in0));
-        anfrageBean.setKatasteramtsId(getString("katasteramtsId", in0));
-        anfrageBean.setMitGrenzniederschriften(getBoolean("mitGrenzniederschriften", in0));
-        anfrageBean.setNameVermessungsstelle(getString("nameVermessungsstelle", in0));
-        anfrageBean.setNurPunktnummernreservierung(getBoolean("nurPunktnummernreservierung", in0));
-        anfrageBean.setSaumAPSuche(getString("saumAPSuche", in0));
-
-        final Collection<VermessungsunterlagenAnfrageBean.PunktnummernreservierungBean> punktnummernreservierungList =
-            new ArrayList<VermessungsunterlagenAnfrageBean.PunktnummernreservierungBean>();
-        final JsonNode punktnummernreservierungsArrayNode = in0.get("punktnummernreservierungsArray")
-                    .get("punktnummernreservierungsArray");
-        if ((punktnummernreservierungsArrayNode != null)) {
-            if (punktnummernreservierungsArrayNode.isArray()) {
-                for (final JsonNode objNode : punktnummernreservierungsArrayNode) {
+            final Collection<VermessungsunterlagenAnfrageBean.PunktnummernreservierungBean> punktnummernreservierungList =
+                new ArrayList<>();
+            final JsonNode punktnummernreservierungsArrayNode = in0.get("punktnummernreservierungsArray")
+                        .get("punktnummernreservierungsArray");
+            if ((punktnummernreservierungsArrayNode != null)) {
+                if (punktnummernreservierungsArrayNode.isArray()) {
+                    for (final JsonNode objNode : punktnummernreservierungsArrayNode) {
+                        final VermessungsunterlagenAnfrageBean.PunktnummernreservierungBean punktnummernreservierungBean =
+                            createPunktnummernreservierungBean(objNode, wrapped);
+                        punktnummernreservierungList.add(punktnummernreservierungBean);
+                    }
+                } else {
+                    final JsonNode objNode = punktnummernreservierungsArrayNode;
                     final VermessungsunterlagenAnfrageBean.PunktnummernreservierungBean punktnummernreservierungBean =
-                        new VermessungsunterlagenAnfrageBean.PunktnummernreservierungBean();
-                    punktnummernreservierungBean.setAnzahlPunktnummern(getInteger("anzahlPunktnummern", objNode));
-                    punktnummernreservierungBean.setKatasteramtsID(getString("katasteramtsID", objNode));
-                    punktnummernreservierungBean.setUtmKilometerQuadrat(getString("utmKilometerQuadrat", objNode));
+                        createPunktnummernreservierungBean(objNode, wrapped);
                     punktnummernreservierungList.add(punktnummernreservierungBean);
                 }
-            } else {
-                final JsonNode objNode = punktnummernreservierungsArrayNode;
-                final VermessungsunterlagenAnfrageBean.PunktnummernreservierungBean punktnummernreservierungBean =
-                    new VermessungsunterlagenAnfrageBean.PunktnummernreservierungBean();
-                punktnummernreservierungBean.setAnzahlPunktnummern(getInteger("anzahlPunktnummern", objNode));
-                punktnummernreservierungBean.setKatasteramtsID(getString("katasteramtsID", objNode));
-                punktnummernreservierungBean.setUtmKilometerQuadrat(getString("utmKilometerQuadrat", objNode));
-                punktnummernreservierungList.add(punktnummernreservierungBean);
             }
-        }
-        anfrageBean.setPunktnummernreservierungsArray(punktnummernreservierungList.toArray(
-                new VermessungsunterlagenAnfrageBean.PunktnummernreservierungBean[0]));
 
-        anfrageBean.setZulassungsnummerVermessungsstelle(getString("zulassungsnummerVermessungsstelle", in0));
+            anfrageBean.setAnfragepolygonArray(anfragepolygonList.toArray(new Polygon[0]));
+            anfrageBean.setAntragsflurstuecksArray(antragsflurstueckList.toArray(
+                    new VermessungsunterlagenAnfrageBean.AntragsflurstueckBean[0]));
+            anfrageBean.setArtderVermessung(artderVermessungList.toArray(new String[0]));
+            anfrageBean.setPunktnummernreservierungsArray(punktnummernreservierungList.toArray(
+                    new VermessungsunterlagenAnfrageBean.PunktnummernreservierungBean[0]));
+            anfrageBean.setAktenzeichenKatasteramt(getString("aktenzeichenKatasteramt", in0, wrapped));
+            anfrageBean.setAnonymousOrder(null);
+            anfrageBean.setGeschaeftsbuchnummer(getString("geschaeftsbuchnummer", in0, wrapped));
+            anfrageBean.setKatasteramtAuftragsnummer(getString("katasteramtAuftragsnummer", in0, wrapped));
+            anfrageBean.setKatasteramtsId(getString("katasteramtsId", in0, wrapped));
+            anfrageBean.setNameVermessungsstelle(getString("nameVermessungsstelle", in0, wrapped));
+            anfrageBean.setZulassungsnummerVermessungsstelle(getString(
+                    "zulassungsnummerVermessungsstelle",
+                    in0,
+                    wrapped));
+            anfrageBean.setSaumAPSuche(getString("saumAPSuche", in0, wrapped));
+            final boolean nurPNR = Boolean.TRUE.equals(getBoolean("nurPunktnummernreservierung", in0, wrapped));
+            anfrageBean.setMitAPBeschreibungen(!nurPNR);
+            anfrageBean.setMitAPKarten(!nurPNR);
+            anfrageBean.setMitAPUebersichten(!nurPNR);
+            anfrageBean.setMitNIVPBeschreibungen(!nurPNR);
+            anfrageBean.setMitNIVPUebersichten(!nurPNR);
+            anfrageBean.setMitAlkisBestandsdatenmitEigentuemerinfo(!nurPNR);
+            anfrageBean.setMitAlkisBestandsdatenohneEigentuemerinfo(!nurPNR);
+            anfrageBean.setMitAlkisBestandsdatennurPunkte(!nurPNR);
+            anfrageBean.setMitRisse(!nurPNR);
+            anfrageBean.setMitGrenzniederschriften(getBoolean("mitGrenzniederschriften", in0, wrapped));
+            anfrageBean.setMitPunktnummernreservierung(!punktnummernreservierungList.isEmpty());
+        } else {
+            final JsonNode datenSatzNode = rootNode.get("AntragsdatensatzBean");
+
+            final Collection<Polygon> anfragepolygonList = new ArrayList<>();
+            final JsonNode anfragepolygonArrayNode = datenSatzNode.get("antragsPolygone");
+            if ((anfragepolygonArrayNode != null) && anfragepolygonArrayNode.isArray()) {
+                for (final JsonNode anfragepolygonNode : anfragepolygonArrayNode) {
+                    anfragepolygonList.add(createAnfragepolygon(anfragepolygonNode.get("points"), wrapped));
+                }
+            }
+
+            final Collection<VermessungsunterlagenAnfrageBean.AntragsflurstueckBean> antragsflurstueckList =
+                new ArrayList<>();
+            final JsonNode antragsflurstuecksArrayNode = datenSatzNode.get("antragsflurstuecke");
+            if (antragsflurstuecksArrayNode != null) {
+                if (antragsflurstuecksArrayNode.isArray()) {
+                    for (final JsonNode objNode : antragsflurstuecksArrayNode) {
+                        final VermessungsunterlagenAnfrageBean.AntragsflurstueckBean antragsflurstueckBean =
+                            createAntragsflurstueckBean(objNode, wrapped);
+                        antragsflurstueckList.add(antragsflurstueckBean);
+                    }
+                } else {
+                    final JsonNode objNode = antragsflurstuecksArrayNode;
+                    final VermessungsunterlagenAnfrageBean.AntragsflurstueckBean antragsflurstueckBean =
+                        createAntragsflurstueckBean(objNode, wrapped);
+                    antragsflurstueckList.add(antragsflurstueckBean);
+                }
+            }
+
+            final Collection<String> artderVermessungList = new ArrayList<>();
+            final JsonNode artderVermessungNode = datenSatzNode.get("artderVermessung");
+            if ((artderVermessungNode != null)) {
+                if (artderVermessungNode.isArray()) {
+                    for (final JsonNode objNode : artderVermessungNode) {
+                        artderVermessungList.add(getString(objNode, wrapped));
+                    }
+                } else {
+                    final JsonNode objNode = artderVermessungNode;
+                    artderVermessungList.add(getString(objNode, wrapped));
+                }
+            }
+
+            final Collection<VermessungsunterlagenAnfrageBean.PunktnummernreservierungBean> punktnummernreservierungList =
+                new ArrayList<>();
+            final JsonNode punktnummernreservierungsArrayNode = datenSatzNode.get("punktnummernreservierungen");
+            if ((punktnummernreservierungsArrayNode != null)) {
+                if (punktnummernreservierungsArrayNode.isArray()) {
+                    for (final JsonNode objNode : punktnummernreservierungsArrayNode) {
+                        final VermessungsunterlagenAnfrageBean.PunktnummernreservierungBean punktnummernreservierungBean =
+                            createPunktnummernreservierungBean(objNode, wrapped);
+                        punktnummernreservierungList.add(punktnummernreservierungBean);
+                    }
+                } else {
+                    final JsonNode objNode = punktnummernreservierungsArrayNode;
+                    final VermessungsunterlagenAnfrageBean.PunktnummernreservierungBean punktnummernreservierungBean =
+                        createPunktnummernreservierungBean(objNode, wrapped);
+                    punktnummernreservierungList.add(punktnummernreservierungBean);
+                }
+            }
+
+            anfrageBean.setAnfragepolygonArray(anfragepolygonList.toArray(new Polygon[0]));
+            anfrageBean.setAntragsflurstuecksArray(antragsflurstueckList.toArray(
+                    new VermessungsunterlagenAnfrageBean.AntragsflurstueckBean[0]));
+            anfrageBean.setArtderVermessung(artderVermessungList.toArray(new String[0]));
+            anfrageBean.setPunktnummernreservierungsArray(punktnummernreservierungList.toArray(
+                    new VermessungsunterlagenAnfrageBean.PunktnummernreservierungBean[0]));
+            anfrageBean.setAktenzeichenKatasteramt(getString("aktenzeichenKatasteramt", datenSatzNode, wrapped));
+            anfrageBean.setAnonymousOrder(getBoolean("anonymousOrder", datenSatzNode, wrapped));
+            anfrageBean.setGeschaeftsbuchnummer(getString("geschaeftsbuchnummer", datenSatzNode, wrapped));
+            anfrageBean.setKatasteramtAuftragsnummer(getString("katasteramtAuftragsnummer", datenSatzNode, wrapped));
+            anfrageBean.setKatasteramtsId(getString("katasteramtsId", datenSatzNode, wrapped));
+            anfrageBean.setNameVermessungsstelle(getString("nameVermessungsstelle", datenSatzNode, wrapped));
+            anfrageBean.setZulassungsnummerVermessungsstelle(getString(
+                    "zulassungsnummerVermessungsstelle",
+                    datenSatzNode,
+                    wrapped));
+            anfrageBean.setSaumAPSuche(getString("saumAPSuche", datenSatzNode, wrapped));
+            anfrageBean.setMitAPBeschreibungen(getBoolean("mitAPBeschreibungen", datenSatzNode, wrapped));
+            anfrageBean.setMitAPKarten(getBoolean("mitAPKarten", datenSatzNode, wrapped));
+            anfrageBean.setMitAPUebersichten(getBoolean("mitAPUebersichten", datenSatzNode, wrapped));
+            anfrageBean.setMitNIVPBeschreibungen(false);
+            anfrageBean.setMitNIVPUebersichten(false);
+            anfrageBean.setMitAlkisBestandsdatenmitEigentuemerinfo(getBoolean(
+                    "mitAlkisBestandsdatenmitEigentuemerinfo",
+                    datenSatzNode,
+                    wrapped));
+            anfrageBean.setMitAlkisBestandsdatennurPunkte(getBoolean(
+                    "mitAlkisBestandsdatennurPunkte",
+                    datenSatzNode,
+                    wrapped));
+            anfrageBean.setMitAlkisBestandsdatenohneEigentuemerinfo(getBoolean(
+                    "mitAlkisBestandsdatenohneEigentuemerinfo",
+                    datenSatzNode,
+                    wrapped));
+            anfrageBean.setMitRisse(getBoolean("mitRisse", datenSatzNode, wrapped));
+            anfrageBean.setMitGrenzniederschriften(getBoolean("mitGrenzniederschriften", datenSatzNode, wrapped));
+            anfrageBean.setMitPunktnummernreservierung(getBoolean(
+                    "mitPunktnummernreservierung",
+                    datenSatzNode,
+                    wrapped));
+            anfrageBean.setTest(true);
+        }
 
         return anfrageBean;
+    }
+
+    /**
+     * DOCUMENT ME!
+     *
+     * @param   objNode  DOCUMENT ME!
+     * @param   wrapped  DOCUMENT ME!
+     *
+     * @return  DOCUMENT ME!
+     */
+    public static VermessungsunterlagenAnfrageBean.PunktnummernreservierungBean createPunktnummernreservierungBean(
+            final JsonNode objNode,
+            final boolean wrapped) {
+        final VermessungsunterlagenAnfrageBean.PunktnummernreservierungBean punktnummernreservierungBean =
+            new VermessungsunterlagenAnfrageBean.PunktnummernreservierungBean();
+        punktnummernreservierungBean.setAnzahlPunktnummern(getInteger("anzahlPunktnummern", objNode, wrapped));
+        punktnummernreservierungBean.setKatasteramtsID(getString("katasteramtsID", objNode, wrapped));
+        punktnummernreservierungBean.setUtmKilometerQuadrat(getString("utmKilometerQuadrat", objNode, wrapped));
+        return punktnummernreservierungBean;
+    }
+
+    /**
+     * DOCUMENT ME!
+     *
+     * @param   objNode  DOCUMENT ME!
+     * @param   wrapped  DOCUMENT ME!
+     *
+     * @return  DOCUMENT ME!
+     */
+    public static VermessungsunterlagenAnfrageBean.AntragsflurstueckBean createAntragsflurstueckBean(
+            final JsonNode objNode,
+            final boolean wrapped) {
+        final VermessungsunterlagenAnfrageBean.AntragsflurstueckBean antragsflurstueckBean =
+            new VermessungsunterlagenAnfrageBean.AntragsflurstueckBean();
+        antragsflurstueckBean.setFlurID(getString("flurID", objNode, false));
+        antragsflurstueckBean.setFlurstuecksID(getString("flurstuecksID", objNode, false));
+        antragsflurstueckBean.setGemarkungsID(getString("gemarkungsID", objNode, false));
+        return antragsflurstueckBean;
+    }
+
+    /**
+     * DOCUMENT ME!
+     *
+     * @param   polygonArrayNode  DOCUMENT ME!
+     * @param   wrapped           DOCUMENT ME!
+     *
+     * @return  DOCUMENT ME!
+     */
+    public static Polygon createAnfragepolygon(final JsonNode polygonArrayNode, final boolean wrapped) {
+        final GeometryFactory geometryFactory = new GeometryFactory();
+        final Collection<Coordinate> coordinates = new ArrayList<>(polygonArrayNode.size());
+        for (final JsonNode objNode : polygonArrayNode) {
+            final Double x = (wrapped ? objNode.get("polygon").get(0).get("$value") : objNode.get("x")).asDouble();
+            final Double y = (wrapped ? objNode.get("polygon").get(1).get("$value") : objNode.get("y")).asDouble();
+            coordinates.add(new Coordinate(x, y));
+        }
+        final LinearRing ring = new LinearRing(new CoordinateArraySequence(
+                    coordinates.toArray(new Coordinate[0])),
+                geometryFactory);
+        final Polygon anfragepolygon = geometryFactory.createPolygon(ring, new LinearRing[0]);
+        anfragepolygon.setSRID(SRID);
+        return anfragepolygon;
     }
 
     /**
