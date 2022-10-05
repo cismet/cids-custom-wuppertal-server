@@ -559,7 +559,7 @@ public class VermessungsunterlagenHelper implements ConnectionContextProvider {
             throws Exception {
         final VermessungsunterlagenAnfrageBean anfrageBean = job.getAnfrageBean();
 
-        final Polygon[] aparr = anfrageBean.getAntragsPolygone();
+        final Polygon[] aparr = anfrageBean.getAnfragepolygonArray();
         final Geometry geometry = ((aparr != null) && (aparr.length > 0)) ? aparr[0] : null;
         final CidsBean geomBean;
         if (geometry != null) {
@@ -584,7 +584,7 @@ public class VermessungsunterlagenHelper implements ConnectionContextProvider {
         jobCidsBean.setProperty("geometrie", geomBean);
         jobCidsBean.setProperty("aktenzeichen", anfrageBean.getAktenzeichenKatasteramt());
         for (final VermessungsunterlagenAnfrageBean.AntragsflurstueckBean flurstueckBean
-                    : anfrageBean.getAntragsflurstuecke()) {
+                    : anfrageBean.getAntragsflurstuecksArray()) {
             final CidsBean flurstueck = CidsBean.createNewCidsBeanFromTableName(
                     "WUNDA_BLAU",
                     mc_VERMESSUNGSUNTERLAGENAUFTRAG_FLURSTUECK.getTableName(),
@@ -595,7 +595,7 @@ public class VermessungsunterlagenHelper implements ConnectionContextProvider {
             jobCidsBean.getBeanCollectionProperty("flurstuecke").add(flurstueck);
         }
         for (final VermessungsunterlagenAnfrageBean.PunktnummernreservierungBean pnrBean
-                    : anfrageBean.getPunktnummernreservierungen()) {
+                    : anfrageBean.getPunktnummernreservierungsArray()) {
             final CidsBean pnr = CidsBean.createNewCidsBeanFromTableName(
                     "WUNDA_BLAU",
                     mc_VERMESSUNGSUNTERLAGENAUFTRAG_PUNKTNUMMER.getTableName(),
@@ -610,7 +610,7 @@ public class VermessungsunterlagenHelper implements ConnectionContextProvider {
         jobCidsBean.setProperty("auftragsnummer", anfrageBean.getKatasteramtAuftragsnummer());
         jobCidsBean.setProperty("katasteramtsid", anfrageBean.getKatasteramtsId());
         jobCidsBean.setProperty("vermessungsstelle", anfrageBean.getZulassungsnummerVermessungsstelle());
-        jobCidsBean.setProperty("nur_punktnummernreservierung", anfrageBean.get_nurPunktnummernreservierung());
+        jobCidsBean.setProperty("nur_punktnummernreservierung", anfrageBean.getNurPunktnummernreservierung());
 
         jobCidsBean.setProperty(
             "mit_alkisbestandsdatenmiteigentuemerinfo",
@@ -644,7 +644,7 @@ public class VermessungsunterlagenHelper implements ConnectionContextProvider {
         }
         jobCidsBean.setProperty("timestamp", new Timestamp(new Date().getTime()));
         jobCidsBean.setProperty("tasks", Arrays.toString(getAllowedTasks().toArray()));
-        jobCidsBean.setProperty("test", anfrageBean.getTest() || "2.1.0".equals(anfrageBean.getPortalVersion()));
+        jobCidsBean.setProperty("test", anfrageBean.isTest());
 
         job.setCidsBean(getMetaService().insertMetaObject(
                 getUser(),
@@ -770,13 +770,10 @@ public class VermessungsunterlagenHelper implements ConnectionContextProvider {
     public static VermessungsunterlagenAnfrageBean createAnfrageBean(final String json) throws IOException {
         final JsonNode rootNode = JOB_MAPPER.readTree(json);
         final VermessungsunterlagenAnfrageBean anfrageBean = new VermessungsunterlagenAnfrageBean();
-        final String portalVersion = getString("portalVersion", rootNode, false);
-        anfrageBean.setPortalVersion(portalVersion);
-        final boolean wrapped = !"2.1.0".equals(portalVersion);
+        anfrageBean.setPortalVersion(getString("portalVersion", rootNode, false));
+        final boolean wrapped = !anfrageBean.isNewPortalVersion();
         if (wrapped) { // is not 2.1.0
             final JsonNode in0 = rootNode.get("in0");
-            anfrageBean.setAktenzeichenKatasteramt(getString("aktenzeichenKatasteramt", in0, wrapped));
-            anfrageBean.setAnonymousOrder(null);
 
             final Collection<Polygon> anfragepolygonList = new ArrayList<>();
             final JsonNode anfragepolygonArrayNode = in0.get("anfragepolygonArray").get("anfragepolygonArray");
@@ -786,7 +783,6 @@ public class VermessungsunterlagenHelper implements ConnectionContextProvider {
                     anfragepolygonList.add(createAnfragepolygon(polygonArrayNode, wrapped));
                 }
             }
-            anfrageBean.setAntragsPolygone(anfragepolygonList.toArray(new Polygon[0]));
 
             final Collection<VermessungsunterlagenAnfrageBean.AntragsflurstueckBean> antragsflurstueckList =
                 new ArrayList<>();
@@ -806,8 +802,6 @@ public class VermessungsunterlagenHelper implements ConnectionContextProvider {
                     antragsflurstueckList.add(antragsflurstueckBean);
                 }
             }
-            anfrageBean.setAntragsflurstuecke(antragsflurstueckList.toArray(
-                    new VermessungsunterlagenAnfrageBean.AntragsflurstueckBean[0]));
 
             final Collection<String> artderVermessungList = new ArrayList<>();
             final JsonNode artderVermessungNode = in0.get("artderVermessung").get("artderVermessung");
@@ -821,16 +815,6 @@ public class VermessungsunterlagenHelper implements ConnectionContextProvider {
                     artderVermessungList.add(getString(objNode, wrapped));
                 }
             }
-            anfrageBean.setArtderVermessung(artderVermessungList.toArray(new String[0]));
-
-            anfrageBean.setGeschaeftsbuchnummer(getString("geschaeftsbuchnummer", in0, wrapped));
-            anfrageBean.setKatasteramtAuftragsnummer(getString("katasteramtAuftragsnummer", in0, wrapped));
-            anfrageBean.setKatasteramtsId(getString("katasteramtsId", in0, wrapped));
-            anfrageBean.setMitGrenzniederschriften(getBoolean("mitGrenzniederschriften", in0, wrapped));
-            anfrageBean.setNameVermessungsstelle(getString("nameVermessungsstelle", in0, wrapped));
-            anfrageBean.set_nurPunktnummernreservierung(getBoolean("nurPunktnummernreservierung", in0, wrapped));
-            anfrageBean.setSaumAPSuche(getString("saumAPSuche", in0, wrapped));
-            anfrageBean.set_nurPunktnummernreservierung(getBoolean("nurPunktnummernreservierung", in0, wrapped));
 
             final Collection<VermessungsunterlagenAnfrageBean.PunktnummernreservierungBean> punktnummernreservierungList =
                 new ArrayList<>();
@@ -850,27 +834,46 @@ public class VermessungsunterlagenHelper implements ConnectionContextProvider {
                     punktnummernreservierungList.add(punktnummernreservierungBean);
                 }
             }
-            anfrageBean.setPunktnummernreservierungen(punktnummernreservierungList.toArray(
-                    new VermessungsunterlagenAnfrageBean.PunktnummernreservierungBean[0]));
 
+            anfrageBean.setAnfragepolygonArray(anfragepolygonList.toArray(new Polygon[0]));
+            anfrageBean.setAntragsflurstuecksArray(antragsflurstueckList.toArray(
+                    new VermessungsunterlagenAnfrageBean.AntragsflurstueckBean[0]));
+            anfrageBean.setArtderVermessung(artderVermessungList.toArray(new String[0]));
+            anfrageBean.setPunktnummernreservierungsArray(punktnummernreservierungList.toArray(
+                    new VermessungsunterlagenAnfrageBean.PunktnummernreservierungBean[0]));
+            anfrageBean.setAktenzeichenKatasteramt(getString("aktenzeichenKatasteramt", in0, wrapped));
+            anfrageBean.setAnonymousOrder(null);
+            anfrageBean.setGeschaeftsbuchnummer(getString("geschaeftsbuchnummer", in0, wrapped));
+            anfrageBean.setKatasteramtAuftragsnummer(getString("katasteramtAuftragsnummer", in0, wrapped));
+            anfrageBean.setKatasteramtsId(getString("katasteramtsId", in0, wrapped));
+            anfrageBean.setNameVermessungsstelle(getString("nameVermessungsstelle", in0, wrapped));
             anfrageBean.setZulassungsnummerVermessungsstelle(getString(
                     "zulassungsnummerVermessungsstelle",
                     in0,
                     wrapped));
+            anfrageBean.setSaumAPSuche(getString("saumAPSuche", in0, wrapped));
+            final boolean nurPNR = Boolean.TRUE.equals(getBoolean("nurPunktnummernreservierung", in0, wrapped));
+            anfrageBean.setMitAPBeschreibungen(!nurPNR);
+            anfrageBean.setMitAPKarten(!nurPNR);
+            anfrageBean.setMitAPUebersichten(!nurPNR);
+            anfrageBean.setMitNIVPBeschreibungen(!nurPNR);
+            anfrageBean.setMitNIVPUebersichten(!nurPNR);
+            anfrageBean.setMitAlkisBestandsdatenmitEigentuemerinfo(!nurPNR);
+            anfrageBean.setMitAlkisBestandsdatenohneEigentuemerinfo(!nurPNR);
+            anfrageBean.setMitAlkisBestandsdatennurPunkte(!nurPNR);
+            anfrageBean.setMitRisse(!nurPNR);
+            anfrageBean.setMitGrenzniederschriften(getBoolean("mitGrenzniederschriften", in0, wrapped));
+            anfrageBean.setMitPunktnummernreservierung(!punktnummernreservierungList.isEmpty());
         } else {
             final JsonNode datenSatzNode = rootNode.get("AntragsdatensatzBean");
-            anfrageBean.setAktenzeichenKatasteramt(getString("aktenzeichenKatasteramt", datenSatzNode, wrapped));
-            anfrageBean.setAnonymousOrder(getBoolean("anonymousOrder", datenSatzNode, wrapped));
 
             final Collection<Polygon> anfragepolygonList = new ArrayList<>();
             final JsonNode anfragepolygonArrayNode = datenSatzNode.get("antragsPolygone");
-
             if ((anfragepolygonArrayNode != null) && anfragepolygonArrayNode.isArray()) {
                 for (final JsonNode anfragepolygonNode : anfragepolygonArrayNode) {
                     anfragepolygonList.add(createAnfragepolygon(anfragepolygonNode.get("points"), wrapped));
                 }
             }
-            anfrageBean.setAntragsPolygone(anfragepolygonList.toArray(new Polygon[0]));
 
             final Collection<VermessungsunterlagenAnfrageBean.AntragsflurstueckBean> antragsflurstueckList =
                 new ArrayList<>();
@@ -889,8 +892,6 @@ public class VermessungsunterlagenHelper implements ConnectionContextProvider {
                     antragsflurstueckList.add(antragsflurstueckBean);
                 }
             }
-            anfrageBean.setAntragsflurstuecke(antragsflurstueckList.toArray(
-                    new VermessungsunterlagenAnfrageBean.AntragsflurstueckBean[0]));
 
             final Collection<String> artderVermessungList = new ArrayList<>();
             final JsonNode artderVermessungNode = datenSatzNode.get("artderVermessung");
@@ -904,35 +905,6 @@ public class VermessungsunterlagenHelper implements ConnectionContextProvider {
                     artderVermessungList.add(getString(objNode, wrapped));
                 }
             }
-            anfrageBean.setArtderVermessung(artderVermessungList.toArray(new String[0]));
-
-            anfrageBean.setGeschaeftsbuchnummer(getString("geschaeftsbuchnummer", datenSatzNode, wrapped));
-            anfrageBean.setKatasteramtAuftragsnummer(getString("katasteramtAuftragsnummer", datenSatzNode, wrapped));
-            anfrageBean.setKatasteramtsId(getString("katasteramtsId", datenSatzNode, wrapped));
-            anfrageBean.setNameVermessungsstelle(getString("nameVermessungsstelle", datenSatzNode, wrapped));
-            anfrageBean.setSaumAPSuche(getString("saumAPSuche", datenSatzNode, wrapped));
-
-            anfrageBean.setMitGrenzniederschriften(getBoolean("mitGrenzniederschriften", datenSatzNode, wrapped));
-            anfrageBean.setMitAPBeschreibungen(getBoolean("mitAPBeschreibungen", datenSatzNode, wrapped));
-            anfrageBean.setMitAPKarten(getBoolean("mitAPKarten", datenSatzNode, wrapped));
-            anfrageBean.setMitAPUebersichten(getBoolean("mitAPUebersichten", datenSatzNode, wrapped));
-            anfrageBean.setMitAlkisBestandsdatenmitEigentuemerinfo(getBoolean(
-                    "mitAlkisBestandsdatenmitEigentuemerinfo",
-                    datenSatzNode,
-                    wrapped));
-            anfrageBean.setMitAlkisBestandsdatennurPunkte(getBoolean(
-                    "mitAlkisBestandsdatennurPunkte",
-                    datenSatzNode,
-                    wrapped));
-            anfrageBean.setMitAlkisBestandsdatenohneEigentuemerinfo(getBoolean(
-                    "mitAlkisBestandsdatenohneEigentuemerinfo",
-                    datenSatzNode,
-                    wrapped));
-            anfrageBean.setMitPunktnummernreservierung(getBoolean(
-                    "mitPunktnummernreservierung",
-                    datenSatzNode,
-                    wrapped));
-            anfrageBean.setMitRisse(getBoolean("mitRisse", datenSatzNode, wrapped));
 
             final Collection<VermessungsunterlagenAnfrageBean.PunktnummernreservierungBean> punktnummernreservierungList =
                 new ArrayList<>();
@@ -951,13 +923,48 @@ public class VermessungsunterlagenHelper implements ConnectionContextProvider {
                     punktnummernreservierungList.add(punktnummernreservierungBean);
                 }
             }
-            anfrageBean.setPunktnummernreservierungen(punktnummernreservierungList.toArray(
-                    new VermessungsunterlagenAnfrageBean.PunktnummernreservierungBean[0]));
 
+            anfrageBean.setAnfragepolygonArray(anfragepolygonList.toArray(new Polygon[0]));
+            anfrageBean.setAntragsflurstuecksArray(antragsflurstueckList.toArray(
+                    new VermessungsunterlagenAnfrageBean.AntragsflurstueckBean[0]));
+            anfrageBean.setArtderVermessung(artderVermessungList.toArray(new String[0]));
+            anfrageBean.setPunktnummernreservierungsArray(punktnummernreservierungList.toArray(
+                    new VermessungsunterlagenAnfrageBean.PunktnummernreservierungBean[0]));
+            anfrageBean.setAktenzeichenKatasteramt(getString("aktenzeichenKatasteramt", datenSatzNode, wrapped));
+            anfrageBean.setAnonymousOrder(getBoolean("anonymousOrder", datenSatzNode, wrapped));
+            anfrageBean.setGeschaeftsbuchnummer(getString("geschaeftsbuchnummer", datenSatzNode, wrapped));
+            anfrageBean.setKatasteramtAuftragsnummer(getString("katasteramtAuftragsnummer", datenSatzNode, wrapped));
+            anfrageBean.setKatasteramtsId(getString("katasteramtsId", datenSatzNode, wrapped));
+            anfrageBean.setNameVermessungsstelle(getString("nameVermessungsstelle", datenSatzNode, wrapped));
             anfrageBean.setZulassungsnummerVermessungsstelle(getString(
                     "zulassungsnummerVermessungsstelle",
                     datenSatzNode,
                     wrapped));
+            anfrageBean.setSaumAPSuche(getString("saumAPSuche", datenSatzNode, wrapped));
+            anfrageBean.setMitAPBeschreibungen(getBoolean("mitAPBeschreibungen", datenSatzNode, wrapped));
+            anfrageBean.setMitAPKarten(getBoolean("mitAPKarten", datenSatzNode, wrapped));
+            anfrageBean.setMitAPUebersichten(getBoolean("mitAPUebersichten", datenSatzNode, wrapped));
+            anfrageBean.setMitNIVPBeschreibungen(false);
+            anfrageBean.setMitNIVPUebersichten(false);
+            anfrageBean.setMitAlkisBestandsdatenmitEigentuemerinfo(getBoolean(
+                    "mitAlkisBestandsdatenmitEigentuemerinfo",
+                    datenSatzNode,
+                    wrapped));
+            anfrageBean.setMitAlkisBestandsdatennurPunkte(getBoolean(
+                    "mitAlkisBestandsdatennurPunkte",
+                    datenSatzNode,
+                    wrapped));
+            anfrageBean.setMitAlkisBestandsdatenohneEigentuemerinfo(getBoolean(
+                    "mitAlkisBestandsdatenohneEigentuemerinfo",
+                    datenSatzNode,
+                    wrapped));
+            anfrageBean.setMitRisse(getBoolean("mitRisse", datenSatzNode, wrapped));
+            anfrageBean.setMitGrenzniederschriften(getBoolean("mitGrenzniederschriften", datenSatzNode, wrapped));
+            anfrageBean.setMitPunktnummernreservierung(getBoolean(
+                    "mitPunktnummernreservierung",
+                    datenSatzNode,
+                    wrapped));
+            anfrageBean.setTest(true);
         }
 
         return anfrageBean;

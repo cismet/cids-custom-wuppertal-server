@@ -321,15 +321,16 @@ public class VermessungsunterlagenJob implements Runnable, ConnectionContextProv
     public void run() {
         setStatus(Status.WORKING);
         try {
+            final VermessungsunterlagenAnfrageBean anfrageBean = getAnfrageBean();
             if (validator.validateAndGetErrorMessage(anfrageBean)) {
                 try {
                     new File(getPath()).mkdirs();
 
                     final int saum = Integer.parseInt(anfrageBean.getSaumAPSuche());
                     final Geometry vermessungsGeometrie =
-                        ((anfrageBean.getAntragsPolygone() != null)
-                                    && (anfrageBean.getAntragsPolygone()[0] != null))
-                        ? anfrageBean.getAntragsPolygone()[0] : null;
+                        ((anfrageBean.getAnfragepolygonArray() != null)
+                                    && (anfrageBean.getAnfragepolygonArray()[0] != null))
+                        ? anfrageBean.getAnfragepolygonArray()[0] : null;
 
                     final Geometry vermessungsGeometrieSaum;
                     if (vermessungsGeometrie != null) {
@@ -345,88 +346,122 @@ public class VermessungsunterlagenJob implements Runnable, ConnectionContextProv
                     helper.updateJobCidsBeanFlurstueckGeom(this, geometryFlurstuecke);
 
                     if (!validator.isVermessungsstelleKnown() || validator.isPnrNotZero()) {
-                        submitTask(new VermUntTaskPNR(
-                                getKey(),
-                                anfrageBean.getZulassungsnummerVermessungsstelle(),
-                                anfrageBean.getGeschaeftsbuchnummer(),
-                                anfrageBean.getPunktnummernreservierungen()));
+                        if (anfrageBean.isMitPunktnummernreservierung()) {
+                            submitTask(new VermUntTaskPNR(
+                                    getKey(),
+                                    anfrageBean.getZulassungsnummerVermessungsstelle(),
+                                    anfrageBean.getGeschaeftsbuchnummer(),
+                                    anfrageBean.getPunktnummernreservierungsArray()));
+                        }
                     }
-                    if (!anfrageBean.get_nurPunktnummernreservierung()) {
-                        if (isTaskAllowed(VermUntTaskAPMap.TYPE) || isTaskAllowed(VermUntTaskAPList.TYPE)
-                                    || isTaskAllowed(VermUntTaskAPUebersicht.TYPE)) {
-                            if (vermessungsGeometrieSaum != null) {
-                                final Collection<CidsBean> aPs = searchAPs(vermessungsGeometrieSaum);
-                                if (!aPs.isEmpty()) {
-                                    submitTask(new VermUntTaskAPMap(getKey(), aPs));
-                                    submitTask(new VermUntTaskAPList(getKey(), aPs));
-                                    submitTask(new VermUntTaskAPUebersicht(
-                                            getKey(),
-                                            aPs,
-                                            validator.getFlurstuecke(),
-                                            anfrageBean.getGeschaeftsbuchnummer()));
-                                }
-                            }
-                        }
 
-                        if (isTaskAllowed(VermUntTaskNivPBeschreibungen.TYPE)
-                                    || isTaskAllowed(VermUntTaskNivPUebersicht.TYPE)) {
-                            if (vermessungsGeometrieSaum != null) {
-                                final Collection<CidsBean> nivPs = searchNivPs(vermessungsGeometrieSaum);
-                                if (!nivPs.isEmpty()) {
-                                    submitTask(new VermUntTaskNivPBeschreibungen(getKey(), nivPs));
-                                    submitTask(new VermUntTaskNivPUebersicht(
-                                            getKey(),
-                                            nivPs,
-                                            validator.getFlurstuecke(),
-                                            anfrageBean.getGeschaeftsbuchnummer()));
-                                }
-                            }
+                    final Collection<CidsBean> aPs;
+                    {
+                        if ((vermessungsGeometrieSaum != null)
+                                    && (anfrageBean.isMitAPKarten()
+                                        || anfrageBean.isMitAPBeschreibungen()
+                                        || anfrageBean.isMitAPUebersichten())
+                                    && (isTaskAllowed(VermUntTaskAPMap.TYPE)
+                                        || isTaskAllowed(VermUntTaskAPList.TYPE)
+                                        || isTaskAllowed(VermUntTaskAPUebersicht.TYPE))) {
+                            aPs = searchAPs(vermessungsGeometrieSaum);
+                        } else {
+                            aPs = null;
                         }
+                    }
 
-                        if (isTaskAllowed(VermUntTaskNasKomplett.TYPE) || isTaskAllowed(VermUntTaskNasPunkte.TYPE)
-                                    || isTaskAllowed(VermUntTaskNasOhneEigentuemer.TYPE)) {
-                            final String requestId = getKey();
-                            if (vermessungsGeometrie != null) {
-                                submitTask(new VermUntTaskNasKomplett(
-                                        getKey(),
-                                        helper.getUser(),
-                                        requestId,
-                                        vermessungsGeometrie));
-                            }
-                            if (vermessungsGeometrieSaum != null) {
-                                submitTask(new VermUntTaskNasPunkte(
-                                        getKey(),
-                                        helper.getUser(),
-                                        requestId,
-                                        vermessungsGeometrieSaum));
-                            }
-                            if (false /*noch deaktiviert, siehe wupp#2467*/
-                                        && isTaskAllowed(VermUntTaskNasOhneEigentuemer.TYPE)) {
-                                submitTask(new VermUntTaskNasPunkte(
-                                        getKey(),
-                                        helper.getUser(),
-                                        requestId,
-                                        vermessungsGeometrieSaum));
-                            }
+                    final Collection<CidsBean> nivPs;
+                    {
+                        if ((vermessungsGeometrieSaum != null)
+                                    && (anfrageBean.isMitNIVPBeschreibungen()
+                                        || anfrageBean.isMitNIVPUebersichten())
+                                    && (isTaskAllowed(VermUntTaskNivPBeschreibungen.TYPE)
+                                        || isTaskAllowed(VermUntTaskNivPUebersicht.TYPE))) {
+                            nivPs = searchNivPs(vermessungsGeometrieSaum);
+                        } else {
+                            nivPs = null;
                         }
+                    }
 
-                        if (isTaskAllowed(VermUntTaskRisseBilder.TYPE)
-                                    || isTaskAllowed(VermUntTaskRisseGrenzniederschrift.TYPE)) {
-                            final Collection<CidsBean> risse = searchRisse(geometryFlurstuecke);
-                            if (!risse.isEmpty()) {
-                                submitTask(new VermUntTaskRisseBilder(
-                                        getKey(),
-                                        risse,
-                                        anfrageBean.getGeschaeftsbuchnummer(),
-                                        ""));
-                                if (Boolean.TRUE.equals(anfrageBean.getMitGrenzniederschriften())) {
-                                    submitTask(new VermUntTaskRisseGrenzniederschrift(
-                                            getKey(),
-                                            risse,
-                                            anfrageBean.getGeschaeftsbuchnummer(),
-                                            ""));
-                                }
-                            }
+                    final Collection<CidsBean> risse;
+                    {
+                        if ((anfrageBean.isMitRisse())
+                                    && (isTaskAllowed(VermUntTaskRisseBilder.TYPE)
+                                        || isTaskAllowed(VermUntTaskRisseGrenzniederschrift.TYPE))) {
+                            risse = searchRisse(geometryFlurstuecke);
+                        } else {
+                            risse = null;
+                        }
+                    }
+
+                    if ((aPs != null) && !aPs.isEmpty()) {
+                        if (anfrageBean.isMitAPKarten()) {
+                            submitTask(new VermUntTaskAPMap(getKey(), aPs));
+                        }
+                        if (anfrageBean.isMitAPBeschreibungen()) {
+                            submitTask(new VermUntTaskAPList(getKey(), aPs));
+                        }
+                        if (anfrageBean.isMitAPUebersichten()) {
+                            submitTask(new VermUntTaskAPUebersicht(
+                                    getKey(),
+                                    aPs,
+                                    validator.getFlurstuecke(),
+                                    anfrageBean.getGeschaeftsbuchnummer()));
+                        }
+                    }
+
+                    if ((nivPs != null) && !nivPs.isEmpty()) {
+                        if (anfrageBean.isMitNIVPBeschreibungen()) {
+                            submitTask(new VermUntTaskNivPBeschreibungen(getKey(), nivPs));
+                        }
+                        if (anfrageBean.isMitNIVPUebersichten()) {
+                            submitTask(new VermUntTaskNivPUebersicht(
+                                    getKey(),
+                                    nivPs,
+                                    validator.getFlurstuecke(),
+                                    anfrageBean.getGeschaeftsbuchnummer()));
+                        }
+                    }
+
+                    final String requestId = getKey();
+                    if (anfrageBean.isMitAlkisBestandsdatenmitEigentuemerinfo() && (vermessungsGeometrie != null)) {
+                        submitTask(new VermUntTaskNasKomplett(
+                                getKey(),
+                                helper.getUser(),
+                                requestId,
+                                vermessungsGeometrie));
+                    }
+                    if (anfrageBean.isMitAlkisBestandsdatennurPunkte() && (vermessungsGeometrieSaum != null)) {
+                        submitTask(new VermUntTaskNasPunkte(
+                                getKey(),
+                                helper.getUser(),
+                                requestId,
+                                vermessungsGeometrieSaum));
+                    }
+                    if (
+                        anfrageBean.isMitAlkisBestandsdatenohneEigentuemerinfo() /*noch deaktiviert, siehe wupp#2467*/
+                                && isTaskAllowed(VermUntTaskNasOhneEigentuemer.TYPE)) {
+                        submitTask(new VermUntTaskNasPunkte(
+                                getKey(),
+                                helper.getUser(),
+                                requestId,
+                                vermessungsGeometrieSaum));
+                    }
+
+                    if ((risse != null) && !risse.isEmpty()) {
+                        if (anfrageBean.isMitRisse()) {
+                            submitTask(new VermUntTaskRisseBilder(
+                                    getKey(),
+                                    risse,
+                                    anfrageBean.getGeschaeftsbuchnummer(),
+                                    ""));
+                        }
+                        if (anfrageBean.isMitGrenzniederschriften()) {
+                            submitTask(new VermUntTaskRisseGrenzniederschrift(
+                                    getKey(),
+                                    risse,
+                                    anfrageBean.getGeschaeftsbuchnummer(),
+                                    ""));
                         }
                     }
 
