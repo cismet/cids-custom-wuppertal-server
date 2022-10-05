@@ -628,7 +628,7 @@ public class VermessungsunterlagenHelper implements ConnectionContextProvider {
         jobCidsBean.setProperty("anonym", anfrageBean.getAnonymousOrder());
 
         try {
-            jobCidsBean.setProperty("saumap", anfrageBean.getSaumAPSuche());
+            jobCidsBean.setProperty("saumap", Integer.parseInt(anfrageBean.getSaumAPSuche()));
         } catch (final Exception ex) {
             // validation will fail. Need to be catched so that the object can be persisted.
             // The validation exception will be stored in the exception_json field later on.
