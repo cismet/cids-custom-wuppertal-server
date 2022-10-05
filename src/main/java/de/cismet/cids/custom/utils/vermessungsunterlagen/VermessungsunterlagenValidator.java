@@ -150,7 +150,7 @@ public class VermessungsunterlagenValidator implements ConnectionContextProvider
         }
 
         // Wenn ausschließlich neue Punktnummern reserviert werden sollen, ist keine weitere Überprüfung notwendig.
-        if (anfrageBean.getNurPunktnummernreservierung()) {
+        if (Boolean.TRUE.equals(anfrageBean.getNurPunktnummernreservierung())) {
             return true;
         }
 
