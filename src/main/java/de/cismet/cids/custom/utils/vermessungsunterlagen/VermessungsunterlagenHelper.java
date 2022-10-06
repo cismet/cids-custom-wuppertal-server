@@ -1002,9 +1002,9 @@ public class VermessungsunterlagenHelper implements ConnectionContextProvider {
             final boolean wrapped) {
         final VermessungsunterlagenAnfrageBean.AntragsflurstueckBean antragsflurstueckBean =
             new VermessungsunterlagenAnfrageBean.AntragsflurstueckBean();
-        antragsflurstueckBean.setFlurID(getString("flurID", objNode, false));
-        antragsflurstueckBean.setFlurstuecksID(getString("flurstuecksID", objNode, false));
-        antragsflurstueckBean.setGemarkungsID(getString("gemarkungsID", objNode, false));
+        antragsflurstueckBean.setFlurID(getString("flurID", objNode, wrapped));
+        antragsflurstueckBean.setFlurstuecksID(getString("flurstuecksID", objNode, wrapped));
+        antragsflurstueckBean.setGemarkungsID(getString("gemarkungsID", objNode, wrapped));
         return antragsflurstueckBean;
     }
 
