@@ -31,7 +31,7 @@ public class VermessungsUnterlagenPortalGetJobErrorAction extends AbstractVermes
 
     public static final String TASK_NAME = "VUPgetJobErrorAction";
 
-    private static final String RETURN = "{\"getJobErrorReturn\":{\"$value\":\"%s\"}}";
+    private static final String RETURN = "{\"return\":{\"$value\":\"%s\"}}";
 
     //~ Methods ----------------------------------------------------------------
 
