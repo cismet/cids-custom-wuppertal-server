@@ -30,7 +30,7 @@ public class VermessungsUnterlagenPortalExecuteJobAction extends AbstractVermess
 
     public static final String TASK_NAME = "VUPexecuteJobAction";
 
-    private static final String RETURN = "{\"executeJobReturn\":{\"$value\":\"%s\"}}";
+    private static final String RETURN = "{\"return\":{\"$value\":\"%s\"}}";
 
     //~ Methods ----------------------------------------------------------------
 
