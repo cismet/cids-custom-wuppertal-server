@@ -31,7 +31,7 @@ public class VermessungsUnterlagenPortalGetJobStatusAction extends AbstractVerme
     //~ Static fields/initializers ---------------------------------------------
 
     private static final String RETURN =
-        "{\"getJobStatusReturn\":{\"enumJobStatus\":{\"$value\":\"%s\"},\"geschaeftsbuchnummer\":{\"$value\":\"%s\"}}}";
+        "{\"return\":{\"enumJobStatus\":{\"$value\":\"%s\"},\"geschaeftsbuchnummer\":{\"$value\":\"%s\"}}}";
 
     //~ Instance fields --------------------------------------------------------
 

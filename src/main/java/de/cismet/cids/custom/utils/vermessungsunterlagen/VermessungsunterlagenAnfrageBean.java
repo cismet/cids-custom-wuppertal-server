@@ -76,7 +76,7 @@ public class VermessungsunterlagenAnfrageBean {
      * @return  DOCUMENT ME!
      */
     public Boolean getNurPunktnummernreservierung() {
-        return NEW_PORTAL_VERSION.equals(getPortalVersion()) ? null : !isMitAPBeschreibungen();
+        return NEW_PORTAL_VERSION.equals(getPortalVersion()) ? null : (!isMitAPBeschreibungen());
     }
 
     /**

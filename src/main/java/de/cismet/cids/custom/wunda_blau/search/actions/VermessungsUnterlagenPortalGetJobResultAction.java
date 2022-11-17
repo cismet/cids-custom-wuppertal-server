@@ -31,7 +31,7 @@ public class VermessungsUnterlagenPortalGetJobResultAction extends AbstractVerme
 
     public static final String TASK_NAME = "VUPgetJobResultAction";
 
-    private static final String RETURN = "{\"getJobResultReturn\":{\"$value\":\"%s\"}}";
+    private static final String RETURN = "{\"return\":{\"$value\":\"%s\"}}";
 
     //~ Methods ----------------------------------------------------------------
 
