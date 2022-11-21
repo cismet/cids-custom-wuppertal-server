@@ -501,7 +501,7 @@ public class FormSolutionsBestellungHandler implements ConnectionContextProvider
      *
      * @throws  IllegalStateException  DOCUMENT ME!
      */
-    public Collection execute(final int startStep,
+    public synchronized Collection execute(final int startStep,
             final boolean repairErrors,
             final boolean test,
             final Collection<MetaObjectNode> mons) {
