@@ -154,27 +154,23 @@ public class VermessungsunterlagenValidator implements ConnectionContextProvider
             return true;
         }
 
-        // Validierung der übergebenen Flurstücke
-        if ((anfrageBean.getAntragsflurstuecksArray() == null)
-                    || (anfrageBean.getAntragsflurstuecksArray().length <= 0)) {
-            // es wurde kein Flurstück übergeben
-            throw getExceptionByErrorCode(Error.NO_ANTRAGSFLURSTUECK);
-        }
-
         final Collection<VermessungsunterlagenAnfrageBean.AntragsflurstueckBean> valideFlurstuecke = new ArrayList<>();
         final Collection<VermessungsunterlagenAnfrageBean.AntragsflurstueckBean> wuppFlurstuecke = new ArrayList<>();
 
-        for (final VermessungsunterlagenAnfrageBean.AntragsflurstueckBean antragsFlurstueck
-                    : anfrageBean.getAntragsflurstuecksArray()) {
-            if (isFlurstueckValide(antragsFlurstueck)) {
-                valideFlurstuecke.add(antragsFlurstueck);
-            }
-            if (isWuppGemarkung(antragsFlurstueck)) {
-                wuppFlurstuecke.add(antragsFlurstueck);
+        if (anfrageBean.getAntragsflurstuecksArray() != null) {
+            for (final VermessungsunterlagenAnfrageBean.AntragsflurstueckBean antragsFlurstueck
+                        : anfrageBean.getAntragsflurstuecksArray()) {
+                if (isFlurstueckValide(antragsFlurstueck)) {
+                    valideFlurstuecke.add(antragsFlurstueck);
+                }
+                if (isWuppGemarkung(antragsFlurstueck)) {
+                    wuppFlurstuecke.add(antragsFlurstueck);
+                }
             }
         }
 
-        if (valideFlurstuecke.isEmpty()) {
+        // nur anonyme Aufträge dürfen ohne Flurstücke sein
+        if (valideFlurstuecke.isEmpty() && !Boolean.TRUE.equals(anfrageBean.getAnonymousOrder())) {
             throw getExceptionByErrorCode(Error.NO_ANTRAGSFLURSTUECK);
         }
 
@@ -185,17 +181,17 @@ public class VermessungsunterlagenValidator implements ConnectionContextProvider
             final Polygon[] polygonArray = anfrageBean.getAnfragepolygonArray();
             // Validierung des Vermessungsgebiets
             if ((polygonArray == null) || (polygonArray.length <= 0) || (polygonArray[0] == null)) {
-                // es wurde kein Flurstück übergeben
+                // es wurde kein Vermessungsgebiet übergeben
                 throw getExceptionByErrorCode(Error.WRONG_GEBIET);
             }
             final Polygon polygon = polygonArray[0];
 
             try {
-                final Geometry geom = polygon.getGeometryN(0);
-                geom.setSRID(VermessungsunterlagenHelper.SRID);
+                final Geometry anfrageGeometrie = polygon.getGeometryN(0);
+                anfrageGeometrie.setSRID(VermessungsunterlagenHelper.SRID);
                 // TODO geom verschneiden zum suchen von flurstücken
-                final Collection<CidsBean> flurstuecke = searchFlurstuecke(geom);
-                for (final CidsBean flurstueck : flurstuecke) {
+                for (final CidsBean flurstueck
+                            : searchFlurstuecke(anfrageGeometrie, Boolean.TRUE.equals(anfrageBean.getAnonymousOrder()))) {
                     final String[] alkisParts = ((String)flurstueck.getProperty("alkis_id")).split("-");
                     final VermessungsunterlagenAnfrageBean.AntragsflurstueckBean wuppFlurstueck =
                         new VermessungsunterlagenAnfrageBean.AntragsflurstueckBean();
@@ -264,9 +260,9 @@ public class VermessungsunterlagenValidator implements ConnectionContextProvider
         final String gemarkung = fs.getGemarkungsID();
         final String flur = fs.getFlurID();
         final String zaehlernenner = fs.getFlurstuecksID();
-        return (gemarkung != null) && !gemarkung.trim().isEmpty()
-                    && (flur != null) && !flur.trim().isEmpty()
-                    && (zaehlernenner != null) && !zaehlernenner.trim().isEmpty();
+        return (gemarkung != null) && !gemarkung.trim().isEmpty() && !"OpenData".equals(gemarkung)
+                    && (flur != null) && !flur.trim().isEmpty() && !"OpenData".equals(flur)
+                    && (zaehlernenner != null) && !zaehlernenner.trim().isEmpty() && !"OpenData".equals(zaehlernenner);
     }
 
     /**
@@ -381,7 +377,8 @@ public class VermessungsunterlagenValidator implements ConnectionContextProvider
      */
     private boolean isWuppGemarkung(final VermessungsunterlagenAnfrageBean.AntragsflurstueckBean flurstueckBean)
             throws VermessungsunterlagenValidatorException {
-        if ((flurstueckBean == null) || (flurstueckBean.getGemarkungsID() == null)) {
+        if ((flurstueckBean == null) || (flurstueckBean.getGemarkungsID() == null)
+                    || "OpenData".equals(flurstueckBean.getGemarkungsID())) {
             return false;
         }
 
@@ -575,12 +572,13 @@ public class VermessungsunterlagenValidator implements ConnectionContextProvider
      * DOCUMENT ME!
      *
      * @param   geom  DOCUMENT ME!
+     * @param   anon  DOCUMENT ME!
      *
      * @return  DOCUMENT ME!
      *
      * @throws  Exception  DOCUMENT ME!
      */
-    private Collection<CidsBean> searchFlurstuecke(final Geometry geom) throws Exception {
+    private Collection<CidsBean> searchFlurstuecke(final Geometry geom, final boolean anon) throws Exception {
         final BufferingGeosearch search = new BufferingGeosearch();
         search.setGeometry(geom);
         final MetaClass mc = CidsBean.getMetaClassFromTableName(
@@ -588,13 +586,46 @@ public class VermessungsunterlagenValidator implements ConnectionContextProvider
                 "alkis_landparcel",
                 getConnectionContext());
         search.setValidClasses(Arrays.asList(mc));
-        final Collection<MetaObjectNode> mons = helper.performSearch(search);
+
+        final boolean keepOnlyBiggestIntersection;
+        final Collection<MetaObjectNode> mons = new ArrayList<>();
+        if (anon) {
+            search.setGeomMode(BufferingGeosearch.GeomMode.WITHIN);
+            mons.addAll(helper.performSearch(search));
+            keepOnlyBiggestIntersection = mons.isEmpty();
+            if (mons.isEmpty()) {
+                search.setGeomMode(BufferingGeosearch.GeomMode.INTERSECTS);
+            }
+        } else {
+            keepOnlyBiggestIntersection = false;
+        }
+        if (mons.isEmpty()) {
+            mons.addAll(helper.performSearch(search));
+        }
 
         final Collection<CidsBean> flurstuecke = new ArrayList<>();
         for (final MetaObjectNode mon : mons) {
-            flurstuecke.add(helper.loadCidsBean(mon));
+            final CidsBean flurstueck = helper.loadCidsBean(mon);
+
+            flurstuecke.add(flurstueck);
         }
-        return flurstuecke;
+
+        if (keepOnlyBiggestIntersection) {
+            CidsBean biggestIntersectionFlurstueck = null;
+            double biggestIntersectionArea = -1d;
+            for (final CidsBean flurstueck : flurstuecke) {
+                final Geometry flurstueckGeom = (Geometry)flurstueck.getProperty("geometrie.geo_field");
+                final Geometry intersectGeom = flurstueckGeom.intersection(geom);
+                final double intersectionArea = intersectGeom.getArea();
+                if (intersectionArea > biggestIntersectionArea) {
+                    biggestIntersectionArea = intersectionArea;
+                    biggestIntersectionFlurstueck = flurstueck;
+                }
+            }
+            return Arrays.asList(biggestIntersectionFlurstueck);
+        } else {
+            return flurstuecke;
+        }
     }
 
     /**

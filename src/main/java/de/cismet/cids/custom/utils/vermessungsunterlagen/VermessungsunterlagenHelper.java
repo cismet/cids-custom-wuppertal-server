@@ -583,27 +583,31 @@ public class VermessungsunterlagenHelper implements ConnectionContextProvider {
         jobCidsBean.setProperty("schluessel", job.getKey());
         jobCidsBean.setProperty("geometrie", geomBean);
         jobCidsBean.setProperty("aktenzeichen", anfrageBean.getAktenzeichenKatasteramt());
-        for (final VermessungsunterlagenAnfrageBean.AntragsflurstueckBean flurstueckBean
-                    : anfrageBean.getAntragsflurstuecksArray()) {
-            final CidsBean flurstueck = CidsBean.createNewCidsBeanFromTableName(
-                    "WUNDA_BLAU",
-                    mc_VERMESSUNGSUNTERLAGENAUFTRAG_FLURSTUECK.getTableName(),
-                    getConnectionContext());
-            flurstueck.setProperty("gemarkung", flurstueckBean.getGemarkungsID());
-            flurstueck.setProperty("flur", flurstueckBean.getFlurID());
-            flurstueck.setProperty("flurstueck", flurstueckBean.getFlurstuecksID());
-            jobCidsBean.getBeanCollectionProperty("flurstuecke").add(flurstueck);
+        if (anfrageBean.getAntragsflurstuecksArray() != null) {
+            for (final VermessungsunterlagenAnfrageBean.AntragsflurstueckBean flurstueckBean
+                        : anfrageBean.getAntragsflurstuecksArray()) {
+                final CidsBean flurstueck = CidsBean.createNewCidsBeanFromTableName(
+                        "WUNDA_BLAU",
+                        mc_VERMESSUNGSUNTERLAGENAUFTRAG_FLURSTUECK.getTableName(),
+                        getConnectionContext());
+                flurstueck.setProperty("gemarkung", flurstueckBean.getGemarkungsID());
+                flurstueck.setProperty("flur", flurstueckBean.getFlurID());
+                flurstueck.setProperty("flurstueck", flurstueckBean.getFlurstuecksID());
+                jobCidsBean.getBeanCollectionProperty("flurstuecke").add(flurstueck);
+            }
         }
-        for (final VermessungsunterlagenAnfrageBean.PunktnummernreservierungBean pnrBean
-                    : anfrageBean.getPunktnummernreservierungsArray()) {
-            final CidsBean pnr = CidsBean.createNewCidsBeanFromTableName(
-                    "WUNDA_BLAU",
-                    mc_VERMESSUNGSUNTERLAGENAUFTRAG_PUNKTNUMMER.getTableName(),
-                    getConnectionContext());
-            pnr.setProperty("anzahl", pnrBean.getAnzahlPunktnummern());
-            pnr.setProperty("katasteramt", pnrBean.getKatasteramtsID());
-            pnr.setProperty("kilometerquadrat", pnrBean.getUtmKilometerQuadrat());
-            jobCidsBean.getBeanCollectionProperty("punktnummern").add(pnr);
+        if (anfrageBean.getPunktnummernreservierungsArray() != null) {
+            for (final VermessungsunterlagenAnfrageBean.PunktnummernreservierungBean pnrBean
+                        : anfrageBean.getPunktnummernreservierungsArray()) {
+                final CidsBean pnr = CidsBean.createNewCidsBeanFromTableName(
+                        "WUNDA_BLAU",
+                        mc_VERMESSUNGSUNTERLAGENAUFTRAG_PUNKTNUMMER.getTableName(),
+                        getConnectionContext());
+                pnr.setProperty("anzahl", pnrBean.getAnzahlPunktnummern());
+                pnr.setProperty("katasteramt", pnrBean.getKatasteramtsID());
+                pnr.setProperty("kilometerquadrat", pnrBean.getUtmKilometerQuadrat());
+                jobCidsBean.getBeanCollectionProperty("punktnummern").add(pnr);
+            }
         }
         jobCidsBean.setProperty("mit_grenzniederschriften", anfrageBean.getMitGrenzniederschriften());
         jobCidsBean.setProperty("geschaeftsbuchnummer", anfrageBean.getGeschaeftsbuchnummer());
@@ -634,13 +638,15 @@ public class VermessungsunterlagenHelper implements ConnectionContextProvider {
             // The validation exception will be stored in the exception_json field later on.
             // That's why the exception can be ignored here.
         }
-        for (final String art : anfrageBean.getArtderVermessung()) {
-            final CidsBean pnr = CidsBean.createNewCidsBeanFromTableName(
-                    "WUNDA_BLAU",
-                    mc_VERMESSUNGSUNTERLAGENAUFTRAG_VERMESSUNGSART.getTableName(),
-                    getConnectionContext());
-            pnr.setProperty("name", art);
-            jobCidsBean.getBeanCollectionProperty("vermessungsarten").add(pnr);
+        if (anfrageBean.getArtderVermessung() != null) {
+            for (final String art : anfrageBean.getArtderVermessung()) {
+                final CidsBean pnr = CidsBean.createNewCidsBeanFromTableName(
+                        "WUNDA_BLAU",
+                        mc_VERMESSUNGSUNTERLAGENAUFTRAG_VERMESSUNGSART.getTableName(),
+                        getConnectionContext());
+                pnr.setProperty("name", art);
+                jobCidsBean.getBeanCollectionProperty("vermessungsarten").add(pnr);
+            }
         }
         jobCidsBean.setProperty("timestamp", new Timestamp(new Date().getTime()));
         jobCidsBean.setProperty("tasks", Arrays.toString(getAllowedTasks().toArray()));
