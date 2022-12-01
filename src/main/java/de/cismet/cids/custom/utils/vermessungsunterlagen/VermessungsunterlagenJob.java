@@ -385,9 +385,9 @@ public class VermessungsunterlagenJob implements Runnable, ConnectionContextProv
 
                     final Collection<CidsBean> risse;
                     {
-                        if ((anfrageBean.isMitRisse())
-                                    && (isTaskAllowed(VermUntTaskRisseBilder.TYPE)
-                                        || isTaskAllowed(VermUntTaskRisseGrenzniederschrift.TYPE))) {
+                        if ((anfrageBean.isMitRisse() && isTaskAllowed(VermUntTaskRisseBilder.TYPE))
+                                    || (anfrageBean.isMitGrenzniederschriften()
+                                        && isTaskAllowed(VermUntTaskRisseGrenzniederschrift.TYPE))) {
                             risse = searchRisse(geometryFlurstuecke);
                         } else {
                             risse = null;
@@ -438,8 +438,7 @@ public class VermessungsunterlagenJob implements Runnable, ConnectionContextProv
                                 requestId,
                                 vermessungsGeometrieSaum));
                     }
-                    if (
-                        anfrageBean.isMitAlkisBestandsdatenohneEigentuemerinfo() /*noch deaktiviert, siehe wupp#2467*/
+                    if (anfrageBean.isMitAlkisBestandsdatenohneEigentuemerinfo()
                                 && isTaskAllowed(VermUntTaskNasOhneEigentuemer.TYPE)) {
                         submitTask(new VermUntTaskNasPunkte(
                                 getKey(),

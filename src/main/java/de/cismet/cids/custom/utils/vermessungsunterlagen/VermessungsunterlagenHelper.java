@@ -865,7 +865,7 @@ public class VermessungsunterlagenHelper implements ConnectionContextProvider {
             anfrageBean.setMitNIVPBeschreibungen(!nurPNR);
             anfrageBean.setMitNIVPUebersichten(!nurPNR);
             anfrageBean.setMitAlkisBestandsdatenmitEigentuemerinfo(!nurPNR);
-            anfrageBean.setMitAlkisBestandsdatenohneEigentuemerinfo(!nurPNR);
+            anfrageBean.setMitAlkisBestandsdatenohneEigentuemerinfo(false);
             anfrageBean.setMitAlkisBestandsdatennurPunkte(!nurPNR);
             anfrageBean.setMitRisse(!nurPNR);
             anfrageBean.setMitGrenzniederschriften(getBoolean("mitGrenzniederschriften", in0, wrapped));
