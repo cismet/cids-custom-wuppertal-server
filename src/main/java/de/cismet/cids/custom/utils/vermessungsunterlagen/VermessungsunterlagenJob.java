@@ -440,7 +440,7 @@ public class VermessungsunterlagenJob implements Runnable, ConnectionContextProv
                     }
                     if (anfrageBean.isMitAlkisBestandsdatenohneEigentuemerinfo()
                                 && isTaskAllowed(VermUntTaskNasOhneEigentuemer.TYPE)) {
-                        submitTask(new VermUntTaskNasPunkte(
+                        submitTask(new VermUntTaskNasOhneEigentuemer(
                                 getKey(),
                                 helper.getUser(),
                                 requestId,
