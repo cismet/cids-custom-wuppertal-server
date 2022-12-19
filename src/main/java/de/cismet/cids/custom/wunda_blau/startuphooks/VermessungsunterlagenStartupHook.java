@@ -19,10 +19,8 @@ import Sirius.server.newuser.UserServer;
 
 import java.rmi.Naming;
 
-import de.cismet.cids.custom.utils.vermessungsunterlagen.VermessungsunterlagenHelper;
-
-import de.cismet.connectioncontext.ConnectionContext;
-import de.cismet.connectioncontext.ConnectionContextStore;
+import de.cismet.cids.custom.utils.vermessungsunterlagen.VermessungsunterlagenHandler;
+import de.cismet.cids.custom.utils.vermessungsunterlagen.VermessungsunterlagenProperties;
 
 /**
  * DOCUMENT ME!
@@ -49,12 +47,7 @@ public class VermessungsunterlagenStartupHook extends AbstractWundaBlauStartupHo
                     try {
                         final DomainServerImpl metaService = waitForMetaService();
 
-                        final String login_name = VermessungsunterlagenHelper.getInstance()
-                                    .getProperties()
-                                    .getCidsLogin();
-
-                        final VermessungsunterlagenHelper helper = VermessungsunterlagenHelper.getInstance();
-
+                        final String login_name = VermessungsunterlagenProperties.fromServerResources().getCidsLogin();
                         final Object userServer = Naming.lookup("rmi://localhost/userServer");
                         final User user = ((UserServer)userServer).getUser(
                                 null,
@@ -62,7 +55,10 @@ public class VermessungsunterlagenStartupHook extends AbstractWundaBlauStartupHo
                                 "WUNDA_BLAU",
                                 login_name,
                                 "");
-                        helper.init(metaService, user);
+                        final VermessungsunterlagenHandler helper = new VermessungsunterlagenHandler(
+                                user,
+                                metaService,
+                                getConnectionContext());
                         helper.test();
                     } catch (final Exception ex) {
                         LOG.error("error while executing VermessungsunterlagenStartupHook", ex);

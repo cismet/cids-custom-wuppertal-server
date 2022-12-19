@@ -20,6 +20,8 @@ import java.util.Properties;
 
 import de.cismet.cids.custom.utils.WundaBlauServerResources;
 
+import de.cismet.cids.utils.serverresources.ServerResourcesLoader;
+
 /**
  * DOCUMENT ME!
  *
@@ -34,6 +36,9 @@ public class VermessungsunterlagenProperties {
     private static final transient Logger LOG = Logger.getLogger(VermessungsunterlagenProperties.class);
     public static final String FROM_WEBDAV = "webdav";
     public static final String FROM_FTP = "ftp";
+    public static final String DIR_PREFIX = "05124";
+
+    private static VermessungsunterlagenProperties PROPERTIES;
 
     //~ Instance fields --------------------------------------------------------
 
@@ -108,5 +113,33 @@ public class VermessungsunterlagenProperties {
             LOG.warn(message, ex);
         }
         return value;
+    }
+
+    /**
+     * DOCUMENT ME!
+     *
+     * @param   jobKey  DOCUMENT ME!
+     *
+     * @return  DOCUMENT ME!
+     */
+    public String getPath(final String jobKey) {
+        return getAbsPathTmp() + "/" + DIR_PREFIX + "_" + jobKey.replace("/", "--");
+    }
+
+    /**
+     * DOCUMENT ME!
+     *
+     * @return  DOCUMENT ME!
+     */
+    public static VermessungsunterlagenProperties fromServerResources() {
+        if (PROPERTIES == null) {
+            try {
+                PROPERTIES = new VermessungsunterlagenProperties(ServerResourcesLoader.getInstance().loadProperties(
+                            WundaBlauServerResources.VERMESSUNGSUNTERLAGENPORTAL_PROPERTIES.getValue()));
+            } catch (final Exception ex) {
+                LOG.error("VermessungsunterlagenHelper could not load the properties", ex);
+            }
+        }
+        return PROPERTIES;
     }
 }

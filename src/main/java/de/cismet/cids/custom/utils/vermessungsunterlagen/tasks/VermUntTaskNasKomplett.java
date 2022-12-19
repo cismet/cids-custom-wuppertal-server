@@ -12,11 +12,9 @@
  */
 package de.cismet.cids.custom.utils.vermessungsunterlagen.tasks;
 
-import Sirius.server.newuser.User;
-
 import com.vividsolutions.jts.geom.Geometry;
 
-import de.cismet.cids.custom.utils.vermessungsunterlagen.VermessungsunterlagenHelper;
+import de.cismet.cids.custom.utils.vermessungsunterlagen.VermessungsunterlagenHandler;
 
 /**
  * DOCUMENT ME!
@@ -36,14 +34,12 @@ public class VermUntTaskNasKomplett extends VermUntTaskNas {
      * Creates a new VermUntTaskNasKomplett object.
      *
      * @param  jobKey     DOCUMENT ME!
-     * @param  user       DOCUMENT ME!
      * @param  requestId  DOCUMENT ME!
      * @param  geometry   DOCUMENT ME!
      */
     public VermUntTaskNasKomplett(final String jobKey,
-            final User user,
             final String requestId,
             final Geometry geometry) {
-        super(TYPE, jobKey, user, requestId, geometry, VermessungsunterlagenHelper.NAS_PRODUCT_KOMPLETT);
+        super(TYPE, jobKey, requestId, geometry, VermessungsunterlagenHandler.NAS_PRODUCT_KOMPLETT);
     }
 }

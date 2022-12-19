@@ -12,11 +12,9 @@
  */
 package de.cismet.cids.custom.utils.vermessungsunterlagen.tasks;
 
-import Sirius.server.newuser.User;
-
 import com.vividsolutions.jts.geom.Geometry;
 
-import de.cismet.cids.custom.utils.vermessungsunterlagen.VermessungsunterlagenHelper;
+import de.cismet.cids.custom.utils.vermessungsunterlagen.VermessungsunterlagenHandler;
 
 /**
  * DOCUMENT ME!
@@ -36,11 +34,10 @@ public class VermUntTaskNasPunkte extends VermUntTaskNas {
      * Creates a new VermUntTaskNasPunkte object.
      *
      * @param  jobKey     DOCUMENT ME!
-     * @param  user       DOCUMENT ME!
      * @param  requestId  DOCUMENT ME!
      * @param  geometry   DOCUMENT ME!
      */
-    public VermUntTaskNasPunkte(final String jobKey, final User user, final String requestId, final Geometry geometry) {
-        super(TYPE, jobKey, user, requestId, geometry, VermessungsunterlagenHelper.NAS_PRODUCT_PUNKTE);
+    public VermUntTaskNasPunkte(final String jobKey, final String requestId, final Geometry geometry) {
+        super(TYPE, jobKey, requestId, geometry, VermessungsunterlagenHandler.NAS_PRODUCT_PUNKTE);
     }
 }

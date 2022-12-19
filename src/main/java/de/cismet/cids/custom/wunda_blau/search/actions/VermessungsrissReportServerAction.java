@@ -110,7 +110,8 @@ public class VermessungsrissReportServerAction extends StampedJasperReportServer
                     selectedVermessungsrisse.add(bean);
                 }
 
-                final Object[] tmp = VermessungsRissReportHelper.getInstance()
+                final Object[] tmp =
+                    new VermessungsRissReportHelper(getUser(), getMetaService(), getConnectionContext())
                             .generateReportData(
                                 jobNumber,
                                 projectName,
