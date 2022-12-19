@@ -14,12 +14,11 @@ import org.apache.log4j.Logger;
 import java.awt.Color;
 import java.awt.image.BufferedImage;
 
-import java.net.URL;
-
-import java.util.List;
-
 import de.cismet.commons.security.handler.ExtendedAccessHandler;
 import de.cismet.commons.security.handler.SimpleHttpAccessHandler;
+
+import de.cismet.connectioncontext.AbstractConnectionContext;
+import de.cismet.connectioncontext.ConnectionContext;
 
 import de.cismet.tools.Static2DTools;
 
@@ -76,28 +75,19 @@ public class VermessungRissReportScriptlet extends JRDefaultScriptlet {
             final String flur,
             final String blatt,
             final ExtendedAccessHandler extendedAccessHandler) {
-        final List<String> validDocuments;
+        final String validDocument;
+        final VermessungsrissPictureFinder finder = new VermessungsrissPictureFinder(
+                null,
+                null,
+                ConnectionContext.create(
+                    AbstractConnectionContext.Category.STATIC,
+                    VermessungRissReportScriptlet.class.getSimpleName()));
         if (host.equals(ServerAlkisConf.getInstance().getVermessungHostGrenzniederschriften())) {
-            validDocuments = VermessungsrissPictureFinder.getInstance()
-                        .findGrenzniederschriftPicture(schluessel, gemarkung, flur, blatt);
+            validDocument = finder.findGrenzniederschriftPicture(schluessel, gemarkung, flur, blatt);
         } else {
-            validDocuments = VermessungsrissPictureFinder.getInstance()
-                        .findVermessungsrissPicture(schluessel, gemarkung, flur, blatt);
+            validDocument = finder.findVermessungsrissPicture(schluessel, gemarkung, flur, blatt);
         }
-
-        boolean imageAvailable = false;
-        for (final String document : validDocuments) {
-            try {
-                final URL url = ServerAlkisConf.getInstance().getDownloadUrlForDocument(document);
-                if (extendedAccessHandler.checkIfURLaccessible(url)) {
-                    imageAvailable = true;
-                    break;
-                }
-            } catch (final Exception ex) {
-                LOG.error(ex, ex);
-            }
-        }
-        return imageAvailable;
+        return validDocument != null;
     }
 
     /**

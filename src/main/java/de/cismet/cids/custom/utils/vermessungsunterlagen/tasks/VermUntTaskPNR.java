@@ -21,7 +21,7 @@ import java.util.Collection;
 import de.cismet.cids.custom.utils.pointnumberreservation.PointNumberReservation;
 import de.cismet.cids.custom.utils.pointnumberreservation.PointNumberReservationRequest;
 import de.cismet.cids.custom.utils.vermessungsunterlagen.VermessungsunterlagenAnfrageBean;
-import de.cismet.cids.custom.utils.vermessungsunterlagen.VermessungsunterlagenHelper;
+import de.cismet.cids.custom.utils.vermessungsunterlagen.VermessungsunterlagenHandler;
 import de.cismet.cids.custom.utils.vermessungsunterlagen.VermessungsunterlagenTask;
 import de.cismet.cids.custom.utils.vermessungsunterlagen.exceptions.VermessungsunterlagenTaskException;
 import de.cismet.cids.custom.wunda_blau.search.actions.PointNumberReserverationServerAction;
@@ -74,8 +74,7 @@ public class VermUntTaskPNR extends VermessungsunterlagenTask {
     @Override
     protected void performTask() throws VermessungsunterlagenTaskException {
         if (vermessungsstelle == null) {
-            final File src = new File(VermessungsunterlagenHelper.getInstance().getProperties()
-                            .getAbsPathPdfPnrVermstelle());
+            final File src = new File(getProperties().getAbsPathPdfPnrVermstelle());
             final File dst = new File(getPath() + "/" + src.getName());
             if (!dst.exists()) {
                 try {
@@ -176,8 +175,8 @@ public class VermUntTaskPNR extends VermessungsunterlagenTask {
                 PointNumberReserverationServerAction.Parameter.ACTION.toString(),
                 PointNumberReserverationServerAction.Action.GET_POINT_NUMBERS);
         final PointNumberReserverationServerAction action = new PointNumberReserverationServerAction();
-        action.setUser(VermessungsunterlagenHelper.getInstance().getUser());
-        action.setMetaService(VermessungsunterlagenHelper.getInstance().getMetaService());
+        action.setUser(getUser());
+        action.setMetaService(getMetaService());
         final Collection<PointNumberReservation> request = (Collection)action.execute(
                 null,
                 sapAction,
@@ -224,8 +223,8 @@ public class VermUntTaskPNR extends VermessungsunterlagenTask {
                 0);
 
         final PointNumberReserverationServerAction action = new PointNumberReserverationServerAction();
-        action.setUser(VermessungsunterlagenHelper.getInstance().getUser());
-        action.setMetaService(VermessungsunterlagenHelper.getInstance().getMetaService());
+        action.setUser(getUser());
+        action.setMetaService(getMetaService());
         return (PointNumberReservationRequest)action.execute(
                 null,
                 sapAction,

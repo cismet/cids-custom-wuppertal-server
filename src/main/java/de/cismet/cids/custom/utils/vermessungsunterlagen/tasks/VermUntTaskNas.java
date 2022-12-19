@@ -12,8 +12,6 @@
  */
 package de.cismet.cids.custom.utils.vermessungsunterlagen.tasks;
 
-import Sirius.server.newuser.User;
-
 import com.vividsolutions.jts.geom.Envelope;
 import com.vividsolutions.jts.geom.Geometry;
 import com.vividsolutions.jts.geom.GeometryCollection;
@@ -25,7 +23,7 @@ import java.io.File;
 import java.io.FileOutputStream;
 
 import de.cismet.cids.custom.utils.nas.NasProduct;
-import de.cismet.cids.custom.utils.vermessungsunterlagen.VermessungsunterlagenHelper;
+import de.cismet.cids.custom.utils.vermessungsunterlagen.VermessungsunterlagenHandler;
 import de.cismet.cids.custom.utils.vermessungsunterlagen.VermessungsunterlagenTask;
 import de.cismet.cids.custom.utils.vermessungsunterlagen.VermessungsunterlagenTaskRetryable;
 import de.cismet.cids.custom.utils.vermessungsunterlagen.exceptions.VermessungsunterlagenTaskException;
@@ -52,7 +50,6 @@ public abstract class VermUntTaskNas extends VermessungsunterlagenTask implement
 
     private final Geometry geometry;
     private final NasProduct product;
-    private final User user;
     private final String requestId;
 
     private String orderId;
@@ -64,35 +61,23 @@ public abstract class VermUntTaskNas extends VermessungsunterlagenTask implement
      *
      * @param  type       DOCUMENT ME!
      * @param  jobkey     DOCUMENT ME!
-     * @param  user       DOCUMENT ME!
      * @param  requestId  DOCUMENT ME!
      * @param  geometry   DOCUMENT ME!
      * @param  product    DOCUMENT ME!
      */
     public VermUntTaskNas(final String type,
             final String jobkey,
-            final User user,
             final String requestId,
             final Geometry geometry,
             final NasProduct product) {
         super(type, jobkey);
 
-        this.user = user;
         this.requestId = requestId;
         this.geometry = geometry;
         this.product = product;
     }
 
     //~ Methods ----------------------------------------------------------------
-
-    /**
-     * DOCUMENT ME!
-     *
-     * @return  DOCUMENT ME!
-     */
-    private User getUser() {
-        return user;
-    }
 
     @Override
     public void performTask() throws VermessungsunterlagenTaskException {
@@ -106,7 +91,7 @@ public abstract class VermUntTaskNas extends VermessungsunterlagenTask implement
         }
 
         final String filename;
-        if (VermessungsunterlagenHelper.NAS_PRODUCT_PUNKTE.getKey().equals(product.getKey())) {
+        if (VermessungsunterlagenHandler.NAS_PRODUCT_PUNKTE.getKey().equals(product.getKey())) {
             filename = getJobKey() + "_Koord";
         } else {
             filename = getJobKey();
@@ -182,7 +167,7 @@ public abstract class VermUntTaskNas extends VermessungsunterlagenTask implement
                 LOG.error(message, ex);
                 throw new VermessungsunterlagenTaskException(getType(), message, ex);
             } finally {
-                VermessungsunterlagenHelper.closeStream(out);
+                VermessungsunterlagenHandler.closeStream(out);
             }
         }
     }

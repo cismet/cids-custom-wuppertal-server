@@ -12,12 +12,15 @@
  */
 package de.cismet.cids.custom.wunda_blau.search.actions;
 
+import lombok.Getter;
+
 import org.apache.commons.io.IOUtils;
 
 import java.io.InputStream;
 
-import de.cismet.cids.custom.utils.vermessungsunterlagen.VermessungsunterlagenHelper;
+import de.cismet.cids.custom.utils.vermessungsunterlagen.VermessungsunterlagenFtpHelper;
 import de.cismet.cids.custom.utils.vermessungsunterlagen.VermessungsunterlagenProperties;
+import de.cismet.cids.custom.utils.vermessungsunterlagen.VermessungsunterlagenWebdavHelper;
 
 import de.cismet.cids.server.actions.ServerAction;
 import de.cismet.cids.server.actions.ServerActionParameter;
@@ -35,6 +38,11 @@ public class VermessungsUnterlagenPortalDownloadAction implements ServerAction {
 
     public static final String TASK_NAME = "VUPDownloadAction";
 
+    //~ Instance fields --------------------------------------------------------
+
+    @Getter private final VermessungsunterlagenProperties properties = VermessungsunterlagenProperties
+                .fromServerResources();
+
     //~ Methods ----------------------------------------------------------------
 
     @Override
@@ -42,19 +50,19 @@ public class VermessungsUnterlagenPortalDownloadAction implements ServerAction {
         final String schluessel = (String)body;
         InputStream inputStream = null;
         try {
-            final String downloadFrom = VermessungsunterlagenHelper.getInstance().getProperties().getDownloadFrom();
+            final String downloadFrom = getProperties().getDownloadFrom();
             if (VermessungsunterlagenProperties.FROM_WEBDAV.equals(downloadFrom)) {
-                final String tmp = VermessungsunterlagenHelper.getInstance().getProperties().getWebDavPath();
+                final String tmp = getProperties().getWebDavPath();
                 final String webDavPath = (tmp.isEmpty() ? "" : ("/" + tmp)) + "/"
-                            + VermessungsunterlagenHelper.DIR_PREFIX
+                            + VermessungsunterlagenProperties.DIR_PREFIX
                             + "_" + schluessel + ".zip";
-                inputStream = VermessungsunterlagenHelper.getInstance().downloadFromWebDAV(webDavPath);
+                inputStream = new VermessungsunterlagenWebdavHelper().downloadFromWebDAV(webDavPath);
             } else if (VermessungsunterlagenProperties.FROM_FTP.equals(downloadFrom)) {
-                final String tmp = VermessungsunterlagenHelper.getInstance().getProperties().getFtpPath();
+                final String tmp = getProperties().getFtpPath();
                 final String ftpZipPath = (tmp.isEmpty() ? "" : ("/" + tmp)) + "/"
-                            + VermessungsunterlagenHelper.DIR_PREFIX
+                            + VermessungsunterlagenProperties.DIR_PREFIX
                             + "_" + schluessel + ".zip";
-                inputStream = VermessungsunterlagenHelper.getInstance().downloadFromFTP(ftpZipPath);
+                inputStream = new VermessungsunterlagenFtpHelper().downloadFromFTP(ftpZipPath);
             }
             return IOUtils.toByteArray(inputStream);
         } catch (final Exception ex) {

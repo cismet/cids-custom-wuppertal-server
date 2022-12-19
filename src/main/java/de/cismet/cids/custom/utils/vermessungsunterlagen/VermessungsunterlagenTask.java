@@ -12,11 +12,15 @@
  */
 package de.cismet.cids.custom.utils.vermessungsunterlagen;
 
+import Sirius.server.middleware.interfaces.domainserver.MetaService;
+import Sirius.server.middleware.interfaces.domainserver.MetaServiceStore;
+import Sirius.server.middleware.interfaces.domainserver.UserStore;
+import Sirius.server.newuser.User;
+
 import lombok.Getter;
+import lombok.Setter;
 
 import org.apache.log4j.Logger;
-
-import org.openide.util.Exceptions;
 
 import java.io.File;
 
@@ -29,13 +33,19 @@ import de.cismet.cids.custom.utils.vermessungsunterlagen.exceptions.Vermessungsu
 import de.cismet.cids.custom.utils.vermessungsunterlagen.exceptions.VermessungsunterlagenTaskException;
 import de.cismet.cids.custom.utils.vermessungsunterlagen.exceptions.VermessungsunterlagenTaskRetryException;
 
+import de.cismet.connectioncontext.ConnectionContext;
+import de.cismet.connectioncontext.ConnectionContextStore;
+
 /**
  * DOCUMENT ME!
  *
  * @author   jruiz
  * @version  $Revision$, $Date$
  */
-public abstract class VermessungsunterlagenTask implements Callable<VermessungsunterlagenTask> {
+public abstract class VermessungsunterlagenTask implements Callable<VermessungsunterlagenTask>,
+    ConnectionContextStore,
+    MetaServiceStore,
+    UserStore {
 
     //~ Static fields/initializers ---------------------------------------------
 
@@ -61,14 +71,14 @@ public abstract class VermessungsunterlagenTask implements Callable<Vermessungsu
 
     //~ Instance fields --------------------------------------------------------
 
+    @Getter @Setter private transient VermessungsunterlagenProperties properties;
+    @Getter @Setter private transient User user;
+    @Getter @Setter private transient MetaService metaService;
+    @Getter private transient ConnectionContext connectionContext;
     @Getter private final String type;
-
     @Getter private final String jobKey;
-
     @Getter private Status status = Status.NONE;
-
     @Getter private final Collection<String> files = new ArrayList<String>();
-
     @Getter private VermessungsunterlagenTaskException exception;
 
     //~ Constructors -----------------------------------------------------------
@@ -85,6 +95,11 @@ public abstract class VermessungsunterlagenTask implements Callable<Vermessungsu
     }
 
     //~ Methods ----------------------------------------------------------------
+
+    @Override
+    public void initWithConnectionContext(final ConnectionContext connectionContext) {
+        this.connectionContext = connectionContext;
+    }
 
     /**
      * DOCUMENT ME!
@@ -161,7 +176,7 @@ public abstract class VermessungsunterlagenTask implements Callable<Vermessungsu
             LOG.info("setting status to ERROR because of an exception", ex);
             this.exception = ex;
             setStatus(Status.ERROR);
-            VermessungsunterlagenHelper.writeExceptionJson(ex, getPath() + "/fehlerprotokoll_" + getType() + ".json");
+            VermessungsunterlagenHandler.writeExceptionJson(ex, getPath() + "/fehlerprotokoll_" + getType() + ".json");
         }
         return this;
     }
@@ -186,6 +201,6 @@ public abstract class VermessungsunterlagenTask implements Callable<Vermessungsu
      * @return  DOCUMENT ME!
      */
     public String getPath() {
-        return VermessungsunterlagenHelper.getInstance().getPath(getJobKey().replace("/", "--")) + getSubPath();
+        return getProperties().getPath(getJobKey().replace("/", "--")) + getSubPath();
     }
 }

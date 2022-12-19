@@ -12,6 +12,13 @@
  */
 package de.cismet.cids.custom.utils.alkis;
 
+import Sirius.server.middleware.interfaces.domainserver.MetaService;
+import Sirius.server.middleware.types.MetaClass;
+import Sirius.server.middleware.types.MetaObject;
+import Sirius.server.newuser.User;
+
+import lombok.Getter;
+
 import org.apache.commons.io.IOUtils;
 import org.apache.commons.lang.StringUtils;
 
@@ -21,13 +28,21 @@ import java.io.UnsupportedEncodingException;
 import java.net.URL;
 import java.net.URLEncoder;
 
-import java.util.ArrayList;
-import java.util.List;
+import java.util.Arrays;
+import java.util.HashMap;
+import java.util.LinkedHashSet;
+import java.util.Map;
+import java.util.Set;
+
+import javax.swing.SwingWorker;
 
 import de.cismet.cids.dynamics.CidsBean;
 
 import de.cismet.commons.security.handler.ExtendedAccessHandler;
 import de.cismet.commons.security.handler.SimpleHttpAccessHandler;
+
+import de.cismet.connectioncontext.ConnectionContext;
+import de.cismet.connectioncontext.ConnectionContextProvider;
 
 /**
  * DOCUMENT ME!
@@ -35,7 +50,7 @@ import de.cismet.commons.security.handler.SimpleHttpAccessHandler;
  * @author   daniel
  * @version  $Revision$, $Date$
  */
-public class VermessungsrissPictureFinder {
+public class VermessungsrissPictureFinder implements ConnectionContextProvider {
 
     //~ Static fields/initializers ---------------------------------------------
 
@@ -45,7 +60,7 @@ public class VermessungsrissPictureFinder {
     public static final String SEP = "/";
     public static final String SUFFIX_REDUCED_SIZE = "_rs";
 
-    private static final String[] SUFFIXE = new String[] {
+    private static final String[] ENDINGS = new String[] {
             ".tif",
             ".jpg",
             ".jpe",
@@ -57,7 +72,7 @@ public class VermessungsrissPictureFinder {
             ".TIFF",
             ".JPEG"
         };
-    private static final String LINKEXTENSION = ".txt";
+    public static final String LINKEXTENSION = ".txt";
     private static final String PREFIX_GRENZNIEDERSCHRIFT = "GN";
     private static final String PREFIX_VERMESSUNGSRISS = "VR";
     private static final String PREFIX_ERGAENZUNGSKARTEN = "GN";
@@ -72,34 +87,54 @@ public class VermessungsrissPictureFinder {
     private static final String SCHLUESSEL_NAMENSVERZEICHNIS = "566";
     private static final String PATH_PLATZHALTER = "platzhalter";
 
+    private static Map<String, CidsBean> FILE_ENDINGS = new HashMap<>();
+
     //~ Instance fields --------------------------------------------------------
 
-    private final ExtendedAccessHandler simpleUrlAccessHandler;
-    private final AlkisConf alkisConf;
+    @Getter private final ExtendedAccessHandler accessHandler;
+    @Getter private final AlkisConf alkisConf;
+    @Getter private final User user;
+    @Getter private final MetaService metaService;
+    private final ConnectionContext connectionContext;
+    private final MetaClass fileEndingMc;
 
     //~ Constructors -----------------------------------------------------------
 
     /**
      * Creates a new VermessungsrissPictureFinder object.
      *
-     * @param  simpleUrlAccessHandler  DOCUMENT ME!
-     * @param  alkisConf               DOCUMENT ME!
+     * @param  user               DOCUMENT ME!
+     * @param  metaService        DOCUMENT ME!
+     * @param  connectionContext  DOCUMENT ME!
      */
-    protected VermessungsrissPictureFinder(final ExtendedAccessHandler simpleUrlAccessHandler,
-            final AlkisConf alkisConf) {
-        this.simpleUrlAccessHandler = simpleUrlAccessHandler;
-        this.alkisConf = alkisConf;
-    }
-
-    /**
-     * Creates a new VermessungsrissPictureFinder object.
-     */
-    private VermessungsrissPictureFinder() {
-        this.simpleUrlAccessHandler = new SimpleHttpAccessHandler();
+    public VermessungsrissPictureFinder(final User user,
+            final MetaService metaService,
+            final ConnectionContext connectionContext) {
+        this.accessHandler = new SimpleHttpAccessHandler();
         this.alkisConf = ServerAlkisConf.getInstance();
+
+        this.user = user;
+        this.metaService = metaService;
+        this.connectionContext = connectionContext;
+
+        MetaClass fileEndingMc = null;
+        try {
+            fileEndingMc = CidsBean.getMetaClassFromTableName(
+                    "WUNDA_BLAU",
+                    "vermessung_fileending_cache",
+                    connectionContext);
+        } catch (final Exception ex) {
+            LOG.error(ex, ex);
+        }
+        this.fileEndingMc = fileEndingMc;
     }
 
     //~ Methods ----------------------------------------------------------------
+
+    @Override
+    public ConnectionContext getConnectionContext() {
+        return connectionContext;
+    }
 
     /**
      * DOCUMENT ME!
@@ -111,16 +146,12 @@ public class VermessungsrissPictureFinder {
      *
      * @return  DOCUMENT ME!
      */
-    public List<String> findVermessungsrissPicture(final String riss,
+    public String findVermessungsrissPicture(final String riss,
             final Integer gemarkung,
             final String flur,
             final String blatt) {
         final String picturePath = getVermessungsrissPictureFilename(riss, gemarkung, flur, blatt);
-        if (LOG.isDebugEnabled()) {
-            LOG.debug("findVermessungrissPicture: " + picturePath);
-        }
-
-        return probeWebserverForRightSuffix(false, true, picturePath);
+        return identifyFullFilename(picturePath, false);
     }
 
     /**
@@ -134,43 +165,36 @@ public class VermessungsrissPictureFinder {
      *
      * @return  DOCUMENT ME!
      */
-    public List<String> findVermessungsbuchwerkPicture(final String schluessel,
+    public String findBuchwerkPicture(final String schluessel,
             final CidsBean gemarkung,
             final Integer steuerbezirk,
             final String bezeichner,
             final boolean historisch) {
-        final String fileName = getVermessungsbuchwerkPictureFilename(
+        final String fileName = getBuchwerkPictureFilename(
                 schluessel,
                 gemarkung,
                 steuerbezirk,
                 bezeichner,
                 historisch);
-        if (LOG.isDebugEnabled()) {
-            LOG.debug("findVermessungrissPicture: " + fileName);
-        }
-
-        return probeWebserverForRightSuffix(true, true, fileName);
+        return identifyFullFilename(fileName, true);
     }
 
     /**
      * DOCUMENT ME!
      *
-     * @param   riss       blattnummer picture DOCUMENT ME!
-     * @param   gemarkung  laufendeNummer DOCUMENT ME!
+     * @param   riss       DOCUMENT ME!
+     * @param   gemarkung  DOCUMENT ME!
      * @param   flur       DOCUMENT ME!
      * @param   blatt      DOCUMENT ME!
      *
      * @return  DOCUMENT ME!
      */
-    public List<String> findGrenzniederschriftPicture(final String riss,
+    public String findGrenzniederschriftPicture(final String riss,
             final Integer gemarkung,
             final String flur,
             final String blatt) {
-        final String picturePath = getGrenzniederschriftFilename(riss, gemarkung, flur, blatt);
-        if (LOG.isDebugEnabled()) {
-            LOG.debug("findGrenzniederschriftPicture: " + picturePath);
-        }
-        return probeWebserverForRightSuffix(false, true, picturePath);
+        final String picturePath = getGrenzniederschriftPictureFilename(riss, gemarkung, flur, blatt);
+        return identifyFullFilename(picturePath, false);
     }
 
     /**
@@ -183,13 +207,11 @@ public class VermessungsrissPictureFinder {
      *
      * @return  DOCUMENT ME!
      */
-    public String getGrenzniederschriftFilename(final String riss,
+    public String getGrenzniederschriftPictureFilename(final String riss,
             final Integer gemarkung,
             final String flur,
             final String blatt) {
-        final String ret = getObjectFilename(true, true, riss, gemarkung, flur, blatt);
-
-        return (ret != null) ? ret : null;
+        return getObjectFilename(true, true, riss, gemarkung, flur, blatt);
     }
 
     /**
@@ -204,7 +226,7 @@ public class VermessungsrissPictureFinder {
      *
      * @return  DOCUMENT ME!
      */
-    public String getObjectFilename(final boolean withPath,
+    private String getObjectFilename(final boolean withPath,
             final boolean isGrenzniederschrift,
             final String schluessel,
             final Integer gemarkung,
@@ -280,12 +302,33 @@ public class VermessungsrissPictureFinder {
     /**
      * DOCUMENT ME!
      *
+     * @param   link  DOCUMENT ME!
+     *
+     * @return  DOCUMENT ME!
+     */
+    public String getVermessungsrissLinkFilename(final String link) {
+        return getObjectPath(false, link);
+    }
+
+    /**
+     * DOCUMENT ME!
+     *
+     * @param   link  DOCUMENT ME!
+     *
+     * @return  DOCUMENT ME!
+     */
+    public String getGrenzniederschriftLinkFilename(final String link) {
+        return getObjectPath(true, link);
+    }
+    /**
+     * DOCUMENT ME!
+     *
      * @param   isGrenzNiederschrift  DOCUMENT ME!
      * @param   filename              DOCUMENT ME!
      *
      * @return  DOCUMENT ME!
      */
-    public String getObjectPath(final boolean isGrenzNiederschrift, final String filename) {
+    private String getObjectPath(final boolean isGrenzNiederschrift, final String filename) {
         if (filename.startsWith(PATH_PLATZHALTER)) {
             return (isGrenzNiederschrift ? alkisConf.getVermessungHostGrenzniederschriften()
                                          : alkisConf.getVermessungHostBilder()) + filename;
@@ -300,39 +343,6 @@ public class VermessungsrissPictureFinder {
         return new StringBuffer(getFolder(isErganzungskarte, isGrenzNiederschrift, gemarkung)).append(SEP)
                     .append(filenameWithPrefix)
                     .toString();
-    }
-
-    /**
-     * DOCUMENT ME!
-     *
-     * @param   isGrenzNiederschrift  DOCUMENT ME!
-     * @param   documentFileName      DOCUMENT ME!
-     *
-     * @return  DOCUMENT ME!
-     */
-    public String getLinkFromLinkDocument(final boolean isGrenzNiederschrift, final String documentFileName) {
-        InputStream urlStream = null;
-        try {
-            final URL objectURL = alkisConf.getDownloadUrlForDocument(documentFileName + LINKEXTENSION);
-            if (simpleUrlAccessHandler.checkIfURLaccessible(objectURL)) {
-                urlStream = simpleUrlAccessHandler.doRequest(objectURL);
-                if (urlStream != null) {
-                    final String link = IOUtils.toString(urlStream);
-                    return link;
-                }
-            }
-        } catch (Exception ex) {
-            LOG.error("Exception while checking link docuemtn", ex);
-        } finally {
-            if (urlStream != null) {
-                try {
-                    urlStream.close();
-                } catch (Exception e) {
-                    LOG.warn("Error during closing InputStream.", e);
-                }
-            }
-        }
-        return null;
     }
 
     /**
@@ -365,7 +375,7 @@ public class VermessungsrissPictureFinder {
      *
      * @return  DOCUMENT ME!
      */
-    public String getVermessungsbuchwerkPictureFilename(final String schluessel,
+    public String getBuchwerkPictureFilename(final String schluessel,
             final CidsBean gemarkung,
             final Integer steuerbezirk,
             final String bezeichner,
@@ -384,115 +394,220 @@ public class VermessungsrissPictureFinder {
     /**
      * DOCUMENT ME!
      *
-     * @param   buchwerk           DOCUMENT ME!
-     * @param   checkReducedSize   DOCUMENT ME!
      * @param   fileWithoutSuffix  DOCUMENT ME!
+     * @param   buchwerk           DOCUMENT ME!
      *
      * @return  DOCUMENT ME!
      */
-    private List<String> probeWebserverForRightSuffix(final boolean buchwerk,
-            final boolean checkReducedSize,
-            final String fileWithoutSuffix) {
-        return probeWebserverForRightSuffix(buchwerk, checkReducedSize, fileWithoutSuffix, 0);
+    private String identifyFullFilename(
+            final String fileWithoutSuffix,
+            final boolean buchwerk) {
+        return identifyFullFilename(fileWithoutSuffix, buchwerk, 0);
     }
 
     /**
      * DOCUMENT ME!
      *
-     * @param   buchwerk           DOCUMENT ME!
-     * @param   checkReducedSize   DOCUMENT ME!
+     * @param   fileWithoutEnding  DOCUMENT ME!
+     *
+     * @return  DOCUMENT ME!
+     */
+    private String identifyFilenameWithEnding(final String fileWithoutEnding) {
+        final Set<String> endings = new LinkedHashSet<>();
+        CidsBean firstGuess;
+        if (FILE_ENDINGS.containsKey(fileWithoutEnding)) {
+            firstGuess = FILE_ENDINGS.get(fileWithoutEnding);
+            if (firstGuess == null) {
+                return null;
+            }
+        } else {
+            firstGuess = null;
+        }
+        if (firstGuess == null) {
+            try {
+                if (fileEndingMc != null) {
+                    final String query = String.format(
+                            "SELECT %d, %s "
+                                    + "FROM %s "
+                                    + "WHERE name = '%s';",
+                            fileEndingMc.getID(),
+                            fileEndingMc.getPrimaryKey(),
+                            fileEndingMc.getTableName(),
+                            fileWithoutEnding);
+
+                    final MetaObject[] results = getMetaService().getMetaObject(
+                            getUser(),
+                            query,
+                            getConnectionContext());
+                    if ((results != null) && (results.length > 0)) {
+                        firstGuess = results[0].getBean();
+                    }
+                }
+            } catch (final Exception ex) {
+                if (LOG.isDebugEnabled()) {
+                    LOG.debug(ex, ex);
+                }
+            }
+        }
+        if (firstGuess != null) {
+            final String ending = (String)firstGuess.getProperty("ending");
+            endings.add(ending);
+        }
+        endings.addAll(Arrays.asList(ENDINGS));
+        for (final String ending : endings) {
+            final String fileWithEnding = fileWithoutEnding + ending;
+            try {
+                final URL objectURL = alkisConf.getDownloadUrlForDocument(fileWithEnding);
+                if (accessHandler.checkIfURLaccessible(objectURL)) {
+                    if (!FILE_ENDINGS.containsKey(fileWithoutEnding)) {
+                        if (fileEndingMc != null) {
+                            final CidsBean cidsBean = fileEndingMc.getEmptyInstance(getConnectionContext()).getBean();
+                            FILE_ENDINGS.put(fileWithoutEnding, cidsBean);
+                            new SwingWorker<Void, Object>() {
+
+                                    @Override
+                                    protected Void doInBackground() throws Exception {
+                                        try {
+                                            cidsBean.setProperty("name", fileWithoutEnding);
+                                            cidsBean.setProperty("ending", ending);
+                                            getMetaService().insertMetaObject(
+                                                getUser(),
+                                                cidsBean.getMetaObject(),
+                                                getConnectionContext());
+                                        } catch (final Exception ex) {
+                                            LOG.error(ex, ex);
+                                        }
+                                        return null;
+                                    }
+                                }.execute();
+                        }
+                    } else {
+                        final CidsBean cidsBean = FILE_ENDINGS.get(fileWithoutEnding);
+                        new SwingWorker<Void, Object>() {
+
+                                @Override
+                                protected Void doInBackground() throws Exception {
+                                    try {
+                                        cidsBean.setProperty("ending", ending);
+                                        getMetaService().updateMetaObject(
+                                            getUser(),
+                                            cidsBean.getMetaObject(),
+                                            getConnectionContext());
+                                    } catch (final Exception ex) {
+                                        LOG.error(ex, ex);
+                                    }
+                                    return null;
+                                }
+                            }.execute();
+                    }
+                    return fileWithEnding;
+                } else {
+                    if (FILE_ENDINGS.containsKey(fileWithoutEnding)) {
+                        final CidsBean cidsBean = FILE_ENDINGS.get(fileWithoutEnding);
+                        if (ending.equals((String)cidsBean.getProperty("ending"))) {
+                            new SwingWorker<Void, Object>() {
+
+                                    @Override
+                                    protected Void doInBackground() throws Exception {
+                                        try {
+                                            getMetaService().deleteMetaObject(
+                                                getUser(),
+                                                cidsBean.getMetaObject(),
+                                                getConnectionContext());
+                                        } catch (final Exception ex) {
+                                            LOG.error(ex, ex);
+                                        }
+                                        return null;
+                                    }
+                                }.execute();
+                        }
+                    }
+                }
+            } catch (final Exception ex) {
+                LOG.error("Problem occured, during checking for " + fileWithEnding, ex);
+            }
+        }
+        FILE_ENDINGS.put(fileWithoutEnding, null);
+        return null;
+    }
+
+    /**
+     * DOCUMENT ME!
+     *
      * @param   fileWithoutSuffix  DOCUMENT ME!
+     * @param   buchwerk           DOCUMENT ME!
      * @param   recursionDepth     DOCUMENT ME!
      *
      * @return  DOCUMENT ME!
      */
-    public List<String> probeWebserverForRightSuffix(final boolean buchwerk,
-            final boolean checkReducedSize,
+    private String identifyFullFilename(
             final String fileWithoutSuffix,
+            final boolean buchwerk,
             final int recursionDepth) {
         if (LOG.isDebugEnabled()) {
             LOG.debug("Searching for picture: " + fileWithoutSuffix + "xxx");
         }
-        final List<String> results = new ArrayList<>();
+
         // check if there is a reduced size image direcly...
-        for (final String suffix : SUFFIXE) {
-            final String fileWithSuffix = (checkReducedSize ? (fileWithoutSuffix + SUFFIX_REDUCED_SIZE)
-                                                            : fileWithoutSuffix) + suffix;
-            try {
-                final URL objectURL = alkisConf.getDownloadUrlForDocument(fileWithSuffix);
-                if (simpleUrlAccessHandler.checkIfURLaccessible(objectURL)) {
-                    results.add(fileWithSuffix);
-                }
-            } catch (final Exception ex) {
-                LOG.error("Problem occured, during checking for " + fileWithSuffix, ex);
-            }
+        final String reducedSize = identifyFilenameWithEnding(fileWithoutSuffix + SUFFIX_REDUCED_SIZE);
+        if (reducedSize != null) {
+            return reducedSize;
         }
-        // we need to do an extra round if we checked with _rs suffix...
-        if (results.isEmpty() && checkReducedSize) {
-            for (final String suffix : SUFFIXE) {
-                final String fileWithSuffix = fileWithoutSuffix + suffix;
-                try {
-                    final URL objectURL = alkisConf.getDownloadUrlForDocument(fileWithSuffix);
-                    if (simpleUrlAccessHandler.checkIfURLaccessible(objectURL)) {
-                        results.add(fileWithSuffix);
-                    }
-                } catch (Exception ex) {
-                    LOG.error("Problem occured, during checking for " + fileWithSuffix, ex);
-                }
-            }
+
+        // we need to do an extra round if we didn't found with _rs suffix...
+        final String fullSize = identifyFilenameWithEnding(fileWithoutSuffix);
+        if (fullSize != null) {
+            return fullSize;
         }
+
         // if the results is empty check if there is a link...
-        if (results.isEmpty()) {
-            if (LOG.isDebugEnabled()) {
-                LOG.debug("No picture file found. Check for Links");
-            }
-            if (recursionDepth < 3) {
-                InputStream urlStream = null;
-                try {
-                    final URL objectURL = alkisConf.getDownloadUrlForDocument(fileWithoutSuffix + LINKEXTENSION);
-                    if (simpleUrlAccessHandler.checkIfURLaccessible(objectURL)) {
-                        urlStream = simpleUrlAccessHandler.doRequest(objectURL);
-                        if (urlStream != null) {
-                            final String link = IOUtils.toString(urlStream).trim();
-                            if (buchwerk) {
-                                return probeWebserverForRightSuffix(
-                                        buchwerk,
-                                        checkReducedSize,
-                                        fileWithoutSuffix.substring(0, fileWithoutSuffix.lastIndexOf(SEP))
-                                                + SEP
-                                                + link,
-                                        recursionDepth
-                                                + 1);
-                            } else {
-                                final boolean isGrenzNiederschrift = fileWithoutSuffix.contains(
-                                        PREFIX_GRENZNIEDERSCHRIFT);
-                                return probeWebserverForRightSuffix(
-                                        buchwerk,
-                                        checkReducedSize,
-                                        getObjectPath(isGrenzNiederschrift, link),
-                                        recursionDepth
-                                                + 1);
-                            }
-                        }
-                    }
-                } catch (Exception ex) {
-                    LOG.error(ex, ex);
-                } finally {
+        if (LOG.isDebugEnabled()) {
+            LOG.debug("No picture file found. Check for Links");
+        }
+        if (recursionDepth < 3) {
+            InputStream urlStream = null;
+            try {
+                final URL objectURL = alkisConf.getDownloadUrlForDocument(fileWithoutSuffix + LINKEXTENSION);
+                if (accessHandler.checkIfURLaccessible(objectURL)) {
+                    urlStream = accessHandler.doRequest(objectURL);
                     if (urlStream != null) {
-                        try {
-                            urlStream.close();
-                        } catch (Exception ex) {
-                            LOG.warn("Error during closing InputStream.", ex);
+                        final String link = IOUtils.toString(urlStream).trim();
+                        if (buchwerk) {
+                            return identifyFullFilename(
+                                    fileWithoutSuffix.substring(0, fileWithoutSuffix.lastIndexOf(SEP))
+                                            + SEP
+                                            + link,
+                                    buchwerk,
+                                    recursionDepth
+                                            + 1);
+                        } else {
+                            final boolean isGrenzNiederschrift = fileWithoutSuffix.contains(
+                                    PREFIX_GRENZNIEDERSCHRIFT);
+                            return identifyFullFilename(
+                                    getObjectPath(isGrenzNiederschrift, link),
+                                    buchwerk,
+                                    recursionDepth
+                                            + 1);
                         }
                     }
                 }
-            } else {
-                LOG.error(
-                    "No hop,hop,hop possible within this logic. Seems to be an endless loop, sorry.",
-                    new Exception("JustTheStackTrace"));
+            } catch (Exception ex) {
+                LOG.error(ex, ex);
+            } finally {
+                if (urlStream != null) {
+                    try {
+                        urlStream.close();
+                    } catch (Exception ex) {
+                        LOG.warn("Error during closing InputStream.", ex);
+                    }
+                }
             }
+        } else {
+            LOG.error(
+                "No hop,hop,hop possible within this logic. Seems to be an endless loop, sorry.",
+                new Exception("JustTheStackTrace"));
         }
-        return results;
+        return null;
     }
 
     /**
@@ -504,7 +619,7 @@ public class VermessungsrissPictureFinder {
      *
      * @return  DOCUMENT ME!
      */
-    public String getFolder(final boolean isErgaenzungskarte,
+    private String getFolder(final boolean isErgaenzungskarte,
             final boolean isGrenzniederschrift,
             final Integer gemarkung) {
         final StringBuffer buf;
@@ -552,36 +667,5 @@ public class VermessungsrissPictureFinder {
                     .append(SEP);
         }
         return buf.toString();
-    }
-
-    /**
-     * DOCUMENT ME!
-     *
-     * @return  DOCUMENT ME!
-     */
-    public static VermessungsrissPictureFinder getInstance() {
-        return LazyInitialiser.INSTANCE;
-    }
-
-    //~ Inner Classes ----------------------------------------------------------
-
-    /**
-     * DOCUMENT ME!
-     *
-     * @version  $Revision$, $Date$
-     */
-    private static final class LazyInitialiser {
-
-        //~ Static fields/initializers -----------------------------------------
-
-        private static final VermessungsrissPictureFinder INSTANCE = new VermessungsrissPictureFinder();
-
-        //~ Constructors -------------------------------------------------------
-
-        /**
-         * Creates a new LazyInitialiser object.
-         */
-        private LazyInitialiser() {
-        }
     }
 }

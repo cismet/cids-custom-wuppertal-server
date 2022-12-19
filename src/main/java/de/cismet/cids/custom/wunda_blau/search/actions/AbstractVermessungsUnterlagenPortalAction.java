@@ -28,13 +28,18 @@ import java.util.Date;
 import de.cismet.cids.server.actions.ServerActionParameter;
 import de.cismet.cids.server.actions.UserAwareServerAction;
 
+import de.cismet.connectioncontext.ConnectionContext;
+import de.cismet.connectioncontext.ConnectionContextStore;
+
 /**
  * DOCUMENT ME!
  *
  * @author   thorsten
  * @version  $Revision$, $Date$
  */
-public abstract class AbstractVermessungsUnterlagenPortalAction implements UserAwareServerAction, MetaServiceStore {
+public abstract class AbstractVermessungsUnterlagenPortalAction implements UserAwareServerAction,
+    MetaServiceStore,
+    ConnectionContextStore {
 
     //~ Static fields/initializers ---------------------------------------------
 
@@ -65,6 +70,7 @@ public abstract class AbstractVermessungsUnterlagenPortalAction implements UserA
 
     private User user;
     private MetaService metaService;
+    private ConnectionContext connectionContext;
     private final FileWriter fw;
 
     //~ Constructors -----------------------------------------------------------
@@ -147,5 +153,15 @@ public abstract class AbstractVermessungsUnterlagenPortalAction implements UserA
     @Override
     public void setMetaService(final MetaService metaService) {
         this.metaService = metaService;
+    }
+
+    @Override
+    public void initWithConnectionContext(final ConnectionContext connectionContext) {
+        this.connectionContext = connectionContext;
+    }
+
+    @Override
+    public ConnectionContext getConnectionContext() {
+        return connectionContext;
     }
 }
