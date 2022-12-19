@@ -29,7 +29,7 @@ import java.util.Map;
 import de.cismet.cids.custom.utils.WundaBlauServerResources;
 import de.cismet.cids.custom.utils.alkis.ServerAlkisConf;
 import de.cismet.cids.custom.utils.alkis.VermessungsRissReportHelper;
-import de.cismet.cids.custom.utils.vermessungsunterlagen.VermessungsunterlagenHelper;
+import de.cismet.cids.custom.utils.vermessungsunterlagen.VermessungsunterlagenHandler;
 import de.cismet.cids.custom.utils.vermessungsunterlagen.VermessungsunterlagenTask;
 import de.cismet.cids.custom.utils.vermessungsunterlagen.VermessungsunterlagenTaskRetryable;
 import de.cismet.cids.custom.utils.vermessungsunterlagen.exceptions.VermessungsunterlagenTaskException;
@@ -43,9 +43,9 @@ import de.cismet.commons.security.handler.SimpleHttpAccessHandler;
 
 import de.cismet.commons.utils.MultiPagePictureReader;
 
-import static de.cismet.cids.custom.utils.vermessungsunterlagen.VermessungsunterlagenHelper.closeStream;
-import static de.cismet.cids.custom.utils.vermessungsunterlagen.VermessungsunterlagenHelper.downloadStream;
-import static de.cismet.cids.custom.utils.vermessungsunterlagen.VermessungsunterlagenHelper.jasperReportDownload;
+import static de.cismet.cids.custom.utils.vermessungsunterlagen.VermessungsunterlagenHandler.closeStream;
+import static de.cismet.cids.custom.utils.vermessungsunterlagen.VermessungsunterlagenHandler.downloadStream;
+import static de.cismet.cids.custom.utils.vermessungsunterlagen.VermessungsunterlagenHandler.jasperReportDownload;
 
 /**
  * DOCUMENT ME!
@@ -97,7 +97,7 @@ public abstract class VermUntTaskRisse extends VermessungsunterlagenTask impleme
         final String suffix = getJobKey().substring(getJobKey().indexOf("_") + 1, getJobKey().length());
         final String filename = getPath() + "/" + prefix + "_" + suffix.replace("/", "--") + ".pdf";
 
-        final File src = new File(VermessungsunterlagenHelper.getInstance().getProperties().getAbsPathPdfRisse());
+        final File src = new File(getProperties().getAbsPathPdfRisse());
         final File dst = new File(getPath() + "/" + src.getName());
         if (!dst.exists()) {
             try {
@@ -108,13 +108,13 @@ public abstract class VermUntTaskRisse extends VermessungsunterlagenTask impleme
             }
         }
 
-        final Object[] tmp = VermessungsRissReportHelper.getInstance()
-                    .generateReportData(
-                        auftragsnummer,
-                        projektnummer,
-                        risseBeans,
-                        host,
-                        MultiPagePictureReader.class);
+        final Object[] tmp =
+            new VermessungsRissReportHelper(getUser(), getMetaService(), getConnectionContext()).generateReportData(
+                auftragsnummer,
+                projektnummer,
+                risseBeans,
+                host,
+                MultiPagePictureReader.class);
 
         final Collection<CidsBean> reportBeans = (Collection)tmp[0];
         final Map parameters = (Map)tmp[1];
@@ -155,9 +155,9 @@ public abstract class VermUntTaskRisse extends VermessungsunterlagenTask impleme
                 downloadStream(in, out);
             } catch (Exception ex) {
                 LOG.warn("could not download additional File", ex);
-                VermessungsunterlagenHelper.writeExceptionJson(
+                VermessungsunterlagenHandler.writeExceptionJson(
                     ex,
-                    VermessungsunterlagenHelper.getInstance().getPath(getJobKey().replace("/", "--"))
+                    getProperties().getPath(getJobKey())
                             + "/fehlerprotokoll_"
                             + pureAdditionalFilename
                             + ".json");

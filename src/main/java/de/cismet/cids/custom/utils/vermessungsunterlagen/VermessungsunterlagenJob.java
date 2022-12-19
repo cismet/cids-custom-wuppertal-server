@@ -12,7 +12,9 @@
  */
 package de.cismet.cids.custom.utils.vermessungsunterlagen;
 
+import Sirius.server.middleware.interfaces.domainserver.MetaService;
 import Sirius.server.middleware.types.MetaObjectNode;
+import Sirius.server.newuser.User;
 
 import com.vividsolutions.jts.geom.Geometry;
 
@@ -64,7 +66,7 @@ import de.cismet.commons.concurrency.CismetExecutors;
 import de.cismet.connectioncontext.ConnectionContext;
 import de.cismet.connectioncontext.ConnectionContextProvider;
 
-import static de.cismet.cids.custom.utils.vermessungsunterlagen.VermessungsunterlagenHelper.writeExceptionJson;
+import static de.cismet.cids.custom.utils.vermessungsunterlagen.VermessungsunterlagenHandler.writeExceptionJson;
 
 /**
  * DOCUMENT ME!
@@ -108,12 +110,14 @@ public class VermessungsunterlagenJob implements Runnable, ConnectionContextProv
             Runtime.getRuntime().availableProcessors());
     private final transient CompletionService<VermessungsunterlagenTask> completionService =
         new ExecutorCompletionService<VermessungsunterlagenTask>(taskExecutor);
-    private final transient VermessungsunterlagenHelper helper = VermessungsunterlagenHelper.getInstance();
-    private final transient VermessungsunterlagenValidator validator = new VermessungsunterlagenValidator(
-            helper,
-            getConnectionContext());
+    @Getter private final transient VermessungsunterlagenHandler helper;
+    @Getter private final transient VermessungsunterlagenValidator validator;
     @Getter @Setter private transient CidsBean cidsBean;
     @Getter private final transient Collection<String> allowedTask;
+
+    @Getter private final User user;
+    @Getter private final MetaService metaService;
+    @Getter private final VermessungsunterlagenProperties properties;
 
     //~ Constructors -----------------------------------------------------------
 
@@ -122,18 +126,28 @@ public class VermessungsunterlagenJob implements Runnable, ConnectionContextProv
      *
      * @param   jobkey             DOCUMENT ME!
      * @param   anfrageBean        DOCUMENT ME!
+     * @param   properties         DOCUMENT ME!
+     * @param   user               DOCUMENT ME!
+     * @param   metaService        DOCUMENT ME!
      * @param   connectionContext  DOCUMENT ME!
      *
      * @throws  Exception  DOCUMENT ME!
      */
     public VermessungsunterlagenJob(final String jobkey,
             final VermessungsunterlagenAnfrageBean anfrageBean,
+            final VermessungsunterlagenProperties properties,
+            final User user,
+            final MetaService metaService,
             final ConnectionContext connectionContext) throws Exception {
         this.key = jobkey;
         this.anfrageBean = anfrageBean;
-
-        this.allowedTask = helper.getAllowedTasks();
+        this.properties = properties;
+        this.user = user;
+        this.metaService = metaService;
         this.connectionContext = connectionContext;
+        this.helper = new VermessungsunterlagenHandler(user, metaService, connectionContext);
+        this.validator = new VermessungsunterlagenValidator(helper, connectionContext);
+        this.allowedTask = helper.getAllowedTasks();
     }
 
     //~ Methods ----------------------------------------------------------------
@@ -181,6 +195,10 @@ public class VermessungsunterlagenJob implements Runnable, ConnectionContextProv
      */
     public void submitTask(final VermessungsunterlagenTask task) throws Exception {
         if (isTaskAllowed(task.getType())) {
+            task.setProperties(getProperties());
+            task.setUser(getUser());
+            task.setMetaService(getMetaService());
+            task.initWithConnectionContext(getConnectionContext());
             this.taskMap.put(task, completionService.submit(task));
         } else {
             LOG.info("Not allowed to run task of Type " + task.getType() + ".");
@@ -309,7 +327,7 @@ public class VermessungsunterlagenJob implements Runnable, ConnectionContextProv
         }
 
         if (geometry != null) {
-            geometry.setSRID(VermessungsunterlagenHelper.SRID);
+            geometry.setSRID(VermessungsunterlagenHandler.SRID);
         }
         return geometry;
     }
@@ -427,14 +445,12 @@ public class VermessungsunterlagenJob implements Runnable, ConnectionContextProv
                     if (anfrageBean.isMitAlkisBestandsdatenmitEigentuemerinfo() && (vermessungsGeometrie != null)) {
                         submitTask(new VermUntTaskNasKomplett(
                                 getKey(),
-                                helper.getUser(),
                                 requestId,
                                 vermessungsGeometrie));
                     }
                     if (anfrageBean.isMitAlkisBestandsdatennurPunkte() && (vermessungsGeometrieSaum != null)) {
                         submitTask(new VermUntTaskNasPunkte(
                                 getKey(),
-                                helper.getUser(),
                                 requestId,
                                 vermessungsGeometrieSaum));
                     }
@@ -442,7 +458,6 @@ public class VermessungsunterlagenJob implements Runnable, ConnectionContextProv
                                 && isTaskAllowed(VermUntTaskNasOhneEigentuemer.TYPE)) {
                         submitTask(new VermUntTaskNasOhneEigentuemer(
                                 getKey(),
-                                helper.getUser(),
                                 requestId,
                                 vermessungsGeometrieSaum));
                     }
@@ -578,13 +593,13 @@ public class VermessungsunterlagenJob implements Runnable, ConnectionContextProv
      *
      * @throws  Exception  DOCUMENT ME!
      */
-    private static String uploadZipToFTP(final File file) throws Exception {
+    private String uploadZipToFTP(final File file) throws Exception {
         final String fileName = file.getName();
         final InputStream inputStream = new FileInputStream(file);
 
-        final String ftpPath = VermessungsunterlagenHelper.getInstance().getProperties().getFtpPath();
+        final String ftpPath = getHelper().getProperties().getFtpPath();
         final String ftpZipPath = (ftpPath.isEmpty() ? "" : ("/" + ftpPath)) + fileName;
-        VermessungsunterlagenHelper.getInstance().uploadToFTP(inputStream, ftpZipPath);
+        new VermessungsunterlagenFtpHelper().uploadToFTP(inputStream, ftpZipPath);
         return ftpZipPath;
     }
 
@@ -597,13 +612,13 @@ public class VermessungsunterlagenJob implements Runnable, ConnectionContextProv
      *
      * @throws  Exception  DOCUMENT ME!
      */
-    private static String uploadZipToWebDAV(final File file) throws Exception {
+    private String uploadZipToWebDAV(final File file) throws Exception {
         final String fileName = file.getName();
         final InputStream inputStream = new FileInputStream(file);
 
-        final String webDAVPath = VermessungsunterlagenHelper.getInstance().getProperties().getWebDavPath();
+        final String webDAVPath = getHelper().getProperties().getWebDavPath();
         final String webDAVZipPath = ((webDAVPath.isEmpty() ? "" : ("/" + webDAVPath)) + fileName);
-        VermessungsunterlagenHelper.getInstance().uploadToWebDAV(inputStream, webDAVZipPath);
+        new VermessungsunterlagenWebdavHelper().uploadToWebDAV(inputStream, webDAVZipPath);
         return webDAVZipPath;
     }
 
@@ -623,7 +638,7 @@ public class VermessungsunterlagenJob implements Runnable, ConnectionContextProv
         } catch (final Exception ex) {
             throw new VermessungsunterlagenException("Fehler beim erzeugen der ZIP-Datei", ex);
         } finally {
-            VermessungsunterlagenHelper.closeStream(zipOut);
+            VermessungsunterlagenHandler.closeStream(zipOut);
         }
     }
 
@@ -692,6 +707,6 @@ public class VermessungsunterlagenJob implements Runnable, ConnectionContextProv
      * @return  DOCUMENT ME!
      */
     public String getPath() {
-        return helper.getPath(getKey().replace("/", "--"));
+        return getProperties().getPath(getKey());
     }
 }

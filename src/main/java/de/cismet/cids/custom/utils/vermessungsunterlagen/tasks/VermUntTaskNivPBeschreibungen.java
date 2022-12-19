@@ -26,7 +26,7 @@ import java.util.Map;
 
 import de.cismet.cids.custom.utils.WundaBlauServerResources;
 import de.cismet.cids.custom.utils.alkis.NivellementPunktReportBean;
-import de.cismet.cids.custom.utils.vermessungsunterlagen.VermessungsunterlagenHelper;
+import de.cismet.cids.custom.utils.vermessungsunterlagen.VermessungsunterlagenHandler;
 import de.cismet.cids.custom.utils.vermessungsunterlagen.exceptions.VermessungsunterlagenTaskException;
 
 import de.cismet.cids.dynamics.CidsBean;
@@ -70,7 +70,7 @@ public class VermUntTaskNivPBeschreibungen extends VermUntTaskNivP {
             final Map parameters = new HashMap();
             parameters.put("SUBREPORT_DIR", DomainServerImpl.getServerProperties().getServerResourcesBasePath() + "/");
 
-            VermessungsunterlagenHelper.jasperReportDownload(
+            VermessungsunterlagenHandler.jasperReportDownload(
                 ServerResourcesLoader.getInstance().loadJasperReport(
                     WundaBlauServerResources.NIVP_JASPER.getValue()),
                 parameters,
@@ -80,7 +80,7 @@ public class VermUntTaskNivPBeschreibungen extends VermUntTaskNivP {
             final String message = "Beim Erstellen des NIVP-Berichtes kam es zu einem unerwarteten Fehler.";
             throw new VermessungsunterlagenTaskException(getType(), message, ex);
         } finally {
-            VermessungsunterlagenHelper.closeStream(out);
+            VermessungsunterlagenHandler.closeStream(out);
         }
     }
 }

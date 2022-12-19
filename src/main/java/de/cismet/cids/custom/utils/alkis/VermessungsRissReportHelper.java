@@ -13,6 +13,8 @@
 package de.cismet.cids.custom.utils.alkis;
 
 import Sirius.server.middleware.impls.domainserver.DomainServerImpl;
+import Sirius.server.middleware.interfaces.domainserver.MetaService;
+import Sirius.server.newuser.User;
 
 import org.apache.log4j.Logger;
 
@@ -21,12 +23,14 @@ import java.net.URL;
 import java.util.Collection;
 import java.util.HashMap;
 import java.util.LinkedList;
-import java.util.List;
 import java.util.Map;
 
 import de.cismet.cids.dynamics.CidsBean;
 
 import de.cismet.commons.utils.MultiPagePictureReader;
+
+import de.cismet.connectioncontext.ConnectionContext;
+import de.cismet.connectioncontext.ConnectionContextProvider;
 
 /**
  * DOCUMENT ME!
@@ -34,7 +38,7 @@ import de.cismet.commons.utils.MultiPagePictureReader;
  * @author   jruiz
  * @version  $Revision$, $Date$
  */
-public class VermessungsRissReportHelper {
+public class VermessungsRissReportHelper implements ConnectionContextProvider {
 
     //~ Static fields/initializers ---------------------------------------------
 
@@ -52,20 +56,36 @@ public class VermessungsRissReportHelper {
 
     //~ Instance fields --------------------------------------------------------
 
-    private final AlkisConf alkisConf;
+    private final AlkisConf alkisConf = ServerAlkisConf.getInstance();
+    private final User user;
+    private final MetaService metaService;
+    private final ConnectionContext connectionContext;
+    private final VermessungsrissPictureFinder pictureFinder;
 
     //~ Constructors -----------------------------------------------------------
 
     /**
      * Creates a new VermessungsRissReportHelper object.
      *
-     * @param  alkisConf  DOCUMENT ME!
+     * @param  user               DOCUMENT ME!
+     * @param  metaService        DOCUMENT ME!
+     * @param  connectionContext  DOCUMENT ME!
      */
-    protected VermessungsRissReportHelper(final AlkisConf alkisConf) {
-        this.alkisConf = alkisConf;
+    public VermessungsRissReportHelper(final User user,
+            final MetaService metaService,
+            final ConnectionContext connectionContext) {
+        this.user = user;
+        this.metaService = metaService;
+        this.connectionContext = connectionContext;
+        this.pictureFinder = new VermessungsrissPictureFinder(user, metaService, connectionContext);
     }
 
     //~ Methods ----------------------------------------------------------------
+
+    @Override
+    public ConnectionContext getConnectionContext() {
+        return connectionContext;
+    }
 
     /**
      * DOCUMENT ME!
@@ -136,48 +156,43 @@ public class VermessungsRissReportHelper {
             description.append(vermessungsriss.getProperty("blatt"));
             description.append(" - Seite ");
 
-            final List<String> documents;
+            final String document;
             // we search for reduced size images, since we need the reduced size image for the report
             if (host.equals(alkisConf.getVermessungHostGrenzniederschriften())) {
-                documents = VermessungsrissPictureFinder.getInstance()
-                            .findGrenzniederschriftPicture(
-                                    schluessel,
-                                    gemarkung,
-                                    flur,
-                                    blatt);
+                document = pictureFinder.findGrenzniederschriftPicture(
+                        schluessel,
+                        gemarkung,
+                        flur,
+                        blatt);
             } else {
-                documents = VermessungsrissPictureFinder.getInstance()
-                            .findVermessungsrissPicture(
-                                    schluessel,
-                                    gemarkung,
-                                    flur,
-                                    blatt);
+                document = pictureFinder.findVermessungsrissPicture(
+                        schluessel,
+                        gemarkung,
+                        flur,
+                        blatt);
             }
 
-            if ((documents == null) || documents.isEmpty()) {
+            if (document == null) {
                 LOG.info("No document URLS found for the Vermessungsriss report");
             }
             MultiPagePictureReader reader = null;
             int pageCount = 0;
             final StringBuilder fileReference = new StringBuilder();
-            if (documents != null) {
-                for (final String document : documents) {
-                    try {
-                        final URL url = ServerAlkisConf.getInstance().getDownloadUrlForDocument(document);
-                        reader = multiPageReaderClass.getConstructor(URL.class, boolean.class, boolean.class)
-                                    .newInstance(url, false, false);
-                        pageCount = reader.getNumberOfPages();
+            if (document != null) {
+                try {
+                    final URL url = ServerAlkisConf.getInstance().getDownloadUrlForDocument(document);
+                    reader = multiPageReaderClass.getConstructor(URL.class, boolean.class, boolean.class)
+                                .newInstance(url, false, false);
+                    pageCount = reader.getNumberOfPages();
 
-                        String path = url.getPath();
-                        path = path.substring(path.lastIndexOf('/') + 1);
-                        fileReference.append(" (");
-                        fileReference.append(path);
-                        fileReference.append(')');
-                        break;
-                    } catch (final Exception ex) {
-                        LOG.warn("Could not read document from URL '" + document + "'. Skipping this url.",
-                            ex);
-                    }
+                    String path = url.getPath();
+                    path = path.substring(path.lastIndexOf('/') + 1);
+                    fileReference.append(" (");
+                    fileReference.append(path);
+                    fileReference.append(')');
+                } catch (final Exception ex) {
+                    LOG.warn("Could not read document from URL '" + document + "'. Skipping this url.",
+                        ex);
                 }
             }
 
@@ -256,82 +271,46 @@ public class VermessungsRissReportHelper {
                 continue;
             }
 
-            final List<String> documents;
+            final String document;
             // we search for reduced size images, since we need the reduced size image for the report
             if (host.equals(ServerAlkisConf.getInstance().getVermessungHostGrenzniederschriften())) {
-                documents = VermessungsrissPictureFinder.getInstance()
-                            .findGrenzniederschriftPicture(
-                                    schluessel,
-                                    gemarkung,
-                                    flur,
-                                    blatt);
+                document = pictureFinder.findGrenzniederschriftPicture(
+                        schluessel,
+                        gemarkung,
+                        flur,
+                        blatt);
             } else {
-                documents = VermessungsrissPictureFinder.getInstance()
-                            .findVermessungsrissPicture(
-                                    schluessel,
-                                    gemarkung,
-                                    flur,
-                                    blatt);
+                document = pictureFinder.findVermessungsrissPicture(
+                        schluessel,
+                        gemarkung,
+                        flur,
+                        blatt);
             }
 
-            if ((documents == null) || documents.isEmpty()) {
+            if (document == null) {
                 LOG.info("No document URLS found for the Vermessungsriss report");
             }
             boolean isOfReducedSize = false;
-            if (documents != null) {
-                for (final String document : documents) {
-                    try {
-                        final URL url = ServerAlkisConf.getInstance().getDownloadUrlForDocument(document);
-                        if (url.toString().contains("_rs")) {
-                            isOfReducedSize = true;
-                        }
-
-                        // when a reduced size image was found we download the original file as jpg also
-                        if (isOfReducedSize) {
-                            additionalFilesToDownload.add(new URL(
-                                    url.toString().replaceAll("_rs", "")));
-                        }
-                        break;
-                    } catch (final Exception ex) {
-                        LOG.warn("Could not read document from URL '" + document
-                                    + "'. Skipping this url.",
-                            ex);
+            if (document != null) {
+                try {
+                    final URL url = ServerAlkisConf.getInstance().getDownloadUrlForDocument(document);
+                    if (url.toString().contains("_rs")) {
+                        isOfReducedSize = true;
                     }
+
+                    // when a reduced size image was found we download the original file as jpg also
+                    if (isOfReducedSize) {
+                        additionalFilesToDownload.add(new URL(
+                                url.toString().replaceAll("_rs", "")));
+                    }
+                    break;
+                } catch (final Exception ex) {
+                    LOG.warn("Could not read document from URL '" + document
+                                + "'. Skipping this url.",
+                        ex);
                 }
             }
         }
         return additionalFilesToDownload;
-    }
-
-    /**
-     * DOCUMENT ME!
-     *
-     * @return  DOCUMENT ME!
-     */
-    public static VermessungsRissReportHelper getInstance() {
-        return LazyInitialiser.INSTANCE;
-    }
-
-    //~ Inner Classes ----------------------------------------------------------
-
-    /**
-     * DOCUMENT ME!
-     *
-     * @version  $Revision$, $Date$
-     */
-    private static final class LazyInitialiser {
-
-        //~ Static fields/initializers -----------------------------------------
-
-        private static final VermessungsRissReportHelper INSTANCE = new VermessungsRissReportHelper(ServerAlkisConf
-                        .getInstance());
-
-        //~ Constructors -------------------------------------------------------
-
-        /**
-         * Creates a new LazyInitialiser object.
-         */
-        private LazyInitialiser() {
-        }
     }
 }

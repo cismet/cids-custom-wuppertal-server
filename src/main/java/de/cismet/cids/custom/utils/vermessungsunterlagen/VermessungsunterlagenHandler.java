@@ -44,8 +44,6 @@ import net.sf.jasperreports.engine.JasperReport;
 
 import org.apache.commons.io.IOUtils;
 import org.apache.commons.lang.RandomStringUtils;
-import org.apache.commons.net.ftp.FTPClient;
-import org.apache.commons.net.ftp.FTPReply;
 import org.apache.log4j.Logger;
 
 import org.openide.util.Lookup;
@@ -91,14 +89,10 @@ import de.cismet.cids.utils.serverresources.ServerResourcesLoader;
 import de.cismet.commons.concurrency.CismetExecutors;
 
 import de.cismet.commons.security.AccessHandler;
-import de.cismet.commons.security.WebDavClient;
 import de.cismet.commons.security.handler.SimpleHttpAccessHandler;
 
-import de.cismet.connectioncontext.AbstractConnectionContext;
 import de.cismet.connectioncontext.ConnectionContext;
 import de.cismet.connectioncontext.ConnectionContextProvider;
-
-import static org.apache.commons.net.ftp.FTP.BINARY_FILE_TYPE;
 
 /**
  * DOCUMENT ME!
@@ -106,17 +100,15 @@ import static org.apache.commons.net.ftp.FTP.BINARY_FILE_TYPE;
  * @author   jruiz
  * @version  $Revision$, $Date$
  */
-public class VermessungsunterlagenHelper implements ConnectionContextProvider {
+public class VermessungsunterlagenHandler implements ConnectionContextProvider {
 
     //~ Static fields/initializers ---------------------------------------------
 
-    private static final transient Logger LOG = Logger.getLogger(VermessungsunterlagenHelper.class);
+    private static final transient Logger LOG = Logger.getLogger(VermessungsunterlagenHandler.class);
 
     private static final int MAX_BUFFER_SIZE = 1024;
     private static final ObjectMapper EXCEPTION_MAPPER = new ObjectMapper();
     private static final ObjectMapper JOB_MAPPER;
-
-    public static final String DIR_PREFIX = "05124";
 
     public static final String ALLOWED_TASKS_CONFIG_ATTR = "vup.tasks_allowed";
     public static final int SRID = 25832;
@@ -162,17 +154,12 @@ public class VermessungsunterlagenHelper implements ConnectionContextProvider {
 
     //~ Instance fields --------------------------------------------------------
 
-    private MetaClass mc_VERMESSUNGSUNTERLAGENAUFTRAG;
-    private MetaClass mc_VERMESSUNGSUNTERLAGENAUFTRAG_FLURSTUECK;
-    private MetaClass mc_VERMESSUNGSUNTERLAGENAUFTRAG_PUNKTNUMMER;
-    private MetaClass mc_VERMESSUNGSUNTERLAGENAUFTRAG_VERMESSUNGSART;
-    private MetaClass mc_GEOM;
-
     private final Map<String, VermessungsunterlagenJobInfoWrapper> jobMap = new HashMap<>();
 
-    private MetaService metaService;
-    private User user;
-    private final VermessungsunterlagenProperties vermessungsunterlagenProperties;
+    private final MetaService metaService;
+    private final User user;
+    private final VermessungsunterlagenProperties vermessungsunterlagenProperties = VermessungsunterlagenProperties
+                .fromServerResources();
 
     private final ConnectionContext connectionContext;
 
@@ -181,18 +168,16 @@ public class VermessungsunterlagenHelper implements ConnectionContextProvider {
     /**
      * Creates a new VermessungsunterlagenHelper object.
      *
+     * @param  user               DOCUMENT ME!
+     * @param  metaService        DOCUMENT ME!
      * @param  connectionContext  DOCUMENT ME!
      */
-    private VermessungsunterlagenHelper(final ConnectionContext connectionContext) {
+    public VermessungsunterlagenHandler(final User user,
+            final MetaService metaService,
+            final ConnectionContext connectionContext) {
+        this.user = user;
+        this.metaService = metaService;
         this.connectionContext = connectionContext;
-        Properties properties = null;
-        try {
-            properties = ServerResourcesLoader.getInstance()
-                        .loadProperties(WundaBlauServerResources.VERMESSUNGSUNTERLAGENPORTAL_PROPERTIES.getValue());
-        } catch (final Exception ex) {
-            LOG.error("VermessungsunterlagenHelper could not load the properties", ex);
-        }
-        this.vermessungsunterlagenProperties = new VermessungsunterlagenProperties(properties);
     }
 
     //~ Methods ----------------------------------------------------------------
@@ -204,40 +189,6 @@ public class VermessungsunterlagenHelper implements ConnectionContextProvider {
      */
     public VermessungsunterlagenProperties getProperties() {
         return vermessungsunterlagenProperties;
-    }
-
-    /**
-     * DOCUMENT ME!
-     *
-     * @param   metaService  DOCUMENT ME!
-     * @param   user         DOCUMENT ME!
-     *
-     * @throws  Exception  DOCUMENT ME!
-     */
-    public void init(final MetaService metaService, final User user) throws Exception {
-        this.metaService = metaService;
-        this.user = user;
-
-        this.mc_GEOM = getMetaService().getClassByTableName(getUser(), "geom", getConnectionContext());
-        this.mc_VERMESSUNGSUNTERLAGENAUFTRAG_PUNKTNUMMER = getMetaService()
-                    .getClassByTableName(
-                            getUser(),
-                            "vermessungsunterlagenauftrag_punktnummer",
-                            getConnectionContext());
-        this.mc_VERMESSUNGSUNTERLAGENAUFTRAG = getMetaService().getClassByTableName(
-                getUser(),
-                "vermessungsunterlagenauftrag",
-                getConnectionContext());
-        this.mc_VERMESSUNGSUNTERLAGENAUFTRAG_VERMESSUNGSART = getMetaService()
-                    .getClassByTableName(
-                            getUser(),
-                            "vermessungsunterlagenauftrag_vermessungsart",
-                            getConnectionContext());
-        this.mc_VERMESSUNGSUNTERLAGENAUFTRAG_FLURSTUECK = getMetaService()
-                    .getClassByTableName(
-                            getUser(),
-                            "vermessungsunterlagenauftrag_flurstueck",
-                            getConnectionContext());
     }
 
     /**
@@ -315,97 +266,6 @@ public class VermessungsunterlagenHelper implements ConnectionContextProvider {
     /**
      * DOCUMENT ME!
      *
-     * @return  DOCUMENT ME!
-     *
-     * @throws  Exception  DOCUMENT ME!
-     */
-    private FTPClient getConnectedFTPClient() throws Exception {
-        final FTPClient ftpClient = new FTPClient();
-        ftpClient.connect(vermessungsunterlagenProperties.getFtpHost());
-
-        final int reply = ftpClient.getReplyCode();
-        if (!FTPReply.isPositiveCompletion(reply)) {
-            ftpClient.disconnect();
-            throw new Exception("Exception in connecting to FTP Server");
-        }
-        ftpClient.login(vermessungsunterlagenProperties.getFtpLogin(), vermessungsunterlagenProperties.getFtpPass());
-        return ftpClient;
-    }
-
-    /**
-     * DOCUMENT ME!
-     *
-     * @param   in          DOCUMENT ME!
-     * @param   ftpZipPath  DOCUMENT ME!
-     *
-     * @throws  Exception  DOCUMENT ME!
-     */
-    public void uploadToFTP(final InputStream in, final String ftpZipPath) throws Exception {
-        final FTPClient connectedFtpClient = getConnectedFTPClient();
-        connectedFtpClient.enterLocalPassiveMode();
-        connectedFtpClient.setFileType(BINARY_FILE_TYPE);
-        connectedFtpClient.storeFile(ftpZipPath, in);
-    }
-
-    /**
-     * DOCUMENT ME!
-     *
-     * @param   in             DOCUMENT ME!
-     * @param   webDAVZipPath  DOCUMENT ME!
-     *
-     * @throws  Exception  DOCUMENT ME!
-     */
-    public void uploadToWebDAV(final InputStream in, final String webDAVZipPath) throws Exception {
-        final String url = vermessungsunterlagenProperties.getWebDavHost() + "/" + webDAVZipPath;
-
-        final WebDavClient webdavclient = new WebDavClient(
-                null,
-                vermessungsunterlagenProperties.getWebDavLogin(),
-                vermessungsunterlagenProperties.getWebDavPass(),
-                false);
-        final int statusCode = webdavclient.put(url, in);
-        if (statusCode >= 400) {
-            throw new Exception("webdav put failed wit status code " + statusCode);
-        }
-    }
-
-    /**
-     * DOCUMENT ME!
-     *
-     * @param   ftpFilePath  DOCUMENT ME!
-     *
-     * @return  DOCUMENT ME!
-     *
-     * @throws  Exception  DOCUMENT ME!
-     */
-    public InputStream downloadFromFTP(final String ftpFilePath) throws Exception {
-        final FTPClient connectedFtpClient = getConnectedFTPClient();
-        connectedFtpClient.enterLocalPassiveMode();
-        connectedFtpClient.setFileType(BINARY_FILE_TYPE);
-        return connectedFtpClient.retrieveFileStream(ftpFilePath);
-    }
-
-    /**
-     * DOCUMENT ME!
-     *
-     * @param   webDAVFilePath  DOCUMENT ME!
-     *
-     * @return  DOCUMENT ME!
-     *
-     * @throws  Exception  DOCUMENT ME!
-     */
-    public InputStream downloadFromWebDAV(final String webDAVFilePath) throws Exception {
-        final WebDavClient webdavclient = new WebDavClient(
-                null,
-                vermessungsunterlagenProperties.getWebDavLogin(),
-                vermessungsunterlagenProperties.getWebDavPass(),
-                false);
-        return webdavclient.getInputStream(vermessungsunterlagenProperties.getWebDavHost() + webDAVFilePath);
-    }
-
-    /**
-     * DOCUMENT ME!
-     *
      * @param   executeJobContent  DOCUMENT ME!
      *
      * @return  DOCUMENT ME!
@@ -432,6 +292,9 @@ public class VermessungsunterlagenHelper implements ConnectionContextProvider {
             final VermessungsunterlagenJob job = new VermessungsunterlagenJob(
                     jobKey,
                     anfrageBean,
+                    getProperties(),
+                    getUser(),
+                    getMetaService(),
                     getConnectionContext());
             try {
                 persistJobCidsBean(job, executeJobContent);
@@ -513,6 +376,12 @@ public class VermessungsunterlagenHelper implements ConnectionContextProvider {
         if (jobMap.containsKey(jobKey)) { // exists in memory ?
             return true;
         } else {                          // exists in database ?
+
+            final MetaClass mc_VERMESSUNGSUNTERLAGENAUFTRAG = getMetaService().getClassByTableName(
+                    getUser(),
+                    "vermessungsunterlagenauftrag",
+                    getConnectionContext());
+
             final List result = getMetaService().performCustomSearch("SELECT schluessel FROM "
                             + mc_VERMESSUNGSUNTERLAGENAUFTRAG + " WHERE schluessel LIKE '" + jobKey + "'",
                     getConnectionContext());
@@ -558,6 +427,24 @@ public class VermessungsunterlagenHelper implements ConnectionContextProvider {
     private void persistJobCidsBean(final VermessungsunterlagenJob job, final String executeJobContent)
             throws Exception {
         final VermessungsunterlagenAnfrageBean anfrageBean = job.getAnfrageBean();
+
+        final MetaClass mc_GEOM = getMetaService().getClassByTableName(getUser(), "geom", getConnectionContext());
+        final MetaClass mc_VERMESSUNGSUNTERLAGENAUFTRAG_PUNKTNUMMER = getMetaService().getClassByTableName(
+                getUser(),
+                "vermessungsunterlagenauftrag_punktnummer",
+                getConnectionContext());
+        final MetaClass mc_VERMESSUNGSUNTERLAGENAUFTRAG = getMetaService().getClassByTableName(
+                getUser(),
+                "vermessungsunterlagenauftrag",
+                getConnectionContext());
+        final MetaClass mc_VERMESSUNGSUNTERLAGENAUFTRAG_VERMESSUNGSART = getMetaService().getClassByTableName(
+                getUser(),
+                "vermessungsunterlagenauftrag_vermessungsart",
+                getConnectionContext());
+        final MetaClass mc_VERMESSUNGSUNTERLAGENAUFTRAG_FLURSTUECK = getMetaService().getClassByTableName(
+                getUser(),
+                "vermessungsunterlagenauftrag_flurstueck",
+                getConnectionContext());
 
         final Polygon[] aparr = anfrageBean.getAnfragepolygonArray();
         final Geometry geometry = ((aparr != null) && (aparr.length > 0)) ? aparr[0] : null;
@@ -726,6 +613,8 @@ public class VermessungsunterlagenHelper implements ConnectionContextProvider {
     public final void updateJobCidsBeanFlurstueckGeom(final VermessungsunterlagenJob job, final Geometry geom)
             throws Exception {
         final CidsBean jobCidsBean = job.getCidsBean();
+
+        final MetaClass mc_GEOM = getMetaService().getClassByTableName(getUser(), "geom", getConnectionContext());
 
         CidsBean geomBean;
         if (geom != null) {
@@ -1090,54 +979,6 @@ public class VermessungsunterlagenHelper implements ConnectionContextProvider {
     /**
      * DOCUMENT ME!
      *
-     * @param  args  DOCUMENT ME!
-     */
-    public static void main(final String[] args) {
-        try {
-            configLog4J();
-
-            final File directory = new File(VermessungsunterlagenHelper.getInstance().vermessungsunterlagenProperties
-                            .getAbsPathTest());
-            final File[] executeJobFiles = directory.listFiles(new FilenameFilter() {
-
-                        @Override
-                        public boolean accept(final File dir, final String name) {
-                            return name.startsWith("executeJob.") && name.endsWith(".json");
-                                // return name.equals("executeJob.2016-09-20T12:22:21.783Z.1988.json");
-                        }
-                    });
-
-            for (final File executeJobFile : executeJobFiles) {
-                LOG.info("----");
-                LOG.info("Path: " + executeJobFile.getAbsolutePath());
-
-                final String executeJobContent = IOUtils.toString(new FileInputStream(executeJobFile));
-                LOG.info("Content: " + executeJobContent);
-
-                final VermessungsunterlagenAnfrageBean anfrageBean = createAnfrageBean(executeJobContent);
-
-////import com.bedatadriven.jackson.datatype.jts.JtsModule;
-///*
-//        <dependency>
-//            <groupId>com.bedatadriven</groupId>
-//            <artifactId>jackson-datatype-jts</artifactId>
-//            <version>2.3</version>
-//        </dependency>
-//*/
-//
-//                final ObjectMapper mapper = new ObjectMapper();
-//                mapper.registerModule(new JtsModule());
-//                LOG.info("Created object: " + mapper.writeValueAsString(anfrageBean));
-//                LOG.info("----");
-            }
-        } catch (final Exception ex) {
-            LOG.error(ex, ex);
-        }
-    }
-
-    /**
-     * DOCUMENT ME!
-     *
      * @return  DOCUMENT ME!
      */
     public final MetaService getMetaService() {
@@ -1151,17 +992,6 @@ public class VermessungsunterlagenHelper implements ConnectionContextProvider {
      */
     public final User getUser() {
         return user;
-    }
-
-    /**
-     * DOCUMENT ME!
-     *
-     * @param   jobkey  DOCUMENT ME!
-     *
-     * @return  DOCUMENT ME!
-     */
-    public String getPath(final String jobkey) {
-        return vermessungsunterlagenProperties.getAbsPathTmp() + "/" + DIR_PREFIX + "_" + jobkey.replace("/", "--");
     }
 
     /**
@@ -1361,15 +1191,6 @@ public class VermessungsunterlagenHelper implements ConnectionContextProvider {
     /**
      * DOCUMENT ME!
      *
-     * @return  DOCUMENT ME!
-     */
-    public static VermessungsunterlagenHelper getInstance() {
-        return LazyInitialiser.INSTANCE;
-    }
-
-    /**
-     * DOCUMENT ME!
-     *
      * @param   box     DOCUMENT ME!
      * @param   width   DOCUMENT ME!
      * @param   height  DOCUMENT ME!
@@ -1463,33 +1284,33 @@ public class VermessungsunterlagenHelper implements ConnectionContextProvider {
         }
     }
 
-    @Override
-    public ConnectionContext getConnectionContext() {
-        return connectionContext;
-    }
-
-    //~ Inner Classes ----------------------------------------------------------
-
     /**
      * DOCUMENT ME!
      *
-     * @version  $Revision$, $Date$
+     * @param   gemarkung  flurstueck DOCUMENT ME!
+     * @param   flur       DOCUMENT ME!
+     * @param   zaehler    DOCUMENT ME!
+     * @param   nenner     DOCUMENT ME!
+     *
+     * @return  DOCUMENT ME!
      */
-    private static final class LazyInitialiser {
-
-        //~ Static fields/initializers -----------------------------------------
-
-        private static final VermessungsunterlagenHelper INSTANCE = new VermessungsunterlagenHelper(ConnectionContext
-                        .create(
-                            AbstractConnectionContext.Category.INSTANCE,
-                            VermessungsunterlagenHelper.class.getSimpleName()));
-
-        //~ Constructors -------------------------------------------------------
-
-        /**
-         * Creates a new LazyInitialiser object.
-         */
-        private LazyInitialiser() {
+    public static String[] createFlurstueckParts(final String gemarkung,
+            final String flur,
+            final String zaehler,
+            final String nenner) {
+        try {
+            final String formattedGemarkung = gemarkung.startsWith("05") ? gemarkung.substring(2) : gemarkung;
+            final String formattedFlur = String.format("%03d", Integer.parseInt(flur));
+            final String formattedZahler = Integer.valueOf(zaehler).toString();
+            final String formattedNenner = (nenner != null) ? Integer.valueOf(nenner).toString() : "0";
+            return new String[] { formattedGemarkung, formattedFlur, formattedZahler, formattedNenner };
+        } catch (final Exception ex) {
+            return null;
         }
+    }
+
+    @Override
+    public ConnectionContext getConnectionContext() {
+        return connectionContext;
     }
 }

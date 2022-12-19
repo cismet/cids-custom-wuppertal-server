@@ -28,7 +28,7 @@ import de.cismet.cids.custom.utils.WundaBlauServerResources;
 import de.cismet.cids.custom.utils.alkis.AlkisPointReportBean;
 import de.cismet.cids.custom.utils.alkis.AlkisProducts;
 import de.cismet.cids.custom.utils.alkis.ServerAlkisProducts;
-import de.cismet.cids.custom.utils.vermessungsunterlagen.VermessungsunterlagenHelper;
+import de.cismet.cids.custom.utils.vermessungsunterlagen.VermessungsunterlagenHandler;
 import de.cismet.cids.custom.utils.vermessungsunterlagen.exceptions.VermessungsunterlagenTaskException;
 
 import de.cismet.cids.dynamics.CidsBean;
@@ -71,7 +71,7 @@ public class VermUntTaskAPMap extends VermUntTaskAP {
             final Map parameters = new HashMap();
             parameters.put("SUBREPORT_DIR", DomainServerImpl.getServerProperties().getServerResourcesBasePath() + "/");
 
-            VermessungsunterlagenHelper.jasperReportDownload(
+            VermessungsunterlagenHandler.jasperReportDownload(
                 ServerResourcesLoader.getInstance().loadJasperReport(
                     WundaBlauServerResources.APMAPS_JASPER.getValue()),
                 parameters,
@@ -81,7 +81,7 @@ public class VermUntTaskAPMap extends VermUntTaskAP {
             final String message = "Beim Erstellen des Punktlisten-Berichtes kam es zu einem unerwarteten Fehler.";
             throw new VermessungsunterlagenTaskException(getType(), message, ex);
         } finally {
-            VermessungsunterlagenHelper.closeStream(out);
+            VermessungsunterlagenHandler.closeStream(out);
         }
     }
 }
