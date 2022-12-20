@@ -157,17 +157,13 @@ public abstract class VermUntTaskNas extends VermessungsunterlagenTask implement
          * Phase 3: save the result file
          */
         if (content != null) {
-            FileOutputStream out = null;
-            try {
-                out = new FileOutputStream(fileToSaveTo);
+            try(final FileOutputStream out = new FileOutputStream(fileToSaveTo)) {
                 out.write(content);
             } catch (final Exception ex) {
                 final String message = "Beim Schreiben der NAS-Order in die Datei '" + fileToSaveTo
                             + "' kam es zu einem unerwarteten Fehler.";
                 LOG.error(message, ex);
                 throw new VermessungsunterlagenTaskException(getType(), message, ex);
-            } finally {
-                VermessungsunterlagenHandler.closeStream(out);
             }
         }
     }

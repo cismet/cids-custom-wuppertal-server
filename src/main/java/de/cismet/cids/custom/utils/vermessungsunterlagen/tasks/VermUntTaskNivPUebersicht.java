@@ -31,12 +31,10 @@ import java.util.Collection;
 
 import de.cismet.cids.custom.utils.alkis.AlkisProductDescription;
 import de.cismet.cids.custom.utils.alkis.ServerAlkisProducts;
-import de.cismet.cids.custom.utils.vermessungsunterlagen.VermessungsunterlagenHandler;
+import de.cismet.cids.custom.utils.vermessungsunterlagen.VermessungsunterlagenUtils;
 import de.cismet.cids.custom.utils.vermessungsunterlagen.exceptions.VermessungsunterlagenTaskException;
 
 import de.cismet.cids.dynamics.CidsBean;
-
-import static de.cismet.cids.custom.utils.vermessungsunterlagen.VermessungsunterlagenHandler.doGetRequest;
 
 /**
  * DOCUMENT ME!
@@ -102,13 +100,11 @@ public class VermUntTaskNivPUebersicht extends VermUntTaskNivP {
         final Coordinate center = envelope.centre();
 
         final String landparcelcode = (String)flurstuecke.iterator().next().getProperty("alkis_id");
-        final AlkisProductDescription product = VermessungsunterlagenHandler.determineAlkisProduct(String.valueOf(
+        final AlkisProductDescription product = VermessungsunterlagenUtils.determineAlkisProduct(String.valueOf(
                     "WUP-Kommunal"),
                 String.valueOf("NivP-Übersicht"),
                 envelope);
 
-        InputStream in = null;
-        OutputStream out = null;
         try {
             final URL url = ServerAlkisProducts.getInstance()
                         .productKarteUrl(
@@ -128,15 +124,14 @@ public class VermUntTaskNivPUebersicht extends VermUntTaskNivP {
             final String filename = product.getCode() + "." + landparcelcode.replace("/", "--")
                         + ((flurstuecke.size() > 1) ? ".ua" : "") + ".pdf";
 
-            in = doGetRequest(url);
-            out = new FileOutputStream(getPath() + "/" + filename);
-            VermessungsunterlagenHandler.downloadStream(in, out);
+            try(final InputStream in = VermessungsunterlagenUtils.doGetRequest(url);
+                        final OutputStream out = new FileOutputStream(getPath() + "/" + filename);
+                ) {
+                VermessungsunterlagenUtils.downloadStream(in, out);
+            }
         } catch (final Exception ex) {
             final String message = "Beim Herunterladen der NIVP-Übersicht kam es zu einem unerwarteten Fehler.";
             throw new VermessungsunterlagenTaskException(getType(), message, ex);
-        } finally {
-            VermessungsunterlagenHandler.closeStream(in);
-            VermessungsunterlagenHandler.closeStream(out);
         }
     }
 }

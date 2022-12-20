@@ -26,7 +26,7 @@ import java.util.Map;
 
 import de.cismet.cids.custom.utils.WundaBlauServerResources;
 import de.cismet.cids.custom.utils.alkis.NivellementPunktReportBean;
-import de.cismet.cids.custom.utils.vermessungsunterlagen.VermessungsunterlagenHandler;
+import de.cismet.cids.custom.utils.vermessungsunterlagen.VermessungsunterlagenUtils;
 import de.cismet.cids.custom.utils.vermessungsunterlagen.exceptions.VermessungsunterlagenTaskException;
 
 import de.cismet.cids.dynamics.CidsBean;
@@ -61,26 +61,24 @@ public class VermUntTaskNivPBeschreibungen extends VermUntTaskNivP {
 
     @Override
     public void performTask() throws VermessungsunterlagenTaskException {
-        OutputStream out = null;
         try {
             final String prefix = "NivP-Bericht";
             final String suffix = getJobKey().substring(getJobKey().indexOf("_") + 1, getJobKey().length());
             final String filename = getPath() + "/" + prefix + "_" + suffix.replace("/", "--") + ".pdf";
-            out = new FileOutputStream(filename);
             final Map parameters = new HashMap();
             parameters.put("SUBREPORT_DIR", DomainServerImpl.getServerProperties().getServerResourcesBasePath() + "/");
 
-            VermessungsunterlagenHandler.jasperReportDownload(
-                ServerResourcesLoader.getInstance().loadJasperReport(
-                    WundaBlauServerResources.NIVP_JASPER.getValue()),
-                parameters,
-                new JRBeanCollectionDataSource(Arrays.asList(new NivellementPunktReportBean(getNivPoints()))),
-                out);
+            try(final OutputStream out = new FileOutputStream(filename)) {
+                VermessungsunterlagenUtils.jasperReportDownload(
+                    ServerResourcesLoader.getInstance().loadJasperReport(
+                        WundaBlauServerResources.NIVP_JASPER.getValue()),
+                    parameters,
+                    new JRBeanCollectionDataSource(Arrays.asList(new NivellementPunktReportBean(getNivPoints()))),
+                    out);
+            }
         } catch (final Exception ex) {
             final String message = "Beim Erstellen des NIVP-Berichtes kam es zu einem unerwarteten Fehler.";
             throw new VermessungsunterlagenTaskException(getType(), message, ex);
-        } finally {
-            VermessungsunterlagenHandler.closeStream(out);
         }
     }
 }

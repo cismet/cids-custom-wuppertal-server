@@ -25,7 +25,7 @@ import java.util.Collection;
 
 import de.cismet.cids.custom.utils.alkis.AlkisProducts;
 import de.cismet.cids.custom.utils.alkis.ServerAlkisProducts;
-import de.cismet.cids.custom.utils.vermessungsunterlagen.VermessungsunterlagenHandler;
+import de.cismet.cids.custom.utils.vermessungsunterlagen.VermessungsunterlagenUtils;
 import de.cismet.cids.custom.utils.vermessungsunterlagen.exceptions.VermessungsunterlagenTaskException;
 
 import de.cismet.cids.dynamics.CidsBean;
@@ -94,21 +94,14 @@ public class VermUntTaskAPList extends VermUntTaskAP {
                     }
 
                     try {
-                        InputStream in = null;
-                        OutputStream out = null;
-                        try {
-                            if ((parameters == null) || (parameters.trim().length() <= 0)) {
-                                in = VermessungsunterlagenHandler.doGetRequest(getOrPostUrl);
-                            } else {
-                                in = VermessungsunterlagenHandler.doPostRequest(
-                                        getOrPostUrl,
-                                        new StringReader(parameters));
-                            }
-                            out = new FileOutputStream(fileToSaveTo);
-                            VermessungsunterlagenHandler.downloadStream(in, out);
-                        } finally {
-                            VermessungsunterlagenHandler.closeStream(in);
-                            VermessungsunterlagenHandler.closeStream(out);
+                        try(final InputStream in = ((parameters == null) || (parameters.trim().length() <= 0))
+                                        ? VermessungsunterlagenUtils.doGetRequest(getOrPostUrl)
+                                        : VermessungsunterlagenUtils.doPostRequest(
+                                            getOrPostUrl,
+                                            new StringReader(parameters));
+                                    final OutputStream out = new FileOutputStream(fileToSaveTo);
+                            ) {
+                            VermessungsunterlagenUtils.downloadStream(in, out);
                         }
                     } catch (final Exception ex) {
                         final String message = "Beim Herunterladen des Produktes unter der URL '" + url
