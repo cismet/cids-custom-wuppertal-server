@@ -29,9 +29,9 @@ import java.util.Map;
 import de.cismet.cids.custom.utils.WundaBlauServerResources;
 import de.cismet.cids.custom.utils.alkis.ServerAlkisConf;
 import de.cismet.cids.custom.utils.alkis.VermessungsRissReportHelper;
-import de.cismet.cids.custom.utils.vermessungsunterlagen.VermessungsunterlagenHandler;
 import de.cismet.cids.custom.utils.vermessungsunterlagen.VermessungsunterlagenTask;
 import de.cismet.cids.custom.utils.vermessungsunterlagen.VermessungsunterlagenTaskRetryable;
+import de.cismet.cids.custom.utils.vermessungsunterlagen.VermessungsunterlagenUtils;
 import de.cismet.cids.custom.utils.vermessungsunterlagen.exceptions.VermessungsunterlagenTaskException;
 
 import de.cismet.cids.dynamics.CidsBean;
@@ -42,10 +42,6 @@ import de.cismet.commons.security.handler.ExtendedAccessHandler;
 import de.cismet.commons.security.handler.SimpleHttpAccessHandler;
 
 import de.cismet.commons.utils.MultiPagePictureReader;
-
-import static de.cismet.cids.custom.utils.vermessungsunterlagen.VermessungsunterlagenHandler.closeStream;
-import static de.cismet.cids.custom.utils.vermessungsunterlagen.VermessungsunterlagenHandler.downloadStream;
-import static de.cismet.cids.custom.utils.vermessungsunterlagen.VermessungsunterlagenHandler.jasperReportDownload;
 
 /**
  * DOCUMENT ME!
@@ -122,22 +118,15 @@ public abstract class VermUntTaskRisse extends VermessungsunterlagenTask impleme
 
         final JRBeanCollectionDataSource dataSource = new JRBeanCollectionDataSource(reportBeans);
 
-        {
-            OutputStream out = null;
-            try {
-                out = new FileOutputStream(filename);
-                jasperReportDownload(ServerResourcesLoader.getInstance().loadJasperReport(
-                        WundaBlauServerResources.VERMESSUNGSRISSE_JASPER.getValue()),
-                    parameters,
-                    dataSource,
-                    out);
-            } catch (final Exception ex) {
-                final String message =
-                    "Beim Erzeugen des Vermessungsrisse-Berichtes kam es zu einem unerwarteten Fehler.";
-                throw new VermessungsunterlagenTaskException(getType(), message, ex);
-            } finally {
-                closeStream(out);
-            }
+        try(final OutputStream out = new FileOutputStream(filename)) {
+            VermessungsunterlagenUtils.jasperReportDownload(ServerResourcesLoader.getInstance().loadJasperReport(
+                    WundaBlauServerResources.VERMESSUNGSRISSE_JASPER.getValue()),
+                parameters,
+                dataSource,
+                out);
+        } catch (final Exception ex) {
+            final String message = "Beim Erzeugen des Vermessungsrisse-Berichtes kam es zu einem unerwarteten Fehler.";
+            throw new VermessungsunterlagenTaskException(getType(), message, ex);
         }
 
         final ExtendedAccessHandler extendedAccessHandler = new SimpleHttpAccessHandler();
@@ -147,23 +136,18 @@ public abstract class VermUntTaskRisse extends VermessungsunterlagenTask impleme
                         .substring(additionalFileToDownload.getFile().lastIndexOf('/') + 1);
             final String pureAdditionalFilename = additionalFilename.substring(0, additionalFilename.lastIndexOf('.'));
 
-            InputStream in = null;
-            OutputStream out = null;
-            try {
-                in = extendedAccessHandler.doRequest(additionalFileToDownload);
-                out = new FileOutputStream(additionalFilename);
-                downloadStream(in, out);
+            try(final InputStream in = extendedAccessHandler.doRequest(additionalFileToDownload);
+                        final OutputStream out = new FileOutputStream(additionalFilename);
+                ) {
+                VermessungsunterlagenUtils.downloadStream(in, out);
             } catch (Exception ex) {
                 LOG.warn("could not download additional File", ex);
-                VermessungsunterlagenHandler.writeExceptionJson(
+                VermessungsunterlagenUtils.writeExceptionJson(
                     ex,
                     getProperties().getPath(getJobKey())
                             + "/fehlerprotokoll_"
                             + pureAdditionalFilename
                             + ".json");
-            } finally {
-                closeStream(in);
-                closeStream(out);
             }
         }
     }

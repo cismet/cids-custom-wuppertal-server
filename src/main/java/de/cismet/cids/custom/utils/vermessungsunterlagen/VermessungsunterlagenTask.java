@@ -176,7 +176,7 @@ public abstract class VermessungsunterlagenTask implements Callable<Vermessungsu
             LOG.info("setting status to ERROR because of an exception", ex);
             this.exception = ex;
             setStatus(Status.ERROR);
-            VermessungsunterlagenHandler.writeExceptionJson(ex, getPath() + "/fehlerprotokoll_" + getType() + ".json");
+            VermessungsunterlagenUtils.writeExceptionJson(ex, getPath() + "/fehlerprotokoll_" + getType() + ".json");
         }
         return this;
     }

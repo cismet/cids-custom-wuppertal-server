@@ -28,7 +28,7 @@ import de.cismet.cids.custom.utils.WundaBlauServerResources;
 import de.cismet.cids.custom.utils.alkis.AlkisPointReportBean;
 import de.cismet.cids.custom.utils.alkis.AlkisProducts;
 import de.cismet.cids.custom.utils.alkis.ServerAlkisProducts;
-import de.cismet.cids.custom.utils.vermessungsunterlagen.VermessungsunterlagenHandler;
+import de.cismet.cids.custom.utils.vermessungsunterlagen.VermessungsunterlagenUtils;
 import de.cismet.cids.custom.utils.vermessungsunterlagen.exceptions.VermessungsunterlagenTaskException;
 
 import de.cismet.cids.dynamics.CidsBean;
@@ -63,25 +63,23 @@ public class VermUntTaskAPMap extends VermUntTaskAP {
 
     @Override
     public void performTask() throws VermessungsunterlagenTaskException {
-        OutputStream out = null;
         try {
             final String filename = getPath() + "/"
                         + ServerAlkisProducts.getInstance().get(AlkisProducts.Type.PUNKTLISTE_PDF) + ".pdf";
-            out = new FileOutputStream(filename);
             final Map parameters = new HashMap();
             parameters.put("SUBREPORT_DIR", DomainServerImpl.getServerProperties().getServerResourcesBasePath() + "/");
 
-            VermessungsunterlagenHandler.jasperReportDownload(
-                ServerResourcesLoader.getInstance().loadJasperReport(
-                    WundaBlauServerResources.APMAPS_JASPER.getValue()),
-                parameters,
-                new JRBeanCollectionDataSource(Arrays.asList(new AlkisPointReportBean(getAlkisPoints()))),
-                out);
+            try(final OutputStream out = new FileOutputStream(filename)) {
+                VermessungsunterlagenUtils.jasperReportDownload(
+                    ServerResourcesLoader.getInstance().loadJasperReport(
+                        WundaBlauServerResources.APMAPS_JASPER.getValue()),
+                    parameters,
+                    new JRBeanCollectionDataSource(Arrays.asList(new AlkisPointReportBean(getAlkisPoints()))),
+                    out);
+            }
         } catch (final Exception ex) {
             final String message = "Beim Erstellen des Punktlisten-Berichtes kam es zu einem unerwarteten Fehler.";
             throw new VermessungsunterlagenTaskException(getType(), message, ex);
-        } finally {
-            VermessungsunterlagenHandler.closeStream(out);
         }
     }
 }
