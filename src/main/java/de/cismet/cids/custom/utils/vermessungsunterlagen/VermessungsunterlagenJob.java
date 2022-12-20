@@ -66,8 +66,6 @@ import de.cismet.commons.concurrency.CismetExecutors;
 import de.cismet.connectioncontext.ConnectionContext;
 import de.cismet.connectioncontext.ConnectionContextProvider;
 
-import static de.cismet.cids.custom.utils.vermessungsunterlagen.VermessungsunterlagenHandler.writeExceptionJson;
-
 /**
  * DOCUMENT ME!
  *
@@ -327,7 +325,7 @@ public class VermessungsunterlagenJob implements Runnable, ConnectionContextProv
         }
 
         if (geometry != null) {
-            geometry.setSRID(VermessungsunterlagenHandler.SRID);
+            geometry.setSRID(VermessungsunterlagenUtils.SRID);
         }
         return geometry;
     }
@@ -510,7 +508,7 @@ public class VermessungsunterlagenJob implements Runnable, ConnectionContextProv
 
                     setStatus(Status.OK);
                 } catch (final Exception ex) {
-                    writeExceptionJson(ex, getPath() + "/fehlerprotokoll.json");
+                    VermessungsunterlagenUtils.writeExceptionJson(ex, getPath() + "/fehlerprotokoll.json");
                     throw ex;
                 } finally {
                     taskExecutor.shutdown();
@@ -630,15 +628,11 @@ public class VermessungsunterlagenJob implements Runnable, ConnectionContextProv
      * @throws  VermessungsunterlagenException  Exception DOCUMENT ME!
      */
     private void zipDirectoryTo(final File file) throws VermessungsunterlagenException {
-        ZipOutputStream zipOut = null;
-        try {
-            zipOut = new ZipOutputStream(new FileOutputStream(file));
+        try(final ZipOutputStream zipOut = new ZipOutputStream(new FileOutputStream(file))) {
             addDirectoryToZip("", getPath(), zipOut);
             zipOut.flush();
         } catch (final Exception ex) {
             throw new VermessungsunterlagenException("Fehler beim erzeugen der ZIP-Datei", ex);
-        } finally {
-            VermessungsunterlagenHandler.closeStream(zipOut);
         }
     }
 

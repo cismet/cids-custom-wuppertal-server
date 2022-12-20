@@ -188,7 +188,7 @@ public class VermessungsunterlagenValidator implements ConnectionContextProvider
 
             try {
                 final Geometry anfrageGeometrie = polygon.getGeometryN(0);
-                anfrageGeometrie.setSRID(VermessungsunterlagenHandler.SRID);
+                anfrageGeometrie.setSRID(VermessungsunterlagenUtils.SRID);
                 // TODO geom verschneiden zum suchen von flurstücken
                 for (final CidsBean flurstueck
                             : searchFlurstuecke(anfrageGeometrie, Boolean.TRUE.equals(anfrageBean.getAnonymousOrder()))) {
@@ -650,7 +650,7 @@ public class VermessungsunterlagenValidator implements ConnectionContextProvider
             nenner = null;
         }
 
-        final String[] parts = VermessungsunterlagenHandler.createFlurstueckParts(alkisId.substring(0, 6),
+        final String[] parts = VermessungsunterlagenUtils.createFlurstueckParts(alkisId.substring(0, 6),
                 alkisId.substring(7, 10),
                 zaehler,
                 nenner);
