@@ -22,7 +22,7 @@ import Sirius.server.newuser.User;
 import java.util.HashMap;
 import java.util.Map;
 
-import de.cismet.cids.custom.utils.alkis.VermessungsrissPictureFinder;
+import de.cismet.cids.custom.utils.alkis.VermessungPictureFinder;
 
 import de.cismet.cids.dynamics.CidsBean;
 
@@ -40,13 +40,11 @@ import de.cismet.connectioncontext.ConnectionContextStore;
  * @version  $Revision$, $Date$
  */
 @org.openide.util.lookup.ServiceProvider(service = ServerAction.class)
-public class VermessungsrissPictureServerAction implements UserAwareServerAction,
-    MetaServiceStore,
-    ConnectionContextStore {
+public class VermessungPictureServerAction implements UserAwareServerAction, MetaServiceStore, ConnectionContextStore {
 
     //~ Static fields/initializers ---------------------------------------------
 
-    public static String TASK_NAME = "VermessungsrissPicture";
+    public static String TASK_NAME = "VermessungPicture";
 
     //~ Enums ------------------------------------------------------------------
 
@@ -59,9 +57,10 @@ public class VermessungsrissPictureServerAction implements UserAwareServerAction
 
         //~ Enum constants -----------------------------------------------------
 
-        FIND_GRENZNIEDERSCHRIFT, FIND_VERMESSUNGSRISS, FIND_BUCHWERK, GET_GRENZNIEDERSCHRIFT_FILENAME,
-        GET_VERMESSUNGSRISS_FILENAME, GET_BUCHWERK_FILENAME, GET_GRENZNIEDERSCHRIFT_LINK_FILENAME,
-        GET_VERMESSUNGSRISS_LINK_FILENAME
+        FIND_GRENZNIEDERSCHRIFT, FIND_VERMESSUNGSRISS, FIND_BUCHWERK, FIND_INSELKARTE, FIND_GEWANNE,
+        GET_GRENZNIEDERSCHRIFT_FILENAME, GET_VERMESSUNGSRISS_FILENAME, GET_BUCHWERK_FILENAME, GET_INSELKARTE_FILENAME,
+        GET_GEWANNE_FILENAME, GET_GRENZNIEDERSCHRIFT_LINK_FILENAME, GET_VERMESSUNGSRISS_LINK_FILENAME,
+        GET_INSELKARTE_LINK_FILENMAME, GET_GEWANNE_LINK_FILENMAME
     }
 
     /**
@@ -73,7 +72,7 @@ public class VermessungsrissPictureServerAction implements UserAwareServerAction
 
         //~ Enum constants -----------------------------------------------------
 
-        SCHLUESSEL, GEMARKUNG, FLUR, BLATT, STEUERBEZIRK, BEZEICHNER, HISTORISCH, LINK
+        SCHLUESSEL, GEMARKUNG, FLUR, BLATT, STEUERBEZIRK, BEZEICHNER, HISTORISCH, LINK, VERSION, KMQUADRAT
     }
 
     //~ Instance fields --------------------------------------------------------
@@ -119,7 +118,7 @@ public class VermessungsrissPictureServerAction implements UserAwareServerAction
 
     @Override
     public Object execute(final Object body, final ServerActionParameter... params) {
-        final VermessungsrissPictureFinder finder = new VermessungsrissPictureFinder(
+        final VermessungPictureFinder finder = new VermessungPictureFinder(
                 getUser(),
                 getMetaService(),
                 getConnectionContext());
@@ -141,6 +140,8 @@ public class VermessungsrissPictureServerAction implements UserAwareServerAction
         String bezeichner = null;
         Boolean historisch = null;
         String link = null;
+        String version = null;
+        Integer kmquadrat = null;
         if (params != null) {
             for (final ServerActionParameter sap : params) {
                 if (sap.getKey().equals(Param.SCHLUESSEL.toString())) {
@@ -175,11 +176,33 @@ public class VermessungsrissPictureServerAction implements UserAwareServerAction
                     historisch = (Boolean)sap.getValue();
                 } else if (sap.getKey().equals(Param.LINK.toString())) {
                     link = (String)sap.getValue();
+                } else if (sap.getKey().equals(Param.VERSION.toString())) {
+                    version = (String)sap.getValue();
+                } else if (sap.getKey().equals(Param.KMQUADRAT.toString())) {
+                    kmquadrat = (Integer)sap.getValue();
                 }
             }
         }
         if (request != null) {
             switch (request) {
+                case FIND_VERMESSUNGSRISS: {
+                    return finder.findVermessungsrissPicture(schluessel, gemarkung, flur, blatt);
+                }
+                case GET_VERMESSUNGSRISS_FILENAME: {
+                    return finder.getVermessungsrissFilename(schluessel, gemarkung, flur, blatt);
+                }
+                case FIND_GRENZNIEDERSCHRIFT: {
+                    return finder.findGrenzniederschriftPicture(schluessel, gemarkung, flur, blatt);
+                }
+                case GET_GRENZNIEDERSCHRIFT_FILENAME: {
+                    return finder.getGrenzniederschriftFilename(schluessel, gemarkung, flur, blatt);
+                }
+                case GET_VERMESSUNGSRISS_LINK_FILENAME: {
+                    return finder.getVermessungsrissLinkFilename(link);
+                }
+                case GET_GRENZNIEDERSCHRIFT_LINK_FILENAME: {
+                    return finder.getGrenzniederschriftLinkFilename(link);
+                }
                 case FIND_BUCHWERK: {
                     return finder.findBuchwerkPicture(
                             schluessel,
@@ -188,31 +211,44 @@ public class VermessungsrissPictureServerAction implements UserAwareServerAction
                             bezeichner,
                             historisch);
                 }
-                case FIND_GRENZNIEDERSCHRIFT: {
-                    return finder.findGrenzniederschriftPicture(schluessel, gemarkung, flur, blatt);
+                case FIND_GEWANNE: {
+                    final boolean liste = gemarkungBean != null;
+                    return finder.findGewannenPicture(
+                            gemarkungBean,
+                            kmquadrat,
+                            liste);
                 }
-                case FIND_VERMESSUNGSRISS: {
-                    return finder.findVermessungsrissPicture(schluessel, gemarkung, flur, blatt);
-                }
+
                 case GET_BUCHWERK_FILENAME: {
-                    return finder.getBuchwerkPictureFilename(
+                    return finder.getBuchwerkFilename(
                             schluessel,
                             gemarkungBean,
                             steuerbezirk,
                             bezeichner,
                             historisch);
                 }
-                case GET_GRENZNIEDERSCHRIFT_FILENAME: {
-                    return finder.getGrenzniederschriftPictureFilename(schluessel, gemarkung, flur, blatt);
+                case FIND_INSELKARTE: {
+                    return finder.findInselkartePicture(
+                            schluessel,
+                            gemarkungBean,
+                            flur,
+                            blatt,
+                            version);
                 }
-                case GET_VERMESSUNGSRISS_FILENAME: {
-                    return finder.getVermessungsrissPictureFilename(schluessel, gemarkung, flur, blatt);
+                case GET_INSELKARTE_FILENAME: {
+                    return finder.getInselkarteFilename(
+                            schluessel,
+                            gemarkungBean,
+                            flur,
+                            blatt,
+                            version);
                 }
-                case GET_VERMESSUNGSRISS_LINK_FILENAME: {
-                    return finder.getVermessungsrissLinkFilename(link);
-                }
-                case GET_GRENZNIEDERSCHRIFT_LINK_FILENAME: {
-                    return finder.getGrenzniederschriftLinkFilename(link);
+                case GET_GEWANNE_FILENAME: {
+                    final boolean liste = gemarkungBean != null;
+                    return finder.getGewannenFilename(
+                            gemarkungBean,
+                            kmquadrat,
+                            liste);
                 }
             }
         }
