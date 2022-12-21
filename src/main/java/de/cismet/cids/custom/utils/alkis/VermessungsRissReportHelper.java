@@ -60,7 +60,7 @@ public class VermessungsRissReportHelper implements ConnectionContextProvider {
     private final User user;
     private final MetaService metaService;
     private final ConnectionContext connectionContext;
-    private final VermessungsrissPictureFinder pictureFinder;
+    private final VermessungPictureFinder pictureFinder;
 
     //~ Constructors -----------------------------------------------------------
 
@@ -77,7 +77,7 @@ public class VermessungsRissReportHelper implements ConnectionContextProvider {
         this.user = user;
         this.metaService = metaService;
         this.connectionContext = connectionContext;
-        this.pictureFinder = new VermessungsrissPictureFinder(user, metaService, connectionContext);
+        this.pictureFinder = new VermessungPictureFinder(user, metaService, connectionContext);
     }
 
     //~ Methods ----------------------------------------------------------------
