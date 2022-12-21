@@ -76,7 +76,7 @@ public class VermessungRissReportScriptlet extends JRDefaultScriptlet {
             final String blatt,
             final ExtendedAccessHandler extendedAccessHandler) {
         final String validDocument;
-        final VermessungsrissPictureFinder finder = new VermessungsrissPictureFinder(
+        final VermessungPictureFinder finder = new VermessungPictureFinder(
                 null,
                 null,
                 ConnectionContext.create(
