@@ -55,7 +55,8 @@ public class AlboVorgangExtReportServerAction extends StampedJasperReportServerA
     //~ Static fields/initializers ---------------------------------------------
 
     public static final String TASK_NAME = "alboVorgangExtReport";
-    private static final String QUERY = "select %s, %s from albo_erhebungsklasse where legende is true  order by schluessel";
+    private static final String QUERY =
+        "select %s, %s from albo_erhebungsklasse where legende is true  order by schluessel";
     private static final String QUERY_WZ =
         "select %s, %s from albo_wirtschaftszweig_erhebungsklasse where legende is true order by schluessel";
 
