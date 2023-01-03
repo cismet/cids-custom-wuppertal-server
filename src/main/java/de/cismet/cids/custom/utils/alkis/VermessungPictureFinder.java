@@ -55,7 +55,6 @@ public class VermessungPictureFinder implements ConnectionContextProvider {
     private static final org.apache.log4j.Logger LOG = org.apache.log4j.Logger.getLogger(VermessungPictureFinder.class);
 
     public static final String SEP = "/";
-    public static final String SUFFIX_REDUCED_SIZE = "_rs";
 
     private static final String[] ENDINGS = new String[] {
             ".pdf",
@@ -611,16 +610,9 @@ public class VermessungPictureFinder implements ConnectionContextProvider {
             final boolean buchwerk,
             final int recursionDepth) {
         if (LOG.isDebugEnabled()) {
-            LOG.debug("Searching for picture: " + fileWithoutSuffix + "xxx");
+            LOG.debug("Searching for picture: " + fileWithoutSuffix);
         }
 
-        // check if there is a reduced size image direcly...
-        final String reducedSize = identifyFilenameWithEnding(fileWithoutSuffix + SUFFIX_REDUCED_SIZE);
-        if (reducedSize != null) {
-            return reducedSize;
-        }
-
-        // we need to do an extra round if we didn't found with _rs suffix...
         final String fullSize = identifyFilenameWithEnding(fileWithoutSuffix);
         if (fullSize != null) {
             return fullSize;
