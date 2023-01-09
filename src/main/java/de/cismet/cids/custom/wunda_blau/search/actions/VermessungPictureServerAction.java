@@ -17,7 +17,10 @@ import Sirius.server.middleware.interfaces.domainserver.MetaService;
 import Sirius.server.middleware.interfaces.domainserver.MetaServiceStore;
 import Sirius.server.middleware.types.MetaClass;
 import Sirius.server.middleware.types.MetaObject;
+import Sirius.server.middleware.types.MetaObjectNode;
 import Sirius.server.newuser.User;
+
+import java.rmi.RemoteException;
 
 import java.util.HashMap;
 import java.util.Map;
@@ -46,6 +49,9 @@ public class VermessungPictureServerAction implements UserAwareServerAction, Met
 
     public static String TASK_NAME = "VermessungPicture";
 
+    private static final transient org.apache.log4j.Logger LOG = org.apache.log4j.Logger.getLogger(
+            VermessungPictureServerAction.class);
+
     //~ Enums ------------------------------------------------------------------
 
     /**
@@ -57,10 +63,19 @@ public class VermessungPictureServerAction implements UserAwareServerAction, Met
 
         //~ Enum constants -----------------------------------------------------
 
-        FIND_GRENZNIEDERSCHRIFT, FIND_VERMESSUNGSRISS, FIND_BUCHWERK, FIND_INSELKARTE, FIND_GEWANNE,
-        GET_GRENZNIEDERSCHRIFT_FILENAME, GET_VERMESSUNGSRISS_FILENAME, GET_BUCHWERK_FILENAME, GET_INSELKARTE_FILENAME,
-        GET_GEWANNE_FILENAME, GET_GRENZNIEDERSCHRIFT_LINK_FILENAME, GET_VERMESSUNGSRISS_LINK_FILENAME,
-        GET_INSELKARTE_LINK_FILENMAME, GET_GEWANNE_LINK_FILENMAME
+        FIND, BASENAME, LINK
+    }
+
+    /**
+     * DOCUMENT ME!
+     *
+     * @version  $Revision$, $Date$
+     */
+    public enum Type {
+
+        //~ Enum constants -----------------------------------------------------
+
+        VERMESSUNGSRISS, GRENZNIEDERSCHRIFT, BUCHWERK, INSELKARTE, GEWANNE, GEBAEUDEBESCHREIBUNG
     }
 
     /**
@@ -72,7 +87,7 @@ public class VermessungPictureServerAction implements UserAwareServerAction, Met
 
         //~ Enum constants -----------------------------------------------------
 
-        SCHLUESSEL, GEMARKUNG, FLUR, BLATT, STEUERBEZIRK, BEZEICHNER, HISTORISCH, LINK, VERSION, KMQUADRAT
+        TYPE, SCHLUESSEL, GEMARKUNG, FLUR, BLATT, STEUERBEZIRK, BEZEICHNER, HISTORISCH, LINK, VERSION, KMQUADRAT, MON
     }
 
     //~ Instance fields --------------------------------------------------------
@@ -131,6 +146,8 @@ public class VermessungPictureServerAction implements UserAwareServerAction, Met
             request = null;
         }
 
+        Type type = null;
+        MetaObjectNode mon = null;
         String schluessel = null;
         Integer gemarkung = null;
         CidsBean gemarkungBean = null;
@@ -146,24 +163,10 @@ public class VermessungPictureServerAction implements UserAwareServerAction, Met
             for (final ServerActionParameter sap : params) {
                 if (sap.getKey().equals(Param.SCHLUESSEL.toString())) {
                     schluessel = (String)sap.getValue();
+                } else if (sap.getKey().equals(Param.TYPE.toString())) {
+                    type = (Type)sap.getValue();
                 } else if (sap.getKey().equals(Param.GEMARKUNG.toString())) {
                     gemarkung = (Integer)sap.getValue();
-                    if (gemarkungMap.containsKey(gemarkung)) {
-                        gemarkungBean = gemarkungMap.get(gemarkung);
-                    } else {
-                        try {
-                            final MetaClass mc = MetaClassCache.getInstance()
-                                        .getMetaClass("WUNDA_BLAU", "vermessung_gemarkung");
-                            final MetaObject mo = getMetaService().getMetaObject(
-                                    getUser(),
-                                    gemarkung,
-                                    mc.getId(),
-                                    getConnectionContext());
-                            gemarkungBean = mo.getBean();
-                            gemarkungMap.put(gemarkung, gemarkungBean);
-                        } catch (final Exception ex) {
-                        }
-                    }
                 } else if (sap.getKey().equals(Param.FLUR.toString())) {
                     flur = (String)sap.getValue();
                 } else if (sap.getKey().equals(Param.BLATT.toString())) {
@@ -180,75 +183,141 @@ public class VermessungPictureServerAction implements UserAwareServerAction, Met
                     version = (String)sap.getValue();
                 } else if (sap.getKey().equals(Param.KMQUADRAT.toString())) {
                     kmquadrat = (Integer)sap.getValue();
+                } else if (sap.getKey().equals(Param.MON.toString())) {
+                    mon = (MetaObjectNode)sap.getValue();
                 }
             }
         }
-        if (request != null) {
-            switch (request) {
-                case FIND_VERMESSUNGSRISS: {
-                    return finder.findVermessungsrissPicture(schluessel, gemarkung, flur, blatt);
+        if (gemarkung != null) {
+            if (gemarkungMap.containsKey(gemarkung)) {
+                gemarkungBean = gemarkungMap.get(gemarkung);
+            } else {
+                try {
+                    final MetaClass mc = MetaClassCache.getInstance()
+                                .getMetaClass("WUNDA_BLAU", "vermessung_gemarkung");
+                    final MetaObject mo = getMetaService().getMetaObject(
+                            getUser(),
+                            gemarkung,
+                            mc.getId(),
+                            getConnectionContext());
+                    gemarkungBean = mo.getBean();
+                    gemarkungMap.put(gemarkung, gemarkungBean);
+                } catch (final Exception ex) {
                 }
-                case GET_VERMESSUNGSRISS_FILENAME: {
-                    return finder.getVermessungsrissFilename(schluessel, gemarkung, flur, blatt);
-                }
-                case FIND_GRENZNIEDERSCHRIFT: {
-                    return finder.findGrenzniederschriftPicture(schluessel, gemarkung, flur, blatt);
-                }
-                case GET_GRENZNIEDERSCHRIFT_FILENAME: {
-                    return finder.getGrenzniederschriftFilename(schluessel, gemarkung, flur, blatt);
-                }
-                case GET_VERMESSUNGSRISS_LINK_FILENAME: {
-                    return finder.getVermessungsrissLinkFilename(link);
-                }
-                case GET_GRENZNIEDERSCHRIFT_LINK_FILENAME: {
-                    return finder.getGrenzniederschriftLinkFilename(link);
-                }
-                case FIND_BUCHWERK: {
-                    return finder.findBuchwerkPicture(
-                            schluessel,
-                            gemarkungBean,
-                            steuerbezirk,
-                            bezeichner,
-                            historisch);
-                }
-                case FIND_GEWANNE: {
-                    final boolean liste = gemarkungBean != null;
-                    return finder.findGewannenPicture(
-                            gemarkungBean,
-                            kmquadrat,
-                            liste);
-                }
+            }
+        }
+        final CidsBean bean;
+        if (mon != null) {
+            MetaObject mo = null;
+            try {
+                mo = getMetaService().getMetaObject(
+                        getUser(),
+                        mon.getObjectId(),
+                        mon.getClassId(),
+                        getConnectionContext());
+            } catch (RemoteException ex) {
+                LOG.error(ex, ex);
+            }
+            bean = (mo != null) ? mo.getBean() : null;
+        } else {
+            bean = null;
+        }
 
-                case GET_BUCHWERK_FILENAME: {
-                    return finder.getBuchwerkFilename(
-                            schluessel,
-                            gemarkungBean,
-                            steuerbezirk,
-                            bezeichner,
-                            historisch);
+        if ((request != null) && (type != null)) {
+            switch (request) {
+                case FIND: {
+                    switch (type) {
+                        case VERMESSUNGSRISS: {
+                            return finder.findVermessungsrissPicture(schluessel, gemarkung, flur, blatt);
+                        }
+                        case GRENZNIEDERSCHRIFT: {
+                            return finder.findGrenzniederschriftPicture(schluessel, gemarkung, flur, blatt);
+                        }
+                        case BUCHWERK: {
+                            return finder.findBuchwerkPicture(
+                                    schluessel,
+                                    gemarkungBean,
+                                    steuerbezirk,
+                                    bezeichner,
+                                    historisch);
+                        }
+                        case INSELKARTE: {
+                            return finder.findInselkartePicture(
+                                    schluessel,
+                                    gemarkungBean,
+                                    flur,
+                                    blatt,
+                                    version);
+                        }
+                        case GEWANNE: {
+                            return finder.findGewannenPicture(
+                                    gemarkungBean,
+                                    kmquadrat,
+                                    gemarkungBean
+                                            != null);
+                        }
+                        case GEBAEUDEBESCHREIBUNG: {
+                            if (bean != null) {
+                                final String ordner = (String)bean.getProperty("ordner");
+                                final String nummer = (String)bean.getProperty("nummer");
+                                return finder.findGebaeudebeschreibungenPicture(ordner, nummer);
+                            } else {
+                                return null;
+                            }
+                        }
+                    }
                 }
-                case FIND_INSELKARTE: {
-                    return finder.findInselkartePicture(
-                            schluessel,
-                            gemarkungBean,
-                            flur,
-                            blatt,
-                            version);
+                case BASENAME: {
+                    switch (type) {
+                        case VERMESSUNGSRISS: {
+                            return finder.getVermessungsrissFilename(schluessel, gemarkung, flur, blatt);
+                        }
+                        case GRENZNIEDERSCHRIFT: {
+                            return finder.getGrenzniederschriftFilename(schluessel, gemarkung, flur, blatt);
+                        }
+                        case BUCHWERK: {
+                            return finder.getBuchwerkFilename(
+                                    schluessel,
+                                    gemarkungBean,
+                                    steuerbezirk,
+                                    bezeichner,
+                                    historisch);
+                        }
+                        case INSELKARTE: {
+                            return finder.getInselkarteFilename(
+                                    schluessel,
+                                    gemarkungBean,
+                                    flur,
+                                    blatt,
+                                    version);
+                        }
+                        case GEWANNE: {
+                            return finder.getGewannenFilename(
+                                    gemarkungBean,
+                                    kmquadrat,
+                                    gemarkungBean
+                                            != null);
+                        }
+                        case GEBAEUDEBESCHREIBUNG: {
+                            if (bean != null) {
+                                final String ordner = (String)bean.getProperty("ordner");
+                                final String nummer = (String)bean.getProperty("nummer");
+                                return finder.getGebaeudebeschreibungenFilename(ordner, nummer);
+                            } else {
+                                return null;
+                            }
+                        }
+                    }
                 }
-                case GET_INSELKARTE_FILENAME: {
-                    return finder.getInselkarteFilename(
-                            schluessel,
-                            gemarkungBean,
-                            flur,
-                            blatt,
-                            version);
-                }
-                case GET_GEWANNE_FILENAME: {
-                    final boolean liste = gemarkungBean != null;
-                    return finder.getGewannenFilename(
-                            gemarkungBean,
-                            kmquadrat,
-                            liste);
+                case LINK: {
+                    switch (type) {
+                        case VERMESSUNGSRISS: {
+                            return finder.getVermessungsrissLinkFilename(link);
+                        }
+                        case GRENZNIEDERSCHRIFT: {
+                            return finder.getGrenzniederschriftLinkFilename(link);
+                        }
+                    }
                 }
             }
         }

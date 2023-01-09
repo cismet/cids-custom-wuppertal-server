@@ -196,6 +196,19 @@ public class VermessungPictureFinder implements ConnectionContextProvider {
     /**
      * DOCUMENT ME!
      *
+     * @param   ordner  DOCUMENT ME!
+     * @param   nummer  DOCUMENT ME!
+     *
+     * @return  DOCUMENT ME!
+     */
+    public String findGebaeudebeschreibungenPicture(final String ordner, final String nummer) {
+        final String fileName = getGebaeudebeschreibungenFilename(ordner, nummer);
+        return identifyFullFilename(fileName, true);
+    }
+
+    /**
+     * DOCUMENT ME!
+     *
      * @param   schluessel  DOCUMENT ME!
      * @param   gemarkung   DOCUMENT ME!
      * @param   flur        DOCUMENT ME!
@@ -250,13 +263,12 @@ public class VermessungPictureFinder implements ConnectionContextProvider {
             final Integer gemarkung,
             final String flur,
             final String blatt) {
-        return getVermessungsrissFilename(true, true, riss, gemarkung, flur, blatt);
+        return getVermessungsrissFilename(true, riss, gemarkung, flur, blatt);
     }
 
     /**
      * DOCUMENT ME!
      *
-     * @param   withPath              DOCUMENT ME!
      * @param   isGrenzniederschrift  blattnummer DOCUMENT ME!
      * @param   schluessel            laufendeNummer DOCUMENT ME!
      * @param   gemarkung             DOCUMENT ME!
@@ -265,34 +277,24 @@ public class VermessungPictureFinder implements ConnectionContextProvider {
      *
      * @return  DOCUMENT ME!
      */
-    private String getVermessungsrissFilename(final boolean withPath,
+    private String getVermessungsrissFilename(
             final boolean isGrenzniederschrift,
             final String schluessel,
             final Integer gemarkung,
             final String flur,
             final String blatt) {
         final boolean isErganzungskarte = SCHLUESSEL_ERGAENZUNGSKARTEN.equals(schluessel);
-        final StringBuffer buf = new StringBuffer();
-        if (isGrenzniederschrift) {
-            buf.append(PREFIX_GRENZNIEDERSCHRIFT);
-        } else {
-            buf.append(PREFIX_VERMESSUNGSRISS);
-        }
-        buf.append("_");
-        buf.append(StringUtils.leftPad(schluessel, 3, '0'));
-        buf.append("-");
-        buf.append(String.format("%04d", gemarkung));
-        buf.append("-");
-        buf.append(StringUtils.leftPad(flur, 3, '0'));
-        buf.append("-");
-        buf.append(StringUtils.leftPad(blatt, 8, '0'));
-        final StringBuffer b = new StringBuffer();
-        if (withPath) {
-            b.append(getRissFolder(isErganzungskarte, isGrenzniederschrift, gemarkung));
-            b.append(SEP);
-        }
-        b.append(buf.toString());
-        return b.toString();
+        return new StringBuffer(getRissFolder(isErganzungskarte, isGrenzniederschrift, gemarkung)).append(SEP)
+                    .append(isGrenzniederschrift ? PREFIX_GRENZNIEDERSCHRIFT : PREFIX_VERMESSUNGSRISS)
+                    .append("_")
+                    .append(StringUtils.leftPad(schluessel, 3, '0'))
+                    .append("-")
+                    .append(String.format("%04d", gemarkung))
+                    .append("-")
+                    .append(StringUtils.leftPad(flur, 3, '0'))
+                    .append("-")
+                    .append(StringUtils.leftPad(blatt, 8, '0'))
+                    .toString();
     }
 
     /**
@@ -355,7 +357,7 @@ public class VermessungPictureFinder implements ConnectionContextProvider {
             final Integer gemarkung,
             final String flur,
             final String blatt) {
-        return getVermessungsrissFilename(true, false, riss, gemarkung, flur, blatt);
+        return getVermessungsrissFilename(false, riss, gemarkung, flur, blatt);
     }
 
     /**
@@ -374,8 +376,8 @@ public class VermessungPictureFinder implements ConnectionContextProvider {
             final Integer steuerbezirk,
             final String bezeichner,
             final boolean historisch) {
-        final StringBuffer buf = new StringBuffer();
-        buf.append(getBuchwerkFolder(schluessel, gemarkung));
+        final StringBuffer buf = new StringBuffer(getBuchwerkFolder(schluessel, gemarkung));
+        buf.append(SEP);
         if (SCHLUESSEL_ERGAENZUNGSKARTEN.equals(schluessel)) {
             buf.append(PREFIX_ERGAENZUNGSKARTEN).append("_");
         } else if (SCHLUESSEL_FLURBUECHER1.equals(schluessel)
@@ -412,8 +414,8 @@ public class VermessungPictureFinder implements ConnectionContextProvider {
             final CidsBean gemarkung,
             final Integer kmquadrat,
             final boolean liste) {
-        final StringBuffer buf = new StringBuffer();
-        buf.append(getGewannenFolder());
+        final StringBuffer buf = new StringBuffer(getGewannenFolder());
+        buf.append(SEP);
         if (liste) {
             buf.append("Gewanne_")
                     .append(((String)gemarkung.getProperty("name")).replaceAll("Ä", "Ae").replaceAll("Ü", "Ue")
@@ -423,6 +425,20 @@ public class VermessungPictureFinder implements ConnectionContextProvider {
             buf.append(Integer.toString(kmquadrat)).append("-Gewanne");
         }
         return buf.toString();
+    }
+
+    /**
+     * DOCUMENT ME!
+     *
+     * @param   ordner  DOCUMENT ME!
+     * @param   nummer  DOCUMENT ME!
+     *
+     * @return  DOCUMENT ME!
+     */
+    public String getGebaeudebeschreibungenFilename(
+            final String ordner,
+            final String nummer) {
+        return new StringBuffer(getGebaeudebeschreibungFolder(ordner)).append(SEP).append(nummer).toString();
     }
 
     /**
@@ -441,7 +457,8 @@ public class VermessungPictureFinder implements ConnectionContextProvider {
             final String flur,
             final String blatt,
             final String version) {
-        final StringBuffer buf = new StringBuffer(getInselkartenFolder(gemarkung)).append(PREFIX_LIEGENSCHAFTSKARTEN)
+        return new StringBuffer(getInselkartenFolder(gemarkung)).append(SEP)
+                    .append(PREFIX_LIEGENSCHAFTSKARTEN)
                     .append("_")
                     .append(StringUtils.leftPad(schluessel, 3, '0'))
                     .append("-")
@@ -451,9 +468,8 @@ public class VermessungPictureFinder implements ConnectionContextProvider {
                     .append("-")
                     .append(StringUtils.leftPad(flur, 3, '0'))
                     .append(StringUtils.leftPad(blatt, 2, '0'))
-                    .append(StringUtils.leftPad(version, 3, '0'));
-
-        return buf.toString();
+                    .append(StringUtils.leftPad(version, 3, '0'))
+                    .toString();
     }
 
     /**
@@ -689,7 +705,7 @@ public class VermessungPictureFinder implements ConnectionContextProvider {
             buf = new StringBuffer(alkisConf.getVermessungHostBilder());
         }
         if (!isErgaenzungskarte) {
-            buf.append(String.format("%04d", gemarkung));
+            buf.append(SEP).append(String.format("%04d", gemarkung));
         }
         return buf.toString();
     }
@@ -703,25 +719,25 @@ public class VermessungPictureFinder implements ConnectionContextProvider {
      * @return  DOCUMENT ME!
      */
     private String getBuchwerkFolder(final String schluessel, final CidsBean gemarkung) {
-        final StringBuffer buf = new StringBuffer();
         if (SCHLUESSEL_NAMENSVERZEICHNIS.equals(schluessel)) {
-            buf.append(alkisConf.getVermessungHostNamensverzeichnis())
-                    .append(SEP)
-                    .append(PREFIX_NAMENSVERZEICHNIS)
-                    .append("_")
-                    .append(StringUtils.leftPad(schluessel, 3, '0'))
-                    .append("-")
-                    .append(String.format("%04d", (Integer)gemarkung.getProperty("id")));
+            return new StringBuffer(alkisConf.getVermessungHostNamensverzeichnis()).append(SEP)
+                        .append(PREFIX_NAMENSVERZEICHNIS)
+                        .append("_")
+                        .append(StringUtils.leftPad(schluessel, 3, '0'))
+                        .append("-")
+                        .append(String.format("%04d", (Integer)gemarkung.getProperty("id")))
+                        .toString();
         } else if (SCHLUESSEL_FLURBUECHER1.equals(schluessel)
                     || SCHLUESSEL_FLURBUECHER2.equals(schluessel)) {
-            buf.append(alkisConf.getVermessungHostFlurbuecher());
+            return new StringBuffer(alkisConf.getVermessungHostFlurbuecher()).toString();
         } else if (SCHLUESSEL_LIEGENSCHAFTSBUECHER1.equals(schluessel)
                     || SCHLUESSEL_LIEGENSCHAFTSBUECHER2.equals(schluessel)) {
-            buf.append(alkisConf.getVermessungHostLiegenschaftsbuecher())
-                    .append((String)gemarkung.getProperty("name"))
-                    .append(SEP);
+            return new StringBuffer(alkisConf.getVermessungHostLiegenschaftsbuecher()).append(SEP)
+                        .append((String)gemarkung.getProperty("name"))
+                        .toString();
+        } else {
+            return null;
         }
-        return buf.toString();
     }
 
     /**
@@ -730,7 +746,7 @@ public class VermessungPictureFinder implements ConnectionContextProvider {
      * @return  DOCUMENT ME!
      */
     private String getGewannenFolder() {
-        return new StringBuffer().append(alkisConf.getVermessungHostGewannen()).append(SEP).toString();
+        return new StringBuffer(alkisConf.getVermessungHostGewannen()).toString();
     }
 
     /**
@@ -741,10 +757,21 @@ public class VermessungPictureFinder implements ConnectionContextProvider {
      * @return  DOCUMENT ME!
      */
     private String getInselkartenFolder(final CidsBean gemarkung) {
-        return new StringBuffer().append(alkisConf.getVermessungHostInselkarten())
-                    .append(SEP)
+        return new StringBuffer(alkisConf.getVermessungHostInselkarten()).append(SEP)
                     .append(String.format("%04d", (Integer)gemarkung.getProperty("id")))
-                    .append(SEP)
+                    .toString();
+    }
+
+    /**
+     * DOCUMENT ME!
+     *
+     * @param   ordner  DOCUMENT ME!
+     *
+     * @return  DOCUMENT ME!
+     */
+    private String getGebaeudebeschreibungFolder(final String ordner) {
+        return new StringBuffer(alkisConf.getVermessungHostGebaeudebeschreibungen()).append(SEP)
+                    .append(ordner)
                     .toString();
     }
 }

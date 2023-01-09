@@ -63,6 +63,8 @@ public abstract class AlkisConf {
     private final String vermessungHostErgaenzungskarten;
     private final String vermessungHostInselkarten;
     private final String vermessungHostGewannen;
+    private final String vermessungHostGebaeudebeschreibungen;
+    private final String vermessungHostGebaeudebuecher;
     private final String landparcelFeatureRendererColor;
     private final String demoServiceUrl;
 
@@ -102,6 +104,8 @@ public abstract class AlkisConf {
         vermessungHostNamensverzeichnis = serviceProperties.getProperty("VERMESSUNG_HOST_NAMENSVERZEICHNIS");
         vermessungHostInselkarten = serviceProperties.getProperty("VERMESSUNG_HOST_INSELKARTEN");
         vermessungHostGewannen = serviceProperties.getProperty("VERMESSUNG_HOST_GEWANNEN");
+        vermessungHostGebaeudebeschreibungen = serviceProperties.getProperty("VERMESSUNG_HOST_GEBAEUDEBESCHREIBUNGEN");
+        vermessungHostGebaeudebuecher = serviceProperties.getProperty("VERMESSUNG_HOST_GEBAUEDEBUECHER");
         apmapsHost = serviceProperties.getProperty("APMAPS_HOST");
         apmapsEtrsHost = serviceProperties.getProperty("APMAPS_ETRS_HOST");
         landparcelFeatureRendererColor = serviceProperties.getProperty("LANDPARCEL_FEATURE_RENDERER_COLOR");
