@@ -24,6 +24,7 @@ import java.io.FileOutputStream;
 
 import de.cismet.cids.custom.utils.nas.NasProduct;
 import de.cismet.cids.custom.utils.vermessungsunterlagen.VermessungsunterlagenHandler;
+import de.cismet.cids.custom.utils.vermessungsunterlagen.VermessungsunterlagenProperties;
 import de.cismet.cids.custom.utils.vermessungsunterlagen.VermessungsunterlagenTask;
 import de.cismet.cids.custom.utils.vermessungsunterlagen.VermessungsunterlagenTaskRetryable;
 import de.cismet.cids.custom.utils.vermessungsunterlagen.exceptions.VermessungsunterlagenTaskException;
@@ -51,6 +52,7 @@ public abstract class VermUntTaskNas extends VermessungsunterlagenTask implement
     private final Geometry geometry;
     private final NasProduct product;
     private final String requestId;
+    private boolean anonymous;
 
     private String orderId;
 
@@ -64,17 +66,20 @@ public abstract class VermUntTaskNas extends VermessungsunterlagenTask implement
      * @param  requestId  DOCUMENT ME!
      * @param  geometry   DOCUMENT ME!
      * @param  product    DOCUMENT ME!
+     * @param  anonymous  DOCUMENT ME!
      */
     public VermUntTaskNas(final String type,
             final String jobkey,
             final String requestId,
             final Geometry geometry,
-            final NasProduct product) {
+            final NasProduct product,
+            final boolean anonymous) {
         super(type, jobkey);
 
         this.requestId = requestId;
         this.geometry = geometry;
         this.product = product;
+        this.anonymous = anonymous;
     }
 
     //~ Methods ----------------------------------------------------------------
@@ -103,7 +108,12 @@ public abstract class VermUntTaskNas extends VermessungsunterlagenTask implement
          * Phase 1: sending the request to the server (only if it hasnt already be sent correctly)
          */
         if (orderId == null) {
-            orderId = sendNasRequest(product, geometryCollection, requestId);
+            orderId = sendNasRequest(
+                    product,
+                    geometryCollection,
+                    requestId,
+                    anonymous ? VermessungsunterlagenProperties.fromServerResources().getProfilKennungAnonym()
+                              : VermessungsunterlagenProperties.fromServerResources().getProfilKennungRegistriert());
             if (orderId == null) {
                 final String message =
                     "Der NAS-Server hat keine OrderID zurückgeliefert. Der Download kann nicht gestartet werden.";
@@ -174,6 +184,7 @@ public abstract class VermUntTaskNas extends VermessungsunterlagenTask implement
      * @param   product              DOCUMENT ME!
      * @param   geometrieCollection  geometrie DOCUMENT ME!
      * @param   requestId            DOCUMENT ME!
+     * @param   profilKennung        DOCUMENT ME!
      *
      * @return  DOCUMENT ME!
      *
@@ -181,7 +192,8 @@ public abstract class VermUntTaskNas extends VermessungsunterlagenTask implement
      */
     private String sendNasRequest(final NasProduct product,
             final GeometryCollection geometrieCollection,
-            final String requestId) throws VermessungsunterlagenTaskException {
+            final String requestId,
+            final String profilKennung) throws VermessungsunterlagenTaskException {
         final NasDataQueryAction action = new NasDataQueryAction();
         action.setUser(getUser());
         final String result = (String)action.execute(
@@ -193,7 +205,8 @@ public abstract class VermUntTaskNas extends VermessungsunterlagenTask implement
                 new ServerActionParameter(
                     NasDataQueryAction.PARAMETER_TYPE.METHOD.toString(),
                     NasDataQueryAction.METHOD_TYPE.ADD),
-                new ServerActionParameter(NasDataQueryAction.PARAMETER_TYPE.REQUEST_ID.toString(), requestId));
+                new ServerActionParameter(NasDataQueryAction.PARAMETER_TYPE.REQUEST_ID.toString(), requestId),
+                new ServerActionParameter(NasDataQueryAction.PARAMETER_TYPE.PROFIL_KENNUNG.toString(), profilKennung));
         if (result == null) {
             final String message = "Beim Absetzen des Requests an den NAS-Server kam es zu einem unerwarteten Fehler.";
             LOG.error(message, new Exception());
