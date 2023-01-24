@@ -12,8 +12,8 @@
  */
 package de.cismet.cids.custom.wunda_blau.search.actions;
 
+import de.cismet.cids.custom.utils.GrundwassermessstellenProperties;
 import de.cismet.cids.custom.utils.WundaBlauServerResources;
-import de.cismet.cids.custom.utils.vermessungsunterlagen.GrundwassermessstellenProperties;
 
 import de.cismet.cids.server.actions.ServerAction;
 import de.cismet.cids.server.actions.WebDavTunnelAction;

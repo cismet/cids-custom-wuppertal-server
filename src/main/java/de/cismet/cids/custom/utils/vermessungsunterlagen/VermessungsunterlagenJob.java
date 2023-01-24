@@ -444,20 +444,23 @@ public class VermessungsunterlagenJob implements Runnable, ConnectionContextProv
                         submitTask(new VermUntTaskNasKomplett(
                                 getKey(),
                                 requestId,
-                                vermessungsGeometrie));
+                                vermessungsGeometrie,
+                                Boolean.TRUE.equals(anfrageBean.getAnonymousOrder())));
                     }
                     if (anfrageBean.isMitAlkisBestandsdatennurPunkte() && (vermessungsGeometrieSaum != null)) {
                         submitTask(new VermUntTaskNasPunkte(
                                 getKey(),
                                 requestId,
-                                vermessungsGeometrieSaum));
+                                vermessungsGeometrieSaum,
+                                Boolean.TRUE.equals(anfrageBean.getAnonymousOrder())));
                     }
                     if (anfrageBean.isMitAlkisBestandsdatenohneEigentuemerinfo()
                                 && isTaskAllowed(VermUntTaskNasOhneEigentuemer.TYPE)) {
                         submitTask(new VermUntTaskNasOhneEigentuemer(
                                 getKey(),
                                 requestId,
-                                vermessungsGeometrieSaum));
+                                vermessungsGeometrieSaum,
+                                Boolean.TRUE.equals(anfrageBean.getAnonymousOrder())));
                     }
 
                     if ((risse != null) && !risse.isEmpty()) {

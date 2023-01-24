@@ -36,10 +36,12 @@ public class VermUntTaskNasOhneEigentuemer extends VermUntTaskNas {
      * @param  jobKey     DOCUMENT ME!
      * @param  requestId  DOCUMENT ME!
      * @param  geometry   DOCUMENT ME!
+     * @param  anonymous  DOCUMENT ME!
      */
     public VermUntTaskNasOhneEigentuemer(final String jobKey,
             final String requestId,
-            final Geometry geometry) {
-        super(TYPE, jobKey, requestId, geometry, VermessungsunterlagenHandler.NAS_PRODUCT_OHNE_EIGENTUEMER);
+            final Geometry geometry,
+            final boolean anonymous) {
+        super(TYPE, jobKey, requestId, geometry, VermessungsunterlagenHandler.NAS_PRODUCT_OHNE_EIGENTUEMER, anonymous);
     }
 }

@@ -10,15 +10,13 @@
  * To change this template file, choose Tools | Templates
  * and open the template in the editor.
  */
-package de.cismet.cids.custom.utils.vermessungsunterlagen;
+package de.cismet.cids.custom.utils;
 
 import lombok.Getter;
 
 import org.apache.log4j.Logger;
 
 import java.util.Properties;
-
-import de.cismet.cids.custom.utils.WundaBlauServerResources;
 
 /**
  * DOCUMENT ME!
