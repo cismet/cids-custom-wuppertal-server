@@ -29,8 +29,7 @@ import de.aed_sicad.www.namespaces.svr.AuftragsManagerLocator;
 import de.aed_sicad.www.namespaces.svr.AuftragsManagerSoap;
 
 import org.apache.commons.io.IOUtils;
-
-import org.openide.util.Exceptions;
+import org.apache.log4j.Logger;
 
 import org.w3c.dom.Document;
 import org.w3c.dom.Element;
@@ -93,10 +92,13 @@ public class NASProductGenerator {
 
     //~ Static fields/initializers ---------------------------------------------
 
+    private static final Logger LOG = org.apache.log4j.Logger.getLogger(NASProductGenerator.class);
     private static final String FILE_APPENDIX = ".xml";
-    private static NASProductGenerator instance;
+    private static NASProductGenerator INSTANCE;
     private static final int REQUEST_PERIOD = 3000;
     private static final String REQUEST_PLACE_HOLDER = "REQUEST-ID";
+    private static final String PROFILKENNUNG_PLACE_HOLDER = "PROFILKENNUNG";
+    private static final String PROFILKENNUNG_DEFAULT_VALUE = "WUNDA";
     private static final String DATA_FORMAT_STD = "<datenformat>1000</datenformat>";
     private static final String DATA_FORMAT_500 = "<datenformat>NAS_500m</datenformat>";
 
@@ -104,7 +106,6 @@ public class NASProductGenerator {
 
     private File openOrdersLogFile;
     private File undeliveredOrdersLogFile;
-    private final transient org.apache.log4j.Logger log = org.apache.log4j.Logger.getLogger(this.getClass());
     private AuftragsManagerSoap manager;
     private String SERVICE_URL;
     private String USER;
@@ -114,11 +115,10 @@ public class NASProductGenerator {
     private String ACTION_DOMAIN;
     private String ACTION_USER;
     private String ACTION_PASSWORD;
-    private HashMap<String, HashMap<String, NasProductInfo>> openOrderMap =
-        new HashMap<String, HashMap<String, NasProductInfo>>();
-    private HashMap<String, HashMap<String, NasProductInfo>> undeliveredOrderMap =
-        new HashMap<String, HashMap<String, NasProductInfo>>();
-    private HashMap<String, NasProductDownloader> downloaderMap = new HashMap<String, NasProductDownloader>();
+    private String PROFIL_KENNUNG;
+    private HashMap<String, HashMap<String, NasProductInfo>> openOrderMap = new HashMap<>();
+    private HashMap<String, HashMap<String, NasProductInfo>> undeliveredOrderMap = new HashMap<>();
+    private HashMap<String, NasProductDownloader> downloaderMap = new HashMap<>();
     private boolean initSucces = false;
     private DXFConverterAction dxfConverter;
 
@@ -152,14 +152,15 @@ public class NASProductGenerator {
                 ACTION_SERVICE = serviceProperties.getProperty("actionServiceURL");
                 ACTION_USER = serviceProperties.getProperty("actionServiceUser");
                 ACTION_PASSWORD = serviceProperties.getProperty("actionServicePassword");
+                PROFIL_KENNUNG = serviceProperties.getProperty("profilKennung", PROFILKENNUNG_DEFAULT_VALUE);
 
                 if ((OUTPUT_DIR == null) || OUTPUT_DIR.isEmpty()) {
-                    log.info("Could not read nas nas output dir property. using server working dir as fallback");
+                    LOG.info("Could not read nas nas output dir property. using server working dir as fallback");
                     OUTPUT_DIR = ".";
                 }
                 if (((SERVICE_URL == null) || SERVICE_URL.isEmpty()) || ((USER == null) || USER.isEmpty())
                             || ((PW == null) || PW.isEmpty())) {
-                    log.warn(
+                    LOG.warn(
                         "NAS Datenabgabe initialisation Error. Could not read all properties for connecting 3A Server. NAS support is disabled");
                     return false;
                 }
@@ -168,13 +169,13 @@ public class NASProductGenerator {
                     outputDir.mkdirs();
                 }
                 if (!outputDir.isDirectory() || !outputDir.canWrite()) {
-                    log.warn("NAS Datenabgabe initialisation Error. Could not write to the given nas output directory: "
+                    LOG.warn("NAS Datenabgabe initialisation Error. Could not write to the given nas output directory: "
                                 + outputDir);
                     return false;
                 }
                 if ((ACTION_DOMAIN == null) || (ACTION_SERVICE == null) || (ACTION_SERVICE == null)
                             || (ACTION_PASSWORD == null)) {
-                    log.warn(
+                    LOG.warn(
                         "NAS Datenabgabe initialisation Error. Can not read properties for connecting to DXF converter Action");
                     return false;
                 }
@@ -194,13 +195,13 @@ public class NASProductGenerator {
                 }
                 if (!(openOrdersLogFile.isFile() && openOrdersLogFile.canWrite())
                             || !(undeliveredOrdersLogFile.isFile() && undeliveredOrdersLogFile.canWrite())) {
-                    log.warn(
+                    LOG.warn(
                         "NAS Datenabgabe initialisation Error. Could not write to NAS order log files. NAS support is disabled");
                     return false;
                 }
                 initFromOrderLogFiles();
-            } catch (Exception ex) {
-                log.warn("NAS Datenabgabe initialisation Error! NAS support is disabled", ex);
+            } catch (final Exception ex) {
+                LOG.warn("NAS Datenabgabe initialisation Error! NAS support is disabled", ex);
                 return false;
             }
         }
@@ -213,10 +214,10 @@ public class NASProductGenerator {
      * @return  DOCUMENT ME!
      */
     public static NASProductGenerator instance() {
-        if (instance == null) {
-            instance = new NASProductGenerator();
+        if (INSTANCE == null) {
+            INSTANCE = new NASProductGenerator();
         }
-        return instance;
+        return INSTANCE;
     }
 
     /**
@@ -225,17 +226,12 @@ public class NASProductGenerator {
     private void initFromOrderLogFiles() {
         loadFromLogFile(openOrderMap, openOrdersLogFile);
         loadFromLogFile(undeliveredOrderMap, undeliveredOrdersLogFile);
-        // check of there are open orders that arent downloaded from the 3a server yet
-        for (final String userId
-                    : openOrderMap.keySet()) {
-            final HashMap<String, NasProductInfo> openOrderIds = openOrderMap.get(userId);
-//            for (final String orderId : openOrderIds.keySet()) {
-//                final NasProductDownloader downloader = new NasProductDownloader(userId, orderId);
-//                downloaderMap.put(orderId, downloader);
-//                final Thread workerThread = new Thread(downloader);
-//                workerThread.start();
-//            }
-        }
+        /*
+         * // check of there are open orders that arent downloaded from the 3a server yet for (final String userId
+         *   : openOrderMap.keySet()) { final HashMap<String, NasProductInfo> openOrderIds = openOrderMap.get(userId);
+         * for (final String orderId : openOrderIds.keySet()) {     final NasProductDownloader downloader = new
+         * NasProductDownloader(userId, orderId);     downloaderMap.put(orderId, downloader);     final Thread
+         * workerThread = new Thread(downloader);     workerThread.start(); }}*/
     }
 
     /**
@@ -244,18 +240,13 @@ public class NASProductGenerator {
      * @return  DOCUMENT ME!
      */
     public boolean reInitFromOrderLogFiles() {
-//        if (!openOrderMap.isEmpty()) {
-//            log.info(
-//                "The open order map (requests that need to be downloaded from the cids server) is not empty. can not re-init from log files");
-//            return false;
-//        }
-//        if (!undeliveredOrderMap.isEmpty()) {
-//            log.info(
-//                "The open order map (requests that need to be downloaded from the client) is not empty. can not re-init from log files");
-//            return false;
-//        }
-        openOrderMap = new HashMap<String, HashMap<String, NasProductInfo>>();
-        undeliveredOrderMap = new HashMap<String, HashMap<String, NasProductInfo>>();
+        /*if (!openOrderMap.isEmpty()) {
+         *  LOG.info(     "The open order map (requests that need to be downloaded from the cids server) is not empty.
+         * can not re-init from log files"); return false; } if (!undeliveredOrderMap.isEmpty()) { LOG.info(     "The
+         * open order map (requests that need to be downloaded from the client) is not empty. can not re-init from log
+         * files"); return false;}*/
+        openOrderMap = new HashMap<>();
+        undeliveredOrderMap = new HashMap<>();
         initFromOrderLogFiles();
         return true;
     }
@@ -263,15 +254,17 @@ public class NASProductGenerator {
     /**
      * DOCUMENT ME!
      *
-     * @param   geom          DOCUMENT ME!
-     * @param   templateFile  DOCUMENT ME!
-     * @param   requestName   DOCUMENT ME!
+     * @param   geom           DOCUMENT ME!
+     * @param   templateFile   DOCUMENT ME!
+     * @param   requestName    DOCUMENT ME!
+     * @param   profilKennung  DOCUMENT ME!
      *
      * @return  DOCUMENT ME!
      */
-    private InputStream generateQeury(final GeometryCollection geom,
+    private InputStream generateQuery(final GeometryCollection geom,
             final InputStream templateFile,
-            final String requestName) {
+            final String requestName,
+            final String profilKennung) {
         int gmlId = 0;
         try {
             final String xmlGeom = GML3Writer.writeGML3_2WithETRS89(geom);
@@ -293,7 +286,7 @@ public class NASProductGenerator {
                     child = child.getNextSibling();
                 }
                 if (oldPolygonNode == null) {
-                    log.error("corrupt query template file, could not find a geometry node");
+                    LOG.error("corrupt query template file, could not find a geometry node");
                 }
                 newPolygonNode.setAttribute("gml:id", "G" + gmlId);
                 gmlId++;
@@ -318,21 +311,24 @@ public class NASProductGenerator {
             // set the request id that is shown in the 3A Auftagsmanagement Interface
             String request = stringOut.toString();
             request = request.replaceAll(REQUEST_PLACE_HOLDER, requestName);
+            request = request.replaceAll(
+                    PROFILKENNUNG_PLACE_HOLDER,
+                    (profilKennung != null) ? profilKennung : PROFIL_KENNUNG);
 
             // check if this request needs to be portioned
             if (isOrderSplitted(geom)) {
                 request = request.replaceAll(DATA_FORMAT_STD, DATA_FORMAT_500);
             }
-            if (log.isDebugEnabled()) {
-                log.debug(request);
+            if (LOG.isDebugEnabled()) {
+                LOG.debug(request);
             }
             return new ByteArrayInputStream(request.getBytes());
-        } catch (ParserConfigurationException ex) {
-            log.error("Parser Configuration Error", ex);
-        } catch (SAXException ex) {
-            log.error("Error during parsing document", ex);
-        } catch (IOException ex) {
-            log.error("Error while openeing nas template file", ex);
+        } catch (final ParserConfigurationException ex) {
+            LOG.error("Parser Configuration Error", ex);
+        } catch (final SAXException ex) {
+            LOG.error("Error during parsing document", ex);
+        } catch (final IOException ex) {
+            LOG.error("Error while openeing nas template file", ex);
         }
         return null;
     }
@@ -352,8 +348,8 @@ public class NASProductGenerator {
                 final String resPath = serverProps.getServerResourcesBasePath();
                 templateFile = new FileInputStream(resPath + product.getTemplate());
             }
-        } catch (FileNotFoundException ex) {
-            log.error("Could not read template template file for Template :" + product.toString(), ex);
+        } catch (final FileNotFoundException ex) {
+            LOG.error("Could not read template template file for Template :" + product.toString(), ex);
         }
         return templateFile;
     }
@@ -361,20 +357,22 @@ public class NASProductGenerator {
     /**
      * DOCUMENT ME!
      *
-     * @param   product      DOCUMENT ME!
-     * @param   geoms        DOCUMENT ME!
-     * @param   user         DOCUMENT ME!
-     * @param   requestName  DOCUMENT ME!
+     * @param   product        DOCUMENT ME!
+     * @param   geoms          DOCUMENT ME!
+     * @param   user           DOCUMENT ME!
+     * @param   requestName    DOCUMENT ME!
+     * @param   profilKennung  DOCUMENT ME!
      *
      * @return  DOCUMENT ME!
      */
     public String executeAsynchQuery(final NasProduct product,
             final GeometryCollection geoms,
             final User user,
-            final String requestName) {
+            final String requestName,
+            final String profilKennung) {
         if (!init()) {
-            if (log.isDebugEnabled()) {
-                log.debug("NASProductGenerator doesnt work hence there was an error during the initialisation.");
+            if (LOG.isDebugEnabled()) {
+                LOG.debug("NASProductGenerator doesnt work hence there was an error during the initialisation.");
             }
             return null;
         }
@@ -382,17 +380,17 @@ public class NASProductGenerator {
             final InputStream templateFile = loadTemplateFile(product);
 
             if (templateFile == null) {
-                log.error("Error laoding the NAS template file.");
+                LOG.error("Error laoding the NAS template file.");
                 return null;
             }
 
             if (geoms == null) {
-                log.error("geometry is null, cannot execute nas query");
+                LOG.error("geometry is null, cannot execute nas query");
                 return null;
             }
 
             final String requestId = getRequestId(user, requestName);
-            final InputStream preparedQuery = generateQeury(geoms, templateFile, requestId);
+            final InputStream preparedQuery = generateQuery(geoms, templateFile, requestId, profilKennung);
             initAmManager();
             final int sessionID = manager.login(USER, PW);
             final String orderId = manager.registerGZip(sessionID, gZipFile(preparedQuery));
@@ -412,8 +410,8 @@ public class NASProductGenerator {
             workerThread.start();
 
             return orderId;
-        } catch (Exception ex) {
-            log.error("could not create conenction to 3A Server", ex);
+        } catch (final Exception ex) {
+            LOG.error("could not create conenction to 3A Server", ex);
         }
         return null;
     }
@@ -427,8 +425,8 @@ public class NASProductGenerator {
     public void writeResultToFileforRequest(final InputStream query, final File file) {
         try {
             if (!init()) {
-                if (log.isDebugEnabled()) {
-                    log.debug("NASProductGenerator doesnt work hence there was an error during the initialisation.");
+                if (LOG.isDebugEnabled()) {
+                    LOG.debug("NASProductGenerator doesnt work hence there was an error during the initialisation.");
                 }
                 return;
             }
@@ -441,8 +439,8 @@ public class NASProductGenerator {
                 try {
                     Thread.sleep(1000);
 //                this.logProtocol(manager.getProtocolGZip(sessionID, orderId));
-                } catch (InterruptedException ex) {
-                    Exceptions.printStackTrace(ex);
+                } catch (final InterruptedException ex) {
+                    LOG.error(ex, ex);
                 }
             }
             final int resCount = manager.getResultCount(sessionID, orderId);
@@ -457,11 +455,9 @@ public class NASProductGenerator {
                 for (final byte[] zipFile : resultFiles) {
                     unzippedFileCollection.add(gunzip(zipFile));
                 }
-                FileOutputStream fos = null;
-                ZipOutputStream zos = null;
-                try {
-                    fos = new FileOutputStream(file);
-                    zos = new ZipOutputStream(fos);
+                try(final FileOutputStream fos = new FileOutputStream(file);
+                            final ZipOutputStream zos = new ZipOutputStream(fos);
+                    ) {
                     for (int i = 0; i < unzippedFileCollection.size(); i++) {
                         final byte[] unzippedFile = unzippedFileCollection.get(i);
                         final String fileEntryName = orderId + "#" + i + FILE_APPENDIX;
@@ -469,32 +465,17 @@ public class NASProductGenerator {
                         zos.write(unzippedFile);
                         zos.closeEntry();
                     }
-                } catch (IOException ex) {
-                    log.warn("error during creation of zip file");
-                } finally {
-                    try {
-                        if (zos != null) {
-                            zos.close();
-                        }
-                        if (fos != null) {
-                            fos.close();
-                        }
-                    } catch (IOException ex) {
-                        Exceptions.printStackTrace(ex);
-                    }
+                } catch (final IOException ex) {
+                    LOG.warn("error during creation of zip file");
                 }
             } else {
                 final byte[] data;
-
-                InputStream is = null;
-                OutputStream os = null;
-
                 try {
                     if (resCount == 0) {
-                        log.error("it seems that there is an error with NAS order: " + orderId
+                        LOG.error("it seems that there is an error with NAS order: " + orderId
                                     + ". Writing protocol to file "
                                     + file);
-                        log.error("Protocol for NAS order " + orderId + ": "
+                        LOG.error("Protocol for NAS order " + orderId + ": "
                                     + new String(gunzip(manager.getProtocolGZip(sessionID, orderId))));
                         data = manager.getProtocolGZip(sessionID, orderId);
                     } else {
@@ -502,33 +483,26 @@ public class NASProductGenerator {
                     }
 
                     if (data == null) {
-                        log.error("result of nas order " + orderId + " is null");
+                        LOG.error("result of nas order " + orderId + " is null");
                         return;
                     }
-                    is = new GZIPInputStream(new ByteArrayInputStream(manager.getResultGZip(sessionID, orderId)));
-                    os = new FileOutputStream(file);
-                    final byte[] buffer = new byte[8192];
-                    int length = is.read(buffer, 0, 8192);
-                    while (length != -1) {
-                        os.write(buffer, 0, length);
-                        length = is.read(buffer, 0, 8192);
-                    }
-                } catch (IOException ex) {
-                    log.error("error during gunzip of nas response files", ex);
-                } finally {
-                    try {
-                        if (is != null) {
-                            is.close();
+                    try(final InputStream is = new GZIPInputStream(
+                                        new ByteArrayInputStream(manager.getResultGZip(sessionID, orderId)));
+                                final OutputStream os = new FileOutputStream(file);
+                        ) {
+                        final byte[] buffer = new byte[8192];
+                        int length = is.read(buffer, 0, 8192);
+                        while (length != -1) {
+                            os.write(buffer, 0, length);
+                            length = is.read(buffer, 0, 8192);
                         }
-                        if (os != null) {
-                            os.close();
-                        }
-                    } catch (IOException ex) {
                     }
+                } catch (final IOException ex) {
+                    LOG.error("error during gunzip of nas response files", ex);
                 }
             }
-        } catch (RemoteException ex) {
-            Exceptions.printStackTrace(ex);
+        } catch (final RemoteException ex) {
+            LOG.error(ex, ex);
         }
     }
 
@@ -540,9 +514,8 @@ public class NASProductGenerator {
         try {
             am = new AuftragsManagerLocator();
             manager = am.getAuftragsManagerSoap(new URL(SERVICE_URL));
-        } catch (Exception ex) {
-            log.error("error creating 3AServer interface", ex);
-            return;
+        } catch (final Exception ex) {
+            LOG.error("error creating 3AServer interface", ex);
         }
     }
 
@@ -556,24 +529,21 @@ public class NASProductGenerator {
      */
     public byte[] getResultForOrder(final String orderId, final User user) {
         if (!init()) {
-            log.error("NASProductGenerator doesnt work hence there was an error during the initialisation.");
+            LOG.error("NASProductGenerator doesnt work hence there was an error during the initialisation.");
             return null;
         }
         final HashMap<String, NasProductInfo> openUserOrders = openOrderMap.get(determineUserPrefix(user));
         if ((openUserOrders != null) && openUserOrders.keySet().contains(orderId)) {
-//            if (log.isDebugEnabled()) {
-//                log.debug("requesting an order that isnt not done");
-//            }
             return new byte[0];
         }
         final HashMap<String, NasProductInfo> undeliveredUserOrders = undeliveredOrderMap.get(determineUserPrefix(
                     user));
         if ((undeliveredUserOrders == null) || undeliveredUserOrders.isEmpty()) {
-            log.error("there are no undelivered nas orders for the user " + user.toString());
+            LOG.error("there are no undelivered nas orders for the user " + user.toString());
             return null;
         }
         if (!undeliveredUserOrders.keySet().contains(orderId)) {
-            log.error("there is no order for user " + user.toString() + " with order id " + orderId);
+            LOG.error("there is no order for user " + user.toString() + " with order id " + orderId);
             return null;
         }
         final NasProductInfo productInfo = undeliveredUserOrders.get(orderId);
@@ -599,8 +569,8 @@ public class NASProductGenerator {
      */
     public File getNasFileForOrder(final String orderId, final String userId, final boolean isZipped) {
         if (!init()) {
-            if (log.isDebugEnabled()) {
-                log.debug("NASProductGenerator doesnt work hence there was an error during the initialisation.");
+            if (LOG.isDebugEnabled()) {
+                LOG.debug("NASProductGenerator doesnt work hence there was an error during the initialisation.");
             }
             return null;
         }
@@ -617,8 +587,8 @@ public class NASProductGenerator {
     public HashMap<String, NasProductInfo> getUndeliveredOrders(final User user) {
         final HashMap<String, NasProductInfo> result = new HashMap<String, NasProductInfo>();
         if (!init()) {
-            if (log.isDebugEnabled()) {
-                log.debug("NASProductGenerator doesnt work hence there was an error during the initialisation.");
+            if (LOG.isDebugEnabled()) {
+                LOG.debug("NASProductGenerator doesnt work hence there was an error during the initialisation.");
             }
             return result;
         }
@@ -642,8 +612,8 @@ public class NASProductGenerator {
      */
     public void cancelOrder(final String orderId, final User user) {
         if (!init()) {
-            if (log.isDebugEnabled()) {
-                log.debug("NASProductGenerator doesnt work hence there was an error during the initialisation.");
+            if (LOG.isDebugEnabled()) {
+                LOG.debug("NASProductGenerator doesnt work hence there was an error during the initialisation.");
             }
             return;
         }
@@ -666,24 +636,20 @@ public class NASProductGenerator {
      * @return  DOCUMENT ME!
      */
     private byte[] gZipFile(final InputStream is) {
-        final ByteArrayOutputStream bos = new ByteArrayOutputStream();
-        OutputStream zipOut = null;
-        try {
-            zipOut = new GZIPOutputStream(bos);
+        try(final ByteArrayOutputStream bos = new ByteArrayOutputStream();
+                    final OutputStream zipOut = new GZIPOutputStream(bos);
+            ) {
             final byte[] buffer = new byte[8192];
             int length = is.read(buffer, 0, 8192);
             while (length != -1) {
                 zipOut.write(buffer, 0, length);
                 length = is.read(buffer, 0, 8192);
             }
-            is.close();
-            zipOut.close();
             return bos.toByteArray();
-        } catch (FileNotFoundException ex) {
-            log.error("error during gzip of gile", ex);
-        } catch (IOException ex) {
-            log.error("error during gzip of gile", ex);
-        } finally {
+        } catch (final FileNotFoundException ex) {
+            LOG.error("error during gzip of gile", ex);
+        } catch (final IOException ex) {
+            LOG.error("error during gzip of gile", ex);
         }
         return null;
     }
@@ -695,8 +661,8 @@ public class NASProductGenerator {
      */
     private void logProtocol(final byte[] protocol) {
         final byte[] unzippedProtocol = gunzip(protocol);
-        if (log.isDebugEnabled()) {
-            log.debug("Nas Protokoll " + new String(unzippedProtocol));
+        if (LOG.isDebugEnabled()) {
+            LOG.debug("Nas Protokoll " + new String(unzippedProtocol));
         }
     }
 
@@ -708,10 +674,9 @@ public class NASProductGenerator {
      * @return  DOCUMENT ME!
      */
     private byte[] gunzip(final byte[] data) {
-        final ByteArrayOutputStream bos = new ByteArrayOutputStream();
-        InputStream is = null;
-        try {
-            is = new GZIPInputStream(new ByteArrayInputStream(data));
+        try(final ByteArrayOutputStream bos = new ByteArrayOutputStream();
+                    final InputStream is = new GZIPInputStream(new ByteArrayInputStream(data));
+            ) {
             final byte[] buffer = new byte[8192];
             int length = is.read(buffer, 0, 8192);
             while (length != -1) {
@@ -719,16 +684,8 @@ public class NASProductGenerator {
                 length = is.read(buffer, 0, 8192);
             }
             return bos.toByteArray();
-        } catch (IOException ex) {
-            log.error("error during gunzip of nas response files", ex);
-        } finally {
-            try {
-                bos.close();
-                if (is != null) {
-                    is.close();
-                }
-            } catch (IOException ex) {
-            }
+        } catch (final IOException ex) {
+            LOG.error("error during gunzip of nas response files", ex);
         }
         return null;
     }
@@ -752,11 +709,9 @@ public class NASProductGenerator {
         if (!file.getParentFile().exists()) {
             file.getParentFile().mkdirs();
         }
-        FileOutputStream fos = null;
-        ZipOutputStream zos = null;
-        try {
-            fos = new FileOutputStream(file);
-            zos = new ZipOutputStream(fos);
+        try(final FileOutputStream fos = new FileOutputStream(file);
+                    final ZipOutputStream zos = new ZipOutputStream(fos);
+            ) {
             for (int i = 0; i < unzippedFileCollection.size(); i++) {
                 final byte[] unzippedFile = unzippedFileCollection.get(i);
                 final String fileEntryName = orderId + "#" + i + FILE_APPENDIX;
@@ -764,19 +719,8 @@ public class NASProductGenerator {
                 zos.write(unzippedFile);
                 zos.closeEntry();
             }
-        } catch (IOException ex) {
-            log.warn("error during creation of zip file");
-        } finally {
-            try {
-                if (zos != null) {
-                    zos.close();
-                }
-                if (fos != null) {
-                    fos.close();
-                }
-            } catch (IOException ex) {
-                Exceptions.printStackTrace(ex);
-            }
+        } catch (final IOException ex) {
+            LOG.warn("error during creation of zip file", ex);
         }
     }
 
@@ -789,37 +733,25 @@ public class NASProductGenerator {
      */
     private void unzipAndSaveFile(final String userKey, final String orderId, final byte[] data) {
         if (data == null) {
-            log.error("result of nas order " + orderId + " is null");
+            LOG.error("result of nas order " + orderId + " is null");
             return;
         }
         final File file = new File(determineFileName(userKey, orderId));
         if (!file.getParentFile().exists()) {
             file.getParentFile().mkdirs();
         }
-        InputStream is = null;
-        OutputStream os = null;
-        try {
-            is = new GZIPInputStream(new ByteArrayInputStream(data));
-//            is = new ByteArrayInputStream(data);
-            os = new FileOutputStream(file);
+
+        try(final InputStream is = new GZIPInputStream(new ByteArrayInputStream(data));
+                    final OutputStream os = new FileOutputStream(file);
+            ) {
             final byte[] buffer = new byte[8192];
             int length = is.read(buffer, 0, 8192);
             while (length != -1) {
                 os.write(buffer, 0, length);
                 length = is.read(buffer, 0, 8192);
             }
-        } catch (IOException ex) {
-            log.error("error during gunzip of nas response files", ex);
-        } finally {
-            try {
-                if (is != null) {
-                    is.close();
-                }
-                if (os != null) {
-                    os.close();
-                }
-            } catch (IOException ex) {
-            }
+        } catch (final IOException ex) {
+            LOG.error("error during gunzip of nas response files", ex);
         }
     }
 
@@ -833,10 +765,9 @@ public class NASProductGenerator {
      * @return  DOCUMENT ME!
      */
     private byte[] loadFile(final String userKey, final String orderId, final String fileExtension) {
-        final ByteArrayOutputStream bos = new ByteArrayOutputStream();
-        InputStream is = null;
-        try {
-            is = new FileInputStream(determineFileName(userKey, orderId, fileExtension));
+        try(final ByteArrayOutputStream bos = new ByteArrayOutputStream();
+                    final InputStream is = new FileInputStream(determineFileName(userKey, orderId, fileExtension));
+            ) {
             final byte[] buffer = new byte[8192];
             int length = is.read(buffer, 0, 8192);
             while (length != -1) {
@@ -844,18 +775,10 @@ public class NASProductGenerator {
                 length = is.read(buffer, 0, 8192);
             }
             return bos.toByteArray();
-        } catch (FileNotFoundException ex) {
-            log.error("could not find result file for order id " + orderId, ex);
-        } catch (IOException ex) {
-            log.error("error during loading result file for order id " + orderId, ex);
-        } finally {
-            try {
-                if (is != null) {
-                    is.close();
-                }
-                bos.close();
-            } catch (IOException ex) {
-            }
+        } catch (final FileNotFoundException ex) {
+            LOG.error("could not find result file for order id " + orderId, ex);
+        } catch (final IOException ex) {
+            LOG.error("error during loading result file for order id " + orderId, ex);
         }
         return null;
     }
@@ -936,7 +859,7 @@ public class NASProductGenerator {
     private void removeFromOpenOrders(final String userKey, final String orderId) {
         final HashMap<String, NasProductInfo> openUserOrders = openOrderMap.get(userKey);
         if (openUserOrders == null) {
-            log.info("there are no undelivered nas orders for the user with id " + userKey);
+            LOG.info("there are no undelivered nas orders for the user with id " + userKey);
             return;
         }
         openUserOrders.remove(orderId);
@@ -972,7 +895,7 @@ public class NASProductGenerator {
     private void removeFromUndeliveredOrders(final String userKey, final String orderId) {
         final HashMap<String, NasProductInfo> undeliveredUserOders = undeliveredOrderMap.get(userKey);
         if (undeliveredUserOders == null) {
-            log.info("there are no undelivered nas orders for the user with id " + userKey);
+            LOG.info("there are no undelivered nas orders for the user with id " + userKey);
             return;
         }
         undeliveredUserOders.remove(orderId);
@@ -1004,8 +927,8 @@ public class NASProductGenerator {
             }
 
             writer.writeValue(undeliveredOrdersLogFile, undeliveredOrdersToSerialize);
-        } catch (IOException ex) {
-            log.error("error during writing open butler orders to log file", ex);
+        } catch (final IOException ex) {
+            LOG.error("error during writing open butler orders to log file", ex);
         }
     }
 
@@ -1020,7 +943,7 @@ public class NASProductGenerator {
         final File file = new File(determineFileName(userKey, orderId));
         if (file.exists()) {
             if (!file.delete()) {
-                log.warn("could not delete file " + file.toString());
+                LOG.warn("could not delete file " + file.toString());
             }
         }
     }
@@ -1072,37 +995,12 @@ public class NASProductGenerator {
             for (final String s : wrapperMap.keySet()) {
                 map.put(s, wrapperMap.get(s).getMap());
             }
-        } catch (JsonParseException ex) {
-            log.warn("Could not parse nas order log files", ex);
-        } catch (JsonMappingException ex) {
-            log.warn("error while json mapping/unmarshalling of nas order log file", ex);
-        } catch (IOException ex) {
-            log.warn("error while loading nas order log file", ex);
-        }
-    }
-
-    /**
-     * DOCUMENT ME!
-     *
-     * @param  args  DOCUMENT ME!
-     */
-    public static void main(final String[] args) {
-        FileInputStream fis = null;
-        try {
-//            final InputStream templateFile = NASProductGenerator.class.getResourceAsStream(
-//                    "test_request.xml");
-            fis = new FileInputStream(new File(
-                        "/home/daniel/Documents/punktreservierung/Wunda_Reservierung2/Muster-Dateien/A_AMGR000000003012_Ben_Auftr_alle_PKZ_alt.xml"));
-            final File f = new File("/home/daniel/Desktop/result.xml");
-            NASProductGenerator.instance().writeResultToFileforRequest(fis, f);
-        } catch (FileNotFoundException ex) {
-            Exceptions.printStackTrace(ex);
-        } finally {
-            try {
-                fis.close();
-            } catch (IOException ex) {
-                Exceptions.printStackTrace(ex);
-            }
+        } catch (final JsonParseException ex) {
+            LOG.warn("Could not parse nas order log files", ex);
+        } catch (final JsonMappingException ex) {
+            LOG.warn("error while json mapping/unmarshalling of nas order log file", ex);
+        } catch (final IOException ex) {
+            LOG.warn("error while loading nas order log file", ex);
         }
     }
 
@@ -1161,7 +1059,7 @@ public class NASProductGenerator {
                             try {
                                 AM_AuftragServer amServer = null;
                                 if (interrupted) {
-                                    log.info(
+                                    LOG.info(
                                         "interrupting the dowload of nas order "
                                                 + orderId);
                                     t.cancel();
@@ -1203,28 +1101,28 @@ public class NASProductGenerator {
                                             IOUtils.copy(
                                                 new FileInputStream(dxfFile),
                                                 new FileOutputStream(resultDxfFile));
-                                        } catch (InterruptedException ex) {
-                                            log.error("DXF Converter Thread was interrupted", ex);
-                                        } catch (ExecutionException ex) {
-                                            log.error("Error during the execution of the dxf converter thread", ex);
-                                        } catch (Exception ex) {
-                                            log.error(ex.getMessage(), ex);
+                                        } catch (final InterruptedException ex) {
+                                            LOG.error("DXF Converter Thread was interrupted", ex);
+                                        } catch (final ExecutionException ex) {
+                                            LOG.error("Error during the execution of the dxf converter thread", ex);
+                                        } catch (final Exception ex) {
+                                            LOG.error(ex.getMessage(), ex);
                                         }
                                     }
                                     removeFromOpenOrders(userId, orderId);
                                     downloaderMap.remove(orderId);
                                 } else {
-                                    log.info(
+                                    LOG.info(
                                         "interrupting the download of nas order "
                                                 + orderId);
                                 }
-                            } catch (RemoteException ex) {
-                                Exceptions.printStackTrace(ex);
+                            } catch (final RemoteException ex) {
+                                LOG.error(ex, ex);
                             }
                         }
                     }, REQUEST_PERIOD, REQUEST_PERIOD);
-            } catch (Exception ex) {
-                log.warn("Could not connect to 3A server", ex);
+            } catch (final Exception ex) {
+                LOG.warn("Could not connect to 3A server", ex);
             }
         }
 

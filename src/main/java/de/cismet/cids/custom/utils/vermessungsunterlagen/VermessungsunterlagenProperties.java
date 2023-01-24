@@ -61,6 +61,8 @@ public class VermessungsunterlagenProperties {
     private final String absPathPdfPnrVermstelle;
     private final String jobResultFrom;
     private final String downloadFrom;
+    private final String profilKennungAnonym;
+    private final String profilKennungRegistriert;
 
     //~ Constructors -----------------------------------------------------------
 
@@ -90,6 +92,8 @@ public class VermessungsunterlagenProperties {
         absPathPdfPnrVermstelle = readProperty("ABS_PATH_PDF_PNR_VERMSTELLE", null);
         jobResultFrom = readProperty("JOB_RESULT_FROM", "webdav");
         downloadFrom = readProperty("DOWNLOAD_FROM", "webdav");
+        profilKennungAnonym = readProperty("PROFIL_KENNUNG_ANONYM", "VUPtemp");
+        profilKennungRegistriert = readProperty("PROFIL_KENNUNG_REGISTRIERT", "VUPdst");
     }
 
     //~ Methods ----------------------------------------------------------------

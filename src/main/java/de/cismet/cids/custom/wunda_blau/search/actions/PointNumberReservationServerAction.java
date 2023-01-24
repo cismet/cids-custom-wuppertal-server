@@ -36,7 +36,7 @@ import de.cismet.connectioncontext.ConnectionContextStore;
  * @version  $Revision$, $Date$
  */
 @org.openide.util.lookup.ServiceProvider(service = ServerAction.class)
-public class PointNumberReserverationServerAction implements UserAwareServerAction,
+public class PointNumberReservationServerAction implements UserAwareServerAction,
     MetaServiceStore,
     ConnectionContextStore {
 
@@ -94,7 +94,7 @@ public class PointNumberReserverationServerAction implements UserAwareServerActi
     private Collection<String> getAllAntragsNummern() {
         final Collection<PointNumberReservationRequest> requests = PointNumberReservationService.instance()
                     .getAllBenAuftr(getProfilKennung());
-        final ArrayList<String> antragsNummern = new ArrayList<String>();
+        final ArrayList<String> antragsNummern = new ArrayList<>();
         if (requests != null) {
             for (final PointNumberReservationRequest r : requests) {
                 antragsNummern.add(r.getAntragsnummer());
