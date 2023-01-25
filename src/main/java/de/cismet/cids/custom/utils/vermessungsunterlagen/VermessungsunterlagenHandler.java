@@ -39,8 +39,6 @@ import java.io.File;
 import java.io.FileInputStream;
 import java.io.FilenameFilter;
 
-import java.rmi.RemoteException;
-
 import java.sql.Timestamp;
 
 import java.util.ArrayList;
@@ -117,6 +115,8 @@ public class VermessungsunterlagenHandler implements ConnectionContextProvider {
     }
 
     private static final Map<String, VermessungsunterlagenJobInfoWrapper> JOB_MAP = new ConcurrentHashMap<>();
+
+    public static int MAX_BEAN_LOADING = 1000;
 
     //~ Instance fields --------------------------------------------------------
 
@@ -637,25 +637,27 @@ public class VermessungsunterlagenHandler implements ConnectionContextProvider {
      * @param   mons  DOCUMENT ME!
      *
      * @return  DOCUMENT ME!
+     *
+     * @throws  Exception  DOCUMENT ME!
      */
-    public Collection<CidsBean> loadBeans(final Collection<MetaObjectNode> mons) {
+    public Collection<CidsBean> loadBeans(final Collection<MetaObjectNode> mons) throws Exception {
         if (mons != null) {
-            final Collection<CidsBean> beans = new ArrayList<CidsBean>(mons.size());
+            if (mons.size() > MAX_BEAN_LOADING) {
+                throw new Exception("Zu viele Objekte gefunden. Bitte Fehler melden !");
+            }
+            final Collection<CidsBean> beans = new ArrayList<>(mons.size());
             for (final MetaObjectNode mon : mons) {
                 if (mon != null) {
-                    try {
-                        final MetaObject mo = getMetaService().getMetaObject(
-                                getUser(),
-                                mon.getObjectId(),
-                                mon.getClassId(),
-                                getConnectionContext());
-                        mo.setAllClasses(
-                            ((MetaClassCacheService)Lookup.getDefault().lookup(MetaClassCacheService.class))
-                                        .getAllClasses(mo.getDomain(), getConnectionContext()));
-                        beans.add(mo.getBean());
-                    } catch (final RemoteException ex) {
-                        LOG.warn("error while loading AP: OID:" + mon.getObjectId() + ", GID: " + mon.getClassId(), ex);
-                    }
+                    final MetaObject mo = getMetaService().getMetaObject(
+                            getUser(),
+                            mon.getObjectId(),
+                            mon.getClassId(),
+                            getConnectionContext());
+                    mo.setAllClasses(
+                        ((MetaClassCacheService)Lookup.getDefault().lookup(MetaClassCacheService.class)).getAllClasses(
+                            mo.getDomain(),
+                            getConnectionContext()));
+                    beans.add(mo.getBean());
                 }
             }
             return beans;

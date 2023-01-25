@@ -229,31 +229,28 @@ public class VermessungsunterlagenJob implements Runnable, ConnectionContextProv
      * @param   geometry  flurstueckBeans DOCUMENT ME!
      *
      * @return  DOCUMENT ME!
+     *
+     * @throws  Exception  DOCUMENT ME!
      */
-    private Collection<CidsBean> searchRisse(final Geometry geometry) {
-        try {
-            final Collection<String> schluesselCollection = Arrays.asList(
-                    "503",
-                    "504",
-                    "505",
-                    "506",
-                    "507",
-                    "508");
+    private Collection<CidsBean> searchRisse(final Geometry geometry) throws Exception {
+        final Collection<String> schluesselCollection = Arrays.asList(
+                "503",
+                "504",
+                "505",
+                "506",
+                "507",
+                "508");
 
-            final CidsServerSearch serverSearch = new CidsVermessungRissSearchStatement(
-                    null,
-                    null,
-                    null,
-                    null,
-                    schluesselCollection,
-                    geometry,
-                    null);
-            final Collection<MetaObjectNode> mons = helper.performSearch(serverSearch);
-            return helper.loadBeans(mons);
-        } catch (final SearchException ex) {
-            LOG.error("error while loading risse", ex);
-            return null;
-        }
+        final CidsServerSearch serverSearch = new CidsVermessungRissSearchStatement(
+                null,
+                null,
+                null,
+                null,
+                schluesselCollection,
+                geometry,
+                null);
+        final Collection<MetaObjectNode> mons = helper.performSearch(serverSearch);
+        return helper.loadBeans(mons);
     }
 
     /**
@@ -262,22 +259,19 @@ public class VermessungsunterlagenJob implements Runnable, ConnectionContextProv
      * @param   geometry  DOCUMENT ME!
      *
      * @return  DOCUMENT ME!
+     *
+     * @throws  Exception  DOCUMENT ME!
      */
-    private Collection<CidsBean> searchAPs(final Geometry geometry) {
-        try {
-            final CidsServerSearch serverSearch = new CidsMeasurementPointSearchStatement(
-                    "",
-                    Arrays.asList(
-                        CidsMeasurementPointSearchStatement.Pointtype.AUFNAHMEPUNKTE,
-                        CidsMeasurementPointSearchStatement.Pointtype.SONSTIGE_VERMESSUNGSPUNKTE),
-                    null,
-                    geometry);
-            final Collection<MetaObjectNode> mons = helper.performSearch(serverSearch);
-            return helper.loadBeans(mons);
-        } catch (final SearchException ex) {
-            LOG.error("error while searching for APs", ex);
-            return null;
-        }
+    private Collection<CidsBean> searchAPs(final Geometry geometry) throws Exception {
+        final CidsServerSearch serverSearch = new CidsMeasurementPointSearchStatement(
+                "",
+                Arrays.asList(
+                    CidsMeasurementPointSearchStatement.Pointtype.AUFNAHMEPUNKTE,
+                    CidsMeasurementPointSearchStatement.Pointtype.SONSTIGE_VERMESSUNGSPUNKTE),
+                null,
+                geometry);
+        final Collection<MetaObjectNode> mons = helper.performSearch(serverSearch);
+        return helper.loadBeans(mons);
     }
 
     /**
@@ -286,20 +280,17 @@ public class VermessungsunterlagenJob implements Runnable, ConnectionContextProv
      * @param   geometry  DOCUMENT ME!
      *
      * @return  DOCUMENT ME!
+     *
+     * @throws  Exception  DOCUMENT ME!
      */
-    private Collection<CidsBean> searchNivPs(final Geometry geometry) {
-        try {
-            final CidsServerSearch serverSearch = new CidsMeasurementPointSearchStatement(
-                    "",
-                    Arrays.asList(CidsMeasurementPointSearchStatement.Pointtype.NIVELLEMENT_PUNKTE),
-                    null,
-                    geometry);
-            final Collection<MetaObjectNode> mons = helper.performSearch(serverSearch);
-            return helper.loadBeans(mons);
-        } catch (final SearchException ex) {
-            LOG.error("error while searching for APs", ex);
-            return null;
-        }
+    private Collection<CidsBean> searchNivPs(final Geometry geometry) throws Exception {
+        final CidsServerSearch serverSearch = new CidsMeasurementPointSearchStatement(
+                "",
+                Arrays.asList(CidsMeasurementPointSearchStatement.Pointtype.NIVELLEMENT_PUNKTE),
+                null,
+                geometry);
+        final Collection<MetaObjectNode> mons = helper.performSearch(serverSearch);
+        return helper.loadBeans(mons);
     }
 
     /**
@@ -402,8 +393,9 @@ public class VermessungsunterlagenJob implements Runnable, ConnectionContextProv
                     final Collection<CidsBean> risse;
                     {
                         if ((anfrageBean.isMitRisse() && isTaskAllowed(VermUntTaskRisseBilder.TYPE))
-                                    || (anfrageBean.isMitGrenzniederschriften()
-                                        && isTaskAllowed(VermUntTaskRisseGrenzniederschrift.TYPE))) {
+                                    || ((anfrageBean.isMitGrenzniederschriften()
+                                            && isTaskAllowed(VermUntTaskRisseGrenzniederschrift.TYPE))
+                                        && (geometryFlurstuecke != null))) {
                             risse = searchRisse(geometryFlurstuecke);
                         } else {
                             risse = null;
