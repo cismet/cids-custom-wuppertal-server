@@ -12,7 +12,6 @@
  */
 package de.cismet.cids.custom.wunda_blau.search.actions;
 
-import org.mortbay.log.Log;
 
 import java.awt.BasicStroke;
 import java.awt.Color;
@@ -55,6 +54,8 @@ public class ImageAnnotator {
 
     static int LINES = 1;
     private static Font calibriFont;
+    private static final transient org.apache.log4j.Logger LOG = org.apache.log4j.Logger.getLogger(
+            ImageAnnotator.class);
 
     static {
         try {
@@ -64,13 +65,11 @@ public class ImageAnnotator {
                         ServerResourcesLoader.getInstance().loadBinary(
                             WundaBlauServerResources.IMAGE_ANNOTATOR_FONT.getValue())));
         } catch (Exception ex) {
-            Log.warn("Calibri could not be loaded", ex);
+            LOG.warn("Calibri could not be loaded", ex);
             calibriFont = new Font(Font.SANS_SERIF, Font.BOLD, 100);
         }
     }
 
-    private static final transient org.apache.log4j.Logger LOG = org.apache.log4j.Logger.getLogger(
-            ImageAnnotator.class);
 
     //~ Instance fields --------------------------------------------------------
 
