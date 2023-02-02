@@ -57,10 +57,10 @@ public class VermessungPictureServerAction implements UserAwareServerAction, Met
 
         //~ Enum constants -----------------------------------------------------
 
-        FIND_GRENZNIEDERSCHRIFT, FIND_VERMESSUNGSRISS, FIND_BUCHWERK, FIND_INSELKARTE, FIND_GEWANNE,
-        GET_GRENZNIEDERSCHRIFT_FILENAME, GET_VERMESSUNGSRISS_FILENAME, GET_BUCHWERK_FILENAME, GET_INSELKARTE_FILENAME,
-        GET_GEWANNE_FILENAME, GET_GRENZNIEDERSCHRIFT_LINK_FILENAME, GET_VERMESSUNGSRISS_LINK_FILENAME,
-        GET_INSELKARTE_LINK_FILENMAME, GET_GEWANNE_LINK_FILENMAME
+        FIND_GRENZNIEDERSCHRIFT, GET_GRENZNIEDERSCHRIFT_FILENAME, GET_GRENZNIEDERSCHRIFT_LINK_FILENAME,
+        FIND_VERMESSUNGSRISS, GET_VERMESSUNGSRISS_FILENAME, GET_VERMESSUNGSRISS_LINK_FILENAME, FIND_BUCHWERK,
+        GET_BUCHWERK_FILENAME, FIND_INSELKARTE, GET_INSELKARTE_FILENAME, FIND_GEWANNE, GET_GEWANNE_FILENAME,
+        FIND_GEBAEUDEBESCHREIBUNG, GET_GEBAEUDEBESCHREIBUNG_FILENAME
     }
 
     /**
@@ -72,7 +72,8 @@ public class VermessungPictureServerAction implements UserAwareServerAction, Met
 
         //~ Enum constants -----------------------------------------------------
 
-        SCHLUESSEL, GEMARKUNG, FLUR, BLATT, STEUERBEZIRK, BEZEICHNER, HISTORISCH, LINK, VERSION, KMQUADRAT
+        SCHLUESSEL, GEMARKUNG, FLUR, BLATT, STEUERBEZIRK, BEZEICHNER, HISTORISCH, LINK, VERSION, KMQUADRAT, ORDNER,
+        NUMMER
     }
 
     //~ Instance fields --------------------------------------------------------
@@ -142,6 +143,8 @@ public class VermessungPictureServerAction implements UserAwareServerAction, Met
         String link = null;
         String version = null;
         Integer kmquadrat = null;
+        String ordner = null;
+        Integer nummer = null;
         if (params != null) {
             for (final ServerActionParameter sap : params) {
                 if (sap.getKey().equals(Param.SCHLUESSEL.toString())) {
@@ -180,6 +183,10 @@ public class VermessungPictureServerAction implements UserAwareServerAction, Met
                     version = (String)sap.getValue();
                 } else if (sap.getKey().equals(Param.KMQUADRAT.toString())) {
                     kmquadrat = (Integer)sap.getValue();
+                } else if (sap.getKey().equals(Param.ORDNER.toString())) {
+                    ordner = (String)sap.getValue();
+                } else if (sap.getKey().equals(Param.NUMMER.toString())) {
+                    nummer = (Integer)sap.getValue();
                 }
             }
         }
@@ -191,20 +198,28 @@ public class VermessungPictureServerAction implements UserAwareServerAction, Met
                 case GET_VERMESSUNGSRISS_FILENAME: {
                     return finder.getVermessungsrissFilename(schluessel, gemarkung, flur, blatt);
                 }
+                case GET_VERMESSUNGSRISS_LINK_FILENAME: {
+                    return finder.getVermessungsrissLinkFilename(link);
+                }
                 case FIND_GRENZNIEDERSCHRIFT: {
                     return finder.findGrenzniederschriftPicture(schluessel, gemarkung, flur, blatt);
                 }
                 case GET_GRENZNIEDERSCHRIFT_FILENAME: {
                     return finder.getGrenzniederschriftFilename(schluessel, gemarkung, flur, blatt);
                 }
-                case GET_VERMESSUNGSRISS_LINK_FILENAME: {
-                    return finder.getVermessungsrissLinkFilename(link);
-                }
                 case GET_GRENZNIEDERSCHRIFT_LINK_FILENAME: {
                     return finder.getGrenzniederschriftLinkFilename(link);
                 }
                 case FIND_BUCHWERK: {
                     return finder.findBuchwerkPicture(
+                            schluessel,
+                            gemarkungBean,
+                            steuerbezirk,
+                            bezeichner,
+                            historisch);
+                }
+                case GET_BUCHWERK_FILENAME: {
+                    return finder.getBuchwerkFilename(
                             schluessel,
                             gemarkungBean,
                             steuerbezirk,
@@ -218,14 +233,12 @@ public class VermessungPictureServerAction implements UserAwareServerAction, Met
                             kmquadrat,
                             liste);
                 }
-
-                case GET_BUCHWERK_FILENAME: {
-                    return finder.getBuchwerkFilename(
-                            schluessel,
+                case GET_GEWANNE_FILENAME: {
+                    final boolean liste = gemarkungBean != null;
+                    return finder.getGewannenFilename(
                             gemarkungBean,
-                            steuerbezirk,
-                            bezeichner,
-                            historisch);
+                            kmquadrat,
+                            liste);
                 }
                 case FIND_INSELKARTE: {
                     return finder.findInselkartePicture(
@@ -243,12 +256,11 @@ public class VermessungPictureServerAction implements UserAwareServerAction, Met
                             blatt,
                             version);
                 }
-                case GET_GEWANNE_FILENAME: {
-                    final boolean liste = gemarkungBean != null;
-                    return finder.getGewannenFilename(
-                            gemarkungBean,
-                            kmquadrat,
-                            liste);
+                case FIND_GEBAEUDEBESCHREIBUNG: {
+                    return finder.findGebaeudebeschreibungPicture(ordner, nummer);
+                }
+                case GET_GEBAEUDEBESCHREIBUNG_FILENAME: {
+                    return finder.getGebaeudebeschreibungFilename(ordner, nummer);
                 }
             }
         }
