@@ -196,6 +196,19 @@ public class VermessungPictureFinder implements ConnectionContextProvider {
     /**
      * DOCUMENT ME!
      *
+     * @param   ordner  DOCUMENT ME!
+     * @param   nummer  DOCUMENT ME!
+     *
+     * @return  DOCUMENT ME!
+     */
+    public String findGebaeudebeschreibungPicture(final String ordner, final Integer nummer) {
+        final String fileName = getGebaeudebeschreibungFilename(ordner, nummer);
+        return identifyFullFilename(fileName, true);
+    }
+
+    /**
+     * DOCUMENT ME!
+     *
      * @param   schluessel  DOCUMENT ME!
      * @param   gemarkung   DOCUMENT ME!
      * @param   flur        DOCUMENT ME!
@@ -425,6 +438,23 @@ public class VermessungPictureFinder implements ConnectionContextProvider {
         return buf.toString();
     }
 
+    /**
+     * DOCUMENT ME!
+     *
+     * @param   ordner  DOCUMENT ME!
+     * @param   nummer  DOCUMENT ME!
+     *
+     * @return  DOCUMENT ME!
+     */
+    public String getGebaeudebeschreibungFilename(
+            final String ordner,
+            final Integer nummer) {
+        return new StringBuffer().append(getGebaeudebeschreibungenFolder())
+                    .append(ordner)
+                    .append(SEP)
+                    .append(String.format("%08d", nummer))
+                    .toString();
+    }
     /**
      * DOCUMENT ME!
      *
@@ -731,6 +761,15 @@ public class VermessungPictureFinder implements ConnectionContextProvider {
      */
     private String getGewannenFolder() {
         return new StringBuffer().append(alkisConf.getVermessungHostGewannen()).append(SEP).toString();
+    }
+
+    /**
+     * DOCUMENT ME!
+     *
+     * @return  DOCUMENT ME!
+     */
+    private String getGebaeudebeschreibungenFolder() {
+        return new StringBuffer().append(alkisConf.getVermessungHostGebaeudebeschreibungen()).append(SEP).toString();
     }
 
     /**
