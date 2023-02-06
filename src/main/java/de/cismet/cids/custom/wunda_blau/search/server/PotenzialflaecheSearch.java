@@ -50,6 +50,7 @@ import java.util.Date;
 import java.util.Iterator;
 import java.util.LinkedHashSet;
 import java.util.List;
+import java.util.Locale;
 import java.util.Properties;
 
 import de.cismet.cids.custom.utils.WundaBlauServerResources;
@@ -278,11 +279,9 @@ public class PotenzialflaecheSearch extends RestApiMonGeometrySearch
                             } else if (value instanceof Double[]) {
                                 final Double[] doubles = (Double[])value;
                                 final String conditionFrom = (doubles[0] != null)
-                                    ? String.format("st_area(geom.geo_field) >= '%s'", Double.toString(doubles[0]))
-                                    : "TRUE";
+                                    ? String.format(Locale.US, "st_area(geom.geo_field) >= %f", doubles[0]) : "TRUE";
                                 final String conditionTo = (doubles[1] != null)
-                                    ? String.format("st_area(geom.geo_field) <= '%s'", Double.toString(doubles[1]))
-                                    : "TRUE";
+                                    ? String.format(Locale.US, "st_area(geom.geo_field) <= %f", doubles[1]) : "TRUE";
                                 wheresMain.add(String.format("(%s AND %s)", conditionFrom, conditionTo));
                             }
                         } else if (property.getValue()
@@ -300,6 +299,17 @@ public class PotenzialflaecheSearch extends RestApiMonGeometrySearch
                                                 .getClassName();
                                     if (String.class.getCanonicalName().equals(className)) {
                                         wheresMain.add(String.format("%s LIKE '%%%s%%'", path, value));
+                                    } else if (Integer.class.getCanonicalName().equals(className)) {
+                                        if (value instanceof Integer) {
+                                            wheresMain.add(String.format("%s = %d", path, (Integer)value));
+                                        } else if (value instanceof Integer[]) {
+                                            final Integer[] integers = (Integer[])value;
+                                            final String conditionFrom = (integers[0] != null)
+                                                ? String.format("%s >= %d", path, integers[0]) : "TRUE";
+                                            final String conditionTo = (integers[1] != null)
+                                                ? String.format("%s <= %d", path, integers[1]) : "TRUE";
+                                            wheresMain.add(String.format("(%s AND %s)", conditionFrom, conditionTo));
+                                        }
                                     } else if (Date.class.getCanonicalName().equals(className)) {
                                         if (value instanceof Date) {
                                             wheresMain.add(String.format(
