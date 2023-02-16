@@ -98,6 +98,7 @@ public enum WundaBlauServerResources {
     KLIMA_CONF_PROPERTIES(new TextServerResource("/klima/klima_conf.properties")),
     KLIMAROUTE_CONF_PROPERTIES(new TextServerResource("/klimaroute/klimaroute_conf.properties")),
     NO2_CONF_PROPERTIES(new TextServerResource("/no2/no2_conf.properties")),
+    SPST_CONF_PROPERTIES(new TextServerResource("/spst/spst_conf.properties")),
     STRADR_CONF_PROPERTIES(new TextServerResource("/stradr/stradr_conf.properties")),
 
     DATASOURCES_CAPABILITYLIST_TEXT(new TextServerResource("/datasources/capabilities.xml")),
