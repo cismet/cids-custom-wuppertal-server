@@ -12,7 +12,6 @@
  */
 package de.cismet.cids.custom.wunda_blau.search.actions;
 
-
 import java.awt.BasicStroke;
 import java.awt.Color;
 import java.awt.Font;
@@ -69,7 +68,6 @@ public class ImageAnnotator {
             calibriFont = new Font(Font.SANS_SERIF, Font.BOLD, 100);
         }
     }
-
 
     //~ Instance fields --------------------------------------------------------
 
