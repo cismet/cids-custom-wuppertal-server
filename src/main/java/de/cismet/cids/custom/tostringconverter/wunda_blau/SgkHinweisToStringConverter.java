@@ -25,7 +25,7 @@ public class SgkHinweisToStringConverter extends CustomToStringConverter {
     //~ Static fields/initializers ---------------------------------------------
 
     public static final String FIELD__TITLE = "titel"; // baum_gebiet
-    public static final String FIELD__ID = "id";           // baum_gebiet
+    public static final String FIELD__ID = "id";       // baum_gebiet
 
     //~ Methods ----------------------------------------------------------------
 
