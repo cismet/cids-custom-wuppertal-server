@@ -22,6 +22,7 @@ import com.vividsolutions.jts.geom.MultiPolygon;
 import com.vividsolutions.jts.geom.Polygon;
 
 import lombok.Getter;
+import lombok.NoArgsConstructor;
 import lombok.Setter;
 
 import org.apache.log4j.Logger;
@@ -164,7 +165,7 @@ public class CidsMauernSearchStatement extends RestApiMonGeometrySearch
             wheres.add(String.format(
                     "m.lastklasse in (%s)",
                     String.join(
-                        "'",
+                        ", ",
                         (List)lastKlasseIds.stream().map(new Function<Integer, String>() {
 
                                 @Override
@@ -239,8 +240,8 @@ public class CidsMauernSearchStatement extends RestApiMonGeometrySearch
             }
         }
 
+        wheres.add(createWhereFor("m.hoehe_max", configuration.getHoeheVon(), configuration.getHoeheBis()));
         if (zustaende != null) {
-            wheres.add(createWhereFor("m.hoehe_max", zustaende.getHoehe().getVon(), zustaende.getHoehe().getBis()));
             if (isNotAllNull(zustaende.getGelaende())) {
                 joins.add("mauer_zustand AS z_gelaende ON m.fk_zustand_gelaende = z_gelaende.id");
                 wheres.add(createWhereFor(
@@ -445,6 +446,7 @@ public class CidsMauernSearchStatement extends RestApiMonGeometrySearch
      */
     @Getter
     @Setter
+    @NoArgsConstructor
     @JsonAutoDetect(
         fieldVisibility = JsonAutoDetect.Visibility.NONE,
         isGetterVisibility = JsonAutoDetect.Visibility.NONE,
@@ -463,6 +465,8 @@ public class CidsMauernSearchStatement extends RestApiMonGeometrySearch
         @JsonProperty private MassnahmenInfo massnahmen = new MassnahmenInfo();
 
         @JsonProperty private Integer sanierung;
+        @JsonProperty private Double hoeheVon;
+        @JsonProperty private Double hoeheBis;
 
         /*
          * @JsonProperty private HashMap<Property, Object> filters; public enum Property {
@@ -481,6 +485,7 @@ public class CidsMauernSearchStatement extends RestApiMonGeometrySearch
      */
     @Getter
     @Setter
+    @NoArgsConstructor
     @JsonAutoDetect(
         fieldVisibility = JsonAutoDetect.Visibility.NONE,
         isGetterVisibility = JsonAutoDetect.Visibility.NONE,
@@ -491,7 +496,6 @@ public class CidsMauernSearchStatement extends RestApiMonGeometrySearch
 
         //~ Instance fields ----------------------------------------------------
 
-        @JsonProperty private ZustandInfo hoehe;
         @JsonProperty private ZustandInfo gelaender;
         @JsonProperty private ZustandInfo ansicht;
         @JsonProperty private ZustandInfo wandkopf;
@@ -508,6 +512,7 @@ public class CidsMauernSearchStatement extends RestApiMonGeometrySearch
      */
     @Getter
     @Setter
+    @NoArgsConstructor
     @JsonAutoDetect(
         fieldVisibility = JsonAutoDetect.Visibility.NONE,
         isGetterVisibility = JsonAutoDetect.Visibility.NONE,
@@ -542,6 +547,7 @@ public class CidsMauernSearchStatement extends RestApiMonGeometrySearch
      */
     @Getter
     @Setter
+    @NoArgsConstructor
     @JsonAutoDetect(
         fieldVisibility = JsonAutoDetect.Visibility.NONE,
         isGetterVisibility = JsonAutoDetect.Visibility.NONE,
@@ -566,6 +572,7 @@ public class CidsMauernSearchStatement extends RestApiMonGeometrySearch
      */
     @Getter
     @Setter
+    @NoArgsConstructor
     @JsonAutoDetect(
         fieldVisibility = JsonAutoDetect.Visibility.NONE,
         isGetterVisibility = JsonAutoDetect.Visibility.NONE,
