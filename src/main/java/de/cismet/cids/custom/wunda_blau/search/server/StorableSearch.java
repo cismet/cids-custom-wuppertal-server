@@ -13,6 +13,7 @@
 package de.cismet.cids.custom.wunda_blau.search.server;
 
 import com.fasterxml.jackson.annotation.JsonAutoDetect;
+import com.fasterxml.jackson.databind.ObjectMapper;
 
 import java.io.Serializable;
 
@@ -33,7 +34,21 @@ public interface StorableSearch<I extends StorableSearch.Configuration> {
      *
      * @return  DOCUMENT ME!
      */
+    String getName();
+
+    /**
+     * DOCUMENT ME!
+     *
+     * @return  DOCUMENT ME!
+     */
     String createQuery();
+
+    /**
+     * DOCUMENT ME!
+     *
+     * @return  DOCUMENT ME!
+     */
+    ObjectMapper getConfigurationMapper();
 
     /**
      * DOCUMENT ME!
@@ -56,7 +71,16 @@ public interface StorableSearch<I extends StorableSearch.Configuration> {
      */
     void setConfiguration(final Object configuration); // jalopy wants this method. workaround
 
-    //~ Inner Classes ----------------------------------------------------------
+    /**
+     * DOCUMENT ME!
+     *
+     * @param   configurationJson  DOCUMENT ME!
+     *
+     * @throws  Exception  DOCUMENT ME!
+     */
+    void setConfiguration(final String configurationJson) throws Exception;
+
+    //~ Inner Interfaces -------------------------------------------------------
 
     /**
      * DOCUMENT ME!
@@ -69,6 +93,6 @@ public interface StorableSearch<I extends StorableSearch.Configuration> {
         getterVisibility = JsonAutoDetect.Visibility.NONE,
         setterVisibility = JsonAutoDetect.Visibility.NONE
     )
-    public abstract static class Configuration implements Serializable {
+    public interface Configuration extends Serializable {
     }
 }
