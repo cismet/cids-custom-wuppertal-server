@@ -16,6 +16,7 @@ import Sirius.server.middleware.types.MetaObjectNode;
 
 import com.fasterxml.jackson.annotation.JsonAutoDetect;
 import com.fasterxml.jackson.annotation.JsonProperty;
+import com.fasterxml.jackson.databind.ObjectMapper;
 
 import com.vividsolutions.jts.geom.Geometry;
 import com.vividsolutions.jts.geom.MultiPolygon;
@@ -26,6 +27,11 @@ import lombok.NoArgsConstructor;
 import lombok.Setter;
 
 import org.apache.log4j.Logger;
+
+import org.openide.util.lookup.ServiceProvider;
+import org.openide.util.lookup.ServiceProviders;
+
+import java.io.Serializable;
 
 import java.text.SimpleDateFormat;
 
@@ -41,6 +47,8 @@ import java.util.stream.Collectors;
 
 import de.cismet.cids.server.search.SearchException;
 
+import de.cismet.cidsx.server.search.RestApiCidsServerSearch;
+
 import de.cismet.cismap.commons.jtsgeometryfactories.PostGisGeometryFactory;
 
 import de.cismet.connectioncontext.ConnectionContext;
@@ -51,6 +59,12 @@ import de.cismet.connectioncontext.ConnectionContext;
  * @author   daniel
  * @version  $Revision$, $Date$
  */
+@ServiceProviders(
+    {
+        @ServiceProvider(service = RestApiCidsServerSearch.class),
+        @ServiceProvider(service = StorableSearch.class)
+    }
+)
 public class CidsMauernSearchStatement extends RestApiMonGeometrySearch
         implements StorableSearch<CidsMauernSearchStatement.Configuration> {
 
@@ -58,12 +72,13 @@ public class CidsMauernSearchStatement extends RestApiMonGeometrySearch
 
     private static final Logger LOG = Logger.getLogger(CidsMauernSearchStatement.class);
     private static final String SQL_STMT =
-        "SELECT DISTINCT (SELECT c.id FROM cs_class c WHERE table_name ilike 'mauer') as class_id, m.id,m.lagebezeichnung as name FROM %s WHERE %s";
+        "SELECT DISTINCT (SELECT c.id FROM cs_class c WHERE table_name ilike 'mauer') as class_id, m.id AS object_id, m.lagebezeichnung as name FROM %s WHERE %s";
     private static final String JOIN_GEOM = "geom AS g ON m.georeferenz = g.id";
     private static final String JOIN_LASTKLASSE = "mauer_lastklasse AS l ON l.id = m.lastklasse";
     private static final String JOIN_EIGENTUEMER = "mauer_eigentuemer AS e ON e.id = m.eigentuemer";
     private static final String DOMAIN = "WUNDA_BLAU";
     private static final String INTERSECTS_BUFFER = SearchProperties.getInstance().getIntersectsBuffer();
+    private static final ObjectMapper OBJECT_MAPPER = new ObjectMapper();
 
     //~ Enums ------------------------------------------------------------------
 
@@ -89,6 +104,22 @@ public class CidsMauernSearchStatement extends RestApiMonGeometrySearch
 
     /**
      * Creates a new CidsMauernSearchStatement object.
+     */
+    public CidsMauernSearchStatement() {
+        this(new Configuration());
+    }
+
+    /**
+     * Creates a new CidsMauernSearchStatement object.
+     *
+     * @param  configuration  DOCUMENT ME!
+     */
+    public CidsMauernSearchStatement(final Configuration configuration) {
+        this(configuration, null);
+    }
+
+    /**
+     * Creates a new CidsMauernSearchStatement object.
      *
      * @param  configuration  eigentuemerIds DOCUMENT ME!
      * @param  geom           DOCUMENT ME!
@@ -99,6 +130,26 @@ public class CidsMauernSearchStatement extends RestApiMonGeometrySearch
     }
 
     //~ Methods ----------------------------------------------------------------
+
+    @Override
+    public String getName() {
+        return "mauer";
+    }
+
+    @Override
+    public void setConfiguration(final String configurationJson) throws Exception {
+        setConfiguration(getConfigurationMapper().readValue(configurationJson, Configuration.class));
+    }
+
+    /**
+     * DOCUMENT ME!
+     *
+     * @return  DOCUMENT ME!
+     */
+    @Override
+    public ObjectMapper getConfigurationMapper() {
+        return OBJECT_MAPPER;
+    }
 
     @Override
     public String createQuery() {
@@ -453,7 +504,7 @@ public class CidsMauernSearchStatement extends RestApiMonGeometrySearch
         getterVisibility = JsonAutoDetect.Visibility.NONE,
         setterVisibility = JsonAutoDetect.Visibility.NONE
     )
-    public static class Configuration extends StorableSearch.Configuration {
+    public static class Configuration implements StorableSearch.Configuration {
 
         //~ Instance fields ----------------------------------------------------
 
@@ -492,7 +543,7 @@ public class CidsMauernSearchStatement extends RestApiMonGeometrySearch
         getterVisibility = JsonAutoDetect.Visibility.NONE,
         setterVisibility = JsonAutoDetect.Visibility.NONE
     )
-    public static class ZustaendeInfo extends StorableSearch.Configuration {
+    public static class ZustaendeInfo implements Serializable {
 
         //~ Instance fields ----------------------------------------------------
 
@@ -519,7 +570,7 @@ public class CidsMauernSearchStatement extends RestApiMonGeometrySearch
         getterVisibility = JsonAutoDetect.Visibility.NONE,
         setterVisibility = JsonAutoDetect.Visibility.NONE
     )
-    public static class ZustandInfo extends StorableSearch.Configuration {
+    public static class ZustandInfo implements Serializable {
 
         //~ Instance fields ----------------------------------------------------
 
@@ -554,7 +605,7 @@ public class CidsMauernSearchStatement extends RestApiMonGeometrySearch
         getterVisibility = JsonAutoDetect.Visibility.NONE,
         setterVisibility = JsonAutoDetect.Visibility.NONE
     )
-    public static class MassnahmenInfo extends StorableSearch.Configuration {
+    public static class MassnahmenInfo implements Serializable {
 
         //~ Instance fields ----------------------------------------------------
 
@@ -579,7 +630,7 @@ public class CidsMauernSearchStatement extends RestApiMonGeometrySearch
         getterVisibility = JsonAutoDetect.Visibility.NONE,
         setterVisibility = JsonAutoDetect.Visibility.NONE
     )
-    public static class MassnahmeInfo extends StorableSearch.Configuration {
+    public static class MassnahmeInfo implements Serializable {
 
         //~ Instance fields ----------------------------------------------------
 
