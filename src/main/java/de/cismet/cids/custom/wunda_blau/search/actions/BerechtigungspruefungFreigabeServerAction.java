@@ -170,11 +170,15 @@ public class BerechtigungspruefungFreigabeServerAction implements UserAwareServe
                             final CidsBean billingBean = BerechtigungspruefungHandler.getInstance()
                                         .loadBillingBean(getUser(), billingId);
                             if (pruefStatus) {
-                                billingBean.setProperty("request", pruefungBean.getProperty("downloadinfo_json"));
-                                getMetaService().updateMetaObject(
-                                    getUser(),
-                                    billingBean.getMetaObject(),
-                                    getConnectionContext());
+                                try {
+                                    billingBean.setProperty("request", pruefungBean.getProperty("downloadinfo_json"));
+                                    getMetaService().updateMetaObject(
+                                        getUser(),
+                                        billingBean.getMetaObject(),
+                                        getConnectionContext());
+                                } catch (final Exception ex) {
+                                    LOG.error("error while setting 'request' of billing", ex);
+                                }
                             } else { // storno
                                 final CidsBean billingStornogrundBean = BerechtigungspruefungHandler.getInstance()
                                             .loadBillingStornogrundBean(getUser());
