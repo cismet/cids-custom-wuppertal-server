@@ -37,8 +37,10 @@ import lombok.Setter;
 import org.apache.log4j.Logger;
 
 import org.openide.util.lookup.ServiceProvider;
+import org.openide.util.lookup.ServiceProviders;
 
 import java.io.IOException;
+import java.io.Serializable;
 import java.io.StringReader;
 
 import java.text.SimpleDateFormat;
@@ -64,12 +66,19 @@ import de.cismet.cidsx.server.api.types.SearchInfo;
 import de.cismet.cidsx.server.api.types.SearchParameterInfo;
 import de.cismet.cidsx.server.search.RestApiCidsServerSearch;
 
+import static de.cismet.cids.custom.wunda_blau.search.server.AlboFlaecheSearch.OBJECT_MAPPER;
+
 /**
  * DOCUMENT ME!
  *
  * @version  $Revision$, $Date$
  */
-@ServiceProvider(service = RestApiCidsServerSearch.class)
+@ServiceProviders(
+    {
+        @ServiceProvider(service = RestApiCidsServerSearch.class),
+        @ServiceProvider(service = StorableSearch.class)
+    }
+)
 public class PotenzialflaecheSearch extends RestApiMonGeometrySearch
         implements StorableSearch<PotenzialflaecheSearch.Configuration> {
 
@@ -145,6 +154,11 @@ public class PotenzialflaecheSearch extends RestApiMonGeometrySearch
     }
 
     //~ Methods ----------------------------------------------------------------
+
+    @Override
+    public String getName() {
+        return "pf_potenzialflaeche";
+    }
 
     /**
      * DOCUMENT ME!
@@ -476,6 +490,19 @@ public class PotenzialflaecheSearch extends RestApiMonGeometrySearch
     public void setConfiguration(final Object searchConfiguration) {
         this.configuration = (searchConfiguration instanceof Configuration) ? (Configuration)searchConfiguration : null;
     }
+    /**
+     * DOCUMENT ME!
+     *
+     * @return  DOCUMENT ME!
+     */
+    @Override
+    public ObjectMapper getConfigurationMapper() {
+        return OBJECT_MAPPER;
+    }
+    @Override
+    public void setConfiguration(final String configurationJson) throws Exception {
+        setConfiguration(getConfigurationMapper().readValue(configurationJson, Configuration.class));
+    }
 
     @Override
     public void setConfiguration(final Configuration searchConfiguration) {
@@ -497,7 +524,7 @@ public class PotenzialflaecheSearch extends RestApiMonGeometrySearch
         getterVisibility = JsonAutoDetect.Visibility.NONE,
         setterVisibility = JsonAutoDetect.Visibility.NONE
     )
-    public static class Configuration extends StorableSearch.Configuration {
+    public static class Configuration implements StorableSearch.Configuration {
 
         //~ Instance fields ----------------------------------------------------
 
@@ -530,7 +557,7 @@ public class PotenzialflaecheSearch extends RestApiMonGeometrySearch
         getterVisibility = JsonAutoDetect.Visibility.NONE,
         setterVisibility = JsonAutoDetect.Visibility.NONE
     )
-    public static class FilterInfo extends StorableSearch.Configuration {
+    public static class FilterInfo implements Serializable {
 
         //~ Instance fields ----------------------------------------------------
 

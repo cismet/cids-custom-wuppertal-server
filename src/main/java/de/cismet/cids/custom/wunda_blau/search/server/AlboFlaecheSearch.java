@@ -28,14 +28,17 @@ import lombok.Setter;
 
 import org.apache.log4j.Logger;
 
+import org.openide.util.lookup.ServiceProvider;
+import org.openide.util.lookup.ServiceProviders;
+
 import java.io.IOException;
+import java.io.Serializable;
 
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.List;
 
-import de.cismet.cids.server.search.AbstractCidsServerSearch;
-import de.cismet.cids.server.search.MetaObjectNodeServerSearch;
+import de.cismet.cidsx.server.search.RestApiCidsServerSearch;
 
 import de.cismet.cismap.commons.jtsgeometryfactories.PostGisGeometryFactory;
 
@@ -46,8 +49,14 @@ import de.cismet.connectioncontext.ConnectionContext;
  *
  * @version  $Revision$, $Date$
  */
-public class AlboFlaecheSearch extends AbstractCidsServerSearch implements MetaObjectNodeServerSearch,
-    StorableSearch<AlboFlaecheSearch.Configuration> {
+@ServiceProviders(
+    {
+        @ServiceProvider(service = RestApiCidsServerSearch.class),
+        @ServiceProvider(service = StorableSearch.class)
+    }
+)
+public class AlboFlaecheSearch extends RestApiMonGeometrySearch
+        implements StorableSearch<AlboFlaecheSearch.Configuration> {
 
     //~ Static fields/initializers ---------------------------------------------
 
@@ -108,16 +117,6 @@ public class AlboFlaecheSearch extends AbstractCidsServerSearch implements MetaO
     /**
      * Creates a new AlboFlaecheSearch object.
      *
-     * @param  withAlboVorgang  DOCUMENT ME!
-     */
-    public AlboFlaecheSearch(final boolean withAlboVorgang) {
-        this(new Configuration());
-        this.withAlboVorgang = withAlboVorgang;
-    }
-
-    /**
-     * Creates a new AlboFlaecheSearch object.
-     *
      * @param  searchInfo  DOCUMENT ME!
      */
     public AlboFlaecheSearch(final Configuration searchInfo) {
@@ -127,23 +126,43 @@ public class AlboFlaecheSearch extends AbstractCidsServerSearch implements MetaO
     /**
      * Creates a new AlboFlaecheSearch object.
      *
-     * @param   searchInfo  DOCUMENT ME!
-     *
-     * @throws  Exception  DOCUMENT ME!
+     * @param  withAlboVorgang  DOCUMENT ME!
      */
-    public AlboFlaecheSearch(final String searchInfo) throws Exception {
-        this((searchInfo != null) ? OBJECT_MAPPER.readValue(searchInfo, Configuration.class) : null);
+    protected AlboFlaecheSearch(final boolean withAlboVorgang) {
+        this(new Configuration());
+        this.withAlboVorgang = withAlboVorgang;
     }
 
     //~ Methods ----------------------------------------------------------------
+
+    @Override
+    public void setConfiguration(final String configurationJson) throws Exception {
+        setConfiguration(getConfigurationMapper().readValue(configurationJson, Configuration.class));
+    }
+
+    @Override
+    public String getName() {
+        return "albo_flaeche";
+    }
 
     /**
      * DOCUMENT ME!
      *
      * @param  connectionContext  DOCUMENT ME!
      */
+    @Override
     public void initWithConnectionContext(final ConnectionContext connectionContext) {
         this.connectionContext = connectionContext;
+    }
+
+    /**
+     * DOCUMENT ME!
+     *
+     * @return  DOCUMENT ME!
+     */
+    @Override
+    public ObjectMapper getConfigurationMapper() {
+        return OBJECT_MAPPER;
     }
 
     /**
@@ -476,6 +495,7 @@ public class AlboFlaecheSearch extends AbstractCidsServerSearch implements MetaO
      *
      * @return  DOCUMENT ME!
      */
+    @Override
     public ConnectionContext getConnectionContext() {
         return connectionContext;
     }
@@ -495,7 +515,7 @@ public class AlboFlaecheSearch extends AbstractCidsServerSearch implements MetaO
         getterVisibility = JsonAutoDetect.Visibility.NONE,
         setterVisibility = JsonAutoDetect.Visibility.NONE
     )
-    public static class Configuration extends StorableSearch.Configuration {
+    public static class Configuration implements StorableSearch.Configuration {
 
         //~ Instance fields ----------------------------------------------------
 
@@ -524,7 +544,7 @@ public class AlboFlaecheSearch extends AbstractCidsServerSearch implements MetaO
         getterVisibility = JsonAutoDetect.Visibility.NONE,
         setterVisibility = JsonAutoDetect.Visibility.NONE
     )
-    public static class ArtInfo extends StorableSearch.Configuration {
+    public static class ArtInfo implements Serializable {
 
         //~ Instance fields ----------------------------------------------------
 

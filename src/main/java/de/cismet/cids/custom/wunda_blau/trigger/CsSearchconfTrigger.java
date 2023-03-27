@@ -16,7 +16,6 @@ import Sirius.server.newuser.User;
 
 import org.openide.util.lookup.ServiceProvider;
 
-import de.cismet.cids.custom.wunda_blau.search.server.AlboFlaecheSearch;
 import de.cismet.cids.custom.wunda_blau.search.server.StorableSearch;
 
 import de.cismet.cids.dynamics.CidsBean;
@@ -64,9 +63,17 @@ public class CsSearchconfTrigger extends AbstractDBAwareCidsTrigger {
     private void storeQuery(final CidsBean cidsBean) {
         if (isForMe(cidsBean)) {
             try {
-                final String conf_json = (String)cidsBean.getProperty("conf_json");
-                final StorableSearch search = new AlboFlaecheSearch(conf_json);
-                cidsBean.setProperty("children_query", search.createQuery());
+                final String confJson = (String)cidsBean.getProperty("conf_json");
+                final String searchName = (String)cidsBean.getProperty("search_name");
+                final String searchQuery;
+                if (searchName != null) {
+                    final StorableSearch search = CsSearchconfHandler.getInstance().getStorableSearches(searchName);
+                    search.setConfiguration(confJson);
+                    searchQuery = search.createQuery();
+                } else {
+                    searchQuery = null;
+                }
+                cidsBean.setProperty("children_query", searchQuery);
             } catch (final Exception ex) {
                 LOG.error(ex, ex);
             }
