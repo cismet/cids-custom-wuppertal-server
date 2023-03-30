@@ -14,13 +14,8 @@ package de.cismet.cids.custom.wunda_blau.startuphooks;
 
 import Sirius.server.middleware.impls.domainserver.DomainServerImpl;
 import Sirius.server.middleware.interfaces.domainserver.DomainServerStartupHook;
-import Sirius.server.newuser.User;
-import Sirius.server.newuser.UserServer;
-
-import java.rmi.Naming;
 
 import de.cismet.cids.custom.utils.berechtigungspruefung.BerechtigungspruefungHandler;
-import de.cismet.cids.custom.utils.berechtigungspruefung.BerechtigungspruefungProperties;
 import de.cismet.cids.custom.utils.formsolutions.FormSolutionsBestellungBerechtigungspruefungHandler;
 
 /**
@@ -47,28 +42,18 @@ public class BerechtigungspruefungStartupHook extends AbstractWundaBlauStartupHo
                 public void run() {
                     final DomainServerImpl metaService = waitForMetaService();
 
-                    try {
-                        final Object userServer = Naming.lookup("rmi://localhost/userServer");
-                        final User user = ((UserServer)userServer).getUser(
-                                null,
-                                null,
-                                "WUNDA_BLAU",
-                                BerechtigungspruefungProperties.getInstance().getCidsLogin(),
-                                BerechtigungspruefungProperties.getInstance().getCidsPassword());
-                        final BerechtigungspruefungHandler handler = BerechtigungspruefungHandler.getInstance();
-                        handler.initWithConnectionContext(getConnectionContext());
-                        handler.setMetaService(metaService);
-                        handler.sendMessagesForAllOpenFreigaben(user);
-                        handler.sendMessagesForAllOpenAnfragen(user);
-                        handler.deleteOldDateianhangFiles(user);
+                    final BerechtigungspruefungHandler handler = BerechtigungspruefungHandler.getInstance();
+                    handler.initWithConnectionContext(getConnectionContext());
+                    handler.setMetaService(metaService);
 
-                        final FormSolutionsBestellungBerechtigungspruefungHandler fsbbh =
-                            FormSolutionsBestellungBerechtigungspruefungHandler.getInstance();
-                        fsbbh.initWithConnectionContext(getConnectionContext());
-                        fsbbh.setMetaService(metaService);
-                    } catch (final Exception ex) {
-                        LOG.warn("Error while initializing the BerechtigungspruefungHandler !", ex);
-                    }
+                    final FormSolutionsBestellungBerechtigungspruefungHandler fsbbh =
+                        FormSolutionsBestellungBerechtigungspruefungHandler.getInstance();
+                    fsbbh.initWithConnectionContext(getConnectionContext());
+                    fsbbh.setMetaService(metaService);
+
+                    handler.sendMessagesForAllOpenFreigaben();
+                    handler.sendMessagesForAllOpenAnfragen();
+                    handler.deleteOldDateianhangFiles();
                 }
             }).start();
     }
