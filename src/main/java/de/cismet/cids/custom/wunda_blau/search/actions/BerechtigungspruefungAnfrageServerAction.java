@@ -125,7 +125,7 @@ public class BerechtigungspruefungAnfrageServerAction implements UserAwareServer
 
             if (abgeholt != null) {
                 BerechtigungspruefungHandler.getInstance().setMetaService(getMetaService());
-                BerechtigungspruefungHandler.getInstance().closeAnfrage(user, abgeholt);
+                BerechtigungspruefungHandler.getInstance().closeAnfrage(abgeholt);
                 return null;
             } else {
                 final byte[] data = (byte[])body;
@@ -142,12 +142,11 @@ public class BerechtigungspruefungAnfrageServerAction implements UserAwareServer
 
                 BerechtigungspruefungHandler.getInstance().setMetaService(getMetaService());
 
-                final String schluessel = BerechtigungspruefungHandler.getInstance()
-                            .createNewSchluessel(getUser(), downloadInfo);
-
+                final String schluessel = BerechtigungspruefungHandler.getInstance().createNewSchluessel(downloadInfo);
+                final String userKey = (String)user.getKey();
                 final CidsBean anfrageBean = BerechtigungspruefungHandler.getInstance()
                             .addNewAnfrage(
-                                getUser(),
+                                userKey,
                                 schluessel,
                                 downloadInfo,
                                 berechtigungsgrund,
@@ -176,7 +175,9 @@ public class BerechtigungspruefungAnfrageServerAction implements UserAwareServer
                                     getConnectionContext());
 
                     final CidsBean persistedBillingBean = DomainServerImpl.getServerInstance()
-                                .insertMetaObject(getUser(), cb.getMetaObject(), getConnectionContext())
+                                .insertMetaObject(BerechtigungspruefungHandler.getInstance().getUser(),
+                                        cb.getMetaObject(),
+                                        getConnectionContext())
                                 .getBean();
 
                     billingDownloadInfo.setBillingId(persistedBillingBean.getPrimaryKeyValue());
@@ -184,7 +185,9 @@ public class BerechtigungspruefungAnfrageServerAction implements UserAwareServer
                         "downloadinfo_json",
                         new ObjectMapper().writeValueAsString(billingDownloadInfo));
                     DomainServerImpl.getServerInstance()
-                            .updateMetaObject(getUser(), anfrageBean.getMetaObject(), getConnectionContext());
+                            .updateMetaObject(BerechtigungspruefungHandler.getInstance().getUser(),
+                                anfrageBean.getMetaObject(),
+                                getConnectionContext());
                 }
 
                 return schluessel;
