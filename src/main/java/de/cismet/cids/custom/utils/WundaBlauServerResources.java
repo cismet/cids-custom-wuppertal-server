@@ -33,6 +33,7 @@ public enum WundaBlauServerResources {
 
     BAULASTBESCHEINIGUNG_JASPER(new JasperReportServerResource("/reports/baulastbescheinigung.jasper")),
     BAULASTEN_JASPER(new JasperReportServerResource("/reports/baulasten.jasper")),
+    BAUMGEBIET_JASPER(new JasperReportServerResource("reports/baum_gebiet_ueberblick.jasper")),
     VERMESSUNGSRISSE_JASPER(new JasperReportServerResource("/reports/vermessungsrisse.jasper")),
     VERMESSUNGSRISSE_DOCUMENT_JASPER(new JasperReportServerResource("/reports/vermessungsrisse_document.jasper")),
     VERMESSUNGSRISSE_OVERVIEW_JASPER(new JasperReportServerResource("/reports/vermessungsrisse_overview.jasper")),
