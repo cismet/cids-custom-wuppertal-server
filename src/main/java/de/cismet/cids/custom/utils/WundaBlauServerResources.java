@@ -107,7 +107,9 @@ public enum WundaBlauServerResources {
 
     VZKAT_PROPERTIES(new TextServerResource("/vzkat/vzkat.properties")),
 
-    ALBO_PROPERTIES(new TextServerResource("/albo/albo.properties"));
+    ALBO_PROPERTIES(new TextServerResource("/albo/albo.properties")),
+
+    MAUERN_PROPERTIES(new PropertiesServerResource("/mauern/mauern.properties", MauernProperties.class));
 
     //~ Instance fields --------------------------------------------------------
 
