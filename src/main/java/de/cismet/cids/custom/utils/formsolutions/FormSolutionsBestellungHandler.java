@@ -3187,16 +3187,6 @@ public class FormSolutionsBestellungHandler implements ConnectionContextProvider
                                         final String email = trimedNotEmpty((String)bestellungBean.getProperty(
                                                     "email"));
                                         doStatusChangedRequest(transid, isInternalEmail(email));
-
-                                        try {
-                                            berechtigungspruefung.setProperty("abgeholt", true);
-                                            getMetaService().updateMetaObject(
-                                                getUser(),
-                                                berechtigungspruefung.getMetaObject(),
-                                                getConnectionContext());
-                                        } catch (final Exception ex) {
-                                            LOG.error(ex, ex);
-                                        }
                                     } else if (Boolean.FALSE.equals(berechtigungspruefung.getProperty("pruefstatus"))) {
                                         getMySqlHelper().updatePruefungAblehnung((String)
                                             berechtigungspruefung.getProperty("schluessel"),
