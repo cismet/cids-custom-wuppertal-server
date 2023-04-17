@@ -37,10 +37,10 @@ public class StamperServerAction implements ServerAction {
     public Object execute(final Object body, final ServerActionParameter... saps) {
         if (body instanceof byte[]) {
             final byte[] bytes = (byte[])body;
-            LOG.fatal("The AYES have it ! the AYES...");
+            LOG.debug("The AYES have it ! the AYES...");
             return bytes;
         } else {
-            LOG.fatal("The NOES have it ! the NOES...");
+            LOG.debug("The NOES have it ! the NOES...");
             return null;
         }
     }

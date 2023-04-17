@@ -16,6 +16,7 @@ import Sirius.server.middleware.interfaces.domainserver.MetaService;
 import Sirius.server.middleware.interfaces.domainserver.MetaServiceStore;
 import Sirius.server.middleware.types.MetaObjectNode;
 import Sirius.server.newuser.User;
+import de.cismet.cids.custom.utils.berechtigungspruefung.BerechtigungspruefungHandler;
 
 import java.util.Collection;
 import java.util.HashMap;
@@ -148,7 +149,7 @@ public class FormSolutionsBestellungBerechtigungspruefungHandler implements Conn
                 if (search instanceof ConnectionContextStore) {
                     ((ConnectionContextStore)search).initWithConnectionContext(getConnectionContext());
                 }
-
+                
                 final List<String> schluessels = (List)csmmle.getMessage().getContent();
                 for (final String schluessel : schluessels) {
                     search.setBerechtigungspruefungSchluessel(schluessel);
@@ -161,8 +162,13 @@ public class FormSolutionsBestellungBerechtigungspruefungHandler implements Conn
                         false,
                         false,
                         mons);
+                    try {
+                        BerechtigungspruefungHandler.getInstance().closeAnfrage(schluessel);
+                    } catch (final Exception ex) {
+                        LOG.error(String.format("Fehler beim Schließen von der Berechtigugnsprüfung %s.", schluessel), ex);
+                    }
                 }
             }
         }
+            }
     }
-}
