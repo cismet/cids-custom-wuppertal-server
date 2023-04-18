@@ -123,6 +123,8 @@ public class BaumGebietReportServerAction extends StampedJasperReportServerActio
             parameters.put("hnr", getAttribute(gebietMon, FIELD__ADR_HNR));
             parameters.put("bemerkung", getAttribute(gebietMon, FIELD__BEMERKUNG));
             parameters.put("wiedervorlage", getDateAttribute(gebietMon, FIELD__WV));
+            
+            parameters.put("mon", gebietMon);
 
             if (imageBytes != null) {
                 try(final ByteArrayInputStream bis = new ByteArrayInputStream(imageBytes)) {
@@ -168,7 +170,7 @@ public class BaumGebietReportServerAction extends StampedJasperReportServerActio
                     new JRBeanCollectionDataSource(meldungenBeans);
 
             parameters.put("meldungen", meldungenBeans);*/
-            BaumMeldungReportScriptlet scriptlet = new BaumMeldungReportScriptlet(getMetaService(), getUser());
+            BaumMeldungReportScriptlet scriptlet = new BaumMeldungReportScriptlet(getMetaService(), getUser(), getConnectionContext());
             parameters.put("REPORT_SCRIPTLET", scriptlet);
             return generateReport(parameters, dataSource);
         } catch (final Exception ex) {
