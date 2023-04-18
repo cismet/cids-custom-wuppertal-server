@@ -16,13 +16,13 @@ import Sirius.server.middleware.interfaces.domainserver.MetaService;
 import Sirius.server.middleware.interfaces.domainserver.MetaServiceStore;
 import Sirius.server.middleware.types.MetaObjectNode;
 import Sirius.server.newuser.User;
-import de.cismet.cids.custom.utils.berechtigungspruefung.BerechtigungspruefungHandler;
 
 import java.util.Collection;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
+import de.cismet.cids.custom.utils.berechtigungspruefung.BerechtigungspruefungHandler;
 import de.cismet.cids.custom.utils.berechtigungspruefung.BerechtigungspruefungProperties;
 import de.cismet.cids.custom.wunda_blau.search.server.FormSolutionsBestellungSearch;
 
@@ -149,7 +149,7 @@ public class FormSolutionsBestellungBerechtigungspruefungHandler implements Conn
                 if (search instanceof ConnectionContextStore) {
                     ((ConnectionContextStore)search).initWithConnectionContext(getConnectionContext());
                 }
-                
+
                 final List<String> schluessels = (List)csmmle.getMessage().getContent();
                 for (final String schluessel : schluessels) {
                     search.setBerechtigungspruefungSchluessel(schluessel);
@@ -165,10 +165,11 @@ public class FormSolutionsBestellungBerechtigungspruefungHandler implements Conn
                     try {
                         BerechtigungspruefungHandler.getInstance().closeAnfrage(schluessel);
                     } catch (final Exception ex) {
-                        LOG.error(String.format("Fehler beim Schließen von der Berechtigugnsprüfung %s.", schluessel), ex);
+                        LOG.error(String.format("Fehler beim Schließen von der Berechtigugnsprüfung %s.", schluessel),
+                            ex);
                     }
                 }
             }
         }
-            }
     }
+}

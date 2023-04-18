@@ -119,7 +119,9 @@ public class GetOrbitStacAction implements ServerAction, UserAwareServerAction {
         info.setSecret(OPEN_CHANNELS_SECRET);
         info.setChannels(channels);
         info.setTimeoutS(OPEN_CHANNEL_TIMEOUT);
-        LOG.debug("try to open channels for " + socketChannelId);
+        if (LOG.isDebugEnabled()) {
+            LOG.debug("try to open channels for " + socketChannelId);
+        }
         final Socket socket = SocketIOSocketProvider.getInstance().getSocket();
         socket.emit("open", mapper.writeValueAsString(info));
     }
