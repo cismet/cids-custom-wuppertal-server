@@ -30,9 +30,11 @@ public class MauernProperties extends DefaultServerResourcePropertiesHandler {
     private static final org.apache.log4j.Logger LOG = org.apache.log4j.Logger.getLogger(MauernProperties.class);
 
     private static final String PROP__RASTERFARI_URL = "rasterfariUrl";
+    private static final String PROP__RASTERFARI_PATH = "rasterfariPath";
     private static final String PROP__WEBDAV_URL = "webdavUrl";
     private static final String PROP__WEBDAV_USER = "webdavUser";
     private static final String PROP__WEBDAV_PASSWORD = "webdavPassword";
+    private static final String PROP__MAP_URL = "mapUrl";
 
     //~ Constructors -----------------------------------------------------------
 
@@ -51,6 +53,15 @@ public class MauernProperties extends DefaultServerResourcePropertiesHandler {
      */
     public String getRasterfariUrl() {
         return getProperties().getProperty(PROP__RASTERFARI_URL, null);
+    }
+
+    /**
+     * DOCUMENT ME!
+     *
+     * @return  DOCUMENT ME!
+     */
+    public String getRasterfariPath() {
+        return getProperties().getProperty(PROP__RASTERFARI_PATH, null);
     }
 
     /**
@@ -78,5 +89,14 @@ public class MauernProperties extends DefaultServerResourcePropertiesHandler {
      */
     public String getWebdavPassword() {
         return getProperties().getProperty(PROP__WEBDAV_PASSWORD, null);
+    }
+
+    /**
+     * DOCUMENT ME!
+     *
+     * @return  DOCUMENT ME!
+     */
+    public String getMapUrl() {
+        return getProperties().getProperty(PROP__MAP_URL, null);
     }
 }
