@@ -22,6 +22,7 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
+import de.cismet.cids.custom.utils.berechtigungspruefung.BerechtigungspruefungHandler;
 import de.cismet.cids.custom.utils.berechtigungspruefung.BerechtigungspruefungProperties;
 import de.cismet.cids.custom.wunda_blau.search.server.FormSolutionsBestellungSearch;
 
@@ -161,6 +162,12 @@ public class FormSolutionsBestellungBerechtigungspruefungHandler implements Conn
                         false,
                         false,
                         mons);
+                    try {
+                        BerechtigungspruefungHandler.getInstance().closeAnfrage(schluessel);
+                    } catch (final Exception ex) {
+                        LOG.error(String.format("Fehler beim Schließen von der Berechtigugnsprüfung %s.", schluessel),
+                            ex);
+                    }
                 }
             }
         }

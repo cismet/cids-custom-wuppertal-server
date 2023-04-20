@@ -16,16 +16,7 @@ import Sirius.server.middleware.interfaces.domainserver.MetaService;
 import Sirius.server.middleware.interfaces.domainserver.MetaServiceStore;
 import Sirius.server.newuser.User;
 
-import java.sql.Timestamp;
-
-import java.util.Arrays;
-import java.util.Date;
-
-import de.cismet.cids.custom.utils.berechtigungspruefung.BerechtigungspruefungBillingDownloadInfo;
-import de.cismet.cids.custom.utils.berechtigungspruefung.BerechtigungspruefungDownloadInfo;
 import de.cismet.cids.custom.utils.berechtigungspruefung.BerechtigungspruefungHandler;
-
-import de.cismet.cids.dynamics.CidsBean;
 
 import de.cismet.cids.server.actions.ServerAction;
 import de.cismet.cids.server.actions.ServerActionParameter;
@@ -128,77 +119,12 @@ public class BerechtigungspruefungFreigabeServerAction implements UserAwareServe
             BerechtigungspruefungHandler.getInstance().setMetaService(getMetaService());
 
             synchronized (this) {
-                final String pruefer = getUser().getName();
                 final String schluessel = (String)body;
-                final CidsBean pruefungBean = BerechtigungspruefungHandler.getInstance()
-                            .loadAnfrageBean(getUser(), schluessel);
-
-                final BerechtigungspruefungDownloadInfo downloadInfo = BerechtigungspruefungHandler.extractDownloadInfo(
-                        (String)pruefungBean.getProperty("downloadinfo_json"));
-
-                if (!Boolean.TRUE.equals(pruefungBean.getProperty("abgeholt"))
-                            && (pruefungBean.getProperty("pruefstatus") != null)) {
-                    return ReturnType.ALREADY;
-//                } else if (pruefungsAbschluss && (pruefungBean.getProperty("pruefer") != null)
-//                            && !pruefer.equals(pruefungBean.getProperty("pruefer"))) {
-//                    return ReturnType.PENDING;
-                }
-                final String userKey = (String)pruefungBean.getProperty("benutzer");
-
-                final Timestamp now = new Timestamp(new Date().getTime());
-                pruefungBean.setProperty("abgeholt", null);
-                pruefungBean.setProperty("pruefer", pruefer);
-                pruefungBean.setProperty("pruefstatus", pruefStatus);
-                if (pruefungsAbschluss) {
-                    pruefungBean.setProperty("freigabe_timestamp", now);
-                    pruefungBean.setProperty("pruefkommentar", begruendung);
-                } else {
-                    pruefungBean.setProperty("pruefung_timestamp", now);
-                }
-
-                getMetaService().updateMetaObject(
-                    getUser(),
-                    pruefungBean.getMetaObject(),
-                    getConnectionContext());
-
-                if (pruefungsAbschluss) {
-                    if (downloadInfo instanceof BerechtigungspruefungBillingDownloadInfo) {
-                        final BerechtigungspruefungBillingDownloadInfo billingDownloadinfo =
-                            (BerechtigungspruefungBillingDownloadInfo)downloadInfo;
-                        final Integer billingId = billingDownloadinfo.getBillingId();
-                        if (billingId != null) {
-                            final CidsBean billingBean = BerechtigungspruefungHandler.getInstance()
-                                        .loadBillingBean(getUser(), billingId);
-                            if (pruefStatus) {
-                                billingBean.setProperty("request", pruefungBean.getProperty("downloadinfo_json"));
-                                getMetaService().updateMetaObject(
-                                    getUser(),
-                                    billingBean.getMetaObject(),
-                                    getConnectionContext());
-                            } else { // storno
-                                final CidsBean billingStornogrundBean = BerechtigungspruefungHandler.getInstance()
-                                            .loadBillingStornogrundBean(getUser());
-
-                                try {
-                                    billingBean.setProperty("storniert", Boolean.TRUE);
-                                    billingBean.setProperty("stornogrund", billingStornogrundBean);
-                                    billingBean.setProperty("storniert_durch", getUser().toString());
-
-                                    getMetaService().updateMetaObject(
-                                        getUser(),
-                                        billingBean.getMetaObject(),
-                                        getConnectionContext());
-                                } catch (Exception ex) {
-                                    LOG.error("Error while setting 'storniert' of billing", ex);
-                                }
-                            }
-                        }
-                    }
-
-                    BerechtigungspruefungHandler.getInstance()
-                            .sendFreigabeMessage(userKey, Arrays.asList(pruefungBean));
-                } else {
-                    BerechtigungspruefungHandler.getInstance().sendProcessingMessage(schluessel, getUser());
+                final String pruefer = getUser().getName();
+                final boolean already = BerechtigungspruefungHandler.getInstance()
+                            .pruefung(schluessel, pruefer, pruefStatus, begruendung, pruefungsAbschluss);
+                if (already) {
+                    return BerechtigungspruefungFreigabeServerAction.ReturnType.ALREADY;
                 }
             }
         } catch (final Exception ex) {
