@@ -49,10 +49,6 @@ public class BaumMeldungReportScriptlet extends JRDefaultScriptlet implements
     //~ Static fields/initializers ---------------------------------------------
 
     protected static final Logger LOG = Logger.getLogger(BaumMeldungReportScriptlet.class);
-    /*private static final String QUERY_MELDUNGEN =
-        "Select id, abgenommen, datum, bemerkung, arr_ansprechpartner\n" +
-        "From baum_meldung\n" +
-        "where fk_gebiet = %d";*/
     private static final String CHILD_TOSTRING_TEMPLATE = "%s";
     private static final String TABLE_GEBIET = "baum_gebiet";
     private static final String TABLE_MELDUNG = "baum_meldung";
@@ -91,7 +87,6 @@ public class BaumMeldungReportScriptlet extends JRDefaultScriptlet implements
     private static final int DEFAULT_BUFFER = 50;
     private static final int DEFAULT_MAP_WIDTH = 300;
     private static final int DEFAULT_MAP_HEIGHT = 200;
-    private static final boolean DEFAULT_SHOW_GEOM = true;
     private static final String DEFAULT__SRS = "EPSG:25832";
     private static final double DEFAULT__HOME_X1 = 6.7d;
     private static final double DEFAULT__HOME_Y1 = 49.1d;
@@ -111,7 +106,10 @@ public class BaumMeldungReportScriptlet extends JRDefaultScriptlet implements
     private final Sirius.server.newuser.User user;
     //~ Methods ----------------------------------------------------------------
 
-    public BaumMeldungReportScriptlet(MetaService metaService, final Sirius.server.newuser.User user, ConnectionContext connectionContext) {
+    public BaumMeldungReportScriptlet(
+            MetaService metaService, 
+            final Sirius.server.newuser.User user, 
+            ConnectionContext connectionContext) {
         this.metaService = metaService;
         this.user = user;
         this.connectionContext = connectionContext;
@@ -130,14 +128,18 @@ public class BaumMeldungReportScriptlet extends JRDefaultScriptlet implements
             mons = searchChild.performServerSearch();
             final List<CidsBean> beansMeldung = new ArrayList<>();
             if (!mons.isEmpty()) {
-                for (final MetaObjectNode mon : mons) {
+                mons.forEach((mon) -> {
                     try {
-                        MetaObject mo = metaService.getMetaObject(user, mon.getObjectId(), mon.getClassId(), ConnectionContext.createDummy());
+                        MetaObject mo = metaService.getMetaObject(
+                                user, 
+                                mon.getObjectId(), 
+                                mon.getClassId(), 
+                                getConnectionContext());
                         beansMeldung.add(mo.getBean());
                     } catch (RemoteException e) {
                         LOG.error("Error while retrieving meta object", e);
                     }
-                }
+                });
             }
                 
             final JRBeanCollectionDataSource meldungenDataSource = 
@@ -162,7 +164,7 @@ public class BaumMeldungReportScriptlet extends JRDefaultScriptlet implements
         return getChildren();
     }
     
-    public JRDataSource getFs(int idSchaden) throws SearchException {
+    public JRDataSource getFestsetzungen(int idSchaden) throws SearchException {
         searchChild.setParentId(idSchaden);
         searchChild.setFkField(FIELD__SCHADEN);
         searchChild.setTable(TABLE_FEST);
@@ -170,7 +172,7 @@ public class BaumMeldungReportScriptlet extends JRDefaultScriptlet implements
         return getChildren();
     }
     
-    public JRDataSource getEs(int idSchaden) throws SearchException {
+    public JRDataSource getErsatzpflanzungen(int idSchaden) throws SearchException {
         searchChild.setParentId(idSchaden);
         searchChild.setFkField(FIELD__SCHADEN);
         searchChild.setTable(TABLE_ERSATZ);
@@ -178,7 +180,7 @@ public class BaumMeldungReportScriptlet extends JRDefaultScriptlet implements
         return getChildren();
     }
     
-    public JRDataSource getEbs(int idErsatz) throws SearchException {
+    public JRDataSource getErsatzbaeume(int idErsatz) throws SearchException {
         searchChild.setParentId(idErsatz);
         searchChild.setFkField(FIELD__ERSATZ);
         searchChild.setTable(TABLE_ERSATZBAUM);
@@ -198,16 +200,20 @@ public class BaumMeldungReportScriptlet extends JRDefaultScriptlet implements
             mons = searchChild.performServerSearch();
             final List<CidsBean> beansAps = new ArrayList<>();
             if (!mons.isEmpty()) {
-                for (final MetaObjectNode mon : mons) {
+                mons.forEach((mon) -> {
                     try {
-                        MetaObject mo = metaService.getMetaObject(user, mon.getObjectId(), mon.getClassId(), ConnectionContext.createDummy());
+                        MetaObject mo = metaService.getMetaObject(
+                                user, 
+                                mon.getObjectId(), 
+                                mon.getClassId(), 
+                                getConnectionContext());
                         CidsBean arrayBean = mo.getBean();
-                        CidsBean apBean = (CidsBean)arrayBean.getProperty("fk_ansprechpartner");
+                        CidsBean apBean = (CidsBean)arrayBean.getProperty(FIELD__AP);
                         beansAps.add(apBean);
                     } catch (RemoteException e) {
                         LOG.error("Error while retrieving meta object", e);
                     }
-                }
+                });
             }
                 
             final JRBeanCollectionDataSource apsDataSource = 
@@ -225,16 +231,20 @@ public class BaumMeldungReportScriptlet extends JRDefaultScriptlet implements
         try {
             mons = searchChild.performServerSearch();
             if (!mons.isEmpty()) {
-                for (final MetaObjectNode mon : mons) {
+                mons.forEach((mon) -> {
                     try {
-                        MetaObject mo = metaService.getMetaObject(user, mon.getObjectId(), mon.getClassId(), ConnectionContext.createDummy());
+                        MetaObject mo = metaService.getMetaObject(
+                                user, 
+                                mon.getObjectId(), 
+                                mon.getClassId(), 
+                                getConnectionContext());
                         CidsBean arrayBean = mo.getBean();
                         CidsBean childBean = (CidsBean)arrayBean.getProperty(fk);
                         beansChildren.add(childBean);
                     } catch (RemoteException e) {
                         LOG.error("Error while retrieving meta object", e);
                     }
-                }
+                });
             }
         } catch (SearchException ex) {
             Exceptions.printStackTrace(ex);
@@ -292,7 +302,11 @@ public class BaumMeldungReportScriptlet extends JRDefaultScriptlet implements
             if (!mons.isEmpty()) {
                 for (final MetaObjectNode mon : mons) {
                     try {
-                        MetaObject mo = metaService.getMetaObject(user, mon.getObjectId(), mon.getClassId(), ConnectionContext.createDummy());
+                        MetaObject mo = metaService.getMetaObject(
+                                user, 
+                                mon.getObjectId(), 
+                                mon.getClassId(), 
+                                getConnectionContext());
                         final CidsBean bean = mo.getBean();
                         beansChild.add(bean);
                         switch(mo.getMetaClass().getName()){
@@ -377,17 +391,22 @@ public class BaumMeldungReportScriptlet extends JRDefaultScriptlet implements
         List <String> listChildren = new ArrayList<>();
         String children = "";
         if (beansChildren != null){
-            for (final CidsBean childBean : beansChildren){
+            beansChildren.forEach((childBean) -> {
                 listChildren.add(childBean.getProperty(FIELD__NAME).toString());
-            }
+            });
             children = listChildren.isEmpty() ? "" : (String.join(", ", listChildren));
         }
         return children;
     }
     
     
-    public BufferedImage generateMap(final Collection<BaumMapImageFactoryConfiguration.ObjectIdentifier> mons, final double buffer, final Integer width,
-            final Integer height, final Integer dpi, final String url) throws Exception {
+    public BufferedImage generateMap(
+            final Collection<BaumMapImageFactoryConfiguration.ObjectIdentifier> mons, 
+            final double buffer, 
+            final Integer width,
+            final Integer height, 
+            final Integer dpi, 
+            final String url) throws Exception {
         final BaumProperties properties = BaumProperties.getInstance();
         final BaumMapImageFactoryConfiguration config = new BaumMapImageFactoryConfiguration();
         config.setMons(mons);
@@ -433,7 +452,9 @@ public class BaumMeldungReportScriptlet extends JRDefaultScriptlet implements
     public BufferedImage generateGebietMap(final MetaObjectNode gebietMon) throws Exception {
         final BaumProperties properties = BaumProperties.getInstance();
         final Collection<BaumMapImageFactoryConfiguration.ObjectIdentifier> mons =
-                Arrays.asList(new BaumMapImageFactoryConfiguration.ObjectIdentifier(gebietMon.getObjectId(), gebietMon.getClassId()));
+                Arrays.asList(new BaumMapImageFactoryConfiguration.ObjectIdentifier(
+                        gebietMon.getObjectId(), 
+                        gebietMon.getClassId()));
         final Integer width = ((properties != null) ? properties.getGebietMapWidth()
                                                 : DEFAULT_MAP_WIDTH);
         final Integer height = ((properties != null) ? properties.getGebietMapHeight()
@@ -450,7 +471,9 @@ public class BaumMeldungReportScriptlet extends JRDefaultScriptlet implements
     public BufferedImage generateSchadenMap(final MetaObjectNode schadenMon) throws Exception {
         final BaumProperties properties = BaumProperties.getInstance();
         final Collection<BaumMapImageFactoryConfiguration.ObjectIdentifier> mons =
-                Arrays.asList(new BaumMapImageFactoryConfiguration.ObjectIdentifier(schadenMon.getObjectId(), schadenMon.getClassId()));
+                Arrays.asList(new BaumMapImageFactoryConfiguration.ObjectIdentifier(
+                        schadenMon.getObjectId(), 
+                        schadenMon.getClassId()));
         final Integer width = ((properties != null) ? properties.getSchadenMapWidth()
                                                 : DEFAULT_MAP_WIDTH);
         final Integer height = ((properties != null) ? properties.getSchadenMapHeight()
@@ -466,8 +489,13 @@ public class BaumMeldungReportScriptlet extends JRDefaultScriptlet implements
     
     public boolean isErsatzGeom(final MetaObjectNode ersatzMon) throws Exception {
         try {
-            MetaObject mo = metaService.getMetaObject(user, ersatzMon.getObjectId(), ersatzMon.getClassId(), ConnectionContext.createDummy());
-            if (mo.getBean()!= null && mo.getBean().getProperty(FIELD__GEOM) != null && mo.getBean().getProperty(FIELD__GEOM_GEO_FIELD) != null){
+            MetaObject mo = metaService.getMetaObject(
+                    user, 
+                    ersatzMon.getObjectId(), 
+                    ersatzMon.getClassId(), 
+                    getConnectionContext());
+            if (mo.getBean()!= null && mo.getBean().getProperty(FIELD__GEOM) != null 
+                    && mo.getBean().getProperty(FIELD__GEOM_GEO_FIELD) != null){
                 return true;
             } 
         } catch (RemoteException e) {
@@ -480,19 +508,31 @@ public class BaumMeldungReportScriptlet extends JRDefaultScriptlet implements
         final BaumProperties properties = BaumProperties.getInstance();
         MetaObject mo;
         try { 
-            mo = metaService.getMetaObject(user, ersatzMon.getObjectId(), ersatzMon.getClassId(), ConnectionContext.createDummy());
+            mo = metaService.getMetaObject(
+                    user, 
+                    ersatzMon.getObjectId(), 
+                    ersatzMon.getClassId(), 
+                    getConnectionContext());
             if (mo.getBean()== null || mo.getBean().getProperty(FIELD__GEOM_GEO_FIELD) == null){
                 return null;
             }
             final int ersatzId = mo.getBean().getPrimaryKeyValue();
-            getEbs(ersatzId);
+            getErsatzbaeume(ersatzId);
             final Collection<BaumMapImageFactoryConfiguration.ObjectIdentifier> mons = new ArrayList<>();
-            mons.add(new BaumMapImageFactoryConfiguration.ObjectIdentifier(ersatzMon.getObjectId(), ersatzMon.getClassId()));
+            mons.add(new BaumMapImageFactoryConfiguration.ObjectIdentifier(
+                    ersatzMon.getObjectId(), 
+                    ersatzMon.getClassId()));
             MetaObject moBaum;
             for( MetaObjectNode monBaum: beansBaumMap.values()){
-                moBaum = metaService.getMetaObject(user, monBaum.getObjectId(), monBaum.getClassId(), ConnectionContext.createDummy());
-                if(((CidsBean)moBaum.getBean().getProperty("fk_ersatz")).getPrimaryKeyValue() == ersatzId){
-                    mons.add(new BaumMapImageFactoryConfiguration.ObjectIdentifier(monBaum.getObjectId(), monBaum.getClassId()));
+                moBaum = metaService.getMetaObject(
+                        user, 
+                        monBaum.getObjectId(), 
+                        monBaum.getClassId(), 
+                        getConnectionContext());
+                if(((CidsBean)moBaum.getBean().getProperty(FIELD__ERSATZ)).getPrimaryKeyValue() == ersatzId){
+                    mons.add(new BaumMapImageFactoryConfiguration.ObjectIdentifier(
+                            monBaum.getObjectId(), 
+                            monBaum.getClassId()));
                 }
             }
             final Integer width = ((properties != null) ? properties.getErsatzMapWidth()
@@ -515,7 +555,9 @@ public class BaumMeldungReportScriptlet extends JRDefaultScriptlet implements
     public BufferedImage generateFestMap(final MetaObjectNode festMon) throws Exception {
         final BaumProperties properties = BaumProperties.getInstance();
         final Collection<BaumMapImageFactoryConfiguration.ObjectIdentifier> mons =
-                Arrays.asList(new BaumMapImageFactoryConfiguration.ObjectIdentifier(festMon.getObjectId(), festMon.getClassId()));
+                Arrays.asList(new BaumMapImageFactoryConfiguration.ObjectIdentifier(
+                        festMon.getObjectId(), 
+                        festMon.getClassId()));
         final Integer width = ((properties != null) ? properties.getFestMapWidth()
                                                 : DEFAULT_MAP_WIDTH);
         final Integer height = ((properties != null) ? properties.getFestMapHeight()
@@ -528,76 +570,17 @@ public class BaumMeldungReportScriptlet extends JRDefaultScriptlet implements
                                                 : null);
         return generateMap(mons, buffer, width, height, dpi, url);
      }
-    /*
-    private static BufferedImage generateMap(final CidsBean gebietBean, final boolean isDgk) {
-        try {
-            final String mapUrl = BaumProperties.getInstance().getUrlSchaden();
-            Geometry geom = null;
-            final Collection<Feature> features = new ArrayList<>();
-                final Geometry flaecheGeom = (Geometry)gebietBean.getProperty("fk_geom.geo_field");
-                if (flaecheGeom != null) {
-                    final StyledFeature dsf = new DefaultStyledFeature();
-                    dsf.setGeometry(flaecheGeom);
-                    dsf.setFillingPaint(FEATURE_COLOR_GEBIET);
-                    dsf.setTransparency(0.5f);
-                    features.add(dsf);
-                    if (geom == null) {
-                        geom = (Geometry)flaecheGeom.buffer(0).clone();
-                    } else {
-                        geom = geom.union((Geometry)flaecheGeom.buffer(0).clone());
-                    }
-                }
-
-            final int margin = 50;
-            if (geom != null) {
-                final XBoundingBox boundingBox = new XBoundingBox(geom);
-                boundingBox.increase(10);
-                boundingBox.setX1(boundingBox.getX1() - margin);
-                boundingBox.setY1(boundingBox.getY1() - margin);
-                boundingBox.setX2(boundingBox.getX2() + margin);
-                boundingBox.setY2(boundingBox.getY2() + margin);
-
-                final HeadlessMapProvider mapProvider = new HeadlessMapProvider();
-                mapProvider.setCenterMapOnResize(true);
-                mapProvider.setBoundingBox(boundingBox);
-                final SimpleWmsGetMapUrl getMapUrl = new SimpleWmsGetMapUrl(mapUrl);
-                final SimpleWMS simpleWms = new SimpleWMS(getMapUrl);
-                mapProvider.addLayer(simpleWms);
-
-                for (final Feature feature : features) {
-                    mapProvider.addFeature(feature);
-                }
-
-                return (BufferedImage)mapProvider.getImageAndWait(
-                        72,
-                        BaumConfProperties.getInstance().getGebietMapDpi(),
-                        BaumConfProperties.getInstance().getGebietMapWidth(),
-                        BaumConfProperties.getInstance().getGebietMapHeight());
-            } else {
-                return null;
-            }
-        } catch (IllegalArgumentException | InterruptedException | ExecutionException e) {
-            LOG.error("Error while retrieving map", e);
-            return null;
-        }
-    }
-*/
-
     
-
-
     public MetaService getMetaService() {
         return metaService;
     }
     
     private final ConnectionContext connectionContext;
     
-
     @Override
     public ConnectionContext getConnectionContext() {
         return connectionContext;
     }
-
 
     public User getUser() {
         return user;

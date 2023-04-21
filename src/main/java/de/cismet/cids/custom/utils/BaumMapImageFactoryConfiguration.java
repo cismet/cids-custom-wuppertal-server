@@ -6,7 +6,6 @@
 package de.cismet.cids.custom.utils;
 
 import Sirius.util.MapImageFactoryConfiguration;
-import java.awt.Color;
 import java.io.Serializable;
 import java.util.Collection;
 import java.util.HashMap;

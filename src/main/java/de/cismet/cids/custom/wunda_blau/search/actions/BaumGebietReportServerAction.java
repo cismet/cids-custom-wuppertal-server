@@ -13,7 +13,6 @@
 package de.cismet.cids.custom.wunda_blau.search.actions;
 
 import Sirius.server.middleware.impls.domainserver.DomainServerImpl;
-import Sirius.server.middleware.types.MetaObject;
 import Sirius.server.middleware.types.MetaObjectNode;
 import de.cismet.cids.custom.utils.BaumMeldungReportScriptlet;
 
@@ -31,7 +30,6 @@ import javax.imageio.ImageIO;
 import de.cismet.cids.custom.utils.StampedJasperReportServerAction;
 import de.cismet.cids.custom.utils.WundaBlauServerResources;
 import de.cismet.cids.custom.wunda_blau.search.server.BaumChildLightweightSearch;
-import de.cismet.cids.dynamics.CidsBean;
 
 import de.cismet.cids.server.actions.ServerAction;
 import de.cismet.cids.server.actions.ServerActionParameter;
@@ -39,12 +37,9 @@ import de.cismet.cids.server.actions.ServerActionParameter;
 import de.cismet.cids.utils.serverresources.ServerResourcesLoader;
 
 import de.cismet.connectioncontext.ConnectionContextStore;
-import java.io.IOException;
 import java.sql.Date;
 import java.text.SimpleDateFormat;
-import java.util.ArrayList;
 import java.util.Collection;
-import java.util.List;
 
 /**
  * DOCUMENT ME!
@@ -65,14 +60,10 @@ public class BaumGebietReportServerAction extends StampedJasperReportServerActio
     public static final String FIELD__AZ = "aktenzeichen";                                  // baum_gebiet
     public static final String FIELD__STRASSE_NAME = "fk_strasse.name";                     // strasse
     public static final String FIELD__WV = "erneut";                                        // baum_gebiet
-    public static final String FIELD__ADR_HNR = "fk_adresse.hausnummer";                               // adresse
+    public static final String FIELD__ADR_HNR = "fk_adresse.hausnummer";                    // adresse
     public static final String FIELD__BEMERKUNG = "bemerkung";                              // baum_gebiet
     public static final String FIELD__ID = "id";                                            // baum_gebiet
     public static final String FIELD__GEOREFERENZ = "fk_geom";  
-    private static final String QUERY_MELDUNGEN =
-        "Select id, abgenommen, datum, bemerkung, arr_ansprechpartner\n" +
-        "From baum_meldung\n" +
-        "where fk_gebiet = %d";
     //~ Enums ------------------------------------------------------------------
 
     /**
@@ -116,12 +107,12 @@ public class BaumGebietReportServerAction extends StampedJasperReportServerActio
 
             final Map<String, Object> parameters = new HashMap<>();
             parameters.put("SUBREPORT_DIR", DomainServerImpl.getServerProperties().getServerResourcesBasePath() + "");
-            parameters.put("aktenzeichen", gebietMon.getObject().getBean().getProperty(FIELD__AZ).toString());
-            parameters.put("id", gebietMon.getObject().getBean().getProperty(FIELD__ID).toString());
+            parameters.put(FIELD__AZ, gebietMon.getObject().getBean().getProperty(FIELD__AZ).toString());
+            parameters.put(FIELD__ID, gebietMon.getObject().getBean().getProperty(FIELD__ID).toString());
             parameters.put("bezeichnung", gebietMon.getObject().getBean().getProperty(FIELD__BEZEICHNUNG).toString());
             parameters.put("strasse", gebietMon.getObject().getBean().getProperty(FIELD__STRASSE_NAME).toString());
             parameters.put("hnr", getAttribute(gebietMon, FIELD__ADR_HNR));
-            parameters.put("bemerkung", getAttribute(gebietMon, FIELD__BEMERKUNG));
+            parameters.put(FIELD__BEMERKUNG, getAttribute(gebietMon, FIELD__BEMERKUNG));
             parameters.put("wiedervorlage", getDateAttribute(gebietMon, FIELD__WV));
             
             parameters.put("mon", gebietMon);
@@ -142,35 +133,11 @@ public class BaumGebietReportServerAction extends StampedJasperReportServerActio
             searchChild.setTable(TABLE_MELDUNG);
             searchChild.setRepresentationFields(CHILD_TOSTRING_FIELDS);
             final Collection<MetaObjectNode> mons;
-            /*mons = searchChild.performServerSearch();
-            final List<CidsBean> beansMeldung = new ArrayList<>();
-            if (!mons.isEmpty()) {
-                for (final MetaObjectNode mon : mons) {
-                    beansMeldung.add(mon.getObject().getBean());
-                            SessionManager.getProxy().getMetaObject(
-                            mon.getObjectId(),
-                            mon.getClassId(),
-                            "WUNDA_BLAU",
-                            getConnectionContext()).getBean());
-                }
-            }
-            final MetaObject[] meldungenMO = getMetaService().getMetaObject(
-                    getUser(),
-                    String.format(
-                        QUERY_MELDUNGEN,
-                        gebietMon.getObject().getBean().getPrimaryKeyValue(),
-                        gebietMon.getObject().getBean().getPrimaryKeyValue(),
-                        getConnectionContext()));
-            final List<CidsBean> meldungenBeans = new ArrayList<>();
-
-            for (final MetaObject mo : meldungenMO) {
-                meldungenBeans.add(mo.getBean());
-            }
-            final JRBeanCollectionDataSource meldungenDataSource = 
-                    new JRBeanCollectionDataSource(meldungenBeans);
-
-            parameters.put("meldungen", meldungenBeans);*/
-            BaumMeldungReportScriptlet scriptlet = new BaumMeldungReportScriptlet(getMetaService(), getUser(), getConnectionContext());
+           
+            BaumMeldungReportScriptlet scriptlet = new BaumMeldungReportScriptlet(
+                    getMetaService(), 
+                    getUser(), 
+                    getConnectionContext());
             parameters.put("REPORT_SCRIPTLET", scriptlet);
             return generateReport(parameters, dataSource);
         } catch (final Exception ex) {

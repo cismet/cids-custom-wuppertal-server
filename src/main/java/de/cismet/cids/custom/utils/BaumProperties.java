@@ -17,7 +17,6 @@ import lombok.Getter;
 import java.util.Properties;
 
 import de.cismet.cids.utils.serverresources.ServerResourcesLoader;
-import java.awt.Color;
 
 /**
  * DOCUMENT ME!
@@ -38,7 +37,6 @@ public class BaumProperties {
     //~ Instance fields --------------------------------------------------------
 
     private final Properties properties;
-    private final String urlErsatzbaum;
     private final String urlFestsetzung;
     private final String urlSchaden;
     private final String urlDefault;
@@ -75,7 +73,6 @@ public class BaumProperties {
     protected BaumProperties(final Properties properties) {
         this.properties = properties;
 
-        urlErsatzbaum = String.valueOf(properties.getProperty("MAP_CALL_STRING_ERSATZBAUM"));
         urlFestsetzung = String.valueOf(properties.getProperty("MAP_CALL_STRING_FESTSETZUNG"));
         urlSchaden = String.valueOf(properties.getProperty("MAP_CALL_STRING_SCHADEN"));
         urlDefault = String.valueOf(properties.getProperty("MAP_CALL_STRING_DEFAULT"));
