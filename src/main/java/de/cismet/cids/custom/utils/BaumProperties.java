@@ -29,10 +29,9 @@ public class BaumProperties {
 
     //~ Static fields/initializers ---------------------------------------------
 
-    private static final transient org.apache.log4j.Logger LOG = 
-            org.apache.log4j.Logger.getLogger(BaumProperties.class);
-    protected static final WundaBlauServerResources SERVER_RESOURCE = 
-            WundaBlauServerResources.BAUM_CONF_PROPERTIES;
+    private static final transient org.apache.log4j.Logger LOG = org.apache.log4j.Logger.getLogger(
+            BaumProperties.class);
+    protected static final WundaBlauServerResources SERVER_RESOURCE = WundaBlauServerResources.BAUM_CONF_PROPERTIES;
 
     //~ Instance fields --------------------------------------------------------
 
@@ -102,7 +101,6 @@ public class BaumProperties {
 
     //~ Methods ----------------------------------------------------------------
 
-    
     /**
      * DOCUMENT ME!
      *
