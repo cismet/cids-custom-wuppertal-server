@@ -14,19 +14,24 @@ package de.cismet.cids.custom.wunda_blau.search.actions;
 
 import Sirius.server.middleware.impls.domainserver.DomainServerImpl;
 import Sirius.server.middleware.types.MetaObjectNode;
-import de.cismet.cids.custom.utils.BaumMeldungReportScriptlet;
 
 import net.sf.jasperreports.engine.JasperReport;
 import net.sf.jasperreports.engine.data.JRBeanCollectionDataSource;
 
 import java.io.ByteArrayInputStream;
 
+import java.sql.Date;
+
+import java.text.SimpleDateFormat;
+
 import java.util.Arrays;
+import java.util.Collection;
 import java.util.HashMap;
 import java.util.Map;
 
 import javax.imageio.ImageIO;
 
+import de.cismet.cids.custom.utils.BaumMeldungReportScriptlet;
 import de.cismet.cids.custom.utils.StampedJasperReportServerAction;
 import de.cismet.cids.custom.utils.WundaBlauServerResources;
 import de.cismet.cids.custom.wunda_blau.search.server.BaumChildLightweightSearch;
@@ -37,9 +42,6 @@ import de.cismet.cids.server.actions.ServerActionParameter;
 import de.cismet.cids.utils.serverresources.ServerResourcesLoader;
 
 import de.cismet.connectioncontext.ConnectionContextStore;
-import java.sql.Date;
-import java.text.SimpleDateFormat;
-import java.util.Collection;
 
 /**
  * DOCUMENT ME!
@@ -51,19 +53,21 @@ import java.util.Collection;
 public class BaumGebietReportServerAction extends StampedJasperReportServerAction implements ConnectionContextStore {
 
     //~ Static fields/initializers ---------------------------------------------
+
     private static final String CHILD_TOSTRING_TEMPLATE = "%s";
     private static final String TABLE_MELDUNG = "baum_meldung";
     private static final String[] CHILD_TOSTRING_FIELDS = { "id" };
     private static final String FK_GEBIET = "fk_gebiet";
     public static final String TASK_NAME = "baumGebietReport";
-    public static final String FIELD__BEZEICHNUNG = "name";                                 // baum_gebiet
-    public static final String FIELD__AZ = "aktenzeichen";                                  // baum_gebiet
-    public static final String FIELD__STRASSE_NAME = "fk_strasse.name";                     // strasse
-    public static final String FIELD__WV = "erneut";                                        // baum_gebiet
-    public static final String FIELD__ADR_HNR = "fk_adresse.hausnummer";                    // adresse
-    public static final String FIELD__BEMERKUNG = "bemerkung";                              // baum_gebiet
-    public static final String FIELD__ID = "id";                                            // baum_gebiet
-    public static final String FIELD__GEOREFERENZ = "fk_geom";  
+    public static final String FIELD__BEZEICHNUNG = "name";              // baum_gebiet
+    public static final String FIELD__AZ = "aktenzeichen";               // baum_gebiet
+    public static final String FIELD__STRASSE_NAME = "fk_strasse.name";  // strasse
+    public static final String FIELD__WV = "erneut";                     // baum_gebiet
+    public static final String FIELD__ADR_HNR = "fk_adresse.hausnummer"; // adresse
+    public static final String FIELD__BEMERKUNG = "bemerkung";           // baum_gebiet
+    public static final String FIELD__ID = "id";                         // baum_gebiet
+    public static final String FIELD__GEOREFERENZ = "fk_geom";
+
     //~ Enums ------------------------------------------------------------------
 
     /**
@@ -77,11 +81,14 @@ public class BaumGebietReportServerAction extends StampedJasperReportServerActio
 
         MAP_IMAGE_BYTES
     }
+
+    //~ Instance fields --------------------------------------------------------
+
     private final BaumChildLightweightSearch searchChild = new BaumChildLightweightSearch(
-                CHILD_TOSTRING_TEMPLATE,
-                CHILD_TOSTRING_FIELDS,
-                TABLE_MELDUNG,
-                FK_GEBIET);
+            CHILD_TOSTRING_TEMPLATE,
+            CHILD_TOSTRING_FIELDS,
+            TABLE_MELDUNG,
+            FK_GEBIET);
 
     //~ Methods ----------------------------------------------------------------
 
@@ -114,7 +121,7 @@ public class BaumGebietReportServerAction extends StampedJasperReportServerActio
             parameters.put("hnr", getAttribute(gebietMon, FIELD__ADR_HNR));
             parameters.put(FIELD__BEMERKUNG, getAttribute(gebietMon, FIELD__BEMERKUNG));
             parameters.put("wiedervorlage", getDateAttribute(gebietMon, FIELD__WV));
-            
+
             parameters.put("mon", gebietMon);
 
             if (imageBytes != null) {
@@ -123,25 +130,27 @@ public class BaumGebietReportServerAction extends StampedJasperReportServerActio
                 }
             }
 
-            final JRBeanCollectionDataSource dataSource = new JRBeanCollectionDataSource(Arrays.asList(getMetaService().getMetaObject(getUser(),
+            final JRBeanCollectionDataSource dataSource = new JRBeanCollectionDataSource(Arrays.asList(
+                        getMetaService().getMetaObject(
+                            getUser(),
                             gebietMon.getObjectId(),
                             gebietMon.getClassId(),
                             getConnectionContext()).getBean()));
-            
+
             searchChild.setParentId(gebietMon.getObject().getBean().getPrimaryKeyValue());
             searchChild.setFkField(FK_GEBIET);
             searchChild.setTable(TABLE_MELDUNG);
             searchChild.setRepresentationFields(CHILD_TOSTRING_FIELDS);
             final Collection<MetaObjectNode> mons;
-           
-            BaumMeldungReportScriptlet scriptlet = new BaumMeldungReportScriptlet(
-                    getMetaService(), 
-                    getUser(), 
+
+            final BaumMeldungReportScriptlet scriptlet = new BaumMeldungReportScriptlet(
+                    getMetaService(),
+                    getUser(),
                     getConnectionContext());
             parameters.put("REPORT_SCRIPTLET", scriptlet);
             return generateReport(parameters, dataSource);
         } catch (final Exception ex) {
-            LOG.error(ex, ex);
+            LOG.error( "Parameter für Gebiet-Report nicht erzeugt.", ex);
             return ex;
         }
     }
@@ -150,27 +159,43 @@ public class BaumGebietReportServerAction extends StampedJasperReportServerActio
     public String getTaskName() {
         return TASK_NAME;
     }
-    
-    private String getAttribute (MetaObjectNode mon, String attribute){
-        if (mon.getObject().getBean().getProperty(attribute) == null){
+
+    /**
+     * DOCUMENT ME!
+     *
+     * @param   mon        DOCUMENT ME!
+     * @param   attribute  DOCUMENT ME!
+     *
+     * @return  DOCUMENT ME!
+     */
+    private String getAttribute(final MetaObjectNode mon, final String attribute) {
+        if (mon.getObject().getBean().getProperty(attribute) == null) {
             return "";
-        } else{
-            String result;
-            result = (String) mon.getObject().getBean().getProperty(attribute);
+        } else {
+            final String result;
+            result = (String)mon.getObject().getBean().getProperty(attribute);
             return result;
-        }         
+        }
     }
-    
-    private String getDateAttribute (MetaObjectNode mon, String attribute){
-        if (mon.getObject().getBean().getProperty(attribute) == null){
+
+    /**
+     * DOCUMENT ME!
+     *
+     * @param   mon        DOCUMENT ME!
+     * @param   attribute  DOCUMENT ME!
+     *
+     * @return  DOCUMENT ME!
+     */
+    private String getDateAttribute(final MetaObjectNode mon, final String attribute) {
+        if (mon.getObject().getBean().getProperty(attribute) == null) {
             return "";
-        } else{
-            String result;
-            Date datum;
+        } else {
+            final String result;
+            final Date datum;
             final SimpleDateFormat formatTag = new SimpleDateFormat("dd.MM.yy");
-            datum = (Date) mon.getObject().getBean().getProperty(attribute);
+            datum = (Date)mon.getObject().getBean().getProperty(attribute);
             result = formatTag.format(datum);
             return result;
-        }         
+        }
     }
 }
