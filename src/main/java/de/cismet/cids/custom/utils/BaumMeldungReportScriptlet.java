@@ -73,6 +73,7 @@ public class BaumMeldungReportScriptlet extends JRDefaultScriptlet implements Co
     private static final String TABLE_FEST = "baum_festsetzung";
     private static final String TABLE_ERSATZ = "baum_ersatz";
     private static final String TABLE_ERSATZBAUM = "baum_ersatzbaum";
+    private static final String TABLE_KONTROLLE = "baum_kontrolle";
     private static final String[] CHILD_TOSTRING_FIELDS = { "id" };
     private static final String FIELD__REFERENCE_MELDUNG = "baum_meldung_reference";
     private static final String FIELD__MELDUNG = "fk_meldung";
@@ -264,6 +265,15 @@ public class BaumMeldungReportScriptlet extends JRDefaultScriptlet implements Co
 
         return getChildren();
     }
+     
+    public JRDataSource getKontrollen(int idErsatz) throws SearchException {
+        searchChild.setParentId(idErsatz);
+        searchChild.setFkField(FIELD__ERSATZ);
+        searchChild.setTable(TABLE_KONTROLLE);
+
+        return getChildren();
+    }
+    
 
     /**
      * DOCUMENT ME!
