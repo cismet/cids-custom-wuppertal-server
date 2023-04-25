@@ -265,15 +265,23 @@ public class BaumMeldungReportScriptlet extends JRDefaultScriptlet implements Co
 
         return getChildren();
     }
-     
-    public JRDataSource getKontrollen(int idErsatz) throws SearchException {
+
+    /**
+     * DOCUMENT ME!
+     *
+     * @param   idErsatz  DOCUMENT ME!
+     *
+     * @return  DOCUMENT ME!
+     *
+     * @throws  SearchException  DOCUMENT ME!
+     */
+    public JRDataSource getKontrollen(final int idErsatz) throws SearchException {
         searchChild.setParentId(idErsatz);
         searchChild.setFkField(FIELD__ERSATZ);
         searchChild.setTable(TABLE_KONTROLLE);
 
         return getChildren();
     }
-    
 
     /**
      * DOCUMENT ME!

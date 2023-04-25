@@ -150,7 +150,7 @@ public class BaumGebietReportServerAction extends StampedJasperReportServerActio
             parameters.put("REPORT_SCRIPTLET", scriptlet);
             return generateReport(parameters, dataSource);
         } catch (final Exception ex) {
-            LOG.error( "Parameter für Gebiet-Report nicht erzeugt.", ex);
+            LOG.error("Parameter für Gebiet-Report nicht erzeugt.", ex);
             return ex;
         }
     }
