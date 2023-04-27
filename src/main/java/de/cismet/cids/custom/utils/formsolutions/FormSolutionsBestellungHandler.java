@@ -455,18 +455,20 @@ public class FormSolutionsBestellungHandler implements ConnectionContextProvider
      * @return  DOCUMENT ME!
      */
     public static User getFsUser() {
-        try {
-            final Object userServer = Naming.lookup("rmi://localhost/userServer");
-            return ((UserServer)userServer).getUser(
-                    null,
-                    null,
-                    "WUNDA_BLAU",
-                    FormSolutionsProperties.getInstance().getCidsLogin(),
-                    FormSolutionsProperties.getInstance().getCidsPassword());
-        } catch (final Exception ex) {
-            LOG.error(ex, ex);
-            return null;
+        for (final String registryIP : DomainServerImpl.getServerProperties().getRegistryIps()) {
+            try {
+                final Object userServer = Naming.lookup("rmi://" + registryIP + "/userServer");
+                return ((UserServer)userServer).getUser(
+                        null,
+                        null,
+                        "WUNDA_BLAU",
+                        FormSolutionsProperties.getInstance().getCidsLogin(),
+                        FormSolutionsProperties.getInstance().getCidsPassword());
+            } catch (final Exception ex) {
+                LOG.error(ex, ex);
+            }
         }
+        return null;
     }
 
     /**

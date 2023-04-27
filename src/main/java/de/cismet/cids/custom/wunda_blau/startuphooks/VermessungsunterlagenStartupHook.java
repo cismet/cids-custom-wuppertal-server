@@ -44,24 +44,28 @@ public class VermessungsunterlagenStartupHook extends AbstractWundaBlauStartupHo
 
                 @Override
                 public void run() {
-                    try {
-                        final DomainServerImpl metaService = waitForMetaService();
+                    for (final String registryIP : DomainServerImpl.getServerProperties().getRegistryIps()) {
+                        try {
+                            final Object userServer = Naming.lookup("rmi://" + registryIP + "/userServer");
+                            final DomainServerImpl metaService = waitForMetaService();
 
-                        final String login_name = VermessungsunterlagenProperties.fromServerResources().getCidsLogin();
-                        final Object userServer = Naming.lookup("rmi://localhost/userServer");
-                        final User user = ((UserServer)userServer).getUser(
-                                null,
-                                null,
-                                "WUNDA_BLAU",
-                                login_name,
-                                "");
-                        final VermessungsunterlagenHandler helper = new VermessungsunterlagenHandler(
-                                user,
-                                metaService,
-                                getConnectionContext());
-                        helper.test();
-                    } catch (final Exception ex) {
-                        LOG.error("error while executing VermessungsunterlagenStartupHook", ex);
+                            final String login_name = VermessungsunterlagenProperties.fromServerResources()
+                                        .getCidsLogin();
+                            final User user = ((UserServer)userServer).getUser(
+                                    null,
+                                    null,
+                                    "WUNDA_BLAU",
+                                    login_name,
+                                    "");
+                            final VermessungsunterlagenHandler helper = new VermessungsunterlagenHandler(
+                                    user,
+                                    metaService,
+                                    getConnectionContext());
+                            helper.test();
+                        } catch (final Exception ex) {
+                            LOG.error("error while executing VermessungsunterlagenStartupHook", ex);
+                        }
+                        break;
                     }
                 }
             }).start();
