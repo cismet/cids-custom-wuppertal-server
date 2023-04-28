@@ -69,7 +69,7 @@
             <dependency>
                 <groupId>de.cismet.cids</groupId>
                 <artifactId>cids-server</artifactId>
-                <version>8.0.3</version>
+                <version>8.1</version>
                 <type>jar</type>
             </dependency>
 
@@ -371,6 +371,12 @@
             <artifactId>commons-lang</artifactId>
             <scope>compile</scope>
             <type>jar</type>
+        </dependency>
+        <dependency>
+            <groupId>de.cismet.verdis</groupId>
+            <artifactId>verdis-server</artifactId>
+            <version>8.1-SNAPSHOT</version>
+            <scope>runtime</scope>
         </dependency>
     </dependencies>
 
