@@ -12,7 +12,6 @@
  */
 package de.cismet.cids.custom.wunda_blau.search.actions;
 
-import lombok.Getter;
 
 import org.apache.commons.io.IOUtils;
 
@@ -38,13 +37,12 @@ public class VermessungsUnterlagenPortalDownloadAction implements ServerAction {
 
     public static final String TASK_NAME = "VUPDownloadAction";
 
-    //~ Instance fields --------------------------------------------------------
-
-    @Getter private final VermessungsunterlagenProperties properties = VermessungsunterlagenProperties
-                .fromServerResources();
-
     //~ Methods ----------------------------------------------------------------
 
+    private VermessungsunterlagenProperties getProperties() {
+        return VermessungsunterlagenProperties.fromServerResources();
+    }
+    
     @Override
     public Object execute(final Object body, final ServerActionParameter... params) {
         final String schluessel = (String)body;

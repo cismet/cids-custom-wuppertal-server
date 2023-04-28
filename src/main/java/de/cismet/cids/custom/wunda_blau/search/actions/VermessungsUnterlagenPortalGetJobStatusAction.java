@@ -50,7 +50,6 @@ public class VermessungsUnterlagenPortalGetJobStatusAction extends AbstractVerme
             throw new RuntimeException("unknown jobKey: " + jobKey);
         }
         final VermessungsunterlagenJob.Status jobStatus = info.getJobStatus();
-        super.executeLog(jobKey, "[" + jobStatus + "," + jobKey + "]", "");
         return String.format(RETURN, jobStatus, jobKey);
     }
 
