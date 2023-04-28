@@ -12,7 +12,6 @@
  */
 package de.cismet.cids.custom.wunda_blau.search.actions;
 
-
 import org.apache.commons.io.IOUtils;
 
 import java.io.InputStream;
@@ -39,10 +38,15 @@ public class VermessungsUnterlagenPortalDownloadAction implements ServerAction {
 
     //~ Methods ----------------------------------------------------------------
 
+    /**
+     * DOCUMENT ME!
+     *
+     * @return  DOCUMENT ME!
+     */
     private VermessungsunterlagenProperties getProperties() {
         return VermessungsunterlagenProperties.fromServerResources();
     }
-    
+
     @Override
     public Object execute(final Object body, final ServerActionParameter... params) {
         final String schluessel = (String)body;
