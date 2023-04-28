@@ -18,12 +18,7 @@ import Sirius.server.newuser.User;
 
 import org.apache.log4j.Logger;
 
-import java.io.FileWriter;
-import java.io.IOException;
-
 import java.text.SimpleDateFormat;
-
-import java.util.Date;
 
 import de.cismet.cids.server.actions.ServerActionParameter;
 import de.cismet.cids.server.actions.UserAwareServerAction;
@@ -71,22 +66,6 @@ public abstract class AbstractVermessungsUnterlagenPortalAction implements UserA
     private User user;
     private MetaService metaService;
     private ConnectionContext connectionContext;
-    private final FileWriter fw;
-
-    //~ Constructors -----------------------------------------------------------
-
-    /**
-     * Creates a new VermessungsUnterlagenPortalExecuteJobAction object.
-     */
-    public AbstractVermessungsUnterlagenPortalAction() {
-        FileWriter tmpfw = null;
-        try {
-            tmpfw = new FileWriter("VermessungsUnterlagenPortal.log", true);
-        } catch (final IOException ex) {
-            LOG.error(ex, ex);
-        }
-        fw = tmpfw;
-    }
 
     //~ Methods ----------------------------------------------------------------
 
@@ -107,32 +86,6 @@ public abstract class AbstractVermessungsUnterlagenPortalAction implements UserA
             }
         }
         return jobKey;
-    }
-
-    /**
-     * DOCUMENT ME!
-     *
-     * @param  in    DOCUMENT ME!
-     * @param  out   DOCUMENT ME!
-     * @param  body  DOCUMENT ME!
-     */
-    public void executeLog(final String in, final String out, final String body) {
-        if (fw != null) {
-            final String userText = (getUser().getName()
-                            + ((getUser().getUserGroup() != null) ? ("@" + getUser().getUserGroup().getName()) : ""));
-
-            final String text = SDF.format(new Date()) + " (" + userText + ") " + this.getTaskName() + " in-->:" + in
-                        + "; out:" + out + "-->";
-            final String jsonBody = "";
-
-            LOG.info(text + "\nbody:\n" + body);
-            try {
-                fw.write(text + "\n");
-                fw.flush();
-            } catch (final IOException ex) {
-                LOG.error(ex, ex);
-            }
-        }
     }
 
     @Override
