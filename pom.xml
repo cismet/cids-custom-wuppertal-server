@@ -372,12 +372,6 @@
             <scope>compile</scope>
             <type>jar</type>
         </dependency>
-        <dependency>
-            <groupId>de.cismet.verdis</groupId>
-            <artifactId>verdis-server</artifactId>
-            <version>8.1-SNAPSHOT</version>
-            <scope>runtime</scope>
-        </dependency>
     </dependencies>
 
     <build>
