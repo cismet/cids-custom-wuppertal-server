@@ -40,7 +40,6 @@ public class VermessungsUnterlagenPortalExecuteJobAction extends AbstractVermess
         final String jobKey = new VermessungsunterlagenHandler(getUser(), getMetaService(), getConnectionContext())
                     .createJob(jsonBody);
 
-        super.executeLog("[jsonObject]", jobKey, jsonBody);
         return String.format(RETURN, jobKey);
     }
 

@@ -46,7 +46,6 @@ public class VermessungsUnterlagenPortalGetJobErrorAction extends AbstractVermes
             throw new RuntimeException("unknown jobKey: " + jobKey);
         }
         final String jobError = info.getJobError();
-        super.executeLog(jobKey, jobError, "");
         return String.format(RETURN, jobError);
     }
 
