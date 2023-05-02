@@ -55,7 +55,7 @@ public class PoiSearch extends AbstractCidsServerSearch implements MetaObjectNod
                 + TABLE_POI + "." + FIELD__NAME + " || ' -- ' || "
                 + "COALESCE(" + TABLE_THEMA + "." + FIELD__THEMA + ", 'xx')" + " as name"
                 + " FROM " + TABLE_POI
-                + " LEFT JOIN " + TABLE_THEMA + " ON " 
+                + " LEFT JOIN " + TABLE_THEMA + " ON "
                 + TABLE_THEMA + "." + FIELD__NUMBER + " = "
                 + TABLE_POI + "." + FIELD__JOIN_THEMA
                 + " ORDER BY " + TABLE_POI + "." + FIELD__NAME;
