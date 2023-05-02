@@ -227,13 +227,18 @@ public class CidsMauernSearchStatement extends RestApiMonGeometrySearch
         }
 
         if (massnahmen != null) {
+            if (isNotAllNull(massnahmen.getErstePruefung())) {
+                final MassnahmeInfo massnahme = massnahmen.getErstePruefung();
+                wheres.add(createWhereFor("m.datum_erste_pruefung", massnahme.getVon(), massnahme.getBis()));
+            }
+            if (isNotAllNull(massnahmen.getLetztePruefung())) {
+                final MassnahmeInfo massnahme = massnahmen.getLetztePruefung();
+                wheres.add(createWhereFor("m.datum_letzte_pruefung", massnahme.getVon(), massnahme.getBis()));
+            }
             if (isNotAllNull(massnahmen.getPruefung())) {
                 final MassnahmeInfo massnahme = massnahmen.getPruefung();
-                final Date von = massnahme.getVon();
-                final Date bis = massnahme.getBis();
                 wheres.add(createWhereFor("m.datum_naechste_pruefung", massnahme.getVon(), massnahme.getBis()));
             }
-
             if (isNotAllNull(massnahmen.getSanierungDurchgefuehrt())) {
                 final MassnahmeInfo massnahme = massnahmen.getSanierungDurchgefuehrt();
                 final Date von = massnahme.getVon();
@@ -609,6 +614,8 @@ public class CidsMauernSearchStatement extends RestApiMonGeometrySearch
 
         //~ Instance fields ----------------------------------------------------
 
+        @JsonProperty private MassnahmeInfo erstePruefung;
+        @JsonProperty private MassnahmeInfo letztePruefung;
         @JsonProperty private MassnahmeInfo pruefung;
         @JsonProperty private MassnahmeInfo sanierungDurchgefuehrt;
         @JsonProperty private MassnahmeInfo sanierungGeplant;

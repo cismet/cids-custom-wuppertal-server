@@ -92,16 +92,19 @@ public class BerechtigungspruefungHandler implements ConnectionContextStore {
      */
     private BerechtigungspruefungHandler() {
         User user = null;
-        try {
-            final Object userServer = Naming.lookup("rmi://localhost/userServer");
-            user = ((UserServer)userServer).getUser(
-                    null,
-                    null,
-                    "WUNDA_BLAU",
-                    BerechtigungspruefungProperties.getInstance().getCidsLogin(),
-                    BerechtigungspruefungProperties.getInstance().getCidsPassword());
-        } catch (final Exception ex) {
-            LOG.fatal(ex, ex);
+        for (final String registryIP : DomainServerImpl.getServerProperties().getRegistryIps()) {
+            try {
+                final Object userServer = Naming.lookup("rmi://" + registryIP + "/userServer");
+                user = ((UserServer)userServer).getUser(
+                        null,
+                        null,
+                        "WUNDA_BLAU",
+                        BerechtigungspruefungProperties.getInstance().getCidsLogin(),
+                        BerechtigungspruefungProperties.getInstance().getCidsPassword());
+            } catch (final Exception ex) {
+                LOG.fatal(ex, ex);
+            }
+            break;
         }
         this.user = user;
     }
