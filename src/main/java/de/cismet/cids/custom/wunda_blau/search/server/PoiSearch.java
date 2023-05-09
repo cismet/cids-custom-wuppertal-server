@@ -10,8 +10,6 @@ package de.cismet.cids.custom.wunda_blau.search.server;
 import Sirius.server.middleware.interfaces.domainserver.MetaService;
 import Sirius.server.middleware.types.MetaObjectNode;
 
-import com.fasterxml.jackson.databind.ObjectMapper;
-
 import lombok.Getter;
 import lombok.Setter;
 
@@ -39,15 +37,13 @@ public class PoiSearch extends AbstractCidsServerSearch implements MetaObjectNod
 
     private static final transient Logger LOG = Logger.getLogger(PoiSearch.class);
 
-    public static final String TABLE_POI = "poi_locationinstance";
-    public static final String TABLE_THEMA = "poi_locationtype";
-    public static final String FIELD__ID = "id";
-    public static final String FIELD__NAME = "geographicidentifier";
-    public static final String FIELD__JOIN_THEMA = "mainlocationtype";
-    public static final String FIELD__NUMBER = "\"number\"";
-    public static final String FIELD__THEMA = "identification";
-
-    public static final ObjectMapper OBJECT_MAPPER = new ObjectMapper();
+    private static final String TABLE_POI = "poi_locationinstance";
+    private static final String TABLE_THEMA = "poi_locationtype";
+    private static final String FIELD__ID = "id";
+    private static final String FIELD__NAME = "geographicidentifier";
+    private static final String FIELD__JOIN_THEMA = "mainlocationtype";
+    private static final String FIELD__NUMBER = "\"number\"";
+    private static final String FIELD__THEMA = "identification";
 
     private static final String QUERY_TEMPLATE = "SELECT "
                 + "  (SELECT c.id FROM cs_class c WHERE table_name ILIKE '" + TABLE_POI + "') AS class_id, "
@@ -95,16 +91,7 @@ public class PoiSearch extends AbstractCidsServerSearch implements MetaObjectNod
     @Override
     public Collection<MetaObjectNode> performServerSearch() {
         try {
-            final List<String> leftJoins = new ArrayList<>();
-            final List<String> wheres = new ArrayList<>();
-            if (getPoiId() != null) {
-                wheres.add(String.format("poi_locationinstance.id = %d", getPoiId()));
-            }
-
-            final String leftJoin = (!leftJoins.isEmpty())
-                ? String.format("LEFT JOIN %s", String.join(" LEFT JOIN ", leftJoins)) : "";
-            final String where = (!wheres.isEmpty()) ? String.format("WHERE %s", String.join(" AND ", wheres)) : "";
-            final String query = String.format(QUERY_TEMPLATE, leftJoin, where);
+            final String query = QUERY_TEMPLATE;
             LOG.info(query);
             final MetaService ms = (MetaService)getActiveLocalServers().get("WUNDA_BLAU");
             final List<MetaObjectNode> mons = new ArrayList<>();
