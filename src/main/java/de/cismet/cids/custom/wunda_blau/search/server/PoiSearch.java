@@ -45,7 +45,6 @@ public class PoiSearch extends AbstractCidsServerSearch implements MetaObjectNod
     private static final String FIELD__NUMBER = "\"number\"";
     private static final String FIELD__THEMA = "identification";
 
-
     private static final String QUERY_TEMPLATE = "SELECT "
                 + "  (SELECT c.id FROM cs_class c WHERE table_name ILIKE '" + TABLE_POI + "') AS class_id, "
                 + TABLE_POI + "." + FIELD__ID + ", "
