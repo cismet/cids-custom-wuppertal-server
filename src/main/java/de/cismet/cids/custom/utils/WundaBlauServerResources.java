@@ -78,6 +78,7 @@ public enum WundaBlauServerResources {
     GRUNDWASSERMESSSTELLEN_PROPERTIES(new TextServerResource("/grundwassermessstellen/gwm_conf.properties")),
     VERMESSUNGSUNTERLAGENPORTAL_PROPERTIES(new TextServerResource("/vermessungsunterlagenportal/vup_conf.properties")),
     QSGEB_PROPERTIES(new TextServerResource("/qsgeb/qsgeb_conf.properties")),
+    BPARK_CONF_PROPERTIES(new TextServerResource("/bpark/bpark_conf.properties")),
     MOTD_PROPERTIES(new TextServerResource("/motd/wunda_blau.properties")),
     PNR_TEMPLATE_BEN_AUFTR_ALL(new TextServerResource("/pointnumberreservation/A_Ben_Auftr_alle_PKZ.xml")),
     PNR_TEMPLATE_BEN_AUFTR_ONE_ANR(new TextServerResource("/pointnumberreservation/A_Ben_Auftr_eine_ANR.xml")),
