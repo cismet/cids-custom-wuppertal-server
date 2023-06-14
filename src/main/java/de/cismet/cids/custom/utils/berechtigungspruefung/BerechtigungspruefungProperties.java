@@ -63,7 +63,7 @@ public class BerechtigungspruefungProperties {
         try {
             cidsLogin = serviceProperties.getProperty("CIDS_LOGIN");
             cidsPassword = serviceProperties.getProperty("CIDS_PASSWORD");
-            if (serviceProperties.getProperty("ANHANG_PFAD") != null) {
+            if (serviceProperties.getProperty("ANHANG_ABS_PATH") != null) {
                 anhangAbsPath = serviceProperties.getProperty("ANHANG_ABS_PATH");
             }
             if (serviceProperties.getProperty("CSM_ANFRAGE") != null) {
