@@ -155,7 +155,7 @@ public class FormSolutionsBestellungBerechtigungspruefungHandler implements Conn
                     search.setBerechtigungspruefungSchluessel(schluessel);
                     final Collection<MetaObjectNode> mons = search.performServerSearch();
 
-                    if (mons != null && !mons.isEmpty()) {
+                    if ((mons != null) && !mons.isEmpty()) {
                         new FormSolutionsBestellungHandler(
                             getMetaService(),
                             getConnectionContext()).execute(
@@ -166,7 +166,9 @@ public class FormSolutionsBestellungBerechtigungspruefungHandler implements Conn
                         try {
                             BerechtigungspruefungHandler.getInstance().closeAnfrage(schluessel);
                         } catch (final Exception ex) {
-                            LOG.error(String.format("Fehler beim Schließen von der Berechtigugnsprüfung %s.", schluessel),
+                            LOG.error(String.format(
+                                    "Fehler beim Schließen von der Berechtigugnsprüfung %s.",
+                                    schluessel),
                                 ex);
                         }
                     }
