@@ -7,9 +7,16 @@
 ****************************************************/
 package de.cismet.cids.custom.wunda_blau.search.actions;
 
+import Sirius.server.middleware.interfaces.domainserver.MetaService;
+import Sirius.server.middleware.interfaces.domainserver.MetaServiceStore;
+
+import org.apache.commons.io.IOUtils;
+
+import java.io.FileInputStream;
+import java.io.IOException;
+
 import de.cismet.cids.custom.utils.berechtigungspruefung.BerechtigungspruefungProperties;
 
-import de.cismet.cids.server.actions.DownloadFileAction;
 import de.cismet.cids.server.actions.ServerAction;
 import de.cismet.cids.server.actions.ServerActionParameter;
 
@@ -20,11 +27,15 @@ import de.cismet.cids.server.actions.ServerActionParameter;
  * @version  $Revision$, $Date$
  */
 @org.openide.util.lookup.ServiceProvider(service = ServerAction.class)
-public class BerechtigungspruefungAnhangDownloadAction extends DownloadFileAction {
+public class BerechtigungspruefungAnhangDownloadAction implements ServerAction, MetaServiceStore {
 
     //~ Static fields/initializers ---------------------------------------------
 
     public static final String TASK_NAME = "berechtigungspruefungAnhangDownload";
+
+    //~ Instance fields --------------------------------------------------------
+
+    private MetaService metaService;
 
     //~ Methods ----------------------------------------------------------------
 
@@ -44,11 +55,21 @@ public class BerechtigungspruefungAnhangDownloadAction extends DownloadFileActio
 
             final String filePath = BerechtigungspruefungProperties.getInstance().getAnhangAbsPath() + "/"
                         + dateiname.replaceAll("../", "");
-            final Object ret = super.execute(filePath);
-            if (ret == null) {
-                throw new RuntimeException("File not found.");
+            try {
+                return IOUtils.toByteArray(new FileInputStream(filePath));
+            } catch (final IOException ex) {
+                throw new RuntimeException("File not found.", ex);
             }
-            return ret;
         }
+    }
+
+    @Override
+    public MetaService getMetaService() {
+        return metaService;
+    }
+
+    @Override
+    public void setMetaService(final MetaService metaService) {
+        this.metaService = metaService;
     }
 }
