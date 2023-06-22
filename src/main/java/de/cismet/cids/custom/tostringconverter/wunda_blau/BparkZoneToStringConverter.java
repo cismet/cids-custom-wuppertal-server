@@ -24,8 +24,8 @@ public class BparkZoneToStringConverter extends CustomToStringConverter {
 
     //~ Static fields/initializers ---------------------------------------------
 
-    public static final String FIELD__ZONE = "zone";                 
-    public static final String FIELD__NR = "nummer"; 
+    public static final String FIELD__ZONE = "zone";
+    public static final String FIELD__NR = "nummer";
 
     //~ Methods ----------------------------------------------------------------
 
@@ -35,10 +35,14 @@ public class BparkZoneToStringConverter extends CustomToStringConverter {
         if (myid < 0) {
             return "Neuen Bereich anlegen";
         } else {
-            return (cidsBean.getProperty(FIELD__NR) == null 
-                        || cidsBean.getProperty(FIELD__NR).toString().trim().length() == 0)
-                    ? String.format("%s", cidsBean.getProperty(FIELD__ZONE).toString()) 
-                    : String.format("%s - %s",cidsBean.getProperty(FIELD__ZONE).toString(), cidsBean.getProperty(FIELD__NR).toString());
+            return
+                ((cidsBean.getProperty(FIELD__NR) == null)
+                            || (cidsBean.getProperty(FIELD__NR).toString().trim().length() == 0))
+                ? String.format("%s", cidsBean.getProperty(FIELD__ZONE).toString())
+                : String.format(
+                    "%s - %s",
+                    cidsBean.getProperty(FIELD__ZONE).toString(),
+                    cidsBean.getProperty(FIELD__NR).toString());
         }
     }
 }

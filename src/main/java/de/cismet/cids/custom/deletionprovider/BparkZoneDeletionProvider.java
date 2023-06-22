@@ -38,7 +38,7 @@ public class BparkZoneDeletionProvider extends AbstractCustomDeletionProvider {
     private static final String TABLE_NAME = "bpark_zone";
     private static final String FIELD__ID = "id";
     private static final String FIELD__FK = "fk_zone";
-    private static final String TABLE_NAME_SEARCH = "bpark_bereich";;
+    private static final String TABLE_NAME_SEARCH = "bpark_bereich";
     private static final String CAUSE =
         "Diese Zone kann nicht gelöscht werden, da diese bei mindestens einem Bereich verwendet wird.";
 

@@ -38,7 +38,7 @@ public class BparkCityausweisbereichDeletionProvider extends AbstractCustomDelet
     private static final String TABLE_NAME = "bpark_cityausweisbereich";
     private static final String FIELD__ID = "id";
     private static final String FIELD__FK = "fk_cityausweisbereich";
-    private static final String TABLE_NAME_SEARCH = "bpark_cityausweis";;
+    private static final String TABLE_NAME_SEARCH = "bpark_cityausweis";
     private static final String CAUSE =
         "Diese Zone kann nicht gelöscht werden, da diese bei mindestens einer Fläche verwendet wird.";
 
