@@ -3285,7 +3285,9 @@ public class FormSolutionsBestellungHandler implements ConnectionContextProvider
                                     }
                                     if (!getProperties().isDeleteTmpProductAfterSuccessfulUploadDisabled()) {
                                         tmpFile.delete();
-                                        origProd.delete();
+                                        if (origProd != null) {
+                                            origProd.delete();
+                                        }
                                     }
 
                                     downloadInfoMap.put(transid, downloadInfo);
