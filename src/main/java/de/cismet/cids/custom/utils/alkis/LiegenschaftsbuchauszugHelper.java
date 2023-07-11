@@ -154,15 +154,26 @@ public class LiegenschaftsbuchauszugHelper {
      *
      * @param   downloadInfo  DOCUMENT ME!
      * @param   file          transId DOCUMENT ME!
+     * @param   transid       DOCUMENT ME!
+     *
+     * @return  DOCUMENT ME!
      *
      * @throws  IOException  DOCUMENT ME!
      */
-    public void writeFullBescheinigung(final BerechtigungspruefungAlkisEinzelnachweisDownloadInfo downloadInfo,
-            final File file) throws IOException {
+    public File writeFullBescheinigung(final BerechtigungspruefungAlkisEinzelnachweisDownloadInfo downloadInfo,
+            final File file,
+            final String transid) throws IOException {
         writeAlkisReports(downloadInfo.getAlkisCodes(),
             downloadInfo.getAuftragsnummer(),
             downloadInfo.getAlkisProdukt(),
             file);
+
+        try {
+            return BaulastBescheinigungHelper.handleLargeFileIfRequired(file, transid);
+        } catch (Exception e) {
+            LOG.fatal(e, e);
+            return null;
+        }
     }
 
     /**

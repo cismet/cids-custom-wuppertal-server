@@ -3036,31 +3036,36 @@ public class FormSolutionsBestellungHandler implements ConnectionContextProvider
     /**
      * DOCUMENT ME!
      *
-     * @param   fileNameOrig    DOCUMENT ME!
-     * @param   in              DOCUMENT ME!
-     * @param   bestellungBean  DOCUMENT ME!
-     * @param   testPdf         DOCUMENT ME!
+     * @param   fileNameOrig       DOCUMENT ME!
+     * @param   in                 DOCUMENT ME!
+     * @param   bestellungBean     DOCUMENT ME!
+     * @param   testPdf            DOCUMENT ME!
+     * @param   fillProduktFields  DOCUMENT ME!
      *
      * @throws  Exception  DOCUMENT ME!
      */
     private void uploadAndFillProduktFields(final String fileNameOrig,
             final InputStream in,
             final CidsBean bestellungBean,
-            final boolean testPdf) throws Exception {
+            final boolean testPdf,
+            final boolean fillProduktFields) throws Exception {
         final String transid = (String)bestellungBean.getProperty("transid");
 
-        final String fileNameFtp = transid + "." + FilenameUtils.getExtension(fileNameOrig);
+        final String fileNameFtp = transid + (fillProduktFields ? "" : "-1") + "."
+                    + FilenameUtils.getExtension(fileNameOrig);
         if (getProperties().isFtpEnabled()) {
             uploadProduktToFtp(in, fileNameFtp, testPdf);
         } else {
             saveProduktInFtpMount(in, fileNameFtp, testPdf);
         }
 
-        bestellungBean.setProperty("produkt_dateipfad", fileNameFtp);
-        bestellungBean.setProperty("produkt_dateiname_orig", fileNameOrig);
-        bestellungBean.setProperty("produkt_ts", new Timestamp(new Date().getTime()));
+        if (fillProduktFields) {
+            bestellungBean.setProperty("produkt_dateipfad", fileNameFtp);
+            bestellungBean.setProperty("produkt_dateiname_orig", fileNameOrig);
+            bestellungBean.setProperty("produkt_ts", new Timestamp(new Date().getTime()));
 
-        createUploadAndFillRechnungFields(bestellungBean);
+            createUploadAndFillRechnungFields(bestellungBean);
+        }
     }
 
     /**
@@ -3135,7 +3140,7 @@ public class FormSolutionsBestellungHandler implements ConnectionContextProvider
                                             "--"));
 
                                 try(final InputStream in = downloadProduct(productUrl)) {
-                                    uploadAndFillProduktFields(fileNameOrig, in, bestellungBean, true);
+                                    uploadAndFillProduktFields(fileNameOrig, in, bestellungBean, true, true);
                                 }
 
                                 getMetaService().updateMetaObject(
@@ -3252,26 +3257,35 @@ public class FormSolutionsBestellungHandler implements ConnectionContextProvider
                                                 getProperties().getProduktTmpAbsPath(),
                                                 transid,
                                                 FilenameUtils.getExtension(fileNameOrig)));
+                                    File origProd = null;
 
                                     if (productType.equals(ProductType.LB_ABSCHLUSS)) {
-                                        getLiegenschaftsbuchauszugHelper().writeFullBescheinigung(
-                                            (BerechtigungspruefungAlkisEinzelnachweisDownloadInfo)downloadInfo,
-                                            tmpFile);
+                                        origProd = getLiegenschaftsbuchauszugHelper().writeFullBescheinigung(
+                                                (BerechtigungspruefungAlkisEinzelnachweisDownloadInfo)downloadInfo,
+                                                tmpFile,
+                                                transid);
                                     } else {
                                         downloadInfo =
                                             new ObjectMapper().readValue(
                                                 downloadinfoJson,
                                                 BerechtigungspruefungBescheinigungDownloadInfo.class);
 
-                                        getBaulastBescheinigungHelper().writeFullBescheinigung(
-                                            (BerechtigungspruefungBescheinigungDownloadInfo)downloadInfo,
-                                            tmpFile);
+                                        origProd = getBaulastBescheinigungHelper().writeFullBescheinigung(
+                                                (BerechtigungspruefungBescheinigungDownloadInfo)downloadInfo,
+                                                tmpFile,
+                                                transid);
                                     }
                                     try(final InputStream in = new FileInputStream(tmpFile)) {
-                                        uploadAndFillProduktFields(fileNameOrig, in, bestellungBean, false);
+                                        uploadAndFillProduktFields(fileNameOrig, in, bestellungBean, false, true);
+                                    }
+                                    if (origProd != null) {
+                                        try(final InputStream in = new FileInputStream(origProd)) {
+                                            uploadAndFillProduktFields(fileNameOrig, in, bestellungBean, false, false);
+                                        }
                                     }
                                     if (!getProperties().isDeleteTmpProductAfterSuccessfulUploadDisabled()) {
                                         tmpFile.delete();
+                                        origProd.delete();
                                     }
 
                                     downloadInfoMap.put(transid, downloadInfo);

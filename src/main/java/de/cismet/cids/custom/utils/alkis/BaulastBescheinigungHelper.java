@@ -51,6 +51,8 @@ import java.util.Set;
 import java.util.zip.ZipEntry;
 import java.util.zip.ZipOutputStream;
 
+import de.cismet.cids.custom.utils.GeneralUtils;
+import de.cismet.cids.custom.utils.WundaBlauServerResources;
 import de.cismet.cids.custom.utils.berechtigungspruefung.DownloadInfoFactory;
 import de.cismet.cids.custom.utils.berechtigungspruefung.baulastbescheinigung.BerechtigungspruefungBescheinigungBaulastInfo;
 import de.cismet.cids.custom.utils.berechtigungspruefung.baulastbescheinigung.BerechtigungspruefungBescheinigungDownloadInfo;
@@ -69,6 +71,8 @@ import de.cismet.cids.dynamics.CidsBean;
 import de.cismet.cids.server.actions.ServerActionParameter;
 import de.cismet.cids.server.search.CidsServerSearch;
 
+import de.cismet.cids.utils.serverresources.ServerResourcesLoader;
+
 import de.cismet.commons.security.handler.SimpleHttpAccessHandler;
 
 import de.cismet.connectioncontext.ConnectionContext;
@@ -86,6 +90,7 @@ public class BaulastBescheinigungHelper {
 
     private static final Logger LOG = Logger.getLogger(BaulastBescheinigungHelper.class);
     private static final Map<String, MetaClass> METACLASS_CACHE = new HashMap();
+    private static final int LARGE_FILE_SIZE = 200 * 1024 * 1024;
 
     //~ Instance fields --------------------------------------------------------
 
@@ -756,11 +761,15 @@ public class BaulastBescheinigungHelper {
     /**
      * DOCUMENT ME!
      *
-     * @param  downloadInfo  DOCUMENT ME!
-     * @param  file          transId DOCUMENT ME!
+     * @param   downloadInfo  DOCUMENT ME!
+     * @param   file          transId DOCUMENT ME!
+     * @param   transid       DOCUMENT ME!
+     *
+     * @return  the file with the original result, when the result was too big
      */
-    public void writeFullBescheinigung(final BerechtigungspruefungBescheinigungDownloadInfo downloadInfo,
-            final File file) {
+    public File writeFullBescheinigung(final BerechtigungspruefungBescheinigungDownloadInfo downloadInfo,
+            final File file,
+            final String transid) {
         try(final ZipOutputStream zipOut = new ZipOutputStream(new FileOutputStream(file))) {
             writeProcotol(downloadInfo.getProtokoll(), zipOut);
             if (downloadInfo.getBescheinigungsInfo() != null) {
@@ -799,8 +808,71 @@ public class BaulastBescheinigungHelper {
                 }
             }
             zipOut.close();
+
+            return handleLargeFileIfRequired(file, transid);
         } catch (final Exception ex) {
             LOG.fatal(ex, ex);
+            return null;
+        }
+    }
+
+    /**
+     * Checks whether the size of the file is greater than 200 MB. If so, then the file will be moved and a email will
+     * be sent
+     *
+     * @param   file     DOCUMENT ME!
+     * @param   transid  DOCUMENT ME!
+     *
+     * @return  the file with the original result, when the result was too big
+     *
+     * @throws  Exception  DOCUMENT ME!
+     */
+    public static File handleLargeFileIfRequired(final File file, final String transid) throws Exception {
+        if (file.length() > (LARGE_FILE_SIZE)) {
+            // rename created file
+            final String fileName = file.getAbsolutePath();
+            final int suffixStart = file.getName().lastIndexOf(".");
+            File newFileName;
+
+            if (suffixStart != -1) {
+                newFileName = File.createTempFile(file.getName().substring(0, suffixStart),
+                        file.getName().substring(suffixStart),
+                        file.getParentFile());
+            } else {
+                newFileName = File.createTempFile(file.getName(), null, file.getParentFile());
+            }
+            File origProduct = new File(fileName);
+            origProduct.renameTo(newFileName);
+            origProduct = newFileName;
+
+            // create new file
+            final byte[] preparedProduct = ServerResourcesLoader.getInstance()
+                        .loadBinary(WundaBlauServerResources.FS_LARGE_PRODUCT_RESPONSE.getValue());
+            final FileOutputStream out = new FileOutputStream(file);
+            out.write(preparedProduct);
+            out.close();
+
+            // send mail
+            final FsMailConfigJson mailConfig =
+                new ObjectMapper().readValue(ServerResourcesLoader.getInstance().loadText(
+                        WundaBlauServerResources.FS_MAIL_CONFIGURATION.getValue()),
+                    FsMailConfigJson.class);
+            String content = ServerResourcesLoader.getInstance()
+                        .loadText(WundaBlauServerResources.FS_MAIL_CONTENT_TEMPLATE.getValue());
+
+            if ((mailConfig != null) && (content != null)) {
+                final String cmdTemplate = mailConfig.getCmdTemplate();
+                final String betreff = mailConfig.getTopic();
+                content = content.replace("{transid}", transid);
+
+                GeneralUtils.sendMail(cmdTemplate, mailConfig.getEmailAddress(), betreff, content);
+            } else {
+                LOG.error("Cannot send mail to inform about a large file that must be delivered manually");
+            }
+
+            return origProduct;
+        } else {
+            return null;
         }
     }
 
