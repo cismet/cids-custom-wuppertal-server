@@ -105,6 +105,9 @@ public enum WundaBlauServerResources {
     DATASOURCES_GENERAL_PROPERTIES(new TextServerResource("/datasources/general.properties")),
     VZKAT_PROPERTIES(new TextServerResource("/vzkat/vzkat.properties")),
     ALBO_PROPERTIES(new TextServerResource("/albo/albo.properties")),
+    FS_MAIL_CONFIGURATION(new JsonServerResource("/formsolutions/mail_configuration.json")),
+    FS_MAIL_CONTENT_TEMPLATE(new TextServerResource("/formsolutions/file_size_mail_content.txt")),
+    FS_LARGE_PRODUCT_RESPONSE(new BinaryServerResource("/formsolutions/largeProduct.zip")),
 
     IMAGE_ANNOTATOR_FONT(new BinaryServerResource("/tiffer/Calibri_Bold.ttf"));
 
