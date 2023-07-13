@@ -21,15 +21,15 @@ import java.util.Properties;
 /**
  * DOCUMENT ME!
  *
- * @author   jruiz
+ * @author   therter
  * @version  $Revision$, $Date$
  */
 @Getter
-public class GrundwassermessstellenProperties {
+public class AltlastenWebDavProperties {
 
     //~ Static fields/initializers ---------------------------------------------
 
-    private static final transient Logger LOG = Logger.getLogger(GrundwassermessstellenProperties.class);
+    private static final transient Logger LOG = Logger.getLogger(AltlastenWebDavProperties.class);
 
     //~ Instance fields --------------------------------------------------------
 
@@ -46,7 +46,7 @@ public class GrundwassermessstellenProperties {
      *
      * @param  properties  DOCUMENT ME!
      */
-    public GrundwassermessstellenProperties(final Properties properties) {
+    public AltlastenWebDavProperties(final Properties properties) {
         this.properties = properties;
         webDavHost = readProperty("WEBDAV_HOST", null);
         webDavPath = readProperty("WEBDAV_PATH", null);
