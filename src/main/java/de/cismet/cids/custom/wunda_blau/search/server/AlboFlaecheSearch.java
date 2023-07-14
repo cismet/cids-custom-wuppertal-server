@@ -73,6 +73,7 @@ public class AlboFlaecheSearch extends RestApiMonGeometrySearch
                 + "(SELECT c.id FROM cs_class c WHERE table_name ILIKE 'albo_flaeche') AS class_id, flaeche.id AS object_id, flaeche.erhebungsnummer || ' [' || art.schluessel || ']' AS name "
                 + "FROM albo_flaeche AS flaeche "
                 + "LEFT JOIN albo_flaechenart AS art ON flaeche.fk_art = art.id "
+                + "LEFT JOIN geom AS geom ON flaeche.fk_geom = geom.id "
                 + "%s "
                 + "WHERE %s "
                 + "ORDER BY flaeche.erhebungsnummer";
@@ -231,6 +232,18 @@ public class AlboFlaecheSearch extends RestApiMonGeometrySearch
                 wheresMain.add(String.format(
                         "flaeche.loeschen = %s",
                         configuration.getUnterdrueckt() ? "TRUE" : "FALSE"));
+            }
+
+            if ((configuration.getSmaller() != null) && (configuration.getSmaller() > 0.0)) {
+                wheresMain.add(String.format(
+                        "st_area(geom.geo_field) < %s",
+                        configuration.getSmaller()));
+            }
+
+            if ((configuration.getGreater() != null) && (configuration.getGreater() > 0.0)) {
+                wheresMain.add(String.format(
+                        "st_area(geom.geo_field) > %s",
+                        configuration.getGreater()));
             }
 
             if (configuration.getArtInfos() != null) {
@@ -529,6 +542,8 @@ public class AlboFlaecheSearch extends RestApiMonGeometrySearch
         @JsonProperty private SearchMode searchModeMain = SearchMode.AND;
         @JsonProperty private SearchMode searchModeArt = SearchMode.AND;
         @JsonProperty private Collection<ArtInfo> artInfos;
+        @JsonProperty private Double greater;
+        @JsonProperty private Double smaller;
     }
 
     /**

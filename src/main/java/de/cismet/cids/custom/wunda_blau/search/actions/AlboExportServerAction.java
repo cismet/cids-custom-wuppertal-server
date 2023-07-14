@@ -13,13 +13,13 @@
 package de.cismet.cids.custom.wunda_blau.search.actions;
 
 import com.vividsolutions.jts.geom.Geometry;
-import com.vividsolutions.jts.geom.Polygon;
+import com.vividsolutions.jts.geom.MultiPolygon;
 
 import java.io.File;
 
 import de.cismet.cids.custom.utils.AlboProperties;
 
-import de.cismet.cids.server.actions.AbstractPostgresToShapefileServerAction;
+import de.cismet.cids.server.actions.AbstractJumpPostgresToShapefileServerAction;
 import de.cismet.cids.server.actions.ServerAction;
 
 /**
@@ -28,7 +28,7 @@ import de.cismet.cids.server.actions.ServerAction;
  * @version  $Revision$, $Date$
  */
 @org.openide.util.lookup.ServiceProvider(service = ServerAction.class)
-public class AlboExportServerAction extends AbstractPostgresToShapefileServerAction {
+public class AlboExportServerAction extends AbstractJumpPostgresToShapefileServerAction {
 
     //~ Static fields/initializers ---------------------------------------------
 
@@ -62,7 +62,7 @@ public class AlboExportServerAction extends AbstractPostgresToShapefileServerAct
 
     @Override
     public Class<? extends Geometry> getGeometryClass(final String columnName) {
-        return Polygon.class;
+        return MultiPolygon.class;
     }
 
     @Override
