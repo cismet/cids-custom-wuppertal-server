@@ -68,11 +68,11 @@ public class NasZaehlObjekteSearch extends AbstractCidsServerSearch implements C
         "SELECT count (*) FROM sic_regen_dachpg where st_intersects(wkb_geometry,<geom>)";
     private static final String BODEN_PKT_STMT =
         "SELECT count (*) FROM sic_regen_bodenpg where st_intersects(wkb_geometry,<geom>)";
-    private static final String ADRESE_STMT = "SELECT DISTINCT i.class_id , i.object_id, s.stringrep"
-                + " FROM geom g, cs_attr_object_derived i LEFT OUTER JOIN cs_cache s ON ( s.class_id =i.class_id AND s.object_id=i.object_id )"
-                + " WHERE i.attr_class_id = ( SELECT cs_class.id FROM cs_class WHERE cs_class.table_name::text = 'GEOM'::text )"
+    private static final String ADRESE_STMT = "SELECT DISTINCT i.class_key , i.object_id, s.stringrep"
+                + " FROM geom g, cs_attr_object_derived i LEFT OUTER JOIN cs_cache s ON ( s.class_key ILIKE i.class_key AND s.object_id = i.object_id )"
+                + " WHERE i.attr_class_key ILIKE 'geom'"
                 + " AND i.attr_object_id = g.id"
-                + " AND i.class_id IN (6)"
+                + " AND i.class_key ILIKE 'adresse'"
                 + " AND geo_field && st_GeometryFromText('<geom>')"
                 + " AND st_intersects(st_buffer(geo_field, " + INTERSECTS_BUFFER
                 + "),st_buffer(st_GeometryFromText('<geom>'), " + INTERSECTS_BUFFER + ")) ORDER BY 1,2,3";

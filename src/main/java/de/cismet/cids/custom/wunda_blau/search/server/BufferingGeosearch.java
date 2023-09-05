@@ -18,6 +18,8 @@ import org.apache.log4j.Logger;
 import org.openide.util.lookup.ServiceProvider;
 
 import java.util.Locale;
+import java.util.Set;
+import java.util.stream.Collectors;
 
 import de.cismet.cids.server.search.builtin.DefaultGeoSearch;
 import de.cismet.cids.server.search.builtin.GeoSearch;
@@ -96,23 +98,19 @@ public final class BufferingGeosearch extends DefaultGeoSearch {
     @Override
     public PreparableStatement getSearchSql(final String domainKey) {
         final String sql = ""                                                                                      // NOI18N
-                    + "SELECT DISTINCT i.class_id ocid, "                                                          // NOI18N
-                    + "                i.object_id oid, "                                                          // NOI18N
+                    + "SELECT DISTINCT i.class_key, "                                                              // NOI18N
+                    + "                i.object_id, "                                                              // NOI18N
                     + "                s.stringrep,s.geometry,s.lightweight_json "                                 // NOI18N
                     + "FROM            geom g, "                                                                   // NOI18N
                     + "                cs_attr_object_derived i "                                                  // NOI18N
                     + "                LEFT OUTER JOIN cs_cache s "                                                // NOI18N
                     + "                ON              ( "                                                         // NOI18N
-                    + "                                                s.class_id =i.class_id "                    // NOI18N
-                    + "                                AND             s.object_id=i.object_id "                   // NOI18N
+                    + "                                                s.class_key ILIKE i.class_key "             // NOI18N
+                    + "                                AND             s.object_id = i.object_id "                 // NOI18N
                     + "                                ) "                                                         // NOI18N
-                    + "WHERE           i.attr_class_id = "                                                         // NOI18N
-                    + "                ( SELECT cs_class.id "                                                      // NOI18N
-                    + "                FROM    cs_class "                                                          // NOI18N
-                    + "                WHERE   cs_class.table_name::text = 'GEOM'::text "                          // NOI18N
-                    + "                ) "                                                                         // NOI18N
+                    + "WHERE           i.attr_class_key ILIKE 'geom' "                                             // NOI18N
                     + "AND             i.attr_object_id = g.id "                                                   // NOI18N
-                    + "AND i.class_id IN <cidsClassesInStatement> "                                                // NOI18N
+                    + "AND i.class_key ILIKE ANY(ARRAY[<cidsClassesInStatement>]) "                                // NOI18N
                     + "AND geo_field && st_geomfromtext('SRID=<cidsSearchGeometrySRID>;<cidsSearchGeometryWKT>') " // NOI18N
                     + "AND <geomStatement> "                                                                       // NOI18N
                     + "ORDER BY 1,2,3";                                                                            // NOI18N
@@ -162,7 +160,7 @@ public final class BufferingGeosearch extends DefaultGeoSearch {
 
         final String cidsSearchGeometryWKT = searchGeometry.toText();
         final String sridString = Integer.toString(searchGeometry.getSRID());
-        final String classesInStatement = getClassesInSnippetsPerDomain().get(domainKey);
+        final Set<String> classesInStatement = getClassesInSnippetsPerDomain().get(domainKey);
         if ((cidsSearchGeometryWKT == null) || (cidsSearchGeometryWKT.trim().length() == 0)
                     || (sridString == null)
                     || (sridString.trim().length() == 0)) {
@@ -173,7 +171,7 @@ public final class BufferingGeosearch extends DefaultGeoSearch {
             return null;
         }
 
-        if ((classesInStatement == null) || (classesInStatement.trim().length() == 0)) {
+        if ((classesInStatement == null) || (classesInStatement.isEmpty())) {
             LOG.warn("There are no search classes defined for domain '" + domainKey // NOI18N
                         + "'. This domain will be skipped."); // NOI18N
 
@@ -181,11 +179,12 @@ public final class BufferingGeosearch extends DefaultGeoSearch {
         }
 
         final PreparableStatement ps = new PreparableStatement(
-                sql.replaceAll("<geomStatement>", geomStatement)              // NOI18N
-                .replaceAll("<cidsClassesInStatement>", classesInStatement)   // NOI18N
-                .replaceAll("<cidsSearchGeometryWKT>", cidsSearchGeometryWKT) // NOI18N
+                sql.replaceAll("<geomStatement>", geomStatement)                           // NOI18N
+                .replaceAll("<cidsClassesInStatement>", classesInStatement.stream().map(str ->
+                            String.format("'%s'", str)).collect(Collectors.joining(", "))) // NOI18N
+                .replaceAll("<cidsSearchGeometryWKT>", cidsSearchGeometryWKT)              // NOI18N
                 .replaceAll("<cidsSearchGeometrySRID>", sridString),
-                new int[0]);                                                  // NOI18N
+                new int[0]);                                                               // NOI18N
 
         ps.setObjects(new Object[0]);
 

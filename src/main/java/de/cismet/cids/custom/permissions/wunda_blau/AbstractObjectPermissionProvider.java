@@ -38,19 +38,17 @@ public abstract class AbstractObjectPermissionProvider extends AbstractCustomBea
 
     //~ Static fields/initializers ---------------------------------------------
 
-    private static final String CLASSNAME__OBJECTPERMISSIONS = "cs_objectpermissions";
-
     private static final String PROPERTY__READ = "read";
     private static final String PROPERTY__WRITE = "write";
 
     private static final String QUERY_TEMPLATE = ""
-                + "SELECT (SELECT id from cs_class WHERE table_name ILIKE '%1$s'), id "
-                + "FROM %1$s "
-                + "WHERE class_id = %2$d "
-                + "AND (object_id IS NULL OR object_id = %3$d) "
-                + "AND (user_name LIKE %4$s OR group_name = ANY(VALUES %5$s)) "
-                + "AND (ts_start IS NULL OR ts_start < %6$s) "
-                + "AND (ts_end IS NULL OR ts_end > %6$s);";
+                + "SELECT 'cs_objectpermissions', id "
+                + "FROM cs_objectpermissions "
+                + "WHERE class_key ILIKE '%1$s' "
+                + "AND (object_id IS NULL OR object_id = %2$d) "
+                + "AND (user_name LIKE %3$s OR group_name = ANY(VALUES %4$s)) "
+                + "AND (ts_start IS NULL OR ts_start < %5$s) "
+                + "AND (ts_end IS NULL OR ts_end > %5$s);";
 
     //~ Enums ------------------------------------------------------------------
 
@@ -131,7 +129,7 @@ public abstract class AbstractObjectPermissionProvider extends AbstractCustomBea
         if ((user == null) || (cidsBean == null)) {
             return null;
         }
-        final int classId = cidsBean.getMetaObject().getClassID();
+        final String classKey = cidsBean.getMetaObject().getMetaClass().getTableName();
         final int objectId = cidsBean.getMetaObject().getId();
         final String userName = user.getName();
         final Collection<String> groupNames = new ArrayList<>();
@@ -142,8 +140,7 @@ public abstract class AbstractObjectPermissionProvider extends AbstractCustomBea
         }
         final String query = String.format(
                 QUERY_TEMPLATE,
-                CLASSNAME__OBJECTPERMISSIONS,
-                classId,
+                classKey,
                 objectId,
                 String.format("'%s'", userName),
                 String.join(", ", groupNames),
