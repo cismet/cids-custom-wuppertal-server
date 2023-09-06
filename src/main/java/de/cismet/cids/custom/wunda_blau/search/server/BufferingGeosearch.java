@@ -109,7 +109,7 @@ public final class BufferingGeosearch extends DefaultGeoSearch {
                     + "WHERE           i.attr_class_id = "                                                         // NOI18N
                     + "                ( SELECT cs_class.id "                                                      // NOI18N
                     + "                FROM    cs_class "                                                          // NOI18N
-                    + "                WHERE   cs_class.table_name::text = 'GEOM'::text "                          // NOI18N
+                    + "                WHERE   cs_class.table_name::text ILIKE 'GEOM'::text "                      // NOI18N
                     + "                ) "                                                                         // NOI18N
                     + "AND             i.attr_object_id = g.id "                                                   // NOI18N
                     + "AND i.class_id IN <cidsClassesInStatement> "                                                // NOI18N
