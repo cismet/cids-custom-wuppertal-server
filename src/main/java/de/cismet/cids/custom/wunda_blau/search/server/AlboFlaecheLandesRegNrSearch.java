@@ -13,6 +13,7 @@ import java.rmi.RemoteException;
 
 import java.util.ArrayList;
 import java.util.Collection;
+import java.util.TreeSet;
 
 import de.cismet.cids.server.search.AbstractCidsServerSearch;
 
@@ -84,12 +85,15 @@ public class AlboFlaecheLandesRegNrSearch extends AbstractCidsServerSearch imple
                                 landesregistriernummer),
                             getConnectionContext());
                     int maxNumber = -1;
+                    final TreeSet<Integer> noSet = new TreeSet<>();
 
                     if ((nr != null) && (nr.size() > 0)) {
                         for (int i = 0; i < nr.size(); ++i) {
                             if ((nr.get(i) != null) && (nr.size() > 0)) {
                                 try {
                                     final int noToCheck = Integer.parseInt(String.valueOf(nr.get(i).get(0)));
+
+                                    noSet.add(noToCheck);
 
                                     if (maxNumber < noToCheck) {
                                         maxNumber = noToCheck;
@@ -100,12 +104,20 @@ public class AlboFlaecheLandesRegNrSearch extends AbstractCidsServerSearch imple
                             }
                         }
                     }
+                    ++maxNumber;
+
+                    for (int i = 0; i < 999; ++i) {
+                        if (!noSet.contains(i)) {
+                            maxNumber = i;
+                            break;
+                        }
+                    }
 
                     final ArrayList<ArrayList<String>> resultList = new ArrayList<>();
                     final ArrayList<String> numberList = new ArrayList<>();
 
                     numberList.add(landesregistriernummer);
-                    numberList.add(String.format("%04d", (maxNumber + 1)));
+                    numberList.add(String.format("%04d", (maxNumber)));
 
                     resultList.add(numberList);
 
