@@ -35,7 +35,7 @@ public class BPlanByGeometrySearch extends AbstractCidsServerSearch implements C
     private static final String DOMAIN = "WUNDA_BLAU";
     private static final String QUERY_BPLAN = "select nummer || ' ' || name from bplan_verfahren "
                 + "join geom on (geometrie = geom.id) "
-                + "where st_intersects(geo_field, st_setSrid('%s', 25832))";
+                + "where st_intersects(geo_field, st_setSrid('%s'::geometry, 25832))";
 //    private static final String QUERY_BPLAN = "select verfahren || ' ' || name from bplan_plan join geom on (geometrie = geom.id) where st_intersects(geo_field, st_setSrid('%s', 25832))";
 
     //~ Instance fields --------------------------------------------------------

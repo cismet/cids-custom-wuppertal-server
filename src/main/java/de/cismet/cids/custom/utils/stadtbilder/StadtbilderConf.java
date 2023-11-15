@@ -36,11 +36,11 @@ public abstract class StadtbilderConf {
 
     private static final org.apache.log4j.Logger LOG = org.apache.log4j.Logger.getLogger(StadtbilderConf.class);
 
-    public static final String YEAR = "${year}";
-    public static final String IMAGE_NUMBER = "${imageNumber}";
-    public static final String FILE_ENDING = "${fileEnding}";
-    public static final String DIRECTION = "${direction}";
-    public static final String FIRST_CHARACTER = "${firstCharacter}";
+    public static final String YEAR = "{year}";
+    public static final String IMAGE_NUMBER = "{imageNumber}";
+    public static final String FILE_ENDING = "{fileEnding}";
+    public static final String DIRECTION = "{direction}";
+    public static final String FIRST_CHARACTER = "{firstCharacter}";
 
     private static final Integer DEFAULT_CACHE_SIZE = 100;
 
