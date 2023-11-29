@@ -17,7 +17,6 @@ import org.apache.log4j.Logger;
 
 import org.openide.util.lookup.ServiceProvider;
 
-
 /**
  * DOCUMENT ME!
  *
@@ -31,7 +30,8 @@ public class KitaDeletionProvider extends AbstractCustomDeletionProvider {
 
     private static final Logger LOG = Logger.getLogger(KitaDeletionProvider.class);
     public static final String TABLE_NAME = "infra_kita";
-    private static final String DELETE_TEXT = "Diese Kita kann nicht gelöscht werden, setzen Sie bitte das Enddatum in Kit-Office.";
+    private static final String DELETE_TEXT =
+        "Diese Kita kann nicht gelöscht werden, setzen Sie bitte das Enddatum in Kit-Office.";
 
     //~ Methods ----------------------------------------------------------------
 
