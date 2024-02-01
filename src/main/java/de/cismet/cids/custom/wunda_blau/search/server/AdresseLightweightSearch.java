@@ -160,7 +160,8 @@ public class AdresseLightweightSearch extends AbstractCidsServerSearch implement
                         + "SELECT c.id FROM cs_class c WHERE table_name ILIKE '%1$s') AS class_id, "
                         + "id, hausnummer FROM %1$s %2$s",
                 TABLE__ADR,
-                (conditions.isEmpty() ? "" : (" WHERE " + String.join(" AND ", conditions))));
+                (conditions.isEmpty() ? "" : (" WHERE " + String.join(" AND ", conditions)))
+                + " ORDER BY sort_hausnummer");
         try {
             final MetaClass mc = CidsBean.getMetaClassFromTableName(
                     "WUNDA_BLAU",
