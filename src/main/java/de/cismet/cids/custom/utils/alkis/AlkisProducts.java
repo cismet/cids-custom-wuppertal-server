@@ -131,7 +131,7 @@ public abstract class AlkisProducts {
     private final List<AlkisProductDescription> alkisMapProducts;
     private final String nachverarbeitungScript;
 
-    private final ServerAlkisConf alkisConf;
+    private final AlkisConf alkisConf;
     //
     private final Map<Type, String> productMap = new HashMap();
 
@@ -147,7 +147,7 @@ public abstract class AlkisProducts {
      *
      * @throws  Exception  DOCUMENT ME!
      */
-    public AlkisProducts(final ServerAlkisConf alkisConf,
+    public AlkisProducts(final AlkisConf alkisConf,
             final Properties productProperties,
             final Properties formatProperties,
             final String produktbeschreibungXml) throws Exception {
