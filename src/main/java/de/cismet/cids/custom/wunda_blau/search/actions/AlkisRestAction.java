@@ -11,15 +11,15 @@
  */
 package de.cismet.cids.custom.wunda_blau.search.actions;
 
-import de.aedsicad.aaaweb.service.alkis.info.ALKISInfoServices;
-import de.aedsicad.aaaweb.service.util.Buchungsblatt;
-import de.aedsicad.aaaweb.service.util.Point;
+import de.aedsicad.aaaweb.rest.client.ApiException;
+import de.aedsicad.aaaweb.rest.model.Buchungsblatt;
+import de.aedsicad.aaaweb.rest.model.Point;
 
-import java.rmi.RemoteException;
+import java.util.Arrays;
+import java.util.List;
 
-import de.cismet.cids.custom.utils.alkis.AlkisProducts;
-import de.cismet.cids.custom.utils.alkis.SOAPAccessProvider;
-import de.cismet.cids.custom.utils.alkis.ServerAlkisConf;
+import de.cismet.cids.custom.utils.alkis.AlkisAccessProvider;
+import de.cismet.cids.custom.utils.alkis.AlkisRestConf;
 
 import de.cismet.cids.server.actions.ServerAction;
 import de.cismet.cids.server.actions.ServerActionParameter;
@@ -31,14 +31,14 @@ import de.cismet.cids.server.actions.ServerActionParameter;
  * @version  $Revision$, $Date$
  */
 @org.openide.util.lookup.ServiceProvider(service = ServerAction.class)
-public class ServerAlkisSoapAction implements ServerAction {
+public class AlkisRestAction implements ServerAction {
 
     //~ Static fields/initializers ---------------------------------------------
 
     private static final transient org.apache.log4j.Logger LOG = org.apache.log4j.Logger.getLogger(
-            ServerAlkisSoapAction.class);
+            AlkisRestAction.class);
 
-    public static final String TASKNAME = "alkisSoapTunnelAction";
+    public static final String TASKNAME = "alkisRestTunnelAction";
 
     //~ Enums ------------------------------------------------------------------
 
@@ -63,41 +63,48 @@ public class ServerAlkisSoapAction implements ServerAction {
         }
 
         try {
-            final String aToken = getSOAPAccessProvider().login();
+            final String token = getAlkisAccessProvider().login();
+            final String configuration = getAlkisAccessProvider().getAlkisRestConf().getConfiguration();
             if (body.toString().equals(RETURN_VALUE.POINT.toString())) {
                 // POINT
                 try {
                     final String pointCode = params[0].getValue().toString();
-                    final Point point = getALKISInfoServices().getPoint(
-                            aToken,
-                            getSOAPAccessProvider().getService(),
-                            pointCode);
+                    final Point point = getAlkisAccessProvider().getAlkisInfoService()
+                                .getPoint(
+                                    token,
+                                    configuration,
+                                    pointCode);
                     return point;
-                } catch (RemoteException remoteException) {
-                    LOG.error("Error in ServerAlkisSoapAction", remoteException);
-                    throw new RuntimeException("Error in ServerAlkisSoapAction", remoteException);
+                } catch (final ApiException remoteException) {
+                    LOG.error("Error in ServerAlkisRestAction", remoteException);
+                    throw new RuntimeException("Error in ServerAlkisRestAction", remoteException);
                 }
             } else {
                 // BUCHUNGSBLATT
                 try {
-                    final String buchungsblattCode = fixBuchungslattCode(params[0].getValue().toString());
-                    final String[] uuids = getALKISInfoServices().translateBuchungsblattCodeIntoUUIds(
-                            aToken,
-                            getSOAPAccessProvider().getService(),
-                            buchungsblattCode);
-                    final Buchungsblatt[] buchungsblaetter = getALKISInfoServices().getBuchungsblaetter(
-                            aToken,
-                            getSOAPAccessProvider().getService(),
-                            uuids,
-                            true);
-                    return buchungsblaetter[0];
-                } catch (RemoteException remoteException) {
-                    LOG.error("Error in ServerAlkisSoapAction", remoteException);
-                    throw new RuntimeException("Error in ServerAlkisSoapAction", remoteException);
+                    final List<String> buchungsblattCode = Arrays.asList(fixBuchungslattCode(
+                                params[0].getValue().toString()));
+                    final boolean aWithLandParcels = true;
+                    final String operationName = null;
+                    final String operationArgument = null;
+                    final String orderNumberInfo = null; // TODO ???
+                    final List<Buchungsblatt> buchungsblaetter = getAlkisAccessProvider().getAlkisInfoService()
+                                .getBuchungsblaetter(
+                                    buchungsblattCode,
+                                    token,
+                                    configuration,
+                                    aWithLandParcels,
+                                    operationName,
+                                    operationArgument,
+                                    orderNumberInfo);
+                    return buchungsblaetter.iterator().next();
+                } catch (final ApiException remoteException) {
+                    LOG.error("Error in ServerAlkisRestAction", remoteException);
+                    throw new RuntimeException("Error in ServerAlkisRestAction", remoteException);
                 }
             }
         } finally {
-            getSOAPAccessProvider().logout();
+            getAlkisAccessProvider().logout();
         }
     }
 
@@ -131,17 +138,8 @@ public class ServerAlkisSoapAction implements ServerAction {
      *
      * @return  DOCUMENT ME!
      */
-    private static SOAPAccessProvider getSOAPAccessProvider() {
-        return LazyInitialiser.INSTANCE;
-    }
-
-    /**
-     * DOCUMENT ME!
-     *
-     * @return  DOCUMENT ME!
-     */
-    private static ALKISInfoServices getALKISInfoServices() {
-        return getSOAPAccessProvider().getAlkisInfoService();
+    private static AlkisAccessProvider getAlkisAccessProvider() {
+        return LazyInitialiser.ALKIS_ACCESS_PROVIDER;
     }
 
     //~ Inner Classes ----------------------------------------------------------
@@ -155,7 +153,8 @@ public class ServerAlkisSoapAction implements ServerAction {
 
         //~ Static fields/initializers -----------------------------------------
 
-        private static final SOAPAccessProvider INSTANCE = new SOAPAccessProvider(ServerAlkisConf.getInstance());
+        private static final AlkisAccessProvider ALKIS_ACCESS_PROVIDER = new AlkisAccessProvider(AlkisRestConf
+                        .getInstance());
 
         //~ Constructors -------------------------------------------------------
 
