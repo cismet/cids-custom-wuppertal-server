@@ -34,13 +34,8 @@ public abstract class AlkisConf {
 
     //~ Instance fields --------------------------------------------------------
 
-    private final String credentialsFile;
     private final String service;
     private final String server;
-    private final String tokenService;
-    private final String catalogService;
-    private final String infoService;
-    private final String searchService;
     private final String srsGeom;
     private final String srsService;
     private final String mapCallString;
@@ -75,14 +70,9 @@ public abstract class AlkisConf {
      * @param  serviceProperties  DOCUMENT ME!
      */
     protected AlkisConf(final Properties serviceProperties) {
-        credentialsFile = serviceProperties.getProperty("CREDENTIALS_FILE");
         service = serviceProperties.getProperty("SERVICE");
         server = serviceProperties.getProperty("SERVER");
         demoServiceUrl = serviceProperties.getProperty("DEMOSERVICEURL");
-        tokenService = serviceProperties.getProperty("TOKEN_SERVICE");
-        catalogService = serviceProperties.getProperty("CATALOG_SERVICE");
-        infoService = serviceProperties.getProperty("INFO_SERVICE");
-        searchService = serviceProperties.getProperty("SEARCH_SERVICE");
         einzelNachweisService = server + serviceProperties.getProperty("BUCH_NACHWEIS_SERVICE");
         listenNachweisService = server + serviceProperties.getProperty("LISTEN_NACHWEIS_SERVICE");
         LiegenschaftskarteService = server + serviceProperties.getProperty("LIEGENSCHAFTSKARTE_SERVICE");

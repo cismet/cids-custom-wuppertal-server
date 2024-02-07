@@ -56,7 +56,7 @@ public class VermessungsRissReportHelper implements ConnectionContextProvider {
 
     //~ Instance fields --------------------------------------------------------
 
-    private final AlkisConf alkisConf = ServerAlkisConf.getInstance();
+    private final ServerAlkisConf alkisConf = ServerAlkisConf.getInstance();
     private final User user;
     private final MetaService metaService;
     private final ConnectionContext connectionContext;

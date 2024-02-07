@@ -13,8 +13,6 @@ import Sirius.server.middleware.types.MetaObjectNode;
 import lombok.Getter;
 import lombok.Setter;
 
-import okhttp3.HttpUrl;
-
 import org.apache.log4j.Logger;
 
 import java.util.ArrayList;

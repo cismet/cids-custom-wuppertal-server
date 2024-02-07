@@ -42,7 +42,7 @@ public final class ServerAlkisProducts extends AlkisProducts {
 
     //~ Instance fields --------------------------------------------------------
 
-    private final SOAPAccessProvider soapAccessProvider;
+    private final AlkisAccessProvider alkisAccessProvider;
 
     //~ Constructors -----------------------------------------------------------
 
@@ -50,18 +50,21 @@ public final class ServerAlkisProducts extends AlkisProducts {
      * Creates a new ServerAlkisProducts object.
      *
      * @param   alkisConf               DOCUMENT ME!
+     * @param   alkisRestConf           DOCUMENT ME!
      * @param   productProperties       DOCUMENT ME!
      * @param   formats                 DOCUMENT ME!
      * @param   produktbeschreibungXml  DOCUMENT ME!
      *
      * @throws  Exception  DOCUMENT ME!
      */
-    private ServerAlkisProducts(final ServerAlkisConf alkisConf,
+    private ServerAlkisProducts(
+            final ServerAlkisConf alkisConf,
+            final AlkisRestConf alkisRestConf,
             final Properties productProperties,
             final Properties formats,
             final String produktbeschreibungXml) throws Exception {
         super(alkisConf, productProperties, formats, produktbeschreibungXml);
-        soapAccessProvider = new SOAPAccessProvider(alkisConf);
+        alkisAccessProvider = new AlkisAccessProvider(alkisRestConf);
     }
 
     //~ Methods ----------------------------------------------------------------
@@ -78,6 +81,7 @@ public final class ServerAlkisProducts extends AlkisProducts {
             try {
                 INSTANCE = new ServerAlkisProducts(
                         ServerAlkisConf.getInstance(),
+                        AlkisRestConf.getInstance(),
                         ServerResourcesLoader.getInstance().loadProperties(
                             WundaBlauServerResources.ALKIS_PRODUCTS_PROPERTIES.getValue()),
                         ServerResourcesLoader.getInstance().loadProperties(
@@ -109,7 +113,8 @@ public final class ServerAlkisProducts extends AlkisProducts {
             final String fertigungsVermerk) throws MalformedURLException {
         final String fabricationNotice = generateFabricationNotice(fertigungsVermerk);
         final StringBuilder urlBuilder = new StringBuilder(ServerAlkisConf.getInstance().getEinzelNachweisService())
-                    .append("?product=").append(productCode).append("&id=").append(objectID).append(getIdentification())
+                    .append(
+                            "?product=").append(productCode).append("&id=").append(objectID).append(getIdentification())
                     .append(getMore());
         if (user != null) {
             try {
@@ -141,7 +146,8 @@ public final class ServerAlkisProducts extends AlkisProducts {
             final Date stichtag,
             final User user) throws MalformedURLException {
         final StringBuilder urlBuilder = new StringBuilder(ServerAlkisConf.getInstance().getEinzelNachweisService())
-                    .append("?reportingDate=").append(STICHTAG_DATE_FORMAT.format(stichtag)).append("&product=")
+                    .append(
+                            "?reportingDate=").append(STICHTAG_DATE_FORMAT.format(stichtag)).append("&product=")
                     .append(productCode)
                     .append("&id=")
                     .append(objectID)
@@ -302,7 +308,8 @@ public final class ServerAlkisProducts extends AlkisProducts {
     public URL productListenNachweisUrl(final String punktliste, final String productCode)
             throws MalformedURLException {
         return new URL(new StringBuffer(ServerAlkisConf.getInstance().getListenNachweisService()).append("?product=")
-                        .append(productCode).append("&ids=").append(punktliste).append(getIdentification()).append(
+                        .append(
+                            productCode).append("&ids=").append(punktliste).append(getIdentification()).append(
                     getMore()).toString());
     }
 
@@ -311,8 +318,8 @@ public final class ServerAlkisProducts extends AlkisProducts {
      *
      * @return  DOCUMENT ME!
      */
-    private SOAPAccessProvider getSoapAccessProvider() {
-        return soapAccessProvider;
+    private AlkisAccessProvider getAlkisAccessProvider() {
+        return alkisAccessProvider;
     }
 
     /**
@@ -321,7 +328,7 @@ public final class ServerAlkisProducts extends AlkisProducts {
      * @return  DOCUMENT ME!
      */
     private String getIdentification() {
-        final String token = getSoapAccessProvider().login();
+        final String token = getAlkisAccessProvider().login();
         return new StringBuffer("&token=").append(token).toString();
     }
 

@@ -17,6 +17,9 @@ import Sirius.server.newuser.User;
 
 import lombok.Getter;
 
+import java.io.File;
+import java.io.FileInputStream;
+import java.io.IOException;
 import java.io.StringReader;
 
 import java.util.Properties;
@@ -36,19 +39,40 @@ import de.cismet.connectioncontext.ConnectionContext;
  * @version  $Revision$, $Date$
  */
 @Getter
-public class ServerAlkisConf extends AlkisConf {
+public class AlkisRestConf extends Properties {
+
+    //~ Instance fields --------------------------------------------------------
+
+    private final Crendetials creds;
+
+    private final String configuration;
+    private final String credentialsFile;
+    private final String tokenApi;
+    private final String aaaWebApi;
 
     //~ Constructors -----------------------------------------------------------
 
     /**
-     * Creates a new ServerAlkisConf object.
+     * Creates a new ServerAlkisRestConf object.
      *
-     * @param   properties  DOCUMENT ME!
+     * @param   serviceProperties  DOCUMENT ME!
      *
-     * @throws  Exception  DOCUMENT ME!
+     * @throws  IOException  DOCUMENT ME!
      */
-    private ServerAlkisConf(final Properties properties) throws Exception {
-        super(properties);
+    public AlkisRestConf(final Properties serviceProperties) throws IOException {
+        configuration = serviceProperties.getProperty("CONFIGURATION");
+        credentialsFile = serviceProperties.getProperty("CREDENTIALS_FILE");
+        tokenApi = serviceProperties.getProperty("TOKEN_API");
+        aaaWebApi = serviceProperties.getProperty("AAAWEB_API");
+
+        final String crendentialsFile = getCredentialsFile();
+        if (crendentialsFile != null) {
+            final Properties credProperties = new Properties();
+            credProperties.load(new FileInputStream(new File(crendentialsFile)));
+            creds = new Crendetials(credProperties);
+        } else {
+            creds = null;
+        }
     }
 
     //~ Methods ----------------------------------------------------------------
@@ -58,7 +82,7 @@ public class ServerAlkisConf extends AlkisConf {
      *
      * @return  DOCUMENT ME!
      */
-    public static ServerAlkisConf getInstance() {
+    public static AlkisRestConf getInstance() {
         return LazyInitialiser.INSTANCE;
     }
 
@@ -73,7 +97,7 @@ public class ServerAlkisConf extends AlkisConf {
      *
      * @throws  Exception  DOCUMENT ME!
      */
-    public static ServerAlkisConf loadFromDomainServer(final User user,
+    public static AlkisRestConf loadFromDomainServer(final User user,
             final ActionService as,
             final ConnectionContext connectionContext) throws Exception {
         final Properties properties = new Properties();
@@ -81,9 +105,9 @@ public class ServerAlkisConf extends AlkisConf {
                 (String)as.executeTask(
                     user,
                     GetServerResourceServerAction.TASK_NAME,
-                    WundaBlauServerResources.ALKIS_CONF.getValue(),
+                    WundaBlauServerResources.ALKIS_REST_CONF.getValue(),
                     connectionContext)));
-        return new ServerAlkisConf(properties);
+        return new AlkisRestConf(properties);
     }
 
     //~ Inner Classes ----------------------------------------------------------
@@ -97,14 +121,14 @@ public class ServerAlkisConf extends AlkisConf {
 
         //~ Static fields/initializers -----------------------------------------
 
-        private static final ServerAlkisConf INSTANCE;
+        private static final AlkisRestConf INSTANCE;
 
         static {
             try {
-                INSTANCE = new ServerAlkisConf(ServerResourcesLoader.getInstance().loadProperties(
-                            WundaBlauServerResources.ALKIS_CONF.getValue()));
+                INSTANCE = new AlkisRestConf(ServerResourcesLoader.getInstance().loadProperties(
+                            WundaBlauServerResources.ALKIS_REST_CONF.getValue()));
             } catch (final Exception ex) {
-                throw new RuntimeException("Exception while initializing ServerAlkisConf", ex);
+                throw new RuntimeException("Exception while initializing ServerAlkisRestConf", ex);
             }
         }
 
@@ -114,6 +138,32 @@ public class ServerAlkisConf extends AlkisConf {
          * Creates a new LazyInitialiser object.
          */
         private LazyInitialiser() {
+        }
+    }
+
+    /**
+     * DOCUMENT ME!
+     *
+     * @version  $Revision$, $Date$
+     */
+    @Getter
+    public class Crendetials {
+
+        //~ Instance fields ----------------------------------------------------
+
+        private final String user;
+        private final String password;
+
+        //~ Constructors -------------------------------------------------------
+
+        /**
+         * Creates a new AlkisConf object.
+         *
+         * @param  properties  DOCUMENT ME!
+         */
+        public Crendetials(final Properties properties) {
+            user = properties.getProperty("USER");
+            password = properties.getProperty("PASSWORD");
         }
     }
 }
