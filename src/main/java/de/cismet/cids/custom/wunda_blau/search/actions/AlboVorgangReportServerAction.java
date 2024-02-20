@@ -20,14 +20,18 @@ import net.sf.jasperreports.engine.data.JRBeanCollectionDataSource;
 
 import java.io.ByteArrayInputStream;
 
+import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.HashMap;
+import java.util.List;
 import java.util.Map;
 
 import javax.imageio.ImageIO;
 
 import de.cismet.cids.custom.utils.StampedJasperReportServerAction;
 import de.cismet.cids.custom.utils.WundaBlauServerResources;
+
+import de.cismet.cids.dynamics.CidsBean;
 
 import de.cismet.cids.server.actions.ServerAction;
 import de.cismet.cids.server.actions.ServerActionParameter;
@@ -94,12 +98,24 @@ public class AlboVorgangReportServerAction extends StampedJasperReportServerActi
                 }
             }
 
-            final JRBeanCollectionDataSource dataSource = new JRBeanCollectionDataSource(Arrays.asList(
-                        getMetaService().getMetaObject(
-                            getUser(),
-                            vorgangMon.getObjectId(),
-                            vorgangMon.getClassId(),
-                            getConnectionContext()).getBean()));
+            // load the vorgang bean and remove all deleted flaechen
+            final CidsBean bean = getMetaService().getMetaObject(
+                        getUser(),
+                        vorgangMon.getObjectId(),
+                        vorgangMon.getClassId(),
+                        getConnectionContext())
+                        .getBean();
+            final List<CidsBean> flBeans = bean.getBeanCollectionProperty("arr_flaechen");
+
+            for (final CidsBean tmpBean : new ArrayList<>(flBeans)) {
+                final Boolean loeschen = (Boolean)tmpBean.getProperty("loeschen");
+
+                if ((loeschen != null) && loeschen) {
+                    flBeans.remove(tmpBean);
+                }
+            }
+
+            final JRBeanCollectionDataSource dataSource = new JRBeanCollectionDataSource(Arrays.asList(bean));
 
             return generateReport(parameters, dataSource);
         } catch (final Exception ex) {
