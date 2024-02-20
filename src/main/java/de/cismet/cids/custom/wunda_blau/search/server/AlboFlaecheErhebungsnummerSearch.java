@@ -33,12 +33,15 @@ public class AlboFlaecheErhebungsnummerSearch extends AbstractCidsServerSearch i
 
     private static final Logger LOG = Logger.getLogger(AlboFlaecheErhebungsnummerSearch.class);
     private static final String ERH_NR_QUERY = "SELECT cs_albo_create_erhebungsnummer(%1$s::geometry, %2$s, %3$s)";
+    private static final String ERH_NR_QUERY_WITH_ID =
+        "SELECT cs_albo_create_erhebungsnummer(%1$s::geometry, %2$s, %3$s, %4$s)";
 
     //~ Instance fields --------------------------------------------------------
 
     private final String geometryAsText;
     private final String flaechentyp;
     private final String prop;
+    private int id = -1;
 
     private ConnectionContext connectionContext = ConnectionContext.createDummy();
 
@@ -57,6 +60,24 @@ public class AlboFlaecheErhebungsnummerSearch extends AbstractCidsServerSearch i
         this.prop = prop;
     }
 
+    /**
+     * Creates a new Alb_BaulastChecker object.
+     *
+     * @param  geometryAsText  blattnummer DOCUMENT ME!
+     * @param  flaechentyp     landesregistriernummer DOCUMENT ME!
+     * @param  prop            DOCUMENT ME!
+     * @param  id              DOCUMENT ME!
+     */
+    public AlboFlaecheErhebungsnummerSearch(final String geometryAsText,
+            final String flaechentyp,
+            final String prop,
+            final int id) {
+        this.geometryAsText = geometryAsText;
+        this.flaechentyp = flaechentyp;
+        this.prop = prop;
+        this.id = id;
+    }
+
     //~ Methods ----------------------------------------------------------------
 
     @Override
@@ -68,17 +89,33 @@ public class AlboFlaecheErhebungsnummerSearch extends AbstractCidsServerSearch i
     public Collection performServerSearch() {
         final MetaService ms = (MetaService)getActiveLocalServers().get("WUNDA_BLAU");
         if (ms != null) {
-            try {
-                final ArrayList<ArrayList> erhNr = ms.performCustomSearch(String.format(
-                            ERH_NR_QUERY,
-                            ((geometryAsText == null) ? "null" : ("'" + geometryAsText + "'")),
-                            ((flaechentyp == null) ? "null" : ("'" + flaechentyp + "'")),
-                            ((prop == null) ? "null" : ("'" + prop + "'"))),
-                        getConnectionContext());
+            if (id < 0) {
+                try {
+                    final ArrayList<ArrayList> erhNr = ms.performCustomSearch(String.format(
+                                ERH_NR_QUERY,
+                                ((geometryAsText == null) ? "null" : ("'" + geometryAsText + "'")),
+                                ((flaechentyp == null) ? "null" : ("'" + flaechentyp + "'")),
+                                ((prop == null) ? "null" : ("'" + prop + "'"))),
+                            getConnectionContext());
 
-                return erhNr;
-            } catch (RemoteException ex) {
-                LOG.error("Error while creating erhebungsnummer", ex);
+                    return erhNr;
+                } catch (RemoteException ex) {
+                    LOG.error("Error while creating erhebungsnummer", ex);
+                }
+            } else {
+                try {
+                    final ArrayList<ArrayList> erhNr = ms.performCustomSearch(String.format(
+                                ERH_NR_QUERY_WITH_ID,
+                                ((geometryAsText == null) ? "null" : ("'" + geometryAsText + "'")),
+                                ((flaechentyp == null) ? "null" : ("'" + flaechentyp + "'")),
+                                ((prop == null) ? "null" : ("'" + prop + "'")),
+                                id),
+                            getConnectionContext());
+
+                    return erhNr;
+                } catch (RemoteException ex) {
+                    LOG.error("Error while creating erhebungsnummer", ex);
+                }
             }
         }
 
