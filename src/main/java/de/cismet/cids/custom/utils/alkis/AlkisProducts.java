@@ -19,7 +19,6 @@ import de.aedsicad.aaaweb.rest.model.LandParcel;
 import de.aedsicad.aaaweb.rest.model.Namensnummer;
 import de.aedsicad.aaaweb.rest.model.Owner;
 
-import org.apache.commons.lang.ArrayUtils;
 import org.apache.commons.lang.StringUtils;
 
 import org.jdom.Attribute;
@@ -41,7 +40,6 @@ import java.util.Comparator;
 import java.util.Date;
 import java.util.HashMap;
 import java.util.HashSet;
-import java.util.Iterator;
 import java.util.LinkedList;
 import java.util.List;
 import java.util.Map;
@@ -621,63 +619,6 @@ public abstract class AlkisProducts {
     /**
      * DOCUMENT ME!
      *
-     * @param   originatingFlurstueck  DOCUMENT ME!
-     * @param   buchungsblatt          DOCUMENT ME!
-     * @param   buchungsblattBean      DOCUMENT ME!
-     *
-     * @return  DOCUMENT ME!
-     */
-    public static String buchungsblattToString(final CidsBean originatingFlurstueck,
-            final Buchungsblatt buchungsblatt,
-            final CidsBean buchungsblattBean) {
-        final String alkisId = (String)originatingFlurstueck.getProperty("alkis_id");
-
-        String pos = "";
-        final List<Buchungsstelle> buchungsstellen = buchungsblatt.getBuchungsstellen();
-        for (final Buchungsstelle b : buchungsstellen) {
-            for (final LandParcel lp : getLandparcelFromBuchungsstelle(b)) {
-                if (lp.getLandParcelCode().equals(alkisId)) {
-                    pos = b.getSequentialNumber();
-                }
-            }
-        }
-
-        final List<Owner> owners = buchungsblatt.getOwners();
-        if ((owners != null) && (owners.size() > 0)) {
-            final StringBuilder infoBuilder = new StringBuilder();
-            infoBuilder.append(
-                "<table border=\"1px solid black\" cellspacing=\"0\" cellpadding=\"0\" border=\"0\" align=\"left\" valign=\"top\">");
-//            infoBuilder.append("<tr><td width=\"200\"><b><a href=\"").append(generateBuchungsblattLinkInfo(buchungsblatt)).append("\">").append(buchungsblatt.getBuchungsblattCode()).append("</a></b></td><td>");
-            infoBuilder.append("<tr><td width=\"200\">Nr. ")
-                    .append(pos)
-                    .append(" auf  <b>")
-                    .append(generateLinkFromCidsBean(buchungsblattBean, buchungsblatt.getBuchungsblattCode()))
-                    .append("</b></td><td>");
-            final Iterator<Owner> ownerIterator = owners.iterator();
-//            if (ownerIterator.hasNext()) {
-//                infoBuilder.append(ownerToString(ownerIterator.next(), ""));
-//            }
-            infoBuilder.append(
-                "<table cellspacing=\"0\" cellpadding=\"0\" border=\"0\" align=\"left\" valign=\"top\">");
-            while (ownerIterator.hasNext()) {
-                infoBuilder.append(ownerToString(ownerIterator.next(), ""));
-//                infoBuilder.append(ownerToString(ownerIterator.next(), "</td><td>"));
-            }
-            infoBuilder.append("</table>");
-            infoBuilder.append("</td></tr>");
-            infoBuilder.append("</table>");
-//            infoBuilder.append("</html>");
-            return infoBuilder.toString();
-//            lblBuchungsblattEigentuemer.setText(infoBuilder.toString());
-        } else {
-            return "";
-//            lblBuchungsblattEigentuemer.setText("-");
-        }
-    }
-
-    /**
-     * DOCUMENT ME!
-     *
      * @param   address  DOCUMENT ME!
      *
      * @return  DOCUMENT ME!
@@ -816,45 +757,6 @@ public abstract class AlkisProducts {
     /**
      * DOCUMENT ME!
      *
-     * @param   land       DOCUMENT ME!
-     * @param   gemarkung  DOCUMENT ME!
-     * @param   flur       DOCUMENT ME!
-     * @param   zaehler    DOCUMENT ME!
-     * @param   nenner     DOCUMENT ME!
-     *
-     * @return  DOCUMENT ME!
-     */
-    public static String generateLandparcelCode(final int land,
-            final int gemarkung,
-            final int flur,
-            final int zaehler,
-            final int nenner) {
-        final String withoutNenner = generateLandparcelCode(land, gemarkung, flur, zaehler);
-        final StringBuilder sb = new StringBuilder(withoutNenner);
-        sb.append(String.format("/%04d", nenner));
-        return sb.toString();
-    }
-
-    /**
-     * DOCUMENT ME!
-     *
-     * @param   land       DOCUMENT ME!
-     * @param   gemarkung  DOCUMENT ME!
-     * @param   flur       DOCUMENT ME!
-     * @param   zaehler    DOCUMENT ME!
-     *
-     * @return  DOCUMENT ME!
-     */
-    public static String generateLandparcelCode(final int land,
-            final int gemarkung,
-            final int flur,
-            final int zaehler) {
-        return String.format("%02d%04d-%03d-%05d", land, gemarkung, flur, zaehler);
-    }
-
-    /**
-     * DOCUMENT ME!
-     *
      * @param   fullLandparcelCode  DOCUMENT ME!
      *
      * @return  DOCUMENT ME!
@@ -899,72 +801,6 @@ public abstract class AlkisProducts {
     }
 
     /**
-     * DOCUMENT ME!
-     *
-     * @param   owner    DOCUMENT ME!
-     * @param   spacing  Einrückung
-     *
-     * @return  DOCUMENT ME!
-     */
-    public static String ownerToString(final Owner owner, final String spacing) {
-        if (owner != null) {
-            final StringBuilder ownerStringBuilder = new StringBuilder();
-            ownerStringBuilder.append("<tr><td width=\"50\">").append(spacing);
-            if (owner.getNameNumber() != null) {
-                ownerStringBuilder.append(normalizeNameNumber(owner.getNameNumber()));
-            }
-            ownerStringBuilder.append("</td><td>");
-            if (owner.getForeName() != null) {
-                ownerStringBuilder.append(owner.getForeName()).append(" ");
-            }
-            if (owner.getSurName() != null) {
-                ownerStringBuilder.append(owner.getSurName());
-            }
-            if (owner.getSalutation() != null) {
-                ownerStringBuilder.append(", ").append(owner.getSalutation());
-            }
-            if (owner.getDateOfBirth() != null) {
-                ownerStringBuilder.append(", *").append(owner.getDateOfBirth());
-            }
-            ownerStringBuilder.append("</td><td width=\"15\"></td><td>");
-            if (owner.getPart() != null) {
-                ownerStringBuilder.append("<nobr>").append("zu ").append(owner.getPart()).append("</nobr>");
-            }
-            ownerStringBuilder.append("</td>");
-
-            if (owner.getNameOfBirth() != null) {
-                ownerStringBuilder.append("<tr><td></td><td>")
-                        .append("geb. ")
-                        .append(owner.getNameOfBirth())
-                        .append("</td><td></tr>");
-            }
-            ownerStringBuilder.append(NEWLINE).append("</td></tr>");
-            final List<Address> addresses = owner.getAddresses();
-            if (addresses != null) {
-                for (final Address address : addresses) {
-                    if ((address != null) && (address.getHerkunftAdress() != null)
-                                && address.getHerkunftAdress().equals(ADRESS_HERKUNFT_KATASTERAMT)) {
-                        ownerStringBuilder.append("<tr><td></td>").append(spacing).append("<td>");
-                        ownerStringBuilder.append(addressToString(address)).append(NEWLINE);
-                        ownerStringBuilder.append("</td><td></td><td></td></tr>");
-                    }
-                }
-                for (final Address address : addresses) {
-                    if ((address != null)
-                                && ((address.getHerkunftAdress() == null)
-                                    || (!address.getHerkunftAdress().equals(ADRESS_HERKUNFT_KATASTERAMT)))) {
-                        ownerStringBuilder.append("<tr><td></td>").append(spacing).append("<td>");
-                        ownerStringBuilder.append(addressToString(address)).append(NEWLINE);
-                        ownerStringBuilder.append("</td><td></td><td></td></tr>");
-                    }
-                }
-            }
-            return ownerStringBuilder.toString();
-        }
-        return "";
-    }
-
-    /**
      * ----------------private.
      *
      * @param   in  DOCUMENT ME!
@@ -998,21 +834,7 @@ public abstract class AlkisProducts {
             return "0";
         }
     }
-
-    /**
-     * DOCUMENT ME!
-     *
-     * @param   buchungsblatt  DOCUMENT ME!
-     *
-     * @return  DOCUMENT ME!
-     */
-    private static String generateBuchungsblattLinkInfo(final Buchungsblatt buchungsblatt) {
-        // TODO: Should return metaclassID::objectID instead of metaclassID::BuchungsblattCode...
-        return new StringBuilder("ALKIS_BUCHUNGSBLATT").append(LINK_SEPARATOR_TOKEN)
-                    .append(buchungsblatt.getBuchungsblattCode())
-                    .toString();
-    }
-
+    
     /**
      * DOCUMENT ME!
      *
@@ -1366,24 +1188,6 @@ public abstract class AlkisProducts {
         sb.append("</td>");
 
         return sb.toString();
-    }
-
-    /**
-     * DOCUMENT ME!
-     *
-     * @param   a  DOCUMENT ME!
-     * @param   b  DOCUMENT ME!
-     *
-     * @return  DOCUMENT ME!
-     */
-    public static LandParcel[] concatArrays(LandParcel[] a, LandParcel[] b) {
-        if (a == null) {
-            a = new LandParcel[0];
-        }
-        if (b == null) {
-            b = new LandParcel[0];
-        }
-        return (LandParcel[])ArrayUtils.addAll(a, b);
     }
 
     /**
