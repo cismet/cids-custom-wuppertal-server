@@ -22,9 +22,9 @@ import Sirius.server.newuser.User;
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
 
-import de.aedsicad.aaaweb.service.util.Buchungsblatt;
-import de.aedsicad.aaaweb.service.util.Buchungsstelle;
-import de.aedsicad.aaaweb.service.util.LandParcel;
+import de.aedsicad.aaaweb.rest.model.Buchungsblatt;
+import de.aedsicad.aaaweb.rest.model.Buchungsstelle;
+import de.aedsicad.aaaweb.rest.model.LandParcel;
 
 import org.apache.commons.io.IOUtils;
 import org.apache.log4j.Logger;
@@ -59,9 +59,9 @@ import de.cismet.cids.custom.utils.berechtigungspruefung.baulastbescheinigung.Be
 import de.cismet.cids.custom.utils.berechtigungspruefung.baulastbescheinigung.BerechtigungspruefungBescheinigungFlurstueckInfo;
 import de.cismet.cids.custom.utils.berechtigungspruefung.baulastbescheinigung.BerechtigungspruefungBescheinigungGruppeInfo;
 import de.cismet.cids.custom.utils.berechtigungspruefung.baulastbescheinigung.BerechtigungspruefungBescheinigungInfo;
+import de.cismet.cids.custom.wunda_blau.search.actions.AlkisRestAction;
 import de.cismet.cids.custom.wunda_blau.search.actions.BaulastBescheinigungReportServerAction;
 import de.cismet.cids.custom.wunda_blau.search.actions.BaulastenReportServerAction;
-import de.cismet.cids.custom.wunda_blau.search.actions.ServerAlkisSoapAction;
 import de.cismet.cids.custom.wunda_blau.search.server.BaulastSearchInfo;
 import de.cismet.cids.custom.wunda_blau.search.server.CidsBaulastSearchStatement;
 import de.cismet.cids.custom.wunda_blau.search.server.FlurstueckInfo;
@@ -609,7 +609,7 @@ public class BaulastBescheinigungHelper {
                     if (Thread.currentThread().isInterrupted()) {
                         throw new InterruptedException();
                     }
-                    final List<Buchungsstelle> buchungsstellen = Arrays.asList(buchungsblatt.getBuchungsstellen());
+                    final List<Buchungsstelle> buchungsstellen = buchungsblatt.getBuchungsstellen();
                     Collections.sort(buchungsstellen, new Comparator<Buchungsstelle>() {
 
                             @Override
@@ -628,7 +628,7 @@ public class BaulastBescheinigungHelper {
                             throw new InterruptedException();
                         }
                         boolean flurstueckPartOfStelle = false;
-                        final LandParcel[] landparcels = AlkisProducts.getLandparcelFromBuchungsstelle(
+                        final List<LandParcel> landparcels = AlkisProducts.getLandparcelFromBuchungsstelle(
                                 buchungsstelle);
                         if (landparcels != null) {
                             for (final LandParcel lp : landparcels) {
@@ -1027,11 +1027,11 @@ public class BaulastBescheinigungHelper {
         final String buchungsblattcode = String.valueOf(buchungsblattBean.getProperty("buchungsblattcode"));
         if ((buchungsblattcode != null) && (buchungsblattcode.length() > 5)) {
             final ServerActionParameter buchungsblattCodeSAP = new ServerActionParameter<>(
-                    ServerAlkisSoapAction.RETURN_VALUE.BUCHUNGSBLATT.toString(),
+                    AlkisRestAction.RETURN_VALUE.BUCHUNGSBLATT.toString(),
                     buchungsblattcode);
-            final Object body = ServerAlkisSoapAction.RETURN_VALUE.BUCHUNGSBLATT;
+            final Object body = AlkisRestAction.RETURN_VALUE.BUCHUNGSBLATT;
 
-            return (Buchungsblatt)new ServerAlkisSoapAction().execute(body, buchungsblattCodeSAP);
+            return (Buchungsblatt)new AlkisRestAction().execute(body, buchungsblattCodeSAP);
         }
         return null;
     }

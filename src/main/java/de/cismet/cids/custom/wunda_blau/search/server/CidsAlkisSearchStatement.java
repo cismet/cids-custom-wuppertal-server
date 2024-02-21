@@ -15,7 +15,7 @@ import com.vividsolutions.jts.geom.Geometry;
 import com.vividsolutions.jts.geom.MultiPolygon;
 import com.vividsolutions.jts.geom.Polygon;
 
-import de.aedsicad.aaaweb.service.alkis.search.ALKISSearchServices;
+import de.aedsicad.aaaweb.rest.api.AlkisSucheApi;
 
 import org.apache.commons.lang.StringEscapeUtils;
 import org.apache.log4j.Logger;
@@ -24,8 +24,8 @@ import java.util.ArrayList;
 import java.util.Collection;
 import java.util.List;
 
-import de.cismet.cids.custom.utils.alkis.SOAPAccessProvider;
-import de.cismet.cids.custom.utils.alkis.ServerAlkisConf;
+import de.cismet.cids.custom.utils.alkis.AlkisAccessProvider;
+import de.cismet.cids.custom.utils.alkis.AlkisRestConf;
 
 import de.cismet.cids.server.search.AbstractCidsServerSearch;
 import de.cismet.cids.server.search.MetaObjectNodeServerSearch;
@@ -191,11 +191,11 @@ public class CidsAlkisSearchStatement extends AbstractCidsServerSearch implement
     public Collection<MetaObjectNode> performServerSearch() {
         try {
             final List<MetaObjectNode> result = new ArrayList<>();
-            final SOAPAccessProvider accessProvider = new SOAPAccessProvider(ServerAlkisConf.loadFromDomainServer(
+            final AlkisAccessProvider accessProvider = new AlkisAccessProvider(AlkisRestConf.loadFromDomainServer(
                         getUser(),
                         (ActionService)getActiveLocalServers().get("WUNDA_BLAU"),
                         getConnectionContext()));
-            final ALKISSearchServices searchService = accessProvider.getAlkisSearchService();
+            final AlkisSucheApi searchService = accessProvider.getAlkisSearchService();
 
             String query = null;
 
@@ -210,9 +210,9 @@ public class CidsAlkisSearchStatement extends AbstractCidsServerSearch implement
                         salutation = "3000"; // NOI18N
                     }
                     final String aToken = accessProvider.login();
-                    final String[] ownersIds = searchService.searchOwnersWithAttributes(
+                    final List<String> ownersIds = searchService.searchOwnersWithAttributes(
                             aToken,
-                            accessProvider.getService(),
+                            accessProvider.getAlkisRestConf().getConfiguration(),
                             salutation,
                             vorname,
                             name,
@@ -224,7 +224,7 @@ public class CidsAlkisSearchStatement extends AbstractCidsServerSearch implement
                     accessProvider.logout();
 
                     if (ownersIds != null) {
-                        final StringBuilder whereClauseBuilder = new StringBuilder(ownersIds.length * 20);
+                        final StringBuilder whereClauseBuilder = new StringBuilder(ownersIds.size() * 20);
                         for (final String oid : ownersIds) {
                             if (whereClauseBuilder.length() > 0) {
                                 whereClauseBuilder.append(',');

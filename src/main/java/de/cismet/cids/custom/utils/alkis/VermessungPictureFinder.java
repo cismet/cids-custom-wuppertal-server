@@ -88,7 +88,7 @@ public class VermessungPictureFinder implements ConnectionContextProvider {
     //~ Instance fields --------------------------------------------------------
 
     @Getter private final ExtendedAccessHandler accessHandler;
-    @Getter private final AlkisConf alkisConf;
+    @Getter private final ServerAlkisConf alkisConf;
     @Getter private final User user;
     @Getter private final MetaService metaService;
     private final ConnectionContext connectionContext;
