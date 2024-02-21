@@ -35,8 +35,6 @@ import net.sf.jasperreports.engine.JasperPrint;
 import net.sf.jasperreports.engine.JasperReport;
 import net.sf.jasperreports.engine.data.JRBeanCollectionDataSource;
 
-import okhttp3.HttpUrl;
-
 import org.apache.commons.codec.digest.DigestUtils;
 import org.apache.commons.httpclient.UsernamePasswordCredentials;
 import org.apache.commons.io.FilenameUtils;
@@ -59,6 +57,7 @@ import java.io.OutputStream;
 import java.io.StringReader;
 import java.io.UnsupportedEncodingException;
 
+import java.net.URI;
 import java.net.URL;
 import java.net.URLDecoder;
 
@@ -1467,6 +1466,33 @@ public class FormSolutionsBestellungHandler implements ConnectionContextProvider
     /**
      * DOCUMENT ME!
      *
+     * @param   url            DOCUMENT ME!
+     * @param   parameterName  DOCUMENT ME!
+     *
+     * @return  DOCUMENT ME!
+     *
+     * @throws  Exception  DOCUMENT ME!
+     */
+    private static String getQueryParameterValue(final String url, final String parameterName) throws Exception {
+        final URI uri = new URI(url);
+        final String query = uri.getQuery();
+        final String[] pairs = query.split("&");
+        for (final String pair : pairs) {
+            final int idx = pair.indexOf("=");
+            if (idx == -1) {
+                continue;
+            }
+            final String key = pair.substring(0, idx);
+            if (key.equals(parameterName)) {
+                return pair.substring(idx + 1);
+            }
+        }
+        return null; // Parameter not found
+    }
+
+    /**
+     * DOCUMENT ME!
+     *
      * @param   table_name         DOCUMENT ME!
      * @param   connectionContext  DOCUMENT ME!
      *
@@ -1664,7 +1690,9 @@ public class FormSolutionsBestellungHandler implements ConnectionContextProvider
         if (ProductType.BAB_ABSCHLUSS.equals(productType) || ProductType.LB_ABSCHLUSS.equals(productType)) {
             final String fileUrl = (formSolutionsBestellung.getFileUrl() != null)
                 ? URLDecoder.decode(formSolutionsBestellung.getFileUrl(), "UTF-8") : null;
-            final String cacheId = (fileUrl != null) ? HttpUrl.parse(fileUrl).queryParameter("cacheID") : null;
+            /*import okhttp3.HttpUrl;*/
+            // final String cacheId = (fileUrl != null) ? HttpUrl.parse(fileUrl).queryParameter("cacheID") : null;
+            final String cacheId = (fileUrl != null) ? getQueryParameterValue(fileUrl, "cacheID") : null;
             if (cacheId != null) {
                 nachfolgerVonBean = searchBestellungByCacheId(cacheId);
             } else {

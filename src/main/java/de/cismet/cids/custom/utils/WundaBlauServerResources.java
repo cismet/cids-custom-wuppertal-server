@@ -82,6 +82,7 @@ public enum WundaBlauServerResources {
     BYTEARRAYFACTORY_PROPERTIES(new TextServerResource("/byteArrayFactory.properties")),
     URLCONFIG_PROPERTIES(new TextServerResource("/urlconfig.properties")),
     ALKIS_CONF(new TextServerResource("/alkis/alkis_conf.properties")),
+    ALKIS_REST_CONF(new TextServerResource("/alkis/alkis_rest_conf.properties")),
     ALKIS_PRODUCTS_PROPERTIES(new TextServerResource("/alkis/alkis_products.properties")),
     ALKIS_FORMATS_PROPERTIES(new TextServerResource("/alkis/formats.properties")),
     BERECHTIGUNGSPRUEFUNG_PROPERTIES(new TextServerResource("/berechtigungspruefung/berechtigungspruefung.properties")),

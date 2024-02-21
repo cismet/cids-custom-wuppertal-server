@@ -28,7 +28,7 @@ import java.util.Date;
 import de.cismet.cids.custom.utils.ServerStamperUtils;
 import de.cismet.cids.custom.utils.StamperUtils;
 import de.cismet.cids.custom.utils.alkis.AlkisProducts;
-import de.cismet.cids.custom.utils.alkis.ServerAlkisConf;
+import de.cismet.cids.custom.utils.alkis.AlkisRestConf;
 import de.cismet.cids.custom.utils.alkis.ServerAlkisProducts;
 
 import de.cismet.cids.server.actions.ServerAction;
@@ -236,8 +236,8 @@ public class AlkisProductServerAction implements ConnectionContextStore, UserAwa
      * @return  DOCUMENT ME!
      */
     private String mask(final String mask) {
-        return mask.replaceAll(ServerAlkisConf.getInstance().getCreds().getUser(), MASK_REPLACEMENT)
-                    .replaceAll(ServerAlkisConf.getInstance().getCreds().getPassword(), MASK_REPLACEMENT);
+        return mask.replaceAll(AlkisRestConf.getInstance().getCreds().getUser(), MASK_REPLACEMENT)
+                    .replaceAll(AlkisRestConf.getInstance().getCreds().getPassword(), MASK_REPLACEMENT);
     }
 
     /**
