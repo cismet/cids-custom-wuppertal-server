@@ -16,10 +16,10 @@ import de.aedsicad.aaaweb.rest.api.AlkisSucheApi;
 import de.aedsicad.aaaweb.rest.api.TokenApi;
 import de.aedsicad.aaaweb.rest.client.ApiClient;
 import de.aedsicad.aaaweb.rest.model.TokenInfo;
-import java.util.Date;
 
 import lombok.Getter;
 
+import java.util.Date;
 import java.util.concurrent.TimeUnit;
 
 /**
@@ -80,6 +80,13 @@ public final class AlkisAccessProvider {
 
     //~ Methods ----------------------------------------------------------------
 
+    /**
+     * DOCUMENT ME!
+     *
+     * @param   token  DOCUMENT ME!
+     *
+     * @return  DOCUMENT ME!
+     */
     public boolean isTokenValid(final String token) {
         boolean valid = false;
         try {
@@ -87,9 +94,9 @@ public final class AlkisAccessProvider {
         } catch (final Exception ex) {
             LOG.info("could not check token info. probably invalid", ex);
         }
-        return valid;        
+        return valid;
     }
-    
+
     /**
      * DOCUMENT ME!
      *
@@ -97,21 +104,21 @@ public final class AlkisAccessProvider {
      */
     public String login() {
         try {
-            boolean valid =  token != null && isTokenValid(token.getToken());
+            final boolean valid = (token != null) && isTokenValid(token.getToken());
             if (!valid) {
                 final String user = alkisRestConf.getCreds().getUser();
                 final String pass = alkisRestConf.getCreds().getPassword();
-                final String extendSecret = "";  // TODO ???
+                final String extendSecret = ""; // TODO ???
 
                 this.token = getTokenService().createToken(user, pass, extendSecret).getToken();
             }
         } catch (final Exception ex) {
             LOG.fatal("login failed", ex);
             token = null;
-            //throw new Exception("login failed", ex);
+            // throw new Exception("login failed", ex);
             return null;
         }
-        return token.getToken();        
+        return token.getToken();
     }
 
     /**
