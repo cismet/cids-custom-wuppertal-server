@@ -16,6 +16,7 @@ import de.aedsicad.aaaweb.rest.api.AlkisSucheApi;
 import de.aedsicad.aaaweb.rest.api.TokenApi;
 import de.aedsicad.aaaweb.rest.client.ApiClient;
 import de.aedsicad.aaaweb.rest.model.TokenInfo;
+import java.util.Date;
 
 import lombok.Getter;
 
@@ -79,14 +80,24 @@ public final class AlkisAccessProvider {
 
     //~ Methods ----------------------------------------------------------------
 
+    public boolean isTokenValid(final String token) {
+        boolean valid = false;
+        try {
+            valid = tokenService.getToken(token) != null;
+        } catch (final Exception ex) {
+            LOG.info("could not check token info. probably invalid", ex);
+        }
+        return valid;        
+    }
+    
     /**
      * DOCUMENT ME!
      *
      * @return  the identityCard
      */
-    public String login() {
+    public String login() throws Exception {
         try {
-            final boolean valid = token != null; // && token.getExpirationTime() > now();
+            boolean valid =  token != null && isTokenValid(token.getToken());
             if (!valid) {
                 final String user = alkisRestConf.getCreds().getUser();
                 final String pass = alkisRestConf.getCreds().getPassword();
@@ -97,6 +108,7 @@ public final class AlkisAccessProvider {
         } catch (final Exception ex) {
             LOG.fatal("login failed", ex);
             token = null;
+            throw new Exception("login failed", ex);
         }
         return token.getToken();
     }
