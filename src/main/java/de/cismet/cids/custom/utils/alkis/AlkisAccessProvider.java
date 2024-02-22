@@ -95,7 +95,7 @@ public final class AlkisAccessProvider {
      *
      * @return  the identityCard
      */
-    public String login() throws Exception {
+    public String login() {
         try {
             boolean valid =  token != null && isTokenValid(token.getToken());
             if (!valid) {
@@ -108,9 +108,10 @@ public final class AlkisAccessProvider {
         } catch (final Exception ex) {
             LOG.fatal("login failed", ex);
             token = null;
-            throw new Exception("login failed", ex);
+            //throw new Exception("login failed", ex);
+            return null;
         }
-        return token.getToken();
+        return token.getToken();        
     }
 
     /**
