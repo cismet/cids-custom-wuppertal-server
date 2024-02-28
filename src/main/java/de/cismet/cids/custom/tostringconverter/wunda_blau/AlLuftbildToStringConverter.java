@@ -30,9 +30,6 @@ public class AlLuftbildToStringConverter extends CustomToStringConverter {
 
     @Override
     public String createString() {
-        String name = String.valueOf(cidsBean.getProperty(FIELD__NAME));
-        return String.format(
-                "%s",
-                (name.split("/"))[2]);
+        return String.valueOf(cidsBean.getProperty(FIELD__NAME));    
     }
 }
