@@ -30,8 +30,7 @@ public class alLuftbildDeletionProvider extends AbstractCustomDeletionProvider {
 
     private static final Logger LOG = Logger.getLogger(alLuftbildDeletionProvider.class);
     public static final String TABLE_NAME = "al_luftbild";
-    private static final String DELETE_TEXT =
-        "Die Luftbilder können nicht gelöscht werden.";
+    private static final String DELETE_TEXT = "Die Luftbilder können nicht gelöscht werden.";
 
     //~ Methods ----------------------------------------------------------------
 
