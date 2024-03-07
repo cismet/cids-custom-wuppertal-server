@@ -12,9 +12,11 @@
  */
 package de.cismet.cids.custom.tostringconverter.wunda_blau;
 
-import de.cismet.cids.tools.CustomToStringConverter;
 import java.text.SimpleDateFormat;
+
 import java.util.Date;
+
+import de.cismet.cids.tools.CustomToStringConverter;
 
 /**
  * DOCUMENT ME!
@@ -26,21 +28,21 @@ public class AlLuftbildToStringConverter extends CustomToStringConverter {
 
     //~ Static fields/initializers ---------------------------------------------
 
-    public static final String FIELD__NAME = "dateiname"; 
-    public static final String FIELD__DATUM = "datum"; 
-    public static final String FIELD__FLUG = "flugnummer";                 
+    public static final String FIELD__NAME = "dateiname";
+    public static final String FIELD__DATUM = "datum";
+    public static final String FIELD__FLUG = "flugnummer";
 
     //~ Methods ----------------------------------------------------------------
 
     @Override
     public String createString() {
-        //Date datum = (Date)(cidsBean.getProperty(FIELD__DATUM));
-        String datum = String.valueOf(cidsBean.getProperty(FIELD__DATUM));
-        String flug = String.valueOf(cidsBean.getProperty(FIELD__FLUG));
-        String name = String.valueOf(cidsBean.getProperty(FIELD__NAME));
+        // Date datum = (Date)(cidsBean.getProperty(FIELD__DATUM));
+        final String datum = String.valueOf(cidsBean.getProperty(FIELD__DATUM));
+        final String flug = String.valueOf(cidsBean.getProperty(FIELD__FLUG));
+        final String name = String.valueOf(cidsBean.getProperty(FIELD__NAME));
         return String.format(
                 "%s -- %s -- %s",
-                datum,//new SimpleDateFormat("dd.MM.yyyy").format(datum),
+                datum, // new SimpleDateFormat("dd.MM.yyyy").format(datum),
                 flug,
                 name);
     }
