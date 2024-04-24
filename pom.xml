@@ -365,13 +365,6 @@
                 </exclusion>
             </exclusions>
         </dependency>
-        <dependency>
-          <groupId>de.cismet</groupId>
-          <artifactId>jfonts</artifactId>
-          <version>1.6.0</version>
-          <scope>system</scope>
-          <systemPath>/home/therter/ApplicationData/WuppDist/server/linux/SB__wunda_live/jasperfonts.jar</systemPath>
-        </dependency>
         <!-- BEGIN: Test dependencies -->
 
         <!-- END: Test dependencies -->
