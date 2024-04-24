@@ -122,6 +122,7 @@ import de.cismet.commons.security.handler.SimpleHttpAccessHandler;
 
 import de.cismet.connectioncontext.ConnectionContext;
 import de.cismet.connectioncontext.ConnectionContextProvider;
+import java.sql.SQLException;
 
 /**
  * DOCUMENT ME!
@@ -152,7 +153,7 @@ public class FormSolutionsBestellungHandler implements ConnectionContextProvider
     private static final Logger LOG = Logger.getLogger(FormSolutionsBestellungHandler.class);
 
     private static final String TEST_CISMET00_PREFIX = "TEST_CISMET00-";
-    private static final String GUTSCHEIN_ADDITIONAL_TEXT = "TESTAUSZUG - nur zur Demonstration (%s)";
+    private static final String GUTSCHEIN_ADDITIONAL_TEXT = "Bestellcode (%s)";
     private static final ObjectMapper MAPPER = new ObjectMapper();
     private static final Map<String, MetaClass> METACLASS_CACHE = new HashMap();
     private static final String EXTERNAL_USER_QUERY_TEMPLATE = ""
@@ -2259,10 +2260,6 @@ public class FormSolutionsBestellungHandler implements ConnectionContextProvider
     public boolean isServerInProduction() {
         return ServerProperties.DEPLOY_ENV__PRODUCTION.equalsIgnoreCase(DomainServerImpl.getServerProperties()
                         .getDeployEnv());
-//        final boolean inProduction;
-//        inProduction = false;
-//
-//        return inProduction;
     }
 
     /**
@@ -2289,19 +2286,18 @@ public class FormSolutionsBestellungHandler implements ConnectionContextProvider
                     if (buchungsblatt == null) {
                         throw new Exception("ALKIS Buchungsblatt wurde nicht gefunden (" + buchungsblattcode + ")");
                     }
-                    if ((buchungsblatt != null) && (buchungsblatt != null)) {
-                        final Object colObj = buchungsblatt.getProperty("landparcels");
-                        if (colObj instanceof Collection) {
-                            final List<CidsBean> landparcelList = (List<CidsBean>)colObj;
+                    
+                    final Object colObj = buchungsblatt.getProperty("landparcels");
+                    if (colObj instanceof Collection) {
+                        final List<CidsBean> landparcelList = (List<CidsBean>)colObj;
 
-                            for (final CidsBean landparcel : landparcelList) {
-                                final Geometry flurgeom = (Geometry)landparcel.getProperty("geometrie.geo_field");
+                        for (final CidsBean landparcel : landparcelList) {
+                            final Geometry flurgeom = (Geometry)landparcel.getProperty("geometrie.geo_field");
 
-                                if (geom == null) {
-                                    geom = flurgeom;
-                                } else {
-                                    geom = flurgeom.union(geom);
-                                }
+                            if (geom == null) {
+                                geom = flurgeom;
+                            } else {
+                                geom = flurgeom.union(geom);
                             }
                         }
                     }
@@ -2467,19 +2463,14 @@ public class FormSolutionsBestellungHandler implements ConnectionContextProvider
      *
      * @return  DOCUMENT ME!
      */
-    private Map<String, Exception> step1CreateMySqlEntries(final Collection<String> transids) {
+    private Map<String, Exception> step1CreateMySqlEntries(final Collection<String> transids) throws SQLException {
         final Map<String, Exception> insertExceptionMap = new HashMap<>(transids.size());
 
         for (final String transid : transids) {
-            try {
-                specialLog("updating or inserting mySQL entry for: " + transid);
-                getMySqlHelper().insertOrUpdateStatus(transid, STATUS_CREATE);
+            specialLog("updating or inserting mySQL entry for: " + transid);
+            getMySqlHelper().insertOrUpdateStatus(transid, STATUS_CREATE);
 
-                doStatusChangedRequest(transid, false);
-            } catch (final Exception ex) {
-                LOG.error("Fehler beim Erzeugen/Aktualisieren des MySQL-Datensatzes.", ex);
-                insertExceptionMap.put(transid, ex);
-            }
+            doStatusChangedRequest(transid, false);
         }
 
         return insertExceptionMap;
