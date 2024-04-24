@@ -152,7 +152,7 @@ public class FormSolutionsBestellungHandler implements ConnectionContextProvider
     private static final Logger LOG = Logger.getLogger(FormSolutionsBestellungHandler.class);
 
     private static final String TEST_CISMET00_PREFIX = "TEST_CISMET00-";
-    private static final String GUTSCHEIN_ADDITIONAL_TEXT = "TESTAUSZUG - nur zur Demonstration (%s)";
+    private static final String GUTSCHEIN_ADDITIONAL_TEXT = "Bestellcode (%s)";
     private static final ObjectMapper MAPPER = new ObjectMapper();
     private static final Map<String, MetaClass> METACLASS_CACHE = new HashMap();
     private static final String EXTERNAL_USER_QUERY_TEMPLATE = ""

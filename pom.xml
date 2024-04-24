@@ -61,7 +61,7 @@
             <dependency>
                 <groupId>de.cismet.commons</groupId>
                 <artifactId>cismet-commons</artifactId>
-                <version>8.0</version>
+                <version>8.0.1</version>
                 <type>jar</type>
                 <scope>compile</scope>
             </dependency>
@@ -69,7 +69,7 @@
             <dependency>
                 <groupId>de.cismet.cids</groupId>
                 <artifactId>cids-server</artifactId>
-                <version>8.4.4</version>
+                <version>8.6</version>
                 <type>jar</type>
             </dependency>
 
@@ -364,6 +364,13 @@
                     <artifactId>okio</artifactId>
                 </exclusion>
             </exclusions>
+        </dependency>
+        <dependency>
+          <groupId>de.cismet</groupId>
+          <artifactId>jfonts</artifactId>
+          <version>1.6.0</version>
+          <scope>system</scope>
+          <systemPath>/home/therter/ApplicationData/WuppDist/server/linux/SB__wunda_live/jasperfonts.jar</systemPath>
         </dependency>
         <!-- BEGIN: Test dependencies -->
 
