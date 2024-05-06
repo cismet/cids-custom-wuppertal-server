@@ -68,6 +68,7 @@ import java.nio.charset.Charset;
 import java.rmi.Naming;
 import java.rmi.RemoteException;
 
+import java.sql.SQLException;
 import java.sql.Timestamp;
 
 import java.text.SimpleDateFormat;
@@ -122,7 +123,6 @@ import de.cismet.commons.security.handler.SimpleHttpAccessHandler;
 
 import de.cismet.connectioncontext.ConnectionContext;
 import de.cismet.connectioncontext.ConnectionContextProvider;
-import java.sql.SQLException;
 
 /**
  * DOCUMENT ME!
@@ -503,68 +503,71 @@ public class FormSolutionsBestellungHandler implements ConnectionContextProvider
      *
      * @throws  IllegalStateException  DOCUMENT ME!
      */
-    public synchronized Collection execute(final int startStep,
+    public Collection execute(final int startStep,
             final boolean repairErrors,
             final boolean test,
             final Collection<MetaObjectNode> mons) {
-        if ((mons != null) && (startStep >= FormSolutionsBestellungHandler.STATUS_SAVE)) {
-            throw new IllegalStateException("fetch not allowed with metaobjectnodes");
-        }
+        synchronized (FormSolutionsBestellungHandler.class) {
+            if ((mons != null) && (startStep >= FormSolutionsBestellungHandler.STATUS_SAVE)) {
+                throw new IllegalStateException("fetch not allowed with metaobjectnodes");
+            }
 
-        Map<String, CidsBean> fsBeanMap = null;
-        if (mons != null) {
-            fsBeanMap = loadCidsEntries(mons);
-        }
+            Map<String, CidsBean> fsBeanMap = null;
+            if (mons != null) {
+                fsBeanMap = loadCidsEntries(mons);
+            }
 
-        Map<String, FormSolutionsBestellung> fsBestellungMap = null;
-        Map<String, BerechtigungspruefungDownloadInfo> downloadInfoMap = null;
+            Map<String, FormSolutionsBestellung> fsBestellungMap = null;
+            Map<String, BerechtigungspruefungDownloadInfo> downloadInfoMap = null;
 
-        switch (startStep) {
-            case STATUS_FETCH:
-            case STATUS_PARSE:
-            case STATUS_SAVE: {
-                if (mons == null) {
-                    try {
-                        if (startStep >= STATUS_CLOSE) {
-                            final Map<String, ProductType> typeMap = test ? step0GetTransIdsFromTest()
-                                                                          : step0FetchTransIds();
-                            final Map<String, Exception> insertExceptionMap = step1CreateMySqlEntries(typeMap.keySet());
-                            final Map<String, String> fsXmlMap = step2ExtractXmlParts(typeMap.keySet());
-                            fsBestellungMap = step3CreateBestellungMap(
-                                    fsXmlMap,
-                                    typeMap);
-                            fsBeanMap = step4CreateCidsEntries(
-                                    fsXmlMap,
-                                    fsBestellungMap,
-                                    typeMap,
-                                    insertExceptionMap);
+            switch (startStep) {
+                case STATUS_FETCH:
+                case STATUS_PARSE:
+                case STATUS_SAVE: {
+                    if (mons == null) {
+                        try {
+                            if (startStep >= STATUS_CLOSE) {
+                                final Map<String, ProductType> typeMap = test ? step0GetTransIdsFromTest()
+                                                                              : step0FetchTransIds();
+                                final Map<String, Exception> insertExceptionMap = step1CreateMySqlEntries(
+                                        typeMap.keySet());
+                                final Map<String, String> fsXmlMap = step2ExtractXmlParts(typeMap.keySet());
+                                fsBestellungMap = step3CreateBestellungMap(
+                                        fsXmlMap,
+                                        typeMap);
+                                fsBeanMap = step4CreateCidsEntries(
+                                        fsXmlMap,
+                                        fsBestellungMap,
+                                        typeMap,
+                                        insertExceptionMap);
+                            }
+                        } catch (final Exception ex) {
+                            LOG.error("Die Liste der FormSolutions-Bestellungen konnte nicht abgerufen werden", ex);
                         }
-                    } catch (final Exception ex) {
-                        LOG.error("Die Liste der FormSolutions-Bestellungen konnte nicht abgerufen werden", ex);
                     }
                 }
-            }
-            case STATUS_CLOSE: {
-                step5CloseTransactions(fsBeanMap);
-            }
-            case STATUS_PRUEFUNG: {
-                step6PruefungProdukt(fsBeanMap, repairErrors);
-            }
-            case STATUS_PRODUKT: {
-                downloadInfoMap = step7CreateProducts(fsBeanMap, repairErrors);
-            }
-            case STATUS_BILLING: {
-                step8Billing(fsBeanMap, downloadInfoMap, repairErrors);
-                if (STATUS_BILLING == startStep) {
-                    break;
+                case STATUS_CLOSE: {
+                    step5CloseTransactions(fsBeanMap);
+                }
+                case STATUS_PRUEFUNG: {
+                    step6PruefungProdukt(fsBeanMap, repairErrors);
+                }
+                case STATUS_PRODUKT: {
+                    downloadInfoMap = step7CreateProducts(fsBeanMap, repairErrors);
+                }
+                case STATUS_BILLING: {
+                    step8Billing(fsBeanMap, downloadInfoMap, repairErrors);
+                    if (STATUS_BILLING == startStep) {
+                        break;
+                    }
+                }
+                case STATUS_PENDING:
+                case STATUS_DONE: {
+                    step9FinalizeEntries(fsBeanMap, repairErrors);
                 }
             }
-            case STATUS_PENDING:
-            case STATUS_DONE: {
-                step9FinalizeEntries(fsBeanMap, repairErrors);
-            }
+            return null;
         }
-        return null;
     }
 
     /**
@@ -2286,7 +2289,7 @@ public class FormSolutionsBestellungHandler implements ConnectionContextProvider
                     if (buchungsblatt == null) {
                         throw new Exception("ALKIS Buchungsblatt wurde nicht gefunden (" + buchungsblattcode + ")");
                     }
-                    
+
                     final Object colObj = buchungsblatt.getProperty("landparcels");
                     if (colObj instanceof Collection) {
                         final List<CidsBean> landparcelList = (List<CidsBean>)colObj;
@@ -2462,6 +2465,8 @@ public class FormSolutionsBestellungHandler implements ConnectionContextProvider
      * @param   transids  DOCUMENT ME!
      *
      * @return  DOCUMENT ME!
+     *
+     * @throws  SQLException  DOCUMENT ME!
      */
     private Map<String, Exception> step1CreateMySqlEntries(final Collection<String> transids) throws SQLException {
         final Map<String, Exception> insertExceptionMap = new HashMap<>(transids.size());
