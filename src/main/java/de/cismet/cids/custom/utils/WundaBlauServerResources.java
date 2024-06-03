@@ -111,6 +111,7 @@ public enum WundaBlauServerResources {
     FS_MAIL_CONTENT_TEMPLATE(new TextServerResource("/formsolutions/file_size_mail_content.txt")),
     FS_LARGE_PRODUCT_RESPONSE(new BinaryServerResource("/formsolutions/largeProduct.zip")),
     ALBO_WEBDAV_PROPERTIES(new TextServerResource("/albo/webdav_conf.properties")),
+    UMWELTALARM_WEBDAV_PROPERTIES(new TextServerResource("/umweltalarm/webdav_conf.properties")),
 
     IMAGE_ANNOTATOR_FONT(new BinaryServerResource("/tiffer/Calibri_Bold.ttf"));
 
