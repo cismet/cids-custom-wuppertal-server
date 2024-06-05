@@ -82,6 +82,7 @@ public enum WundaBlauServerResources {
     BYTEARRAYFACTORY_PROPERTIES(new TextServerResource("/byteArrayFactory.properties")),
     URLCONFIG_PROPERTIES(new TextServerResource("/urlconfig.properties")),
     ALKIS_CONF(new TextServerResource("/alkis/alkis_conf.properties")),
+    ALKIS_REST_CONF(new TextServerResource("/alkis/alkis_rest_conf.properties")),
     ALKIS_PRODUCTS_PROPERTIES(new TextServerResource("/alkis/alkis_products.properties")),
     ALKIS_FORMATS_PROPERTIES(new TextServerResource("/alkis/formats.properties")),
     BERECHTIGUNGSPRUEFUNG_PROPERTIES(new TextServerResource("/berechtigungspruefung/berechtigungspruefung.properties")),
@@ -96,6 +97,7 @@ public enum WundaBlauServerResources {
     EMOB_CONF_PROPERTIES(new TextServerResource("/emob/emob_conf.properties")),
     PRBR_CONF_PROPERTIES(new TextServerResource("/prbr/prbr_conf.properties")),
     BAUM_CONF_PROPERTIES(new TextServerResource("/baum/baum_conf.properties")),
+    AL_CONF_PROPERTIES(new TextServerResource("/alLuftbild/al_conf.properties")),
     KLIMA_CONF_PROPERTIES(new TextServerResource("/klima/klima_conf.properties")),
     KLIMAROUTE_CONF_PROPERTIES(new TextServerResource("/klimaroute/klimaroute_conf.properties")),
     NO2_CONF_PROPERTIES(new TextServerResource("/no2/no2_conf.properties")),
@@ -110,6 +112,7 @@ public enum WundaBlauServerResources {
     FS_MAIL_CONTENT_TEMPLATE(new TextServerResource("/formsolutions/file_size_mail_content.txt")),
     FS_LARGE_PRODUCT_RESPONSE(new BinaryServerResource("/formsolutions/largeProduct.zip")),
     ALBO_WEBDAV_PROPERTIES(new TextServerResource("/albo/webdav_conf.properties")),
+    UMWELTALARM_WEBDAV_PROPERTIES(new TextServerResource("/umweltalarm/webdav_conf.properties")),
 
     IMAGE_ANNOTATOR_FONT(new BinaryServerResource("/tiffer/Calibri_Bold.ttf"));
 

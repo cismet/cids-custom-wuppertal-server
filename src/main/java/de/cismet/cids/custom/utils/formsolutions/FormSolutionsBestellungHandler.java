@@ -35,8 +35,6 @@ import net.sf.jasperreports.engine.JasperPrint;
 import net.sf.jasperreports.engine.JasperReport;
 import net.sf.jasperreports.engine.data.JRBeanCollectionDataSource;
 
-import okhttp3.HttpUrl;
-
 import org.apache.commons.codec.digest.DigestUtils;
 import org.apache.commons.httpclient.UsernamePasswordCredentials;
 import org.apache.commons.io.FilenameUtils;
@@ -59,6 +57,7 @@ import java.io.OutputStream;
 import java.io.StringReader;
 import java.io.UnsupportedEncodingException;
 
+import java.net.URI;
 import java.net.URL;
 import java.net.URLDecoder;
 
@@ -69,6 +68,7 @@ import java.nio.charset.Charset;
 import java.rmi.Naming;
 import java.rmi.RemoteException;
 
+import java.sql.SQLException;
 import java.sql.Timestamp;
 
 import java.text.SimpleDateFormat;
@@ -153,7 +153,7 @@ public class FormSolutionsBestellungHandler implements ConnectionContextProvider
     private static final Logger LOG = Logger.getLogger(FormSolutionsBestellungHandler.class);
 
     private static final String TEST_CISMET00_PREFIX = "TEST_CISMET00-";
-    private static final String GUTSCHEIN_ADDITIONAL_TEXT = "TESTAUSZUG - nur zur Demonstration (%s)";
+    private static final String GUTSCHEIN_ADDITIONAL_TEXT = "Bestellcode (%s)";
     private static final ObjectMapper MAPPER = new ObjectMapper();
     private static final Map<String, MetaClass> METACLASS_CACHE = new HashMap();
     private static final String EXTERNAL_USER_QUERY_TEMPLATE = ""
@@ -503,68 +503,71 @@ public class FormSolutionsBestellungHandler implements ConnectionContextProvider
      *
      * @throws  IllegalStateException  DOCUMENT ME!
      */
-    public synchronized Collection execute(final int startStep,
+    public Collection execute(final int startStep,
             final boolean repairErrors,
             final boolean test,
             final Collection<MetaObjectNode> mons) {
-        if ((mons != null) && (startStep >= FormSolutionsBestellungHandler.STATUS_SAVE)) {
-            throw new IllegalStateException("fetch not allowed with metaobjectnodes");
-        }
+        synchronized (FormSolutionsBestellungHandler.class) {
+            if ((mons != null) && (startStep >= FormSolutionsBestellungHandler.STATUS_SAVE)) {
+                throw new IllegalStateException("fetch not allowed with metaobjectnodes");
+            }
 
-        Map<String, CidsBean> fsBeanMap = null;
-        if (mons != null) {
-            fsBeanMap = loadCidsEntries(mons);
-        }
+            Map<String, CidsBean> fsBeanMap = null;
+            if (mons != null) {
+                fsBeanMap = loadCidsEntries(mons);
+            }
 
-        Map<String, FormSolutionsBestellung> fsBestellungMap = null;
-        Map<String, BerechtigungspruefungDownloadInfo> downloadInfoMap = null;
+            Map<String, FormSolutionsBestellung> fsBestellungMap = null;
+            Map<String, BerechtigungspruefungDownloadInfo> downloadInfoMap = null;
 
-        switch (startStep) {
-            case STATUS_FETCH:
-            case STATUS_PARSE:
-            case STATUS_SAVE: {
-                if (mons == null) {
-                    try {
-                        if (startStep >= STATUS_CLOSE) {
-                            final Map<String, ProductType> typeMap = test ? step0GetTransIdsFromTest()
-                                                                          : step0FetchTransIds();
-                            final Map<String, Exception> insertExceptionMap = step1CreateMySqlEntries(typeMap.keySet());
-                            final Map<String, String> fsXmlMap = step2ExtractXmlParts(typeMap.keySet());
-                            fsBestellungMap = step3CreateBestellungMap(
-                                    fsXmlMap,
-                                    typeMap);
-                            fsBeanMap = step4CreateCidsEntries(
-                                    fsXmlMap,
-                                    fsBestellungMap,
-                                    typeMap,
-                                    insertExceptionMap);
+            switch (startStep) {
+                case STATUS_FETCH:
+                case STATUS_PARSE:
+                case STATUS_SAVE: {
+                    if (mons == null) {
+                        try {
+                            if (startStep >= STATUS_CLOSE) {
+                                final Map<String, ProductType> typeMap = test ? step0GetTransIdsFromTest()
+                                                                              : step0FetchTransIds();
+                                final Map<String, Exception> insertExceptionMap = step1CreateMySqlEntries(
+                                        typeMap.keySet());
+                                final Map<String, String> fsXmlMap = step2ExtractXmlParts(typeMap.keySet());
+                                fsBestellungMap = step3CreateBestellungMap(
+                                        fsXmlMap,
+                                        typeMap);
+                                fsBeanMap = step4CreateCidsEntries(
+                                        fsXmlMap,
+                                        fsBestellungMap,
+                                        typeMap,
+                                        insertExceptionMap);
+                            }
+                        } catch (final Exception ex) {
+                            LOG.error("Die Liste der FormSolutions-Bestellungen konnte nicht abgerufen werden", ex);
                         }
-                    } catch (final Exception ex) {
-                        LOG.error("Die Liste der FormSolutions-Bestellungen konnte nicht abgerufen werden", ex);
                     }
                 }
-            }
-            case STATUS_CLOSE: {
-                step5CloseTransactions(fsBeanMap);
-            }
-            case STATUS_PRUEFUNG: {
-                step6PruefungProdukt(fsBeanMap, repairErrors);
-            }
-            case STATUS_PRODUKT: {
-                downloadInfoMap = step7CreateProducts(fsBeanMap, repairErrors);
-            }
-            case STATUS_BILLING: {
-                step8Billing(fsBeanMap, downloadInfoMap, repairErrors);
-                if (STATUS_BILLING == startStep) {
-                    break;
+                case STATUS_CLOSE: {
+                    step5CloseTransactions(fsBeanMap);
+                }
+                case STATUS_PRUEFUNG: {
+                    step6PruefungProdukt(fsBeanMap, repairErrors);
+                }
+                case STATUS_PRODUKT: {
+                    downloadInfoMap = step7CreateProducts(fsBeanMap, repairErrors);
+                }
+                case STATUS_BILLING: {
+                    step8Billing(fsBeanMap, downloadInfoMap, repairErrors);
+                    if (STATUS_BILLING == startStep) {
+                        break;
+                    }
+                }
+                case STATUS_PENDING:
+                case STATUS_DONE: {
+                    step9FinalizeEntries(fsBeanMap, repairErrors);
                 }
             }
-            case STATUS_PENDING:
-            case STATUS_DONE: {
-                step9FinalizeEntries(fsBeanMap, repairErrors);
-            }
+            return null;
         }
-        return null;
     }
 
     /**
@@ -1467,6 +1470,33 @@ public class FormSolutionsBestellungHandler implements ConnectionContextProvider
     /**
      * DOCUMENT ME!
      *
+     * @param   url            DOCUMENT ME!
+     * @param   parameterName  DOCUMENT ME!
+     *
+     * @return  DOCUMENT ME!
+     *
+     * @throws  Exception  DOCUMENT ME!
+     */
+    private static String getQueryParameterValue(final String url, final String parameterName) throws Exception {
+        final URI uri = new URI(url);
+        final String query = uri.getQuery();
+        final String[] pairs = query.split("&");
+        for (final String pair : pairs) {
+            final int idx = pair.indexOf("=");
+            if (idx == -1) {
+                continue;
+            }
+            final String key = pair.substring(0, idx);
+            if (key.equals(parameterName)) {
+                return pair.substring(idx + 1);
+            }
+        }
+        return null; // Parameter not found
+    }
+
+    /**
+     * DOCUMENT ME!
+     *
      * @param   table_name         DOCUMENT ME!
      * @param   connectionContext  DOCUMENT ME!
      *
@@ -1664,7 +1694,9 @@ public class FormSolutionsBestellungHandler implements ConnectionContextProvider
         if (ProductType.BAB_ABSCHLUSS.equals(productType) || ProductType.LB_ABSCHLUSS.equals(productType)) {
             final String fileUrl = (formSolutionsBestellung.getFileUrl() != null)
                 ? URLDecoder.decode(formSolutionsBestellung.getFileUrl(), "UTF-8") : null;
-            final String cacheId = (fileUrl != null) ? HttpUrl.parse(fileUrl).queryParameter("cacheID") : null;
+            /*import okhttp3.HttpUrl;*/
+            // final String cacheId = (fileUrl != null) ? HttpUrl.parse(fileUrl).queryParameter("cacheID") : null;
+            final String cacheId = (fileUrl != null) ? getQueryParameterValue(fileUrl, "cacheID") : null;
             if (cacheId != null) {
                 nachfolgerVonBean = searchBestellungByCacheId(cacheId);
             } else {
@@ -2231,10 +2263,6 @@ public class FormSolutionsBestellungHandler implements ConnectionContextProvider
     public boolean isServerInProduction() {
         return ServerProperties.DEPLOY_ENV__PRODUCTION.equalsIgnoreCase(DomainServerImpl.getServerProperties()
                         .getDeployEnv());
-//        final boolean inProduction;
-//        inProduction = false;
-//
-//        return inProduction;
     }
 
     /**
@@ -2261,19 +2289,18 @@ public class FormSolutionsBestellungHandler implements ConnectionContextProvider
                     if (buchungsblatt == null) {
                         throw new Exception("ALKIS Buchungsblatt wurde nicht gefunden (" + buchungsblattcode + ")");
                     }
-                    if ((buchungsblatt != null) && (buchungsblatt != null)) {
-                        final Object colObj = buchungsblatt.getProperty("landparcels");
-                        if (colObj instanceof Collection) {
-                            final List<CidsBean> landparcelList = (List<CidsBean>)colObj;
 
-                            for (final CidsBean landparcel : landparcelList) {
-                                final Geometry flurgeom = (Geometry)landparcel.getProperty("geometrie.geo_field");
+                    final Object colObj = buchungsblatt.getProperty("landparcels");
+                    if (colObj instanceof Collection) {
+                        final List<CidsBean> landparcelList = (List<CidsBean>)colObj;
 
-                                if (geom == null) {
-                                    geom = flurgeom;
-                                } else {
-                                    geom = flurgeom.union(geom);
-                                }
+                        for (final CidsBean landparcel : landparcelList) {
+                            final Geometry flurgeom = (Geometry)landparcel.getProperty("geometrie.geo_field");
+
+                            if (geom == null) {
+                                geom = flurgeom;
+                            } else {
+                                geom = flurgeom.union(geom);
                             }
                         }
                     }
@@ -2438,20 +2465,17 @@ public class FormSolutionsBestellungHandler implements ConnectionContextProvider
      * @param   transids  DOCUMENT ME!
      *
      * @return  DOCUMENT ME!
+     *
+     * @throws  SQLException  DOCUMENT ME!
      */
-    private Map<String, Exception> step1CreateMySqlEntries(final Collection<String> transids) {
+    private Map<String, Exception> step1CreateMySqlEntries(final Collection<String> transids) throws SQLException {
         final Map<String, Exception> insertExceptionMap = new HashMap<>(transids.size());
 
         for (final String transid : transids) {
-            try {
-                specialLog("updating or inserting mySQL entry for: " + transid);
-                getMySqlHelper().insertOrUpdateStatus(transid, STATUS_CREATE);
+            specialLog("updating or inserting mySQL entry for: " + transid);
+            getMySqlHelper().insertOrUpdateStatus(transid, STATUS_CREATE);
 
-                doStatusChangedRequest(transid, false);
-            } catch (final Exception ex) {
-                LOG.error("Fehler beim Erzeugen/Aktualisieren des MySQL-Datensatzes.", ex);
-                insertExceptionMap.put(transid, ex);
-            }
+            doStatusChangedRequest(transid, false);
         }
 
         return insertExceptionMap;

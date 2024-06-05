@@ -105,12 +105,24 @@ public class AlboVorgangExtReportServerAction extends StampedJasperReportServerA
                 }
             }
 
-            final JRBeanCollectionDataSource dataSource = new JRBeanCollectionDataSource(Arrays.asList(
-                        getMetaService().getMetaObject(
-                            getUser(),
-                            vorgangMon.getObjectId(),
-                            vorgangMon.getClassId(),
-                            getConnectionContext()).getBean()));
+            // load the vorgang bean and remove all deleted flaechen
+            final CidsBean bean = getMetaService().getMetaObject(
+                        getUser(),
+                        vorgangMon.getObjectId(),
+                        vorgangMon.getClassId(),
+                        getConnectionContext())
+                        .getBean();
+            final List<CidsBean> flBeans = bean.getBeanCollectionProperty("arr_flaechen");
+
+            for (final CidsBean tmpBean : new ArrayList<>(flBeans)) {
+                final Boolean loeschen = (Boolean)tmpBean.getProperty("loeschen");
+
+                if ((loeschen != null) && loeschen) {
+                    flBeans.remove(tmpBean);
+                }
+            }
+
+            final JRBeanCollectionDataSource dataSource = new JRBeanCollectionDataSource(Arrays.asList(bean));
 
             final MetaClass erhebungsklasse = getMetaService().getClassByTableName(
                     getUser(),
