@@ -30,22 +30,22 @@ import de.cismet.cids.dynamics.CidsBean;
  * @version  $Revision$, $Date$
  */
 @ServiceProvider(service = CustomDeletionProvider.class)
-public class UaLeistungenDeletionProvider extends AbstractCustomDeletionProvider {
+public class UaFirmaDeletionProvider extends AbstractCustomDeletionProvider {
 
     //~ Static fields/initializers ---------------------------------------------
 
-    private static final Logger LOG = Logger.getLogger(UaLeistungenDeletionProvider.class);
-    private static final String TABLE_NAME = "ua_leistungen";
+    private static final Logger LOG = Logger.getLogger(UaFirmaDeletionProvider.class);
+    private static final String TABLE_NAME = "ua_firma";
     private static final String FIELD__ID = "id";
-    private static final String FIELD__FK = "fk_leistungen";
-    private static final String TABLE_NAME_SEARCH = "ua_firma_leistungen_leistungen";
+    private static final String FIELD__FK = "fk_firma";
+    private static final String TABLE_NAME_SEARCH = "ua_einsatz_firma_leistungen";
     private static final String CAUSE =
-        "Diese Leistung kann nicht gelöscht werden, da diese bei mindestens einem Einsatz verwendet wird.";
+        "Diese Firma kann nicht gelöscht werden, da diese bei mindestens einem Einsatz verwendet wird.";
   
 
     //~ Instance fields --------------------------------------------------------
 
-    private String deleteText = "Diese Leistung kann nicht gelöscht werden, da diese verwendet wird.";
+    private String deleteText = "Diese Firma kann nicht gelöscht werden, da diese verwendet wird.";
 
     //~ Methods ----------------------------------------------------------------
 
@@ -79,7 +79,7 @@ public class UaLeistungenDeletionProvider extends AbstractCustomDeletionProvider
             }
             
         } catch (RemoteException ex) {
-            LOG.error("Cannot delete Leistung object", ex);
+            LOG.error("Cannot delete Firma object", ex);
         }
         return false;
     }
