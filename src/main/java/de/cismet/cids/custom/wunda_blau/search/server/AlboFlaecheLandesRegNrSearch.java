@@ -65,7 +65,7 @@ public class AlboFlaecheLandesRegNrSearch extends AbstractCidsServerSearch imple
     @Override
     public Collection performServerSearch() {
         final MetaService ms = (MetaService)getActiveLocalServers().get("WUNDA_BLAU");
-        if (ms != null) {
+        if ((ms != null) && ((geometryAsText == null) || !geometryAsText.equals("null"))) {
             try {
                 if (landesregistriernummer == null) {
                     final ArrayList<ArrayList> landReg = ms.performCustomSearch(String.format(
