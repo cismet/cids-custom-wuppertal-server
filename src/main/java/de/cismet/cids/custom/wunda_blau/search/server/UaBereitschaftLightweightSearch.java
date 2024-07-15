@@ -38,23 +38,23 @@ import de.cismet.connectioncontext.ConnectionContextStore;
 
 /**
  * Builtin Legacy Search to delegate the operation getLightweightMetaObjectsByQuery to the cids Pure REST Search API.**
- * Searches all Adresses for one Streetkey (implemented for baum)
+ * Searches all active
  *
  * @author   Sandra Simmert
  * @version  $Revision$, $Date$
  */
 @ServiceProvider(service = RestApiCidsServerSearch.class)
-public class AdresseLightweightSearch extends AbstractCidsServerSearch implements RestApiCidsServerSearch,
+public class UaBereitschaftLightweightSearch extends AbstractCidsServerSearch implements RestApiCidsServerSearch,
     LightweightMetaObjectsSearch,
     ConnectionContextStore {
 
     //~ Static fields/initializers ---------------------------------------------
 
-    private static final Logger LOG = Logger.getLogger(AdresseLightweightSearch.class);
+    private static final Logger LOG = Logger.getLogger(UaBereitschaftLightweightSearch.class);
 
-    private static final String TABLE__ADR = "adresse";
+    private static final String TABLE__BEREITSCHAFT = "ua_bereitschaft";
     public static final String TOSTRING_TEMPLATE = "%1$s (%2$s)";
-    public static final String[] TOSTRING_FIELDS = { Subject.HNR.toString(), Subject.KEY.toString() };
+    public static final String[] TOSTRING_FIELDS = { Subject.NAME.toString(), Subject.AKTIV.toString() };
 
     //~ Enums ------------------------------------------------------------------
 
@@ -67,18 +67,18 @@ public class AdresseLightweightSearch extends AbstractCidsServerSearch implement
 
         //~ Enum constants -----------------------------------------------------
 
-        HNR {
+        NAME {
 
             @Override
             public String toString() {
-                return "hausnummer";
+                return "name";
             }
         },
-        KEY {
+        AKTIV {
 
             @Override
             public String toString() {
-                return "strasse";
+                return "aktiv";
             }
         }
     }
@@ -88,8 +88,8 @@ public class AdresseLightweightSearch extends AbstractCidsServerSearch implement
     private ConnectionContext connectionContext = ConnectionContext.createDummy();
 
     @Getter private final SearchInfo searchInfo;
-    @Getter @Setter private Subject subject = Subject.HNR;
-    @Getter @Setter private Integer keyId;
+    @Getter @Setter private Subject subject = Subject.NAME;
+    @Getter @Setter private Boolean aktiv;
     @Getter @Setter private String representationPattern;
     @Getter @Setter private String[] representationFields;
 
@@ -98,14 +98,14 @@ public class AdresseLightweightSearch extends AbstractCidsServerSearch implement
     /**
      * Creates a new LightweightMetaObjectsByQuerySearch object.
      */
-    public AdresseLightweightSearch() {
+    public UaBereitschaftLightweightSearch() {
         this.searchInfo = new SearchInfo(
                 this.getClass().getName(),
                 this.getClass().getSimpleName(),
                 "Builtin Legacy Search to delegate the operation getLightweightMetaObjectsByQuery to the cids Pure REST Search API.",
                 Arrays.asList(
                     new SearchParameterInfo[] {
-                        new MySearchParameterInfo("keyId", Type.INTEGER),
+                        new MySearchParameterInfo("aktiv", Type.BOOLEAN),
                         new MySearchParameterInfo("representationPattern", Type.STRING, true),
                         new MySearchParameterInfo("representationFields", Type.STRING, true)
                     }),
@@ -113,13 +113,13 @@ public class AdresseLightweightSearch extends AbstractCidsServerSearch implement
     }
 
     /**
-     * Creates a new AdresseLightweightSearch object.
+     * Creates a new UaBereitschaftLightweightSearch object.
      *
      * @param  subject                DOCUMENT ME!
      * @param  representationPattern  DOCUMENT ME!
      * @param  representationFields   DOCUMENT ME!
      */
-    public AdresseLightweightSearch(
+    public UaBereitschaftLightweightSearch(
             final Subject subject,
             final String representationPattern,
             final String[] representationFields) {
@@ -152,20 +152,23 @@ public class AdresseLightweightSearch extends AbstractCidsServerSearch implement
         }
 
         final Collection<String> conditions = new ArrayList<>();
-        if (getKeyId() != null) {
-            conditions.add(String.format("strasse = %d", getKeyId()));
+        if (getAktiv() != null) {
+            if (getAktiv()) {
+                conditions.add(String.format("aktiv"));
+            } else {
+                conditions.add(String.format("not aktiv"));
+            }
         }
 
         final String query = String.format("SELECT ("
                         + "SELECT c.id FROM cs_class c WHERE table_name ILIKE '%1$s') AS class_id, "
-                        + "id, hausnummer FROM %1$s %2$s",
-                TABLE__ADR,
-                (conditions.isEmpty() ? "" : (" WHERE " + String.join(" AND ", conditions)))
-                        + " ORDER BY sort_hausnummer");
+                        + "id, name FROM %1$s %2$s",
+                TABLE__BEREITSCHAFT,
+                (conditions.isEmpty() ? "" : (" WHERE " + String.join(" AND ", conditions))));
         try {
             final MetaClass mc = CidsBean.getMetaClassFromTableName(
                     "WUNDA_BLAU",
-                    TABLE__ADR,
+                    TABLE__BEREITSCHAFT,
                     getConnectionContext());
             if (getRepresentationPattern() != null) {
                 return Arrays.asList(metaService.getLightweightMetaObjectsByQuery(

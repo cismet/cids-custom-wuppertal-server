@@ -1,5 +1,3 @@
-package de.cismet.cids.custom.wunda_blau.search.actions;
-
 /***************************************************
 *
 * cismet GmbH, Saarbruecken, Germany
@@ -12,9 +10,9 @@ package de.cismet.cids.custom.wunda_blau.search.actions;
  * To change this template file, choose Tools | Templates
  * and open the template in the editor.
  */
+package de.cismet.cids.custom.wunda_blau.search.actions;
 
-
-import de.cismet.cids.custom.utils.AltlastenWebDavProperties;
+import de.cismet.cids.custom.utils.UaWebDavProperties;
 import de.cismet.cids.custom.utils.WundaBlauServerResources;
 
 import de.cismet.cids.server.actions.ServerAction;
@@ -25,35 +23,35 @@ import de.cismet.cids.utils.serverresources.ServerResourcesLoader;
 /**
  * DOCUMENT ME!
  *
- * @author   therter
+ * @author   sandra
  * @version  $Revision$, $Date$
  */
 @org.openide.util.lookup.ServiceProvider(service = ServerAction.class)
-public class RasterfariWebDavTunnelAction extends WebDavTunnelAction {
+public class UaWebDavTunnelAction extends WebDavTunnelAction {
 
     //~ Static fields/initializers ---------------------------------------------
 
-    private static final org.apache.log4j.Logger LOG = org.apache.log4j.Logger.getLogger(RasterfariWebDavTunnelAction.class);
-    public static final String TASK_NAME = "UmweltalarmWebDavTunnelAction";
+    private static final org.apache.log4j.Logger LOG = org.apache.log4j.Logger.getLogger(UaWebDavTunnelAction.class);
+    public static final String TASK_NAME = "UaWebDavTunnelAction";
 
     //~ Instance fields --------------------------------------------------------
 
-    private final AltlastenWebDavProperties properties;
+    private final UaWebDavProperties properties;
 
     //~ Constructors -----------------------------------------------------------
 
     /**
-     * Creates a new GrundwassermessstellenWebDavTunnelAction object.
+     * Creates a new UaWebDavTunnelAction object.
      */
-    public RasterfariWebDavTunnelAction() {
-        AltlastenWebDavProperties properties = null;
+    public UaWebDavTunnelAction() {
+        UaWebDavProperties uaProperties = null;
         try {
-            properties = new AltlastenWebDavProperties(ServerResourcesLoader.getInstance().loadProperties(
+            uaProperties = new UaWebDavProperties(ServerResourcesLoader.getInstance().loadProperties(
                         WundaBlauServerResources.UMWELTALARM_WEBDAV_PROPERTIES.getValue()));
         } catch (final Exception ex) {
-            LOG.info("UmweltalarmWebDavTunnelAction could not load the properties", ex);
+            LOG.info("UaWebDavTunnelAction could not load the properties", ex);
         }
-        this.properties = properties;
+        this.properties = uaProperties;
     }
 
     //~ Methods ----------------------------------------------------------------
