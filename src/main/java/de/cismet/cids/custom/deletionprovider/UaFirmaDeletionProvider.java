@@ -41,7 +41,6 @@ public class UaFirmaDeletionProvider extends AbstractCustomDeletionProvider {
     private static final String TABLE_NAME_SEARCH = "ua_einsatz_firma_leistungen";
     private static final String CAUSE =
         "Diese Firma kann nicht gelöscht werden, da diese bei mindestens einem Einsatz verwendet wird.";
-  
 
     //~ Instance fields --------------------------------------------------------
 
@@ -68,7 +67,7 @@ public class UaFirmaDeletionProvider extends AbstractCustomDeletionProvider {
                 TABLE_NAME_SEARCH,
                 FIELD__FK,
                 leist_id);
-        
+
         try {
             final ArrayList<ArrayList> leistArray = getMetaService().performCustomSearch(
                     queryLeistIn,
@@ -77,7 +76,6 @@ public class UaFirmaDeletionProvider extends AbstractCustomDeletionProvider {
                 deleteText = CAUSE;
                 return true;
             }
-            
         } catch (RemoteException ex) {
             LOG.error("Cannot delete Firma object", ex);
         }

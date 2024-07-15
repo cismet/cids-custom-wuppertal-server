@@ -41,7 +41,6 @@ public class UaGewaesserDeletionProvider extends AbstractCustomDeletionProvider 
     private static final String TABLE_NAME_SEARCH = "ua_einsatz";
     private static final String CAUSE =
         "Dieses Gewässer kann nicht gelöscht werden, da dieses bei mindestens einem Einsatz verwendet wird.";
-  
 
     //~ Instance fields --------------------------------------------------------
 
@@ -68,7 +67,7 @@ public class UaGewaesserDeletionProvider extends AbstractCustomDeletionProvider 
                 TABLE_NAME_SEARCH,
                 FIELD__FK,
                 gewaesser_id);
-        
+
         try {
             final ArrayList<ArrayList> gewArray = getMetaService().performCustomSearch(
                     queryGewIn,
@@ -77,7 +76,6 @@ public class UaGewaesserDeletionProvider extends AbstractCustomDeletionProvider 
                 deleteText = CAUSE;
                 return true;
             }
-            
         } catch (RemoteException ex) {
             LOG.error("Cannot delete Gewaesser object", ex);
         }

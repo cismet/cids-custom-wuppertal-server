@@ -30,8 +30,7 @@ public class UaEinsatzDeletionProvider extends AbstractCustomDeletionProvider {
 
     private static final Logger LOG = Logger.getLogger(UaEinsatzDeletionProvider.class);
     public static final String TABLE_NAME = "ua_einsatz";
-    private static final String DELETE_TEXT =
-        "Dieser Einsatz kann nicht gelöscht werden.";
+    private static final String DELETE_TEXT = "Dieser Einsatz kann nicht gelöscht werden.";
 
     //~ Methods ----------------------------------------------------------------
 
