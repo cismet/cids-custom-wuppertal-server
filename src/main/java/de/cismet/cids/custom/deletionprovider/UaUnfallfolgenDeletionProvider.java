@@ -41,7 +41,6 @@ public class UaUnfallfolgenDeletionProvider extends AbstractCustomDeletionProvid
     private static final String TABLE_NAME_SEARCH = "ua_einsatz_unfallfolgen";
     private static final String CAUSE =
         "Diese Unfallfolge kann nicht gelöscht werden, da diese bei mindestens einem Einsatz verwendet wird.";
-  
 
     //~ Instance fields --------------------------------------------------------
 
@@ -68,7 +67,7 @@ public class UaUnfallfolgenDeletionProvider extends AbstractCustomDeletionProvid
                 TABLE_NAME_SEARCH,
                 FIELD__FK,
                 folge_id);
-        
+
         try {
             final ArrayList<ArrayList> folgeArray = getMetaService().performCustomSearch(
                     queryFolgeIn,
@@ -77,7 +76,6 @@ public class UaUnfallfolgenDeletionProvider extends AbstractCustomDeletionProvid
                 deleteText = CAUSE;
                 return true;
             }
-            
         } catch (RemoteException ex) {
             LOG.error("Cannot delete unfallfolge object", ex);
         }

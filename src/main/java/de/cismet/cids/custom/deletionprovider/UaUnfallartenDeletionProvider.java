@@ -41,7 +41,6 @@ public class UaUnfallartenDeletionProvider extends AbstractCustomDeletionProvide
     private static final String TABLE_NAME_SEARCH = "ua_einsatz_unfallarten";
     private static final String CAUSE =
         "Diese Unfallart kann nicht gelöscht werden, da diese bei mindestens einem Einsatz verwendet wird.";
-  
 
     //~ Instance fields --------------------------------------------------------
 
@@ -68,7 +67,7 @@ public class UaUnfallartenDeletionProvider extends AbstractCustomDeletionProvide
                 TABLE_NAME_SEARCH,
                 FIELD__FK,
                 art_id);
-        
+
         try {
             final ArrayList<ArrayList> artArray = getMetaService().performCustomSearch(
                     queryArtIn,
@@ -77,7 +76,6 @@ public class UaUnfallartenDeletionProvider extends AbstractCustomDeletionProvide
                 deleteText = CAUSE;
                 return true;
             }
-            
         } catch (RemoteException ex) {
             LOG.error("Cannot delete Unfallart object", ex);
         }

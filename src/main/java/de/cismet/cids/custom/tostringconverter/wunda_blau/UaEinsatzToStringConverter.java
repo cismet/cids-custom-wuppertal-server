@@ -24,16 +24,15 @@ public class UaEinsatzToStringConverter extends CustomToStringConverter {
 
     //~ Static fields/initializers ---------------------------------------------
 
-    public static final String FIELD__ID = "id";                 
-    public static final String FIELD__AZ = "aktenzeichen"; 
+    public static final String FIELD__ID = "id";
+    public static final String FIELD__AZ = "aktenzeichen";
 
     //~ Methods ----------------------------------------------------------------
 
     @Override
     public String createString() {
-        String id = String.valueOf(cidsBean.getProperty(FIELD__ID));
-        String az = String.valueOf(cidsBean.getProperty(FIELD__AZ));
+        final String id = String.valueOf(cidsBean.getProperty(FIELD__ID));
+        final String az = String.valueOf(cidsBean.getProperty(FIELD__AZ));
         return String.format("%s (%s)", az, id);
-       
     }
 }

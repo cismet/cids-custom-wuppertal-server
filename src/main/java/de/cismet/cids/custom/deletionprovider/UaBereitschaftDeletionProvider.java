@@ -41,7 +41,6 @@ public class UaBereitschaftDeletionProvider extends AbstractCustomDeletionProvid
     private static final String TABLE_NAME_SEARCH = "ua_einsatz";
     private static final String CAUSE =
         "Diese Person kann nicht gelöscht werden, da diese bei mindestens einem Einsatz verwendet wird.";
-  
 
     //~ Instance fields --------------------------------------------------------
 
@@ -68,7 +67,7 @@ public class UaBereitschaftDeletionProvider extends AbstractCustomDeletionProvid
                 TABLE_NAME_SEARCH,
                 FIELD__FK,
                 bereit_id);
-        
+
         try {
             final ArrayList<ArrayList> bereitArray = getMetaService().performCustomSearch(
                     queryBereitIn,
@@ -77,7 +76,6 @@ public class UaBereitschaftDeletionProvider extends AbstractCustomDeletionProvid
                 deleteText = CAUSE;
                 return true;
             }
-            
         } catch (RemoteException ex) {
             LOG.error("Cannot delete Bereitschaft object", ex);
         }

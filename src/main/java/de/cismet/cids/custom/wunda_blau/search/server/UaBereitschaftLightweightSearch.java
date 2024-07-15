@@ -152,11 +152,10 @@ public class UaBereitschaftLightweightSearch extends AbstractCidsServerSearch im
         }
 
         final Collection<String> conditions = new ArrayList<>();
-        if (getAktiv()!= null) {
-            if (getAktiv()){
-                
+        if (getAktiv() != null) {
+            if (getAktiv()) {
                 conditions.add(String.format("aktiv"));
-            } else{
+            } else {
                 conditions.add(String.format("not aktiv"));
             }
         }

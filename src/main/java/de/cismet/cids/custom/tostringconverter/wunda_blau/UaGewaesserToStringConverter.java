@@ -24,14 +24,14 @@ public class UaGewaesserToStringConverter extends CustomToStringConverter {
 
     //~ Static fields/initializers ---------------------------------------------
 
-    public static final String FIELD__NAME = "name";                 
-    public static final String FIELD__WV = "wv"; 
+    public static final String FIELD__NAME = "name";
+    public static final String FIELD__WV = "wv";
 
     //~ Methods ----------------------------------------------------------------
 
     @Override
     public String createString() {
-        String gewaesser = String.valueOf(cidsBean.getProperty(FIELD__NAME));
+        final String gewaesser = String.valueOf(cidsBean.getProperty(FIELD__NAME));
         if (Boolean.TRUE.equals(cidsBean.getProperty(FIELD__WV))) {
             return String.format(
                     "%s - WV",

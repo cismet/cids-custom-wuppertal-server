@@ -52,6 +52,8 @@ public class UaVerursacherLightweightSearch extends AbstractCidsServerSearch imp
     //~ Static fields/initializers ---------------------------------------------
 
     private static final Logger LOG = Logger.getLogger(UaVerursacherLightweightSearch.class);
+    public static final String FIELD__FK_EINSATZ = "fk_einsatz";
+    public static final String TABLE_NAME = "ua_verursacher";
 
     //~ Instance fields --------------------------------------------------------
 
@@ -61,8 +63,6 @@ public class UaVerursacherLightweightSearch extends AbstractCidsServerSearch imp
     @Getter @Setter private Integer einsatzId;
     @Getter @Setter private String representationPattern;
     @Getter @Setter private String[] representationFields;
-    public static final String FIELD__FK_EINSATZ = "fk_einsatz";               
-    public static final String TABLE_NAME = "ua_verursacher";
 
     //~ Constructors -----------------------------------------------------------
 
