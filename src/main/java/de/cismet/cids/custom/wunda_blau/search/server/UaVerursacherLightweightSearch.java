@@ -9,6 +9,7 @@ package de.cismet.cids.custom.wunda_blau.search.server;
 
 import Sirius.server.middleware.interfaces.domainserver.MetaService;
 import Sirius.server.middleware.types.MetaClass;
+import Sirius.server.middleware.types.MetaObjectNode;
 
 import lombok.Getter;
 import lombok.Setter;
@@ -20,6 +21,7 @@ import org.openide.util.lookup.ServiceProvider;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collection;
+import java.util.List;
 
 import de.cismet.cids.dynamics.CidsBean;
 
@@ -37,75 +39,44 @@ import de.cismet.connectioncontext.ConnectionContext;
 import de.cismet.connectioncontext.ConnectionContextStore;
 
 /**
- * Builtin Legacy Search to delegate the operation getLightweightMetaObjectsByQuery to the cids Pure REST Search API.**
- * Searches all Adresses for one Streetkey (implemented for baum)
+ * Builtin Legacy Search to delegate the operation getLightweightMetaObjectsByQuery to the cids Pure REST Search API.
  *
  * @author   Sandra Simmert
  * @version  $Revision$, $Date$
  */
 @ServiceProvider(service = RestApiCidsServerSearch.class)
-public class AdresseLightweightSearch extends AbstractCidsServerSearch implements RestApiCidsServerSearch,
+public class UaVerursacherLightweightSearch extends AbstractCidsServerSearch implements RestApiCidsServerSearch,
     LightweightMetaObjectsSearch,
     ConnectionContextStore {
 
     //~ Static fields/initializers ---------------------------------------------
 
-    private static final Logger LOG = Logger.getLogger(AdresseLightweightSearch.class);
-
-    private static final String TABLE__ADR = "adresse";
-    public static final String TOSTRING_TEMPLATE = "%1$s (%2$s)";
-    public static final String[] TOSTRING_FIELDS = { Subject.HNR.toString(), Subject.KEY.toString() };
-
-    //~ Enums ------------------------------------------------------------------
-
-    /**
-     * DOCUMENT ME!
-     *
-     * @version  $Revision$, $Date$
-     */
-    public enum Subject {
-
-        //~ Enum constants -----------------------------------------------------
-
-        HNR {
-
-            @Override
-            public String toString() {
-                return "hausnummer";
-            }
-        },
-        KEY {
-
-            @Override
-            public String toString() {
-                return "strasse";
-            }
-        }
-    }
+    private static final Logger LOG = Logger.getLogger(UaVerursacherLightweightSearch.class);
 
     //~ Instance fields --------------------------------------------------------
 
     private ConnectionContext connectionContext = ConnectionContext.createDummy();
 
     @Getter private final SearchInfo searchInfo;
-    @Getter @Setter private Subject subject = Subject.HNR;
-    @Getter @Setter private Integer keyId;
+    @Getter @Setter private Integer einsatzId;
     @Getter @Setter private String representationPattern;
     @Getter @Setter private String[] representationFields;
+    public static final String FIELD__FK_EINSATZ = "fk_einsatz";               
+    public static final String TABLE_NAME = "ua_verursacher";
 
     //~ Constructors -----------------------------------------------------------
 
     /**
      * Creates a new LightweightMetaObjectsByQuerySearch object.
      */
-    public AdresseLightweightSearch() {
+    public UaVerursacherLightweightSearch() {
         this.searchInfo = new SearchInfo(
                 this.getClass().getName(),
                 this.getClass().getSimpleName(),
                 "Builtin Legacy Search to delegate the operation getLightweightMetaObjectsByQuery to the cids Pure REST Search API.",
                 Arrays.asList(
                     new SearchParameterInfo[] {
-                        new MySearchParameterInfo("keyId", Type.INTEGER),
+                        new MySearchParameterInfo(FIELD__FK_EINSATZ, Type.INTEGER),
                         new MySearchParameterInfo("representationPattern", Type.STRING, true),
                         new MySearchParameterInfo("representationFields", Type.STRING, true)
                     }),
@@ -113,18 +84,14 @@ public class AdresseLightweightSearch extends AbstractCidsServerSearch implement
     }
 
     /**
-     * Creates a new AdresseLightweightSearch object.
+     * Creates a new UaVerursacherLightweightSearch object.
      *
-     * @param  subject                DOCUMENT ME!
      * @param  representationPattern  DOCUMENT ME!
      * @param  representationFields   DOCUMENT ME!
      */
-    public AdresseLightweightSearch(
-            final Subject subject,
-            final String representationPattern,
+    public UaVerursacherLightweightSearch(final String representationPattern,
             final String[] representationFields) {
         this();
-        setSubject(subject);
         setRepresentationPattern(representationPattern);
         setRepresentationFields(representationFields);
     }
@@ -143,6 +110,8 @@ public class AdresseLightweightSearch extends AbstractCidsServerSearch implement
 
     @Override
     public Collection performServerSearch() throws SearchException {
+        final Integer id = getEinsatzId();
+
         final MetaService metaService = (MetaService)this.getActiveLocalServers().get("WUNDA_BLAU");
         if (metaService == null) {
             final String message = "Lightweight Meta Objects By Query Search "
@@ -152,37 +121,36 @@ public class AdresseLightweightSearch extends AbstractCidsServerSearch implement
         }
 
         final Collection<String> conditions = new ArrayList<>();
-        if (getKeyId() != null) {
-            conditions.add(String.format("strasse = %d", getKeyId()));
+        if (id != null) {
+            conditions.add(String.format("%s = %d", FIELD__FK_EINSATZ, id));
         }
 
         final String query = String.format("SELECT ("
                         + "SELECT c.id FROM cs_class c WHERE table_name ILIKE '%1$s') AS class_id, "
-                        + "id, hausnummer FROM %1$s %2$s",
-                TABLE__ADR,
-                (conditions.isEmpty() ? "" : (" WHERE " + String.join(" AND ", conditions)))
-                + " ORDER BY sort_hausnummer");
+                        + "id, %2$s FROM %1$s %3$s"
+                        + " ORDER BY %2$s",
+                TABLE_NAME,
+                representationFields[0],
+                (conditions.isEmpty() ? "" : (" WHERE " + String.join(" AND ", conditions))));
+        LOG.info(query);
         try {
             final MetaClass mc = CidsBean.getMetaClassFromTableName(
                     "WUNDA_BLAU",
-                    TABLE__ADR,
+                    TABLE_NAME,
                     getConnectionContext());
-            if (getRepresentationPattern() != null) {
-                return Arrays.asList(metaService.getLightweightMetaObjectsByQuery(
-                            mc.getID(),
-                            getUser(),
-                            query,
-                            getRepresentationFields(),
-                            getRepresentationPattern(),
-                            getConnectionContext()));
-            } else {
-                return Arrays.asList(metaService.getLightweightMetaObjectsByQuery(
-                            mc.getID(),
-                            getUser(),
-                            query,
-                            getRepresentationFields(),
-                            getConnectionContext()));
+
+            // final MetaService ms = (MetaService)getActiveLocalServers().get("WUNDA_BLAU");
+            final List<MetaObjectNode> mons = new ArrayList<>();
+            final List<ArrayList> resultList = metaService.performCustomSearch(query, getConnectionContext());
+            for (final ArrayList al : resultList) {
+                final int cid = (Integer)al.get(0);
+                final int oid = (Integer)al.get(1);
+                final String name = String.valueOf(al.get(2));
+                final MetaObjectNode mon = new MetaObjectNode("WUNDA_BLAU", oid, cid, name, null, null);
+
+                mons.add(mon);
             }
+            return mons;
         } catch (final Exception ex) {
             throw new SearchException("error while loading lwmos", ex);
         }

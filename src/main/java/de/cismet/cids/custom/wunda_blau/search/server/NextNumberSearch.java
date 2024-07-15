@@ -9,6 +9,7 @@ package de.cismet.cids.custom.wunda_blau.search.server;
 
 import Sirius.server.middleware.interfaces.domainserver.MetaService;
 import Sirius.server.middleware.types.MetaClass;
+import Sirius.server.middleware.types.MetaObjectNode;
 
 import lombok.Getter;
 import lombok.Setter;
@@ -20,6 +21,7 @@ import org.openide.util.lookup.ServiceProvider;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collection;
+import java.util.List;
 
 import de.cismet.cids.dynamics.CidsBean;
 
@@ -37,59 +39,27 @@ import de.cismet.connectioncontext.ConnectionContext;
 import de.cismet.connectioncontext.ConnectionContextStore;
 
 /**
- * Builtin Legacy Search to delegate the operation getLightweightMetaObjectsByQuery to the cids Pure REST Search API.**
- * Searches all Adresses for one Streetkey (implemented for baum)
+ * Builtin Legacy Search to delegate the operation getLightweightMetaObjectsByQuery to the cids Pure REST Search API.
  *
  * @author   Sandra Simmert
  * @version  $Revision$, $Date$
  */
 @ServiceProvider(service = RestApiCidsServerSearch.class)
-public class AdresseLightweightSearch extends AbstractCidsServerSearch implements RestApiCidsServerSearch,
+public class NextNumberSearch extends AbstractCidsServerSearch implements RestApiCidsServerSearch,
     LightweightMetaObjectsSearch,
     ConnectionContextStore {
 
     //~ Static fields/initializers ---------------------------------------------
 
-    private static final Logger LOG = Logger.getLogger(AdresseLightweightSearch.class);
-
-    private static final String TABLE__ADR = "adresse";
-    public static final String TOSTRING_TEMPLATE = "%1$s (%2$s)";
-    public static final String[] TOSTRING_FIELDS = { Subject.HNR.toString(), Subject.KEY.toString() };
-
-    //~ Enums ------------------------------------------------------------------
-
-    /**
-     * DOCUMENT ME!
-     *
-     * @version  $Revision$, $Date$
-     */
-    public enum Subject {
-
-        //~ Enum constants -----------------------------------------------------
-
-        HNR {
-
-            @Override
-            public String toString() {
-                return "hausnummer";
-            }
-        },
-        KEY {
-
-            @Override
-            public String toString() {
-                return "strasse";
-            }
-        }
-    }
+    private static final Logger LOG = Logger.getLogger(NextNumberSearch.class);
 
     //~ Instance fields --------------------------------------------------------
 
     private ConnectionContext connectionContext = ConnectionContext.createDummy();
 
     @Getter private final SearchInfo searchInfo;
-    @Getter @Setter private Subject subject = Subject.HNR;
-    @Getter @Setter private Integer keyId;
+    @Getter @Setter private Collection<String> where = new ArrayList<>();
+    @Getter @Setter private String table;
     @Getter @Setter private String representationPattern;
     @Getter @Setter private String[] representationFields;
 
@@ -98,14 +68,14 @@ public class AdresseLightweightSearch extends AbstractCidsServerSearch implement
     /**
      * Creates a new LightweightMetaObjectsByQuerySearch object.
      */
-    public AdresseLightweightSearch() {
+    public NextNumberSearch() {
         this.searchInfo = new SearchInfo(
                 this.getClass().getName(),
                 this.getClass().getSimpleName(),
                 "Builtin Legacy Search to delegate the operation getLightweightMetaObjectsByQuery to the cids Pure REST Search API.",
                 Arrays.asList(
                     new SearchParameterInfo[] {
-                        new MySearchParameterInfo("keyId", Type.INTEGER),
+                        new MySearchParameterInfo("id", Type.INTEGER),
                         new MySearchParameterInfo("representationPattern", Type.STRING, true),
                         new MySearchParameterInfo("representationFields", Type.STRING, true)
                     }),
@@ -113,20 +83,22 @@ public class AdresseLightweightSearch extends AbstractCidsServerSearch implement
     }
 
     /**
-     * Creates a new AdresseLightweightSearch object.
+     * Creates a new NextNumberSearch object.
      *
-     * @param  subject                DOCUMENT ME!
      * @param  representationPattern  DOCUMENT ME!
      * @param  representationFields   DOCUMENT ME!
+     * @param  where                  DOCUMENT ME!
+     * @param  table                  DOCUMENT ME!
      */
-    public AdresseLightweightSearch(
-            final Subject subject,
-            final String representationPattern,
-            final String[] representationFields) {
+    public NextNumberSearch(final String representationPattern,
+            final String[] representationFields,
+            final Collection<String> where,
+            final String table) {
         this();
-        setSubject(subject);
         setRepresentationPattern(representationPattern);
         setRepresentationFields(representationFields);
+        setTable(table);
+        setWhere(where);
     }
 
     //~ Methods ----------------------------------------------------------------
@@ -150,39 +122,23 @@ public class AdresseLightweightSearch extends AbstractCidsServerSearch implement
             LOG.error(message);
             throw new SearchException(message);
         }
-
-        final Collection<String> conditions = new ArrayList<>();
-        if (getKeyId() != null) {
-            conditions.add(String.format("strasse = %d", getKeyId()));
+        final Collection<String> fields = new ArrayList<>();
+        if (representationFields != null) {
+            fields.addAll(Arrays.asList(representationFields));
         }
 
-        final String query = String.format("SELECT ("
-                        + "SELECT c.id FROM cs_class c WHERE table_name ILIKE '%1$s') AS class_id, "
-                        + "id, hausnummer FROM %1$s %2$s",
-                TABLE__ADR,
-                (conditions.isEmpty() ? "" : (" WHERE " + String.join(" AND ", conditions)))
-                + " ORDER BY sort_hausnummer");
+        final String query = "SELECT (SELECT c.id FROM cs_class c WHERE table_name ILIKE '" + table + "') AS class_id, "
+                    + "id"
+                    + (fields.isEmpty() ? "" : (", " + String.join(", ", fields)))
+                    + " FROM " + table
+                    + (where.isEmpty() ? "" : (" WHERE " + String.join(" AND ", where)));
         try {
             final MetaClass mc = CidsBean.getMetaClassFromTableName(
                     "WUNDA_BLAU",
-                    TABLE__ADR,
+                    table,
                     getConnectionContext());
-            if (getRepresentationPattern() != null) {
-                return Arrays.asList(metaService.getLightweightMetaObjectsByQuery(
-                            mc.getID(),
-                            getUser(),
-                            query,
-                            getRepresentationFields(),
-                            getRepresentationPattern(),
-                            getConnectionContext()));
-            } else {
-                return Arrays.asList(metaService.getLightweightMetaObjectsByQuery(
-                            mc.getID(),
-                            getUser(),
-                            query,
-                            getRepresentationFields(),
-                            getConnectionContext()));
-            }
+            final List<ArrayList> resultList = metaService.performCustomSearch(query, getConnectionContext());
+            return resultList;
         } catch (final Exception ex) {
             throw new SearchException("error while loading lwmos", ex);
         }
