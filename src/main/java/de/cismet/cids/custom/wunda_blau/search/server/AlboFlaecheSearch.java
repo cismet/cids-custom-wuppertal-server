@@ -208,6 +208,10 @@ public class AlboFlaecheSearch extends RestApiMonGeometrySearch
                         configuration.getErhebungsNummer()));
             }
 
+            if ((configuration.getFisAlboNr() != null) && !configuration.getFisAlboNr().isEmpty()) {
+                wheresMain.add(String.format("flaeche.geodaten_id LIKE '%%%s%%'", configuration.getFisAlboNr()));
+            }
+
             if ((configuration.getVorgangSchluessel() != null) && !configuration.getVorgangSchluessel().isEmpty()) {
                 leftJoins.add("albo_vorgang AS vorgang ON vorgang.arr_flaechen = arr.vorgang_reference");
                 wheresMain.add(String.format("vorgang.schluessel LIKE '%%%s%%'", configuration.getVorgangSchluessel()));
@@ -534,6 +538,7 @@ public class AlboFlaecheSearch extends RestApiMonGeometrySearch
 
         @JsonProperty private String vorgangSchluessel;
         @JsonProperty private String erhebungsNummer;
+        @JsonProperty private String fisAlboNr;
         @JsonProperty private String statusSchluessel;
         @JsonProperty private String typSchluessel;
         @JsonProperty private String zuordnungSchluessel;
