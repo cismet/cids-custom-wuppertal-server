@@ -83,6 +83,17 @@ public class AlboFlaecheSearch extends RestApiMonGeometrySearch
                 + "join albo_vorgang_flaeche AS arr ON (vorgang.arr_flaechen = arr.vorgang_reference) "
                 + "WHERE arr.fk_flaeche in (%s) "
                 + "ORDER BY name";
+    private static final String QUERY_VORGANG_TEMPLATE_WITH_NR = "SELECT DISTINCT "
+                + "(SELECT c.id FROM cs_class c WHERE table_name ILIKE 'albo_vorgang') AS class_id, vorgang.id AS object_id, vorgang.schluessel AS name "
+                + "FROM albo_vorgang AS vorgang "
+                + "left join albo_vorgang_flaeche AS arr ON (vorgang.arr_flaechen = arr.vorgang_reference) "
+                + "WHERE arr.fk_flaeche in (%s) or vorgang.schluessel LIKE '%%%s%%'"
+                + "ORDER BY name";
+    private static final String QUERY_VORGANG_TEMPLATE_WITHOUT_FL_WITH_NR = "SELECT DISTINCT "
+                + "(SELECT c.id FROM cs_class c WHERE table_name ILIKE 'albo_vorgang') AS class_id, vorgang.id AS object_id, vorgang.schluessel AS name "
+                + "FROM albo_vorgang AS vorgang "
+                + "WHERE vorgang.schluessel LIKE '%%%s%%'"
+                + "ORDER BY name";
 
     //~ Enums ------------------------------------------------------------------
 
@@ -486,9 +497,29 @@ public class AlboFlaecheSearch extends RestApiMonGeometrySearch
                     mons.clear();
                 }
 
-                if (!flaechenIds.toString().equals("")) {
-                    resultList = ms.performCustomSearch(String.format(QUERY_VORGANG_TEMPLATE, flaechenIds.toString()),
-                            getConnectionContext());
+                if (!flaechenIds.toString().equals("")
+                            || ((configuration.getVorgangSchluessel() != null)
+                                && !configuration.getVorgangSchluessel().isEmpty())) {
+                    if ((configuration.getVorgangSchluessel() != null)
+                                && !configuration.getVorgangSchluessel().isEmpty()) {
+                        if (flaechenIds.toString().equals("")) {
+                            resultList = ms.performCustomSearch(String.format(
+                                        QUERY_VORGANG_TEMPLATE_WITHOUT_FL_WITH_NR,
+                                        configuration.getVorgangSchluessel()),
+                                    getConnectionContext());
+                        } else {
+                            resultList = ms.performCustomSearch(String.format(
+                                        QUERY_VORGANG_TEMPLATE_WITH_NR,
+                                        flaechenIds.toString(),
+                                        configuration.getVorgangSchluessel()),
+                                    getConnectionContext());
+                        }
+                    } else {
+                        resultList = ms.performCustomSearch(String.format(
+                                    QUERY_VORGANG_TEMPLATE,
+                                    flaechenIds.toString()),
+                                getConnectionContext());
+                    }
 
                     for (final ArrayList al : resultList) {
                         final int cid = (Integer)al.get(0);
