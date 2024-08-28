@@ -635,8 +635,13 @@ public class FormSolutionsBestellungHandler implements ConnectionContextProvider
 
         for (final ProductType productType : ProductType.values()) {
             final Collection<String> transIds = getOpenExtendedTransids(productType);
+
             for (final String transId : transIds) {
-                transIdProductTypeMap.put(transId, productType);
+                if (!isDuplicate(transId)) {
+                    transIdProductTypeMap.put(transId, productType);
+                } else {
+                    removeDuplicate(transId);
+                }
             }
         }
 
@@ -645,6 +650,85 @@ public class FormSolutionsBestellungHandler implements ConnectionContextProvider
         }
 
         return transIdProductTypeMap;
+    }
+
+    /**
+     * chekcs, if the given oder is a duplicate
+     *
+     * @param   transid  the transid of the order to check
+     *
+     * @return  true, iff the order is a duplicate
+     */
+    private boolean isDuplicate(final String transid) {
+        boolean duplicate = false;
+
+        try {
+            final MetaClass bestellungMc = getMetaClass("fs_bestellung", getConnectionContext());
+            final String searchQuery = String.format(
+                    BESTELLUNG_BY_TRANSID_QUERY_TEMPLATE,
+                    bestellungMc.getID(),
+                    bestellungMc.getTableName()
+                            + "."
+                            + bestellungMc.getPrimaryKey(),
+                    bestellungMc.getTableName(),
+                    transid);
+            final MetaObject[] mos = getMetaService().getMetaObject(getUser(), searchQuery, getConnectionContext());
+
+            if ((mos != null) && (mos.length > 0)) {
+                duplicate = true;
+            }
+        } catch (final Exception ex) {
+            final String message = "error while search for duplicates for " + transid;
+            LOG.error(message, ex);
+            specialLog(message);
+        }
+
+        return duplicate;
+    }
+
+    /**
+     * set the status of the given order to deleted
+     *
+     * @param  transid  the transid of the order
+     */
+    private void removeDuplicate(final String transid) {
+        try {
+            final String auftragXml = getAuftrag(transid);
+
+            if (auftragXml == null) {
+                LOG.warn("formsolutions no xml data available for duplicated transid " + transid);
+            } else {
+                LOG.warn("xml data for duplicated transid " + transid + ":\n" + auftragXml);
+            }
+        } catch (final Exception ex) {
+            LOG.warn("Error wwhen retrieving order with transid " + transid, ex);
+        }
+
+        try {
+            final boolean vetoAttribute = DomainServerImpl.getServerInstance()
+                        .hasConfigAttr(getUser(), "custom.formsolutions.noclose", getConnectionContext());
+            final boolean closeVeto = (transid == null) || transid.startsWith(TEST_CISMET00_PREFIX)
+                        || vetoAttribute;
+
+            if (isServerInProduction() && !closeVeto) {
+                getHttpAccessHandler().doRequest(
+                    new URL(
+                        String.format(
+                            getProperties().getUrlAuftragDeleteFs(),
+                            transid.substring(0, transid.indexOf("-")),
+                            transid)),
+                    new StringReader(""),
+                    "text/plain",
+                    AccessHandler.ACCESS_METHODS.POST_REQUEST,
+                    null,
+                    creds);
+            } else if (closeVeto) {
+                LOG.warn("close veto exists. So the duplicated order will not be deleted. vetoAttribute: "
+                            + vetoAttribute);
+            }
+        } catch (final Exception ex) {
+            LOG.warn("Error when removing order with transid " + transid, ex);
+        }
     }
 
     /**
@@ -1028,7 +1112,17 @@ public class FormSolutionsBestellungHandler implements ConnectionContextProvider
                     IOUtils.write(attachements, out);
                 }
             }
-            final String xml = new String(DatatypeConverter.parseBase64Binary((String)map.get("xml")));
+            final String xmlBase64 = (String)map.get("xml");
+            String xml = null;
+
+            if ((xmlBase64 != null) || xmlBase64.equals("")) {
+                xml = new String(DatatypeConverter.parseBase64Binary(xmlBase64));
+            } else {
+                // this should never happen, but it happened sometimes. (I guess, when the status change to delete did
+                // not work properly on formsolution side)
+
+                return null;
+            }
 
             final Charset utf8charset = Charset.forName("UTF-8");
             final Charset iso885915charset = Charset.forName("ISO-8859-15");
@@ -2185,6 +2279,9 @@ public class FormSolutionsBestellungHandler implements ConnectionContextProvider
         for (final String transid : transids) {
             try {
                 final String auftragXml = getAuftrag(transid);
+                if (auftragXml == null) {
+                    throw new Exception("xml tag does not contain data");
+                }
                 fsXmlMap.put(transid, auftragXml);
                 getMySqlHelper().updateStatus(transid, STATUS_FETCH);
 
@@ -2261,8 +2358,10 @@ public class FormSolutionsBestellungHandler implements ConnectionContextProvider
      * @return  DOCUMENT ME!
      */
     public boolean isServerInProduction() {
-        return ServerProperties.DEPLOY_ENV__PRODUCTION.equalsIgnoreCase(DomainServerImpl.getServerProperties()
-                        .getDeployEnv());
+        final boolean prod = ServerProperties.DEPLOY_ENV__PRODUCTION.equalsIgnoreCase(DomainServerImpl
+                        .getServerProperties().getDeployEnv());
+
+        return prod;
     }
 
     /**
@@ -2349,7 +2448,6 @@ public class FormSolutionsBestellungHandler implements ConnectionContextProvider
 
         specialLog("creating cids entries for num of objects: " + transids.size());
 
-        final Set<String> duplicateTransids = new HashSet<>();
         final Map<String, CidsBean> fsBeanMap = new HashMap<>(transids.size());
         for (final String transid : transids) {
             specialLog("creating cids entry for: " + transid);
@@ -2357,38 +2455,14 @@ public class FormSolutionsBestellungHandler implements ConnectionContextProvider
             final String auftragXml = fsXmlMap.get(transid);
             final FormSolutionsBestellung formSolutionBestellung = fsBestellungMap.get(transid);
 
-            boolean duplicate = false;
-            try {
-                final MetaClass bestellungMc = getMetaClass("fs_bestellung", getConnectionContext());
-                final String searchQuery = String.format(
-                        BESTELLUNG_BY_TRANSID_QUERY_TEMPLATE,
-                        bestellungMc.getID(),
-                        bestellungMc.getTableName()
-                                + "."
-                                + bestellungMc.getPrimaryKey(),
-                        bestellungMc.getTableName(),
-                        transid);
-                final MetaObject[] mos = getMetaService().getMetaObject(getUser(), searchQuery, getConnectionContext());
-                if ((mos != null) && (mos.length > 0)) {
-                    duplicate = true;
-                    if (getProperties().isIgnoreDuplicates()) {
-                        continue;
-                    }
-                    duplicateTransids.add(transid);
-                }
-            } catch (final Exception ex) {
-                final String message = "error while search for duplicates for " + transid;
-                LOG.error(message, ex);
-                specialLog(message);
-            }
-
             try {
                 final Exception insertException = insertExceptionMap.get(transid);
                 final ProductType type = typeMap.get(transid);
 
                 final CidsBean bestellungBean = createBestellungBean(formSolutionBestellung, type);
                 bestellungBean.setProperty("form_xml_orig", auftragXml);
-                bestellungBean.setProperty("duplicate", duplicate);
+                bestellungBean.setProperty("duplicate", false);
+
                 if (insertException != null) {
                     bestellungBean.setProperty("fehler", "Fehler beim Erzeugen des MySQL-Datensatzes");
                     bestellungBean.setProperty("exception", getObjectMapper().writeValueAsString(insertException));
@@ -2415,22 +2489,18 @@ public class FormSolutionsBestellungHandler implements ConnectionContextProvider
                         getConnectionContext());
 
                 final CidsBean persistedBestellungBean = persistedMo.getBean();
-                if (!duplicate) {
-                    fsBeanMap.put(transid, persistedBestellungBean);
-                    getMySqlHelper().updateStatus(transid, STATUS_SAVE);
-                    final String email = trimedNotEmpty((String)bestellungBean.getProperty("email"));
-                    doStatusChangedRequest(transid, isInternalEmail(email));
-                }
+
+                fsBeanMap.put(transid, persistedBestellungBean);
+                getMySqlHelper().updateStatus(transid, STATUS_SAVE);
+
+                final String email = trimedNotEmpty((String)bestellungBean.getProperty("email"));
+
+                doStatusChangedRequest(transid, isInternalEmail(email));
             } catch (final Exception ex) {
                 setErrorStatus(transid, STATUS_SAVE, null, "Fehler beim Erstellen des Bestellungs-Objektes", ex);
             }
         }
-        final String duplicateTransIdsTxt = getProperties().getDuplicateTransIdsTxt();
-        try(final OutputStream os = new FileOutputStream(duplicateTransIdsTxt)) {
-            IOUtils.write(String.join("\n", duplicateTransids), os, "UTF-8");
-        } catch (final Exception ex) {
-            LOG.warn(ex, ex);
-        }
+
         return fsBeanMap;
     }
 

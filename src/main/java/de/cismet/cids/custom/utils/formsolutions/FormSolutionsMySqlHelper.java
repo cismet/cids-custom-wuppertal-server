@@ -67,7 +67,7 @@ public class FormSolutionsMySqlHelper {
      * @throws  SQLException  DOCUMENT ME!
      */
     private void connect() throws SQLException {
-        if (this.connection == null) {
+        if ((this.connection == null) || this.connection.isClosed() || !this.connection.isValid(5)) {
             this.connection = DriverManager.getConnection(FormSolutionsProperties.getInstance().getMysqlJdbc());
 
             this.preparedSelectStatement = connection.prepareStatement(
