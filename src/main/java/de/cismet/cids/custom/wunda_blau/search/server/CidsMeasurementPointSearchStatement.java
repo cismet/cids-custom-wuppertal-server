@@ -334,21 +334,15 @@ public class CidsMeasurementPointSearchStatement extends AbstractCidsServerSearc
 
             whereClauseBuilder.append(conjunction);
 
-            whereClauseBuilder.append("g.geo_field && st_GeometryFromText('").append(geomString).append("')");
+            whereClauseBuilder.append("g.geo_field && st_GeomFromEWKT('").append(geomString).append("')");
 
             whereClauseBuilder.append(conjunction);
 
-            if ((geometry instanceof Polygon) || (geometry instanceof MultiPolygon)) { // with buffer for geostring
-                whereClauseBuilder.append("st_intersects(st_buffer(g.geo_field, " + INTERSECTS_BUFFER
-                                + "), st_buffer(st_GeometryFromText('")
-                        .append(geomString)
-                        .append("'), " + INTERSECTS_BUFFER + "))");
-            } else {
-                whereClauseBuilder.append("st_intersects(st_buffer(g.geo_field, " + INTERSECTS_BUFFER
-                                + "), st_GeometryFromText('")
-                        .append(geomString)
-                        .append("'))");
-            }
+            whereClauseBuilder.append("st_intersects(g.geo_field, st_buffer(st_GeomFromEWKT('")
+                    .append(geomString)
+                    .append("'), ")
+                    .append(INTERSECTS_BUFFER)
+                    .append("))");
         }
         return whereClauseBuilder.toString();
     }
