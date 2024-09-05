@@ -653,7 +653,7 @@ public class FormSolutionsBestellungHandler implements ConnectionContextProvider
     }
 
     /**
-     * chekcs, if the given oder is a duplicate
+     * checks, if the given order is a duplicate.
      *
      * @param   transid  the transid of the order to check
      *
@@ -687,7 +687,7 @@ public class FormSolutionsBestellungHandler implements ConnectionContextProvider
     }
 
     /**
-     * set the status of the given order to deleted
+     * set the status of the given order to deleted.
      *
      * @param  transid  the transid of the order
      */
@@ -701,7 +701,7 @@ public class FormSolutionsBestellungHandler implements ConnectionContextProvider
                 LOG.warn("xml data for duplicated transid " + transid + ":\n" + auftragXml);
             }
         } catch (final Exception ex) {
-            LOG.warn("Error wwhen retrieving order with transid " + transid, ex);
+            LOG.warn("Error when retrieving order with transid " + transid, ex);
         }
 
         try {
@@ -1115,7 +1115,7 @@ public class FormSolutionsBestellungHandler implements ConnectionContextProvider
             final String xmlBase64 = (String)map.get("xml");
             String xml = null;
 
-            if ((xmlBase64 != null) || xmlBase64.equals("")) {
+            if ((xmlBase64 != null) && !xmlBase64.equals("")) {
                 xml = new String(DatatypeConverter.parseBase64Binary(xmlBase64));
             } else {
                 // this should never happen, but it happened sometimes. (I guess, when the status change to delete did
