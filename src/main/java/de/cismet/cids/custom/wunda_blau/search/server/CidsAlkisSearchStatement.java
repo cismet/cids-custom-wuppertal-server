@@ -304,26 +304,14 @@ public class CidsAlkisSearchStatement extends AbstractCidsServerSearch implement
             }
             if (geometry != null) {
                 final String geostring = PostGisGeometryFactory.getPostGisCompliantDbString(geometry);
-                if ((geometry instanceof Polygon) || (geometry instanceof MultiPolygon)) { // with buffer for geostring
-                    query += " and st_intersects("
-                                + "st_buffer(geo_field, "
-                                + INTERSECTS_BUFFER
-                                + "),"
-                                + "st_buffer(st_GeometryFromText('"
-                                + geostring
-                                + "'), "
-                                + INTERSECTS_BUFFER
-                                + "))";
-                } else {                                                                   // without buffer for
-                                                                                           // geostring
-                    query += " and st_intersects("
-                                + "st_buffer(geo_field, "
-                                + INTERSECTS_BUFFER
-                                + "),"
-                                + "st_GeometryFromText('"
-                                + geostring
-                                + "'))";
-                }
+                query += " and st_intersects("
+                            + "geo_field"
+                            + ","
+                            + "st_buffer(st_GeomFromEWKT('"
+                            + geostring
+                            + "'), "
+                            + INTERSECTS_BUFFER
+                            + "))";
             }
 
             if (LOG.isInfoEnabled()) {
