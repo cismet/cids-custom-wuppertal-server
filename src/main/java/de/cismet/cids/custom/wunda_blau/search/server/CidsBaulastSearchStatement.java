@@ -139,18 +139,12 @@ public class CidsBaulastSearchStatement extends AbstractCidsServerSearch impleme
 
         if ((geometry != null) && !geometry.isEmpty()) {
             final String geomString = PostGisGeometryFactory.getPostGisCompliantDbString(geometry);
-            if ((geometry instanceof Polygon) || (geometry instanceof MultiPolygon)) { // with buffer for geostring
-                geoquerypart = " and g.geo_field && st_GeometryFromText('" + geomString
-                            + "',25832) and st_intersects(st_buffer(g.geo_field, " + INTERSECTS_BUFFER
-                            + "),st_buffer(st_GeometryFromText('"
-                            + geomString
-                            + "',25832), " + INTERSECTS_BUFFER + "))";
-            } else {
-                geoquerypart = " and g.geo_field && st_GeometryFromText('" + geomString
-                            + "',25832) and st_intersects(st_buffer(g.geo_field, " + INTERSECTS_BUFFER
-                            + "),st_GeometryFromText('" + geomString
-                            + "',25832))";
-            }
+
+            geoquerypart = " and g.geo_field && st_GeomFromEWKT('" + geomString
+                        + "') and st_intersects(g.geo_field"
+                        + ",st_buffer(st_GeomFromEWKT('"
+                        + geomString
+                        + "'), " + INTERSECTS_BUFFER + "))";
         }
 
         if ((art != null) && (art.length() > 0)) {
