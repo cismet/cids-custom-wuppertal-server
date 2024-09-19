@@ -49,6 +49,7 @@ public class AlkisRestConf extends Properties {
     private final String credentialsFile;
     private final String tokenApi;
     private final String aaaWebApi;
+    private final Boolean newRestServiceUsed;
 
     //~ Constructors -----------------------------------------------------------
 
@@ -64,6 +65,7 @@ public class AlkisRestConf extends Properties {
         credentialsFile = serviceProperties.getProperty("CREDENTIALS_FILE");
         tokenApi = serviceProperties.getProperty("TOKEN_API");
         aaaWebApi = serviceProperties.getProperty("AAAWEB_API");
+        newRestServiceUsed = serviceProperties.getProperty("NEW_REST_SERVICE_USED", "false").equalsIgnoreCase("true");
 
         final String crendentialsFile = getCredentialsFile();
         if (crendentialsFile != null) {

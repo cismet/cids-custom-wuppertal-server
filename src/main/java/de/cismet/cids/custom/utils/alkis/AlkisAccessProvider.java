@@ -68,7 +68,7 @@ public final class AlkisAccessProvider {
             aaaWebApiClient.setBasePath(aaaWebApiUrl);
             aaaWebApiClient.getHttpClient().setReadTimeout(30, TimeUnit.SECONDS);
 
-            this.tokenService = new TokenApi(tokenApiClient);
+            this.tokenService = new TokenApi(!getAlkisRestConf().getNewRestServiceUsed(), tokenApiClient);
             this.alkisInfoService = new AlkisInformationApi(aaaWebApiClient);
             this.alkisSearchService = new AlkisSucheApi(aaaWebApiClient);
         } catch (Exception ex) {

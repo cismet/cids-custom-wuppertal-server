@@ -82,22 +82,51 @@ public class AlkisRestAction implements ServerAction {
             } else {
                 // BUCHUNGSBLATT
                 try {
-                    final List<String> buchungsblattCode = Arrays.asList(fixBuchungslattCode(
-                                params[0].getValue().toString()));
                     final boolean aWithLandParcels = true;
+                    // the following two parameter are only used for logging purposes
                     final String operationName = null;
                     final String operationArgument = null;
-                    final String orderNumberInfo = null; // TODO ???
-                    final List<Buchungsblatt> buchungsblaetter = getAlkisAccessProvider().getAlkisInfoService()
-                                .getBuchungsblaetter(
-                                    buchungsblattCode,
-                                    token,
-                                    configuration,
-                                    aWithLandParcels,
-                                    operationName,
-                                    operationArgument,
-                                    orderNumberInfo);
-                    return buchungsblaetter.iterator().next();
+                    // Optional
+                    // Um die aufgerufenen Funktionen eindeutig zu einem Geschäftsvorgang zuordnen zu können, besteht
+                    // bei bestimmten Operationen die Möglichkeit Angaben zur Auftrags- bzw. Antragsnummer zu
+                    // übergeben. Diese Angaben werden mit der durchgeführten Funktion protokolliert.
+                    final String orderNumberInfo = null;
+
+                    if (getAlkisAccessProvider().getAlkisRestConf().getNewRestServiceUsed()) {
+                        final String fixedBuchungsblattCode = fixBuchungslattCode(params[0].getValue().toString());
+
+                        final List<String> buchungsblattUUIDs = getAlkisAccessProvider().getAlkisInfoService()
+                                    .translateBuchungsblattCodeIntoUUIds(token, configuration, fixedBuchungsblattCode);
+
+                        if ((buchungsblattUUIDs != null) && (buchungsblattUUIDs.size() > 0)) {
+                            final List<Buchungsblatt> buchungsblaetter = getAlkisAccessProvider().getAlkisInfoService()
+                                        .getBuchungsblaetter(
+                                            buchungsblattUUIDs,
+                                            token,
+                                            configuration,
+                                            aWithLandParcels,
+                                            operationName,
+                                            operationArgument,
+                                            orderNumberInfo);
+                            return buchungsblaetter.iterator().next();
+                        } else {
+                            return null;
+                        }
+                    } else {
+                        final List<String> buchungsblattCode = Arrays.asList(fixBuchungslattCode(
+                                    params[0].getValue().toString()));
+
+                        final List<Buchungsblatt> buchungsblaetter = getAlkisAccessProvider().getAlkisInfoService()
+                                    .getBuchungsblaetter(
+                                        buchungsblattCode,
+                                        token,
+                                        configuration,
+                                        aWithLandParcels,
+                                        operationName,
+                                        operationArgument,
+                                        orderNumberInfo);
+                        return buchungsblaetter.iterator().next();
+                    }
                 } catch (final ApiException remoteException) {
                     LOG.error("Error in ServerAlkisRestAction", remoteException);
                     throw new RuntimeException("Error in ServerAlkisRestAction", remoteException);
@@ -109,20 +138,45 @@ public class AlkisRestAction implements ServerAction {
     }
 
     /**
-     * DOCUMENT ME!
+     * fixes the buchungsblattcode. Beschreibung aus dem Migrationskonzept: "Folgende Definition ist einzuhalten: Die
+     * Elemente sind rechtsbündig zu belegen, fehlende Stellen sind mit führenden Nullen zu belegen. Es ergibt sich kein
+     * Leerzeichen am Ende des Buchungsblattkennzeichens bei fehlender Buchstabenerweiterung. Die Gesamtlänge des
+     * Buchungsblattkennzeichens beträgt immer 13 Zeichen." (Anmerkung therter: 13 Zeichen ohne Bindestrich).
      *
-     * @param   buchungsblattCode  DOCUMENT ME!
+     * @param   buchungsblattCode  the code to fix
      *
-     * @return  DOCUMENT ME!
+     * @return  the fixed code
      */
     public static String fixBuchungslattCode(final String buchungsblattCode) {
         if (buchungsblattCode != null) {
-            final StringBuffer buchungsblattCodeSB = new StringBuffer(buchungsblattCode);
-            // Fix SICAD-API-strangeness...
-            while (buchungsblattCodeSB.length() < 14) {
-                buchungsblattCodeSB.append(" ");
+            if (getAlkisAccessProvider().getAlkisRestConf().getNewRestServiceUsed()) {
+                final StringBuffer buchungsblattCodeSB = new StringBuffer();
+
+                if (((buchungsblattCode.length() < 14) || buchungsblattCode.endsWith(" "))
+                            && buchungsblattCode.contains("-")) {
+                    String blattCode = buchungsblattCode;
+
+                    if (blattCode.endsWith(" ")) {
+                        blattCode = blattCode.substring(0, blattCode.length() - 1);
+                    }
+                    buchungsblattCodeSB.append(blattCode.substring(0, blattCode.indexOf("-") + 1));
+
+                    for (int i = 0; i < (14 - blattCode.length()); ++i) {
+                        buchungsblattCodeSB.append("0");
+                    }
+                    buchungsblattCodeSB.append(blattCode.substring(blattCode.indexOf("-") + 1));
+                    return buchungsblattCodeSB.toString();
+                } else {
+                    return buchungsblattCode;
+                }
+            } else {
+                final StringBuffer buchungsblattCodeSB = new StringBuffer(buchungsblattCode);
+                // Fix SICAD-API-strangeness...
+                while (buchungsblattCodeSB.length() < 14) {
+                    buchungsblattCodeSB.append(" ");
+                }
+                return buchungsblattCodeSB.toString();
             }
-            return buchungsblattCodeSB.toString();
         } else {
             return "";
         }
