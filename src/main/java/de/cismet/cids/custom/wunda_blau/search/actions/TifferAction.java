@@ -34,6 +34,7 @@ import javax.imageio.stream.ImageOutputStream;
 import de.cismet.cids.custom.utils.ServerStadtbilderConf;
 
 import de.cismet.cids.server.actions.ServerAction;
+import de.cismet.cids.server.actions.ServerActionHelper;
 import de.cismet.cids.server.actions.ServerActionParameter;
 
 import de.cismet.commons.security.handler.SimpleHttpAccessHandler;
@@ -177,7 +178,7 @@ public class TifferAction implements ServerAction {
             out = new ByteArrayOutputStream();
             writeImage(bi, format, out);
 
-            return out.toByteArray();
+            return ServerActionHelper.asyncByteArrayHelper(out.toByteArray(), "tiffer." + format);
         } catch (IOException ex) {
             LOG.error("Error while creating the ByteArrayOutputStream", ex);
             return null;

@@ -30,6 +30,7 @@ import de.cismet.cids.custom.utils.alkis.NivellementPunktReportBean;
 import de.cismet.cids.dynamics.CidsBean;
 
 import de.cismet.cids.server.actions.ServerAction;
+import de.cismet.cids.server.actions.ServerActionHelper;
 import de.cismet.cids.server.actions.ServerActionParameter;
 
 import de.cismet.cids.utils.serverresources.ServerResourcesLoader;
@@ -118,7 +119,7 @@ public class NivPReportServerAction extends StampedJasperReportServerAction impl
                     DomainServerImpl.getServerProperties().getServerResourcesBasePath()
                             + "/");
 
-                return generateReport(parameters, dataSource);
+                return ServerActionHelper.asyncByteArrayHelper(generateReport(parameters, dataSource), "NivPReport.pdf");
             } else {
                 return null;
             }

@@ -29,6 +29,7 @@ import de.cismet.cids.custom.utils.alkis.VermessungsRissReportHelper;
 import de.cismet.cids.dynamics.CidsBean;
 
 import de.cismet.cids.server.actions.ServerAction;
+import de.cismet.cids.server.actions.ServerActionHelper;
 import de.cismet.cids.server.actions.ServerActionParameter;
 
 import de.cismet.cids.utils.serverresources.ServerResourcesLoader;
@@ -123,7 +124,7 @@ public class VermessungsrissReportServerAction extends StampedJasperReportServer
 
                 final JRBeanCollectionDataSource dataSource = new JRBeanCollectionDataSource(reportBeans);
 
-                return generateReport(parameters, dataSource);
+                return ServerActionHelper.asyncByteArrayHelper(generateReport(parameters, dataSource), "VermessungsrissReport.pdf");
             } else {
                 return null;
             }

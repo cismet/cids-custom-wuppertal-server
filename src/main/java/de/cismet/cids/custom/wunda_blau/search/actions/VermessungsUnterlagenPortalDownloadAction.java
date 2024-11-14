@@ -21,6 +21,7 @@ import de.cismet.cids.custom.utils.vermessungsunterlagen.VermessungsunterlagenPr
 import de.cismet.cids.custom.utils.vermessungsunterlagen.VermessungsunterlagenWebdavHelper;
 
 import de.cismet.cids.server.actions.ServerAction;
+import de.cismet.cids.server.actions.ServerActionHelper;
 import de.cismet.cids.server.actions.ServerActionParameter;
 
 /**
@@ -66,7 +67,7 @@ public class VermessungsUnterlagenPortalDownloadAction implements ServerAction {
                             + "_" + schluessel + ".zip";
                 inputStream = new VermessungsunterlagenFtpHelper().downloadFromFTP(ftpZipPath);
             }
-            return IOUtils.toByteArray(inputStream);
+            return ServerActionHelper.asyncByteArrayHelper(IOUtils.toByteArray(inputStream), "vermessungsunterlagen.zip");
         } catch (final Exception ex) {
             return new Exception("Fehler beim Herunterladen der Zip-Datei.", ex);
         } finally {

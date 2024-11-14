@@ -36,6 +36,7 @@ import de.cismet.cids.custom.utils.WundaBlauServerResources;
 import de.cismet.cids.dynamics.CidsBean;
 
 import de.cismet.cids.server.actions.ServerAction;
+import de.cismet.cids.server.actions.ServerActionHelper;
 import de.cismet.cids.server.actions.ServerActionParameter;
 
 import de.cismet.cids.utils.serverresources.ServerResourcesLoader;
@@ -170,7 +171,7 @@ public class AlboVorgangExtReportServerAction extends StampedJasperReportServerA
             parameters.put("ERHEBUNGSKLASSEN_WZ_STRING", mo2String(allErhebungsklassenWz));
             parameters.put("ERHEBUNGSKLASSEN_STRING", mo2String(allErhebungsklassen));
 
-            return generateReport(parameters, dataSource);
+            return ServerActionHelper.asyncByteArrayHelper(generateReport(parameters, dataSource), "vorgang.pdf");
         } catch (final Exception ex) {
             LOG.error(ex, ex);
             return ex;

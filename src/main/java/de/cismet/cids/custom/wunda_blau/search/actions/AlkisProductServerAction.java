@@ -32,6 +32,7 @@ import de.cismet.cids.custom.utils.alkis.AlkisRestConf;
 import de.cismet.cids.custom.utils.alkis.ServerAlkisProducts;
 
 import de.cismet.cids.server.actions.ServerAction;
+import de.cismet.cids.server.actions.ServerActionHelper;
 import de.cismet.cids.server.actions.ServerActionParameter;
 import de.cismet.cids.server.actions.UserAwareServerAction;
 
@@ -215,7 +216,11 @@ public class AlkisProductServerAction implements ConnectionContextStore, UserAwa
                 }
             }
             if (url != null) {
-                return doDownload(url, Body.LISTENNACHWEIS.equals(body), (Body)body);
+                return ServerActionHelper.asyncByteArrayHelper(doDownload(
+                            url,
+                            Body.LISTENNACHWEIS.equals(body),
+                            (Body)body),
+                        "ProduktReport.pdf");
             } else {
                 throw new Exception("url could not be generated");
             }

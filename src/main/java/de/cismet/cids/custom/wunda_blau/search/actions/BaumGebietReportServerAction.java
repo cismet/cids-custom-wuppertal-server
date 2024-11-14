@@ -37,6 +37,7 @@ import de.cismet.cids.custom.utils.WundaBlauServerResources;
 import de.cismet.cids.custom.wunda_blau.search.server.BaumChildLightweightSearch;
 
 import de.cismet.cids.server.actions.ServerAction;
+import de.cismet.cids.server.actions.ServerActionHelper;
 import de.cismet.cids.server.actions.ServerActionParameter;
 
 import de.cismet.cids.utils.serverresources.ServerResourcesLoader;
@@ -148,7 +149,7 @@ public class BaumGebietReportServerAction extends StampedJasperReportServerActio
                     getUser(),
                     getConnectionContext());
             parameters.put("REPORT_SCRIPTLET", scriptlet);
-            return generateReport(parameters, dataSource);
+            return ServerActionHelper.asyncByteArrayHelper(generateReport(parameters, dataSource), "BaumgebietReport.pdf");
         } catch (final Exception ex) {
             LOG.error("Parameter für Gebiet-Report nicht erzeugt.", ex);
             return ex;
