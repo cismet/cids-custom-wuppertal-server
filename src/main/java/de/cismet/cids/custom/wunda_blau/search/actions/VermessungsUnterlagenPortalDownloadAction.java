@@ -67,7 +67,8 @@ public class VermessungsUnterlagenPortalDownloadAction implements ServerAction {
                             + "_" + schluessel + ".zip";
                 inputStream = new VermessungsunterlagenFtpHelper().downloadFromFTP(ftpZipPath);
             }
-            return ServerActionHelper.asyncByteArrayHelper(IOUtils.toByteArray(inputStream), "vermessungsunterlagen.zip");
+            return ServerActionHelper.asyncByteArrayHelper(IOUtils.toByteArray(inputStream),
+                    "vermessungsunterlagen.zip");
         } catch (final Exception ex) {
             return new Exception("Fehler beim Herunterladen der Zip-Datei.", ex);
         } finally {

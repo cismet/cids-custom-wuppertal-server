@@ -110,7 +110,8 @@ public class AlkisPointReportServerAction extends StampedJasperReportServerActio
                     DomainServerImpl.getServerProperties().getServerResourcesBasePath()
                             + "/");
 
-                return ServerActionHelper.asyncByteArrayHelper(generateReport(parameters, dataSource), "PunktReport.pdf");
+                return ServerActionHelper.asyncByteArrayHelper(generateReport(parameters, dataSource),
+                        "PunktReport.pdf");
             } else {
                 return null;
             }

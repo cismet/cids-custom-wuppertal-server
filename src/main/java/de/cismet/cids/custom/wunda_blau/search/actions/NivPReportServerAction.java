@@ -119,7 +119,8 @@ public class NivPReportServerAction extends StampedJasperReportServerAction impl
                     DomainServerImpl.getServerProperties().getServerResourcesBasePath()
                             + "/");
 
-                return ServerActionHelper.asyncByteArrayHelper(generateReport(parameters, dataSource), "NivPReport.pdf");
+                return ServerActionHelper.asyncByteArrayHelper(generateReport(parameters, dataSource),
+                        "NivPReport.pdf");
             } else {
                 return null;
             }

@@ -124,7 +124,8 @@ public class VermessungsrissReportServerAction extends StampedJasperReportServer
 
                 final JRBeanCollectionDataSource dataSource = new JRBeanCollectionDataSource(reportBeans);
 
-                return ServerActionHelper.asyncByteArrayHelper(generateReport(parameters, dataSource), "VermessungsrissReport.pdf");
+                return ServerActionHelper.asyncByteArrayHelper(generateReport(parameters, dataSource),
+                        "VermessungsrissReport.pdf");
             } else {
                 return null;
             }
