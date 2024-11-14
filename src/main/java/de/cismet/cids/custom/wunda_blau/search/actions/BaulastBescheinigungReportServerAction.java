@@ -144,7 +144,8 @@ public class BaulastBescheinigungReportServerAction extends StampedJasperReportS
                     DomainServerImpl.getServerProperties().getServerResourcesBasePath()
                             + "/");
 
-                return ServerActionHelper.asyncByteArrayHelper(generateReport(parameters, dataSource), "BaulastReport.pdf");
+                return ServerActionHelper.asyncByteArrayHelper(generateReport(parameters, dataSource),
+                        "BaulastReport.pdf");
             } else {
                 return null;
             }

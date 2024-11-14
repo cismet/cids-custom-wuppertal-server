@@ -149,7 +149,8 @@ public class BaumGebietReportServerAction extends StampedJasperReportServerActio
                     getUser(),
                     getConnectionContext());
             parameters.put("REPORT_SCRIPTLET", scriptlet);
-            return ServerActionHelper.asyncByteArrayHelper(generateReport(parameters, dataSource), "BaumgebietReport.pdf");
+            return ServerActionHelper.asyncByteArrayHelper(generateReport(parameters, dataSource),
+                    "BaumgebietReport.pdf");
         } catch (final Exception ex) {
             LOG.error("Parameter für Gebiet-Report nicht erzeugt.", ex);
             return ex;

@@ -132,7 +132,8 @@ public class BaulastenReportServerAction extends StampedJasperReportServerAction
                 "SUBREPORT_DIR",
                 DomainServerImpl.getServerProperties().getServerResourcesBasePath()
                         + "/");
-            return ServerActionHelper.asyncByteArrayHelper(generateReport(parameters, dataSource), "BaulastenReport.pdf");
+            return ServerActionHelper.asyncByteArrayHelper(generateReport(parameters, dataSource),
+                    "BaulastenReport.pdf");
         } catch (final Exception ex) {
             LOG.error(ex, ex);
             return ex;
