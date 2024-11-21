@@ -41,6 +41,8 @@ import java.util.UUID;
 
 import de.cismet.cids.custom.utils.alkis.AlkisProducts;
 
+import de.cismet.cids.server.actions.UploadableInputStream;
+
 import de.cismet.commons.security.handler.SimpleHttpAccessHandler;
 
 import de.cismet.connectioncontext.ConnectionContext;
@@ -161,7 +163,7 @@ public class StamperUtils {
      *
      * @throws  Exception  DOCUMENT ME!
      */
-    public byte[] stampRequest(final String documentType,
+    public UploadableInputStream stampRequest(final String documentType,
             final URL url,
             final String postParams,
             final StamperFallback fallback,
@@ -211,7 +213,7 @@ public class StamperUtils {
      *
      * @throws  Exception  DOCUMENT ME!
      */
-    private byte[] stampRequest(final URL url,
+    private UploadableInputStream stampRequest(final URL url,
             final String postParams,
             final StamperContext stamperContext) throws Exception {
         final URL serviceUrl = new URL(getConf().getStamperService() + getConf().getStamperRequest());
@@ -247,7 +249,7 @@ public class StamperUtils {
             parts.add(new FilePart("requestJson", fileRequest));
             parts.add(new FilePart("context", fileContext));
 
-            return IOUtils.toByteArray(
+            return new UploadableInputStream(
                     new SimpleHttpAccessHandler().doMultipartRequest(serviceUrl, parts.toArray(new Part[0]), null));
         } finally {
             fileContext.delete();
@@ -268,7 +270,7 @@ public class StamperUtils {
      *
      * @throws  Exception  DOCUMENT ME!
      */
-    public byte[] stampDocument(final String documentType,
+    public UploadableInputStream stampDocument(final String documentType,
             final InputStream inputStream,
             final StamperFallback fallback,
             final ConnectionContext connectionContext) throws Exception {
@@ -310,7 +312,8 @@ public class StamperUtils {
      *
      * @throws  Exception  java.lang.Exception
      */
-    private byte[] stampDocument(final InputStream inputStream, final StamperContext stamperContext) throws Exception {
+    private UploadableInputStream stampDocument(final InputStream inputStream, final StamperContext stamperContext)
+            throws Exception {
         final URL serviceUrl = new URL(getConf().getStamperService() + getConf().getStamperDocument());
         final String connectionContextJsonAsString = new ObjectMapper().writeValueAsString(stamperContext);
         if (LOG.isDebugEnabled()) {
@@ -331,7 +334,7 @@ public class StamperUtils {
             parts.add(new FilePart("document", fileDocument));
             parts.add(new FilePart("context", fileContext));
 
-            return IOUtils.toByteArray(
+            return new UploadableInputStream(
                     new SimpleHttpAccessHandler().doMultipartRequest(serviceUrl, parts.toArray(new Part[0]), null));
         } finally {
             fileContext.delete();
@@ -382,7 +385,7 @@ public class StamperUtils {
          *
          * @throws  Exception  DOCUMENT ME!
          */
-        byte[] createProduct() throws Exception;
+        UploadableInputStream createProduct() throws Exception;
     }
 
     //~ Inner Classes ----------------------------------------------------------

@@ -16,7 +16,6 @@ import Sirius.server.middleware.interfaces.domainserver.MetaService;
 import Sirius.server.middleware.interfaces.domainserver.MetaServiceStore;
 import Sirius.server.newuser.User;
 
-import org.apache.commons.io.IOUtils;
 import org.apache.log4j.Logger;
 
 import java.io.StringReader;
@@ -34,6 +33,7 @@ import de.cismet.cids.custom.utils.alkis.ServerAlkisProducts;
 import de.cismet.cids.server.actions.ServerAction;
 import de.cismet.cids.server.actions.ServerActionHelper;
 import de.cismet.cids.server.actions.ServerActionParameter;
+import de.cismet.cids.server.actions.UploadableInputStream;
 import de.cismet.cids.server.actions.UserAwareServerAction;
 
 import de.cismet.commons.security.AccessHandler;
@@ -256,7 +256,8 @@ public class AlkisProductServerAction implements ConnectionContextStore, UserAwa
      *
      * @throws  Exception  DOCUMENT ME!
      */
-    private byte[] doDownload(final URL url, final boolean postParams, final Body body) throws Exception {
+    private UploadableInputStream doDownload(final URL url, final boolean postParams, final Body body)
+            throws Exception {
         final String queryString = url.getQuery();
         final String urlString = url.toExternalForm();
         final boolean fullUrl = (queryString == null) && postParams;
@@ -270,16 +271,16 @@ public class AlkisProductServerAction implements ConnectionContextStore, UserAwa
                         new StamperUtils.StamperFallback() {
 
                             @Override
-                            public byte[] createProduct() throws Exception {
-                                return IOUtils.toByteArray(
-                                        postParams
-                                            ? new SimpleHttpAccessHandler().doRequest(
+                            public UploadableInputStream createProduct() throws Exception {
+                                return (postParams
+                                        ? new UploadableInputStream(
+                                            new SimpleHttpAccessHandler().doRequest(
                                                 fullUrl ? url
                                                         : new URL(urlString.substring(0, urlString.lastIndexOf('?'))),
                                                 fullUrl ? null : new StringReader(queryString),
                                                 AccessHandler.ACCESS_METHODS.POST_REQUEST,
-                                                AlkisProducts.POST_HEADER)
-                                            : new SimpleHttpAccessHandler().doRequest(url));
+                                                AlkisProducts.POST_HEADER))
+                                        : new UploadableInputStream(new SimpleHttpAccessHandler().doRequest(url)));
                             }
                         },
                         getConnectionContext());
