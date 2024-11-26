@@ -39,6 +39,7 @@ public class TwMassnahmeDeletionProvider extends AbstractCustomDeletionProvider 
     private static final String FIELD__ID = "id";
     private static final String FIELD__FK = "fk_massnahmen";
     private static final String TABLE_NAME_SEARCH = "tw_brunnen_massnahmen";
+    private static final String ERROR_MESSAGE = "Der folgende Fehler ist aufgetreten: ";
     private static final String CAUSE =
         "Diese Massnahme kann nicht gelöscht werden, da diese bei mindestens einem Trinkwasserbrunnen verwendet wird.";
 
@@ -78,6 +79,8 @@ public class TwMassnahmeDeletionProvider extends AbstractCustomDeletionProvider 
             }
         } catch (RemoteException ex) {
             LOG.error("Cannot delete Massnahme object", ex);
+            deleteText = ERROR_MESSAGE + ex.getMessage();
+            return true;
         }
         return false;
     }

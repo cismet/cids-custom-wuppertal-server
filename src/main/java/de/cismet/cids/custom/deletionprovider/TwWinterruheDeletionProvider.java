@@ -32,10 +32,6 @@ public class TwWinterruheDeletionProvider extends AbstractCustomDeletionProvider
     private static final String TABLE_NAME = "tw_winterruhe";
     private static final String DELETE_TEXT = "Die Winterruhe kann nicht gelöscht werden.";
 
-    //~ Instance fields --------------------------------------------------------
-
-    
-
     //~ Methods ----------------------------------------------------------------
 
     @Override
