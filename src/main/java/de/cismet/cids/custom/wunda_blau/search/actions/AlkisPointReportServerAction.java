@@ -30,6 +30,7 @@ import de.cismet.cids.custom.utils.alkis.AlkisPointReportBean;
 import de.cismet.cids.dynamics.CidsBean;
 
 import de.cismet.cids.server.actions.ServerAction;
+import de.cismet.cids.server.actions.ServerActionHelper;
 import de.cismet.cids.server.actions.ServerActionParameter;
 
 import de.cismet.cids.utils.serverresources.ServerResourcesLoader;
@@ -109,7 +110,8 @@ public class AlkisPointReportServerAction extends StampedJasperReportServerActio
                     DomainServerImpl.getServerProperties().getServerResourcesBasePath()
                             + "/");
 
-                return generateReport(parameters, dataSource);
+                return ServerActionHelper.asyncByteArrayHelper(generateReport(parameters, dataSource),
+                        "PunktReport.pdf");
             } else {
                 return null;
             }
