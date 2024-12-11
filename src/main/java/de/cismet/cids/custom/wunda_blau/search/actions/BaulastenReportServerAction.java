@@ -33,6 +33,7 @@ import de.cismet.cids.custom.utils.alkis.BaulastenReportGenerator;
 import de.cismet.cids.dynamics.CidsBean;
 
 import de.cismet.cids.server.actions.ServerAction;
+import de.cismet.cids.server.actions.ServerActionHelper;
 import de.cismet.cids.server.actions.ServerActionParameter;
 import de.cismet.cids.server.actions.UserAwareServerAction;
 
@@ -131,7 +132,8 @@ public class BaulastenReportServerAction extends StampedJasperReportServerAction
                 "SUBREPORT_DIR",
                 DomainServerImpl.getServerProperties().getServerResourcesBasePath()
                         + "/");
-            return generateReport(parameters, dataSource);
+            return ServerActionHelper.asyncByteArrayHelper(generateReport(parameters, dataSource),
+                    "BaulastenReport.pdf");
         } catch (final Exception ex) {
             LOG.error(ex, ex);
             return ex;

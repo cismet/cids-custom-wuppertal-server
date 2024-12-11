@@ -34,6 +34,7 @@ import de.cismet.cids.custom.utils.WundaBlauServerResources;
 import de.cismet.cids.dynamics.CidsBean;
 
 import de.cismet.cids.server.actions.ServerAction;
+import de.cismet.cids.server.actions.ServerActionHelper;
 import de.cismet.cids.server.actions.ServerActionParameter;
 
 import de.cismet.cids.utils.serverresources.ServerResourcesLoader;
@@ -117,7 +118,7 @@ public class AlboVorgangReportServerAction extends StampedJasperReportServerActi
 
             final JRBeanCollectionDataSource dataSource = new JRBeanCollectionDataSource(Arrays.asList(bean));
 
-            return generateReport(parameters, dataSource);
+            return ServerActionHelper.asyncByteArrayHelper(generateReport(parameters, dataSource), "vorgang.pdf");
         } catch (final Exception ex) {
             LOG.error(ex, ex);
             return ex;

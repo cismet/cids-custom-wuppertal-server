@@ -29,6 +29,7 @@ import de.cismet.cids.dynamics.CidsBean;
 
 import de.cismet.cids.server.actions.DefaultServerAction;
 import de.cismet.cids.server.actions.ServerAction;
+import de.cismet.cids.server.actions.ServerActionHelper;
 import de.cismet.cids.server.actions.ServerActionParameter;
 
 import de.cismet.cids.utils.serverresources.PropertiesServerResource;
@@ -100,7 +101,7 @@ public class PfReportDownloadAction extends DefaultServerAction {
                                 new File(
                                     DomainServerImpl.getServerProperties().getServerResourcesBasePath(),
                                     fileName.startsWith("/") ? fileName.substring(1) : fileName))) {
-                return IOUtils.toByteArray(inputStream);
+                return ServerActionHelper.asyncByteArrayHelper(IOUtils.toByteArray(inputStream), "PfReport.pdf");
             }
         } catch (final Exception ex) {
             LOG.info("error while jasper file", ex);

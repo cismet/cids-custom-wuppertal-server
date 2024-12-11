@@ -10,7 +10,6 @@ package de.cismet.cids.custom.wunda_blau.search.actions;
 import Sirius.server.middleware.impls.domainserver.DomainServerImpl;
 import Sirius.server.middleware.types.MetaObjectNode;
 import Sirius.server.newuser.User;
-import Sirius.server.property.ServerProperties;
 
 import org.apache.commons.io.IOUtils;
 import org.apache.log4j.Logger;
@@ -25,6 +24,7 @@ import de.cismet.cids.custom.utils.formsolutions.FormSolutionsProperties;
 import de.cismet.cids.dynamics.CidsBean;
 
 import de.cismet.cids.server.actions.ServerAction;
+import de.cismet.cids.server.actions.ServerActionHelper;
 import de.cismet.cids.server.actions.ServerActionParameter;
 import de.cismet.cids.server.actions.UserAwareServerAction;
 
@@ -132,7 +132,7 @@ public class FormSolutionDownloadBestellungAction implements ServerAction,
                         IOUtils.copy(in, out);
                     }
                 }
-                return out.toByteArray();
+                return ServerActionHelper.asyncByteArrayHelper(out.toByteArray(), "fs.pdf");
             } catch (final Exception ex) {
                 LOG.error(ex, ex);
                 return ex;

@@ -14,11 +14,14 @@ package de.cismet.cids.custom.utils;
 
 import net.sf.jasperreports.engine.JRDataSource;
 
+import org.apache.commons.io.IOUtils;
+
 import java.io.ByteArrayInputStream;
 
 import java.util.Map;
 
 import de.cismet.cids.server.actions.JasperReportServerAction;
+import de.cismet.cids.server.actions.UploadableInputStream;
 
 import de.cismet.connectioncontext.ConnectionContext;
 import de.cismet.connectioncontext.ConnectionContextStore;
@@ -54,14 +57,16 @@ public abstract class StampedJasperReportServerAction extends JasperReportServer
         final String documentType = "action_" + getTaskName();
         final byte[] bytes = super.generateReport(parameters, dataSource);
         try(final ByteArrayInputStream bis = new ByteArrayInputStream(bytes)) {
-            return ServerStamperUtils.getInstance()
+            final UploadableInputStream stream = ServerStamperUtils.getInstance()
                         .stampDocument(documentType, bis, new StamperUtils.StamperFallback() {
 
                                 @Override
-                                public byte[] createProduct() throws Exception {
-                                    return bytes;
+                                public UploadableInputStream createProduct() throws Exception {
+                                    return new UploadableInputStream(new ByteArrayInputStream(bytes));
                                 }
                             }, getConnectionContext());
+
+            return IOUtils.toByteArray(stream.getInputStream());
         }
     }
 }

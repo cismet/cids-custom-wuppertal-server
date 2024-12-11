@@ -34,6 +34,7 @@ import de.cismet.cids.custom.utils.WundaBlauServerResources;
 import de.cismet.cids.custom.utils.berechtigungspruefung.baulastbescheinigung.BerechtigungspruefungBescheinigungGruppeInfo;
 
 import de.cismet.cids.server.actions.ServerAction;
+import de.cismet.cids.server.actions.ServerActionHelper;
 import de.cismet.cids.server.actions.ServerActionParameter;
 import de.cismet.cids.server.actions.UserAwareServerAction;
 
@@ -143,7 +144,8 @@ public class BaulastBescheinigungReportServerAction extends StampedJasperReportS
                     DomainServerImpl.getServerProperties().getServerResourcesBasePath()
                             + "/");
 
-                return generateReport(parameters, dataSource);
+                return ServerActionHelper.asyncByteArrayHelper(generateReport(parameters, dataSource),
+                        "BaulastReport.pdf");
             } else {
                 return null;
             }

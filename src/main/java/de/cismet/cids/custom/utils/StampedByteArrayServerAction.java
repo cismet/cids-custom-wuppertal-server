@@ -15,7 +15,9 @@ package de.cismet.cids.custom.utils;
 import java.io.ByteArrayInputStream;
 
 import de.cismet.cids.server.actions.DefaultServerAction;
+import de.cismet.cids.server.actions.ServerActionHelper;
 import de.cismet.cids.server.actions.ServerActionParameter;
+import de.cismet.cids.server.actions.UploadableInputStream;
 
 /**
  * DOCUMENT ME!
@@ -45,18 +47,20 @@ public abstract class StampedByteArrayServerAction extends DefaultServerAction {
             final String documentType = "action_" + getTaskName();
             final byte[] bytes = (byte[])executeBeforeStamp(o, saps);
             try(final ByteArrayInputStream bis = new ByteArrayInputStream(bytes)) {
-                return ServerStamperUtils.getInstance()
-                            .stampDocument(
-                                documentType,
-                                bis,
-                                new StamperUtils.StamperFallback() {
+                return ServerActionHelper.asyncByteArrayHelper(ServerStamperUtils.getInstance().stampDocument(
+                            documentType,
+                            bis,
+                            new StamperUtils.StamperFallback() {
 
-                                    @Override
-                                    public byte[] createProduct() throws Exception {
-                                        return bytes;
-                                    }
-                                },
-                                getConnectionContext());
+                                @Override
+                                public UploadableInputStream createProduct() throws Exception {
+                                    return new UploadableInputStream(new ByteArrayInputStream(bytes));
+                                }
+                            },
+                            getConnectionContext()),
+                        "stamped"
+                                + getTaskName()
+                                + "Report.pdf");
             }
         } catch (final Exception ex) {
             return ex;
