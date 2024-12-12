@@ -76,7 +76,7 @@ public class NasZaehlObjekteServerAction implements ServerAction, MetaServiceSto
                 + " FROM geom g, cs_attr_object_derived i LEFT OUTER JOIN cs_cache s ON ( s.class_id =i.class_id AND s.object_id=i.object_id )"
                 + " WHERE i.attr_class_id = ( SELECT cs_class.id FROM cs_class WHERE cs_class.table_name::text ILIKE 'GEOM'::text )"
                 + " AND i.attr_object_id = g.id"
-                + " AND i.class_id IN (6)"
+                + " AND i.class_id IN ((select id from cs_Class where table_name ilike 'adresse'))"
                 + " AND geo_field && st_GeometryFromText('<geom>')"
                 + " AND st_intersects(st_buffer(geo_field, " + INTERSECTS_BUFFER
                 + "),st_buffer(st_GeometryFromText('<geom>'), " + INTERSECTS_BUFFER + ")) ORDER BY 1,2,3";
