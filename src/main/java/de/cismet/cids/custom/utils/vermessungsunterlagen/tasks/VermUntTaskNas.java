@@ -22,6 +22,7 @@ import com.vividsolutions.jts.geom.Polygon;
 import java.io.File;
 import java.io.FileOutputStream;
 
+import de.cismet.cids.custom.utils.AsyncDownloadHelper;
 import de.cismet.cids.custom.utils.nas.NasProduct;
 import de.cismet.cids.custom.utils.vermessungsunterlagen.VermessungsunterlagenHandler;
 import de.cismet.cids.custom.utils.vermessungsunterlagen.VermessungsunterlagenProperties;
@@ -144,7 +145,11 @@ public abstract class VermUntTaskNas extends VermessungsunterlagenTask implement
                 LOG.info("result fetching thread was interrupted");
                 break;
             }
-            content = (byte[])action.execute(null, paramOrderId, paramMethod);
+            content = (byte[])AsyncDownloadHelper.actionResultToByteArrayIfPossible(action.execute(
+                        null,
+                        paramOrderId,
+                        paramMethod));
+
             if (content == null) {
                 final String message = "Beim Abfragen der NAS-Ergebnisse kam es zu einem unerwarteten Fehler.";
                 LOG.error(message, new Exception());
