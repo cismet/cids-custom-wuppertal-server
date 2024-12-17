@@ -34,6 +34,7 @@ import java.util.Map;
 import java.util.zip.ZipEntry;
 import java.util.zip.ZipOutputStream;
 
+import de.cismet.cids.custom.utils.AsyncDownloadHelper;
 import de.cismet.cids.custom.utils.berechtigungspruefung.katasterauszug.BerechtigungspruefungAlkisDownloadInfo;
 import de.cismet.cids.custom.utils.berechtigungspruefung.katasterauszug.BerechtigungspruefungAlkisEinzelnachweisDownloadInfo;
 import de.cismet.cids.custom.wunda_blau.search.actions.AlkisProductServerAction;
@@ -227,7 +228,9 @@ public class LiegenschaftsbuchauszugHelper {
             serverAction.setUser(getUser());
             serverAction.initWithConnectionContext(getConnectionContext());
 
-            final Object o = serverAction.execute(AlkisProductServerAction.Body.EINZELNACHWEIS, saps);
+            Object o = serverAction.execute(AlkisProductServerAction.Body.EINZELNACHWEIS, saps);
+
+            o = AsyncDownloadHelper.actionResultToByteArrayIfPossible(o);
 
             if (o instanceof Exception) {
                 throw new IOException((Exception)o);
@@ -259,7 +262,9 @@ public class LiegenschaftsbuchauszugHelper {
                     serverAction.setUser(getUser());
                     serverAction.initWithConnectionContext(getConnectionContext());
 
-                    final Object o = serverAction.execute(AlkisProductServerAction.Body.EINZELNACHWEIS, saps);
+                    Object o = serverAction.execute(AlkisProductServerAction.Body.EINZELNACHWEIS, saps);
+
+                    o = AsyncDownloadHelper.actionResultToByteArrayIfPossible(o);
 
                     if (o instanceof Exception) {
                         throw new IOException((Exception)o);

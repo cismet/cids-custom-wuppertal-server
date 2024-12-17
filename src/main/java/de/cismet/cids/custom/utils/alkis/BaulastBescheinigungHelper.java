@@ -51,6 +51,7 @@ import java.util.Set;
 import java.util.zip.ZipEntry;
 import java.util.zip.ZipOutputStream;
 
+import de.cismet.cids.custom.utils.AsyncDownloadHelper;
 import de.cismet.cids.custom.utils.GeneralUtils;
 import de.cismet.cids.custom.utils.WundaBlauServerResources;
 import de.cismet.cids.custom.utils.berechtigungspruefung.DownloadInfoFactory;
@@ -964,8 +965,10 @@ public class BaulastBescheinigungHelper {
                 fls.iterator().next().getAlkisId().replace("/", "--"),
                 ((fls.size() > 1) ? ".ua" : ""),
                 number);
-        writeToZip(fileName,
-            new ByteArrayInputStream((byte[])serverAction.execute(null, saps)),
+        writeToZip(
+            fileName,
+            new ByteArrayInputStream(
+                (byte[])AsyncDownloadHelper.actionResultToByteArrayIfPossible(serverAction.execute(null, saps))),
             zipOut);
     }
 
@@ -1011,7 +1014,11 @@ public class BaulastBescheinigungHelper {
         serverAction.setUser(getUser());
         serverAction.initWithConnectionContext(getConnectionContext());
 
-        writeToZip("baulasten.pdf", new ByteArrayInputStream((byte[])serverAction.execute(null, saps)), zipOut);
+        writeToZip(
+            "baulasten.pdf",
+            new ByteArrayInputStream(
+                (byte[])AsyncDownloadHelper.actionResultToByteArrayIfPossible(serverAction.execute(null, saps))),
+            zipOut);
     }
 
     /**
