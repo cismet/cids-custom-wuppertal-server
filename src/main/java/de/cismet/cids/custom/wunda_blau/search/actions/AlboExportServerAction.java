@@ -66,6 +66,11 @@ public class AlboExportServerAction extends AbstractJumpPostgresToShapefileServe
     }
 
     @Override
+    public String getCharset() {
+        return "UTF-8";
+    }
+
+    @Override
     public String getTaskName() {
         return TASK_NAME;
     }
