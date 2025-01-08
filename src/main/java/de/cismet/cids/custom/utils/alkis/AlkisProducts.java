@@ -46,6 +46,8 @@ import java.util.Map;
 import java.util.Properties;
 import java.util.Set;
 
+import de.cismet.cids.custom.wunda_blau.search.actions.AlkisRestAction;
+
 import de.cismet.cids.dynamics.CidsBean;
 
 import static de.cismet.cids.custom.utils.alkis.AlkisPunktReportScriptlet.SUFFIXES;
@@ -964,20 +966,65 @@ public abstract class AlkisProducts {
     }
 
     /**
-     * DOCUMENT ME!
+     * fixes the buchungsblatt code.
      *
      * @param   buchungsblattCode  DOCUMENT ME!
      *
      * @return  DOCUMENT ME!
      */
     public static String fixBuchungslattCode(final String buchungsblattCode) {
+        boolean useNewVersion = false;
+
+        if (AlkisRestAction.getAlkisAccessProvider().getAlkisRestConf().getNewRestServiceUsed()) {
+            useNewVersion = true;
+        } else {
+            useNewVersion = false;
+        }
+
+        return fixBuchungslattCode(buchungsblattCode, useNewVersion);
+    }
+
+    /**
+     * fixes the buchungsblattcode. Beschreibung aus dem Migrationskonzept: "Folgende Definition ist einzuhalten: Die
+     * Elemente sind rechtsbündig zu belegen, fehlende Stellen sind mit führenden Nullen zu belegen. Es ergibt sich kein
+     * Leerzeichen am Ende des Buchungsblattkennzeichens bei fehlender Buchstabenerweiterung. Die Gesamtlänge des
+     * Buchungsblattkennzeichens beträgt immer 13 Zeichen." (Anmerkung therter: 13 Zeichen ohne Bindestrich).
+     *
+     * @param   buchungsblattCode  the code to fix
+     * @param   newVersion         DOCUMENT ME!
+     *
+     * @return  the fixed code
+     */
+    public static String fixBuchungslattCode(final String buchungsblattCode, final boolean newVersion) {
         if (buchungsblattCode != null) {
-            final StringBuffer buchungsblattCodeSB = new StringBuffer(buchungsblattCode);
-            // Fix SICAD-API-strangeness...
-            while (buchungsblattCodeSB.length() < 14) {
-                buchungsblattCodeSB.append(" ");
+            if (newVersion) {
+                final StringBuffer buchungsblattCodeSB = new StringBuffer();
+
+                if (((buchungsblattCode.length() < 14) || buchungsblattCode.endsWith(" "))
+                            && buchungsblattCode.contains("-")) {
+                    String blattCode = buchungsblattCode;
+
+                    if (blattCode.endsWith(" ")) {
+                        blattCode = blattCode.substring(0, blattCode.length() - 1);
+                    }
+                    buchungsblattCodeSB.append(blattCode.substring(0, blattCode.indexOf("-") + 1));
+
+                    for (int i = 0; i < (14 - blattCode.length()); ++i) {
+                        buchungsblattCodeSB.append("0");
+                    }
+                    buchungsblattCodeSB.append(blattCode.substring(blattCode.indexOf("-") + 1));
+                    return buchungsblattCodeSB.toString();
+                } else {
+                    return buchungsblattCode;
+                }
+            } else {
+                final StringBuffer buchungsblattCodeSB = new StringBuffer(buchungsblattCode);
+                // Fix SICAD-API-strangeness...
+                while (buchungsblattCodeSB.length() < 14) {
+                    buchungsblattCodeSB.append(" ");
+                }
+                return buchungsblattCodeSB.toString();
             }
-            return buchungsblattCodeSB.toString();
         } else {
             return "";
         }

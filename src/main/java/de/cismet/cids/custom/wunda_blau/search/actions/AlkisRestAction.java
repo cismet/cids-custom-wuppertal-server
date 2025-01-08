@@ -19,6 +19,7 @@ import java.util.Arrays;
 import java.util.List;
 
 import de.cismet.cids.custom.utils.alkis.AlkisAccessProvider;
+import de.cismet.cids.custom.utils.alkis.AlkisProducts;
 import de.cismet.cids.custom.utils.alkis.AlkisRestConf;
 
 import de.cismet.cids.server.actions.ServerAction;
@@ -57,8 +58,21 @@ public class AlkisRestAction implements ServerAction {
     //~ Methods ----------------------------------------------------------------
 
     @Override
-    public Object execute(final Object body, final ServerActionParameter... params) {
-        if (!(body instanceof RETURN_VALUE)) {
+    public Object execute(Object body, final ServerActionParameter... params) {
+        if (body instanceof byte[]) {
+            String bodyString = new String((byte[])body);
+            bodyString = bodyString.trim();
+
+            try {
+                final RETURN_VALUE retVal = RETURN_VALUE.valueOf(bodyString);
+
+                if (retVal != null) {
+                    body = retVal;
+                }
+            } catch (IllegalArgumentException e) {
+                throw new IllegalArgumentException("Body has to be either POINT or BUCHUNGSBLATT");
+            }
+        } else if (!(body instanceof RETURN_VALUE)) {
             throw new IllegalArgumentException("Body has to be either POINT or BUCHUNGSBLATT");
         }
 
@@ -93,7 +107,8 @@ public class AlkisRestAction implements ServerAction {
                     final String orderNumberInfo = null;
 
                     if (getAlkisAccessProvider().getAlkisRestConf().getNewRestServiceUsed()) {
-                        final String fixedBuchungsblattCode = fixBuchungslattCode(params[0].getValue().toString());
+                        final String fixedBuchungsblattCode = AlkisProducts.fixBuchungslattCode(params[0].getValue()
+                                        .toString());
 
                         final List<String> buchungsblattUUIDs = getAlkisAccessProvider().getAlkisInfoService()
                                     .translateBuchungsblattCodeIntoUUIds(token, configuration, fixedBuchungsblattCode);
@@ -113,7 +128,7 @@ public class AlkisRestAction implements ServerAction {
                             return null;
                         }
                     } else {
-                        final List<String> buchungsblattCode = Arrays.asList(fixBuchungslattCode(
+                        final List<String> buchungsblattCode = Arrays.asList(AlkisProducts.fixBuchungslattCode(
                                     params[0].getValue().toString()));
 
                         final List<Buchungsblatt> buchungsblaetter = getAlkisAccessProvider().getAlkisInfoService()
@@ -137,51 +152,6 @@ public class AlkisRestAction implements ServerAction {
         }
     }
 
-    /**
-     * fixes the buchungsblattcode. Beschreibung aus dem Migrationskonzept: "Folgende Definition ist einzuhalten: Die
-     * Elemente sind rechtsbündig zu belegen, fehlende Stellen sind mit führenden Nullen zu belegen. Es ergibt sich kein
-     * Leerzeichen am Ende des Buchungsblattkennzeichens bei fehlender Buchstabenerweiterung. Die Gesamtlänge des
-     * Buchungsblattkennzeichens beträgt immer 13 Zeichen." (Anmerkung therter: 13 Zeichen ohne Bindestrich).
-     *
-     * @param   buchungsblattCode  the code to fix
-     *
-     * @return  the fixed code
-     */
-    public static String fixBuchungslattCode(final String buchungsblattCode) {
-        if (buchungsblattCode != null) {
-            if (getAlkisAccessProvider().getAlkisRestConf().getNewRestServiceUsed()) {
-                final StringBuffer buchungsblattCodeSB = new StringBuffer();
-
-                if (((buchungsblattCode.length() < 14) || buchungsblattCode.endsWith(" "))
-                            && buchungsblattCode.contains("-")) {
-                    String blattCode = buchungsblattCode;
-
-                    if (blattCode.endsWith(" ")) {
-                        blattCode = blattCode.substring(0, blattCode.length() - 1);
-                    }
-                    buchungsblattCodeSB.append(blattCode.substring(0, blattCode.indexOf("-") + 1));
-
-                    for (int i = 0; i < (14 - blattCode.length()); ++i) {
-                        buchungsblattCodeSB.append("0");
-                    }
-                    buchungsblattCodeSB.append(blattCode.substring(blattCode.indexOf("-") + 1));
-                    return buchungsblattCodeSB.toString();
-                } else {
-                    return buchungsblattCode;
-                }
-            } else {
-                final StringBuffer buchungsblattCodeSB = new StringBuffer(buchungsblattCode);
-                // Fix SICAD-API-strangeness...
-                while (buchungsblattCodeSB.length() < 14) {
-                    buchungsblattCodeSB.append(" ");
-                }
-                return buchungsblattCodeSB.toString();
-            }
-        } else {
-            return "";
-        }
-    }
-
     @Override
     public String getTaskName() {
         return TASKNAME;
@@ -192,7 +162,7 @@ public class AlkisRestAction implements ServerAction {
      *
      * @return  DOCUMENT ME!
      */
-    private static AlkisAccessProvider getAlkisAccessProvider() {
+    public static AlkisAccessProvider getAlkisAccessProvider() {
         return LazyInitialiser.ALKIS_ACCESS_PROVIDER;
     }
 
