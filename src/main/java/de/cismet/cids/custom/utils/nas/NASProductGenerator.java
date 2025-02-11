@@ -29,7 +29,6 @@ import de.aed_sicad.www.namespaces.svr.AuftragsManagerLocator;
 import de.aed_sicad.www.namespaces.svr.AuftragsManagerSoap;
 
 import org.apache.commons.io.IOUtils;
-import org.apache.log4j.Logger;
 
 import org.openide.util.Exceptions;
 
@@ -284,7 +283,12 @@ public class NASProductGenerator {
             final DocumentBuilderFactory dbFactory = DocumentBuilderFactory.newInstance();
             final DocumentBuilder dBuilder = dbFactory.newDocumentBuilder();
             final Document doc = dBuilder.parse(templateFile);
-            final NodeList intersectNodes = doc.getElementsByTagName("ogc:Intersects");
+            NodeList intersectNodes = doc.getElementsByTagName("ogc:Intersects");
+
+            if (intersectNodes.getLength() == 0) {
+                intersectNodes = doc.getElementsByTagName("fes:Intersects");
+            }
+
             final Document doc2 = dBuilder.parse(new InputSource(new StringReader(xmlGeom)));
             final Element newPolygonNode = doc2.getDocumentElement();
             for (int i = 0; i < intersectNodes.getLength(); i++) {
