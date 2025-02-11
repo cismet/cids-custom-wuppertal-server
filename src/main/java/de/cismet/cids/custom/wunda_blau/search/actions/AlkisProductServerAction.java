@@ -120,7 +120,7 @@ public class AlkisProductServerAction implements ConnectionContextStore, UserAwa
     }
 
     @Override
-    public Object execute(final Object body, final ServerActionParameter... params) {
+    public Object execute(Object body, final ServerActionParameter... params) {
         try {
             String produkt = null;
             String alkisCode = null;
@@ -166,6 +166,25 @@ public class AlkisProductServerAction implements ConnectionContextStore, UserAwa
             }
 
             final URL url;
+
+            if (body instanceof byte[]) {
+                String bodyString = new String((byte[])body);
+                bodyString = bodyString.trim();
+
+                try {
+                    final Body retVal = Body.valueOf(bodyString);
+
+                    if (retVal != null) {
+                        body = retVal;
+                    }
+                } catch (IllegalArgumentException e) {
+                    throw new IllegalArgumentException(
+                        "Body has to be either KARTE, KARTE_CUSTOM, EINZELNACHWEIS, EINZELNACHWEIS_STICHTAG or LISTENNACHWEIS");
+                }
+            } else if (!(body instanceof Body)) {
+                throw new IllegalArgumentException(
+                    "Body has to be either KARTE, KARTE_CUSTOM, EINZELNACHWEIS, EINZELNACHWEIS_STICHTAG or LISTENNACHWEIS");
+            }
 
             switch ((Body)body) {
                 case KARTE: {
