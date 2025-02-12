@@ -94,6 +94,10 @@ public class AlboFlaecheSearch extends RestApiMonGeometrySearch
                 + "FROM albo_vorgang AS vorgang "
                 + "WHERE vorgang.schluessel LIKE '%%%s%%'"
                 + "ORDER BY name";
+    private static final String QUERY_BETRIEB =
+        "(SELECT count(*) from albo_standort where albo_standort.fk_flaeche = flaeche.id)";
+    private static final String QUERY_WZ =
+        "(SELECT count(*) from albo_standort join albo_standort_wirtschaftszweig  on (albo_standort_wirtschaftszweig.standort_reference = albo_standort.arr_wirtschaftszweige) join albo_wirtschaftszweig on (albo_wirtschaftszweig.id = albo_standort_wirtschaftszweig.fk_wirtschaftszweig) where albo_standort.fk_flaeche = flaeche.id)";
 
     //~ Enums ------------------------------------------------------------------
 
@@ -261,6 +265,25 @@ public class AlboFlaecheSearch extends RestApiMonGeometrySearch
                         configuration.getGreater()));
             }
 
+            if ((configuration.getBetriebe() != null) && (configuration.getBetriebe() > 0)) {
+                if ((configuration.getBetriebeModus() != null) && (configuration.getBetriebeModus() == 1)) {
+                    wheresMain.add(String.format(
+                            QUERY_BETRIEB
+                                    + " > %s",
+                            configuration.getBetriebe()));
+                } else if ((configuration.getBetriebeModus() != null) && (configuration.getBetriebeModus() == 2)) {
+                    wheresMain.add(String.format(
+                            QUERY_BETRIEB
+                                    + " < %s",
+                            configuration.getBetriebe()));
+                } else {
+                    wheresMain.add(String.format(
+                            QUERY_BETRIEB
+                                    + " = %s",
+                            configuration.getBetriebe()));
+                }
+            }
+
             if (configuration.getArtInfos() != null) {
                 int artCount = 0;
                 for (final ArtInfo artInfo : configuration.getArtInfos()) {
@@ -279,6 +302,11 @@ public class AlboFlaecheSearch extends RestApiMonGeometrySearch
                             final Boolean jahrModus = ((StandortInfo)artInfo).getJahrModus();
                             final Integer dauer = ((StandortInfo)artInfo).getDauer();
                             final Boolean dauerModus = ((StandortInfo)artInfo).getDauerModus();
+                            final Integer betriebe = ((StandortInfo)artInfo).getBetriebe();
+                            final Integer betriebeModus = ((StandortInfo)artInfo).getBetriebeModus();
+                            final Integer wz = ((StandortInfo)artInfo).getWz();
+                            final Integer wzModus = ((StandortInfo)artInfo).getWzModus();
+
                             if (wirtschaftszweig != null) {
                                 subLeftJoins.add(String.format(
                                         "albo_standort_wirtschaftszweig AS stwz%1$s ON stwz%1$s.standort_reference = standort%1$s.id",
@@ -329,6 +357,48 @@ public class AlboFlaecheSearch extends RestApiMonGeometrySearch
                                                     + "THEN standort%1$s.jahr_bis - standort%1$s.jahr_von < %2$d ELSE FALSE END",
                                             alias,
                                             dauer));
+                                }
+                            }
+
+                            if ((betriebe != null) && (betriebe > 0)) {
+                                if (betriebeModus != null) {
+                                    if (betriebeModus == 1) {
+                                        subAndWheres.add(String.format(
+                                                QUERY_BETRIEB
+                                                        + " > %s",
+                                                betriebe));
+                                    } else if (betriebeModus == 2) {
+                                        subAndWheres.add(String.format(
+                                                QUERY_BETRIEB
+                                                        + " < %s",
+                                                betriebe));
+                                    } else {
+                                        subAndWheres.add(String.format(
+                                                QUERY_BETRIEB
+                                                        + " = %s",
+                                                betriebe));
+                                    }
+                                }
+                            }
+
+                            if ((wz != null) && (wz > 0)) {
+                                if (wzModus != null) {
+                                    if (wzModus == 1) {
+                                        subAndWheres.add(String.format(
+                                                QUERY_WZ
+                                                        + " > %s",
+                                                wz));
+                                    } else if (wzModus == 2) {
+                                        subAndWheres.add(String.format(
+                                                QUERY_WZ
+                                                        + " < %s",
+                                                wz));
+                                    } else {
+                                        subAndWheres.add(String.format(
+                                                QUERY_WZ
+                                                        + " = %s",
+                                                wz));
+                                    }
                                 }
                             }
 
@@ -580,6 +650,8 @@ public class AlboFlaecheSearch extends RestApiMonGeometrySearch
         @JsonProperty private Collection<ArtInfo> artInfos;
         @JsonProperty private Double greater;
         @JsonProperty private Double smaller;
+        @JsonProperty private Integer betriebe;
+        @JsonProperty private Integer betriebeModus;
     }
 
     /**
@@ -642,6 +714,10 @@ public class AlboFlaecheSearch extends RestApiMonGeometrySearch
         @JsonProperty private Boolean jahrModus;
         @JsonProperty private Integer dauer;
         @JsonProperty private Boolean dauerModus;
+        @JsonProperty private Integer betriebeModus;
+        @JsonProperty private Integer betriebe;
+        @JsonProperty private Integer wz;
+        @JsonProperty private Integer wzModus;
 
         //~ Constructors -------------------------------------------------------
 
