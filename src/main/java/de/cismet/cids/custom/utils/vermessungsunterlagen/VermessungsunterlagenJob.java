@@ -22,6 +22,16 @@ import lombok.Getter;
 import lombok.Setter;
 
 import org.apache.log4j.Logger;
+import org.apache.logging.log4j.Level;
+import org.apache.logging.log4j.LogManager;
+import org.apache.logging.log4j.core.LoggerContext;
+import org.apache.logging.log4j.core.config.Configuration;
+import org.apache.logging.log4j.core.config.Configurator;
+import org.apache.logging.log4j.core.config.builder.api.AppenderComponentBuilder;
+import org.apache.logging.log4j.core.config.builder.api.ConfigurationBuilder;
+import org.apache.logging.log4j.core.config.builder.api.RootLoggerComponentBuilder;
+import org.apache.logging.log4j.core.config.builder.impl.BuiltConfiguration;
+import org.apache.logging.log4j.core.config.builder.impl.DefaultConfigurationBuilder;
 
 import java.io.File;
 import java.io.FileInputStream;
@@ -539,13 +549,27 @@ public class VermessungsunterlagenJob implements Runnable, ConnectionContextProv
      * @param  level  DOCUMENT ME!
      */
     public static void configure4LumbermillOn(final String host, final int port, final String level) {
-        final Properties p = new Properties();
-        p.put("log4j.appender.Remote", "org.apache.log4j.net.SocketAppender");
-        p.put("log4j.appender.Remote.remoteHost", host);
-        p.put("log4j.appender.Remote.port", Integer.toString(port));
-        p.put("log4j.appender.Remote.locationInfo", "true");
-        p.put("log4j.rootLogger", level + ",Remote");
-        org.apache.log4j.PropertyConfigurator.configure(p);
+        final ConfigurationBuilder<BuiltConfiguration> builder = new DefaultConfigurationBuilder<>();
+
+        builder.setStatusLevel(Level.WARN);
+        builder.setConfigurationName("DynamicConfig");
+
+        // Define appenders
+        final AppenderComponentBuilder socketAppender = builder.newAppender("Remote", "Socket")
+                    .addAttribute("host", host)
+                    .addAttribute("port", port);
+        socketAppender.add(builder.newLayout("JsonLayout"));
+        builder.add(socketAppender);
+
+        // Define root logger
+        final RootLoggerComponentBuilder rootLogger = builder.newRootLogger(level);
+
+        builder.add(rootLogger);
+
+        // Build and apply the configuration
+        final LoggerContext ctx = (LoggerContext)LogManager.getContext(false);
+        final Configuration conf = builder.build();
+        ctx.start(conf);
     }
 
     /**
