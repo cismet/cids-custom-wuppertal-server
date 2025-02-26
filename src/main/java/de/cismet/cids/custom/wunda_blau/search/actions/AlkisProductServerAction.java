@@ -22,6 +22,9 @@ import java.io.StringReader;
 
 import java.net.URL;
 
+import java.text.DateFormat;
+import java.text.SimpleDateFormat;
+
 import java.util.Date;
 
 import de.cismet.cids.custom.utils.ServerStamperUtils;
@@ -42,8 +45,6 @@ import de.cismet.commons.security.handler.SimpleHttpAccessHandler;
 
 import de.cismet.connectioncontext.ConnectionContext;
 import de.cismet.connectioncontext.ConnectionContextStore;
-import java.text.DateFormat;
-import java.text.SimpleDateFormat;
 
 /**
  * DOCUMENT ME!
@@ -147,7 +148,7 @@ public class AlkisProductServerAction implements ConnectionContextStore, UserAwa
                         fertigungsVermerk = (String)sap.getValue();
                     } else if (sap.getKey().equals(AlkisProductServerAction.Parameter.STICHTAG.toString())) {
                         if (sap.getValue() instanceof String) {
-                            DateFormat df = new SimpleDateFormat("d.M.yyyy");
+                            final DateFormat df = new SimpleDateFormat("d.M.yyyy");
                             stichtag = df.parse((String)sap.getValue());
                         } else {
                             stichtag = (Date)sap.getValue();
