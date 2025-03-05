@@ -644,6 +644,10 @@ public abstract class AlkisProducts {
             if (address.getCity() != null) {
                 addressStringBuilder.append(address.getCity());
             }
+            if ((address.getCountry() != null) && !address.getCountry().equalsIgnoreCase("DEUTSCHLAND")) {
+                addressStringBuilder.append(NEWLINE);
+                addressStringBuilder.append(address.getCountry());
+            }
             if (addressStringBuilder.length() > 0) {
                 addressStringBuilder.append(NEWLINE);
             }
@@ -1056,15 +1060,11 @@ public abstract class AlkisProducts {
                         + style
                         + " cellpadding=\"10\" border=\"0\" align=\"left\" valign=\"top\">");
 
-        final NamensnummerComparator nnComparator = new NamensnummerComparator(namensnummernMap);
-
         for (final String uuid : namensnummerUuids) {
             final Namensnummer namensnummer = namensnummernMap.get(uuid);
 
             sb.append("<tr>");
-//            if (level > 0) {
-//                sb.append("<td style=\"padding-left:0px; padding-right:0px;\">↳</td>");
-//            }
+
             if (namensnummer.getArtRechtsgemeinschaft() != null) {
                 final String artRechtsgemeinschaft = namensnummer.getArtRechtsgemeinschaft().trim();
                 sb.append("<td width=\"80\">")
@@ -1076,18 +1076,6 @@ public abstract class AlkisProducts {
                         .append((namensnummer.getBeschriebRechtsgemeinschaft() != null)
                                     ? namensnummer.getBeschriebRechtsgemeinschaft() : "")
                         .append(NEWLINE);
-
-                final List<String> einzelGemeinschaftsUuids = new ArrayList<>(namensnummer.getNamensnummernUUIds());
-                Collections.sort(einzelGemeinschaftsUuids, nnComparator);
-
-                sb.append(NEWLINE)
-                        .append(buchungsblattOwnersToHtml(
-                                    level
-                                    + 1,
-                                    einzelGemeinschaftsUuids,
-                                    namensnummernMap,
-                                    ownerHashMap))
-                        .append("</td>");
             } else {
                 final Owner owner = ownerHashMap.get(namensnummer.getEigentuemerUUId());
                 sb.append(buchungsblattOwnerToHtml(namensnummer, owner));
@@ -1155,7 +1143,7 @@ public abstract class AlkisProducts {
         }
 
         final List<String> rootUuids = new ArrayList<>(namensnummernMap.keySet());
-        rootUuids.removeAll(redirectedUuids);
+//        rootUuids.removeAll(redirectedUuids);
         Collections.sort(rootUuids, new NamensnummerComparator(namensnummernMap));
         return rootUuids;
     }

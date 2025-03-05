@@ -13,10 +13,14 @@ package de.cismet.cids.custom.wunda_blau.search.actions;
 
 import de.aedsicad.aaaweb.rest.client.ApiException;
 import de.aedsicad.aaaweb.rest.model.Buchungsblatt;
+import de.aedsicad.aaaweb.rest.model.Namensnummer;
 import de.aedsicad.aaaweb.rest.model.Point;
 
+import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 
 import de.cismet.cids.custom.utils.alkis.AlkisAccessProvider;
 import de.cismet.cids.custom.utils.alkis.AlkisProducts;
@@ -123,7 +127,35 @@ public class AlkisRestAction implements ServerAction {
                                             operationName,
                                             operationArgument,
                                             orderNumberInfo);
-                            return buchungsblaetter.iterator().next();
+                            final Buchungsblatt buchungsblatt = buchungsblaetter.iterator().next();
+                            final List<Namensnummer> allUUIDs = new ArrayList<>();
+                            final Map<Namensnummer, List<String>> gemeinschaft = new HashMap<>();
+
+                            for (final Namensnummer nummer : buchungsblatt.getNamensnummern()) {
+                                if ((nummer.getArtRechtsgemeinschaft() != null)
+                                            && (nummer.getNamensnummernUUIds() == null)) {
+                                    final List<String> tmp = new ArrayList<>();
+                                    nummer.setNamensnummernUUIds(tmp);
+                                    gemeinschaft.put(nummer, tmp);
+                                } else {
+                                    allUUIDs.add(nummer);
+                                }
+                            }
+
+                            for (final Namensnummer key : gemeinschaft.keySet()) {
+                                final List<String> gemList = gemeinschaft.get(key);
+
+                                for (final Namensnummer tmp : allUUIDs) {
+                                    if (key.getBeschriebRechtsgemeinschaft().contains(tmp.getLaufendeNummer() + ",")
+                                                || key.getBeschriebRechtsgemeinschaft().contains(
+                                                    tmp.getLaufendeNummer()
+                                                    + " ")) {
+                                        gemList.add(tmp.getUuid());
+                                    }
+                                }
+                            }
+
+                            return buchungsblatt;
                         } else {
                             return null;
                         }
