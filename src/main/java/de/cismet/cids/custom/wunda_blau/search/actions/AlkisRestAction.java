@@ -80,9 +80,11 @@ public class AlkisRestAction implements ServerAction {
             throw new IllegalArgumentException("Body has to be either POINT or BUCHUNGSBLATT");
         }
 
+        String token = null;
         try {
-            final String token = getAlkisAccessProvider().login();
+            token = getAlkisAccessProvider().login();
             final String configuration = getAlkisAccessProvider().getAlkisRestConf().getConfiguration();
+
             if (body.toString().equals(RETURN_VALUE.POINT.toString())) {
                 // POINT
                 try {
@@ -180,7 +182,9 @@ public class AlkisRestAction implements ServerAction {
                 }
             }
         } finally {
-            getAlkisAccessProvider().logout();
+            if (token != null) {
+                getAlkisAccessProvider().logout(token);
+            }
         }
     }
 
