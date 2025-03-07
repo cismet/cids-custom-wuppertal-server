@@ -19,7 +19,6 @@ import de.aedsicad.aaaweb.rest.model.TokenInfo;
 
 import lombok.Getter;
 
-import java.util.Date;
 import java.util.concurrent.TimeUnit;
 
 /**
@@ -103,15 +102,15 @@ public final class AlkisAccessProvider {
      * @return  the identityCard
      */
     public String login() {
+        // create a new token every time, because the AlkisAccessProvider is used in the ServiceAlkisProducts singleton
+        // that can be used by different threads at the same time and a logout will then invalidate a token that is
+        // used by an other thread
         try {
-            final boolean valid = (token != null) && isTokenValid(token.getToken());
-            if (!valid) {
-                final String user = alkisRestConf.getCreds().getUser();
-                final String pass = alkisRestConf.getCreds().getPassword();
-                final String extendSecret = ""; // TODO ???
+            final String user = alkisRestConf.getCreds().getUser();
+            final String pass = alkisRestConf.getCreds().getPassword();
+            final String extendSecret = ""; // TODO ???
 
-                this.token = getTokenService().createToken(user, pass, extendSecret).getToken();
-            }
+            this.token = getTokenService().createToken(user, pass, extendSecret).getToken();
         } catch (final Exception ex) {
             LOG.fatal("login failed", ex);
             token = null;
@@ -123,10 +122,12 @@ public final class AlkisAccessProvider {
 
     /**
      * DOCUMENT ME!
+     *
+     * @param  token  DOCUMENT ME!
      */
-    public void logout() {
+    public void logout(String token) {
         try {
-            getTokenService().deleteToken(token.getToken());
+            getTokenService().deleteToken(token);
         } catch (final Exception ex) {
         }
         token = null;

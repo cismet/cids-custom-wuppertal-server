@@ -221,7 +221,7 @@ public class CidsAlkisSearchStatement extends AbstractCidsServerSearch implement
                             null,
                             null,
                             TIMEOUT);
-                    accessProvider.logout();
+                    accessProvider.logout(aToken);
 
                     if (ownersIds != null) {
                         final StringBuilder whereClauseBuilder = new StringBuilder(ownersIds.size() * 20);
