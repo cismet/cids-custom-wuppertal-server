@@ -1295,9 +1295,9 @@ public class FormSolutionsBestellungHandler implements ConnectionContextProvider
         switch (type) {
             case SGK: {
                 if ("farbig".equals(farbauspraegung)) {
-                    return "LK.NRW.K.BF";
+                    return "LK.NRW.K.F";
                 } else if ("Graustufen".equals(farbauspraegung)) {
-                    return "LK.NRW.K.BSW";
+                    return "LK.NRW.K.SW";
                 } else {
                     return null;
                 }
