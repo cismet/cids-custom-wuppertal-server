@@ -3431,8 +3431,8 @@ public class FormSolutionsBestellungHandler implements ConnectionContextProvider
             ? (String)bestellungBean.getProperty("fk_produkt.fk_typ.key") : null;
         if (type != null) {
             switch (type) {
-                case "LK.NRW.K.BF":
-                case "LK.NRW.K.BSW": {
+                case "LK.NRW.K.F":
+                case "LK.NRW.K.SW": {
                     return ProductType.SGK;
                 }
                 case "LK.GDBNRW.A.ABKF":
