@@ -534,7 +534,7 @@ public abstract class AlkisProducts {
                     || get(
                         AlkisProducts.Type.FLURSTUECKS_UND_EIGENTUMSNACHWEIS_KOMMUNAL_INTERN_HTML).equals(
                         product)) {
-            downloadTitle = "Flurstücks- und Eigentumsnachweis (kommunal, intern)";
+            downloadTitle = "Flurstücks- und Eigentumsnachweis (NRW, intern)";
         } else if (get(AlkisProducts.Type.BESTANDSNACHWEIS_NRW_PDF).equals(product)
                     || get(AlkisProducts.Type.BESTANDSNACHWEIS_NRW_HTML).equals(
                         product)) {
@@ -550,7 +550,7 @@ public abstract class AlkisProducts {
                         product)
                     || get(
                         AlkisProducts.Type.BESTANDSNACHWEIS_KOMMUNAL_INTERN_HTML).equals(product)) {
-            downloadTitle = "Bestandsnachweis (kommunal, intern)";
+            downloadTitle = "Bestandsnachweis (NRW, intern)";
         } else if (get(AlkisProducts.Type.GRUNDSTUECKSNACHWEIS_NRW_PDF).equals(product)
                     || get(AlkisProducts.Type.GRUNDSTUECKSNACHWEIS_NRW_HTML).equals(product)) {
             downloadTitle = "Grundstücksnachweis (NRW)";
