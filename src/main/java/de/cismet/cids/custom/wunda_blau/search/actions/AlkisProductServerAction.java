@@ -231,7 +231,8 @@ public class AlkisProductServerAction implements ConnectionContextStore, UserAwa
                                         alkisCode,
                                         produkt,
                                         stichtag,
-                                        getUser());
+                                        getUser(),
+                                        fertigungsVermerk);
                 }
                 break;
                 case LISTENNACHWEIS: {
