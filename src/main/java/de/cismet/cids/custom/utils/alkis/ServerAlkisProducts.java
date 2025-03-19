@@ -132,10 +132,11 @@ public final class ServerAlkisProducts extends AlkisProducts {
     /**
      * DOCUMENT ME!
      *
-     * @param   objectID     DOCUMENT ME!
-     * @param   productCode  DOCUMENT ME!
-     * @param   stichtag     DOCUMENT ME!
-     * @param   user         DOCUMENT ME!
+     * @param   objectID           DOCUMENT ME!
+     * @param   productCode        DOCUMENT ME!
+     * @param   stichtag           DOCUMENT ME!
+     * @param   user               DOCUMENT ME!
+     * @param   fertigungsVermerk  DOCUMENT ME!
      *
      * @return  DOCUMENT ME!
      *
@@ -144,7 +145,9 @@ public final class ServerAlkisProducts extends AlkisProducts {
     public URL productEinzelnachweisStichtagsbezogenUrl(final String objectID,
             final String productCode,
             final Date stichtag,
-            final User user) throws MalformedURLException {
+            final User user,
+            final String fertigungsVermerk) throws MalformedURLException {
+        final String fabricationNotice = generateFabricationNotice(fertigungsVermerk);
         final StringBuilder urlBuilder = new StringBuilder(ServerAlkisConf.getInstance().getEinzelNachweisService())
                     .append(
                             "?reportingDate=").append(STICHTAG_DATE_FORMAT.format(stichtag)).append("&product=")
@@ -159,6 +162,9 @@ public final class ServerAlkisProducts extends AlkisProducts {
             } catch (final UnsupportedEncodingException ex) {
                 throw new MalformedURLException("error while encoding: " + user.getName());
             }
+        }
+        if (fabricationNotice != null) {
+            urlBuilder.append("&fabricationNotice=").append(fabricationNotice);
         }
         return new URL(urlBuilder.toString());
     }
