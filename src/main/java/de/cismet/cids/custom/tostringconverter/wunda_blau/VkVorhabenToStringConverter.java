@@ -20,12 +20,12 @@ import de.cismet.cids.tools.CustomToStringConverter;
  * @author   sandra
  * @version  $Revision$, $Date$
  */
-public class BaumGebietToStringConverter extends CustomToStringConverter {
+public class VkVorhabenToStringConverter extends CustomToStringConverter {
 
     //~ Static fields/initializers ---------------------------------------------
 
-    public static final String FIELD__AZ = "aktenzeichen"; // baum_gebiet
-    public static final String FIELD__ID = "id";           // baum_gebiet
+    public static final String FIELD__TITEL = "titel";     // vk_vorhaben
+    public static final String FIELD__ID = "id";           // vk_vorhaben
 
     //~ Methods ----------------------------------------------------------------
 
@@ -33,11 +33,11 @@ public class BaumGebietToStringConverter extends CustomToStringConverter {
     public String createString() {
         final Integer myid = cidsBean.getPrimaryKeyValue();
         if (myid < 0) {
-            return "ein neues Gebiet (mit Meldung) anlegen...";
+            return "ein neues Vorhaben anlegen...";
         } else {
             return String.format(
                     "%s (%s)",
-                    String.valueOf(cidsBean.getProperty(FIELD__AZ)),
+                    String.valueOf(cidsBean.getProperty(FIELD__TITEL)),
                     String.valueOf(cidsBean.getProperty(FIELD__ID)));
         }
     }
