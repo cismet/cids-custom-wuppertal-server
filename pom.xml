@@ -69,7 +69,7 @@
             <dependency>
                 <groupId>de.cismet.cids</groupId>
                 <artifactId>cids-server</artifactId>
-                <version>9.0</version>
+                <version>9.0.1-prerelease-geom-1</version>
                 <type>jar</type>
             </dependency>
 
