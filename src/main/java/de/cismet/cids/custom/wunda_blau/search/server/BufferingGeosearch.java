@@ -38,6 +38,7 @@ public final class BufferingGeosearch extends DefaultGeoSearch {
 
     /** LOGGER. */
     private static final transient Logger LOG = Logger.getLogger(BufferingGeosearch.class);
+    private static final String GEO_FIELD = "geom_val";
 
     //~ Enums ------------------------------------------------------------------
 
@@ -95,27 +96,39 @@ public final class BufferingGeosearch extends DefaultGeoSearch {
 
     @Override
     public PreparableStatement getSearchSql(final String domainKey) {
-        final String sql = ""                                                                                      // NOI18N
-                    + "SELECT DISTINCT i.class_id ocid, "                                                          // NOI18N
-                    + "                i.object_id oid, "                                                          // NOI18N
-                    + "                s.stringrep,s.geometry,s.lightweight_json "                                 // NOI18N
-                    + "FROM            geom g, "                                                                   // NOI18N
-                    + "                cs_attr_object_derived i "                                                  // NOI18N
-                    + "                LEFT OUTER JOIN cs_cache s "                                                // NOI18N
-                    + "                ON              ( "                                                         // NOI18N
-                    + "                                                s.class_id =i.class_id "                    // NOI18N
-                    + "                                AND             s.object_id=i.object_id "                   // NOI18N
-                    + "                                ) "                                                         // NOI18N
-                    + "WHERE           i.attr_class_id = "                                                         // NOI18N
-                    + "                ( SELECT cs_class.id "                                                      // NOI18N
-                    + "                FROM    cs_class "                                                          // NOI18N
-                    + "                WHERE   cs_class.table_name::text ILIKE 'GEOM'::text "                      // NOI18N
-                    + "                ) "                                                                         // NOI18N
-                    + "AND             i.attr_object_id = g.id "                                                   // NOI18N
-                    + "AND i.class_id IN <cidsClassesInStatement> "                                                // NOI18N
-                    + "AND geo_field && st_geomfromtext('SRID=<cidsSearchGeometrySRID>;<cidsSearchGeometryWKT>') " // NOI18N
-                    + "AND <geomStatement> "                                                                       // NOI18N
-                    + "ORDER BY 1,2,3";                                                                            // NOI18N
+        final String sql =
+            "SELECT DISTINCT i.class_id ocid, i.object_id as oid, c.stringrep, c.geometry, c.lightweight_json \n"
+                    + "FROM            cs_attr_geom g, \n"
+                    + "                cs_attr_object_derived i \n"
+                    + "                LEFT OUTER JOIN cs_cache c \n"
+                    + "                ON ( c.class_id =i.class_id AND c.object_id=i.object_id ) \n"
+                    + "WHERE           i.attr_class_id = g.class_id\n"
+                    + "AND             i.attr_object_id = g.object_id\n"
+                    + "AND i.class_id IN <cidsClassesInStatement> \n"
+                    + "AND geom_val && st_geomfromtext('SRID=<cidsSearchGeometrySRID>;<cidsSearchGeometryWKT>')\n"
+                    + "AND <geomStatement>\n"
+                    + "ORDER BY        1,2,3";
+//        final String sql = ""                                                                                      // NOI18N
+//                    + "SELECT DISTINCT i.class_id ocid, "                                                          // NOI18N
+//                    + "                i.object_id oid, "                                                          // NOI18N
+//                    + "                s.stringrep,s.geometry,s.lightweight_json "                                 // NOI18N
+//                    + "FROM            geom g, "                                                                   // NOI18N
+//                    + "                cs_attr_object_derived i "                                                  // NOI18N
+//                    + "                LEFT OUTER JOIN cs_cache s "                                                // NOI18N
+//                    + "                ON              ( "                                                         // NOI18N
+//                    + "                                                s.class_id =i.class_id "                    // NOI18N
+//                    + "                                AND             s.object_id=i.object_id "                   // NOI18N
+//                    + "                                ) "                                                         // NOI18N
+//                    + "WHERE           i.attr_class_id = "                                                         // NOI18N
+//                    + "                ( SELECT cs_class.id "                                                      // NOI18N
+//                    + "                FROM    cs_class "                                                          // NOI18N
+//                    + "                WHERE   cs_class.table_name::text ILIKE 'GEOM'::text "                      // NOI18N
+//                    + "                ) "                                                                         // NOI18N
+//                    + "AND             i.attr_object_id = g.id "                                                   // NOI18N
+//                    + "AND i.class_id IN <cidsClassesInStatement> "                                                // NOI18N
+//                    + "AND geo_field && st_geomfromtext('SRID=<cidsSearchGeometrySRID>;<cidsSearchGeometryWKT>') " // NOI18N
+//                    + "AND <geomStatement> "                                                                       // NOI18N
+//                    + "ORDER BY 1,2,3";                                                                            // NOI18N
 
         final Geometry searchGeometry = getGeometry();
         final String geomFunction;
@@ -137,13 +150,13 @@ public final class BufferingGeosearch extends DefaultGeoSearch {
         final String bufferedSearchGeomFromText = (buffer != null)
             ? String.format(Locale.US, "st_buffer(%s, %f)", searchGeomFromText, buffer) : searchGeomFromText;
         final String bufferedTargetGeomText = (buffer != null)
-            ? String.format(Locale.US, "st_buffer(geo_field, %f)", buffer) : "geo_field";
+            ? String.format(Locale.US, "st_buffer(" + GEO_FIELD + ", %f)", buffer) : GEO_FIELD;
 
         final String geomFunctionString = "%s(%s, %s)";
         final String geomFunctionParamA;
         final String geomFunctionParamB;
         if (searchGeometry.getSRID() == 4326) {
-            geomFunctionParamA = "geo_field";
+            geomFunctionParamA = GEO_FIELD;
             geomFunctionParamB = searchGeomFromText;
         } else {
             if ((searchGeometry instanceof Polygon) || (searchGeometry instanceof MultiPolygon)) {    // with buffer for searchGeometry
