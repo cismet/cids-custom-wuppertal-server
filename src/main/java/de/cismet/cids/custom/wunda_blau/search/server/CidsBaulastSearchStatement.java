@@ -140,8 +140,8 @@ public class CidsBaulastSearchStatement extends AbstractCidsServerSearch impleme
         if ((geometry != null) && !geometry.isEmpty()) {
             final String geomString = PostGisGeometryFactory.getPostGisCompliantDbString(geometry);
 
-            geoquerypart = " and g.geo_field && st_GeomFromEWKT('" + geomString
-                        + "') and st_intersects(g.geo_field"
+            geoquerypart = " and f.umschreibendes_rechteck && st_GeomFromEWKT('" + geomString
+                        + "') and st_intersects(f.umschreibendes_rechteck"
                         + ",st_buffer(st_GeomFromEWKT('"
                         + geomString
                         + "'), " + INTERSECTS_BUFFER + "))";
@@ -301,8 +301,8 @@ public class CidsBaulastSearchStatement extends AbstractCidsServerSearch impleme
                     + "\n               alb_flurstueck_kicker k";
         if ((geometry != null) && !geometry.isEmpty()) {
             queryMid += ", "
-                        + "\n               flurstueck f, "
-                        + "\n               geom g ";
+                        + "\n               flurstueck f ";
+//                        + "\n               geom g ";
         }
         queryMid += ""
                     + "\n        WHERE  1 = 1 "
@@ -310,8 +310,8 @@ public class CidsBaulastSearchStatement extends AbstractCidsServerSearch impleme
                     + "\n               AND fsj.flurstueck = k.id ";
         if ((geometry != null) && !geometry.isEmpty()) {
             queryMid += ""
-                        + "\n               AND k.fs_referenz = f.id "
-                        + "\n               AND f.umschreibendes_rechteck = g.id ";
+                        + "\n               AND k.fs_referenz = f.id ";
+//                        + "\n               AND f.umschreibendes_rechteck = g.id ";
         }
         queryMid += ""
                     + "\n               "
@@ -383,10 +383,10 @@ public class CidsBaulastSearchStatement extends AbstractCidsServerSearch impleme
                     + "\n                      f.fstnr_n       nenner "
                     + "\n               FROM   alb_flurstueck_kicker k, "
                     + "\n                      flurstueck f, "
-                    + "\n                      geom g, "
+        //                    + "\n                      geom g, "
                     + "\n                      (SELECT f.id fid, "
                     + "\n                              k.id kid, "
-                    + "\n                              geo_field "
+                    + "\n                              umschreibendes_rechteck "
                     + "\n                       FROM   alb_flurstueck_kicker k "
                     + "\n                              LEFT OUTER JOIN (SELECT "
                     + "\n                              flurstueck "
@@ -399,23 +399,25 @@ public class CidsBaulastSearchStatement extends AbstractCidsServerSearch impleme
                     + "\n                                              ) AS x "
                     + "\n                                ON ( x.flurstueck = k.id ), "
                     + "\n                              flurstueck f, "
-                    + "\n                              geom g "
+        //                    + "\n                              geom g "
                     + "\n                       WHERE  x.flurstueck IS NULL "
                     + "\n                              AND k.fs_referenz = f.id "
-                    + "\n                              AND f.umschreibendes_rechteck = g.id "
+        //                    + "\n                              AND f.umschreibendes_rechteck = g.id "
                     + "\n                              " + fsquerypart
                     + "\n                                                     ) AS y "
                     + "\n               WHERE  k.fs_referenz = f.id "
-                    + "\n                      AND f.umschreibendes_rechteck = g.id "
-                    + "\n                      AND CASE WHEN NOT st_isEmpty(y.geo_field) AND NOT st_isEmpty(g.geo_field) THEN y.geo_field && g.geo_field ELSE FALSE END "
-                    + "\n                      AND CASE WHEN NOT st_isEmpty(y.geo_field) AND NOT st_isEmpty(g.geo_field) AND NOT st_isEmpty(St_buffer(y.geo_field,"
-                    + INTERSECTS_BUFFER + ")) AND NOT st_isEmpty(St_buffer(g.geo_field, " + INTERSECTS_BUFFER
-                    + ")) THEN st_Intersects(St_buffer(y.geo_field, " + INTERSECTS_BUFFER + "), St_buffer(g.geo_field, "
+        //                    + "\n                      AND f.umschreibendes_rechteck = g.id "
+                    + "\n                      AND CASE WHEN NOT st_isEmpty(y.geo_field) AND NOT st_isEmpty(f.umschreibendes_rechteck) THEN y.geo_field && f.umschreibendes_rechteck ELSE FALSE END "
+                    + "\n                      AND CASE WHEN NOT st_isEmpty(y.geo_field) AND NOT st_isEmpty(f.umschreibendes_rechteck) AND NOT st_isEmpty(St_buffer(y.geo_field,"
+                    + INTERSECTS_BUFFER + ")) AND NOT st_isEmpty(St_buffer(f.umschreibendes_rechteck, "
+                    + INTERSECTS_BUFFER
+                    + ")) THEN st_Intersects(St_buffer(y.geo_field, " + INTERSECTS_BUFFER
+                    + "), St_buffer(f.umschreibendes_rechteck, "
                     + INTERSECTS_BUFFER + ")) ELSE FALSE END "
                     + "\n                      AND NOT y.fid = f.id "
-                    + "\n                      AND CASE WHEN NOT st_isEmpty(y.geo_field) AND NOT st_isEmpty(g.geo_field) AND NOT st_isEmpty(st_Buffer(y.geo_field, -0.005)) AND NOT st_isEmpty(St_buffer(g.geo_field, "
+                    + "\n                      AND CASE WHEN NOT st_isEmpty(y.geo_field) AND NOT st_isEmpty(f.umschreibendes_rechteck) AND NOT st_isEmpty(st_Buffer(y.geo_field, -0.005)) AND NOT st_isEmpty(St_buffer(f.umschreibendes_rechteck, "
                     + INTERSECTS_BUFFER
-                    + ")) THEN st_Intersects(st_Buffer(y.geo_field, -0.005), St_buffer(g.geo_field, "
+                    + ")) THEN st_Intersects(st_Buffer(y.geo_field, -0.005), St_buffer(f.umschreibendes_rechteck, "
                     + INTERSECTS_BUFFER + ")) ELSE FALSE END) AS indirekt "
                     + "\n                                 WHERE  1 = 1 "
                     + "\n                                        AND l.id = fsj.baulast_reference "

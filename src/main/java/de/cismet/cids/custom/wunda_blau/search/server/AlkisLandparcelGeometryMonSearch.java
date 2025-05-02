@@ -97,10 +97,10 @@ public class AlkisLandparcelGeometryMonSearch extends RestApiMonGeometrySearch {
             final String area;
             if (geometry != null) {
                 area = String.format(
-                        "st_area(st_intersection(geom.geo_field, st_GeometryFromText('%1$s')))",
+                        "st_area(st_intersection(alkis_landparcel.geometrie, st_GeomFromEWKT('%1$s')))",
                         PostGisGeometryFactory.getPostGisCompliantDbString(geometry));
             } else {
-                area = "st_area(geom.geo_field)";
+                area = "st_area(alkis_landparcel.geometrie)";
             }
             final String query = ""
                         + "SELECT "
@@ -114,8 +114,6 @@ public class AlkisLandparcelGeometryMonSearch extends RestApiMonGeometrySearch {
                         + "    alkis_landparcel.id AS object_id, "
                         + "    alkis_landparcel.alkis_id AS object_name "
                         + "  FROM alkis_landparcel "
-                        + "  "
-                        + ((geomCondition != null) ? "LEFT JOIN geom ON geom.id = alkis_landparcel.geometrie " : " ")
                         + "  " + ((geomCondition != null) ? ("WHERE " + geomCondition) : " ")
                         + ") AS sub "
                         + "GROUP BY object_id "
@@ -138,6 +136,29 @@ public class AlkisLandparcelGeometryMonSearch extends RestApiMonGeometrySearch {
         } catch (final Exception ex) {
             LOG.error("error while searching for AlkisLandparcel object", ex);
             throw new RuntimeException(ex);
+        }
+    }
+    
+    
+    /**
+     * DOCUMENT ME!
+     *
+     * @return  DOCUMENT ME!
+     */
+    protected String getGeomCondition() {
+        final Geometry geometry = getGeometry();
+        
+        if (geometry != null) {
+            final String geomStringFromText = String.format(
+                    "st_GeomFromEWKT('%s')",
+                    PostGisGeometryFactory.getPostGisCompliantDbString(geometry));
+            return String.format(
+                    "(alkis_landparcel.geometrie && %s AND st_intersects(%s, alkis_landparcel.geometrie))",
+                    geomStringFromText,
+                    ((getBuffer() != null) ? String.format("st_buffer(%s, %f)", geomStringFromText, getBuffer())
+                                           : geomStringFromText));
+        } else {
+            return null;
         }
     }
 }
