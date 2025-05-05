@@ -614,7 +614,7 @@ public class VermessungsunterlagenValidator implements ConnectionContextProvider
             CidsBean biggestIntersectionFlurstueck = null;
             double biggestIntersectionArea = -1d;
             for (final CidsBean flurstueck : flurstuecke) {
-                final Geometry flurstueckGeom = (Geometry)flurstueck.getProperty("geometrie.geo_field");
+                final Geometry flurstueckGeom = (Geometry)flurstueck.getProperty("geometrie");
                 final Geometry intersectGeom = flurstueckGeom.intersection(geom);
                 final double intersectionArea = intersectGeom.getArea();
                 if (intersectionArea > biggestIntersectionArea) {
