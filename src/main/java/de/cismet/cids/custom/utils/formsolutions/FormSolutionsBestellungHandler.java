@@ -2394,7 +2394,7 @@ public class FormSolutionsBestellungHandler implements ConnectionContextProvider
                         final List<CidsBean> landparcelList = (List<CidsBean>)colObj;
 
                         for (final CidsBean landparcel : landparcelList) {
-                            final Geometry flurgeom = (Geometry)landparcel.getProperty("geometrie.geo_field");
+                            final Geometry flurgeom = (Geometry)landparcel.getProperty("geometrie");
 
                             if (geom == null) {
                                 geom = flurgeom;
@@ -2415,7 +2415,7 @@ public class FormSolutionsBestellungHandler implements ConnectionContextProvider
                 if (flurstueck == null) {
                     throw new Exception("ALKIS Flurstück wurde nicht gefunden (" + landparcelcode + ")");
                 }
-                final Geometry flurgeom = (Geometry)flurstueck.getProperty("geometrie.geo_field");
+                final Geometry flurgeom = (Geometry)flurstueck.getProperty("geometrie");
                 if (geom == null) {
                     geom = flurgeom;
                 } else {
