@@ -138,16 +138,16 @@ public class AlkisLandparcelGeometryMonSearch extends RestApiMonGeometrySearch {
             throw new RuntimeException(ex);
         }
     }
-    
-    
+
     /**
      * DOCUMENT ME!
      *
      * @return  DOCUMENT ME!
      */
+    @Override
     protected String getGeomCondition() {
         final Geometry geometry = getGeometry();
-        
+
         if (geometry != null) {
             final String geomStringFromText = String.format(
                     "st_GeomFromEWKT('%s')",
