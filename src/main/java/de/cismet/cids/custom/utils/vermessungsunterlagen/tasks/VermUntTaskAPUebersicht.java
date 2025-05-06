@@ -78,8 +78,13 @@ public class VermUntTaskAPUebersicht extends VermUntTaskAP {
         final GeometryFactory geometryFactory = new GeometryFactory();
         final Collection<Geometry> geometries = new ArrayList<Geometry>(getAlkisPoints().size());
         for (final CidsBean alkisPoint : getAlkisPoints()) {
-            final Geometry geom = (Geometry)alkisPoint.getProperty("geom.geo_field");
-            geometries.add(geom);
+            if (alkisPoint.getProperty("geom") instanceof Geometry) {
+                final Geometry geom = (Geometry)alkisPoint.getProperty("geom");
+                geometries.add(geom);
+            } else {
+                final Geometry geom = (Geometry)alkisPoint.getProperty("geom.geo_field");
+                geometries.add(geom);
+            }
         }
         final Envelope envelope = geometryFactory.createGeometryCollection(geometries.toArray(new Geometry[0]))
                     .getEnvelopeInternal();
