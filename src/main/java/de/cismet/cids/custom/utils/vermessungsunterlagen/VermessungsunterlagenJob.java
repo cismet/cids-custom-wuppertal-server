@@ -317,8 +317,13 @@ public class VermessungsunterlagenJob implements Runnable, ConnectionContextProv
             throws Exception {
         Geometry geometry = null;
         for (final CidsBean cidsBean : cidsBeans) {
-            final Geometry fsGeometry = (Geometry)cidsBean.getProperty("geometrie.geo_field");
-            geometry = (geometry == null) ? fsGeometry : geometry.union(fsGeometry);
+            if (cidsBean.getProperty("geometrie") instanceof Geometry) {
+                final Geometry fsGeometry = (Geometry)cidsBean.getProperty("geometrie");
+                geometry = (geometry == null) ? fsGeometry : geometry.union(fsGeometry);
+            } else {
+                final Geometry fsGeometry = (Geometry)cidsBean.getProperty("geometrie.geo_field");
+                geometry = (geometry == null) ? fsGeometry : geometry.union(fsGeometry);
+            }
         }
 
         if ((geometry != null) && (intersectionGeometry != null)) {
