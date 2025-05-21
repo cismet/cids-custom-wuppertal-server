@@ -35,8 +35,7 @@ public class GemeindeByGeometrySearch extends AbstractCidsServerSearch implement
     private static final String DOMAIN = "WUNDA_BLAU";
     private static final String QUERY_GEMEINDE = "select distinct g.name from flurstueck f "
                 + "join gemarkung g on (g.gemarkungsnummer = f.gemarkungs_nr) "
-                + "join geom on (umschreibendes_rechteck = geom.id) "
-                + "where st_intersects(geo_field,  st_setSrid('%s'::geometry, 25832))";
+                + "where st_intersects(umschreibendes_rechteck,  st_setSrid('%s'::geometry, 25832))";
 
     //~ Instance fields --------------------------------------------------------
 
