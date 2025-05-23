@@ -12,8 +12,6 @@ import Sirius.server.middleware.interfaces.domainserver.MetaService;
 import Sirius.server.middleware.types.MetaObjectNode;
 
 import com.vividsolutions.jts.geom.Geometry;
-import com.vividsolutions.jts.geom.MultiPolygon;
-import com.vividsolutions.jts.geom.Polygon;
 
 import de.aedsicad.aaaweb.rest.api.AlkisSucheApi;
 
@@ -302,7 +300,7 @@ public class CidsAlkisSearchStatement extends AbstractCidsServerSearch implement
                     break;
                 }
             }
-            if (geometry != null) {
+            if ((geometry != null) && (query != null)) {
                 final String geostring = PostGisGeometryFactory.getPostGisCompliantDbString(geometry);
                 query += " and st_intersects("
                             + "geometrie"
