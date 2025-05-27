@@ -17,14 +17,11 @@ import org.apache.log4j.Logger;
 import org.jdom.Document;
 import org.jdom.Element;
 import org.jdom.input.SAXBuilder;
-import org.jdom.output.Format;
-import org.jdom.output.XMLOutputter;
 
 import sun.misc.BASE64Encoder;
 
 import java.io.File;
 import java.io.StringReader;
-import java.io.StringWriter;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -32,8 +29,10 @@ import java.util.Properties;
 
 import de.cismet.cids.utils.serverresources.ServerResourcesLoader;
 
+import de.cismet.commons.utils.datasource.DatasourcesPojoConverter;
 import de.cismet.commons.utils.datasource.DatasourcesUtils;
 import de.cismet.commons.utils.datasource.HtmlConverter;
+import de.cismet.commons.utils.datasource.HtmlDetailConverter;
 
 /**
  * DOCUMENT ME!
@@ -58,6 +57,7 @@ public class DatasourceExtractor {
         String[] credentialArray = null;
         Element rootObject = null;
         File file = null;
+        File file2 = null;
 
         try {
             // read the capabilities list
@@ -103,19 +103,31 @@ public class DatasourceExtractor {
 
             if (filename != null) {
                 file = new File(filename);
+                if (filename.contains(".")) {
+                    file2 = new File(filename.substring(0, filename.lastIndexOf(".")) + "_neu.html");
+                }
             }
         } catch (final Exception ex) {
             LOG.error("Datasource could not load the general properties", ex);
         }
 
         if ((rootObject != null) && (file != null)) {
-            final HtmlConverter converter = new HtmlConverter();
+            DatasourcesPojoConverter converter = new HtmlConverter();
             DatasourcesUtils.createLayerListHeadless(
                 rootObject,
                 rootObject,
                 credentialArray,
                 converter,
                 file);
+            if (file2 != null) {
+                converter = new HtmlDetailConverter();
+                DatasourcesUtils.createLayerListHeadless(
+                    rootObject,
+                    rootObject,
+                    credentialArray,
+                    converter,
+                    file2);
+            }
         }
     }
 }
