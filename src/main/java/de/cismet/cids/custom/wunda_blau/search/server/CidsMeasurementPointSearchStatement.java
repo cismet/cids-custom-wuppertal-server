@@ -263,7 +263,7 @@ public class CidsMeasurementPointSearchStatement extends AbstractCidsServerSearc
         String fromClause = null;
 
         if (geometry != null) {
-            fromClause = CIDSCLASS_ALKIS.concat(" ap, geom g");
+            fromClause = CIDSCLASS_ALKIS.concat(" ap ");
         } else {
             fromClause = CIDSCLASS_ALKIS.concat(" ap");
         }
@@ -330,15 +330,15 @@ public class CidsMeasurementPointSearchStatement extends AbstractCidsServerSearc
             whereClauseBuilder.append(conjunction);
             conjunction = " AND ";
 
-            whereClauseBuilder.append("ap.geom = g.id");
+//            whereClauseBuilder.append("ap.geom = g.id");
+//
+//            whereClauseBuilder.append(conjunction);
+
+            whereClauseBuilder.append("ap.geom && st_GeomFromEWKT('").append(geomString).append("')");
 
             whereClauseBuilder.append(conjunction);
 
-            whereClauseBuilder.append("g.geo_field && st_GeomFromEWKT('").append(geomString).append("')");
-
-            whereClauseBuilder.append(conjunction);
-
-            whereClauseBuilder.append("st_intersects(g.geo_field, st_buffer(st_GeomFromEWKT('")
+            whereClauseBuilder.append("st_intersects(ap.geom, st_buffer(st_GeomFromEWKT('")
                     .append(geomString)
                     .append("'), ")
                     .append(INTERSECTS_BUFFER)

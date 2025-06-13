@@ -114,9 +114,12 @@ public class CidsLandParcelSearchStatement extends AbstractCidsServerSearch impl
             }
 
             String query =
-                "select distinct (select id from cs_class where table_name ilike 'flurstueck') as class_id, fl.id as object_id, fl.alkis_id from flurstueck fl, geom where geom.id = fl.umschreibendes_rechteck";
+                "select distinct (select id from cs_class where table_name ilike 'flurstueck') as class_id, fl.id as object_id, fl.alkis_id from flurstueck fl ";
+            boolean hasWhereClause = false;
+
             if (searchActualParcel || searchHistoricalParcel) {
-                query += " and ( ";
+                hasWhereClause = true;
+                query += " where ( ";
                 if (searchActualParcel) {
                     query += "fl.historisch is null";
                 }
@@ -132,18 +135,32 @@ public class CidsLandParcelSearchStatement extends AbstractCidsServerSearch impl
             if (geometry != null) {
                 final String geostring = PostGisGeometryFactory.getPostGisCompliantDbString(geometry);
                 if ((geometry instanceof Polygon) || (geometry instanceof MultiPolygon)) {
-                    query += " and geo_field &&\n"
+                    if (hasWhereClause) {
+                        query += " and ";
+                    } else {
+                        query += " where ";
+                    }
+                    hasWhereClause = true;
+                    query += " umschreibendes_rechteck &&\n"
                                 + "st_buffer(\n"
                                 + "st_GeometryFromText('" + geostring + "')\n"
                                 + ", " + INTERSECTS_BUFFER + ")\n"
-                                + "and st_intersects(geo_field,st_buffer(st_GeometryFromText('" + geostring
+                                + "and st_intersects(umschreibendes_rechteck,st_buffer(st_GeometryFromText('"
+                                + geostring
                                 + "'), " + INTERSECTS_BUFFER + "))";
                 } else {
-                    query += " and geo_field &&\n"
+                    if (hasWhereClause) {
+                        query += " and ";
+                    } else {
+                        query += " where ";
+                    }
+                    hasWhereClause = true;
+                    query += " umschreibendes_rechteck &&\n"
                                 + "st_buffer(\n"
                                 + "st_GeometryFromText('" + geostring + "')\n"
                                 + ", " + INTERSECTS_BUFFER + ")\n"
-                                + "and st_intersects(geo_field, st_GeometryFromText('" + geostring + "'))";
+                                + "and st_intersects(umschreibendes_rechteck, st_GeometryFromText('" + geostring
+                                + "'))";
                 }
             }
 

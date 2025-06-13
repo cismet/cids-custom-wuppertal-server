@@ -12,8 +12,6 @@ import Sirius.server.middleware.interfaces.domainserver.MetaService;
 import Sirius.server.middleware.types.MetaObjectNode;
 
 import com.vividsolutions.jts.geom.Geometry;
-import com.vividsolutions.jts.geom.MultiPolygon;
-import com.vividsolutions.jts.geom.Polygon;
 
 import de.aedsicad.aaaweb.rest.api.AlkisSucheApi;
 
@@ -233,12 +231,12 @@ public class CidsAlkisSearchStatement extends AbstractCidsServerSearch implement
                         }
                         if (resulttyp == Resulttyp.FLURSTUECK) {
                             query =
-                                "select distinct (select id from cs_class where table_name ilike 'alkis_landparcel') as class_id, lp.id as object_id, lp.alkis_id from alkis_landparcel lp,alkis_flurstueck_to_buchungsblaetter jt,alkis_buchungsblatt bb,ownerofbb ,geom where geom.id = lp.geometrie and lp.buchungsblaetter=jt.flurstueck_reference and jt.buchungsblatt=bb.id and bb.buchungsblattcode = ownerofbb.bb and ownerofbb.ownerid in ("
+                                "select distinct (select id from cs_class where table_name ilike 'alkis_landparcel') as class_id, lp.id as object_id, lp.alkis_id from alkis_landparcel lp,alkis_flurstueck_to_buchungsblaetter jt,alkis_buchungsblatt bb,ownerofbb where lp.buchungsblaetter=jt.flurstueck_reference and jt.buchungsblatt=bb.id and bb.buchungsblattcode = ownerofbb.bb and ownerofbb.ownerid in ("
                                         + whereClauseBuilder
                                         + ")";
                         } else {
                             query =
-                                "select distinct (select id from cs_class where table_name ilike 'alkis_buchungsblatt') as class_id, jt.buchungsblatt as object_id,bb.buchungsblattcode from alkis_landparcel lp,alkis_flurstueck_to_buchungsblaetter jt,alkis_buchungsblatt bb,ownerofbb ,geom where geom.id = lp.geometrie and lp.buchungsblaetter=jt.flurstueck_reference and jt.buchungsblatt=bb.id and bb.buchungsblattcode = ownerofbb.bb and ownerofbb.ownerid in ("
+                                "select distinct (select id from cs_class where table_name ilike 'alkis_buchungsblatt') as class_id, jt.buchungsblatt as object_id,bb.buchungsblattcode from alkis_landparcel lp,alkis_flurstueck_to_buchungsblaetter jt,alkis_buchungsblatt bb,ownerofbb where lp.buchungsblaetter=jt.flurstueck_reference and jt.buchungsblatt=bb.id and bb.buchungsblattcode = ownerofbb.bb and ownerofbb.ownerid in ("
                                         + whereClauseBuilder
                                         + ")";
                         }
@@ -250,26 +248,26 @@ public class CidsAlkisSearchStatement extends AbstractCidsServerSearch implement
                     if (resulttyp == Resulttyp.FLURSTUECK) {
                         if (useWildcardForBuchungsblattsearch) {
                             query =
-                                "select distinct (select id from cs_class where table_name ilike 'alkis_landparcel') as class_id, lp.id as object_id, lp.alkis_id from alkis_landparcel lp,alkis_flurstueck_to_buchungsblaetter jt,alkis_buchungsblatt bb ,geom where geom.id = lp.geometrie and lp.buchungsblaetter=jt.flurstueck_reference and jt.buchungsblatt=bb.id and bb.buchungsblattcode ilike '"
+                                "select distinct (select id from cs_class where table_name ilike 'alkis_landparcel') as class_id, lp.id as object_id, lp.alkis_id from alkis_landparcel lp,alkis_flurstueck_to_buchungsblaetter jt,alkis_buchungsblatt bb where lp.buchungsblaetter=jt.flurstueck_reference and jt.buchungsblatt=bb.id and bb.buchungsblattcode ilike '"
                                         + buchungsblattnummer
                                         + WILDCARD
                                         + "'";
                         } else {
                             query =
-                                "select distinct (select id from cs_class where table_name ilike 'alkis_landparcel') as class_id, lp.id as object_id, lp.alkis_id from alkis_landparcel lp,alkis_flurstueck_to_buchungsblaetter jt,alkis_buchungsblatt bb ,geom where geom.id = lp.geometrie and lp.buchungsblaetter=jt.flurstueck_reference and jt.buchungsblatt=bb.id and bb.buchungsblattcode ilike '"
+                                "select distinct (select id from cs_class where table_name ilike 'alkis_landparcel') as class_id, lp.id as object_id, lp.alkis_id from alkis_landparcel lp,alkis_flurstueck_to_buchungsblaetter jt,alkis_buchungsblatt bb where lp.buchungsblaetter=jt.flurstueck_reference and jt.buchungsblatt=bb.id and bb.buchungsblattcode ilike '"
                                         + buchungsblattnummer
                                         + "'";
                         }
                     } else {
                         if (useWildcardForBuchungsblattsearch) {
                             query =
-                                "select distinct (select id from cs_class where table_name ilike 'alkis_buchungsblatt') as class_id, jt.buchungsblatt as object_id,bb.buchungsblattcode from alkis_landparcel lp,alkis_flurstueck_to_buchungsblaetter jt,alkis_buchungsblatt bb ,geom where geom.id = lp.geometrie and lp.buchungsblaetter=jt.flurstueck_reference and jt.buchungsblatt=bb.id and bb.buchungsblattcode ilike '"
+                                "select distinct (select id from cs_class where table_name ilike 'alkis_buchungsblatt') as class_id, jt.buchungsblatt as object_id,bb.buchungsblattcode from alkis_landparcel lp,alkis_flurstueck_to_buchungsblaetter jt,alkis_buchungsblatt bb where lp.buchungsblaetter=jt.flurstueck_reference and jt.buchungsblatt=bb.id and bb.buchungsblattcode ilike '"
                                         + buchungsblattnummer
                                         + WILDCARD
                                         + "'";
                         } else {
                             query =
-                                "select distinct (select id from cs_class where table_name ilike 'alkis_buchungsblatt') as class_id, jt.buchungsblatt as object_id,bb.buchungsblattcode from alkis_landparcel lp,alkis_flurstueck_to_buchungsblaetter jt,alkis_buchungsblatt bb ,geom where geom.id = lp.geometrie and lp.buchungsblaetter=jt.flurstueck_reference and jt.buchungsblatt=bb.id and bb.buchungsblattcode ilike '"
+                                "select distinct (select id from cs_class where table_name ilike 'alkis_buchungsblatt') as class_id, jt.buchungsblatt as object_id,bb.buchungsblattcode from alkis_landparcel lp,alkis_flurstueck_to_buchungsblaetter jt,alkis_buchungsblatt bb where lp.buchungsblaetter=jt.flurstueck_reference and jt.buchungsblatt=bb.id and bb.buchungsblattcode ilike '"
                                         + buchungsblattnummer
                                         + "'";
                         }
@@ -292,20 +290,20 @@ public class CidsAlkisSearchStatement extends AbstractCidsServerSearch implement
                     }
                     if (resulttyp == Resulttyp.FLURSTUECK) {
                         query =
-                            "select distinct (select id from cs_class where table_name ilike 'alkis_landparcel') as class_id, lp.id as object_id, lp.alkis_id from alkis_landparcel lp ,geom where geom.id = lp.geometrie and "
+                            "select distinct (select id from cs_class where table_name ilike 'alkis_landparcel') as class_id, lp.id as object_id, lp.alkis_id from alkis_landparcel lp where "
                                     + flurstueckClause;
                     } else {
                         query =
-                            "select distinct (select id from cs_class where table_name ilike 'alkis_buchungsblatt') as class_id, jt.buchungsblatt as object_id,bb.buchungsblattcode from  alkis_landparcel lp,alkis_flurstueck_to_buchungsblaetter jt,alkis_buchungsblatt bb,geom where geom.id = lp.geometrie and lp.buchungsblaetter=jt.flurstueck_reference and jt.buchungsblatt=bb.id and "
+                            "select distinct (select id from cs_class where table_name ilike 'alkis_buchungsblatt') as class_id, jt.buchungsblatt as object_id,bb.buchungsblattcode from  alkis_landparcel lp,alkis_flurstueck_to_buchungsblaetter jt,alkis_buchungsblatt bb where lp.buchungsblaetter=jt.flurstueck_reference and jt.buchungsblatt=bb.id and "
                                     + flurstueckClause;
                     }
                     break;
                 }
             }
-            if (geometry != null) {
+            if ((geometry != null) && (query != null)) {
                 final String geostring = PostGisGeometryFactory.getPostGisCompliantDbString(geometry);
                 query += " and st_intersects("
-                            + "geo_field"
+                            + "geometrie"
                             + ","
                             + "st_buffer(st_GeomFromEWKT('"
                             + geostring
