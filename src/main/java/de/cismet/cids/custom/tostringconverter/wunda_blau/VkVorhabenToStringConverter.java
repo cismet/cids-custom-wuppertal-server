@@ -24,8 +24,8 @@ public class VkVorhabenToStringConverter extends CustomToStringConverter {
 
     //~ Static fields/initializers ---------------------------------------------
 
-    public static final String FIELD__TITEL = "titel";     // vk_vorhaben
-    public static final String FIELD__ID = "id";           // vk_vorhaben
+    public static final String FIELD__TITEL = "titel"; // vk_vorhaben
+    public static final String FIELD__ID = "id";       // vk_vorhaben
 
     //~ Methods ----------------------------------------------------------------
 

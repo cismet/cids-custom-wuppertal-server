@@ -61,7 +61,8 @@ public class VkStekDeletionProvider extends AbstractCustomDeletionProvider {
         final CidsBean stekBean = metaObject.getBean();
         final Integer stek_id = stekBean.getPrimaryKeyValue();
 
-        final String queryStek = String.format("SELECT * FROM %s WHERE %s = %d;",
+        final String queryStek = String.format(
+                "SELECT * FROM %s WHERE %s = %d;",
                 TABLE_NAME_SEARCH,
                 FIELD__FK,
                 stek_id);

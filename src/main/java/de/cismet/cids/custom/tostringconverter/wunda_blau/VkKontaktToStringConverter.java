@@ -24,8 +24,8 @@ public class VkKontaktToStringConverter extends CustomToStringConverter {
 
     //~ Static fields/initializers ---------------------------------------------
 
-    public static final String FIELD__MAIL = "mail"; // vk_kontakt
-    public static final String FIELD__TEL = "telefon";      // vk_kontakt
+    public static final String FIELD__MAIL = "mail";   // vk_kontakt
+    public static final String FIELD__TEL = "telefon"; // vk_kontakt
 
     //~ Methods ----------------------------------------------------------------
 
@@ -33,13 +33,14 @@ public class VkKontaktToStringConverter extends CustomToStringConverter {
     public String createString() {
         final Integer myid = cidsBean.getPrimaryKeyValue();
         if (myid < 0) {
-            return "eine neuen Kontakt anlegen...";
+            return "einen neuen Kontakt anlegen...";
         } else {
-            if (cidsBean.getProperty(FIELD__TEL) == null){
+            if (cidsBean.getProperty(FIELD__TEL) == null) {
                 return String.format("%s",
                         String.valueOf(cidsBean.getProperty(FIELD__MAIL)));
             } else {
-                return String.format("%s (%s)",
+                return String.format(
+                        "%s (%s)",
                         String.valueOf(cidsBean.getProperty(FIELD__MAIL)),
                         String.valueOf(cidsBean.getProperty(FIELD__TEL)));
             }

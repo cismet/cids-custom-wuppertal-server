@@ -61,7 +61,8 @@ public class VkKontaktDeletionProvider extends AbstractCustomDeletionProvider {
         final CidsBean kontaktBean = metaObject.getBean();
         final Integer kontakt_id = kontaktBean.getPrimaryKeyValue();
 
-        final String queryKontakt = String.format("SELECT * FROM %s WHERE %s = %d;",
+        final String queryKontakt = String.format(
+                "SELECT * FROM %s WHERE %s = %d;",
                 TABLE_NAME_SEARCH,
                 FIELD__FK,
                 kontakt_id);

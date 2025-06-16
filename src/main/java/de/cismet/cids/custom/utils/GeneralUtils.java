@@ -55,14 +55,14 @@ public class GeneralUtils {
         final InputStream es = process.getErrorStream();
         final String ausgabe_is = IOUtils.toString(new InputStreamReader(is));
         final String ausgabe_es = IOUtils.toString(new InputStreamReader(es));
-        String ausgabe = ""; 
-        if (ausgabe_is != null && ausgabe_is.length() > 0){
+        String ausgabe = "";
+        if ((ausgabe_is != null) && (ausgabe_is.length() > 0)) {
             ausgabe += ausgabe_is + "\n";
         }
-        if (ausgabe_es != null && ausgabe_es.length() > 0){
+        if ((ausgabe_es != null) && (ausgabe_es.length() > 0)) {
             ausgabe += ausgabe_es + "\n";
         }
-        //return IOUtils.toString(new InputStreamReader(is));
+        // return IOUtils.toString(new InputStreamReader(is));
         return ausgabe;
     }
 
@@ -90,16 +90,17 @@ public class GeneralUtils {
             executeCmd(cmd);
         }
     }
-    
+
     /**
      * DOCUMENT ME!
      *
      * @param   cmdTemplate   DOCUMENT ME!
-     * @param   absender
+     * @param   absender      DOCUMENT ME!
      * @param   emailAdresse  DOCUMENT ME!
      * @param   betreff       DOCUMENT ME!
      * @param   inhalt        DOCUMENT ME!
-     * @return 
+     *
+     * @return  DOCUMENT ME!
      *
      * @throws  Exception  DOCUMENT ME!
      */

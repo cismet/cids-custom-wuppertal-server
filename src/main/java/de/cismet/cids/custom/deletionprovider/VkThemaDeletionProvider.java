@@ -61,7 +61,8 @@ public class VkThemaDeletionProvider extends AbstractCustomDeletionProvider {
         final CidsBean themaBean = metaObject.getBean();
         final Integer thema_id = themaBean.getPrimaryKeyValue();
 
-        final String queryThema = String.format("SELECT * FROM %s WHERE %s = %d;",
+        final String queryThema = String.format(
+                "SELECT * FROM %s WHERE %s = %d;",
                 TABLE_NAME_SEARCH,
                 FIELD__FK,
                 thema_id);

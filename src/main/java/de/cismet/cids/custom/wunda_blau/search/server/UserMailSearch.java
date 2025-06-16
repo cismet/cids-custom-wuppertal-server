@@ -16,6 +16,8 @@ import org.apache.log4j.Logger;
 
 import org.openide.util.lookup.ServiceProvider;
 
+import java.rmi.RemoteException;
+
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collection;
@@ -33,7 +35,6 @@ import de.cismet.cidsx.server.search.builtin.legacy.LightweightMetaObjectsSearch
 
 import de.cismet.connectioncontext.ConnectionContext;
 import de.cismet.connectioncontext.ConnectionContextStore;
-import java.rmi.RemoteException;
 
 /**
  * Builtin Legacy Search to delegate the operation getLightweightMetaObjectsByQuery to the cids Pure REST Search API.
@@ -49,10 +50,12 @@ public class UserMailSearch extends AbstractCidsServerSearch implements RestApiC
     //~ Static fields/initializers ---------------------------------------------
 
     private static final Logger LOG = Logger.getLogger(UserMailSearch.class);
+
+    //~ Instance fields --------------------------------------------------------
+
     private final String table = "cs_info";
     private String representationPattern = "%s";
-    private String[] representationFields = {"key"};
-    //~ Instance fields --------------------------------------------------------
+    private String[] representationFields = { "key" };
 
     private ConnectionContext connectionContext = ConnectionContext.createDummy();
 
@@ -81,14 +84,14 @@ public class UserMailSearch extends AbstractCidsServerSearch implements RestApiC
     /**
      * Creates a new UserMailSearch object.
      *
-     * @param  username               DOCUMENT ME!
+     * @param  username  DOCUMENT ME!
      */
     public UserMailSearch(final String username) {
         this();
         final Collection<String> conditions = new ArrayList<>();
         conditions.add(String.format(" key like '%s'", username));
-        //conditions.add(" email is not null");
-        //conditions.add(" wunda");
+        // conditions.add(" email is not null");
+        // conditions.add(" wunda");
         setWhere(conditions);
     }
 
@@ -133,22 +136,26 @@ public class UserMailSearch extends AbstractCidsServerSearch implements RestApiC
 
     @Override
     public String[] getRepresentationFields() {
-        throw new UnsupportedOperationException("Not supported yet."); //To change body of generated methods, choose Tools | Templates.
+        throw new UnsupportedOperationException("Not supported yet.");    // To change body of generated methods, choose
+                                                                          // Tools | Templates.
     }
 
     @Override
-    public void setRepresentationFields(String[] strings) {
-        throw new UnsupportedOperationException("Not supported yet."); //To change body of generated methods, choose Tools | Templates.
+    public void setRepresentationFields(final String[] strings) {
+        throw new UnsupportedOperationException("Not supported yet.");    // To change body of generated methods, choose
+                                                                          // Tools | Templates.
     }
 
     @Override
     public String getRepresentationPattern() {
-        throw new UnsupportedOperationException("Not supported yet."); //To change body of generated methods, choose Tools | Templates.
+        throw new UnsupportedOperationException("Not supported yet.");    // To change body of generated methods, choose
+                                                                          // Tools | Templates.
     }
 
     @Override
-    public void setRepresentationPattern(String string) {
-        throw new UnsupportedOperationException("Not supported yet."); //To change body of generated methods, choose Tools | Templates.
+    public void setRepresentationPattern(final String string) {
+        throw new UnsupportedOperationException("Not supported yet.");    // To change body of generated methods, choose
+                                                                          // Tools | Templates.
     }
 
     //~ Inner Classes ----------------------------------------------------------
