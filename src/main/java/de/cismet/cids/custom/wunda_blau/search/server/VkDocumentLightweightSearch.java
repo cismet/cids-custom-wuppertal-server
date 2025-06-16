@@ -140,12 +140,6 @@ public class VkDocumentLightweightSearch extends AbstractCidsServerSearch implem
                 (conditions.isEmpty() ? "" : (" WHERE " + String.join(" AND ", conditions))));
         LOG.info(query);
         try {
-            final MetaClass mc = CidsBean.getMetaClassFromTableName(
-                    "WUNDA_BLAU",
-                    table,
-                    getConnectionContext());
-
-            // final MetaService ms = (MetaService)getActiveLocalServers().get("WUNDA_BLAU");
             final List<MetaObjectNode> mons = new ArrayList<>();
             final List<ArrayList> resultList = metaService.performCustomSearch(query, getConnectionContext());
             for (final ArrayList al : resultList) {
