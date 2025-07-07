@@ -18,6 +18,8 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 
 import org.apache.log4j.Logger;
 
+import java.io.UnsupportedEncodingException;
+
 import de.cismet.cids.custom.utils.GeneralUtils;
 import de.cismet.cids.custom.utils.VkMailConfigJson;
 import de.cismet.cids.custom.utils.WundaBlauServerResources;
@@ -56,7 +58,7 @@ public class VkSendMailServerAction implements ServerAction, ConnectionContextSt
 
         //~ Enum constants -----------------------------------------------------
 
-        ABSENDER, MAIL_ADRESS, BETREFF, CONTENT
+        ABSENDER, MAIL_ADRESS, BETREFF, CONTENT, ENCODING
     }
 
     //~ Instance fields --------------------------------------------------------
@@ -93,6 +95,9 @@ public class VkSendMailServerAction implements ServerAction, ConnectionContextSt
             String mail_adress = null;
             String betreff = null;
             String content = null;
+            String encoding = null;
+            final String sendEmailEncoding = "utf-8";
+
             if (params != null) {
                 for (final ServerActionParameter sap : params) {
                     if (sap.getKey().equals(Parameter.ABSENDER.toString())) {
@@ -103,8 +108,26 @@ public class VkSendMailServerAction implements ServerAction, ConnectionContextSt
                         betreff = (String)sap.getValue();
                     } else if (sap.getKey().equals(Parameter.CONTENT.toString())) {
                         content = (String)sap.getValue();
+                    } else if (sap.getKey().equals(Parameter.ENCODING.toString())) {
+                        encoding = (String)sap.getValue();
                     }
                 }
+
+                if (encoding != null) {
+                    // this is a trick that can be used, if the data was send in an other charset than utf-8 (e.g.
+                    // Windows-1252), but it was parsed as utf-8. But unfortunately it will not work with all charsets.
+                    try {
+                        if (betreff != null) {
+                            betreff = new String(betreff.getBytes(encoding), sendEmailEncoding);
+                        }
+                        if (content != null) {
+                            content = new String(content.getBytes(encoding), sendEmailEncoding);
+                        }
+                    } catch (UnsupportedEncodingException e) {
+                        LOG.error("Unsupported encoding used: " + encoding + " and " + sendEmailEncoding, e);
+                    }
+                }
+
                 final VkMailConfigJson mailConfig =
                     new ObjectMapper().readValue(ServerResourcesLoader.getInstance().loadText(
                             WundaBlauServerResources.VK_MAIL_CONFIGURATION.getValue()),
