@@ -56,7 +56,7 @@ public class VkSendMailServerAction implements ServerAction, ConnectionContextSt
 
         //~ Enum constants -----------------------------------------------------
 
-        ABSENDER, MAIL_ADRESS, BETREFF, CONTENT
+        ABSENDER, MAIL_ADRESS, BETREFF, CONTENT, ENCODING
     }
 
     //~ Instance fields --------------------------------------------------------
@@ -93,18 +93,29 @@ public class VkSendMailServerAction implements ServerAction, ConnectionContextSt
             String mail_adress = null;
             String betreff = null;
             String content = null;
+            String encoding = null;
+            final String sendEmailEncoding = "utf-8";
             if (params != null) {
+                for (final ServerActionParameter sap : params) {
+                    if (sap.getKey().equals(Parameter.ENCODING.toString())) {
+                        encoding = (String)sap.getValue();
+                        break;
+                    }
+                }
                 for (final ServerActionParameter sap : params) {
                     if (sap.getKey().equals(Parameter.ABSENDER.toString())) {
                         absender = (String)sap.getValue();
                     } else if (sap.getKey().equals(Parameter.MAIL_ADRESS.toString())) {
                         mail_adress = (String)sap.getValue();
                     } else if (sap.getKey().equals(Parameter.BETREFF.toString())) {
-                        betreff = (String)sap.getValue();
+                        betreff = (encoding != null)
+                            ? new String(((String)sap.getValue()).getBytes(encoding), sendEmailEncoding): (String)sap.getValue();
                     } else if (sap.getKey().equals(Parameter.CONTENT.toString())) {
-                        content = (String)sap.getValue();
-                    }
+                        content = (encoding != null)
+                            ? new String(((String)sap.getValue()).getBytes(encoding), sendEmailEncoding): (String)sap.getValue();
+                    } 
                 }
+                
                 final VkMailConfigJson mailConfig =
                     new ObjectMapper().readValue(ServerResourcesLoader.getInstance().loadText(
                             WundaBlauServerResources.VK_MAIL_CONFIGURATION.getValue()),
