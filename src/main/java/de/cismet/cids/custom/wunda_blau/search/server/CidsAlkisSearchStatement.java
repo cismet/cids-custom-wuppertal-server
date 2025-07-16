@@ -10,10 +10,15 @@ package de.cismet.cids.custom.wunda_blau.search.server;
 import Sirius.server.middleware.interfaces.domainserver.ActionService;
 import Sirius.server.middleware.interfaces.domainserver.MetaService;
 import Sirius.server.middleware.types.MetaObjectNode;
+import Sirius.server.search.SearchRuntimeException;
+
+import com.fasterxml.jackson.databind.JsonNode;
+import com.fasterxml.jackson.databind.ObjectMapper;
 
 import com.vividsolutions.jts.geom.Geometry;
 
 import de.aedsicad.aaaweb.rest.api.AlkisSucheApi;
+import de.aedsicad.aaaweb.rest.client.ApiException;
 
 import org.apache.commons.lang.StringEscapeUtils;
 import org.apache.log4j.Logger;
@@ -330,6 +335,30 @@ public class CidsAlkisSearchStatement extends AbstractCidsServerSearch implement
                 }
             }
             return result;
+        } catch (final ApiException e) {
+            if (e.getResponseBody() != null) {
+                LOG.error("Problem" + e.getResponseBody(), e);
+                String message = e.getResponseBody();
+
+                try {
+                    final ObjectMapper map = new ObjectMapper();
+                    final JsonNode node = map.readTree(message);
+                    JsonNode tmpMessage = node.get("error");
+
+                    if ((tmpMessage != null) && (tmpMessage.get("message") != null)) {
+                        tmpMessage = tmpMessage.get("message");
+                        message = "<html>"
+                                    + tmpMessage.textValue();
+                    }
+                } catch (Exception ex) {
+                    LOG.error("Cannot parse exception", ex);
+                }
+
+                throw new SearchRuntimeException(message);
+            } else {
+                LOG.error("Problem", e);
+                throw new RuntimeException(e);
+            }
         } catch (final Exception e) {
             LOG.error("Problem", e);
             throw new RuntimeException(e);
