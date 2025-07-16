@@ -61,7 +61,7 @@
             <dependency>
                 <groupId>de.cismet.commons</groupId>
                 <artifactId>cismet-commons</artifactId>
-                <version>9.0.4</version>
+                <version>9.0.5</version>
                 <type>jar</type>
                 <scope>compile</scope>
             </dependency>
@@ -69,7 +69,7 @@
             <dependency>
                 <groupId>de.cismet.cids</groupId>
                 <artifactId>cids-server</artifactId>
-                <version>9.1.4</version>
+                <version>9.1.5</version>
                 <type>jar</type>
             </dependency>
 
@@ -362,7 +362,7 @@
         <dependency>
             <groupId>com.twelvemonkeys.imageio</groupId>
             <artifactId>imageio-metadata</artifactId>
-            <version>3.0</version>
+            <version>3.7.1</version>
             <scope>compile</scope>
             <type>jar</type>
         </dependency>                        
