@@ -46,6 +46,8 @@ public class NasProduct implements Serializable {
     private String billingKey;
     private String template;
     private String permissionNeeded;
+    private String templateContent;
+    private String server;
     private Map<String, Object> params;
 
     //~ Constructors -----------------------------------------------------------
@@ -66,6 +68,42 @@ public class NasProduct implements Serializable {
     }
 
     //~ Methods ----------------------------------------------------------------
+
+    /**
+     * DOCUMENT ME!
+     *
+     * @return  the templateContent
+     */
+    public String getTemplateContent() {
+        return templateContent;
+    }
+
+    /**
+     * DOCUMENT ME!
+     *
+     * @param  templateContent  the templateContent to set
+     */
+    public void setTemplateContent(final String templateContent) {
+        this.templateContent = templateContent;
+    }
+
+    /**
+     * DOCUMENT ME!
+     *
+     * @return  the server
+     */
+    public String getServer() {
+        return server;
+    }
+
+    /**
+     * DOCUMENT ME!
+     *
+     * @param  server  the server to set
+     */
+    public void setServer(final String server) {
+        this.server = server;
+    }
 
     /**
      * DOCUMENT ME!

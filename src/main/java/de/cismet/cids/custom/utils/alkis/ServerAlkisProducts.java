@@ -333,9 +333,24 @@ public final class ServerAlkisProducts extends AlkisProducts {
      *
      * @return  DOCUMENT ME!
      */
-    private String getIdentification() {
+    public String getIdentification() {
         final String token = getAlkisAccessProvider().login();
         return new StringBuffer("&token=").append(token).toString();
+    }
+
+    /**
+     * DOCUMENT ME!
+     *
+     * @param   server  DOCUMENT ME!
+     * @param   id      DOCUMENT ME!
+     *
+     * @return  DOCUMENT ME!
+     *
+     * @throws  MalformedURLException  DOCUMENT ME!
+     */
+    public URL getCsvGetResultURL(final String server, final String id) throws MalformedURLException {
+        return new URL(new StringBuffer(server).append("?action=stream&").append("streamid=").append(id).append(
+                    getIdentification()).toString());
     }
 
     /**
