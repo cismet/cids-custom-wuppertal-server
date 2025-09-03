@@ -13,7 +13,7 @@
 
     <groupId>de.cismet.cids.custom.wupp.server</groupId>
     <artifactId>cids-custom-server-wuppertal</artifactId>
-    <version>9.4.1</version>
+    <version>9.4.2</version>
     <packaging>jar</packaging>
     
     <name>${names.cids.custom-wuppertal-server} [${project.version}]</name>
@@ -23,7 +23,7 @@
         <connection>https://github.com/cismet/cids-custom-wuppertal-server.git</connection>
         <developerConnection>scm:git:git@github.com:cismet/cids-custom-wuppertal-server.git</developerConnection>
         <url>https://github.com/cismet/cids-custom-wuppertal-server</url>
-        <tag>v9.4.1</tag>
+        <tag>v9.4.2</tag>
     </scm>
 
     <properties>
@@ -61,7 +61,7 @@
             <dependency>
                 <groupId>de.cismet.commons</groupId>
                 <artifactId>cismet-commons</artifactId>
-                <version>9.0.5</version>
+                <version>9.0.6</version>
                 <type>jar</type>
                 <scope>compile</scope>
             </dependency>
@@ -69,7 +69,7 @@
             <dependency>
                 <groupId>de.cismet.cids</groupId>
                 <artifactId>cids-server</artifactId>
-                <version>9.1.5</version>
+                <version>9.1.6</version>
                 <type>jar</type>
             </dependency>
 
@@ -281,7 +281,7 @@
         <dependency>
             <groupId>mysql</groupId>
             <artifactId>mysql-connector-java</artifactId>
-            <version>8.0.21</version>
+            <version>8.0.28</version>
             <scope>runtime</scope>
         </dependency>
         <!-- END: runtime dependencies -->
@@ -295,18 +295,6 @@
         <!-- END: Provided dependencies -->
         
         <dependency>
-            <groupId>axis</groupId>
-            <artifactId>axis</artifactId>
-            <version>1.4</version>
-            <exclusions>
-                <exclusion>
-                    <groupId>commons-logging</groupId>
-                    <artifactId>commons-logging</artifactId>
-                </exclusion>
-            </exclusions>
-            <!--<scope>runtime</scope>-->
-        </dependency>
-        <dependency>
             <groupId>jakarta.xml.bind</groupId>
             <artifactId>jakarta.xml.bind-api</artifactId>
             <scope>compile</scope>
@@ -316,7 +304,8 @@
         <dependency>
             <groupId>io.socket</groupId>
             <artifactId>socket.io-client</artifactId>
-            <version>1.0.0</version>
+            <!--<version>1.0.0</version>-->
+            <version>2.0.1</version>
             <scope>compile</scope>                
         </dependency>                 
         <dependency>
@@ -343,19 +332,19 @@
         <dependency>
             <groupId>commons-net</groupId>
             <artifactId>commons-net</artifactId>
-            <version>3.3</version>
+            <version>3.9.0</version>
             <classifier>ftp</classifier>
         </dependency>
         <dependency>
             <groupId>org.jsoup</groupId>
             <artifactId>jsoup</artifactId>
-            <version>1.14.2</version>
+            <version>1.15.4</version>
         </dependency>
 
         <dependency>
             <groupId>com.drewnoakes</groupId>
             <artifactId>metadata-extractor</artifactId>
-            <version>2.8.1</version>
+            <version>2.18.0</version>
             <scope>compile</scope>
             <type>jar</type>
         </dependency>
@@ -440,12 +429,6 @@
                                         - "Unused declared dependencies found: com.sun.jersey:jersey-json:jar:1.17.1:compile" if dependency jersey-json is present
                                     -->
                                     <ignoredUnusedDeclaredDependency>com.sun.jersey:jersey-json:jar</ignoredUnusedDeclaredDependency>
-                                    <!--
-                                         STRANGE maven-dependency-plugin:analyze-only behaviour:
-                                         - "class file for org.apache.axis.client.Service not found" if dependency axis is missing
-                                         - "Unused declared dependencies found: com.sun.jersey:jersey-json:jar:1.17.1:compile" if dependency jersey-json is present
-                                    -->
-                                    <ignoredUnusedDeclaredDependency>axis:axis:jar</ignoredUnusedDeclaredDependency>
                                     <!-- 
                                         jcl-over-slf4j logging bridge is needed to avoid commons-logging compatibility problems 
                                     -->
