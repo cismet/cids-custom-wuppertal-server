@@ -117,7 +117,8 @@ public enum WundaBlauServerResources {
     ALBO_WEBDAV_PROPERTIES(new TextServerResource("/albo/webdav_conf.properties")),
     UMWELTALARM_WEBDAV_PROPERTIES(new TextServerResource("/umweltalarm/webdav_conf.properties")),
 
-    IMAGE_ANNOTATOR_FONT(new BinaryServerResource("/tiffer/Calibri_Bold.ttf"));
+    IMAGE_ANNOTATOR_FONT(new BinaryServerResource("/tiffer/Calibri_Bold.ttf")),
+    TZB_WEBDAV(new JsonServerResource("/tzb/webdav.json"));
 
     //~ Instance fields --------------------------------------------------------
 
