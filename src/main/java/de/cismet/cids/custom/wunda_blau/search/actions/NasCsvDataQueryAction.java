@@ -76,7 +76,7 @@ public class NasCsvDataQueryAction implements UserAwareServerAction {
 
         //~ Enum constants -----------------------------------------------------
 
-        TEMPLATE, GEOMETRY_COLLECTION, METHOD
+        TEMPLATE, GEOMETRY_COLLECTION, METHOD, AUFTRAGSNUMMER
     }
 
     //~ Instance fields --------------------------------------------------------
@@ -90,12 +90,15 @@ public class NasCsvDataQueryAction implements UserAwareServerAction {
         NasProduct nasProduct = null;
         GeometryCollection geoms = null;
         METHOD_TYPE method = null;
+        String auftrag = "";
 
         for (final ServerActionParameter sap : params) {
             if (sap.getKey().equals(PARAMETER_TYPE.TEMPLATE.toString())) {
                 nasProduct = (NasProduct)sap.getValue();
             } else if (sap.getKey().equals(PARAMETER_TYPE.GEOMETRY_COLLECTION.toString())) {
                 geoms = (GeometryCollection)sap.getValue();
+            } else if (sap.getKey().equals(PARAMETER_TYPE.AUFTRAGSNUMMER.toString())) {
+                auftrag = (String)sap.getValue();
             } else if (sap.getKey().equals(PARAMETER_TYPE.METHOD.toString())) {
                 method = (METHOD_TYPE)sap.getValue();
             }
@@ -115,6 +118,8 @@ public class NasCsvDataQueryAction implements UserAwareServerAction {
                 if (landparcels instanceof String) {
                     final URL url = new URL(nasProduct.getServer());
                     String para = nasProduct.getTemplateContent().replace("%landparcels%", (String)landparcels);
+                    final String auftragsnummer = getRequestId(user, auftrag);
+                    para = para.replace("%auftrag%", auftragsnummer);
                     para += ServerAlkisProducts.getInstance().getIdentification();
                     final HashMap<String, String> requestHeaders = new HashMap<String, String>();
                     requestHeaders.put("content-type", "application/x-www-form-urlencoded");
@@ -148,6 +153,18 @@ public class NasCsvDataQueryAction implements UserAwareServerAction {
         }
 
         return null;
+    }
+
+    /**
+     * DOCUMENT ME!
+     *
+     * @param   user       DOCUMENT ME!
+     * @param   requestId  DOCUMENT ME!
+     *
+     * @return  DOCUMENT ME!
+     */
+    private String getRequestId(final User user, final String requestId) {
+        return user.getName() + "_" + requestId;
     }
 
     @Override
