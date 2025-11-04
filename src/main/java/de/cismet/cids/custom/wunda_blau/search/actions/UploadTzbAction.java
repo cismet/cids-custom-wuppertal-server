@@ -194,7 +194,6 @@ public class UploadTzbAction implements ServerAction, UserAwareServerAction {
             actionBean.setProperty(ParameterType.status_reason.toString(),
                 paramsHashMap.get(ParameterType.status_reason.toString()));
             actionBean.setProperty(ParameterType.fk_tree.toString(), fkTreeBean);
-            actionBean.setProperty("payload", "{\"test\": \"Ein Test\"}");
             actionBean.setProperty("fk_action", fkActionBean);
             final Map<String, Object> payload = (Map<String, Object>)paramsHashMap.get(ParameterType.payload
                             .toString());
@@ -220,7 +219,7 @@ public class UploadTzbAction implements ServerAction, UserAwareServerAction {
 
             final MetaObject mo = DomainServerImpl.getServerInstance()
                         .insertMetaObject(getUser(), actionBean.getMetaObject(), CC);
-            return mo.getBean();
+            return mo.getBean().toJSONString(true);
         } catch (Exception e) {
             LOG.error("Cannot create tzb_tree_action cide bean^");
         }
