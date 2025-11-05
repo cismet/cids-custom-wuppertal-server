@@ -221,9 +221,10 @@ public class UploadTzbAction implements ServerAction, UserAwareServerAction {
                         .insertMetaObject(getUser(), actionBean.getMetaObject(), CC);
             return mo.getBean().toJSONString(true);
         } catch (Exception e) {
-            LOG.error("Cannot create tzb_tree_action cide bean^");
+            LOG.error("Cannot create tzb_tree_action cids bean", e);
+
+            return "{\"error\":, \"" + e.getMessage() + "\"}";
         }
-        return true;
     }
 
     /**
