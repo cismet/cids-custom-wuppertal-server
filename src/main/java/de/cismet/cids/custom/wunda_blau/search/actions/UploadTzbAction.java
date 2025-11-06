@@ -139,8 +139,6 @@ public class UploadTzbAction implements ServerAction, UserAwareServerAction {
                     DOMAIN,
                     "tzb_tree_action",
                     CC);
-            final MetaObject o = DomainServerImpl.getServerInstance().getMetaObject(getUser(), 1000, 877, CC);
-//            o.getBean().getProperty(ParameterType.action_time.toString());
             final Object actionTimeAsObject = paramsHashMap.get(ParameterType.action_time.toString());
             final Object createdTimeAsObject = paramsHashMap.get(ParameterType.created_at.toString());
             final Object actionAsObject = paramsHashMap.get(ParameterType.key.toString());
@@ -179,7 +177,7 @@ public class UploadTzbAction implements ServerAction, UserAwareServerAction {
                 final MetaClass mcTzbTree = DomainServerImpl.getServerInstance()
                             .getClassByTableName(getUser(), "tzb_tree", CC);
                 final MetaObject[] trees = DomainServerImpl.getServerInstance()
-                            .getMetaObject(getUser(), String.format(ACTION_QUERY, mcTzbTree.getID(), treeAsObject), CC);
+                            .getMetaObject(getUser(), String.format(TREE_QUERY, mcTzbTree.getID(), treeAsObject), CC);
 
                 if ((trees != null) && (trees.length == 1)) {
                     fkTreeBean = trees[0].getBean();
