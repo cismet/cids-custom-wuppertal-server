@@ -33,8 +33,9 @@ public class AlboTeilflaecheSearch extends AbstractCidsServerSearch implements C
 
     private static final Logger LOG = Logger.getLogger(AlboTeilflaecheSearch.class);
     private static final String QUERY =
-        "select geodaten_id, erhebungsnummer, landesregistriernummer, laufende_nummer from albo_flaeche fl where "
-                + " fl.laufende_nummer <> '0000' and not exists (select 1 from albo_flaeche where landesregistriernummer = fl.landesregistriernummer and laufende_nummer = '0000') ";
+        "select geodaten_id, erhebungsnummer, '0' || left(geodaten_id, 5) as laufende_nummer, lpad(right(geodaten_id, 3)::text, 4, '0') as landesregistriernummer "
+                + " from albo_flaeche fl where geodaten_id is not null and  geodaten_id <> '' and "
+                + " lpad(right(fl.geodaten_id, 3)::text, 4, '0') <> '0000' and not exists (select 1 from albo_flaeche where ('0' || left(geodaten_id, 5)) = ('0' || left(fl.geodaten_id, 5)) and lpad(right(geodaten_id, 3)::text, 4, '0') = '0000') ";
 
     //~ Instance fields --------------------------------------------------------
 

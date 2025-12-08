@@ -50,7 +50,7 @@ public class AlboFlaecheNummerUniqueSearch extends AbstractCidsServerSearch impl
      * Creates a new Alb_BaulastChecker object.
      *
      * @param  nummer                DOCUMENT ME!
-     * @param  id                    flaechentyp landesregistriernummer DOCUMENT ME!
+     * @param  id                    DOCUMENT ME!
      * @param  checkErhebungsnummer  geometryAsText blattnummer DOCUMENT ME!
      */
     public AlboFlaecheNummerUniqueSearch(final String nummer, final Integer id, final boolean checkErhebungsnummer) {
