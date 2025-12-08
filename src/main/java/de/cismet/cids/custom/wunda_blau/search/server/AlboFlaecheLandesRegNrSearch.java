@@ -29,16 +29,17 @@ import de.cismet.connectioncontext.ConnectionContextStore;
 public class AlboFlaecheLandesRegNrSearch extends AbstractCidsServerSearch implements ConnectionContextStore {
 
     //~ Static fields/initializers ---------------------------------------------
-
+    //landesregistriernummer was (geodaten_id, '0' || left(geodaten_id, 5))
+    //laufende_nummer was lpad(right(geodaten_id, 3)::text, 4, '0')
     private static final String QUERY_AREA =
         "SELECT landreg from baublock where st_intersects(geom, '%1$s'::geometry) order by st_area(st_intersection(geom, '%1$s'::geometry)) desc limit 1";
     private static final String QUERY_LFD_NR =
-        "select laufende_nummer from albo_flaeche where landesregistriernummer = '%1s'";
+        "select lpad(right(geodaten_id, 3)::text, 4, '0') from albo_flaeche where ('0' || left(geodaten_id, 5)) = '%1s'";
 
     //~ Instance fields --------------------------------------------------------
 
     private final String geometryAsText;
-    private String landesregistriernummer;
+    private String landesregistriernummer = null;
 
     private ConnectionContext connectionContext = ConnectionContext.createDummy();
 
@@ -47,12 +48,10 @@ public class AlboFlaecheLandesRegNrSearch extends AbstractCidsServerSearch imple
     /**
      * Creates a new Alb_BaulastChecker object.
      *
-     * @param  geometryAsText          blattnummer DOCUMENT ME!
-     * @param  landesregistriernummer  DOCUMENT ME!
+     * @param  geometryAsText  blattnummer DOCUMENT ME!
      */
-    public AlboFlaecheLandesRegNrSearch(final String geometryAsText, final String landesregistriernummer) {
+    public AlboFlaecheLandesRegNrSearch(final String geometryAsText) {
         this.geometryAsText = geometryAsText;
-        this.landesregistriernummer = landesregistriernummer;
     }
 
     //~ Methods ----------------------------------------------------------------
@@ -67,16 +66,15 @@ public class AlboFlaecheLandesRegNrSearch extends AbstractCidsServerSearch imple
         final MetaService ms = (MetaService)getActiveLocalServers().get("WUNDA_BLAU");
         if ((ms != null) && ((geometryAsText == null) || !geometryAsText.equals("null"))) {
             try {
-                if (landesregistriernummer == null) {
-                    final ArrayList<ArrayList> landReg = ms.performCustomSearch(String.format(
-                                QUERY_AREA,
-                                geometryAsText),
-                            getConnectionContext());
-                    if ((landReg != null) && (landReg.size() > 0) && (landReg.get(0) != null)
-                                && (landReg.get(0).size() > 0)
-                                && (landReg.get(0).get(0) != null)) {
-                        landesregistriernummer = String.valueOf(landReg.get(0).get(0));
-                    }
+                final ArrayList<ArrayList> landReg = ms.performCustomSearch(String.format(
+                            QUERY_AREA,
+                            geometryAsText),
+                        getConnectionContext());
+
+                if ((landReg != null) && (landReg.size() > 0) && (landReg.get(0) != null)
+                            && (landReg.get(0).size() > 0)
+                            && (landReg.get(0).get(0) != null)) {
+                    landesregistriernummer = String.valueOf(landReg.get(0).get(0));
                 }
 
                 if (landesregistriernummer != null) {

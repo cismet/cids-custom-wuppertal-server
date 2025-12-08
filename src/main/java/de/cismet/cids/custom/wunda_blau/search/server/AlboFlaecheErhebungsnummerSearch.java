@@ -50,8 +50,8 @@ public class AlboFlaecheErhebungsnummerSearch extends AbstractCidsServerSearch i
     /**
      * Creates a new Alb_BaulastChecker object.
      *
-     * @param  geometryAsText  blattnummer DOCUMENT ME!
-     * @param  flaechentyp     landesregistriernummer DOCUMENT ME!
+     * @param  geometryAsText  DOCUMENT ME!
+     * @param  flaechentyp     DOCUMENT ME!
      * @param  prop            DOCUMENT ME!
      */
     public AlboFlaecheErhebungsnummerSearch(final String geometryAsText, final String flaechentyp, final String prop) {
@@ -63,8 +63,8 @@ public class AlboFlaecheErhebungsnummerSearch extends AbstractCidsServerSearch i
     /**
      * Creates a new Alb_BaulastChecker object.
      *
-     * @param  geometryAsText  blattnummer DOCUMENT ME!
-     * @param  flaechentyp     landesregistriernummer DOCUMENT ME!
+     * @param  geometryAsText  DOCUMENT ME!
+     * @param  flaechentyp     DOCUMENT ME!
      * @param  prop            DOCUMENT ME!
      * @param  id              DOCUMENT ME!
      */
