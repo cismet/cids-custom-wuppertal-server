@@ -18,9 +18,6 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 import lombok.AllArgsConstructor;
 import lombok.Getter;
 
-import org.apache.commons.httpclient.methods.multipart.FilePart;
-import org.apache.commons.httpclient.methods.multipart.Part;
-import org.apache.commons.httpclient.methods.multipart.StringPart;
 import org.apache.commons.io.FileUtils;
 import org.apache.commons.io.IOUtils;
 import org.apache.commons.lang.exception.ExceptionUtils;
@@ -244,13 +241,22 @@ public class StamperUtils {
             FileUtils.writeStringToFile(fileRequest, optionsJsonAsString, "UTF-8");
             FileUtils.writeStringToFile(fileContext, connectionContextJsonAsString, "UTF-8");
 
-            final Collection<Part> parts = new ArrayList<>();
-            parts.add(new StringPart("password", getConf().getPassword()));
-            parts.add(new FilePart("requestJson", fileRequest));
-            parts.add(new FilePart("context", fileContext));
+            final Collection<SimpleHttpAccessHandler.Part> parts = new ArrayList<>();
+            parts.add(new SimpleHttpAccessHandler.Part(
+                    "password",
+                    getConf().getPassword(),
+                    SimpleHttpAccessHandler.PartType.STRING));
+            parts.add(new SimpleHttpAccessHandler.Part(
+                    "requestJson",
+                    fileRequest,
+                    SimpleHttpAccessHandler.PartType.FILE));
+            parts.add(new SimpleHttpAccessHandler.Part("context", fileContext, SimpleHttpAccessHandler.PartType.FILE));
 
             return new UploadableInputStream(
-                    new SimpleHttpAccessHandler().doMultipartRequest(serviceUrl, parts.toArray(new Part[0]), null));
+                    new SimpleHttpAccessHandler().doMultipartRequest(
+                        serviceUrl,
+                        parts.toArray(new SimpleHttpAccessHandler.Part[0]),
+                        null));
         } finally {
             fileContext.delete();
             fileRequest.delete();
@@ -329,13 +335,22 @@ public class StamperUtils {
             FileUtils.copyInputStreamToFile(inputStream, fileDocument);
             FileUtils.writeStringToFile(fileContext, connectionContextJsonAsString, "UTF-8");
 
-            final Collection<Part> parts = new ArrayList<>();
-            parts.add(new StringPart("password", getConf().getPassword()));
-            parts.add(new FilePart("document", fileDocument));
-            parts.add(new FilePart("context", fileContext));
+            final Collection<SimpleHttpAccessHandler.Part> parts = new ArrayList<>();
+            parts.add(new SimpleHttpAccessHandler.Part(
+                    "password",
+                    getConf().getPassword(),
+                    SimpleHttpAccessHandler.PartType.STRING));
+            parts.add(new SimpleHttpAccessHandler.Part(
+                    "document",
+                    fileDocument,
+                    SimpleHttpAccessHandler.PartType.FILE));
+            parts.add(new SimpleHttpAccessHandler.Part("context", fileContext, SimpleHttpAccessHandler.PartType.FILE));
 
             return new UploadableInputStream(
-                    new SimpleHttpAccessHandler().doMultipartRequest(serviceUrl, parts.toArray(new Part[0]), null));
+                    new SimpleHttpAccessHandler().doMultipartRequest(
+                        serviceUrl,
+                        parts.toArray(new SimpleHttpAccessHandler.Part[0]),
+                        null));
         } finally {
             fileContext.delete();
             fileDocument.delete();

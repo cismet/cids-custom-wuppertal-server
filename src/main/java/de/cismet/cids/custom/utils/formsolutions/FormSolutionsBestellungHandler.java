@@ -36,10 +36,10 @@ import net.sf.jasperreports.engine.JasperReport;
 import net.sf.jasperreports.engine.data.JRBeanCollectionDataSource;
 
 import org.apache.commons.codec.digest.DigestUtils;
-import org.apache.commons.httpclient.UsernamePasswordCredentials;
 import org.apache.commons.io.FilenameUtils;
 import org.apache.commons.io.IOUtils;
 import org.apache.commons.lang.RandomStringUtils;
+import org.apache.hc.client5.http.auth.UsernamePasswordCredentials;
 import org.apache.log4j.Logger;
 
 import org.openide.util.Lookup;
@@ -243,7 +243,7 @@ public class FormSolutionsBestellungHandler implements ConnectionContextProvider
             try {
                 creds = new UsernamePasswordCredentials(
                         getProperties().getUser(),
-                        getProperties().getPassword());
+                        getProperties().getPassword().toCharArray());
             } catch (final Exception ex) {
                 LOG.error(""
                             + "UsernamePasswordCredentials couldn't be created. "
