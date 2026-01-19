@@ -17,13 +17,13 @@ import Sirius.server.middleware.types.MetaClass;
 import Sirius.server.middleware.types.MetaObject;
 import Sirius.server.newuser.User;
 
-import com.fasterxml.jackson.core.JsonFactory;
 import com.fasterxml.jackson.databind.ObjectMapper;
 
 import lombok.Getter;
 import lombok.Setter;
 
-import java.awt.Image;
+import java.awt.Graphics2D;
+import java.awt.RenderingHints;
 import java.awt.image.BufferedImage;
 
 import java.io.ByteArrayOutputStream;
@@ -33,7 +33,6 @@ import java.io.IOException;
 
 import java.sql.Timestamp;
 
-import java.text.DateFormat;
 import java.text.SimpleDateFormat;
 
 import java.util.ArrayList;
@@ -57,7 +56,6 @@ import de.cismet.cids.server.actions.UserAwareServerAction;
 
 import de.cismet.cids.utils.serverresources.JsonServerResource;
 import de.cismet.cids.utils.serverresources.ServerResourcesLoader;
-import de.cismet.cids.utils.serverresources.TextServerResource;
 
 import de.cismet.commons.security.WebDavClient;
 import de.cismet.commons.security.WebDavHelper;
@@ -67,6 +65,7 @@ import de.cismet.connectioncontext.ConnectionContext;
 
 import de.cismet.netutil.ProxyHandler;
 
+import de.cismet.tools.ExifReader;
 import de.cismet.tools.PasswordEncrypter;
 
 /**
@@ -454,6 +453,50 @@ public class UploadTzbAction implements ServerAction, UserAwareServerAction {
         return tempFile;
     }
 
+
+    private static BufferedImage rotate(final BufferedImage src, final int degrees) {
+        if ((degrees % 360) == 0) {
+            return src;
+        }
+
+        final double rads = Math.toRadians(degrees);
+        final int srcW = src.getWidth();
+        final int srcH = src.getHeight();
+
+        final int dstW = ((degrees == 90) || (degrees == 270)) ? srcH : srcW;
+        final int dstH = ((degrees == 90) || (degrees == 270)) ? srcW : srcH;
+
+        final BufferedImage dst = new BufferedImage(dstW, dstH, BufferedImage.TYPE_INT_RGB);
+        final Graphics2D g = dst.createGraphics();
+
+        g.setRenderingHint(RenderingHints.KEY_INTERPOLATION,
+            RenderingHints.VALUE_INTERPOLATION_BICUBIC);
+
+        switch (degrees) {
+            case 90: {
+                g.translate(dstW, 0);
+                break;
+            }
+            case 180: {
+                g.translate(dstW, dstH);
+                break;
+            }
+            case 270: {
+                g.translate(0, dstH);
+                break;
+            }
+            default: {
+                throw new IllegalArgumentException("Unsupported rotation: " + degrees);
+            }
+        }
+
+        g.rotate(rads);
+        g.drawImage(src, 0, 0, null);
+        g.dispose();
+
+        return dst;
+    }
+
     /**
      * DOCUMENT ME!
      *
@@ -465,9 +508,19 @@ public class UploadTzbAction implements ServerAction, UserAwareServerAction {
      * @throws  Exception  DOCUMENT ME!
      */
     private static byte[] createThumbnail(final File tempFile, final String ending) throws Exception {
-        final Image img = ImageIO.read(tempFile);
-        final int height = img.getHeight(null);
-        final int width = img.getWidth(null);
+        final BufferedImage imgOrig = ImageIO.read(tempFile);
+
+        final ExifReader reader = new ExifReader(tempFile);
+        Double rotation = reader.getOrientationRotation();
+
+        if (rotation == null) {
+            rotation = 0.0;
+        }
+
+        final BufferedImage orientedImg = rotate(imgOrig, rotation.intValue());
+
+        final int height = orientedImg.getHeight(null);
+        final int width = orientedImg.getWidth(null);
         final int longestSide = Math.max(width, height);
         double scale = 1;
 
@@ -476,15 +529,19 @@ public class UploadTzbAction implements ServerAction, UserAwareServerAction {
             scale = 600.0 / longestSide;
         }
 
-        final BufferedImage imgThumb = new BufferedImage((int)(width * scale),
-                (int)(height * scale),
-                BufferedImage.TYPE_INT_RGB);
+        final int swidth = (int)Math.round(width * scale);
+        final int sheight = (int)Math.round(height * scale);
 
-        imgThumb.createGraphics()
-                .drawImage(img.getScaledInstance((int)(width * scale), (int)(height * scale), Image.SCALE_SMOOTH),
-                    0,
-                    0,
-                    null);
+        final BufferedImage imgThumb = new BufferedImage(swidth, sheight, BufferedImage.TYPE_INT_RGB);
+        final Graphics2D g = imgThumb.createGraphics();
+
+        g.setRenderingHint(RenderingHints.KEY_INTERPOLATION, RenderingHints.VALUE_INTERPOLATION_BICUBIC);
+        g.setRenderingHint(RenderingHints.KEY_RENDERING, RenderingHints.VALUE_RENDER_QUALITY);
+        g.setRenderingHint(RenderingHints.KEY_ANTIALIASING, RenderingHints.VALUE_ANTIALIAS_ON);
+
+        g.drawImage(orientedImg, 0, 0, swidth, sheight, null);
+        g.dispose();
+
         final ByteArrayOutputStream os = new ByteArrayOutputStream();
         ImageIO.write(imgThumb, ending, os);
 

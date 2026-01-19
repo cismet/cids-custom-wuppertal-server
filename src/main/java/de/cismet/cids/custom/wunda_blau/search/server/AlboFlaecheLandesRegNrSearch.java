@@ -29,8 +29,9 @@ import de.cismet.connectioncontext.ConnectionContextStore;
 public class AlboFlaecheLandesRegNrSearch extends AbstractCidsServerSearch implements ConnectionContextStore {
 
     //~ Static fields/initializers ---------------------------------------------
-    //landesregistriernummer was (geodaten_id, '0' || left(geodaten_id, 5))
-    //laufende_nummer was lpad(right(geodaten_id, 3)::text, 4, '0')
+
+    // landesregistriernummer was (geodaten_id, '0' || left(geodaten_id, 5))
+    // laufende_nummer was lpad(right(geodaten_id, 3)::text, 4, '0')
     private static final String QUERY_AREA =
         "SELECT landreg from baublock where st_intersects(geom, '%1$s'::geometry) order by st_area(st_intersection(geom, '%1$s'::geometry)) desc limit 1";
     private static final String QUERY_LFD_NR =
