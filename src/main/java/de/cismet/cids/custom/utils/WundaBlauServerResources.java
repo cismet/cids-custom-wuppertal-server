@@ -104,6 +104,7 @@ public enum WundaBlauServerResources {
     NO2_CONF_PROPERTIES(new TextServerResource("/no2/no2_conf.properties")),
     SPST_CONF_PROPERTIES(new TextServerResource("/spst/spst_conf.properties")),
     UA_CONF_PROPERTIES(new TextServerResource("/umweltalarm/ua_conf.properties")),
+    EA_CONF_PROPERTIES(new TextServerResource("/emob/ea_conf.properties")),
     TW_CONF_PROPERTIES(new TextServerResource("/trinkwasser/tw_conf.properties")),
     STRADR_CONF_PROPERTIES(new TextServerResource("/stradr/stradr_conf.properties")),
     DATASOURCES_CREDENTIALS_PROPERTIES(new TextServerResource("/datasources/credentials.properties")),
