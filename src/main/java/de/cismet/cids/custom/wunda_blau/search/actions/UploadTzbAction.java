@@ -453,7 +453,16 @@ public class UploadTzbAction implements ServerAction, UserAwareServerAction {
         return tempFile;
     }
 
-
+    /**
+     * DOCUMENT ME!
+     *
+     * @param   src      DOCUMENT ME!
+     * @param   degrees  DOCUMENT ME!
+     *
+     * @return  DOCUMENT ME!
+     *
+     * @throws  IllegalArgumentException  DOCUMENT ME!
+     */
     private static BufferedImage rotate(final BufferedImage src, final int degrees) {
         if ((degrees % 360) == 0) {
             return src;

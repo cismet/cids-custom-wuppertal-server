@@ -15,6 +15,7 @@ package de.cismet.cids.custom.utils;
 import java.util.Properties;
 
 import de.cismet.cids.custom.utils.stadtbilder.StadtbilderConf;
+import de.cismet.cids.utils.serverresources.ServerResource;
 
 import de.cismet.cids.utils.serverresources.ServerResourcesLoader;
 
@@ -37,6 +38,10 @@ public class ServerStadtbilderConf extends StadtbilderConf {
      */
     private ServerStadtbilderConf(final Properties properties) throws Exception {
         super(properties);
+    }
+
+    private ServerStadtbilderConf(final ServerResource serverResource) throws Exception {
+        super(serverResource);
     }
 
     //~ Methods ----------------------------------------------------------------
@@ -65,8 +70,7 @@ public class ServerStadtbilderConf extends StadtbilderConf {
 
         static {
             try {
-                INSTANCE = new ServerStadtbilderConf(ServerResourcesLoader.getInstance().loadProperties(
-                            WundaBlauServerResources.STADTBILDER_CONF_PROPERTIES.getValue()));
+                INSTANCE = new ServerStadtbilderConf(WundaBlauServerResources.STADTBILDER_CONF_PROPERTIES.getValue());
             } catch (final Exception ex) {
                 throw new RuntimeException("Exception while initializing ServerStadtbilderConf", ex);
             }
