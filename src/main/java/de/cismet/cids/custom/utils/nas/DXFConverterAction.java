@@ -20,11 +20,10 @@ import java.util.concurrent.Callable;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Future;
 
-import javax.ws.rs.core.MediaType;
-
 import de.cismet.cidsx.server.api.types.ActionTask;
 
 import de.cismet.commons.concurrency.CismetExecutors;
+import jakarta.ws.rs.core.MediaType;
 
 /**
  * DOCUMENT ME!

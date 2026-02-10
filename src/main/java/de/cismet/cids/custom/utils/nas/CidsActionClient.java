@@ -15,17 +15,6 @@ package de.cismet.cids.custom.utils.nas;
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.core.type.TypeReference;
 import com.fasterxml.jackson.databind.ObjectMapper;
-import com.fasterxml.jackson.databind.node.ObjectNode;
-
-import com.sun.jersey.api.client.Client;
-import com.sun.jersey.api.client.ClientResponse;
-import com.sun.jersey.api.client.WebResource;
-import com.sun.jersey.api.client.config.ClientConfig;
-import com.sun.jersey.api.client.config.DefaultClientConfig;
-import com.sun.jersey.api.client.filter.HTTPBasicAuthFilter;
-import com.sun.jersey.api.json.JSONConfiguration;
-import com.sun.jersey.multipart.FormDataMultiPart;
-import com.sun.jersey.multipart.impl.MultiPartWriter;
 
 import org.apache.commons.io.IOUtils;
 import org.apache.log4j.Logger;
@@ -40,12 +29,20 @@ import java.io.IOException;
 import java.util.HashMap;
 import java.util.List;
 
-import javax.ws.rs.core.MediaType;
-
 import de.cismet.cidsx.server.api.types.Action;
 import de.cismet.cidsx.server.api.types.ActionResultInfo;
 import de.cismet.cidsx.server.api.types.ActionTask;
 import de.cismet.cidsx.server.api.types.CollectionResource;
+import jakarta.ws.rs.client.Client;
+import jakarta.ws.rs.client.ClientBuilder;
+import jakarta.ws.rs.client.Entity;
+import jakarta.ws.rs.client.WebTarget;
+import jakarta.ws.rs.core.MediaType;
+import org.glassfish.jersey.client.ClientConfig;
+import org.glassfish.jersey.client.authentication.HttpAuthenticationFeature;
+import org.glassfish.jersey.jackson.JacksonFeature;
+import org.glassfish.jersey.media.multipart.FormDataMultiPart;
+import org.glassfish.jersey.media.multipart.MultiPartFeature;
 
 /**
  * DOCUMENT ME!
@@ -80,10 +77,11 @@ public class CidsActionClient {
     public CidsActionClient(final String domain, final String baseURL) {
         this.domain = domain;
         this.baseURL = baseURL;
-        final ClientConfig clientConfig = new DefaultClientConfig();
-        clientConfig.getFeatures().put(JSONConfiguration.FEATURE_POJO_MAPPING, Boolean.TRUE);
-        clientConfig.getClasses().add(MultiPartWriter.class);
-        client = Client.create(clientConfig);
+        ClientConfig clientConfig = new ClientConfig();
+        clientConfig.register(JacksonFeature.class);
+        clientConfig.register(MultiPartFeature.class);
+
+        client = ClientBuilder.newClient(clientConfig);
     }
 
     //~ Methods ----------------------------------------------------------------
@@ -104,7 +102,7 @@ public class CidsActionClient {
      * @param  password  DOCUMENT ME!
      */
     public void setBasicAuthentication(final String user, final String password) {
-        client.addFilter(new HTTPBasicAuthFilter(user, password));
+        client.register(HttpAuthenticationFeature.basic(user, password));
     }
 
     /**
@@ -117,8 +115,8 @@ public class CidsActionClient {
      * @return  DOCUMENT ME!
      */
     private <T extends Object> T getSimpleResource(final Class<T> c, final String url) {
-        final WebResource r = client.resource(url);
-        final String jsonResult = r.get(String.class);
+        final WebTarget t = client.target(url);
+        final String jsonResult = t.request(MediaType.APPLICATION_JSON).get(String.class);
         try {
             final T result = mapper.readValue(jsonResult, c);
             return result;
@@ -139,9 +137,9 @@ public class CidsActionClient {
      */
     private <E extends Object> List<E> getCollectionResource(final Class<E> c, final String url) {
         try {
-            final String json = client.resource(url)
+            final String json = client.target(url)
                         .queryParam("domain", "cids")
-                        .accept(MediaType.APPLICATION_JSON)
+                        .request(MediaType.APPLICATION_JSON)
                         .get(String.class);
 
             final CollectionResource resource = mapper.readValue(json, CollectionResource.class);
@@ -223,7 +221,7 @@ public class CidsActionClient {
         final String formattedUrl = String.format(RESOURCE_URL, domain, actionKey, taskKey, "");
         final String url = baseURL + ACTION_URL
                     + formattedUrl.substring(0, formattedUrl.lastIndexOf("/results"));
-        client.resource(url).delete();
+        client.target(url).request().delete();
     }
 
     /**
@@ -246,21 +244,29 @@ public class CidsActionClient {
             final String formattedUrl = String.format(RESOURCE_URL, domain, actionKey, "", "");
             final String url = baseURL + ACTION_URL
                         + formattedUrl.substring(0, formattedUrl.lastIndexOf("//results"));
-            final WebResource webResource = client.resource(url)
+            final WebTarget target = client.target(url)
                         .queryParam("requestResultingInstance", Boolean.toString(requestResultingInstance));
 
-            final FormDataMultiPart form = new FormDataMultiPart();
-            form.field("taskparams", mapper.writeValueAsString(task), MediaType.APPLICATION_JSON_TYPE);
-            if (f != null) {
-                form.field("file", f, fileType);
+            FormDataMultiPart form = null;
+            
+            try {
+                form = new FormDataMultiPart();
+                
+                form.field("taskparams", mapper.writeValueAsString(task), MediaType.APPLICATION_JSON_TYPE);
+                if (f != null) {
+                    form.field("file", f, fileType);
+                }
+                final String responseJson = target.request(MediaType.APPLICATION_JSON)
+                            .post(Entity.entity(form, form.getMediaType()), String.class);
+
+                final ActionTask resultingInstance = mapper.readValue(responseJson, ActionTask.class);
+
+                return resultingInstance;
+            } finally {
+                if (form != null) {
+                    form.close();
+                }
             }
-            final String responseJson = webResource.type(MediaType.MULTIPART_FORM_DATA)
-                        .accept(MediaType.APPLICATION_JSON)
-                        .post(String.class, form);
-
-            final ActionTask resultingInstance = mapper.readValue(responseJson, ActionTask.class);
-
-            return resultingInstance;
         } catch (JsonProcessingException ex) {
             LOG.error(ex.getMessage(), ex);
         } catch (IOException ex) {
@@ -286,9 +292,9 @@ public class CidsActionClient {
             final String resultKey) {
         final String url = baseURL + ACTION_URL
                     + String.format(RESOURCE_URL, domain, actionKey, taskKey, resultKey);
-        final WebResource r = client.resource(url);
+        final WebTarget r = client.target(url);
 
-        return r.get(c);
+        return r.request().get(c);
     }
 
     /**

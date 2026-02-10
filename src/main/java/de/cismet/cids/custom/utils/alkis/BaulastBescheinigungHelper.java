@@ -565,8 +565,7 @@ public class BaulastBescheinigungHelper {
      *
      * @return  DOCUMENT ME!
      *
-     * @throws  Exception             DOCUMENT ME!
-     * @throws  InterruptedException  DOCUMENT ME!
+     * @throws  Exception  DOCUMENT ME!
      */
     public Map<String, Collection<CidsBean>> createGrundstueckeToFlurstueckeMap(
             final Collection<CidsBean> flurstuecke,
@@ -578,12 +577,18 @@ public class BaulastBescheinigungHelper {
         for (final CidsBean flurstueckBean : flurstuecke) {
             final List<CidsBean> buchungsblaetter = new ArrayList<>(flurstueckBean.getBeanCollectionProperty(
                         "buchungsblaetter"));
+
             if (buchungsblaetter.size() == 1) {
                 protocolBuffer.appendLine("Flurstück: " + flurstueckBean + " (1 Buchungsblatt):");
             } else {
                 protocolBuffer.appendLine("Flurstück: " + flurstueckBean + " (" + buchungsblaetter.size()
                             + " Buchungsblätter):");
             }
+
+            if (buchungsblaetter.isEmpty()) {
+                throw new Exception("Keine Buchungsblätter gefunden für " + flurstueckBean);
+            }
+
             Collections.sort(buchungsblaetter, new Comparator<CidsBean>() {
 
                     @Override

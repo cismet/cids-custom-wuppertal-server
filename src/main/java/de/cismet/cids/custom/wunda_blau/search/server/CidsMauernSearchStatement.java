@@ -47,7 +47,7 @@ import java.util.stream.Collectors;
 
 import de.cismet.cids.server.search.SearchException;
 
-import de.cismet.cidsx.server.search.RestApiCidsServerSearch;
+import de.cismet.cids.custom.utils.RestApiCidsServerSearchAndStorableSearch;
 
 import de.cismet.cismap.commons.jtsgeometryfactories.PostGisGeometryFactory;
 
@@ -59,12 +59,7 @@ import de.cismet.connectioncontext.ConnectionContext;
  * @author   daniel
  * @version  $Revision$, $Date$
  */
-@ServiceProviders(
-    {
-        @ServiceProvider(service = RestApiCidsServerSearch.class),
-        @ServiceProvider(service = StorableSearch.class)
-    }
-)
+@ServiceProvider(service = RestApiCidsServerSearchAndStorableSearch.class)
 public class CidsMauernSearchStatement extends RestApiMonGeometrySearch
         implements StorableSearch<CidsMauernSearchStatement.Configuration> {
 

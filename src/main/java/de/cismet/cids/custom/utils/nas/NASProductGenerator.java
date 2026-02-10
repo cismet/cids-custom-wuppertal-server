@@ -17,9 +17,6 @@ import com.fasterxml.jackson.databind.JsonMappingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.databind.ObjectWriter;
 
-import com.sun.org.apache.xml.internal.serialize.OutputFormat;
-import com.sun.org.apache.xml.internal.serialize.XMLSerializer;
-
 import com.vividsolutions.jts.geom.Envelope;
 import com.vividsolutions.jts.geom.GeometryCollection;
 
@@ -78,6 +75,11 @@ import de.cismet.cids.custom.utils.WundaBlauServerResources;
 import de.cismet.cids.utils.serverresources.ServerResourcesLoader;
 
 import de.cismet.cidsx.server.api.types.ActionTask;
+import javax.xml.transform.OutputKeys;
+import javax.xml.transform.Transformer;
+import javax.xml.transform.TransformerFactory;
+import javax.xml.transform.dom.DOMSource;
+import javax.xml.transform.stream.StreamResult;
 
 /*
  * To change this template, choose Tools | Templates
@@ -317,12 +319,15 @@ public class NASProductGenerator {
                 intersectNodes.item(i).removeChild(oldPolygonNode);
                 intersectNodes.item(i).appendChild(importedNode);
             }
-            final OutputFormat format = new OutputFormat(doc);
-            // as a String
+
             final StringWriter stringOut = new StringWriter();
-            final XMLSerializer serial = new XMLSerializer(stringOut,
-                    format);
-            serial.serialize(doc);
+            final TransformerFactory tf = TransformerFactory.newInstance();
+            final Transformer transformer = tf.newTransformer();
+
+            transformer.setOutputProperty(OutputKeys.INDENT, "yes");
+            transformer.setOutputProperty("{http://xml.apache.org/xslt}indent-amount", "2");
+
+            transformer.transform(new DOMSource(doc), new StreamResult(stringOut));
 
             // set the request id that is shown in the 3A Auftagsmanagement Interface
             String request = stringOut.toString();
@@ -345,6 +350,8 @@ public class NASProductGenerator {
             log.error("Error during parsing document", ex);
         } catch (IOException ex) {
             log.error("Error while openeing nas template file", ex);
+        } catch (Exception ex) {
+            log.error("Error while generating query", ex);
         }
         return null;
     }

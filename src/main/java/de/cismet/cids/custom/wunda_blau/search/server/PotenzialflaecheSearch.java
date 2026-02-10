@@ -55,6 +55,7 @@ import java.util.List;
 import java.util.Locale;
 import java.util.Properties;
 
+import de.cismet.cids.custom.utils.RestApiCidsServerSearchAndStorableSearch;
 import de.cismet.cids.custom.utils.WundaBlauServerResources;
 import de.cismet.cids.custom.wunda_blau.search.actions.PotenzialflaecheReportServerAction;
 
@@ -64,21 +65,13 @@ import de.cismet.cidsx.base.types.Type;
 
 import de.cismet.cidsx.server.api.types.SearchInfo;
 import de.cismet.cidsx.server.api.types.SearchParameterInfo;
-import de.cismet.cidsx.server.search.RestApiCidsServerSearch;
-
-import static de.cismet.cids.custom.wunda_blau.search.server.AlboFlaecheSearch.OBJECT_MAPPER;
 
 /**
  * DOCUMENT ME!
  *
  * @version  $Revision$, $Date$
  */
-@ServiceProviders(
-    {
-        @ServiceProvider(service = RestApiCidsServerSearch.class),
-        @ServiceProvider(service = StorableSearch.class)
-    }
-)
+@ServiceProvider(service = RestApiCidsServerSearchAndStorableSearch.class)
 public class PotenzialflaecheSearch extends RestApiMonGeometrySearch
         implements StorableSearch<PotenzialflaecheSearch.Configuration> {
 

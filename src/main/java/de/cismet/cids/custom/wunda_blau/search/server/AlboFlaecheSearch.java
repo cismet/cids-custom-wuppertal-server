@@ -38,7 +38,7 @@ import java.util.ArrayList;
 import java.util.Collection;
 import java.util.List;
 
-import de.cismet.cidsx.server.search.RestApiCidsServerSearch;
+import de.cismet.cids.custom.utils.RestApiCidsServerSearchAndStorableSearch;
 
 import de.cismet.cismap.commons.jtsgeometryfactories.PostGisGeometryFactory;
 
@@ -49,12 +49,7 @@ import de.cismet.connectioncontext.ConnectionContext;
  *
  * @version  $Revision$, $Date$
  */
-@ServiceProviders(
-    {
-        @ServiceProvider(service = RestApiCidsServerSearch.class),
-        @ServiceProvider(service = StorableSearch.class)
-    }
-)
+@ServiceProvider(service = RestApiCidsServerSearchAndStorableSearch.class)
 public class AlboFlaecheSearch extends RestApiMonGeometrySearch
         implements StorableSearch<AlboFlaecheSearch.Configuration> {
 

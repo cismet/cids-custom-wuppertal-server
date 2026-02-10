@@ -39,14 +39,13 @@ import java.util.GregorianCalendar;
 import java.util.HashMap;
 import java.util.Properties;
 
-import javax.ws.rs.core.MediaType;
-
 import de.cismet.cids.custom.utils.WundaBlauServerResources;
 import de.cismet.cids.custom.utils.nas.CidsActionClient;
 
 import de.cismet.cids.utils.serverresources.ServerResourcesLoader;
 
 import de.cismet.cidsx.server.api.types.ActionTask;
+import jakarta.ws.rs.core.MediaType;
 
 /**
  * DOCUMENT ME!

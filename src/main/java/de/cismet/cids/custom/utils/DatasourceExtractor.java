@@ -18,12 +18,11 @@ import org.jdom.Document;
 import org.jdom.Element;
 import org.jdom.input.SAXBuilder;
 
-import sun.misc.BASE64Encoder;
-
 import java.io.File;
 import java.io.StringReader;
 
 import java.util.ArrayList;
+import java.util.Base64;
 import java.util.List;
 import java.util.Properties;
 
@@ -62,8 +61,7 @@ public class DatasourceExtractor {
         try {
             // read the capabilities list
             final StringReader capabilityList = ServerResourcesLoader.getInstance()
-                        .loadStringReader(
-                            WundaBlauServerResources.DATASOURCES_CAPABILITYLIST_TEXT.getValue());
+                        .loadStringReader(WundaBlauServerResources.DATASOURCES_CAPABILITYLIST_TEXT.getValue());
             final SAXBuilder builder = new SAXBuilder(false);
             final Document doc = builder.build(capabilityList);
 
@@ -75,20 +73,16 @@ public class DatasourceExtractor {
         try {
             // read the credentials
             final Properties credentials = ServerResourcesLoader.getInstance()
-                        .loadProperties(
-                            WundaBlauServerResources.DATASOURCES_CREDENTIALS_PROPERTIES.getValue());
-            final BASE64Encoder base64 = new BASE64Encoder();
+                        .loadProperties(WundaBlauServerResources.DATASOURCES_CREDENTIALS_PROPERTIES.getValue());
             final List<String> credentialList = new ArrayList<String>();
 
-            if ((credentials.stringPropertyNames() != null)
-                        && (credentials.stringPropertyNames().size() > 0)) {
+            if ((credentials.stringPropertyNames() != null) && (credentials.stringPropertyNames().size() > 0)) {
                 for (final String key : credentials.stringPropertyNames()) {
                     final String credential = key + ":" + credentials.getProperty(key);
-                    credentialList.add(base64.encode(credential.getBytes()));
+                    credentialList.add(Base64.getEncoder().encodeToString(credential.getBytes()));
                 }
 
-                credentialArray = credentialList.toArray(
-                        new String[credentials.stringPropertyNames().size()]);
+                credentialArray = credentialList.toArray(new String[credentials.stringPropertyNames().size()]);
             }
         } catch (final Exception ex) {
             LOG.error("Datasource could not load the credential properties", ex);
@@ -97,8 +91,7 @@ public class DatasourceExtractor {
         try {
             // read the output file
             final Properties general = ServerResourcesLoader.getInstance()
-                        .loadProperties(
-                            WundaBlauServerResources.DATASOURCES_GENERAL_PROPERTIES.getValue());
+                        .loadProperties(WundaBlauServerResources.DATASOURCES_GENERAL_PROPERTIES.getValue());
             final String filename = general.getProperty("output_file");
 
             if (filename != null) {
@@ -113,20 +106,10 @@ public class DatasourceExtractor {
 
         if ((rootObject != null) && (file != null)) {
             DatasourcesPojoConverter converter = new HtmlConverter();
-            DatasourcesUtils.createLayerListHeadless(
-                rootObject,
-                rootObject,
-                credentialArray,
-                converter,
-                file);
+            DatasourcesUtils.createLayerListHeadless(rootObject, rootObject, credentialArray, converter, file);
             if (file2 != null) {
                 converter = new HtmlDetailConverter();
-                DatasourcesUtils.createLayerListHeadless(
-                    rootObject,
-                    rootObject,
-                    credentialArray,
-                    converter,
-                    file2);
+                DatasourcesUtils.createLayerListHeadless(rootObject, rootObject, credentialArray, converter, file2);
             }
         }
     }

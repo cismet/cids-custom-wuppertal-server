@@ -11,10 +11,9 @@
  */
 package de.cismet.cids.custom.utils.nas;
 
-import com.sun.org.apache.xml.internal.serialize.OutputFormat;
-import com.sun.org.apache.xml.internal.serialize.XMLSerializer;
-
 import com.vividsolutions.jts.geom.GeometryCollection;
+import jakarta.xml.bind.JAXBContext;
+import jakarta.xml.bind.JAXBException;
 
 import org.apache.log4j.Logger;
 
@@ -31,11 +30,14 @@ import java.io.ByteArrayInputStream;
 import java.io.IOException;
 import java.io.StringWriter;
 
-import javax.xml.bind.JAXBContext;
-import javax.xml.bind.JAXBException;
 import javax.xml.parsers.DocumentBuilder;
 import javax.xml.parsers.DocumentBuilderFactory;
 import javax.xml.parsers.ParserConfigurationException;
+import javax.xml.transform.OutputKeys;
+import javax.xml.transform.Transformer;
+import javax.xml.transform.TransformerFactory;
+import javax.xml.transform.dom.DOMSource;
+import javax.xml.transform.stream.StreamResult;
 
 /**
  * This class provides an easy way to convert JTS Geometry Collections into an xml representation that is suited to the
@@ -122,13 +124,15 @@ public class GML3Writer {
                 geometryMember.appendChild(surface);
             }
 
-            final OutputFormat format = new OutputFormat(doc);
-            // as a String
             final StringWriter stringOut = new StringWriter();
-            final XMLSerializer serial = new XMLSerializer(stringOut,
-                    format);
-            serial.serialize(doc);
-//            rawXML = os.toString();
+            final TransformerFactory tf = TransformerFactory.newInstance();
+            final Transformer transformer = tf.newTransformer();
+
+            transformer.setOutputProperty(OutputKeys.INDENT, "yes");
+            transformer.setOutputProperty("{http://xml.apache.org/xslt}indent-amount", "2");
+
+            transformer.transform(new DOMSource(doc), new StreamResult(stringOut));
+
             rawXML = stringOut.toString();
         } catch (JAXBException ex) {
             Exceptions.printStackTrace(ex);
