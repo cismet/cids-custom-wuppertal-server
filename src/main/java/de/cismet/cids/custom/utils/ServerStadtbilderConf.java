@@ -15,8 +15,8 @@ package de.cismet.cids.custom.utils;
 import java.util.Properties;
 
 import de.cismet.cids.custom.utils.stadtbilder.StadtbilderConf;
-import de.cismet.cids.utils.serverresources.ServerResource;
 
+import de.cismet.cids.utils.serverresources.ServerResource;
 import de.cismet.cids.utils.serverresources.ServerResourcesLoader;
 
 /**
@@ -40,6 +40,13 @@ public class ServerStadtbilderConf extends StadtbilderConf {
         super(properties);
     }
 
+    /**
+     * Creates a new ServerStadtbilderConf object.
+     *
+     * @param   serverResource  DOCUMENT ME!
+     *
+     * @throws  Exception  DOCUMENT ME!
+     */
     private ServerStadtbilderConf(final ServerResource serverResource) throws Exception {
         super(serverResource);
     }
