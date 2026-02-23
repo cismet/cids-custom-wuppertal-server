@@ -12,7 +12,6 @@
  */
 package de.cismet.cids.custom.utils.stadtbilder;
 
-import de.cismet.cids.custom.utils.WundaBlauServerResources;
 import lombok.Getter;
 
 import java.net.MalformedURLException;
@@ -22,7 +21,9 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.Properties;
 
+import de.cismet.cids.custom.utils.WundaBlauServerResources;
 import de.cismet.cids.custom.wunda_blau.search.server.MetaObjectNodesStadtbildSerieSearchStatement;
+
 import de.cismet.cids.utils.serverresources.ServerResource;
 import de.cismet.cids.utils.serverresources.ServerResourcesLoader;
 
@@ -83,6 +84,13 @@ public abstract class StadtbilderConf {
         tifferAnnotation = serviceProperties.getProperty("TIFFER_ANNOTATION");
     }
 
+    /**
+     * Creates a new StadtbilderConf object.
+     *
+     * @param   serverResource  DOCUMENT ME!
+     *
+     * @throws  Exception  DOCUMENT ME!
+     */
     protected StadtbilderConf(final ServerResource serverResource) throws Exception {
         this(ServerResourcesLoader.getInstance().loadProperties(serverResource));
         this.serverResource = serverResource;
@@ -90,11 +98,18 @@ public abstract class StadtbilderConf {
 
     //~ Methods ----------------------------------------------------------------
 
+    /**
+     * DOCUMENT ME!
+     *
+     * @return  DOCUMENT ME!
+     *
+     * @throws  RuntimeException  DOCUMENT ME!
+     */
     public String getPreviewUrlBase() {
         if (serverResource != null) {
             try {
-                Properties serviceProperties = ServerResourcesLoader.getInstance().loadProperties(serverResource);
-                
+                final Properties serviceProperties = ServerResourcesLoader.getInstance().loadProperties(serverResource);
+
                 return serviceProperties.getProperty("PREVIEW_URL_BASE");
             } catch (final Exception ex) {
                 throw new RuntimeException("Exception while initializing ServerStadtbilderConf", ex);
@@ -103,12 +118,19 @@ public abstract class StadtbilderConf {
             return previewUrlBase;
         }
     }
-    
+
+    /**
+     * DOCUMENT ME!
+     *
+     * @return  DOCUMENT ME!
+     *
+     * @throws  RuntimeException  DOCUMENT ME!
+     */
     public String getHighresUrlBase() {
         if (serverResource != null) {
             try {
-                Properties serviceProperties = ServerResourcesLoader.getInstance().loadProperties(serverResource);
-                
+                final Properties serviceProperties = ServerResourcesLoader.getInstance().loadProperties(serverResource);
+
                 return serviceProperties.getProperty("HIGHRES_URL_BASE");
             } catch (final Exception ex) {
                 throw new RuntimeException("Exception while initializing ServerStadtbilderConf", ex);
@@ -117,7 +139,7 @@ public abstract class StadtbilderConf {
             return highresUrlBase;
         }
     }
-    
+
     /**
      * DOCUMENT ME!
      *
