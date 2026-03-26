@@ -45,6 +45,7 @@ public class FormSolutionsMySqlHelper {
     private PreparedStatement preparedUpdatePruefungFreigabeStatement;
     private PreparedStatement preparedUpdatePruefungAblehnungStatement;
     private Connection connection = null;
+    private String mySqlConnection = null;
 
     //~ Constructors -----------------------------------------------------------
 
@@ -66,8 +67,22 @@ public class FormSolutionsMySqlHelper {
      *
      * @throws  SQLException  DOCUMENT ME!
      */
-    private void connect() throws SQLException {
+    private synchronized void connect() throws SQLException {
+        FormSolutionsProperties.getInstance().refresh();
+
+        if (mySqlConnection == null) {
+            mySqlConnection = FormSolutionsProperties.getInstance().getMysqlJdbc();
+        } else {
+            if (!mySqlConnection.equals(FormSolutionsProperties.getInstance().getMysqlJdbc())
+                        && (this.connection != null)) {
+                // if the conenction has changed, close the current connection
+                this.connection.close();
+                this.connection = null;
+            }
+        }
+
         if ((this.connection == null) || this.connection.isClosed() || !this.connection.isValid(5)) {
+            LOG.error("JSBC: " + FormSolutionsProperties.getInstance().getMysqlJdbc());
             this.connection = DriverManager.getConnection(FormSolutionsProperties.getInstance().getMysqlJdbc());
 
             this.preparedSelectStatement = connection.prepareStatement(
@@ -87,6 +102,21 @@ public class FormSolutionsMySqlHelper {
             this.preparedUpdatePruefungAblehnungStatement = connection.prepareStatement(
                     "UPDATE bestellung SET bpruefnr = ?, status = ?, last_update = now(), ablehnungsgrund = ? WHERE transid = ?;");
         }
+    }
+
+    /**
+     * DOCUMENT ME!
+     *
+     * @param   transid  DOCUMENT ME!
+     *
+     * @return  DOCUMENT ME!
+     *
+     * @throws  SQLException  DOCUMENT ME!
+     */
+    public boolean checkConnection(final String transid) throws SQLException {
+        final boolean res = checkMysqlEntry(transid);
+
+        return res;
     }
 
     /**

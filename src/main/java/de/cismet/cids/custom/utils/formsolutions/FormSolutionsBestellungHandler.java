@@ -3491,6 +3491,8 @@ public class FormSolutionsBestellungHandler implements ConnectionContextProvider
      * @return  DOCUMENT ME!
      */
     private static FormSolutionsProperties getProperties() {
+        FormSolutionsProperties.getInstance().refresh();
+
         return FormSolutionsProperties.getInstance();
     }
 

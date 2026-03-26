@@ -38,70 +38,70 @@ public class FormSolutionsProperties {
 
     //~ Instance fields --------------------------------------------------------
 
-    private final String user;
-    private final String password;
-    private final String mysqlJdbc;
-    private final String produktBasepath;
-    private final String rechnungBasepath;
-    private final String cidsLogin;
-    private final String cidsPassword;
-    private final String urlAuftragslisteSgkFs;
-    private final String urlAuftragslisteAbkFs;
-    private final String urlAuftragslisteBb1Fs;
-    private final String urlAuftragslisteBb2Fs;
-    private final String urlAuftragslisteLb1Fs;
-    private final String urlAuftragslisteLb2Fs;
-    private final String urlAuftragFs;
-    private final String urlAuftragDeleteFs;
-    private final String urlStatusUpdate;
-    private final String urlStatusUpdateLB;
-    private final boolean ftpEnabled;
-    private final String ftpHost;
-    private final String ftpLogin;
-    private final String ftpPass;
-    private final boolean ftpOverTls;
-    private final String ftpMountAbsPath;
-    private final String testType;
-    private final String specialLogAbsPath;
-    private final String produktTmpAbsPath;
-    private final String anhangTmpAbsPath;
-    private final String billingKundeLogin;
-    private final String billingKundeLoginBB;
-    private final String billingKundeLoginLB;
-    private final String billingKundeLoginKarte;
-    private final String billingModus;
-    private final String billingModusbezeichnung;
-    private final String billingVerwendungszweckDownload;
-    private final String billingVerwendungszweckPostweg;
-    private final String billingVerwendungskeyDownload;
-    private final String billingVerwendungskeyPostweg;
-    private final String billingProduktkeyBBDownload;
-    private final String billingProduktkeyBBPostweg;
-    private final String billingProduktkeyLBDownload;
-    private final String billingProduktkeyLBPostweg;
-    private final String billingProduktkeyLBBestDownload;
-    private final String billingProduktkeyLBBestPostweg;
-    private final String rechnungAuftragsartKarte;
-    private final String rechnungAuftragsartBaulasten;
-    private final String rechnungAuftragsartLB;
-    private final String rechnungBerechnugsgGrundlageKarte;
-    private final String rechnungBerechnugsgGrundlageBaulasten;
-    private final String rechnungBerechnugsgGrundlageLB;
-    private final String tmpBrokenpdfsAbsPath;
-    private final String transidHashpepper;
-    private final String redirectionFormat;
-    private final String redirectionFormatLB;
-    private final String urlCreateCacheid;
-    private final String cidsActionHttpRedirectorUrl;
-    private final boolean mysqlDisabled;
-    private final boolean deleteTmpProductAfterSuccessfulUploadDisabled;
-    private final Integer connectionTimeout;
-    private final Integer soTimeout;
-    private final String testXml;
-    private final String ignoreTransIdsTxt;
-    private final String duplicateTransIdsTxt;
-    private final boolean ignoreDuplicates;
-    private final boolean skipUnfinnishedAtStartup;
+    private String user;
+    private String password;
+    private String mysqlJdbc;
+    private String produktBasepath;
+    private String rechnungBasepath;
+    private String cidsLogin;
+    private String cidsPassword;
+    private String urlAuftragslisteSgkFs;
+    private String urlAuftragslisteAbkFs;
+    private String urlAuftragslisteBb1Fs;
+    private String urlAuftragslisteBb2Fs;
+    private String urlAuftragslisteLb1Fs;
+    private String urlAuftragslisteLb2Fs;
+    private String urlAuftragFs;
+    private String urlAuftragDeleteFs;
+    private String urlStatusUpdate;
+    private String urlStatusUpdateLB;
+    private boolean ftpEnabled;
+    private String ftpHost;
+    private String ftpLogin;
+    private String ftpPass;
+    private boolean ftpOverTls;
+    private String ftpMountAbsPath;
+    private String testType;
+    private String specialLogAbsPath;
+    private String produktTmpAbsPath;
+    private String anhangTmpAbsPath;
+    private String billingKundeLogin;
+    private String billingKundeLoginBB;
+    private String billingKundeLoginLB;
+    private String billingKundeLoginKarte;
+    private String billingModus;
+    private String billingModusbezeichnung;
+    private String billingVerwendungszweckDownload;
+    private String billingVerwendungszweckPostweg;
+    private String billingVerwendungskeyDownload;
+    private String billingVerwendungskeyPostweg;
+    private String billingProduktkeyBBDownload;
+    private String billingProduktkeyBBPostweg;
+    private String billingProduktkeyLBDownload;
+    private String billingProduktkeyLBPostweg;
+    private String billingProduktkeyLBBestDownload;
+    private String billingProduktkeyLBBestPostweg;
+    private String rechnungAuftragsartKarte;
+    private String rechnungAuftragsartBaulasten;
+    private String rechnungAuftragsartLB;
+    private String rechnungBerechnugsgGrundlageKarte;
+    private String rechnungBerechnugsgGrundlageBaulasten;
+    private String rechnungBerechnugsgGrundlageLB;
+    private String tmpBrokenpdfsAbsPath;
+    private String transidHashpepper;
+    private String redirectionFormat;
+    private String redirectionFormatLB;
+    private String urlCreateCacheid;
+    private String cidsActionHttpRedirectorUrl;
+    private boolean mysqlDisabled;
+    private boolean deleteTmpProductAfterSuccessfulUploadDisabled;
+    private Integer connectionTimeout;
+    private Integer soTimeout;
+    private String testXml;
+    private String ignoreTransIdsTxt;
+    private String duplicateTransIdsTxt;
+    private boolean ignoreDuplicates;
+    private boolean skipUnfinnishedAtStartup;
 
     //~ Constructors -----------------------------------------------------------
 
@@ -111,6 +111,26 @@ public class FormSolutionsProperties {
      * @param  properties  DOCUMENT ME!
      */
     protected FormSolutionsProperties(final Properties properties) {
+        init(properties);
+    }
+
+    //~ Methods ----------------------------------------------------------------
+
+    /**
+     * DOCUMENT ME!
+     *
+     * @return  DOCUMENT ME!
+     */
+    public static FormSolutionsProperties getInstance() {
+        return LazyInitialiser.INSTANCE;
+    }
+
+    /**
+     * DOCUMENT ME!
+     *
+     * @param  properties  DOCUMENT ME!
+     */
+    private void init(final Properties properties) {
         user = properties.getProperty("USER");
         password = properties.getProperty("PASSWORD");
         mysqlJdbc = properties.getProperty("MYSQL_JDBC");
@@ -206,15 +226,23 @@ public class FormSolutionsProperties {
         this.connectionTimeout = connectionTimeout;
     }
 
-    //~ Methods ----------------------------------------------------------------
-
     /**
      * DOCUMENT ME!
-     *
-     * @return  DOCUMENT ME!
      */
-    public static FormSolutionsProperties getInstance() {
-        return LazyInitialiser.INSTANCE;
+    public synchronized void refresh() {
+        try {
+            final Properties properties = ServerResourcesLoader.getInstance()
+                        .loadProperties(WundaBlauServerResources.FORMSOLUTIONS_PROPERTIES.getValue());
+
+            init(properties);
+        } catch (final Throwable ex) {
+            if ("WUNDA_BLAU".equals(DomainServerImpl.getServerProperties().getServerName())) {
+                LOG.error(
+                    "FormSolutionsConstants Initialization Error. "
+                            + "All FormSolutions related features will not work.",
+                    ex);
+            }
+        }
     }
 
     //~ Inner Classes ----------------------------------------------------------
