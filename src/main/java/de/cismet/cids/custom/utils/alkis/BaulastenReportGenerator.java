@@ -34,6 +34,8 @@ import org.apache.log4j.Logger;
 import java.io.IOException;
 import java.io.InputStream;
 
+import java.lang.ref.SoftReference;
+
 import java.net.URL;
 
 import java.util.ArrayList;
@@ -122,6 +124,8 @@ public class BaulastenReportGenerator {
 
     //~ Instance fields --------------------------------------------------------
 
+    private Map<String, SoftReference<MultiPagePictureReader>> pictureCache = new HashMap<>();
+
     private JRDataSource dataSource;
     private Map parameters;
 
@@ -207,11 +211,17 @@ public class BaulastenReportGenerator {
                 for (final String document : documentListRasterdaten) {
                     final URL url = pictureFinder.getUrlForDocument(document);
 
-                    final MultiPagePictureReader reader = multipageReaderCreator.createReader(
-                            url,
-                            false,
-                            false);
+                    final SoftReference<MultiPagePictureReader> readerReference = pictureCache.get(url.toString());
 
+                    MultiPagePictureReader reader = ((readerReference == null) ? null : readerReference.get());
+
+                    if (reader == null) {
+                        reader = multipageReaderCreator.createReader(
+                                url,
+                                false,
+                                false);
+                        pictureCache.put(url.toString(), new SoftReference<>(reader));
+                    }
                     final EXIFReader exif = new EXIFReader();
 
                     final Map<Integer, MetadataInfo> metadatainfoPerPage = new HashMap();
@@ -313,10 +323,16 @@ public class BaulastenReportGenerator {
             for (final String document : documentList) {
                 try {
                     final URL url = pictureFinder.getUrlForDocument(document);
-                    final MultiPagePictureReader reader = multipageReaderCreator.createReader(
-                            url,
-                            false,
-                            false);
+                    final SoftReference<MultiPagePictureReader> readerReference = pictureCache.get(url.toString());
+                    MultiPagePictureReader reader = ((readerReference == null) ? null : readerReference.get());
+
+                    if (reader == null) {
+                        reader = multipageReaderCreator.createReader(
+                                url,
+                                false,
+                                false);
+                    }
+
                     for (int i = 0; i < reader.getNumberOfPages(); i++) {
                         imageBeans.add(new BaulastImageReportBean(
                                 i,
@@ -355,6 +371,8 @@ public class BaulastenReportGenerator {
             fertigungsVermerk);
 
         this.parameters = parameters;
+
+        pictureCache.clear();
     }
 
     /**

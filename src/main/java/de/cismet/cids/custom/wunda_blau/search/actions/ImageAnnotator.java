@@ -40,7 +40,6 @@ import de.cismet.cids.custom.utils.WundaBlauServerResources;
 
 import de.cismet.cids.utils.serverresources.ServerResourcesLoader;
 
-//import com.sun.media.jai.codec.*;
 /**
  * DOCUMENT ME!
  *
