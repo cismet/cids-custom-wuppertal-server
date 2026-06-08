@@ -21,6 +21,7 @@ import java.io.InputStreamReader;
 
 import java.util.Base64;
 import java.util.Properties;
+import java.util.regex.Matcher;
 
 import de.cismet.cids.utils.serverresources.ServerResourcesLoader;
 
@@ -107,7 +108,7 @@ public class ByteArrayFactoryHandler {
             final ConnectionContext connectionContext) throws Exception {
         final String cmd = cmdTemplate.replaceAll(jwtPlaceholder, user.getJwsToken())
                     .replaceAll(factoryClassPlaceholder, factoryClassName)
-                    .replaceAll(parametersPlaceholder, parameters);
+                    .replaceAll(parametersPlaceholder, Matcher.quoteReplacement(parameters));
         if (LOG.isDebugEnabled()) {
             LOG.debug(cmd);
         }
