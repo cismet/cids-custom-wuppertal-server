@@ -39,7 +39,17 @@ public class ListDatasourcesAction implements ServerAction {
     @Override
     public Object execute(final Object body, final ServerActionParameter... saps) {
         try {
-            DatasourceExtractor.extractDatasources();
+            new Thread() {
+                @Override
+                public void run() {
+                    try {
+                        DatasourceExtractor.extractDatasources();
+                    } catch (Exception e) {
+                        LOG.error("Error while extracting the data sources", e);
+                    }
+                }
+            }.start();
+            
             return true;
         } catch (Exception e) {
             LOG.error("Error while extracting the data sources");
