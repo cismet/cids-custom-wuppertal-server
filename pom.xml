@@ -61,7 +61,7 @@
             <dependency>
                 <groupId>de.cismet.commons</groupId>
                 <artifactId>cismet-commons</artifactId>
-                <version>9.0.7</version>
+                <version>9.1.1</version>
                 <type>jar</type>
                 <scope>compile</scope>
             </dependency>
