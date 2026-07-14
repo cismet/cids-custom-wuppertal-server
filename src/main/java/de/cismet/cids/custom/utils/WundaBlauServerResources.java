@@ -78,6 +78,7 @@ public enum WundaBlauServerResources {
     FME_DB_CONN_PROPERTIES(new TextServerResource("/nas/fme_db_conn.properties")),
     PNR_PROPERTIES(new TextServerResource("/pointnumberreservation/pointNumberRes_conf.properties")),
     VCM_PROPERTIES(new TextServerResource("/virtualcitymap/vcm.properties")),
+    GEOPORTAL_PROPERTIES(new TextServerResource("/geoportal/geoportal.properties")),
     STADTBILDER_CONF_PROPERTIES(new TextServerResource("/stadtbilder/sb_conf.properties")),
     BYTEARRAYFACTORY_PROPERTIES(new TextServerResource("/byteArrayFactory.properties")),
     URLCONFIG_PROPERTIES(new TextServerResource("/urlconfig.properties")),
