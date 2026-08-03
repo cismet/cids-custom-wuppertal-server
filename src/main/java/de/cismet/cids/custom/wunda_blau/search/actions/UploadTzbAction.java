@@ -533,9 +533,9 @@ public class UploadTzbAction implements ServerAction, UserAwareServerAction {
         final int longestSide = Math.max(width, height);
         double scale = 1;
 
-        // set longest side to 600 if it is longer
-        if (longestSide > 600) {
-            scale = 600.0 / longestSide;
+        // set longest side to 1088 if it is longer
+        if (longestSide > 1088) {
+            scale = 1088.0 / longestSide;
         }
 
         final int swidth = (int)Math.round(width * scale);
