@@ -92,10 +92,12 @@ import javax.xml.bind.Unmarshaller;
 import javax.xml.bind.ValidationEvent;
 import javax.xml.bind.ValidationEventHandler;
 
+import de.cismet.cids.custom.utils.GeneralUtils;
 import de.cismet.cids.custom.utils.WundaBlauServerResources;
 import de.cismet.cids.custom.utils.alkis.AlkisProductDescription;
 import de.cismet.cids.custom.utils.alkis.AlkisProducts;
 import de.cismet.cids.custom.utils.alkis.BaulastBescheinigungHelper;
+import de.cismet.cids.custom.utils.alkis.FsMailConfigJson;
 import de.cismet.cids.custom.utils.alkis.LiegenschaftsbuchauszugHelper;
 import de.cismet.cids.custom.utils.alkis.ServerAlkisProducts;
 import de.cismet.cids.custom.utils.berechtigungspruefung.BerechtigungspruefungBillingDownloadInfo;
@@ -179,6 +181,7 @@ public class FormSolutionsBestellungHandler implements ConnectionContextProvider
 
     private static final String PDF_START = "%PDF";
     private static final String PDF_END = "%%EOF";
+    private static final Map<String, Integer> NOTIFICATION_MAP = new HashMap<>();
 
     //~ Enums ------------------------------------------------------------------
 
@@ -791,18 +794,23 @@ public class FormSolutionsBestellungHandler implements ConnectionContextProvider
      * @throws  Exception  DOCUMENT ME!
      */
     public MetaObject[] getUnfinishedBestellungen() throws Exception {
-        final MetaClass mcBestellung = CidsBean.getMetaClassFromTableName(
-                "WUNDA_BLAU",
-                "fs_bestellung",
-                getConnectionContext());
-        final String pruefungQuery = String.format(
-                UNFINISHED_BESTELLUNGEN_QUERY_TEMPLATE,
-                mcBestellung.getID(),
-                mcBestellung.getTableName()
-                        + "."
-                        + mcBestellung.getPrimaryKey(),
-                mcBestellung.getTableName());
-        return getMetaService().getMetaObject(getUser(), pruefungQuery, getConnectionContext());
+        if (isServerInProduction()) {
+            // to avoid the processing of unfinished orders when the server is running on the hot standby db
+            final MetaClass mcBestellung = CidsBean.getMetaClassFromTableName(
+                    "WUNDA_BLAU",
+                    "fs_bestellung",
+                    getConnectionContext());
+            final String pruefungQuery = String.format(
+                    UNFINISHED_BESTELLUNGEN_QUERY_TEMPLATE,
+                    mcBestellung.getID(),
+                    mcBestellung.getTableName()
+                            + "."
+                            + mcBestellung.getPrimaryKey(),
+                    mcBestellung.getTableName());
+            return getMetaService().getMetaObject(getUser(), pruefungQuery, getConnectionContext());
+        } else {
+            return null;
+        }
     }
 
     /**
@@ -973,7 +981,7 @@ public class FormSolutionsBestellungHandler implements ConnectionContextProvider
                                 getMySqlHelper().updateStatus(transid, okStatus);
                                 final String email = trimedNotEmpty((String)bestellungBean.getProperty("email"));
 
-                                doStatusChangedRequest(transid, isInternalEmail(email));
+                                doStatusChangedRequest(transid, isInternalEmail(email), okStatus);
                             } catch (final Exception ex) {
                                 setErrorStatus(
                                     transid,
@@ -1067,7 +1075,7 @@ public class FormSolutionsBestellungHandler implements ConnectionContextProvider
             final String email = ((bestellungBean != null) ? trimedNotEmpty(
                         (String)bestellungBean.getProperty("email")) : null);
 
-            doStatusChangedRequest(transid, isInternalEmail(email));
+            doStatusChangedRequest(transid, isInternalEmail(email), -status);
         } catch (final Exception ex2) {
             LOG.error("Fehler beim Aktualisieren des MySQL-Datensatzes", ex2);
         }
@@ -1157,10 +1165,22 @@ public class FormSolutionsBestellungHandler implements ConnectionContextProvider
      *
      * @param  transid        DOCUMENT ME!
      * @param  toBothSystems  DOCUMENT ME!
+     * @param  newState       DOCUMENT ME!
      */
-    private void doStatusChangedRequest(final String transid, final boolean toBothSystems) {
+    private void doStatusChangedRequest(final String transid, final boolean toBothSystems, final int newState) {
         if (isServerInProduction()) {
             try {
+                final Integer status = NOTIFICATION_MAP.get(transid);
+
+                if ((status != null) && (status == newState)) {
+                    specialLog("statusChangedRequest was already sent for: " + transid + " status " + newState);
+
+                    sendMailNotificationAboutWrongStatusChangedRequest(transid, newState);
+
+                    return;
+                } else {
+                    NOTIFICATION_MAP.put(transid, newState);
+                }
                 specialLog("doing status changed request for: " + transid);
 
                 if ((transid != null)
@@ -1188,6 +1208,37 @@ public class FormSolutionsBestellungHandler implements ConnectionContextProvider
             } catch (final Exception ex) {
                 LOG.warn("STATUS_UPDATE_URL could not be requested", ex);
             }
+        }
+    }
+
+    /**
+     * DOCUMENT ME!
+     *
+     * @param  transid   DOCUMENT ME!
+     * @param  newState  DOCUMENT ME!
+     */
+    private void sendMailNotificationAboutWrongStatusChangedRequest(final String transid, final int newState) {
+        try {
+            final String message = "Es wurden zu viele StatusChanged Requests beauftragt für transid: " + transid
+                        + " mit Status " + newState;
+            final String subject = "Zu viele statusChanged Requests";
+
+            // send mail
+            final FsMailConfigJson mailConfig =
+                new ObjectMapper().readValue(ServerResourcesLoader.getInstance().loadText(
+                        WundaBlauServerResources.FS_MAIL_CONFIGURATION.getValue()),
+                    FsMailConfigJson.class);
+
+            if ((mailConfig != null) && (message != null)) {
+                final String cmdTemplate = mailConfig.getCmdTemplate();
+                final String emailAddress = "thorsten.herter@cismet.de";
+
+                GeneralUtils.sendMail(cmdTemplate, emailAddress, subject, message);
+            } else {
+                LOG.error("Cannot send mail to inform about a wrong statusChange request");
+            }
+        } catch (final Exception ex) {
+            LOG.warn("Cannot send mail notification", ex);
         }
     }
 
@@ -2297,7 +2348,7 @@ public class FormSolutionsBestellungHandler implements ConnectionContextProvider
                     }
                 }
 
-                doStatusChangedRequest(transid, isInternalEmail(email));
+                doStatusChangedRequest(transid, isInternalEmail(email), STATUS_FETCH);
             } catch (final Exception ex) {
                 setErrorStatus(transid, STATUS_FETCH, null, "Fehler beim Abholen FormSolution", ex);
             }
@@ -2343,7 +2394,7 @@ public class FormSolutionsBestellungHandler implements ConnectionContextProvider
                     extractProduct(formSolutionsBestellung, typeMap.get(transid)),
                     downloadOnly,
                     email);
-                doStatusChangedRequest(transid, isInternalEmail(email));
+                doStatusChangedRequest(transid, isInternalEmail(email), STATUS_PARSE);
             } catch (final Exception ex) {
                 setErrorStatus(transid, STATUS_PARSE, null, "Fehler beim Parsen FormSolution", ex);
             }
@@ -2495,7 +2546,7 @@ public class FormSolutionsBestellungHandler implements ConnectionContextProvider
 
                 final String email = trimedNotEmpty((String)bestellungBean.getProperty("email"));
 
-                doStatusChangedRequest(transid, isInternalEmail(email));
+                doStatusChangedRequest(transid, isInternalEmail(email), STATUS_SAVE);
             } catch (final Exception ex) {
                 setErrorStatus(transid, STATUS_SAVE, null, "Fehler beim Erstellen des Bestellungs-Objektes", ex);
             }
@@ -2545,7 +2596,7 @@ public class FormSolutionsBestellungHandler implements ConnectionContextProvider
             specialLog("updating or inserting mySQL entry for: " + transid);
             getMySqlHelper().insertOrUpdateStatus(transid, STATUS_CREATE);
 
-            doStatusChangedRequest(transid, false);
+            doStatusChangedRequest(transid, false, STATUS_CREATE);
         }
 
         return insertExceptionMap;
@@ -2585,7 +2636,7 @@ public class FormSolutionsBestellungHandler implements ConnectionContextProvider
 
                         getMySqlHelper().updateStatus(transid, STATUS_CLOSE);
                         final String email = trimedNotEmpty((String)bestellungBean.getProperty("email"));
-                        doStatusChangedRequest(transid, isInternalEmail(email));
+                        doStatusChangedRequest(transid, isInternalEmail(email), STATUS_CLOSE);
                     } catch (final Exception ex) {
                         LOG.error(ex, ex);
 //                        setErrorStatus(
@@ -3253,7 +3304,7 @@ public class FormSolutionsBestellungHandler implements ConnectionContextProvider
                                     (String)bestellungBean.getProperty("produkt_dateipfad"),
                                     (String)bestellungBean.getProperty("produkt_dateiname_orig"));
                                 final String email = trimedNotEmpty((String)bestellungBean.getProperty("email"));
-                                doStatusChangedRequest(transid, isInternalEmail(email));
+                                doStatusChangedRequest(transid, isInternalEmail(email), STATUS_PRODUKT);
                             }
                             break;
                             case LB_WEITERLEITUNG:
@@ -3287,7 +3338,10 @@ public class FormSolutionsBestellungHandler implements ConnectionContextProvider
                                             redirect2formsolutions);
                                         final String email = trimedNotEmpty((String)bestellungBean.getProperty(
                                                     "email"));
-                                        doStatusChangedRequest(transid, isInternalEmail(email));
+                                        doStatusChangedRequest(
+                                            transid,
+                                            isInternalEmail(email),
+                                            STATUS_WEITERLEITUNG_ABSCHLUSSFORMULAR);
                                     } else if (Boolean.FALSE.equals(berechtigungspruefung.getProperty("pruefstatus"))) {
                                         getMySqlHelper().updatePruefungAblehnung((String)
                                             berechtigungspruefung.getProperty("schluessel"),
@@ -3296,7 +3350,7 @@ public class FormSolutionsBestellungHandler implements ConnectionContextProvider
                                             (String)berechtigungspruefung.getProperty("pruefkommentar"));
                                         final String email = trimedNotEmpty((String)bestellungBean.getProperty(
                                                     "email"));
-                                        doStatusChangedRequest(transid, isInternalEmail(email));
+                                        doStatusChangedRequest(transid, isInternalEmail(email), -STATUS_PRUEFUNG);
                                     }
                                 }
                             }
@@ -3397,7 +3451,7 @@ public class FormSolutionsBestellungHandler implements ConnectionContextProvider
                                         (String)bestellungBean.getProperty("produkt_dateipfad"),
                                         (String)bestellungBean.getProperty("produkt_dateiname_orig"));
                                     final String email = trimedNotEmpty((String)bestellungBean.getProperty("email"));
-                                    doStatusChangedRequest(transid, isInternalEmail(email));
+                                    doStatusChangedRequest(transid, isInternalEmail(email), STATUS_PRODUKT);
                                 } else {
                                     throw new Exception("Daten des vorgelagerten Formulars wurden nicht gefunden.");
                                 }
