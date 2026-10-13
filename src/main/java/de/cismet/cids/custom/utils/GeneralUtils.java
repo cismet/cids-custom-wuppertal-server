@@ -48,7 +48,7 @@ public class GeneralUtils {
      *
      * @throws  Exception  DOCUMENT ME!
      */
-    private static String executeCmd(final String cmd) throws Exception {
+    public static String executeCmd(final String cmd) throws Exception {
         final ProcessBuilder builder = new ProcessBuilder("/bin/sh", "-c", cmd);
         final Process process = builder.start();
         final InputStream is = process.getInputStream();
