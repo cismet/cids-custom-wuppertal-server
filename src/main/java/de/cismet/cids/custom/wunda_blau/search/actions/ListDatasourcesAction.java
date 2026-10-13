@@ -12,12 +12,22 @@
  */
 package de.cismet.cids.custom.wunda_blau.search.actions;
 
+import Sirius.server.middleware.impls.domainserver.DomainServerImpl;
+
 import org.apache.log4j.Logger;
 
+import java.io.BufferedReader;
+import java.io.InputStreamReader;
+
+import java.util.stream.Collectors;
+
 import de.cismet.cids.custom.utils.DatasourceExtractor;
+import de.cismet.cids.custom.utils.GeneralUtils;
 
 import de.cismet.cids.server.actions.ServerAction;
 import de.cismet.cids.server.actions.ServerActionParameter;
+import java.io.InputStream;
+import org.apache.commons.io.IOUtils;
 
 /**
  * DOCUMENT ME!
@@ -45,6 +55,13 @@ public class ListDatasourcesAction implements ServerAction {
                     public void run() {
                         try {
                             DatasourceExtractor.extractDatasources();
+
+                            final String afterScript = DomainServerImpl.getServerProperties()
+                                        .getDatasourcechangeTriggerScriptAfter();
+
+                            if (afterScript != null) {
+                                GeneralUtils.executeCmd(afterScript);
+                            }
                         } catch (Exception e) {
                             LOG.error("Error while extracting the data sources", e);
                         }
