@@ -60,7 +60,23 @@ public class ListDatasourcesAction implements ServerAction {
                                         .getDatasourcechangeTriggerScriptAfter();
 
                             if (afterScript != null) {
-                                GeneralUtils.executeCmd(afterScript);
+                                LOG.info("process script: " + afterScript);
+                                final ProcessBuilder builder = new ProcessBuilder(afterScript.trim());
+                                builder.redirectErrorStream(true);
+                                final Process process = builder.start();
+                                
+                                final String out = IOUtils.toString(new InputStreamReader(process.getInputStream()));
+                                
+                                final int exitCode = process.waitFor();
+                                
+                                if (exitCode == 0) {
+                                    LOG.info("afterScript finished, output:\n" + out);
+                                } else {
+                                    LOG.error("afterScript failed with exit code " + exitCode + ", output:\n" + out);
+                                }
+//                                GeneralUtils.executeCmd(afterScript);
+                            } else {
+                                LOG.warn("no afterScript for datasource list found");
                             }
                         } catch (Exception e) {
                             LOG.error("Error while extracting the data sources", e);
