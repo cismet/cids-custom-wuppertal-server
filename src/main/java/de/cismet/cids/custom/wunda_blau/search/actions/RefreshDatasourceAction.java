@@ -16,10 +16,12 @@ import Sirius.server.middleware.impls.domainserver.DomainServerImpl;
 import Sirius.server.middleware.interfaces.domainserver.MetaService;
 import Sirius.server.middleware.interfaces.domainserver.MetaServiceStore;
 
+import org.apache.commons.io.IOUtils;
 import org.apache.log4j.Logger;
 
 import java.io.File;
 import java.io.FileWriter;
+import java.io.InputStreamReader;
 
 import de.cismet.cids.custom.utils.WundaBlauServerResources;
 
@@ -78,6 +80,29 @@ public class RefreshDatasourceAction implements ServerAction {
                 final FileWriter fr = new FileWriter(f);
                 fr.write(documentContent);
                 fr.close();
+
+                final String afterScript = DomainServerImpl.getServerProperties()
+                            .getDatasourcechangeTriggerScriptAfter();
+
+                if (afterScript != null) {
+                    LOG.info("process script: " + afterScript);
+                    final ProcessBuilder builder = new ProcessBuilder(afterScript.trim());
+                    builder.redirectErrorStream(true);
+                    final Process process = builder.start();
+
+                    final String out = IOUtils.toString(new InputStreamReader(process.getInputStream()));
+
+                    final int exitCode = process.waitFor();
+
+                    if (exitCode == 0) {
+                        LOG.info("afterScript finished, output:\n" + out);
+                    } else {
+                        LOG.error("afterScript failed with exit code " + exitCode + ", output:\n" + out);
+                    }
+//                                GeneralUtils.executeCmd(afterScript);
+                } else {
+                    LOG.warn("no afterScript for datasource list found");
+                }
             }
 
             return true;

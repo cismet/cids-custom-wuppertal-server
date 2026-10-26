@@ -87,6 +87,7 @@ public class UploadTzbAction implements ServerAction, UserAwareServerAction {
     private static final SimpleDateFormat sdf = new SimpleDateFormat("yyyy-MM-dd'T'HH:mm:ss");
     private static final String ACTION_QUERY = "select %1s, a.id from tzb_action a where key = '%2s'";
     private static final String TREE_QUERY = "select %1s, t.id from tzb_tree t where id = %2s";
+    private static final String CAMPAIGN_QUERY = "select %1s, t.id from tzb_campaign t where id = %2s";
 
     //~ Enums ------------------------------------------------------------------
 
@@ -99,7 +100,7 @@ public class UploadTzbAction implements ServerAction, UserAwareServerAction {
 
         //~ Enum constants -----------------------------------------------------
 
-        key, status, payload, created_at, action_time, description, status_reason, fk_tree, url
+        key, status, payload, created_at, action_time, description, status_reason, fk_tree, url, fk_kampagne
     }
 
     //~ Instance fields --------------------------------------------------------
@@ -142,6 +143,7 @@ public class UploadTzbAction implements ServerAction, UserAwareServerAction {
             final Object createdTimeAsObject = paramsHashMap.get(ParameterType.created_at.toString());
             final Object actionAsObject = paramsHashMap.get(ParameterType.key.toString());
             final Object treeAsObject = paramsHashMap.get(ParameterType.fk_tree.toString());
+            final Object campaignAsObject = paramsHashMap.get(ParameterType.fk_kampagne.toString());
             Timestamp actionTime = null;
             Timestamp createdTime = null;
 
@@ -155,6 +157,7 @@ public class UploadTzbAction implements ServerAction, UserAwareServerAction {
 
             CidsBean fkActionBean = null;
             CidsBean fkTreeBean = null;
+            CidsBean fkCampaignBean = null;
 
             if (actionAsObject instanceof String) {
                 final MetaClass mcTzbAction = DomainServerImpl.getServerInstance()
@@ -172,16 +175,48 @@ public class UploadTzbAction implements ServerAction, UserAwareServerAction {
                 }
             }
 
-            if (treeAsObject instanceof String) {
+            if ((treeAsObject instanceof String) || (treeAsObject instanceof Integer)) {
+                String treeAsString = null;
+
+                if (treeAsObject instanceof String) {
+                    treeAsString = (String)treeAsObject;
+                } else {
+                    treeAsString = ((Integer)treeAsObject).toString();
+                }
+
                 final MetaClass mcTzbTree = DomainServerImpl.getServerInstance()
                             .getClassByTableName(getUser(), "tzb_tree", CC);
                 final MetaObject[] trees = DomainServerImpl.getServerInstance()
-                            .getMetaObject(getUser(), String.format(TREE_QUERY, mcTzbTree.getID(), treeAsObject), CC);
+                            .getMetaObject(getUser(), String.format(TREE_QUERY, mcTzbTree.getID(), treeAsString), CC);
 
                 if ((trees != null) && (trees.length == 1)) {
                     fkTreeBean = trees[0].getBean();
                 } else {
-                    LOG.error("Cannot find action '" + treeAsObject + "'");
+                    LOG.error("Cannot find action '" + treeAsString + "'");
+                }
+            }
+
+            if ((campaignAsObject instanceof String) || (campaignAsObject instanceof Integer)) {
+                String campaignAsString = null;
+
+                if (campaignAsObject instanceof String) {
+                    campaignAsString = (String)campaignAsObject;
+                } else {
+                    campaignAsString = ((Integer)campaignAsObject).toString();
+                }
+
+                final MetaClass mcCampaign = DomainServerImpl.getServerInstance()
+                            .getClassByTableName(getUser(), "tzb_campaign", CC);
+                final MetaObject[] campaigns = DomainServerImpl.getServerInstance()
+                            .getMetaObject(
+                                getUser(),
+                                String.format(CAMPAIGN_QUERY, mcCampaign.getID(), campaignAsString),
+                                CC);
+
+                if ((campaigns != null) && (campaigns.length == 1)) {
+                    fkCampaignBean = campaigns[0].getBean();
+                } else {
+                    LOG.error("Cannot find campaign '" + campaignAsString + "'");
                 }
             }
 
@@ -192,6 +227,7 @@ public class UploadTzbAction implements ServerAction, UserAwareServerAction {
                 paramsHashMap.get(ParameterType.status_reason.toString()));
             actionBean.setProperty(ParameterType.fk_tree.toString(), fkTreeBean);
             actionBean.setProperty("fk_action", fkActionBean);
+            actionBean.setProperty(ParameterType.fk_kampagne.toString(), fkCampaignBean);
             final Map<String, Object> payload = (Map<String, Object>)paramsHashMap.get(ParameterType.payload
                             .toString());
 
