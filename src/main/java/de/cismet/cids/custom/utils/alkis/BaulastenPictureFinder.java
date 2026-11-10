@@ -37,6 +37,7 @@ public class BaulastenPictureFinder {
     public static final String SEP = "/";
     static final org.apache.log4j.Logger log = org.apache.log4j.Logger.getLogger(BaulastenPictureFinder.class);
     private static final String[] SUFFIXE = new String[] { "tif", "jpg", "tiff", "jpeg" };
+    private static char[] ADDITIONAL_CHAR = { 'A', 'B', 'C', 'a' };
     private static final String LINKEXTENSION = "txt";
     public static final String SUFFIX_REDUCED_SIZE = "_rs";
     public static final String EXTENSION_REDUCED_SIZE = "jpg";
@@ -486,10 +487,24 @@ public class BaulastenPictureFinder {
         } else {
             for (final String suffix : SUFFIXE) {
                 try {
-                    final String fileWithSuffix = fileWithoutSuffixString + suffix;
-                    final URL objectURL = getUrlForDocument(fileWithSuffix);
+                    String fileWithSuffix = fileWithoutSuffixString + suffix;
+                    URL objectURL = getUrlForDocument(fileWithSuffix);
                     if (getExtendedAccessHandler().checkIfURLaccessible(objectURL)) {
                         results.add(fileWithSuffix);
+                    } else {
+                        for (final char addChar : ADDITIONAL_CHAR) {
+                            if (fileWithoutSuffixString.contains(String.valueOf(addChar))) {
+                                fileWithSuffix = fileWithoutSuffixString.replace(
+                                        addChar,
+                                        (Character.isUpperCase(addChar) ? Character.toLowerCase(addChar)
+                                                                        : Character.toUpperCase(addChar))) + suffix;
+                                objectURL = getUrlForDocument(fileWithSuffix);
+
+                                if (getExtendedAccessHandler().checkIfURLaccessible(objectURL)) {
+                                    results.add(fileWithSuffix);
+                                }
+                            }
+                        }
                     }
                 } catch (Exception ex) {
                     log.error("Problem occured, during checking for " + fileWithoutSuffixString + suffix, ex);
