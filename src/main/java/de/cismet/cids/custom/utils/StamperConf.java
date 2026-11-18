@@ -16,6 +16,8 @@ import lombok.Getter;
 
 import java.util.Properties;
 
+import de.cismet.cids.utils.PasswordUtils;
+
 /**
  * DOCUMENT ME!
  *
@@ -51,7 +53,7 @@ public class StamperConf {
         stamperRequest = properties.getProperty("STAMPER_REQUEST");
         stamperDocument = properties.getProperty("STAMPER_DOCUMENT");
         stamperVerify = properties.getProperty("STAMPER_VERIFY");
-        password = properties.getProperty("STAMPER_PASSWORD");
+        password = PasswordUtils.decrypt(properties.getProperty("STAMPER_PASSWORD"));
         enabledFor = (properties.getProperty("ENABLED_FOR") != null) ? properties.getProperty("ENABLED_FOR").split(",")
                                                                      : new String[0];
         onErrorSkipAndLogInto = properties.getProperty("ON_ERROR_SKIP_AND_LOG_INTO");

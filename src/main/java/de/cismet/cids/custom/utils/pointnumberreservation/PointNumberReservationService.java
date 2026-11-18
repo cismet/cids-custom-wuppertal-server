@@ -37,6 +37,7 @@ import java.util.zip.GZIPOutputStream;
 
 import de.cismet.cids.custom.utils.WundaBlauServerResources;
 
+import de.cismet.cids.utils.PasswordUtils;
 import de.cismet.cids.utils.serverresources.ServerResourcesLoader;
 
 /**
@@ -122,7 +123,7 @@ public class PointNumberReservationService {
             }
             SERVICE_URL = serviceProperties.getProperty("service", "");
             USER = serviceProperties.getProperty("user", "");
-            PW = serviceProperties.getProperty("password", "");
+            PW = PasswordUtils.decrypt(serviceProperties.getProperty("password", ""));
         } catch (Exception ex) {
             LOG.warn("Punktnummernreservierung initialisation Error!", ex);
             initError = true;

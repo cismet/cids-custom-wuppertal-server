@@ -14,6 +14,7 @@ package de.cismet.cids.custom.utils;
 
 import lombok.Getter;
 
+import de.cismet.cids.utils.PasswordUtils;
 import de.cismet.cids.utils.serverresources.DefaultServerResourcePropertiesHandler;
 
 /**
@@ -242,7 +243,7 @@ public class PotenzialflaechenProperties extends DefaultServerResourceProperties
      */
     public String getWebdavPassword() {
         try {
-            return getProperties().getProperty(PROP__WEBDAV_PASSWORD, null);
+            return PasswordUtils.decrypt(getProperties().getProperty(PROP__WEBDAV_PASSWORD, null));
         } catch (final Exception ex) {
             LOG.info(String.format("Property %s not set", PROP__WEBDAV_PASSWORD), ex);
             return null;

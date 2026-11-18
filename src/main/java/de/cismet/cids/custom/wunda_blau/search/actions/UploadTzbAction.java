@@ -54,6 +54,7 @@ import de.cismet.cids.server.actions.ServerAction;
 import de.cismet.cids.server.actions.ServerActionParameter;
 import de.cismet.cids.server.actions.UserAwareServerAction;
 
+import de.cismet.cids.utils.PasswordUtils;
 import de.cismet.cids.utils.serverresources.JsonServerResource;
 import de.cismet.cids.utils.serverresources.ServerResourcesLoader;
 
@@ -66,7 +67,6 @@ import de.cismet.connectioncontext.ConnectionContext;
 import de.cismet.netutil.ProxyHandler;
 
 import de.cismet.tools.ExifReader;
-import de.cismet.tools.PasswordEncrypter;
 
 /**
  * DOCUMENT ME!
@@ -461,13 +461,10 @@ public class UploadTzbAction implements ServerAction, UserAwareServerAction {
             fos.close();
 
             if (webDavClient == null) {
-                String pass = passwd;
-
-                if ((pass != null) && pass.startsWith(PasswordEncrypter.CRYPT_PREFIX)) {
-                    pass = PasswordEncrypter.decryptString(passwd);
-                }
-
-                webDavClient = new WebDavClient(ProxyHandler.getInstance().getProxy(), user, pass);
+                webDavClient = new WebDavClient(
+                        ProxyHandler.getInstance().getProxy(),
+                        user,
+                        PasswordUtils.decrypt(passwd));
             }
 
             final int httpStatusCode = WebDavHelper.uploadFileToWebDAV(
