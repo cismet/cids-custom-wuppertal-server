@@ -18,6 +18,8 @@ import org.apache.log4j.Logger;
 
 import java.util.Properties;
 
+import de.cismet.cids.utils.PasswordUtils;
+
 /**
  * DOCUMENT ME!
  *
@@ -51,7 +53,7 @@ public class AltlastenWebDavProperties {
         webDavHost = readProperty("WEBDAV_HOST", null);
         webDavPath = readProperty("WEBDAV_PATH", null);
         webDavLogin = readProperty("WEBDAV_LOGIN", null);
-        webDavPass = readProperty("WEBDAV_PASS", null);
+        webDavPass = PasswordUtils.decrypt(readProperty("WEBDAV_PASS", null));
     }
 
     //~ Methods ----------------------------------------------------------------

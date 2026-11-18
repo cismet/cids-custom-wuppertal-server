@@ -28,6 +28,7 @@ import de.cismet.cids.custom.utils.WundaBlauServerResources;
 
 import de.cismet.cids.server.actions.GetServerResourceServerAction;
 
+import de.cismet.cids.utils.PasswordUtils;
 import de.cismet.cids.utils.serverresources.ServerResourcesLoader;
 
 import de.cismet.connectioncontext.ConnectionContext;
@@ -165,7 +166,7 @@ public class AlkisRestConf extends Properties {
          */
         public Crendetials(final Properties properties) {
             user = properties.getProperty("USER");
-            password = properties.getProperty("PASSWORD");
+            password = PasswordUtils.decrypt(properties.getProperty("PASSWORD"));
         }
     }
 }

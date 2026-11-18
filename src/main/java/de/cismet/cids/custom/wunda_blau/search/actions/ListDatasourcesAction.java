@@ -12,13 +12,7 @@
  */
 package de.cismet.cids.custom.wunda_blau.search.actions;
 
-import Sirius.server.middleware.impls.domainserver.DomainServerImpl;
-
-import org.apache.commons.io.IOUtils;
 import org.apache.log4j.Logger;
-
-import java.io.InputStreamReader;
-
 
 import de.cismet.cids.custom.utils.DatasourceExtractor;
 

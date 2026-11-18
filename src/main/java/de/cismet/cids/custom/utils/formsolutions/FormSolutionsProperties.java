@@ -20,6 +20,7 @@ import java.util.Properties;
 
 import de.cismet.cids.custom.utils.WundaBlauServerResources;
 
+import de.cismet.cids.utils.PasswordUtils;
 import de.cismet.cids.utils.serverresources.ServerResourcesLoader;
 
 /**
@@ -132,12 +133,12 @@ public class FormSolutionsProperties {
      */
     private void init(final Properties properties) {
         user = properties.getProperty("USER");
-        password = properties.getProperty("PASSWORD");
+        password = PasswordUtils.decrypt(properties.getProperty("PASSWORD"));
         mysqlJdbc = properties.getProperty("MYSQL_JDBC");
         produktBasepath = properties.getProperty("PRODUKT_BASEPATH");
         rechnungBasepath = properties.getProperty("RECHNUNG_BASEPATH");
         cidsLogin = properties.getProperty("CIDS_LOGIN");
-        cidsPassword = properties.getProperty("CIDS_PASSWORD");
+        cidsPassword = PasswordUtils.decrypt(properties.getProperty("CIDS_PASSWORD"));
         urlAuftragslisteSgkFs = properties.getProperty("URL_AUFTRAGSLISTE_SGK_FS");
         urlAuftragslisteAbkFs = properties.getProperty("URL_AUFTRAGSLISTE_ABK_FS");
         urlAuftragslisteBb1Fs = properties.getProperty("URL_AUFTRAGSLISTE_BB1_FS");
@@ -151,7 +152,7 @@ public class FormSolutionsProperties {
         ftpEnabled = Boolean.valueOf(properties.getProperty("FTP_ENABLED"));
         ftpHost = properties.getProperty("FTP_HOST");
         ftpLogin = properties.getProperty("FTP_LOGIN");
-        ftpPass = properties.getProperty("FTP_PASS");
+        ftpPass = PasswordUtils.decrypt(properties.getProperty("FTP_PASS"));
         ftpMountAbsPath = properties.getProperty("FTP_MOUNT_ABS_PATH");
         ftpOverTls = Boolean.valueOf(properties.getProperty("FTP_OVER_TLS"));
         testType = properties.getProperty("TEST_TYPE");

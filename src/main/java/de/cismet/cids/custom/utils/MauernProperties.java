@@ -14,6 +14,7 @@ package de.cismet.cids.custom.utils;
 
 import lombok.Getter;
 
+import de.cismet.cids.utils.PasswordUtils;
 import de.cismet.cids.utils.serverresources.DefaultServerResourcePropertiesHandler;
 
 /**
@@ -88,7 +89,7 @@ public class MauernProperties extends DefaultServerResourcePropertiesHandler {
      * @return  DOCUMENT ME!
      */
     public String getWebdavPassword() {
-        return getProperties().getProperty(PROP__WEBDAV_PASSWORD, null);
+        return PasswordUtils.decrypt(getProperties().getProperty(PROP__WEBDAV_PASSWORD, null));
     }
 
     /**
