@@ -20,6 +20,7 @@ import java.util.Properties;
 
 import de.cismet.cids.custom.utils.WundaBlauServerResources;
 
+import de.cismet.cids.utils.PasswordUtils;
 import de.cismet.cids.utils.serverresources.ServerResourcesLoader;
 
 /**
@@ -79,12 +80,12 @@ public class VermessungsunterlagenProperties {
         ftpEnabled = Boolean.parseBoolean(readProperty("FTP_ENABLED", "true"));
         ftpHost = readProperty("FTP_HOST", null);
         ftpLogin = readProperty("FTP_LOGIN", null);
-        ftpPass = readProperty("FTP_PASS", null);
+        ftpPass = PasswordUtils.decrypt(readProperty("FTP_PASS", null));
         ftpPath = readProperty("FTP_PATH", null);
         webDavEnabled = Boolean.parseBoolean(readProperty("WEBDAV_ENABLED", "false"));
         webDavHost = readProperty("WEBDAV_HOST", null);
         webDavLogin = readProperty("WEBDAV_LOGIN", null);
-        webDavPass = readProperty("WEBDAV_PASS", null);
+        webDavPass = PasswordUtils.decrypt(readProperty("WEBDAV_PASS", null));
         webDavPath = readProperty("WEBDAV_PATH", null);
         absPathTest = readProperty("ABS_PATH_TEST", null);
         absPathPdfRisse = readProperty("ABS_PATH_PDF_RISSE", null);

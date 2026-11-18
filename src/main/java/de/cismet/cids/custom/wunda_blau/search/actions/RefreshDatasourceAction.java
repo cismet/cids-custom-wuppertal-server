@@ -13,8 +13,6 @@
 package de.cismet.cids.custom.wunda_blau.search.actions;
 
 import Sirius.server.middleware.impls.domainserver.DomainServerImpl;
-import Sirius.server.middleware.interfaces.domainserver.MetaService;
-import Sirius.server.middleware.interfaces.domainserver.MetaServiceStore;
 
 import org.apache.commons.io.IOUtils;
 import org.apache.log4j.Logger;

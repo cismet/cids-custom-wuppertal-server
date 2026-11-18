@@ -75,6 +75,7 @@ import javax.xml.parsers.ParserConfigurationException;
 
 import de.cismet.cids.custom.utils.WundaBlauServerResources;
 
+import de.cismet.cids.utils.PasswordUtils;
 import de.cismet.cids.utils.serverresources.ServerResourcesLoader;
 
 import de.cismet.cidsx.server.api.types.ActionTask;
@@ -152,7 +153,7 @@ public class NASProductGenerator {
                 ACTION_DOMAIN = serviceProperties.getProperty("actionDomain");
                 ACTION_SERVICE = serviceProperties.getProperty("actionServiceURL");
                 ACTION_USER = serviceProperties.getProperty("actionServiceUser");
-                ACTION_PASSWORD = serviceProperties.getProperty("actionServicePassword");
+                ACTION_PASSWORD = PasswordUtils.decrypt(serviceProperties.getProperty("actionServicePassword"));
                 PROFIL_KENNUNG = serviceProperties.getProperty("profilKennung", PROFILKENNUNG_DEFAULT_VALUE);
 
                 if ((OUTPUT_DIR == null) || OUTPUT_DIR.isEmpty()) {
